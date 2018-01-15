@@ -120,9 +120,6 @@ void Window::dispatchTouchEvent(int event, int finger, long time, int x, int y) 
 			// TAP!
 			touch.numClicks++;
 			if (touch.touchedView) {
-				//POINT offset = offsetToView(touch.touchedView);
-				//pt.x -= offset.x;
-				//pt.y -= offset.y;
 				touch.touchedView->dispatchTouchEvent(TOUCH_EVENT_TAP, finger, time, pt);
 			}
 		} else {

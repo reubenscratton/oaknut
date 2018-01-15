@@ -10,13 +10,13 @@
 #define TOUCH_EVENT_UP   2
 #define TOUCH_EVENT_CANCEL 3
 #define TOUCH_EVENT_DRAG 4
-//#define TOUCH_EVENT_DRAG_Y 5
 #define TOUCH_EVENT_TAP 6
 #define TOUCH_EVENT_FLING 7
-//#define TOUCH_EVENT_EX_TAP_CONFIRMED 7
+#define NUM_PAST 10
+
+// TODO: these constants should be in platform styles
 #define TOUCH_SLOP 10 // DPs
 #define DBLCLICK_THRESHOLD 400
-#define NUM_PAST 10
 
 typedef struct {
 	class View* touchedView;
