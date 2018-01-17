@@ -165,7 +165,7 @@ public:
     virtual void updateScrollbars();
 
 	// Touch
-    std::function<bool(View*,int,int,POINT)>* onTouchEventDelegate;
+    std::function<bool(View*,int,int,POINT)> onTouchEventDelegate;
 	
     Matrix4* _matrix;
 

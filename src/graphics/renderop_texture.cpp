@@ -7,6 +7,40 @@
 
 #include "../oaknut.h"
 
+SimpleBitmapProvider::SimpleBitmapProvider(Bitmap *bitmap) {
+    _bitmap = bitmap;
+}
+Bitmap* SimpleBitmapProvider::getBitmap() const {
+    return _bitmap;
+}
+void SimpleBitmapProvider::addCallback(Callback *callback) {
+}
+void SimpleBitmapProvider::removeCallback(Callback *callback) {
+}
+
+
+AsyncBitmapProvider::AsyncBitmapProvider(const char* assetPath) {
+    // todo: maybe defer loading until first getBitmap()?
+    Data *data = oakLoadAsset(assetPath);
+    oakBitmapCreateFromData(data->data, (int) data->cb, [&](Bitmap *bitmap) {
+        _bitmap = bitmap;
+        for (auto it : _callbacks) {
+            it->onBitmapChanged();
+        }
+    });
+}
+Bitmap* AsyncBitmapProvider::getBitmap() const {
+    return _bitmap;
+}
+
+void AsyncBitmapProvider::addCallback(Callback *callback) {
+    _callbacks.push_back(callback);
+}
+void AsyncBitmapProvider::removeCallback(Callback *callback) {
+    _callbacks.remove(callback);
+}
+
+
 class GLProgramTexture : public GLProgram {
 public:
     virtual void load();
@@ -86,7 +120,7 @@ TextureRenderOp::TextureRenderOp(View* view) : RenderOp(view) {
     _rectTex = RECT_Make(0,0,1,1);
 }
 TextureRenderOp::TextureRenderOp(View* view, const RECT& rect, Bitmap* bitmap, const RECT* rectTex, COLOUR tintColour) : RenderOp(view) {
-    _bitmap = bitmap;
+    _bitmapProvider = new SimpleBitmapProvider(bitmap);
     _alpha = 1.0f;
     _colour = tintColour;
     if (_colour) {
@@ -111,8 +145,8 @@ TextureRenderOp::TextureRenderOp(View* view, const char* assetPath, int tintColo
     _colour = tintColour;
     Data* data = oakLoadAsset(assetPath);
     oakBitmapCreateFromData(data->data, (int)data->cb, [&](Bitmap* bitmap) {
-        _bitmap = bitmap;
-        _rect = RECT_Make(0,0,_bitmap->_width, _bitmap->_height);
+        _bitmapProvider = new SimpleBitmapProvider(bitmap);
+        _rect = RECT_Make(0,0,bitmap->_width,bitmap->_height);
     });
     _rectTex = RECT_Make(0,0,1,1);
     setBlendMode(BLENDMODE_NORMAL);
@@ -140,12 +174,59 @@ void TextureRenderOp::asQuads(QUAD *quad) {
 
 bool TextureRenderOp::canMergeWith(const RenderOp* op) {
     return RenderOp::canMergeWith(op)
-        && _bitmap._obj==((const TextureRenderOp*)op)->_bitmap._obj;
+        && _bitmapProvider==((const TextureRenderOp*)op)->_bitmapProvider;
 }
 
 void TextureRenderOp::render(Canvas* canvas, Surface* surface) {
-    RenderOp::render(canvas, surface);
-    canvas->bindTexture(_bitmap);
+    if (_bitmapProvider) {
+        Bitmap *bitmap = _bitmapProvider->getBitmap();
+        if (bitmap) {
+            RenderOp::render(canvas, surface);
+            canvas->bindTexture(bitmap);
+        }
+    }
+}
+
+void TextureRenderOp::setColour(COLOUR colour) {
+    if (colour != _colour) {
+        _colour = colour;
+        if (_colour) {
+            _prog = &glprogTextureTint;
+        } else {
+            _prog = &glprogTexture;
+        }
+        rebatchIfNecessary();
+    }
 }
 
 
+void TextureRenderOp::setBitmap(Bitmap *bitmap) {
+    Bitmap* currentBitmap = _bitmapProvider ? _bitmapProvider->getBitmap() : NULL;
+    if (bitmap != currentBitmap) {
+        _bitmapProvider = new SimpleBitmapProvider(bitmap);
+        onBitmapChanged();
+    }
+}
+
+void TextureRenderOp::setBitmapProvider(BitmapProvider *bitmapProvider) {
+    if (bitmapProvider != _bitmapProvider) {
+        if (_bitmapProvider) {
+            _bitmapProvider->removeCallback(this);
+        }
+        _bitmapProvider = bitmapProvider;
+        if (bitmapProvider) {
+            _bitmapProvider->addCallback(this);
+        }
+        rebatchIfNecessary();
+    }
+}
+
+// BitmapProvider::Callback
+void TextureRenderOp::onBitmapChanged() {
+    Bitmap* bitmap = _bitmapProvider->getBitmap();
+    setBlendMode(bitmap->hasAlpha() ? BLENDMODE_NORMAL : BLENDMODE_NONE);
+    rebatchIfNecessary();
+    if (_view) {
+        _view->setNeedsFullRedraw(); // lazy
+    }
+}

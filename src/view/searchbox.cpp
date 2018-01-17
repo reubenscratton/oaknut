@@ -27,7 +27,7 @@ void SearchBox::setSearchTextChangedDelegate(SEARCHTEXTCHANGED delegate) {
 }
 
 float SearchBox::spaceForSearchIcon() {
-    return (_searchIconOp->_bitmap ? _searchIconOp->_bitmap->_width : 0 ) + dp(2);
+    return dp(18);
 }
 void SearchBox::setPadding(EDGEINSETS padding) {
     padding.left += spaceForSearchIcon();
@@ -40,11 +40,7 @@ void SearchBox::layout() {
     RECT_inset(rect, dp(12), dp(6));
     _roundRectOp->setRect(rect);
     
-    SIZE searchIconSize = SIZE_Make(0,0);
-    if (_searchIconOp->_bitmap != NULL) {
-        searchIconSize.width = _searchIconOp->_bitmap->_width;
-        searchIconSize.height = _searchIconOp->_bitmap->_height;
-    }
+    SIZE searchIconSize = SIZE_Make(dp(16),dp(16));
     _searchIconOp->setRect( RECT_Make(rect.origin.x+(rect.size.width-searchIconSize.width)/2,rect.origin.y+(rect.size.height-searchIconSize.height)/2, searchIconSize.width, searchIconSize.height));
 }
 
@@ -55,7 +51,7 @@ bool SearchBox::becomeFirstResponder() {
         anim->_interpolater = linear;
         anim->_delegate = [=](float val) {
             RECT iconRect;
-            iconRect.size = SIZE_Make(_searchIconOp->_bitmap->_width, _searchIconOp->_bitmap->_height);;
+            iconRect.size = SIZE_Make(dp(16), dp(16));
             RECT paddedBounds = getBoundsWithPadding();
             float spaceForSearchIcon = this->spaceForSearchIcon();
             paddedBounds.origin.x -= spaceForSearchIcon;

@@ -103,17 +103,17 @@ void Window::dispatchTouchEvent(int event, int finger, long time, int x, int y) 
 			}
 		}
 		if (touch.touchedView) {
-			POINT offset = offsetToView(touch.touchedView);
-			pt.x -= offset.x;
-			pt.y -= offset.y;
+			//POINT offset = offsetToView(touch.touchedView);
+			//pt.x -= offset.x;
+			//pt.y -= offset.y;
 			touch.touchedView->dispatchTouchEvent(TOUCH_EVENT_MOVE, finger, time, pt);
 		}
 	}
 	else if (event == TOUCH_EVENT_UP) {
 		if (touch.touchedView) {
-			POINT offset = offsetToView(touch.touchedView);
-			pt.x -= offset.x;
-			pt.y -= offset.y;
+			//POINT offset = offsetToView(touch.touchedView);
+			//pt.x -= offset.x;
+			//pt.y -= offset.y;
 			touch.touchedView->dispatchTouchEvent(TOUCH_EVENT_UP, finger, time, pt);
 		}
 		if (!touch.isDragging) {

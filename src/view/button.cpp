@@ -72,7 +72,7 @@ void ToolbarButton::setImageUrl(const string& url) {
 
 void ToolbarButton::setImageBitmap(Bitmap* bitmap) {
     lazyCreateImageView();
-    _imageView->setImageBitmap(bitmap);
+    _imageView->setBitmap(bitmap);
 }
 
 void ToolbarButton::lazyCreateImageView() {

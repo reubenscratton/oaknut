@@ -176,6 +176,9 @@ void View::updateRenderOps() {
 }
 
 void View::invalidateRect(const RECT& rect) {
+    if (!_surface) {
+        return;
+    }
 
     // invalidateRect is only meaningful when partial redraw works (ie private surfaces)
 	if (!_surface->_supportsPartialRedraw) {
@@ -454,6 +457,8 @@ void View::layout() {
         pt.y += _alignspecVert.margin;
     }
     if (anchorHorz || anchorVert) {
+        if (!anchorHorz) pt.x = _frame.origin.x;
+        if (!anchorVert) pt.y = _frame.origin.y;
         setFrameOrigin(pt);
     }
 	
@@ -1012,7 +1017,7 @@ bool View::onTouchEvent(int eventType, int eventSource, POINT pt) {
     
     
 	if (onTouchEventDelegate) {
-		if ((*onTouchEventDelegate)(this, eventType, eventSource, pt)) {
+		if (onTouchEventDelegate(this, eventType, eventSource, pt)) {
 			return true;
 		}
 	}

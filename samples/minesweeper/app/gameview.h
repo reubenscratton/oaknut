@@ -7,27 +7,25 @@
 
 #pragma once
 #include <oaknut.h>
-#include "minesweepergame.h"
+#include "game.h"
 
-class MinesweeperView : public View {
+class GameView : public View {
 public:
-    MinesweeperGame* _game;
-    ObjPtr<Bitmap> _imgUnopened, _imgMine, _imgFlag;
-    ObjPtr<Bitmap> _imgNumbers[9];
+    Game* _game;
+    ObjPtr<BitmapProvider> _imgUnknown, _imgMine, _imgFlag, _imgBoom;
+    ObjPtr<BitmapProvider> _imgNumbers[9];
     float _cellSize;
-    Timer* _timer;
+    ObjPtr<Timer> _timer;
     bool _wasLongPress;
 
-    MinesweeperView(MinesweeperGame* game);
+    GameView();
+    void setGame(Game* game);
+    void updateCell(Cell& cell);
 
     // Overrides
     virtual void updateContentSize(float parentWidth, float parentHeight);
     virtual bool onTouchEvent(int eventType, int finger, POINT pt);
 
 protected:
-    void loadImageAsset(ObjPtr<Bitmap>& rbitmap, const char* assetPath);
-    void bindBitmaps();
-    void updateCell(Cell& cell);
     void processCellTouch(const POINT& pt, bool longPress);
-    void revealCell(int col, int row);
 };

@@ -10,7 +10,6 @@ public:
 
 	string _url;
     ObjPtr<TextureRenderOp> _renderOp;
-    ObjPtr<Bitmap> _bitmap;
     ObjPtr<AtlasNode> _atlasNode;
 	bool _errorDisplay;
 	long _startLoadTime;
@@ -21,14 +20,15 @@ public:
 	
 	ImageView();
 	void setImageUrl(const string& url);
-    void setImageBitmap(Bitmap* bitmap);
+	void setBitmapProvider(BitmapProvider *bitmapProvider);
+    void setBitmap(Bitmap* bitmap);
     void setImageNode(AtlasNode* node);
 	
 	// Overrides
 	virtual void attachToWindow(Window* window);
 	virtual void detachFromWindow();
 	virtual void onEffectiveTintColourChanged();
-    virtual void updateRenderOps();
+	virtual void layout();
 
 	// Internal helpers
 	void loadImage();

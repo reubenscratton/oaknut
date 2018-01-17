@@ -66,7 +66,7 @@ public:
         return *(T*)_obj;
     }
     
-    T* operator-> () {
+    T* operator-> () const {
         return (T*)_obj;
     }
 	void assign(T* obj) {
@@ -91,7 +91,7 @@ public:
         return *this;
     }
     
-    operator T*() {
+    operator T*() const {
         return (T*)_obj;
     }
     bool isSet() {

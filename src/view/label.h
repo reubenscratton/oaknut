@@ -23,7 +23,8 @@ public:
     
     // API
     virtual const string& getText() { return _textRenderer.getText(); }
-	virtual void setText(string text);
+	virtual void setText(const string& text);
+	virtual void setText(const char* format, ...);
     virtual void setTextColour(COLOUR colour);
 	virtual void setFont(Font* font);
     virtual void setMaxLines(int maxLines);

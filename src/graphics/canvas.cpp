@@ -89,7 +89,7 @@ void Canvas::setVertexConfig(int vertexConfig) {
 }
 
 void Canvas::bindTexture(Bitmap* texture) {
-    if (_currentTexture != texture) {
+    if (texture&& _currentTexture != texture) {
         _currentTexture = texture;
         texture->bind();
     }

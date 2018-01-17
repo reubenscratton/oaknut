@@ -5,33 +5,79 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#include "app.h"
-#include "minesweepergame.h"
-#include "minesweeperview.h"
+#include <oaknut.h>
+#include "game.h"
+#include "gameview.h"
 
 
-
-class MainViewController : public ViewController {
+class MainViewController : public ViewController, Game::Callback {
 public:
 
-    MinesweeperGame* _game;
+    Game* _game;
+    GameView* _gameView;
+    Label* _labelNumFlags;
+    ImageView* _imageViewFace;
+    Label* _labelNumRemaining;
+
+    ObjPtr<BitmapProvider> _bmpFaceNormal;
+    ObjPtr<BitmapProvider> _bmpFaceWon;
+    ObjPtr<BitmapProvider> _bmpFaceLost;
 
     MainViewController() {
-        _game = new MinesweeperGame(10, 10);
 
-        View *view = new View();
-        view->setMeasureSpecs(MEASURESPEC_FillParent, MEASURESPEC_FillParent);
-        view->setBackgroundColour(0xFFFFf0f0);
+        _bmpFaceNormal = new AsyncBitmapProvider("images/face_normal.png");
+        _bmpFaceWon = new AsyncBitmapProvider("images/face_won.png");
+        _bmpFaceLost = new AsyncBitmapProvider("images/face_lost.png");
+
+        View* view = Styles::layoutInflate("layout/main.res");
+        _gameView = (GameView*)view->findViewById("game");
+        _labelNumFlags = (Label*)view->findViewById("flags");
+        _imageViewFace = (ImageView*)view->findViewById("face");
+        _imageViewFace->onTouchEventDelegate = [=](View* view, int eventType, int eventSource, POINT pt) -> bool {
+            if (eventType == TOUCH_EVENT_TAP) {
+                if (_game->_state != InProgress) {
+                    _game->restart();
+                }
+            }
+            return true;
+        };
+        _labelNumRemaining = (Label*)view->findViewById("remaining");
         setView(view);
 
-        MinesweeperView* minesweeperView = new MinesweeperView(_game);
-        minesweeperView->setMeasureSpecs(MEASURESPEC_WrapContent, MEASURESPEC_WrapContent);
-        view->addSubview(minesweeperView);
+        _game = new Game(this, 10, 10);
+        _gameView->setGame(_game);
+        _game->restart();
+    }
+
+    // Game callbacks
+    virtual void onGameStateChanged() {
+        switch (_game->_state) {
+            case InProgress:
+                _imageViewFace->setBitmapProvider(_bmpFaceNormal);
+                break;
+            case Won:
+                _imageViewFace->setBitmapProvider(_bmpFaceWon);
+                break;
+            case Lost:
+                _imageViewFace->setBitmapProvider(_bmpFaceLost);
+                break;
+        }
+    }
+    virtual void onGameNumFlagsChanged() {
+        _labelNumFlags->setText("Mines: %d", _game->_flags);
+    }
+    virtual void onGameNumRemainingChanged() {
+        _labelNumRemaining->setText("Closed: %d", _game->_unknown);
+    }
+    virtual void onCellStateChanged(Cell& cell) {
+        _gameView->updateCell(cell);
     }
 
 };
 
 void oakMain() {
+    Styles::loadAsset("styles.res");
+
     MainViewController* mainVC = new MainViewController();
     mainWindow->setRootViewController(mainVC);
 }

@@ -7,6 +7,7 @@ CFLAGS+= -DPLATFORM_IOS=1
 include $(OAKNUT_DIR)/src/platform/apple/oaknut.make
 
 CFLAGS_COMMON := \
+	$(CFLAGS) \
     -stdlib=libc++ \
 	-isysroot $(XCODE_APP)/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/$(IOS_SDK) \
 	$(FLAGS) \

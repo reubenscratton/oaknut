@@ -23,7 +23,7 @@ void CanvasView::layout() {
     oakCanvasResize(_canvas, _frame.size.width, _frame.size.height);
     Bitmap* bitmap = oakCanvasGetBitmap(_canvas);
     bitmap->_texSampleMethod = GL_NEAREST;
-    _textureRenderOp->_bitmap = bitmap;
+    _textureRenderOp->setBitmap(bitmap);
 }
 
 void CanvasView::redraw() {

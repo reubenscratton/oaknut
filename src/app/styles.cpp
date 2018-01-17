@@ -7,6 +7,8 @@
 
 #include "../oaknut.h"
 
+static StyleMap s_root;
+
 /**
 
  - Resources are a hierarchy of JSON-style key-value pairs but without quote marks around everything.
@@ -22,6 +24,17 @@
 
 */
 
+class DefaultStylesLoader {
+public:
+    DefaultStylesLoader() {
+        string DEFAULT_STYLES=
+#include "styles.res"
+        ;
+        Utf8Iterator it(DEFAULT_STYLES);
+        s_root.parse(it);
+    }
+};
+static DefaultStylesLoader s_DefaultStylesLoader;
 
 
 void StyleValueUber::setValue(const string& qual, StyleValue* value) {
@@ -47,7 +60,6 @@ void StyleValueUber::setValue(const string& qual, StyleValue* value) {
 
 
 
-static StyleMap s_root;
 
 string Styles::getLocalizedString(const string& key) {
     return getString(key);
