@@ -5,15 +5,17 @@
 # for XCode et al when needed, while modern IDEs like CLion are supported out of the box.
 
 
+# NB: CMake docs say to not use glob to build source lists but I don't see the harm in it.
+# All you have to do is remember to reset your CMake cache when you add or remove source files.
+# To me that's a faintly better deal than having to remember to add and remove things from
+# CMakeLists explicitly. Really CMake is broken in this regard, it should track source dirs
+# rather than individual files and be run as a prebuild step. Alternatively IDEs could just be
+# intelligent about makefiles, but I guess that'll never happen.
 file(GLOB_RECURSE SOURCES_APP  "app/*.*")
 file(GLOB_RECURSE SOURCES_ASSETS  "assets/*.*")
 file(GLOB_RECURSE SOURCES_PLATFORM  "platform/*.*")
 file(GLOB_RECURSE SOURCES_OAKNUT  "${CMAKE_CURRENT_LIST_DIR}/src/*.*")
 set(SOURCES ${SOURCES_APP} ${SOURCES_ASSETS} ${SOURCES_PLATFORM} ${SOURCES_OAKNUT})
-
-
-include_directories(SYSTEM ${CMAKE_CURRENT_LIST_DIR}/src)
-
 
 # Web
 set(PROJECT_NAME_WEB ${PROJECT_NAME}_web)
@@ -42,4 +44,10 @@ if (APPLE)
         ios SOURCES ${SOURCES})
 
 endif ()
+
+# Ignore this target, it exists so CLion's Intellisense detects Oaknut source code
+# Cmake does not let you specify include directories for a custom target, very silly
+add_executable(${PROJECT_NAME}_do_not_build ${SOURCES})
+target_include_directories(${PROJECT_NAME}_do_not_build SYSTEM PUBLIC $ENV{OAKNUT_DIR}/src)
+
 

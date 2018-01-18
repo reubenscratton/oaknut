@@ -13,8 +13,8 @@ ANDROID_KEY_ALIAS:=androiddebugkey
 # iOS
 IOS_SDK=iPhoneOS11.1.sdk
 IOS_ABIS=arm64
-IOS_CERT=D1FCEAF1B5FF0C2588E461648C0488ECFEA10161
-IOS_PROVISIONING_PROFILE=/Users/reuben/Library/MobileDevice/Provisioning\ Profiles/2e47ce16-3a69-42d0-ae59-c25992b7dcaa.mobileprovision
+IOS_CERT=AA35BF8660055BE507571702777D49D2609620E9
+IOS_PROVISIONING_PROFILE=/Users/reuben/Library/MobileDevice/Provisioning\ Profiles/8973664a-c5d7-4972-92d9-9c9a1990499e.mobileprovision
 
 # macOS
 MACOS_SDK=MacOSX10.13.sdk
