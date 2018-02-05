@@ -96,6 +96,18 @@ typedef float CGFloat;
 #define GL_BGRA 0x80E1
 #endif
 
+#ifdef PLATFORM_LINUX
+// NB: Your CPATH variable should include all the ridiculous number
+// of places these headers can be found
+#include	<gdk/gdk.h>
+#include	<gdk/gdkkeysyms.h>
+#include	<gtk/gtk.h>
+#include	<gtkgl/gtkglarea.h>
+#define GL_GLEXT_PROTOTYPES
+#include	<GL/gl.h>
+#include	<GL/glext.h>
+#include	<GL/glu.h>
+#endif
 
 // Configuration
 //#define CONFIG_SLOW_ANIMATIONS 1

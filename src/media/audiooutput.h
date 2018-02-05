@@ -26,6 +26,11 @@
  #endif
 #endif
 
+#if PLATFORM_LINUX
+#include <AL/al.h>
+#include <AL/alc.h>
+#endif
+
 
 class AudioOutput : public Object {
 public:

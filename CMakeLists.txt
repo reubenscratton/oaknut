@@ -27,6 +27,13 @@ set(PROJECT_NAME_ANDROID ${PROJECT_NAME}_android)
 add_custom_target(${PROJECT_NAME_ANDROID} COMMAND make -C ${PROJECT_SOURCE_DIR}
         PLATFORM=android android SOURCES ${SOURCES})
 
+# Linux
+set(PROJECT_NAME_LINUX ${PROJECT_NAME}_linux)
+add_custom_target(${PROJECT_NAME_LINUX} COMMAND make -C ${PROJECT_SOURCE_DIR}
+        PLATFORM=linux
+        PROJECT_NAME=${PROJECT_NAME_LINUX}
+        linux SOURCES ${SOURCES})
+
 if (APPLE)
 
     # MacOS
