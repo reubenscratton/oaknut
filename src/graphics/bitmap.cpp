@@ -48,7 +48,13 @@ GLenum Bitmap::getGlFormat() {
         case BITMAPFORMAT_RGBA32: return GL_RGBA;
         case BITMAPFORMAT_BGRA32: return GL_BGRA;
         case BITMAPFORMAT_RGB565: return GL_RGB;
-        case BITMAPFORMAT_A8: return GL_ALPHA;
+        case BITMAPFORMAT_A8:
+#ifdef PLATFORM_LINUX   // TODO: 'red' vs 'alpha' is probably not a Linux thing, it's more likely to be GL vs GL ES
+            return GL_RED;
+#else
+            return GL_ALPHA;
+#endif
+
     }
     assert(0);
 }
@@ -57,7 +63,12 @@ GLenum Bitmap::getGlInternalFormat() {
         case BITMAPFORMAT_RGBA32: return GL_RGBA;
         case BITMAPFORMAT_BGRA32: return GL_RGBA;
         case BITMAPFORMAT_RGB565: return GL_RGB;
-        case BITMAPFORMAT_A8: return GL_ALPHA;
+        case BITMAPFORMAT_A8:
+#ifdef PLATFORM_LINUX
+            return GL_RED;
+#else
+            return GL_ALPHA;
+#endif
     }
     assert(0);
 }

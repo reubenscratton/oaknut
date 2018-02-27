@@ -79,7 +79,7 @@ void Surface::setSize(SIZE size) {
 
 void Surface::use() {
     check_gl(glBindFramebuffer, GL_FRAMEBUFFER, _tex ? _fb :
-#if TARGET_OS_IOS
+#if TARGET_OS_IOS || defined(PLATFORM_LINUX)
              1
 #else
              0

@@ -11,10 +11,6 @@ public:
     int _doneGlInit;
     QuadBuffer* _quadBuffer;
 
-    //SimplePool<TextureRenderOp> _poolTextureRenderOps;
-    //SimplePool<TextRenderOp> _poolTextRenderOps;
-    //SimplePool<ColorRectFillRenderOp> _poolColorRectRenderOps;
-    
     // GL state
     struct {
         //GLint blend:1;

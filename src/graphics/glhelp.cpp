@@ -22,7 +22,7 @@ static GLuint loadShader(GLenum shaderType, const char* pSource) {
         "#version 120\n";
 #endif
 		source.append(pSource);
-#if TARGET_OS_OSX
+#if TARGET_OS_OSX || PLATFORM_LINUX
         // Surely to god there's a better way than this...!
         int x;
         while ((x = (int)source.find("highp")) >= 0) source.erase(source.begin()+x, source.begin()+x+5);

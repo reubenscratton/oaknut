@@ -21,7 +21,6 @@ MACOS_SDK=MacOSX10.13.sdk
 
 # Should be provided by environment variables
 ANDROID_SDK_DIR:=/Users/reuben/Library/Android/sdk
-EMSCRIPTEN_DIR:=/Users/reuben/Downloads/emsdk-portable/emscripten/1.37.22
 
 include $(OAKNUT_DIR)/oaknut.make
 

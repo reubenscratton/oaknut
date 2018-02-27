@@ -8,8 +8,8 @@
 // TODO: this is a mess, fix it
 
 #if EMSCRIPTEN
- #import <Al/al.h>
- #import <Al/alc.h>
+ #import <AL/al.h>
+ #import <AL/alc.h>
 #else
  #ifdef ANDROID
   #include <SLES/OpenSLES.h>

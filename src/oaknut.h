@@ -99,10 +99,10 @@ typedef float CGFloat;
 #ifdef PLATFORM_LINUX
 // NB: Your CPATH variable should include all the ridiculous number
 // of places these headers can be found
-#include	<gdk/gdk.h>
-#include	<gdk/gdkkeysyms.h>
+//#include	<gdk/gdk.h>
+//#include	<gdk/gdkkeysyms.h>
 #include	<gtk/gtk.h>
-#include	<gtkgl/gtkglarea.h>
+//#include	<gtkgl/gtkglarea.h>
 #define GL_GLEXT_PROTOTYPES
 #include	<GL/gl.h>
 #include	<GL/glext.h>

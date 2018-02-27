@@ -8,8 +8,6 @@
 #include "../oaknut.h"
 
 
-
-
 Window::Window() : _rootViewController(NULL), _scale(1) {
 	_canvas = new Canvas();
     _surface = new Surface();
@@ -27,8 +25,7 @@ void Window::setRootViewController(ViewController* viewController) {
 	_rootViewController = viewController;
 	if (viewController) {
 		viewController->onWillResume();
-			_canvas->prepareToDraw();
-
+		_canvas->prepareToDraw();
 		viewController->attachToWindow(this);
 		viewController->onDidResume();
 	}
@@ -179,11 +176,6 @@ void incFrames() {
 
 void Window::draw() {
     _redrawNeeded = false;
-    
-#if IOS_WEBGL_BUG
-	_oddFrame = !_oddFrame;
-#endif
-
 
 	_canvas->prepareToDraw();
 
@@ -236,23 +228,13 @@ void Window::setNeedsLayout() {
 	requestRedraw();
 }
 
-#if EMSCRIPTEN
-EMSCRIPTEN_KEEPALIVE
-extern "C" void dispatchMainWindowDraw() {
-    mainWindow->draw();
-}
-#endif
 
 void Window::requestRedraw() {
 	if (_redrawNeeded) {
 		return;
 	}
 	_redrawNeeded = true;
-#if EMSCRIPTEN
-    EM_ASM({ requestAnimationFrame( function() { _dispatchMainWindowDraw(); }) });
-#else
     oakRequestRedraw();
-#endif
 }
 
 POINT Window::offsetToView(View* view) {

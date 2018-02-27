@@ -27,7 +27,6 @@ public:
     CVImageBufferRef _cvImageBuffer; 
     CVOpenGLESTextureRef _cvTexture;
     CVOpenGLESTextureCacheRef _cvTextureCache;
-    bool _needsUpload;
 
     OSBitmap(int width, int height, int format, void* pixels, int stride);
     OSBitmap(CVPixelBufferRef cvImageBuffer, bool fromCamera);

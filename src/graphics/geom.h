@@ -14,7 +14,6 @@ typedef struct _VERTEX {
     uint32_t colour;
     GLfloat unused[3]; // seems v wasteful. Worth it?
 } VERTEX;
-#pragma pack(pop)
 
 VERTEX VERTEX_Make(GLfloat x,
                    GLfloat y,
@@ -129,6 +128,7 @@ QUAD QUADFromRECT(const RECT& rect, uint32_t colour);
 QUAD clipQuad(const QUAD& quad, const RECT& clip);
 
 #define EDGEINSETS_Zero EDGEINSETS(0,0,0,0)
+#pragma pack(pop)
 
 
 class AffineTransform {

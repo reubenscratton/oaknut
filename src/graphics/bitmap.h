@@ -74,6 +74,7 @@ public:
     GLuint _textureId;
     bool _allocdTexData;
     bool _paramsValid;
+    bool _needsUpload;
 
     // Constructor is protected, use oakBitmapCreate...() APIs to instantiate
 protected:

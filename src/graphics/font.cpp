@@ -27,7 +27,11 @@ static bool s_inited;
 Glyph* Font::getGlyph(char32_t ch) {
     if (!s_inited) {
         s_inited = true;
+#ifdef PLATFORM_LINUX
+        atlas = new Atlas(512, 512, BITMAPFORMAT_RGBA32); //  TODO: why won't A8 work on Linux? Test Cairo
+#else
         atlas = new Atlas(512, 512, BITMAPFORMAT_A8); // 64KB per page
+#endif
     }
     auto it = _glyphs.find(ch);
     if (it != _glyphs.end()) {

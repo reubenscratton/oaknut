@@ -33,6 +33,7 @@ add_custom_target(${PROJECT_NAME_LINUX} COMMAND make -C ${PROJECT_SOURCE_DIR}
         PLATFORM=linux
         PROJECT_NAME=${PROJECT_NAME_LINUX}
         linux SOURCES ${SOURCES})
+add_definitions(-DPLATFORM_LINUX=1)
 
 if (APPLE)
 
@@ -55,6 +56,11 @@ endif ()
 # Ignore this target, it exists so CLion's Intellisense detects Oaknut source code
 # Cmake does not let you specify include directories for a custom target, very silly
 add_executable(${PROJECT_NAME}_do_not_build ${SOURCES})
-target_include_directories(${PROJECT_NAME}_do_not_build SYSTEM PUBLIC $ENV{OAKNUT_DIR}/src)
+target_include_directories(${PROJECT_NAME}_do_not_build SYSTEM PUBLIC $ENV{OAKNUT_DIR}/src
+    /usr/include/gtk-3.0
+        /usr/include/pango-1.0
+        /usr/include/harfbuzz
+        /usr/include/freetype2
+        /usr/include/gdk-pixbuf-2.0 /usr/include/cairo)
 
 

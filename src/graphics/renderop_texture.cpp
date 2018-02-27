@@ -35,6 +35,9 @@ Bitmap* AsyncBitmapProvider::getBitmap() const {
 
 void AsyncBitmapProvider::addCallback(Callback *callback) {
     _callbacks.push_back(callback);
+    if (_bitmap) {
+        callback->onBitmapChanged();
+    }
 }
 void AsyncBitmapProvider::removeCallback(Callback *callback) {
     _callbacks.remove(callback);

@@ -2,32 +2,29 @@
 # It should not be run directly.
 
 # TODO: WTF Linux? These should all be completely unnecessary...
-SYSINCS:= -isystem /usr/include/gtk-2.0
-SYSINCS+= -isystem /usr/include/gtkgl-2.0
+SYSINCS:= -isystem /usr/include/gtk-3.0
 SYSINCS+= -isystem /usr/include/glib-2.0
-SYSINCS+= -isystem /usr/include/cairo
+SYSINCS+= -isystem /usr/lib/x86_64-linux-gnu/glib-2.0/include
 SYSINCS+= -isystem /usr/include/pango-1.0
+SYSINCS+= -isystem /usr/include/cairo
+SYSINCS+= -isystem /usr/include/harfbuzz
+SYSINCS+= -isystem /usr/include/freetype2
 SYSINCS+= -isystem /usr/include/gdk-pixbuf-2.0
 SYSINCS+= -isystem /usr/include/atk-1.0
-SYSINCS+= -isystem /home/osboxes/gtkglext
-SYSINCS+= -isystem /usr/lib/gtkglext-1.0/include
-SYSINCS+= -isystem /usr/lib/x86_64-linux-gnu/glib-2.0/include
-SYSINCS+= -isystem /usr/lib/x86_64-linux-gnu/gtk-2.0/include
+#SYSINCS+= -isystem /usr/include/gtkgl-2.0
+#SYSINCS+= -isystem /usr/lib/gtkglext-1.0/include
+#SYSINCS+= -isystem /usr/lib/x86_64-linux-gnu/gtk-2.0/include
 
-# /usr/lib/x86_64-linux-gnu/
 LIBS:= \
     -lGLU -lGL -lglib-2.0 -lgobject-2.0 -latk-1.0 \
-    -lgio-2.0 -lgthread-2.0 -lgmodule-2.0 -lgdk_pixbuf-2.0 \
-    -lcairo -lpango-1.0 -lpangocairo-1.0 -lpangoft2-1.0 -lpangoxft-1.0 \
-    -lgdk-x11-2.0 -lgtk-x11-2.0 -lgtkgl-2.0 \
+    -lgtk-3 -lgdk-3 -lpango-1.0 -lpangocairo-1.0 -lgdk_pixbuf-2.0 -lcairo -lfreetype -lharfbuzz \
     -lopenal -lpthread -lrt
 
-CFLAGS+= -DPLATFORM_LINUX=1
+#    -lgio-2.0 -lgthread-2.0 -lgmodule-2.0 \
+#    -lgdk-x11-2.0 -lgtk-x11-2.0 -lgtkgl-2.0 \
+#    -lpangoft2-1.0 -lpangoxft-1.0 \
 
-CFLAGS_COMMON := \
-	$(CFLAGS)
-
-CFLAGS_COMPILE := \
+CFLAGS+= -DPLATFORM_LINUX=1 \
     -isystem $(OAKNUT_DIR)/src \
     $(SYSINCS) \
     -g \
@@ -58,20 +55,20 @@ $(OBJ_DIR):
 	@mkdir -p $@
 
 $(OBJS_CPP): $(OBJ_DIR)/%.o : % | $(OBJ_DIR)
-	@echo Compiling $(notdir $@)
 	@mkdir -p $(dir $@)
-	g++ $(CFLAGS_COMMON) $(CFLAGS_COMPILE_CPP) $(CFLAGS_COMPILE) -o $@ -c $<
+	@echo Compiling $(notdir $<)
+	g++ $(CFLAGS) $(CFLAGS_COMPILE_CPP) -o $@ -c $<
 
 $(OBJS_C): $(OBJ_DIR)/%.o : % | $(OBJ_DIR)
-	@echo Compiling $(notdir $@)
+	@echo Compiling $(notdir $<)
 	@mkdir -p $(dir $@)
-	g++ $(CFLAGS_COMMON) $(CFLAGS_COMPILE_C) $(CFLAGS_COMPILE) -o $@ -c $<
+	g++ $(CFLAGS) $(CFLAGS_COMPILE_C) -o $@ -c $<
 
 
 $(EXECUTABLE) : $(OBJS) $(BUNDLE_DIR) $(ASSETS_DIR)/assets
 	@echo Linking app
 	@mkdir -p $(dir $(EXECUTABLE))
-	g++ $(CFLAGS_COMMON) -o $@ $(OBJS) $(LIBS) $(CFLAGS_LINK)
+	g++ -o $@ $(OBJS) $(LIBS) $(CFLAGS_LINK)
 
 .PHONY: $(ASSETS_DIR)/assets
 

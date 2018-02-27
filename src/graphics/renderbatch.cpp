@@ -135,7 +135,7 @@ void RenderBatch::render(Canvas* canvas, Surface* surface, RenderOp* firstOp) {
                   rect.size.width, rect.size.height);
     }
 
-    //    oakLog("Drawing %d quads at once", numQuadsThisChunk);
+    //   oakLog("Drawing %d quads at once", numQuadsThisChunk);
     check_gl(glDrawElements, GL_TRIANGLES, 6 * numQuadsThisChunk, GL_UNSIGNED_SHORT, (void*)((_alloc->offset+firstOp->_renderBase)*6*sizeof(GLshort)));
 
     // Iterate next rect of invalid region, if there is any

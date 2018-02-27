@@ -45,9 +45,6 @@ public:
 	bool _viewLayoutValid;
 	bool _redrawNeeded;
     View* _firstResponder;
-#if IOS_WEBGL_BUG
-	bool _oddFrame;
-#endif
     class IKeyboardInputHandler* _keyboardHandler;
 	
 	Window();

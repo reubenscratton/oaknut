@@ -17,6 +17,14 @@ long oakCurrentMillis() {
     //return (clock() * 1000) / CLOCKS_PER_SEC;
 }
 
+EMSCRIPTEN_KEEPALIVE
+extern "C" void dispatchMainWindowDraw() {
+    mainWindow->draw();
+}
+
+void oakRequestRedraw() {
+    EM_ASM({ requestAnimationFrame( function() { _dispatchMainWindowDraw(); }) });
+}
 
 
 class OSTimer : public Timer {

@@ -58,6 +58,7 @@ public:
     GLshort* _indexes;
     GLuint _indexBufferId;
     GLuint _vertexBufferId;
+    GLuint _vao;
     
     QuadBuffer();
     void bind();

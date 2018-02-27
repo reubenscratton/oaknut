@@ -5,7 +5,6 @@
 class OSBitmap : public Bitmap {
 public:
     jobject _androidBitmap;
-    bool _needsUpload;
 
     OSBitmap(int width, int height, int format);
     OSBitmap(jobject androidBitmap);

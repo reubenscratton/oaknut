@@ -49,7 +49,7 @@ void Canvas::prepareToDraw() {
         check_gl(glDepthMask, GL_TRUE);
         check_gl(glClear, GL_DEPTH_BUFFER_BIT);
         check_gl(glDepthMask, GL_FALSE);
-        check_gl(glClearColor, 0,0,0,1);
+        check_gl(glClearColor, 1,0,0,1);
         check_gl(glClear, GL_COLOR_BUFFER_BIT);
         check_gl(glDisable, GL_DEPTH_TEST);
         check_gl(glActiveTexture, GL_TEXTURE0);
@@ -57,7 +57,7 @@ void Canvas::prepareToDraw() {
         check_gl(glDisable, GL_BLEND);
         _enabledFlags.scissorTest = 0;
         check_gl(glDisable, GL_SCISSOR_TEST);
-        
+
         // As long as we only have one quadbuffer we only need to bind the once
         _quadBuffer->bind();
         _currentVertexConfig = 0;
