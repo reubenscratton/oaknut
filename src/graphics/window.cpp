@@ -9,8 +9,8 @@
 
 
 Window::Window() : _rootViewController(NULL), _scale(1) {
-	_canvas = new Canvas();
     _surface = new Surface();
+    _quadBuffer = new QuadBuffer();
 }
 
 
@@ -25,7 +25,7 @@ void Window::setRootViewController(ViewController* viewController) {
 	_rootViewController = viewController;
 	if (viewController) {
 		viewController->onWillResume();
-		_canvas->prepareToDraw();
+		prepareToDraw();
 		viewController->attachToWindow(this);
 		viewController->onDidResume();
 	}
@@ -45,114 +45,142 @@ void Window::resizeSurface(int width, int height, float scale) {
 	}
 }
 
+Window::MotionTracker::MotionTracker(int source) {
+    this->source = source;
+    isDragging = false;
+    touchedView = NULL;
+    timeOfDownEvent = 0;
+    pastIndex = pastCount = 0;
+}
 
-void Window::dispatchTouchEvent(int event, int finger, long time, int x, int y) {
-	//oakLog("Window::dispatchTouch %d %d %d %d", event, finger, x, y);
-	ViewController* rootVC = _rootViewController;
-    x *= _scale;
-    y *= _scale;
-	POINT pt = POINT_Make(x, y);
-	TOUCH& touch = _touches[finger];
-    
-    // Record point history for velocity calculation
-    if (event == TOUCH_EVENT_DOWN) {
-        //glInsertEventMarkerEXT(0, "com.apple.GPUTools.event.debug-frame");
-        touch.pastIndex = touch.pastCount = 0;
-		touch.ptDown = pt;
-		touch.isDragging = false;
-		if (time - touch.timeOfDownEvent >= DBLCLICK_THRESHOLD) {
-			touch.numClicks = 0;
-		}
-		touch.timeOfDownEvent = time;
+void Window::MotionTracker::dispatchEvent(int event, long time, POINT pt, Window* window) {
+    if (event == INPUT_EVENT_DOWN) {
+        if (multiclickTimer) {
+            multiclickTimer->stop();
+            multiclickTimer = NULL;
+            numClicks++;
+        }
+        pastIndex = pastCount = 0;
+        ptDown = pt;
+        timeOfDownEvent = time;
+        touchedView = window->_rootViewController->_view->dispatchTouchEvent(INPUT_EVENT_DOWN, source, time, pt);
     }
-    if (event == TOUCH_EVENT_DOWN || event==TOUCH_EVENT_MOVE) {
-        if (event==TOUCH_EVENT_MOVE) { // filter out spurious move events (seen on iOS 10)
-            int prevIndex = touch.pastIndex-1;
-            if (prevIndex<0) prevIndex+=NUM_PAST;
-            if (touch.pastPts[prevIndex].equals(pt)) {
-                touch.pastTime[prevIndex] = time;
+    if (event == INPUT_EVENT_DOWN || event == INPUT_EVENT_MOVE) {
+        if (event == INPUT_EVENT_MOVE) { // filter out spurious move events (seen on iOS 10)
+            int prevIndex = pastIndex - 1;
+            if (prevIndex < 0) prevIndex += NUM_PAST;
+            if (pastPts[prevIndex].equals(pt)) {
+                pastTime[prevIndex] = time;
                 return;
             }
         }
-        touch.pastTime[touch.pastIndex] = time;
-        touch.pastPts[touch.pastIndex] = pt;
-        touch.pastIndex = (touch.pastIndex+1) % NUM_PAST;
-        touch.pastCount++;
+        pastTime[pastIndex] = time;
+        pastPts[pastIndex] = pt;
+        pastIndex = (pastIndex + 1) % NUM_PAST;
+        pastCount++;
     }
- 
-	if (event == TOUCH_EVENT_DOWN) {
-		touch.touchedView = rootVC->_view->dispatchTouchEvent(TOUCH_EVENT_DOWN, finger, time, pt);
-	}
-	else if (event == TOUCH_EVENT_MOVE) {
-		if (!touch.isDragging) {
-			float dx = x - touch.ptDown.x;
-			float dy = y - touch.ptDown.y;
-			float dist = sqrtf(dx*dx + dy*dy);
-			if (idp(dist) >= TOUCH_SLOP) {
-				touch.isDragging = true;
-				View* interceptView = rootVC->_view->dispatchTouchEvent(TOUCH_EVENT_DRAG, finger, time, pt);
-				if (interceptView) {
-					if (touch.touchedView) {
-						touch.touchedView->dispatchTouchEvent(TOUCH_EVENT_CANCEL, finger, time, pt);
-					}
-					touch.touchedView = interceptView;
-				}
-			}
-		}
-		if (touch.touchedView) {
-			//POINT offset = offsetToView(touch.touchedView);
-			//pt.x -= offset.x;
-			//pt.y -= offset.y;
-			touch.touchedView->dispatchTouchEvent(TOUCH_EVENT_MOVE, finger, time, pt);
-		}
-	}
-	else if (event == TOUCH_EVENT_UP) {
-		if (touch.touchedView) {
-			//POINT offset = offsetToView(touch.touchedView);
-			//pt.x -= offset.x;
-			//pt.y -= offset.y;
-			touch.touchedView->dispatchTouchEvent(TOUCH_EVENT_UP, finger, time, pt);
-		}
-		if (!touch.isDragging) {
-			// TAP!
-			touch.numClicks++;
-			if (touch.touchedView) {
-				touch.touchedView->dispatchTouchEvent(TOUCH_EVENT_TAP, finger, time, pt);
-			}
-		} else {
-			// FLING!
-                
-			// Work out the drag velocity by getting the distance travelled from the oldest historical point
-			// and extrapolating an average distance per second.
-			int numPoints = min(touch.pastCount, NUM_PAST);
-			int index = touch.pastIndex - numPoints;
-			if (index<0) index += NUM_PAST;
-			while (numPoints-- > 1) {
-				POINT ptFrom = touch.pastPts[index];
-				long timeFrom = touch.pastTime[index];
-				index = (index+1) % NUM_PAST;
-				if (time-timeFrom >= 333) { // ignore historical points that are too old
-					continue;
-				}
-				int dTime = (int)(time - timeFrom);
-				if (dTime <= 0) continue;
-				float dx = pt.x - ptFrom.x;
-				float dy = pt.y - ptFrom.y;
-				float thisVeloX = dx * 1000.0f/dTime;
-				float thisVeloY = dy * 1000.0f/dTime;
-                POINT velocity = {0,0};
-				velocity.x = (velocity.x==0) ? thisVeloX : ((velocity.x + thisVeloX)/2);
-				velocity.y = (velocity.y==0) ? thisVeloY : ((velocity.y + thisVeloY)/2);
-                if (touch.touchedView) {
-                    touch.touchedView->dispatchTouchEvent(TOUCH_EVENT_FLING, finger, time, velocity);
+
+    if (event == INPUT_EVENT_MOVE) {
+        if (timeOfDownEvent && !isDragging) {
+            float dx = pt.x - ptDown.x;
+            float dy = pt.y - ptDown.y;
+            float dist = sqrtf(dx * dx + dy * dy);
+            if (idp(dist) >= TOUCH_SLOP) {
+                isDragging = true;
+                View *interceptView = window->_rootViewController->_view->dispatchTouchEvent(INPUT_EVENT_DRAG, source, time, pt);
+                if (interceptView) {
+                    if (touchedView) {
+                        touchedView->dispatchTouchEvent(INPUT_EVENT_CANCEL, source, time, pt);
+                    }
+                    touchedView = interceptView;
+                }
+            }
+        }
+        if (touchedView) {
+            touchedView->dispatchTouchEvent(INPUT_EVENT_MOVE, source, time, pt);
+        }
+    } else if (event == INPUT_EVENT_UP) {
+        if (touchedView) {
+            touchedView->dispatchTouchEvent(INPUT_EVENT_UP, source, time, pt);
+        }
+        if (!isDragging) {
+            // TAP!
+            if (touchedView) {
+                touchedView->dispatchTouchEvent(INPUT_EVENT_TAP, source, time, pt);
+                oakLog("tap %d", numClicks);
+            }
+            multiclickTimer = Timer::start([&] {
+                if (touchedView) {
+                    touchedView->dispatchTouchEvent(INPUT_EVENT_TAP_CONFIRMED, source, time, pt);
+                }
+                multiclickTimer = NULL;
+                oakLog("tap confirmed at %d", numClicks);
+                numClicks = 0;
+                touchedView = NULL;
+            }, MULTI_CLICK_THRESHOLD, false);
+        } else {
+            // FLING!
+
+            // Work out the drag velocity by getting the distance travelled from the oldest historical point
+            // and extrapolating an average distance per second.
+            int numPoints = min(pastCount, NUM_PAST);
+            int index = pastIndex - numPoints;
+            if (index < 0) index += NUM_PAST;
+            while (numPoints-- > 1) {
+                POINT ptFrom = pastPts[index];
+                long timeFrom = pastTime[index];
+                index = (index + 1) % NUM_PAST;
+                if (time - timeFrom >= 333) { // ignore historical points that are too old
+                    continue;
+                }
+                int dTime = (int) (time - timeFrom);
+                if (dTime <= 0) continue;
+                float dx = pt.x - ptFrom.x;
+                float dy = pt.y - ptFrom.y;
+                float thisVeloX = dx * 1000.0f / dTime;
+                float thisVeloY = dy * 1000.0f / dTime;
+                POINT velocity = {0, 0};
+                velocity.x = (velocity.x == 0) ? thisVeloX : ((velocity.x + thisVeloX) / 2);
+                velocity.y = (velocity.y == 0) ? thisVeloY : ((velocity.y + thisVeloY) / 2);
+                if (touchedView) {
+                    touchedView->dispatchTouchEvent(INPUT_EVENT_FLING, source, time, velocity);
                 }
                 break;
-			}
-		}
+            }
+        }
+        //touchedView = NULL;
+        timeOfDownEvent = 0;
 
-	}
-	
-	
+    }
+
+}
+
+void Window::dispatchInputEvent(int event, int source, long time, int x, int y) {
+	//oakLog("Window::dispatchTouch %d %d %d %d", event, finger, x, y);
+    x *= _scale;
+    y *= _scale;
+    POINT pt = POINT_Make(x, y);
+
+    if (SOURCE_TYPE(source)==INPUT_SOURCE_TYPE_MOUSE || SOURCE_TYPE(source)==INPUT_SOURCE_TYPE_FINGER) {
+
+        // Start or lookup motion tracker
+        MotionTracker *tracker = NULL;
+        for (auto it=_motionTrackers.begin() ; it!=_motionTrackers.end() ; it++) {
+            if ((*it)->source == source) {
+                tracker = *it;
+                break;
+            }
+        }
+        if (!tracker) {
+            tracker = new MotionTracker(source);
+            //glInsertEventMarkerEXT(0, "com.apple.GPUTools.event.debug-frame");
+            _motionTrackers.push_back(tracker);
+        }
+
+        // Let the tracker process the new input event
+        tracker->dispatchEvent(event, time, pt, this);
+
+    }
 }
 
 static int numFrames;
@@ -177,7 +205,7 @@ void incFrames() {
 void Window::draw() {
     _redrawNeeded = false;
 
-	_canvas->prepareToDraw();
+	prepareToDraw();
 
 	// Draw view controllers
 	ViewController* rootVC = _rootViewController;
@@ -192,7 +220,7 @@ void Window::draw() {
 			_inLayoutPass = false;
 		}
         
-        _surface->render(view, _canvas);
+        _surface->render(view, this);
 	}
 
 	
@@ -264,6 +292,89 @@ bool Window::setFirstResponder(View* view) {
     return true;
 }
 
+
+void Window::setBlendMode(int blendMode) {
+    if (blendMode != _blendMode) {
+        if (blendMode == BLENDMODE_NONE) {
+            check_gl(glDisable, GL_BLEND);
+        } else {
+            if (blendMode == BLENDMODE_NORMAL) {
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // normal alpha blend
+            } else {
+                glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
+            }
+            if (_blendMode == BLENDMODE_NONE) {
+                check_gl(glEnable, GL_BLEND);
+            }
+        }
+        _blendMode = blendMode;
+    }
+}
+void Window::glEnableScissorTest(bool enabled) {
+    if (enabled && !_enabledFlags.scissorTest) {
+        _enabledFlags.scissorTest = 1;
+        check_gl(glEnable, GL_SCISSOR_TEST);
+    }
+    else if (!enabled && _enabledFlags.scissorTest) {
+        _enabledFlags.scissorTest = 0;
+        check_gl(glDisable, GL_SCISSOR_TEST);
+    }
+}
+
+
+void Window::prepareToDraw() {
+    // GL context init
+    if (!_doneGlInit) {
+        _doneGlInit = 1;
+        check_gl(glDepthMask, GL_TRUE);
+        check_gl(glClear, GL_DEPTH_BUFFER_BIT);
+        check_gl(glDepthMask, GL_FALSE);
+        check_gl(glClearColor, 1,0,0,1);
+        check_gl(glClear, GL_COLOR_BUFFER_BIT);
+        check_gl(glDisable, GL_DEPTH_TEST);
+        check_gl(glActiveTexture, GL_TEXTURE0);
+        _blendMode = BLENDMODE_NONE;
+        check_gl(glDisable, GL_BLEND);
+        _enabledFlags.scissorTest = 0;
+        check_gl(glDisable, GL_SCISSOR_TEST);
+
+        // As long as we only have one quadbuffer we only need to bind the once
+        _quadBuffer->bind();
+        _currentVertexConfig = 0;
+    }
+
+    _renderCounter++;
+    _currentSurface = NULL;
+    _currentProg = 0;
+}
+
+void Window::setCurrentSurface(Surface* surface) {
+    if (surface != _currentSurface) {
+        _currentSurface = surface;
+        _currentSurface->use();
+    }
+}
+
+void Window::setVertexConfig(int vertexConfig) {
+    _currentVertexConfig = vertexConfig;
+    check_gl(glVertexAttribPointer, VERTEXATTRIB_POSITION, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), 0);
+    check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), (void*)8);
+//    check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_UNSIGNED_SHORT, GL_TRUE, sizeof(VERTEX), (void*)8);
+    check_gl(glVertexAttribPointer, VERTEXATTRIB_COLOUR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(VERTEX), (void*)16);
+
+    check_gl(glEnableVertexAttribArray, VERTEXATTRIB_POSITION);
+    check_gl(glEnableVertexAttribArray, VERTEXATTRIB_TEXCOORD);
+    check_gl(glEnableVertexAttribArray, VERTEXATTRIB_COLOUR);
+
+}
+
+void Window::bindTexture(Bitmap* texture) {
+    if (texture&& _currentTexture != texture) {
+        _currentTexture = texture;
+        texture->bind();
+    }
+
+}
 
 
 

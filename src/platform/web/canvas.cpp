@@ -58,7 +58,7 @@ public:
     static void setGlyphMetrics(WebFont* font, Glyph* glyph, int glyphWidth) {
         glyph->bitmapWidth = ceilf(glyphWidth);
         glyph->bitmapHeight = ceilf(font->_size);
-        glyph->advance.width = glyph->bitmapWidth+2; // todo!!!
+        glyph->advance.width = glyph->bitmapWidth+1; // todo!!!
     }
     Glyph* createGlyph(char32_t ch, Atlas* atlas) {
         string str;

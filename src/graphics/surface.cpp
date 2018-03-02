@@ -166,7 +166,7 @@ void Surface::removeRenderOp(RenderOp* op) {
 
 
 
-static void renderPhase1(Surface* surface, View* view, Canvas* canvas, POINT origin) {
+static void renderPhase1(Surface* surface, View* view, Window* window, POINT origin) {
 
     if (view->_visibility != VISIBILITY_VISIBLE) {
         return;
@@ -184,7 +184,7 @@ static void renderPhase1(Surface* surface, View* view, Canvas* canvas, POINT ori
         if (!view->_surface->_op) {
             RECT rect = view->getBounds();
             view->_surface->_op = new PrivateSurfaceRenderOp(view, rect);
-            view->_surface->_op->_alloc = canvas->_quadBuffer->alloc(1, NULL);
+            view->_surface->_op->_alloc = window->_quadBuffer->alloc(1, NULL);
         } else {
             if (sizeChanged) {
                 view->_surface->_op->setRect(view->getBounds());
@@ -229,7 +229,7 @@ static void renderPhase1(Surface* surface, View* view, Canvas* canvas, POINT ori
     // Recurse
     for (auto it = view->_subviews.begin(); it!=view->_subviews.end() ; it++) {
         ObjPtr<View>& subview = *it;
-        renderPhase1(surface, subview, canvas, origin);
+        renderPhase1(surface, subview, window, origin);
     }
  
     if (changesMvp) {
@@ -252,12 +252,12 @@ void PrivateSurfaceRenderOp::rectToSurfaceQuad(RECT rect, QUAD* quad) {
     rect.origin += _view->_surfaceOrigin;
     *quad = QUADFromRECT(rect, 0);
 }
-void PrivateSurfaceRenderOp::render(Canvas* canvas, Surface* surface) {
-    RenderOp::render(canvas, surface);
+void PrivateSurfaceRenderOp::render(Window* window, Surface* surface) {
+    RenderOp::render(window, surface);
    // _prog->setTintColour(_tintColour);
     
     // Bind to the private surface texture
-    canvas->_currentTexture = NULL;
+    window->_currentTexture = NULL;
     check_gl(glBindTexture, GL_TEXTURE_2D, _view->_surface->_tex);
     
     if (_dirty) {
@@ -270,7 +270,7 @@ void PrivateSurfaceRenderOp::render(Canvas* canvas, Surface* surface) {
 }
 
 
-static void renderPhase2(Surface* surface, View* view, Canvas* canvas) {
+static void renderPhase2(Surface* surface, View* view, Window* window) {
     if (view->_visibility != VISIBILITY_VISIBLE) {
         return;
     }
@@ -306,16 +306,16 @@ static void renderPhase2(Surface* surface, View* view, Canvas* canvas) {
         }
         
         // If op not drawn yet, draw it (and as many others in the batch as can be done now)
-        if (op->_renderCounter != canvas->_renderCounter) {
-            canvas->setCurrentSurface(surface);
+        if (op->_renderCounter != window->_renderCounter) {
+            window->setCurrentSurface(surface);
             RenderBatch* batch = op->_batch;
-            batch->render(canvas, surface, op);
+            batch->render(window, surface, op);
         }
     }
     
     // Recurse subviews
     for (auto it=view->_subviews.begin() ; it != view->_subviews.end() ; it++) {
-        renderPhase2(surface, *it, canvas);
+        renderPhase2(surface, *it, window);
     }
         
     // Pop draw state
@@ -326,8 +326,8 @@ static void renderPhase2(Surface* surface, View* view, Canvas* canvas) {
     // If rendered a child surface then we must now render the child surface onto its parent
     if (!surfaceIsCurrent) {
         if (prevsurf) {
-            canvas->setCurrentSurface(prevsurf);
-            surface->_op->render(canvas, prevsurf);
+            window->setCurrentSurface(prevsurf);
+            surface->_op->render(window, prevsurf);
             if (surface->_supportsPartialRedraw) {
                 surface->_invalidRegion.rects.clear();
             }
@@ -349,15 +349,15 @@ static void renderPhase2(Surface* surface, View* view, Canvas* canvas) {
 }
 
 
-void Surface::render(View* view, Canvas* canvas) {
+void Surface::render(View* view, Window* window) {
 
     _mvpNum = 0;
     
     /** PHASE 1: ENSURE ALL RENDER LISTS ARE VALID **/
-    renderPhase1(this, view, canvas, POINT_Make(0,0));
+    renderPhase1(this, view, window, POINT_Make(0,0));
     
     /** PHASE 2: THE ACTUAL OPENGL DRAW COMMANDS **/
-    renderPhase2(NULL, view, canvas);
+    renderPhase2(NULL, view, window);
     
     //oakLog("batch count:%d", _listBatches.size());
 }

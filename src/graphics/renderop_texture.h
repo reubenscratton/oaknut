@@ -51,7 +51,7 @@ public:
     TextureRenderOp(View* view, const RECT& rect, Bitmap* texture, const RECT* rectTex, COLOUR tintColour);
     TextureRenderOp(View* view, const char* assetPath, int tintColour);
     virtual bool canMergeWith(const RenderOp* op);
-    virtual void render(Canvas* canvas, Surface* surface);
+    virtual void render(Window* window, Surface* surface);
     virtual void asQuads(QUAD* quad);
     
     virtual void setAlpha(float alpha);

@@ -180,12 +180,12 @@ bool TextureRenderOp::canMergeWith(const RenderOp* op) {
         && _bitmapProvider==((const TextureRenderOp*)op)->_bitmapProvider;
 }
 
-void TextureRenderOp::render(Canvas* canvas, Surface* surface) {
+void TextureRenderOp::render(Window* window, Surface* surface) {
     if (_bitmapProvider) {
         Bitmap *bitmap = _bitmapProvider->getBitmap();
         if (bitmap) {
-            RenderOp::render(canvas, surface);
-            canvas->bindTexture(bitmap);
+            RenderOp::render(window, surface);
+            window->bindTexture(bitmap);
         }
     }
 }

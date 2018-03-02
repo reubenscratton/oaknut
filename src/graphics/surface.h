@@ -13,7 +13,7 @@ public:
     PrivateSurfaceRenderOp(View* view, const RECT& rect);
     ~PrivateSurfaceRenderOp();
     virtual void rectToSurfaceQuad(RECT rect, QUAD* quad);
-    virtual void render(Canvas* canvas, Surface* surface);
+    virtual void render(class Window* window, Surface* surface);
 };
 
 class Surface : public Object {
@@ -34,7 +34,7 @@ public:
     Surface();
     Surface(View* owningView);
     ~Surface();
-    void render(View* view, Canvas* canvas);
+    void render(View* view, Window* window);
 	void setSize(SIZE size);
 	void setupPrivateFbo();
 	void use();

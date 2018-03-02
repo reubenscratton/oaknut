@@ -61,6 +61,8 @@ target_include_directories(${PROJECT_NAME}_do_not_build SYSTEM PUBLIC $ENV{OAKNU
         /usr/include/pango-1.0
         /usr/include/harfbuzz
         /usr/include/freetype2
-        /usr/include/gdk-pixbuf-2.0 /usr/include/cairo)
+        /usr/include/gdk-pixbuf-2.0
+        /usr/include/cairo
+        /usr/include/glib-2.0)
 
 

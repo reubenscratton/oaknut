@@ -98,8 +98,8 @@ void RoundRectRenderOp::asQuads(QUAD *quad) {
     quad->bl.t = quad->br.t = _rectTex.bottom();
 }
 
-void RoundRectRenderOp::render(Canvas* canvas, Surface* surface) {
-    RenderOp::render(canvas, surface);
+void RoundRectRenderOp::render(Window* window, Surface* surface) {
+    RenderOp::render(window, surface);
     GLProgramRoundRect* prog = (GLProgramRoundRect*)_prog;
     //prog->setColour(_colour);
     if (prog == &glprogRoundRect1) { // ugh

@@ -15,34 +15,41 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b7ef45b6-2785-4763-8b94-6065aea96bea" name="Default" comment="">
-      <change beforePath="" afterPath="$PROJECT_DIR$/../../src/platform/linux/timer.cpp" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/../../src/base/task.cpp" />
+      <change beforePath="" afterPath="$PROJECT_DIR$/../../src/base/task.h" />
       <change beforePath="$PROJECT_DIR$/../../CMakeLists.txt" afterPath="$PROJECT_DIR$/../../CMakeLists.txt" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change beforePath="$PROJECT_DIR$/Makefile" afterPath="$PROJECT_DIR$/Makefile" />
-      <change beforePath="$PROJECT_DIR$/../../src/graphics/bitmap.cpp" afterPath="$PROJECT_DIR$/../../src/graphics/bitmap.cpp" />
-      <change beforePath="$PROJECT_DIR$/../../src/graphics/bitmap.h" afterPath="$PROJECT_DIR$/../../src/graphics/bitmap.h" />
-      <change beforePath="$PROJECT_DIR$/../../src/graphics/canvas.cpp" afterPath="$PROJECT_DIR$/../../src/graphics/canvas.cpp" />
-      <change beforePath="$PROJECT_DIR$/../../src/graphics/canvas.h" afterPath="$PROJECT_DIR$/../../src/graphics/canvas.h" />
-      <change beforePath="$PROJECT_DIR$/../../src/graphics/font.cpp" afterPath="$PROJECT_DIR$/../../src/graphics/font.cpp" />
-      <change beforePath="$PROJECT_DIR$/../../src/graphics/geom.h" afterPath="$PROJECT_DIR$/../../src/graphics/geom.h" />
+      <change beforePath="$PROJECT_DIR$/../../src/graphics/canvas.cpp" afterPath="" />
+      <change beforePath="$PROJECT_DIR$/../../src/graphics/canvas.h" afterPath="" />
       <change beforePath="$PROJECT_DIR$/../../src/graphics/glhelp.cpp" afterPath="$PROJECT_DIR$/../../src/graphics/glhelp.cpp" />
       <change beforePath="$PROJECT_DIR$/../../src/graphics/glhelp.h" afterPath="$PROJECT_DIR$/../../src/graphics/glhelp.h" />
-      <change beforePath="$PROJECT_DIR$/../../src/graphics/quadbuffer.cpp" afterPath="$PROJECT_DIR$/../../src/graphics/quadbuffer.cpp" />
-      <change beforePath="$PROJECT_DIR$/../../src/graphics/quadbuffer.h" afterPath="$PROJECT_DIR$/../../src/graphics/quadbuffer.h" />
       <change beforePath="$PROJECT_DIR$/../../src/graphics/renderbatch.cpp" afterPath="$PROJECT_DIR$/../../src/graphics/renderbatch.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/graphics/renderbatch.h" afterPath="$PROJECT_DIR$/../../src/graphics/renderbatch.h" />
+      <change beforePath="$PROJECT_DIR$/../../src/graphics/renderop.cpp" afterPath="$PROJECT_DIR$/../../src/graphics/renderop.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/graphics/renderop.h" afterPath="$PROJECT_DIR$/../../src/graphics/renderop.h" />
+      <change beforePath="$PROJECT_DIR$/../../src/graphics/renderop_blur.cpp" afterPath="$PROJECT_DIR$/../../src/graphics/renderop_blur.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/graphics/renderop_blur.h" afterPath="$PROJECT_DIR$/../../src/graphics/renderop_blur.h" />
+      <change beforePath="$PROJECT_DIR$/../../src/graphics/renderop_roundrect.cpp" afterPath="$PROJECT_DIR$/../../src/graphics/renderop_roundrect.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/graphics/renderop_roundrect.h" afterPath="$PROJECT_DIR$/../../src/graphics/renderop_roundrect.h" />
+      <change beforePath="$PROJECT_DIR$/../../src/graphics/renderop_text.cpp" afterPath="$PROJECT_DIR$/../../src/graphics/renderop_text.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/graphics/renderop_text.h" afterPath="$PROJECT_DIR$/../../src/graphics/renderop_text.h" />
       <change beforePath="$PROJECT_DIR$/../../src/graphics/renderop_texture.cpp" afterPath="$PROJECT_DIR$/../../src/graphics/renderop_texture.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/graphics/renderop_texture.h" afterPath="$PROJECT_DIR$/../../src/graphics/renderop_texture.h" />
       <change beforePath="$PROJECT_DIR$/../../src/graphics/surface.cpp" afterPath="$PROJECT_DIR$/../../src/graphics/surface.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/graphics/surface.h" afterPath="$PROJECT_DIR$/../../src/graphics/surface.h" />
       <change beforePath="$PROJECT_DIR$/../../src/graphics/window.cpp" afterPath="$PROJECT_DIR$/../../src/graphics/window.cpp" />
       <change beforePath="$PROJECT_DIR$/../../src/graphics/window.h" afterPath="$PROJECT_DIR$/../../src/graphics/window.h" />
-      <change beforePath="$PROJECT_DIR$/../../src/media/audiooutput.h" afterPath="$PROJECT_DIR$/../../src/media/audiooutput.h" />
       <change beforePath="$PROJECT_DIR$/../../src/oaknut.h" afterPath="$PROJECT_DIR$/../../src/oaknut.h" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/android/bitmap.h" afterPath="$PROJECT_DIR$/../../src/platform/android/bitmap.h" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/apple/bitmap.h" afterPath="$PROJECT_DIR$/../../src/platform/apple/bitmap.h" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/linux/linux.cpp" afterPath="$PROJECT_DIR$/../../src/platform/linux/linux.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/platform/linux/async.cpp" afterPath="" />
       <change beforePath="$PROJECT_DIR$/../../src/platform/linux/main.cpp" afterPath="$PROJECT_DIR$/../../src/platform/linux/main.cpp" />
       <change beforePath="$PROJECT_DIR$/../../src/platform/linux/oaknut.make" afterPath="$PROJECT_DIR$/../../src/platform/linux/oaknut.make" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/web/oaknut.make" afterPath="$PROJECT_DIR$/../../src/platform/web/oaknut.make" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/web/web.cpp" afterPath="$PROJECT_DIR$/../../src/platform/web/web.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/platform/linux/urlrequest.cpp" afterPath="$PROJECT_DIR$/../../src/platform/linux/urlrequest.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/platform/web/canvas.cpp" afterPath="$PROJECT_DIR$/../../src/platform/web/canvas.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/view/button.cpp" afterPath="$PROJECT_DIR$/../../src/view/button.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/view/edittext.cpp" afterPath="$PROJECT_DIR$/../../src/view/edittext.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/view/listview.cpp" afterPath="$PROJECT_DIR$/../../src/view/listview.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/view/segmentedcontrol.cpp" afterPath="$PROJECT_DIR$/../../src/view/segmentedcontrol.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/view/view.cpp" afterPath="$PROJECT_DIR$/../../src/view/view.cpp" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -55,36 +62,14 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="main.cpp" pinned="false" current-in-tab="false">
+      <file leaf-file-name="main.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/../../src/platform/linux/main.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2772">
+            <state relative-caret-position="892">
               <caret line="154" column="0" lean-forward="false" selection-start-line="154" selection-start-column="0" selection-end-line="154" selection-end-column="0" />
               <folding>
                 <element signature="e#23#42#0" expanded="true" />
                 <element signature="e#113#131#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="canvas.cpp" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../src/platform/web/canvas.cpp">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="216">
-              <caret line="12" column="0" lean-forward="false" selection-start-line="12" selection-start-column="0" selection-end-line="12" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="font.cpp" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/../../src/graphics/font.cpp">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="540">
-              <caret line="30" column="106" lean-forward="false" selection-start-line="30" selection-start-column="106" selection-end-line="30" selection-end-column="106" />
-              <folding>
-                <element signature="e#627#689#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -115,7 +100,7 @@
       <file leaf-file-name="CMakeLists.txt" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../../CMakeLists.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="72">
+            <state relative-caret-position="396">
               <caret line="22" column="20" lean-forward="false" selection-start-line="22" selection-start-column="20" selection-end-line="22" selection-end-column="20" />
               <folding />
             </state>
@@ -220,8 +205,9 @@
         <option value="$PROJECT_DIR$/../../src/media/audiooutput.h" />
         <option value="$PROJECT_DIR$/../../src/platform/web/oaknut.make" />
         <option value="$PROJECT_DIR$/../../src/graphics/quadbuffer.cpp" />
-        <option value="$PROJECT_DIR$/../../src/platform/linux/main.cpp" />
         <option value="$PROJECT_DIR$/../../src/graphics/font.cpp" />
+        <option value="$PROJECT_DIR$/../../src/platform/web/canvas.cpp" />
+        <option value="$PROJECT_DIR$/../../src/platform/linux/main.cpp" />
       </list>
     </option>
   </component>
@@ -280,6 +266,14 @@
               <item name="samples" type="462c0819:PsiDirectoryNode" />
               <item name="minesweeper" type="462c0819:PsiDirectoryNode" />
               <item name="build" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="Minesweeper" type="dad4c3:CidrFilesViewHelper$MyProjectTreeStructure$1" />
+              <item name="oaknut" type="462c0819:PsiDirectoryNode" />
+              <item name="samples" type="462c0819:PsiDirectoryNode" />
+              <item name="minesweeper" type="462c0819:PsiDirectoryNode" />
+              <item name="build" type="462c0819:PsiDirectoryNode" />
+              <item name="linux" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="Minesweeper" type="dad4c3:CidrFilesViewHelper$MyProjectTreeStructure$1" />
@@ -369,7 +363,7 @@
   <component name="PropertiesComponent">
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="/usr/bin/python" />
+    <property name="last_opened_file_path" value="$USER_HOME$/embeeb" />
     <property name="settings.editor.selected.configurable" value="CMakeSettings" />
   </component>
   <component name="RecentsManager">
@@ -444,11 +438,16 @@
       <workItem from="1519671792651" duration="3459000" />
       <workItem from="1519679388605" duration="1258000" />
       <workItem from="1519680720510" duration="3258000" />
+      <workItem from="1519754814628" duration="348000" />
+      <workItem from="1519755179210" duration="970000" />
+      <workItem from="1519900221518" duration="594000" />
+      <workItem from="1519924050429" duration="1247000" />
+      <workItem from="1520013452889" duration="1198000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="135353000" />
+    <option name="totallyTimeSpent" value="139710000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="75" y="41" width="1617" height="1152" extended-state="0" />
@@ -456,16 +455,16 @@
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17068645" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2753346" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="CMake" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.23613767" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3288719" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3288719" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39961758" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2753346" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
@@ -724,7 +723,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="432">
           <caret line="24" column="21" lean-forward="false" selection-start-line="24" selection-start-column="21" selection-end-line="24" selection-end-column="21" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -760,7 +758,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="162">
           <caret line="9" column="0" lean-forward="false" selection-start-line="9" selection-start-column="0" selection-end-line="9" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -768,19 +765,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2538">
           <caret line="141" column="0" lean-forward="false" selection-start-line="141" selection-start-column="0" selection-end-line="141" selection-end-column="0" />
-          <folding>
-            <element signature="e#1259#1276#0" expanded="true" />
-            <element signature="e#1284#1303#0" expanded="true" />
-            <element signature="e#1670#1972#0" expanded="true" />
-            <element signature="e#1994#2042#0" expanded="true" />
-            <element signature="e#2059#2439#0" expanded="true" />
-            <element signature="e#2493#2515#0" expanded="true" />
-            <element signature="e#2840#2858#0" expanded="true" />
-            <element signature="e#3629#3907#0" expanded="true" />
-            <element signature="e#3962#4304#0" expanded="true" />
-            <element signature="e#4497#4525#0" expanded="true" />
-            <element signature="e#4696#4728#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -825,7 +809,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/../../CMakeLists.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="72">
+        <state relative-caret-position="396">
           <caret line="22" column="20" lean-forward="false" selection-start-line="22" selection-start-column="20" selection-end-line="22" selection-end-column="20" />
           <folding />
         </state>
@@ -835,7 +819,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="144">
           <caret line="8" column="30" lean-forward="false" selection-start-line="8" selection-start-column="30" selection-end-line="8" selection-end-column="30" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -851,9 +834,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="288">
           <caret line="24" column="8" lean-forward="false" selection-start-line="24" selection-start-column="8" selection-end-line="24" selection-end-column="8" />
-          <folding>
-            <element signature="e#269#306#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -869,43 +849,32 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="440">
           <caret line="131" column="4" lean-forward="false" selection-start-line="131" selection-start-column="4" selection-end-line="131" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../src/graphics/renderstate.h" />
+    <entry file="file://$PROJECT_DIR$/../../src/graphics/font.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="540">
+          <caret line="30" column="106" lean-forward="false" selection-start-line="30" selection-start-column="106" selection-end-line="30" selection-end-column="106" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../src/platform/web/canvas.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="18">
+          <caret line="37" column="42" lean-forward="true" selection-start-line="37" selection-start-column="42" selection-end-line="37" selection-end-column="42" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../../src/platform/linux/main.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2772">
+        <state relative-caret-position="892">
           <caret line="154" column="0" lean-forward="false" selection-start-line="154" selection-start-column="0" selection-end-line="154" selection-end-column="0" />
           <folding>
             <element signature="e#23#42#0" expanded="true" />
             <element signature="e#113#131#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/graphics/canvas.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="252">
-          <caret line="14" column="12" lean-forward="false" selection-start-line="14" selection-start-column="12" selection-end-line="14" selection-end-column="12" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/platform/web/canvas.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="216">
-          <caret line="12" column="0" lean-forward="false" selection-start-line="12" selection-start-column="0" selection-end-line="12" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/graphics/font.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="540">
-          <caret line="30" column="106" lean-forward="false" selection-start-line="30" selection-start-column="106" selection-end-line="30" selection-end-column="106" />
-          <folding>
-            <element signature="e#627#689#0" expanded="true" />
           </folding>
         </state>
       </provider>

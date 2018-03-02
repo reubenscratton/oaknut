@@ -18,7 +18,7 @@ EditText::EditText() : Label() {
 }
 
 bool EditText::onTouchEvent(int eventType, int eventSource, POINT pt) {
-    if (eventType == TOUCH_EVENT_TAP) {
+    if (eventType == INPUT_EVENT_TAP) {
         if (_clearButtonOp && _clearButtonOp->_rect.contains(pt)) {
             setText("");
             return true;

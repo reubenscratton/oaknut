@@ -11,14 +11,11 @@ SYSINCS+= -isystem /usr/include/harfbuzz
 SYSINCS+= -isystem /usr/include/freetype2
 SYSINCS+= -isystem /usr/include/gdk-pixbuf-2.0
 SYSINCS+= -isystem /usr/include/atk-1.0
-#SYSINCS+= -isystem /usr/include/gtkgl-2.0
-#SYSINCS+= -isystem /usr/lib/gtkglext-1.0/include
-#SYSINCS+= -isystem /usr/lib/x86_64-linux-gnu/gtk-2.0/include
 
 LIBS:= \
     -lGLU -lGL -lglib-2.0 -lgobject-2.0 -latk-1.0 \
     -lgtk-3 -lgdk-3 -lpango-1.0 -lpangocairo-1.0 -lgdk_pixbuf-2.0 -lcairo -lfreetype -lharfbuzz \
-    -lopenal -lpthread -lrt
+    -lopenal -lpthread -lrt -lcurl
 
 #    -lgio-2.0 -lgthread-2.0 -lgmodule-2.0 \
 #    -lgdk-x11-2.0 -lgtk-x11-2.0 -lgtkgl-2.0 \

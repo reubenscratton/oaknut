@@ -134,8 +134,8 @@ void BlurRenderOp::asQuads(QUAD *quad) {
 }
 
 
-void BlurRenderOp::render(Canvas* canvas, Surface* surface) {
-    RenderOp::render(canvas, surface);
+void BlurRenderOp::render(Window* window, Surface* surface) {
+    RenderOp::render(window, surface);
 
     GLint viewport[4];
     check_gl(glGetIntegerv, GL_VIEWPORT, viewport);
@@ -152,7 +152,7 @@ void BlurRenderOp::render(Canvas* canvas, Surface* surface) {
     GLint oldFBO;
     check_gl(glGetIntegerv, GL_FRAMEBUFFER_BINDING, &oldFBO);
     if (!_alloc) {
-        _alloc = canvas->_quadBuffer->alloc(1, NULL);
+        _alloc = window->_quadBuffer->alloc(1, NULL);
     }
     if (!_vertexesValid) {
         QUAD* quad = (QUAD*)_alloc->addr();
@@ -166,7 +166,7 @@ void BlurRenderOp::render(Canvas* canvas, Surface* surface) {
     
     // 1D blur horizontally, source is 1/4-sized mipmap and destination is fb0
     check_gl(glBindFramebuffer, GL_FRAMEBUFFER, _fb[0]);
-    s_progBlur.use(canvas);
+    s_progBlur.use(window);
     s_progBlur.setMvp(_mvp);
     s_progBlur.setTexOffset(POINT_Make(0, 1.f/_downsampledSize.height));
     glViewport(0, 0, _downsampledSize.width, _downsampledSize.height);
@@ -181,9 +181,9 @@ void BlurRenderOp::render(Canvas* canvas, Surface* surface) {
     // Switch back to rendering to the backbuffer
     check_gl(glBindFramebuffer, GL_FRAMEBUFFER, oldFBO);
     check_gl(glViewport, viewport[0], viewport[1], viewport[2], viewport[3]);
-    canvas->_currentTexture = NULL;
+    window->_currentTexture = NULL;
     check_gl(glBindTexture, GL_TEXTURE_2D, _textureIds[2]);
-    _prog->use(canvas);
+    _prog->use(window);
 }
 
 

@@ -115,7 +115,7 @@ void ListView::onItemTap(View* itemView, LISTINDEX index) {
 
 bool ListView::onTouchEvent(int eventType, int finger, POINT pt) {
     View::onTouchEvent(eventType, finger, pt);
-	if (eventType == TOUCH_EVENT_DOWN) {
+	if (eventType == INPUT_EVENT_DOWN) {
 		
         pt.x += _contentOffset.x;
         pt.y += _contentOffset.y;
@@ -130,14 +130,14 @@ bool ListView::onTouchEvent(int eventType, int finger, POINT pt) {
 		return true;
 		
 	}
-	if (eventType == TOUCH_EVENT_DRAG) {
+	if (eventType == INPUT_EVENT_DRAG) {
 		setSelectedIndex(LISTINDEX_NONE);
 		return true;
 	}
-	if (eventType == TOUCH_EVENT_UP) {
+	if (eventType == INPUT_EVENT_UP) {
 		return true;
 	}
-	if (eventType == TOUCH_EVENT_TAP) {
+	if (eventType == INPUT_EVENT_TAP) {
 		if (_selectedIndex != LISTINDEX_NONE) {
 			onItemTap(indexToView(_selectedIndex), _selectedIndex);
 			setSelectedIndex(LISTINDEX_NONE);

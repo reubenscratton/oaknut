@@ -131,11 +131,6 @@ float idp(float pixels); // pixels to dp
 void oakKeyboardShow(bool show);
 void oakKeyboardNotifyTextChanged();
 
-// Async
-void* oakAsyncQueueCreate(const char* queueName);
-void oakAsyncQueueDestroy(void* osobj);
-void oakAsyncQueueEnqueueItem(void* osobj, std::function<void(void)> func);
-void oakAsyncRunOnMainThread(std::function<void(void)> func);
 
 // Camera
 #if OAKNUT_WANT_CAMERA
@@ -167,6 +162,7 @@ void oakFaceDetectorClose(void* osobj);
 #include "base/object.h"
 #include "data/data.h"
 #include "base/timer.hpp"
+#include "base/task.h"
 
 Data* oakLoadAsset(const char* assetPath);
 
@@ -184,7 +180,6 @@ Data* oakLoadAsset(const char* assetPath);
 #include "graphics/renderop_text.h"
 #include "graphics/renderop_texture.h"
 #include "graphics/renderbatch.h"
-#include "graphics/canvas.h"
 #include "graphics/surface.h"
 #include "graphics/renderop_blur.h"
 #include "graphics/window.h"

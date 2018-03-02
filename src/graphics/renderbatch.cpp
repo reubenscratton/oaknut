@@ -26,7 +26,7 @@ void RenderBatch::invalidateGeometry(RenderOp* op) {
 
 extern int renderOrder(View* view1, View* view2);
 
-void RenderBatch::render(Canvas* canvas, Surface* surface, RenderOp* firstOp) {
+void RenderBatch::render(Window* window, Surface* surface, RenderOp* firstOp) {
 
     // Upload any changed vertex data
     if (_dirty) {
@@ -37,7 +37,7 @@ void RenderBatch::render(Canvas* canvas, Surface* surface, RenderOp* firstOp) {
             _numQuads += op->numQuads();
         }
         if (!_alloc || _alloc->count<_numQuads) {
-            _alloc = canvas->_quadBuffer->alloc(_numQuads, _alloc);
+            _alloc = window->_quadBuffer->alloc(_numQuads, _alloc);
         }
         QUAD* quad = (QUAD*)_alloc->addr();
         int renderBase = 0;
@@ -55,7 +55,7 @@ void RenderBatch::render(Canvas* canvas, Surface* surface, RenderOp* firstOp) {
     }
     
     // Use and configure the shader for this batch
-    firstOp->render(canvas, surface);
+    firstOp->render(window, surface);
     if (firstOp->_prog) {
         firstOp->_prog->lazyLoadUniforms();
     }
@@ -90,8 +90,8 @@ void RenderBatch::render(Canvas* canvas, Surface* surface, RenderOp* firstOp) {
             // This batch op can be rendered now!
             numQuadsThisChunk += currentOp->numQuads();
             currentOp->_mustRedraw = false;
-            assert(currentOp->_renderCounter != canvas->_renderCounter);
-            currentOp->_renderCounter = canvas->_renderCounter;
+            assert(currentOp->_renderCounter != window->_renderCounter);
+            currentOp->_renderCounter = window->_renderCounter;
 
             // Update nextOpInBatch to point to the next one
             if (++it == _ops.end()) {
@@ -128,7 +128,7 @@ void RenderBatch::render(Canvas* canvas, Surface* surface, RenderOp* firstOp) {
         if (invalidRectIt == surface->_invalidRegion.rects.end()) {
             return;
         }
-        canvas->glEnableScissorTest(true);
+        window->glEnableScissorTest(true);
     nextInvalidRect:
         rect = *invalidRectIt;
         glScissor(rect.left(), surface->_size.height - rect.bottom(), /* surface -> viewport coords */
@@ -143,7 +143,7 @@ void RenderBatch::render(Canvas* canvas, Surface* surface, RenderOp* firstOp) {
         if (++invalidRectIt != surface->_invalidRegion.rects.end()) {
             goto nextInvalidRect;
         }
-        canvas->glEnableScissorTest(false);
+        window->glEnableScissorTest(false);
     }
 
 }

@@ -29,7 +29,7 @@ public:
     void addGlyph(Glyph* glyph, const RECT& rect);
     void reset();
     virtual bool canMergeWith(const RenderOp* op);
-    virtual void render(Canvas* canvas, Surface* surface);
+    virtual void render(Window* window, Surface* surface);
     virtual void asQuads(QUAD* quad);
 };
 

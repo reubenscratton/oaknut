@@ -989,24 +989,24 @@ bool View::onTouchEvent(int eventType, int eventSource, POINT pt) {
     //    return false;
     //}
     
-    if (eventType == TOUCH_EVENT_DOWN) {
+    if (eventType == INPUT_EVENT_DOWN) {
         _ptDrag = pt;
         _isDragging = false;
         if (_scrollbarVert) {
             _scrollbarVert->mFinished = true;
         }
     }
-    if (eventType == TOUCH_EVENT_MOVE) {
+    if (eventType == INPUT_EVENT_MOVE) {
         if (_scrollbarVert) {
             float dy = pt.y - _ptDrag.y;
             setContentOffset(POINT_Make(_contentOffset.x, _contentOffset.y - dy));
         }
         _ptDrag = pt;
     }
-    if (eventType == TOUCH_EVENT_DRAG) {
+    if (eventType == INPUT_EVENT_DRAG) {
         _isDragging = true;
     }
-    if (eventType == TOUCH_EVENT_FLING) {
+    if (eventType == INPUT_EVENT_FLING) {
         //oakLog("fling! %f", -pt.y);
         if (_scrollbarVert) {
             _scrollbarVert->fling(_contentOffset.y, -pt.y, 0, _contentSize.height-_frame.size.height);

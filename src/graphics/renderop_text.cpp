@@ -63,10 +63,10 @@ bool TextRenderOp::canMergeWith(const RenderOp* op) {
     return _textRenderParams.equals(textOp->_textRenderParams);
 }
 
-void TextRenderOp::render(Canvas* canvas, Surface* surface) {
-    RenderOp::render(canvas, surface);
+void TextRenderOp::render(Window* window, Surface* surface) {
+    RenderOp::render(window, surface);
     //oakLog("render text %d", _textRenderParams.atlasPage->_texture->_textureId);
-    canvas->bindTexture(_textRenderParams.atlasPage->_bitmap);
+    window->bindTexture(_textRenderParams.atlasPage->_bitmap);
 }
 
 void TextRenderOp::asQuads(QUAD *quad) {

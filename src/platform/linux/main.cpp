@@ -64,20 +64,20 @@ gint glarea_mouse_event(GtkWidget *widget, GdkEventMotion *event) {
     int oakEvent;
     switch(event->type) {
         case GDK_BUTTON_PRESS:
-            oakEvent = TOUCH_EVENT_DOWN;
+            oakEvent = INPUT_EVENT_DOWN;
             break;
         case GDK_MOTION_NOTIFY:
-            oakEvent = TOUCH_EVENT_MOVE;
+            oakEvent = INPUT_EVENT_MOVE;
             break;
         case GDK_BUTTON_RELEASE:
-            oakEvent = TOUCH_EVENT_UP;
+            oakEvent = INPUT_EVENT_UP;
             break;
         default:
             oakLog("unhandled mouse event type=%d", event->type);
             return FALSE;
     }
             //oakLog("x=%d y=%d", x, y);
-    mainWindow->dispatchTouchEvent(oakEvent, 0, event->time, x, y);
+    mainWindow->dispatchInputEvent(oakEvent, MAKE_SOURCE(INPUT_SOURCE_TYPE_MOUSE,0), event->time, x, y);
 
     /*if(state & GDK_BUTTON1_MASK) {
         g_print("Mouse motion button 1 at coordinates (%d,%d)\n",x,y);

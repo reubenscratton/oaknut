@@ -50,13 +50,13 @@ bool Button::applyStyleValue(const string& name, StyleValue* value) {
 }
 
 bool Button::onTouchEvent(int eventType, int finger, POINT pt) {
-    if (eventType == TOUCH_EVENT_DOWN) {
+    if (eventType == INPUT_EVENT_DOWN) {
         setPressed(true);
     }
-    if (eventType == TOUCH_EVENT_CANCEL || eventType==TOUCH_EVENT_UP) {
+    if (eventType == INPUT_EVENT_CANCEL || eventType==INPUT_EVENT_UP) {
         setPressed(false);
     }
-    if (eventType == TOUCH_EVENT_TAP) {
+    if (eventType == INPUT_EVENT_TAP) {
         if (_onClickDelegate) {
             _onClickDelegate(this);
         }
@@ -88,16 +88,16 @@ void ToolbarButton::lazyCreateImageView() {
 }
 
 bool ToolbarButton::onTouchEvent(int eventType, int finger, POINT pt) {
-	if (eventType == TOUCH_EVENT_DOWN) {
+	if (eventType == INPUT_EVENT_DOWN) {
 		_alpha = 0.5f;
 		setNeedsFullRedraw();
 	}
-	if (eventType == TOUCH_EVENT_CANCEL || eventType==TOUCH_EVENT_UP) {
+	if (eventType == INPUT_EVENT_CANCEL || eventType==INPUT_EVENT_UP) {
 		if (!_alphaAnim) {
 			animateAlpha(1.0, 350);
 		}
 	}
-	if (eventType == TOUCH_EVENT_TAP) {
+	if (eventType == INPUT_EVENT_TAP) {
 		if (_onClickDelegate) {
 			_onClickDelegate(this);
 		}

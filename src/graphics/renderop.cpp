@@ -105,9 +105,9 @@ string debugRect(const RECT& rect) {
 }
 
 
-void RenderOp::render(Canvas* canvas, Surface* surface) {
-    canvas->setBlendMode(_blendMode);
-    _prog->use(canvas);
+void RenderOp::render(Window* window, Surface* surface) {
+    window->setBlendMode(_blendMode);
+    _prog->use(window);
     _prog->setMvp(surface->_mvp);
     _prog->setAlpha(_alpha);
 }

@@ -154,7 +154,7 @@ void SegmentedControl::setPressedIndex(int pressedIndex) {
 }
 
 bool SegmentedControl::onTouchEvent(int eventType, int eventSource, POINT pt) {
-	if (eventType == TOUCH_EVENT_DOWN) {
+	if (eventType == INPUT_EVENT_DOWN) {
 		_pressedIndex = -1;
 		for (int i=0 ; i<_segments.size() ; i++) {
 			Segment& segment = _segments.at(i);
@@ -163,7 +163,7 @@ bool SegmentedControl::onTouchEvent(int eventType, int eventSource, POINT pt) {
 				break;
 			}
 		}
-	} else if (eventType == TOUCH_EVENT_UP) {
+	} else if (eventType == INPUT_EVENT_UP) {
 		if (_pressedIndex >= 0) {
             Segment& segment = _segments.at(_pressedIndex);
 			if (segment.rect.contains(pt)) {

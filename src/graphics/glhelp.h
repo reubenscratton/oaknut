@@ -158,7 +158,7 @@ public:
     
 	virtual void load() = 0;
 	virtual void findVariables();
-    virtual void use(class Canvas* canvas);
+    virtual void use(class Window* window);
 	virtual void setAlpha(float alpha);
     virtual void lazyLoadUniforms();
     virtual void setMvp(const Matrix4& mvp);

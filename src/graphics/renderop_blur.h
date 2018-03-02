@@ -23,6 +23,6 @@ public:
     // Overrides
     virtual void setRect(const RECT& rect);
     virtual void asQuads(QUAD *quad);
-    virtual void render(Canvas* canvas, Surface* surface);
+    virtual void render(Window* window, Surface* surface);
     
 };

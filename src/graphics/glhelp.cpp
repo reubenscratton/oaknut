@@ -127,19 +127,19 @@ void GLProgram::findVariables() {
 	_alpha.position = check_gl(glGetUniformLocation, _program, "alpha");
 }
 
-void GLProgram::use(Canvas* canvas) {
+void GLProgram::use(Window* window) {
     if (!_loaded) {
         _loaded = true;
         load();
     }
-    if (canvas->_currentProg != _program) {
-        canvas->_currentProg = _program;
+    if (window->_currentProg != _program) {
+        window->_currentProg = _program;
         check_gl(glUseProgram,_program);
     }
     
     // These are program-specific...
-    if (canvas->_currentVertexConfig != _vertexConfig) {
-        canvas->setVertexConfig(_vertexConfig);
+    if (window->_currentVertexConfig != _vertexConfig) {
+        window->setVertexConfig(_vertexConfig);
     }
 }
 

@@ -22,7 +22,7 @@ public:
     
     RenderBatch();
     ~RenderBatch();
-    void render(Canvas* canvas, Surface* surface, RenderOp* firstOp);
+    void render(Window* window, Surface* surface, RenderOp* firstOp);
 
     
     void invalidateGeometry(RenderOp* op);
