@@ -51,63 +51,33 @@
 
 using namespace std;
 
-#ifdef EMSCRIPTEN
-#define GL_GLEXT_PROTOTYPES
-#define EGL_EGLEXT_PROTOTYPES
-#include <emscripten.h>
-#include <emscripten/bind.h>
-#include <emscripten/val.h>
-#include <emscripten/threading.h>
-//#include <GL/glut.h>
-#include <emscripten/html5.h>
-#include <GLES2/gl2.h>
-#include <libc/pthread.h>
-using namespace emscripten;
-#else
-#ifdef ANDROID
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-#elif __APPLE__
-#include <TargetConditionals.h>
-#if __OBJC__
- #include <CoreFoundation/CoreFoundation.h>
+#ifdef PLATFORM_WEB
+#include <platform/web/platform.h>
 #endif
- #if TARGET_OS_IOS
-  #include <OpenGLES/ES3/gl.h>
-  #include <OpenGLES/ES3/glext.h>
-  #if __OBJC__
-  #include <OpenGLES/EAGL.h>
-  #endif
- #else
-  #include <OpenGL/gl.h>
-  #include <OpenGL/glu.h>
-  #include <OpenGL/glext.h>
- #endif
- #include <objc/runtime.h>
- #include <objc/message.h>
+#ifdef PLATFORM_ANDROID
+#include <platform/android/platform.h>
 #endif
+#ifdef PLATFORM_APPLE
+#include <platform/apple/platform.h>
+#endif
+#ifdef PLATFORM_LINUX
+#include <platform/linux/platform.h>
+#endif
+
+// These defs need removing
 #ifdef __LP64__
 typedef double CGFloat;
 #else
 typedef float CGFloat;
 #endif
-#endif
 #ifndef GL_BGRA
 #define GL_BGRA 0x80E1
 #endif
-
-#ifdef PLATFORM_LINUX
-// NB: Your CPATH variable should include all the ridiculous number
-// of places these headers can be found
-//#include	<gdk/gdk.h>
-//#include	<gdk/gdkkeysyms.h>
-#include	<gtk/gtk.h>
-//#include	<gtkgl/gtkglarea.h>
-#define GL_GLEXT_PROTOTYPES
-#include	<GL/gl.h>
-#include	<GL/glext.h>
-#include	<GL/glu.h>
+#ifndef MIN
+#define MIN(X,Y) (((X) < (Y)) ? (X) : (Y))
+#define MAX(X,Y) (((X) > (Y)) ? (X) : (Y))
 #endif
+
 
 // Configuration
 //#define CONFIG_SLOW_ANIMATIONS 1
@@ -122,10 +92,6 @@ string oakGetAppHomeDir();
 float dp(float dp); // dp to pixels
 float idp(float pixels); // pixels to dp
 
-#ifndef MIN
-#define MIN(X,Y) (((X) < (Y)) ? (X) : (Y))
-#define MAX(X,Y) (((X) > (Y)) ? (X) : (Y))
-#endif
 
 
 void oakKeyboardShow(bool show);
@@ -166,7 +132,6 @@ void oakFaceDetectorClose(void* osobj);
 
 Data* oakLoadAsset(const char* assetPath);
 
-
 #include "graphics/quadbuffer.h"
 #include "graphics/glhelp.h"
 #include "graphics/region.h"
@@ -204,27 +169,9 @@ Data* oakLoadAsset(const char* assetPath);
 #include "app/userdefaults.h"
 #include "util/circularbuffer.h"
 #include "media/audiooutput.h"
+#include "graphics/canvas.h"
 #include "view/canvasview.h"
 
-// Canvas
-void* oakCanvasCreate();
-void oakCanvasResize(void* oscanvas, int width, int height);
-Bitmap* oakCanvasGetBitmap(void* oscanvas);
-void oakCanvasClear(void* oscanvas, COLOUR colour);
-void oakCanvasSetFillColour(void* oscanvas, COLOUR colour);
-void oakCanvasSetStrokeColour(void* oscanvas, COLOUR colour);
-void oakCanvasSetStrokeWidth(void* oscanvas, float strokeWidth);
-void oakCanvasSetAffineTransform(void* oscanvas, AffineTransform* t);
-void oakCanvasDrawRect(void* oscanvas, RECT rect);
-void oakCanvasDrawOval(void* oscanvas, RECT rect);
-void oakCanvasDrawPath(void* oscanvas, void* path);
-void oakCanvasRelease(void* oscanvas);
-
-void* oakCanvasPathCreate();
-void oakCanvasPathMoveTo(void* ospath, POINT pt);
-void oakCanvasPathLineTo(void* ospath, POINT pt);
-void oakCanvasPathCurveTo(void* ospath, POINT ctrl1, POINT ctrl2, POINT pt);
-void oakCanvasPathRelease(void* ospath);
 
 extern Window* mainWindow;
 

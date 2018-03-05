@@ -7,7 +7,6 @@
 
 #if PLATFORM_ANDROID
 
-#include "android.h"
 #include "bitmap.h"
 
 struct android_app {

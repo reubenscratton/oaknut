@@ -7,7 +7,6 @@
 #if PLATFORM_LINUX
 
 #include "oaknut.h"
-#include <curl/curl.h>
 
 void URLRequest::nativeStart() {
     retain(); // ensure request is alive until it completes, can't count on anything else to keep us alive

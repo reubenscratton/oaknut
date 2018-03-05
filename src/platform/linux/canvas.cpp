@@ -7,10 +7,6 @@
 #if PLATFORM_LINUX
 
 #include "bitmap.h"
-#include <hb.h>
-#include <hb-ft.h>
-#include <cairo-ft.h>
-#include <cairo.h>
 
 static FT_Library ft_library;
 static cairo_t* cairo_for_measuring;
@@ -88,8 +84,22 @@ Font* oakFontGet(const string& fontAssetPath, float size) {
 }
 
 
+class LinuxPath : public Path {
+public:
 
-class LinuxCanvas : public Object {
+    void moveTo(POINT pt) {
+        //CGPathMoveToPoint(path, nil, pt.x, pt.y);
+    }
+    void lineTo(POINT pt) {
+        //CGPathAddLineToPoint(path, nil, pt.x, pt.y);
+    }
+    void curveTo(POINT ctrl1, POINT ctrl2, POINT pt) {
+        //CGPathAddCurveToPoint(path, nil, ctrl1.x, ctrl1.y, ctrl2.x, ctrl2.y, pt.x, pt.y);
+    }
+};
+
+
+class LinuxCanvas : public Canvas {
 public:
     ObjPtr<OSBitmap> _bitmap;
     //CGSize _size;
@@ -97,6 +107,11 @@ public:
     //CGColorRef _strokeColor;
     //CGFloat _strokeWidth;
     //const AffineTransform* _transform;
+
+    Bitmap* getBitmap() {
+        return _bitmap;
+    }
+
 
     void resize(int width, int height) {
     //    _size = size;
@@ -122,7 +137,7 @@ public:
         //_strokeColor = rgba(colour);
         //CGContextSetStrokeColorWithColor(_bitmap->_context, _strokeColor);
     }
-    void setStrokeWidth(CGFloat strokeWidth) {
+    void setStrokeWidth(float strokeWidth) {
         //_strokeWidth = strokeWidth;
         //CGContextSetLineWidth(_bitmap->_context, strokeWidth);
     }
@@ -152,7 +167,7 @@ public:
         _bitmap->_needsUpload = true;*/
     }
 
-    void drawPath(void* ospath) {
+    void drawPath(Path* ospath) {
         /*CGPathRef path = (CGPathRef)ospath;
         if (_transform) {
             CGAffineTransform cgtransform;
@@ -175,75 +190,20 @@ public:
         }
         _bitmap->_needsUpload = true;*/
     }
+    Path* createPath() {
+        //CGMutablePathRef path = CGPathCreateMutable();
+        // return path;
+        return new LinuxPath();
+    }
+
 };
 
 
 
-// API
-void* oakCanvasCreate() {
+
+Canvas* Canvas::create() {
     return new LinuxCanvas();
 }
-Bitmap* oakCanvasGetBitmap(void* oscanvas) {
-    LinuxCanvas* canvas = (LinuxCanvas*)oscanvas;
-    return canvas->_bitmap;
-}
-void oakCanvasResize(void* oscanvas, int width, int height) {
-    LinuxCanvas* canvas = (LinuxCanvas*)oscanvas;
-    canvas->resize(width, height);
-}
-void oakCanvasClear(void* oscanvas, COLOUR colour) {
-    LinuxCanvas* canvas = (LinuxCanvas*)oscanvas;
-    canvas->clear(colour);
-}
-void oakCanvasSetFillColour(void* oscanvas, COLOUR colour) {
-    LinuxCanvas* canvas = (LinuxCanvas*)oscanvas;
-    canvas->setFillColour(colour);
-}
-void oakCanvasSetStrokeColour(void* oscanvas, COLOUR colour) {
-    LinuxCanvas* canvas = (LinuxCanvas*)oscanvas;
-    canvas->setStrokeColour(colour);
-}
-void oakCanvasSetStrokeWidth(void* oscanvas, float strokeWidth) {
-    LinuxCanvas* canvas = (LinuxCanvas*)oscanvas;
-    canvas->setStrokeWidth(strokeWidth);
-}
-void oakCanvasSetAffineTransform(void* oscanvas, AffineTransform* t) {
-    LinuxCanvas* canvas = (LinuxCanvas*)oscanvas;
-    canvas->setAffineTransform(t);
-}
-void oakCanvasDrawRect(void* oscanvas, RECT rect) {
-    LinuxCanvas* canvas = (LinuxCanvas*)oscanvas;
-    canvas->drawRect(rect);
-}
-void oakCanvasDrawOval(void* oscanvas, RECT rect) {
-    LinuxCanvas* canvas = (LinuxCanvas*)oscanvas;
-    canvas->drawOval(rect);
-}
-void oakCanvasDrawPath(void* oscanvas, void* ospath) {
-    LinuxCanvas* canvas = (LinuxCanvas*)oscanvas;
-    canvas->drawPath(ospath);
-}
 
-void* oakCanvasPathCreate() {
-    //CGMutablePathRef path = CGPathCreateMutable();
-   // return path;
-   return NULL;
-}
-void oakCanvasPathMoveTo(void* ospath, POINT pt) {
-    //CGMutablePathRef path = (CGMutablePathRef)ospath;
-    //CGPathMoveToPoint(path, nil, pt.x, pt.y);
-}
-void oakCanvasPathLineTo(void* ospath, POINT pt) {
-    //CGMutablePathRef path = (CGMutablePathRef)ospath;
-    //CGPathAddLineToPoint(path, nil, pt.x, pt.y);
-}
-void oakCanvasPathCurveTo(void* ospath, POINT ctrl1, POINT ctrl2, POINT pt) {
-    //CGMutablePathRef path = (CGMutablePathRef)ospath;
-    //CGPathAddCurveToPoint(path, nil, ctrl1.x, ctrl1.y, ctrl2.x, ctrl2.y, pt.x, pt.y);
-}
-void oakCanvasPathRelease(void* ospath) {
-    //CGMutablePathRef path = (CGMutablePathRef)ospath;
-    //CGPathRelease(path);
-}
 
 #endif

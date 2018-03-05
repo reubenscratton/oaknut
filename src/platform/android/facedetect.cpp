@@ -6,7 +6,7 @@
 //
 #if PLATFORM_ANDROID
 
-#include "android.h"
+#include <oaknut.h>
 
 static jclass jclassFaceDetector;
 static jmethodID jmidConstructor;

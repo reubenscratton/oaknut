@@ -1,3 +1,6 @@
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+
 
 #define PACKAGE "org/oaknut/main"
 #define JAVA_FN(RETURNS, CLAZZ,METHOD) extern "C" JNIEXPORT \

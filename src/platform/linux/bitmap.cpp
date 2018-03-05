@@ -7,7 +7,6 @@
 #if PLATFORM_LINUX
 
 #include "bitmap.h"
-#include <cairo/cairo.h>
 
 
 static int bytesPerPixelForFormat(int format) {

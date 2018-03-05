@@ -5,10 +5,10 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#include "../oaknut.h"
+#include <oaknut.h>
 
 CanvasView::CanvasView() {
-    _canvas = oakCanvasCreate();
+    _canvas = Canvas::create();
     _textureRenderOp = new TextureRenderOp(this);
     _textureRenderOp->setBlendMode(BLENDMODE_PREMULTIPLIED);
     _textureRenderOp->setTexRect(RECT_Make(0,1,1,-1));
@@ -20,13 +20,13 @@ void CanvasView::layout() {
     RECT bounds = getBounds();
     _textureRenderOp->setRect(bounds);
     
-    oakCanvasResize(_canvas, _frame.size.width, _frame.size.height);
-    Bitmap* bitmap = oakCanvasGetBitmap(_canvas);
+    _canvas->resize(_frame.size.width, _frame.size.height);
+    Bitmap* bitmap = _canvas->getBitmap();
     bitmap->_texSampleMethod = GL_NEAREST;
     _textureRenderOp->setBitmap(bitmap);
 }
 
 void CanvasView::redraw() {
-    oakCanvasClear(_canvas, 0);
+    _canvas->clear(0);
 }
 

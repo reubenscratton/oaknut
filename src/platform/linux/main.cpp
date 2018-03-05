@@ -131,11 +131,10 @@ int main(int argc, char **argv) {
     g_signal_connect(glarea, "button_press_event", G_CALLBACK(glarea_mouse_event), NULL);
     g_signal_connect(glarea, "button_release_event", G_CALLBACK(glarea_mouse_event), NULL);
     g_signal_connect(glarea, "key_press_event", G_CALLBACK(glarea_key_press_event), NULL);
-    g_signal_connect(glarea, "delete_event", G_CALLBACK(gtk_main_quit), NULL);
     gtk_widget_set_size_request(glarea, 640, 480); /* minimum size */
-    //gtk_quit_add_destroy(1, GTK_OBJECT(glarea));
+    g_signal_connect(glarea, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
-    /* ... Insert glarea into window and show it all ... */
+    // ... Insert glarea into window and show it
     gtk_container_add(GTK_CONTAINER(glwindow),glarea);
     gtk_widget_show(glarea);
     gtk_widget_show(glwindow);

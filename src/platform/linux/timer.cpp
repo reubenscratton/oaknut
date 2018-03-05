@@ -6,7 +6,7 @@
 //
 #if PLATFORM_LINUX
 
-#include "oaknut.h"
+#include <oaknut.h>
 
 long oakCurrentMillis() {
     struct timeval te;
