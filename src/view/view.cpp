@@ -955,9 +955,9 @@ View* View::hitTest(POINT pt, POINT* ptRel) {
 }
 
 /**
-dispatches a touch event to a view.
+dispatches an input event to a view.
 */
-View* View::dispatchTouchEvent(int eventType, int eventSource, long time, POINT pt) {
+View* View::dispatchInputEvent(int eventType, int eventSource, long time, POINT pt) {
 	if (_state & STATE_DISABLED) {
         return NULL;
     }

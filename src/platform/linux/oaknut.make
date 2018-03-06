@@ -34,6 +34,7 @@ CFLAGS_COMPILE_C:=-x c -std=gnu99
 
 
 EXECUTABLE:=$(BUILD_DIR)/$(PROJECT_NAME)
+ASSETS_DIR:=$(BUILD_DIR)
 OBJ_DIR:=$(BUILD_DIR)/obj
 OBJS_CPP := $(patsubst %,$(OBJ_DIR)/%.o,$(SOURCES_CPP))
 OBJS_C := $(patsubst %,$(OBJ_DIR)/%.o,$(SOURCES_C))
@@ -42,11 +43,8 @@ OBJS := $(OBJS_CPP) $(OBJS_C)
 $(BUNDLE_DIR): $(BUILD_DIR)
 	@mkdir -p $@
 
-#$(ASSETS_DIR): $(BUNDLE_DIR)
-#	@mkdir -p $@
-
-#$(ASSETS_DIR)/assets: $(ASSETS_DIR)
-#	rsync -rupE --delete $(PROJECT_ROOT)/assets $(ASSETS_DIR)
+$(ASSETS_DIR)/assets: $(ASSETS_DIR)
+	rsync -rupE --delete $(PROJECT_ROOT)/assets $(ASSETS_DIR)
 
 $(OBJ_DIR):
 	@mkdir -p $@

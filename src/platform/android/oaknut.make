@@ -2,9 +2,8 @@
 # It should not be run directly.
 
 CFLAGS+= -DPLATFORM_ANDROID=1
-
 # Derived paths
-JAVA_FILES := $(wildcard $(OAKNUT_DIR)/platform/android/java/org.oaknut.main/*.java)
+JAVA_FILES:=$(wildcard $(OAKNUT_DIR)/src/platform/android/java/org.oaknut.main/*.java)
 RESOURCES_DIR:=$(PROJECT_ROOT)/platform/android/res
 MANIFEST_FILE:=$(PROJECT_ROOT)/platform/android/AndroidManifest.xml
 ANDROID_NDK_DIR:=$(ANDROID_SDK_DIR)/ndk-bundle

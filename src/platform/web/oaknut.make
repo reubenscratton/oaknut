@@ -26,7 +26,7 @@ $(OBJS_CPP): $(OBJ_DIR)%.bc : % | $(OBJ_DIR)
 	@$(EMSCRIPTEN_ROOT)/emcc --bind -std=c++11 $(CFLAGS) $(OPTS) -I$(OAKNUT_DIR)/src $< -o $@
 
 $(OBJS_C): $(OBJ_DIR)%.bc : % | $(OBJ_DIR)
-	@echo Compiling $(notdir $@)
+	@echo Compiling $(notdir $<)
 	@mkdir -p $(dir $@)
 	@$(EMSCRIPTEN_ROOT)/emcc --bind $(CFLAGS) $(OPTS) -I$(OAKNUT_DIR)/src $< -o $@
 

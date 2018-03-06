@@ -42,7 +42,7 @@ public:
     class MotionTracker {
     public:
         MotionTracker(int source);
-        void dispatchEvent(int event, long time, POINT pt, Window* window);
+        void dispatchInputEvent(int event, long time, POINT pt, Window* window);
 
         int source;
         class View* touchedView;

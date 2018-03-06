@@ -249,7 +249,7 @@ public:
 
     // Touch
 	virtual View* hitTest(POINT pt, POINT* ptRel);
-	virtual View* dispatchTouchEvent(int eventType, int finger, long time, POINT pt);
+	virtual View* dispatchInputEvent(int eventType, int finger, long time, POINT pt);
 	virtual bool onTouchEvent(int eventType, int finger, POINT pt);
     
     // Keyboard input

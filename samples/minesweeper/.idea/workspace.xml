@@ -2,10 +2,10 @@
 <project version="4">
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true" buildAllGenerated="true">
     <generated>
-      <config projectName="Minesweeper" targetName="Minesweeper_do_not_build" />
+      <config projectName="Minesweeper" targetName="Minesweeper_web" />
       <config projectName="Minesweeper" targetName="Minesweeper_linux" />
       <config projectName="Minesweeper" targetName="Minesweeper_android" />
-      <config projectName="Minesweeper" targetName="Minesweeper_web" />
+      <config projectName="Minesweeper" targetName="Minesweeper_do_not_build" />
     </generated>
   </component>
   <component name="CMakeSettings">
@@ -16,21 +16,16 @@
   <component name="ChangeListManager">
     <list default="true" id="b7ef45b6-2785-4763-8b94-6065aea96bea" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change beforePath="$PROJECT_DIR$/../../src/oaknut.h" afterPath="$PROJECT_DIR$/../../src/oaknut.h" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/android/android.cpp" afterPath="$PROJECT_DIR$/../../src/platform/android/android.cpp" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/android/android.h" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/android/async.cpp" afterPath="$PROJECT_DIR$/../../src/platform/android/async.cpp" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/android/bitmap.h" afterPath="$PROJECT_DIR$/../../src/platform/android/bitmap.h" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/android/facedetect.cpp" afterPath="$PROJECT_DIR$/../../src/platform/android/facedetect.cpp" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/android/timer.cpp" afterPath="$PROJECT_DIR$/../../src/platform/android/timer.cpp" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/linux/bitmap.cpp" afterPath="$PROJECT_DIR$/../../src/platform/linux/bitmap.cpp" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/linux/bitmap.h" afterPath="$PROJECT_DIR$/../../src/platform/linux/bitmap.h" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/linux/canvas.cpp" afterPath="$PROJECT_DIR$/../../src/platform/linux/canvas.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/app/viewcontroller.cpp" afterPath="$PROJECT_DIR$/../../src/app/viewcontroller.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/graphics/window.cpp" afterPath="$PROJECT_DIR$/../../src/graphics/window.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/graphics/window.h" afterPath="$PROJECT_DIR$/../../src/graphics/window.h" />
+      <change beforePath="$PROJECT_DIR$/../../src/platform/android/oaknut.make" afterPath="$PROJECT_DIR$/../../src/platform/android/oaknut.make" />
       <change beforePath="$PROJECT_DIR$/../../src/platform/linux/main.cpp" afterPath="$PROJECT_DIR$/../../src/platform/linux/main.cpp" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/linux/timer.cpp" afterPath="$PROJECT_DIR$/../../src/platform/linux/timer.cpp" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/linux/urlrequest.cpp" afterPath="$PROJECT_DIR$/../../src/platform/linux/urlrequest.cpp" />
-      <change beforePath="$PROJECT_DIR$/../../src/view/canvasview.cpp" afterPath="$PROJECT_DIR$/../../src/view/canvasview.cpp" />
-      <change beforePath="$PROJECT_DIR$/../../src/view/canvasview.h" afterPath="$PROJECT_DIR$/../../src/view/canvasview.h" />
+      <change beforePath="$PROJECT_DIR$/../../src/platform/linux/oaknut.make" afterPath="$PROJECT_DIR$/../../src/platform/linux/oaknut.make" />
+      <change beforePath="$PROJECT_DIR$/../../src/platform/web/oaknut.make" afterPath="$PROJECT_DIR$/../../src/platform/web/oaknut.make" />
+      <change beforePath="$PROJECT_DIR$/../../src/platform/web/web.cpp" afterPath="$PROJECT_DIR$/../../src/platform/web/web.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/view/view.cpp" afterPath="$PROJECT_DIR$/../../src/view/view.cpp" />
+      <change beforePath="$PROJECT_DIR$/../../src/view/view.h" afterPath="$PROJECT_DIR$/../../src/view/view.h" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -47,7 +42,7 @@
         <entry file="file://$PROJECT_DIR$/../../src/platform/linux/main.cpp">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="892">
-              <caret line="153" column="0" lean-forward="false" selection-start-line="153" selection-start-column="0" selection-end-line="153" selection-end-column="0" />
+              <caret line="155" column="0" lean-forward="false" selection-start-line="155" selection-start-column="0" selection-end-line="155" selection-end-column="0" />
               <folding>
                 <element signature="e#23#42#0" expanded="true" />
                 <element signature="e#113#131#0" expanded="true" />
@@ -425,12 +420,13 @@
       <workItem from="1519924050429" duration="1247000" />
       <workItem from="1520013452889" duration="1198000" />
       <workItem from="1520240874375" duration="605000" />
-      <workItem from="1520253050698" duration="599000" />
+      <workItem from="1520253050698" duration="699000" />
+      <workItem from="1520277321207" duration="599000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="140914000" />
+    <option name="totallyTimeSpent" value="141613000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="75" y="41" width="1617" height="1152" extended-state="0" />
@@ -846,14 +842,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="18">
           <caret line="37" column="42" lean-forward="true" selection-start-line="37" selection-start-column="42" selection-end-line="37" selection-end-column="42" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../../src/platform/linux/main.cpp">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="892">
-          <caret line="153" column="0" lean-forward="false" selection-start-line="153" selection-start-column="0" selection-end-line="153" selection-end-column="0" />
+          <caret line="155" column="0" lean-forward="false" selection-start-line="155" selection-start-column="0" selection-end-line="155" selection-end-column="0" />
           <folding>
             <element signature="e#23#42#0" expanded="true" />
             <element signature="e#113#131#0" expanded="true" />

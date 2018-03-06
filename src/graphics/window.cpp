@@ -53,7 +53,7 @@ Window::MotionTracker::MotionTracker(int source) {
     pastIndex = pastCount = 0;
 }
 
-void Window::MotionTracker::dispatchEvent(int event, long time, POINT pt, Window* window) {
+void Window::MotionTracker::dispatchInputEvent(int event, long time, POINT pt, Window* window) {
     if (event == INPUT_EVENT_DOWN) {
         if (multiclickTimer) {
             multiclickTimer->stop();
@@ -63,7 +63,7 @@ void Window::MotionTracker::dispatchEvent(int event, long time, POINT pt, Window
         pastIndex = pastCount = 0;
         ptDown = pt;
         timeOfDownEvent = time;
-        touchedView = window->_rootViewController->_view->dispatchTouchEvent(INPUT_EVENT_DOWN, source, time, pt);
+        touchedView = window->_rootViewController->_view->dispatchInputEvent(INPUT_EVENT_DOWN, source, time, pt);
     }
     if (event == INPUT_EVENT_DOWN || event == INPUT_EVENT_MOVE) {
         if (event == INPUT_EVENT_MOVE) { // filter out spurious move events (seen on iOS 10)
@@ -87,31 +87,31 @@ void Window::MotionTracker::dispatchEvent(int event, long time, POINT pt, Window
             float dist = sqrtf(dx * dx + dy * dy);
             if (idp(dist) >= TOUCH_SLOP) {
                 isDragging = true;
-                View *interceptView = window->_rootViewController->_view->dispatchTouchEvent(INPUT_EVENT_DRAG, source, time, pt);
+                View *interceptView = window->_rootViewController->_view->dispatchInputEvent(INPUT_EVENT_DRAG, source, time, pt);
                 if (interceptView) {
                     if (touchedView) {
-                        touchedView->dispatchTouchEvent(INPUT_EVENT_CANCEL, source, time, pt);
+                        touchedView->dispatchInputEvent(INPUT_EVENT_CANCEL, source, time, pt);
                     }
                     touchedView = interceptView;
                 }
             }
         }
         if (touchedView) {
-            touchedView->dispatchTouchEvent(INPUT_EVENT_MOVE, source, time, pt);
+            touchedView->dispatchInputEvent(INPUT_EVENT_MOVE, source, time, pt);
         }
     } else if (event == INPUT_EVENT_UP) {
         if (touchedView) {
-            touchedView->dispatchTouchEvent(INPUT_EVENT_UP, source, time, pt);
+            touchedView->dispatchInputEvent(INPUT_EVENT_UP, source, time, pt);
         }
         if (!isDragging) {
             // TAP!
             if (touchedView) {
-                touchedView->dispatchTouchEvent(INPUT_EVENT_TAP, source, time, pt);
+                touchedView->dispatchInputEvent(INPUT_EVENT_TAP, source, time, pt);
                 oakLog("tap %d", numClicks);
             }
             multiclickTimer = Timer::start([&] {
                 if (touchedView) {
-                    touchedView->dispatchTouchEvent(INPUT_EVENT_TAP_CONFIRMED, source, time, pt);
+                    touchedView->dispatchInputEvent(INPUT_EVENT_TAP_CONFIRMED, source, time, pt);
                 }
                 multiclickTimer = NULL;
                 oakLog("tap confirmed at %d", numClicks);
@@ -143,7 +143,7 @@ void Window::MotionTracker::dispatchEvent(int event, long time, POINT pt, Window
                 velocity.x = (velocity.x == 0) ? thisVeloX : ((velocity.x + thisVeloX) / 2);
                 velocity.y = (velocity.y == 0) ? thisVeloY : ((velocity.y + thisVeloY) / 2);
                 if (touchedView) {
-                    touchedView->dispatchTouchEvent(INPUT_EVENT_FLING, source, time, velocity);
+                    touchedView->dispatchInputEvent(INPUT_EVENT_FLING, source, time, velocity);
                 }
                 break;
             }
@@ -157,8 +157,8 @@ void Window::MotionTracker::dispatchEvent(int event, long time, POINT pt, Window
 
 void Window::dispatchInputEvent(int event, int source, long time, int x, int y) {
 	//oakLog("Window::dispatchTouch %d %d %d %d", event, finger, x, y);
-    x *= _scale;
-    y *= _scale;
+    //x *= _scale;
+    //y *= _scale;
     POINT pt = POINT_Make(x, y);
 
     if (SOURCE_TYPE(source)==INPUT_SOURCE_TYPE_MOUSE || SOURCE_TYPE(source)==INPUT_SOURCE_TYPE_FINGER) {
@@ -178,7 +178,7 @@ void Window::dispatchInputEvent(int event, int source, long time, int x, int y) 
         }
 
         // Let the tracker process the new input event
-        tracker->dispatchEvent(event, time, pt, this);
+        tracker->dispatchInputEvent(event, time, pt, this);
 
     }
 }
