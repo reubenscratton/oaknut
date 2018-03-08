@@ -145,29 +145,29 @@ public:
     POINT ctrl1,ctrl2,pt;
 };
 
-class WebCanvasPath : public Object {
+class WebPath : public Path {
 public:
-    WebCanvasPath() {
+    WebPath() {
     }
-    ~WebCanvasPath() {
+    ~WebPath() {
         for (auto it : _pathElements) {
             delete (PathElement*)it;
         }
     }
-    void moveTo(const POINT& pt) {
+    void moveTo(POINT pt) {
         _pathElements.push_back(new PathElementMoveTo(pt));
     }
-    void lineTo(const POINT& pt) {
+    void lineTo(POINT pt) {
         _pathElements.push_back(new PathElementLineTo(pt));
     }
-    void curveTo(const POINT& ctrl1, const POINT& ctrl2, const POINT& pt) {
+    void curveTo(POINT ctrl1, POINT ctrl2, POINT pt) {
         _pathElements.push_back(new PathElementCurveTo(ctrl1, ctrl2, pt));
     }
     
     vector<PathElement*> _pathElements;
 };
 
-class WebCanvas : public OSBitmap {
+class WebCanvas : public Canvas, public OSBitmap {
 public:
     val _canvas;
     val _ctxt;
@@ -181,6 +181,10 @@ public:
     WebCanvas() : _canvas(val::null()), _ctxt(val::null()) {
         _format = BITMAPFORMAT_RGBA32;
         _canvas = val::global("document").call<val>("createElement", val("canvas"));
+    }
+
+    Bitmap* getBitmap() {
+        return this; // for web at least, the canvas *is* a kind of bitmap...
     }
 
     void resize(int width, int height) {
@@ -218,6 +222,15 @@ public:
         _transform = t ? (*t) : AffineTransform();
         _hasChanged = true;
     }
+    void drawRect(RECT rect) {
+        _ctxt.call<void>("fillRect", val(rect.left()), val(rect.top()), val(rect.size.width), val(rect.size.height));
+        if (_strokeWidth > 0) {
+            _ctxt.set("lineWidth", val(_strokeWidth));
+            _ctxt.set("strokeStyle", val(cssColourStr(_strokeColour)));
+            _ctxt.call<void>("strokeRect", val(rect.left()), val(rect.top()), val(rect.size.width), val(rect.size.height));
+        }
+        _hasChanged = true;
+    }
     void drawOval(RECT rect) {
         _ctxt.call<void>("save");
         _ctxt.call<void>("beginPath");
@@ -228,7 +241,8 @@ public:
         _ctxt.call<void>("restore");
         _hasChanged = true;
     }
-    void drawPath(WebCanvasPath* path) {
+    void drawPath(Path* apath) {
+        WebPath* path = (WebPath*)apath;
         _ctxt.call<void>("save");
         _ctxt.call<void>("beginPath");
         _ctxt.set("lineCap", val("round"));
@@ -263,7 +277,12 @@ public:
         _ctxt.call<void>("restore");
         _hasChanged = true;
     }
-    
+
+    Path* createPath() {
+        return new WebPath();
+    }
+
+    // Bitmap API
     virtual void lock(PIXELDATA* pixelData, bool forWriting) {
         assert(0); // Canvas should never be locked, you draw to them with the canvas API!
     }
@@ -282,66 +301,8 @@ public:
 
 };
 
-void* oakCanvasCreate() {
+Canvas* Canvas::create() {
     return new WebCanvas();
-}
-void oakCanvasResize(void* oscanvas, int width, int height) {
-    WebCanvas* canvas = (WebCanvas*)oscanvas;
-    canvas->resize(width, height);
-}
-Bitmap* oakCanvasGetBitmap(void* oscanvas) {
-    return (WebCanvas*)oscanvas; // for web at least, the canvas *is* a kind of bitmap...
-}
-void oakCanvasClear(void* oscanvas, COLOUR colour) {
-    WebCanvas* canvas = (WebCanvas*)oscanvas;
-    canvas->clear(colour);
-}
-void oakCanvasSetFillColour(void* oscanvas, COLOUR colour) {
-    WebCanvas* canvas = (WebCanvas*)oscanvas;
-    canvas->setFillColour(colour);
-}
-void oakCanvasSetStrokeColour(void* oscanvas, COLOUR colour) {
-    WebCanvas* canvas = (WebCanvas*)oscanvas;
-    canvas->setStrokeColour(colour);
-}
-void oakCanvasSetStrokeWidth(void* oscanvas, float strokeWidth) {
-    WebCanvas* canvas = (WebCanvas*)oscanvas;
-    canvas->setStrokeWidth(strokeWidth);
-}
-void oakCanvasSetAffineTransform(void* oscanvas, AffineTransform* t) {
-    WebCanvas* canvas = (WebCanvas*)oscanvas;
-    canvas->setAffineTransform(t);
-}
-void oakCanvasDrawRect(void* oscanvas, RECT rect) {
-    WebCanvas* canvas = (WebCanvas*)oscanvas;
-}
-void oakCanvasDrawOval(void* oscanvas, RECT rect) {
-    WebCanvas* canvas = (WebCanvas*)oscanvas;
-    canvas->drawOval(rect);
-}
-void oakCanvasDrawPath(void* oscanvas, void* ospath) {
-    WebCanvas* canvas = (WebCanvas*)oscanvas;
-    canvas->drawPath((WebCanvasPath*)ospath);
-}
-void oakCanvasRelease(void* oscanvas) {
-    WebCanvas* canvas = (WebCanvas*)oscanvas;
-    delete canvas;
-}
-
-void* oakCanvasPathCreate() {
-    return new WebCanvasPath();
-}
-void oakCanvasPathMoveTo(void* ospath, POINT pt) {
-    ((WebCanvasPath*)ospath)->moveTo(pt);
-}
-void oakCanvasPathLineTo(void* ospath, POINT pt) {
-    ((WebCanvasPath*)ospath)->lineTo(pt);
-}
-void oakCanvasPathCurveTo(void* ospath, POINT ctrl1, POINT ctrl2, POINT pt) {
-    ((WebCanvasPath*)ospath)->curveTo(ctrl1, ctrl2, pt);
-}
-void oakCanvasPathRelease(void* ospath) {
-    delete (WebCanvasPath*)ospath;
 }
 
 #endif

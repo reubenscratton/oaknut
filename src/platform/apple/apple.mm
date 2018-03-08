@@ -29,42 +29,79 @@ static EAGLSharegroup* s_mainEAGLSharegroup;
 static CGLContextObj s_mainContext;
 #endif
 
-void* oakAsyncQueueCreate(const char* queueName) {
+void Task::ensureSharedGLContext() {
 #if TARGET_OS_IOS
-    if (!s_mainEAGLSharegroup) {
-        s_mainEAGLSharegroup = [EAGLContext currentContext].sharegroup;
-    }
-#else
-    if (!s_mainContext) {
-         s_mainContext = CGLGetCurrentContext();
-    }
-#endif
-    dispatch_queue_t queue = dispatch_queue_create(queueName, 0);
-    dispatch_async(queue, ^() {
-#if TARGET_OS_IOS
+    if (![EAGLContext currentContext]) {
         EAGLContext* eaglcontext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2 sharegroup: s_mainEAGLSharegroup];
         assert(eaglcontext);
         [EAGLContext setCurrentContext:eaglcontext];
+    }
 #else
+    if (!CGLGetCurrentContext()) {
         CGLContextObj ctx;
         CGLCreateContext(CGLGetPixelFormat(s_mainContext), s_mainContext, &ctx);
         CGLSetCurrentContext(ctx);
+    }
 #endif
-
-    });
-    return (__bridge_retained void*)queue;
-}
-void oakAsyncQueueDelete(void* osobj) {
-    dispatch_queue_t __unused queue = (__bridge_transfer dispatch_queue_t)osobj;
-}
-void oakAsyncQueueEnqueueItem(void* osobj, function<void(void)> func) {
-    dispatch_queue_t q = (__bridge dispatch_queue_t)osobj;
-    dispatch_async(q, ^{
-        func();
-    });
 }
 
-void oakAsyncRunOnMainThread(function<void(void)> func) {
+
+class AppleTask : public Task {
+public:
+    NSBlockOperation* _op;
+
+    AppleTask(TASKFUNC func) : Task(func) {
+        _op = [NSBlockOperation blockOperationWithBlock:^() {
+            _func();
+        }];
+    }
+};
+
+Task* Task::create(TASKFUNC func) {
+    return new AppleTask(func);
+}
+
+class AppleTaskQueue : public TaskQueue {
+public:
+
+    NSOperationQueue* _queue;
+
+    AppleTaskQueue(const string& name) : TaskQueue(name) {
+#if TARGET_OS_IOS
+        if (!s_mainEAGLSharegroup) {
+            s_mainEAGLSharegroup = [EAGLContext currentContext].sharegroup;
+        }
+#else
+        if (!s_mainContext) {
+             s_mainContext = CGLGetCurrentContext();
+        }
+#endif
+        _queue = [NSOperationQueue new];
+        _queue.name = [[NSString alloc] initWithUTF8String:name.data()];
+    }
+    ~AppleTaskQueue() {
+        _queue = nil;
+    }
+
+    void enqueueTask(Task* task) {
+        [_queue addOperation:((AppleTask*)task)->_op];
+    }
+    bool cancelTask(Task* atask) {
+        AppleTask* task = (AppleTask*)atask;
+        if (!task->_op.isCancelled && !task->_op.isFinished && !task->_op.isExecuting) {
+            [task->_op cancel];
+            return task->_op.isCancelled;
+        }
+        return false;
+    }
+
+};
+
+TaskQueue* TaskQueue::create(const string& name) {
+    return new AppleTaskQueue(name);
+}
+
+void TaskQueue::postToMainThread(function<void(void)> func) {
     dispatch_async(dispatch_get_main_queue(), ^() {
         func();
     });

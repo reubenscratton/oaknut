@@ -12,6 +12,8 @@
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
 #include <OpenGL/glext.h>
+#define glGenVertexArrays glGenVertexArraysAPPLE
+#define glBindVertexArray glBindVertexArrayAPPLE
 #endif
 #include <objc/runtime.h>
 #include <objc/message.h>

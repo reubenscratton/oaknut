@@ -132,18 +132,6 @@ Font* oakFontGet(const string& fontAssetPath, float size) {
 
 
 
-@interface AppleCanvas : NSObject {
-    @public
-    ObjPtr<OSBitmap> _bitmap;
-    CGSize _size;
-    CGColorRef _fillColor;
-    CGColorRef _strokeColor;
-    CGFloat _strokeWidth;
-    const AffineTransform* _transform;
-}
-
-@end
-
 static CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
 
 static CGColorRef rgba(unsigned int rgba) {
@@ -155,154 +143,132 @@ static CGColorRef rgba(unsigned int rgba) {
     return CGColorCreate(rgb, components);
 }
 
-@implementation AppleCanvas
+class ApplePath : public Path {
+public:
+    CGMutablePathRef _path;
 
-- (void)resize:(CGSize)size {
-    _size = size;
-    _bitmap = new OSBitmap(size.width, size.height, BITMAPFORMAT_RGBA32, NULL, 0);
-}
-
-- (void)clear:(COLOUR)colour {
-    CGContextSetBlendMode(_bitmap->_context, kCGBlendModeCopy);
-    CGContextRef context = _bitmap->_context;
-    CGContextSetFillColorWithColor(context, rgba(colour));
-    CGContextFillRect(context, CGRectMake(0,0,_size.width,_size.height));
-    CGContextSetFillColorWithColor(context, _fillColor);
-    CGContextSetLineCap(context, kCGLineCapRound);
-    _bitmap->_needsUpload = true;
-    CGContextSetBlendMode(_bitmap->_context, kCGBlendModeNormal);
-}
-
-- (void)setFillColour:(COLOUR)colour {
-    _fillColor = rgba(colour);
-    CGContextSetFillColorWithColor(_bitmap->_context, _fillColor);
-}
-- (void)setStrokeColour:(COLOUR)colour {
-    _strokeColor = rgba(colour);
-    CGContextSetStrokeColorWithColor(_bitmap->_context, _strokeColor);
-}
-- (void)setStrokeWidth:(CGFloat)strokeWidth {
-    _strokeWidth = strokeWidth;
-    CGContextSetLineWidth(_bitmap->_context, strokeWidth);
-}
-- (void)setAffineTransform:(AffineTransform*)t {
-    _transform = t;
-}
-
-- (void)drawRect:(RECT)rect {
-    CGRect cgrect = CGRectMake(rect.origin.x,rect.origin.y,rect.size.width,rect.size.height);
-    if (_fillColor) {
-        CGContextFillRect(_bitmap->_context, cgrect);
+    ApplePath() {
+        _path = CGPathCreateMutable();
     }
-    if (_strokeColor && _strokeWidth>0) {
-        CGContextStrokeRect(_bitmap->_context, cgrect);
+    ~ApplePath() {
+        CGPathRelease(_path);
     }
-    _bitmap->_needsUpload = true;
-}
+    void moveTo(POINT pt) {
+        CGPathMoveToPoint(_path, nil, pt.x, pt.y);
+    }
+    void lineTo(POINT pt) {
+        CGPathAddLineToPoint(_path, nil, pt.x, pt.y);
+    }
+    void curveTo(POINT ctrl1, POINT ctrl2, POINT pt) {
+        CGPathAddCurveToPoint(_path, nil, ctrl1.x, ctrl1.y, ctrl2.x, ctrl2.y, pt.x, pt.y);
+    }
 
-- (void)drawOval:(RECT)rect {
-    CGRect cgrect = CGRectMake(rect.origin.x,rect.origin.y,rect.size.width,rect.size.height);
-    if (_fillColor) {
-        CGContextFillEllipseInRect(_bitmap->_context, cgrect);
-    }
-    if (_strokeColor && _strokeWidth>0) {
-        CGContextStrokeEllipseInRect(_bitmap->_context, cgrect);
-    }
-    _bitmap->_needsUpload = true;
-}
+};
 
-- (void)drawPath:(void*)ospath {
-    CGPathRef path = (CGPathRef)ospath;
-    if (_transform) {
-        CGAffineTransform cgtransform;
-        cgtransform.a = _transform->a;
-        cgtransform.b = _transform->b;
-        cgtransform.c = _transform->c;
-        cgtransform.d = _transform->d;
-        cgtransform.tx = _transform->tx;
-        cgtransform.ty = _transform->ty;
-        path = CGPathCreateCopyByTransformingPath(path, &cgtransform);
-    }
-    CGContextBeginPath(_bitmap->_context);
-    CGContextAddPath(_bitmap->_context, path);
-    CGContextClosePath(_bitmap->_context);
-    if (_fillColor) {
-        CGContextFillPath(_bitmap->_context);
-    }
-    if (_strokeColor && _strokeWidth>0) {
-        CGContextStrokePath(_bitmap->_context);
-    }
-    _bitmap->_needsUpload = true;
-}
-
-@end
+class AppleCanvas : public Canvas {
+public:
+    ObjPtr<OSBitmap> _bitmap;
+    CGSize _size;
+    CGColorRef _fillColor;
+    CGColorRef _strokeColor;
+    CGFloat _strokeWidth;
+    const AffineTransform* _transform;
 
 
-// API
-void* oakCanvasCreate() {
-    AppleCanvas* canvas = [AppleCanvas new];
-    return (__bridge_retained void*)(canvas);
-}
-Bitmap* oakCanvasGetBitmap(void* oscanvas) {
-    AppleCanvas* canvas = (__bridge AppleCanvas*)oscanvas;
-    return canvas->_bitmap;
-}
-void oakCanvasResize(void* oscanvas, int width, int height) {
-    AppleCanvas* canvas = (__bridge AppleCanvas*)oscanvas;
-    [canvas resize:CGSizeMake(width, height)];
-}
-void oakCanvasClear(void* canvas, COLOUR colour) {
-    AppleCanvas* c = (__bridge AppleCanvas*)canvas;
-    [c clear:colour];
-}
-void oakCanvasSetFillColour(void* canvas, COLOUR colour) {
-    AppleCanvas* c = (__bridge AppleCanvas*)canvas;
-    [c setFillColour:colour];
-}
-void oakCanvasSetStrokeColour(void* canvas, COLOUR colour) {
-    AppleCanvas* c = (__bridge AppleCanvas*)canvas;
-    [c setStrokeColour:colour];
-}
-void oakCanvasSetStrokeWidth(void* canvas, float strokeWidth) {
-    AppleCanvas* c = (__bridge AppleCanvas*)canvas;
-    [c setStrokeWidth:strokeWidth];
-}
-void oakCanvasSetAffineTransform(void* canvas, AffineTransform* t) {
-    AppleCanvas* c = (__bridge AppleCanvas*)canvas;
-    [c setAffineTransform:t];
-}
-void oakCanvasDrawRect(void* canvas, RECT rect) {
-    AppleCanvas* c = (__bridge AppleCanvas*)canvas;
-    [c drawRect:rect];
-}
-void oakCanvasDrawOval(void* canvas, RECT rect) {
-    AppleCanvas* c = (__bridge AppleCanvas*)canvas;
-    [c drawOval:rect];
-}
-void oakCanvasDrawPath(void* canvas, void* ospath) {
-    AppleCanvas* c = (__bridge AppleCanvas*)canvas;
-    [c drawPath:ospath];
+    Bitmap* getBitmap() {
+        return _bitmap;
+    }
+    void resize(int width, int height) {
+        _size.width = width;
+        _size.height = height;
+        _bitmap = new OSBitmap(width, height, BITMAPFORMAT_RGBA32, NULL, 0);
+    }
+    void clear(COLOUR colour) {
+        CGContextSetBlendMode(_bitmap->_context, kCGBlendModeCopy);
+        CGContextRef context = _bitmap->_context;
+        CGContextSetFillColorWithColor(context, rgba(colour));
+        CGContextFillRect(context, CGRectMake(0,0,_size.width,_size.height));
+        CGContextSetFillColorWithColor(context, _fillColor);
+        CGContextSetLineCap(context, kCGLineCapRound);
+        _bitmap->_needsUpload = true;
+        CGContextSetBlendMode(_bitmap->_context, kCGBlendModeNormal);
+    }
+    void setFillColour(COLOUR colour) {
+        _fillColor = rgba(colour);
+        CGContextSetFillColorWithColor(_bitmap->_context, _fillColor);
+    }
+    void setStrokeColour(COLOUR colour) {
+       _strokeColor = rgba(colour);
+        CGContextSetStrokeColorWithColor(_bitmap->_context, _strokeColor);
+    }
+    void setStrokeWidth(float strokeWidth) {
+        _strokeWidth = strokeWidth;
+        CGContextSetLineWidth(_bitmap->_context, strokeWidth);
+    }
+    void setAffineTransform(AffineTransform* t) {
+        _transform = t;
+    }
+
+    void drawRect(RECT rect) {
+        CGRect cgrect = CGRectMake(rect.origin.x,rect.origin.y,rect.size.width,rect.size.height);
+        if (_fillColor) {
+            CGContextFillRect(_bitmap->_context, cgrect);
+        }
+        if (_strokeColor && _strokeWidth>0) {
+            CGContextStrokeRect(_bitmap->_context, cgrect);
+        }
+        _bitmap->_needsUpload = true;
+    }
+
+    void drawOval(RECT rect) {
+        CGRect cgrect = CGRectMake(rect.origin.x,rect.origin.y,rect.size.width,rect.size.height);
+        if (_fillColor) {
+            CGContextFillEllipseInRect(_bitmap->_context, cgrect);
+        }
+        if (_strokeColor && _strokeWidth>0) {
+            CGContextStrokeEllipseInRect(_bitmap->_context, cgrect);
+        }
+        _bitmap->_needsUpload = true;
+    }
+
+    Path* createPath() {
+        return new ApplePath();
+    }
+
+    void drawPath(Path* path) {
+        ApplePath* applePath = (ApplePath*)path;
+        CGPathRef cgpath = applePath->_path;
+        if (_transform) {
+            CGAffineTransform cgtransform;
+            cgtransform.a = _transform->a;
+            cgtransform.b = _transform->b;
+            cgtransform.c = _transform->c;
+            cgtransform.d = _transform->d;
+            cgtransform.tx = _transform->tx;
+            cgtransform.ty = _transform->ty;
+            cgpath = CGPathCreateCopyByTransformingPath(cgpath, &cgtransform);
+        }
+        CGContextBeginPath(_bitmap->_context);
+        CGContextAddPath(_bitmap->_context, cgpath);
+        CGContextClosePath(_bitmap->_context);
+        if (_fillColor) {
+            CGContextFillPath(_bitmap->_context);
+        }
+        if (_strokeColor && _strokeWidth>0) {
+            CGContextStrokePath(_bitmap->_context);
+        }
+        _bitmap->_needsUpload = true;
+        if (_transform) {
+            CGPathRelease(cgpath);
+        }
+    }
+
+};
+
+Canvas* Canvas::create() {
+    return new AppleCanvas();
 }
 
-void* oakCanvasPathCreate() {
-    CGMutablePathRef path = CGPathCreateMutable();
-    return path;
-}
-void oakCanvasPathMoveTo(void* ospath, POINT pt) {
-    CGMutablePathRef path = (CGMutablePathRef)ospath;
-    CGPathMoveToPoint(path, nil, pt.x, pt.y);
-}
-void oakCanvasPathLineTo(void* ospath, POINT pt) {
-    CGMutablePathRef path = (CGMutablePathRef)ospath;
-    CGPathAddLineToPoint(path, nil, pt.x, pt.y);
-}
-void oakCanvasPathCurveTo(void* ospath, POINT ctrl1, POINT ctrl2, POINT pt) {
-    CGMutablePathRef path = (CGMutablePathRef)ospath;
-    CGPathAddCurveToPoint(path, nil, ctrl1.x, ctrl1.y, ctrl2.x, ctrl2.y, pt.x, pt.y);
-}
-void oakCanvasPathRelease(void* ospath) {
-    CGMutablePathRef path = (CGMutablePathRef)ospath;
-    CGPathRelease(path);
-}
+
 
 #endif

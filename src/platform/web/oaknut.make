@@ -21,19 +21,19 @@ OPTS:=-O0 --profiling -s USE_PTHREADS=1 -s DEMANGLE_SUPPORT=1 -s TOTAL_MEMORY=33
 OPTS+= -isystem $(EMSCRIPTEN_ROOT)/system/include
 
 $(OBJS_CPP): $(OBJ_DIR)%.bc : % | $(OBJ_DIR)
-	@echo Compiling $(notdir $@)
+	@echo web: Compiling $(notdir $<)
 	@mkdir -p $(dir $@)
 	@$(EMSCRIPTEN_ROOT)/emcc --bind -std=c++11 $(CFLAGS) $(OPTS) -I$(OAKNUT_DIR)/src $< -o $@
 
 $(OBJS_C): $(OBJ_DIR)%.bc : % | $(OBJ_DIR)
-	@echo Compiling $(notdir $<)
+	@echo web: Compiling $(notdir $<)
 	@mkdir -p $(dir $@)
 	@$(EMSCRIPTEN_ROOT)/emcc --bind $(CFLAGS) $(OPTS) -I$(OAKNUT_DIR)/src $< -o $@
 
 EXECUTABLE=$(OUTPUT_DIR)/xx.html
 
 $(EXECUTABLE): $(OBJS) $(HTML_FILE)
-	@echo Linking app
+	@echo web: Linking app
 	@mkdir -p $(dir $(EXECUTABLE))
 	@$(EMSCRIPTEN_ROOT)/emcc --bind $(OPTS) --emrun --preload-file $(PROJECT_ROOT)/assets@/assets --shell-file $(HTML_FILE) $(OBJS) -o $@
 

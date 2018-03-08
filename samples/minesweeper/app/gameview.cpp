@@ -68,23 +68,23 @@ bool GameView::onTouchEvent(int eventType, int finger, POINT pt) {
     if (_game->_state != InProgress) {
         return false;
     }
-    if (eventType == TOUCH_EVENT_DOWN
-        || eventType == TOUCH_EVENT_DRAG
-        || eventType == TOUCH_EVENT_UP
-        || eventType == TOUCH_EVENT_CANCEL) {
+    if (eventType == INPUT_EVENT_DOWN
+        || eventType == INPUT_EVENT_DRAG
+        || eventType == INPUT_EVENT_UP
+        || eventType == INPUT_EVENT_CANCEL) {
         if (_timer) {
             _timer->stop();
             _timer = NULL;
         }
     }
-    if (eventType == TOUCH_EVENT_DOWN) {
+    if (eventType == INPUT_EVENT_DOWN) {
         _wasLongPress = false;
         _timer = Timer::start([=] () {
             _wasLongPress = true;
             processCellTouch(pt, true);
         }, 800, false);
     } else
-    if (eventType == TOUCH_EVENT_TAP) {
+    if (eventType == INPUT_EVENT_TAP) {
         if (!_wasLongPress) {
             processCellTouch(pt, false);
         }

@@ -26,8 +26,8 @@
 #endif
 #import <OpenGL/gl.h>
 #if ESSENTIAL_GL_PRACTICES_SUPPORT_GL3
-#define glBindVertexArray glBindVertexArray
-#define glGenVertexArrays glGenVertexArrays
+//#define glBindVertexArray glBindVertexArray
+//#define glGenVertexArrays glGenVertexArrays
 #define glGenerateMipmap glGenerateMipmap
 #define glDeleteVertexArrays glDeleteVertexArrays
 #else
@@ -58,7 +58,7 @@ static bool _renderNeeded;
 - (void)handleTouches:(NSEvent*)event eventType:(int)eventType remove:(BOOL)remove {
     CGPoint pt = event.locationInWindow;
     pt.y = self.frame.size.height - pt.y;
-    mainWindow->dispatchTouchEvent(eventType, 0, event.timestamp*1000, pt.x, pt.y);
+    mainWindow->dispatchInputEvent(eventType, MAKE_SOURCE(INPUT_SOURCE_TYPE_MOUSE, 0), event.timestamp*1000, pt.x*mainWindow->_scale, pt.y*mainWindow->_scale);
     [self setNeedsDisplay:YES];
     /*NSSet<NSTouch*>* touches = event.allTouches;
     for (NSTouch* touch in touches) {
@@ -92,14 +92,14 @@ static bool s_mouseIsDown;
 
 - (void)mouseDown:(NSEvent *)event {
     s_mouseIsDown = true;
-    [self handleTouches:event eventType:TOUCH_EVENT_DOWN remove:NO];
+    [self handleTouches:event eventType:INPUT_EVENT_DOWN remove:NO];
 }
 - (void)mouseUp:(NSEvent *)event {
     s_mouseIsDown = false;
-    [self handleTouches:event eventType:TOUCH_EVENT_UP remove:YES];
+    [self handleTouches:event eventType:INPUT_EVENT_UP remove:YES];
 }
 - (void)mouseMoved:(NSEvent *)event {
-    [self handleTouches:event eventType:TOUCH_EVENT_MOVE remove:NO];
+    [self handleTouches:event eventType:INPUT_EVENT_MOVE remove:NO];
 }
 
 //- (void)touchesBeganWithEvent:(NSEvent*)event {
@@ -107,14 +107,14 @@ static bool s_mouseIsDown;
 - (void)touchesMovedWithEvent:(NSEvent*)event {
     if (s_mouseIsDown) {
 //    oakLog("move!");
-        [self handleTouches:event eventType:TOUCH_EVENT_MOVE remove:NO];
+        [self handleTouches:event eventType:INPUT_EVENT_MOVE remove:NO];
     }
 }
 //- (void)touchesEndedWithEvent:(NSEvent*)event {
 //}
 
 - (void)touchesCancelledWithEvent:(NSEvent*)event {
-    [self handleTouches:event eventType:TOUCH_EVENT_CANCEL remove:YES];
+    [self handleTouches:event eventType:INPUT_EVENT_CANCEL remove:YES];
 }
 
 

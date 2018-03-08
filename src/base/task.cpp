@@ -7,6 +7,22 @@
 
 #include <oaknut.h>
 
+Task::Task(TASKFUNC func) : _func(func) {
+}
+
+void Task::exec() {
+    _func();
+}
+
+bool Task::cancel() {
+    bool cancelled = true;
+    if (_queue) {
+        cancelled = _queue->cancelTask(this);
+        _queue = NULL;
+    }
+    return cancelled;
+}
+
 TaskQueue::TaskQueue(const string& name) : _name(name) {
 }
 

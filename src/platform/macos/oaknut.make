@@ -58,27 +58,27 @@ $(OBJ_DIR):
 	@mkdir -p $@
 
 $(OBJS_CPP): $(OBJ_DIR)/%.o : % | $(OBJ_DIR)
-	@echo Compiling $(notdir $@)
+	@echo macOS: Compiling $(notdir $<)
 	@mkdir -p $(dir $@)
 	$(CLANG) -arch x86_64 $(CFLAGS_COMMON) $(CFLAGS_COMPILE_CPP) $(CFLAGS_COMPILE) -o $@ -c $<
 
 $(OBJS_C): $(OBJ_DIR)/%.o : % | $(OBJ_DIR)
-	@echo Compiling $(notdir $@)
+	@echo macOS: Compiling $(notdir $<)
 	@mkdir -p $(dir $@)
 	$(CLANG) -arch x86_64 $(CFLAGS_COMMON) $(CFLAGS_COMPILE_C) $(CFLAGS_COMPILE) -o $@ -c $<
 
 $(OBJS_M): $(OBJ_DIR)/%.o : % | $(OBJ_DIR)
-	@echo Compiling $(notdir $@)
+	@echo macOS: Compiling $(notdir $<)
 	@mkdir -p $(dir $@)
 	$(CLANG) -arch x86_64 $(CFLAGS_COMMON) $(CFLAGS_COMPILE_M) $(CFLAGS_COMPILE) -o $@ -c $<
 
 $(OBJS_MM): $(OBJ_DIR)/%.o : % | $(OBJ_DIR)
-	@echo Compiling $(notdir $@)
+	@echo macOS: Compiling $(notdir $<)
 	@mkdir -p $(dir $@)
 	$(CLANG) -arch x86_64 $(CFLAGS_COMMON) $(CFLAGS_COMPILE_MM) $(CFLAGS_COMPILE) -o $@ -c $<
 
 $(EXECUTABLE) : $(OBJS) $(BUNDLE_DIR) $(ASSETS_DIR)/assets
-	@echo Linking app
+	@echo macOS: Linking app
 	@mkdir -p $(dir $(EXECUTABLE))
 	$(CLANG)++ -arch x86_64 $(CFLAGS_COMMON) -o $@ $(FRAMEWORKS) $(OBJS) $(CFLAGS_LINK)
 	plutil -convert binary1 $(PROJECT_ROOT)/platform/macos/Info.plist -o $(BUNDLE_DIR)/Contents/Info.plist

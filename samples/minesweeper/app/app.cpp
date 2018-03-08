@@ -34,7 +34,7 @@ public:
         _labelNumFlags = (Label*)view->findViewById("flags");
         _imageViewFace = (ImageView*)view->findViewById("face");
         _imageViewFace->onTouchEventDelegate = [=](View* view, int eventType, int eventSource, POINT pt) -> bool {
-            if (eventType == TOUCH_EVENT_TAP) {
+            if (eventType == INPUT_EVENT_TAP) {
                 if (_game->_state != InProgress) {
                     _game->restart();
                 }

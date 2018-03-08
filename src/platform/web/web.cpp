@@ -72,6 +72,8 @@ static void Emma_setWindowSize(int width, int height, int scale) {
 
 static void Emma_userEvent(int eventType, int eventSourceId, int x, int y) {
     //oakLog("userEv type=%d src=%d x=%d,y=%d", eventType, eventSourceId, x, y);
+    x *= mainWindow->_scale;
+    y *= mainWindow->_scale;
     mainWindow->dispatchInputEvent(eventType, (INPUT_SOURCE_TYPE_MOUSE<<8) | eventSourceId, oakCurrentMillis(), x, y);
 }
 

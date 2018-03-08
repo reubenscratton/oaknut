@@ -1,0 +1,6 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Minesweeper_macos" type="CMakeRunConfiguration" factoryName="Application" WORKING_DIR="file://$PROJECT_DIR$/build/macos" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Minesweeper" TARGET_NAME="Minesweeper_macos" CONFIG_NAME="Debug" RUN_PATH="$PROJECT_DIR$/build/macos/Minesweeper_macos.app/Contents/MacOS/macos_app">
+    <envs />
+    <method />
+  </configuration>
+</component>

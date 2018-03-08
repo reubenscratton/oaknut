@@ -4,14 +4,14 @@
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
 //
-#if PLATFORM_LINUX
+#if PLATFORM_WEB
 
 #include <oaknut.h>
 
-
-static Task* Task::create(TASKFUNC func) {
+Task* Task::create(TASKFUNC func) {
     return new Task(func);
 }
+
 
 class PosixTaskQueue : public TaskQueue {
 public:
@@ -29,7 +29,7 @@ public:
         pthread_cond_destroy(&_cond);
         pthread_mutex_destroy(&_mutex);
     }
-    
+
     void enqueueTask(Task* task) {
         pthread_mutex_lock(&_mutex);
         _tasks.push_back(task);
@@ -40,7 +40,7 @@ public:
         bool found = false;
         pthread_mutex_lock(&_mutex);
         for (auto it = _tasks.begin() ; it!=_tasks.end() ; it++) {
-            if (it == task) {
+            if (*it == task) {
                 _tasks.erase(it);
                 found = true;
                 break;
@@ -59,7 +59,7 @@ public:
     static void* s_threadFunc(void* arg) {
         return ((PosixTaskQueue*)arg)->threadFunc();
     }
-    
+
     void* threadFunc() {
         retain();
         for (;;) {
@@ -73,7 +73,7 @@ public:
             if (!task) {
                 break;
             }
-            task.func();
+            task->exec();
         }
         release();
         printf("exiting threadFunc\n");
@@ -100,10 +100,9 @@ void mainThreadThunk(Foo* foo) {
     delete foo;
 }
 
-void oakAsyncRunOnMainThread(std::function<void(void)> func) {
+void TaskQueue::postToMainThread(TASKFUNC func) {
     void* pv = new Foo(func);
-    oakLog("TODO! oakAsyncRunOnMainThread");
-    //emscripten_async_waitable_run_in_main_runtime_thread_(EM_FUNC_SIG_VI, (void*)mainThreadThunk, pv);
+    emscripten_async_waitable_run_in_main_runtime_thread_(EM_FUNC_SIG_VI, (void*)mainThreadThunk, pv);
 }
 
 #endif

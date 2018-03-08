@@ -8,9 +8,9 @@
 
 class Path : public Object {
 public:
-    void moveTo(POINT pt);
-    void lineTo(POINT pt);
-    void curveTo(POINT ctrl1, POINT ctrl2, POINT pt);
+    virtual void moveTo(POINT pt)=0;
+    virtual void lineTo(POINT pt)=0;
+    virtual void curveTo(POINT ctrl1, POINT ctrl2, POINT pt)=0;
 };
 
 class Canvas : public Object {

@@ -119,7 +119,7 @@ extern dispatch_queue_t oakQueue;
 		}
 
         //dispatch_async(oakQueue, ^{
-            mainWindow->dispatchTouchEvent(eventType, touchSlot, touch.timestamp*1000, pt.x, pt.y);
+            mainWindow->dispatchInputEvent(eventType, MAKE_SOURCE(INPUT_SOURCE_TYPE_FINGER, touchSlot), touch.timestamp*1000, pt.x, pt.y);
             [self setNeedsDisplay];
         //});
 	}
@@ -127,19 +127,19 @@ extern dispatch_queue_t oakQueue;
 
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
-	[self handleTouches:touches eventType:TOUCH_EVENT_DOWN remove:NO];
+	[self handleTouches:touches eventType:INPUT_EVENT_DOWN remove:NO];
 }
 
 - (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
-	[self handleTouches:touches eventType:TOUCH_EVENT_MOVE remove:NO];
+	[self handleTouches:touches eventType:INPUT_EVENT_MOVE remove:NO];
 }
 
 - (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
-	[self handleTouches:touches eventType:TOUCH_EVENT_UP remove:YES];
+	[self handleTouches:touches eventType:INPUT_EVENT_UP remove:YES];
 }
 
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
-	[self handleTouches:touches eventType:TOUCH_EVENT_CANCEL remove:YES];
+	[self handleTouches:touches eventType:INPUT_EVENT_CANCEL remove:YES];
 }
 
 
