@@ -102,7 +102,7 @@ void mainThreadThunk(Foo* foo) {
 
 void oakAsyncRunOnMainThread(std::function<void(void)> func) {
     void* pv = new Foo(func);
-    oakLog("TODO! oakAsyncRunOnMainThread");
+    app.log("TODO! oakAsyncRunOnMainThread");
     //emscripten_async_waitable_run_in_main_runtime_thread_(EM_FUNC_SIG_VI, (void*)mainThreadThunk, pv);
 }
 

@@ -29,7 +29,7 @@ void URLRequest::nativeStart() {
 }
 
 void URLRequest::nativeStop() {
-    oakLog("todo! URLRequest::nativeStop");
+    app.log("todo! URLRequest::nativeStop");
 }
 
 

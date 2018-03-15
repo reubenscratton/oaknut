@@ -35,7 +35,7 @@ public:
 #if DEBUG
     void dbgLog(bool retain) {
         if (_obj && _obj==DBGOBJ) {
-            oakLog("DBGOBJ:%s=%d", retain?"+1":"-1", _obj->_refs);
+            app.log("DBGOBJ:%s=%d", retain?"+1":"-1", _obj->_refs);
         }
     }
 #else

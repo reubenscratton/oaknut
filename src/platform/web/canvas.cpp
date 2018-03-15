@@ -18,7 +18,7 @@ public:
     val _canvas;
     val _ctxt;
     
-    WebFont(const string& fontAssetPath, float size) : Font(fontAssetPath, dp(size)), _canvas(val::null()), _ctxt(val::null()) {
+    WebFont(const string& fontAssetPath, float size) : Font(fontAssetPath, app.dp(size)), _canvas(val::null()), _ctxt(val::null()) {
         _canvas = val::global("document").call<val>("createElement", val("canvas"));
         _canvas.set("width", _size);
         _canvas.set("height", _size);
@@ -28,12 +28,12 @@ public:
             if (it != s_customFonts.end()) {
                 fontFamily = it->second;
             } else {
-                Data* fontData = oakLoadAsset(fontAssetPath.data());
+                Data* fontData = app.loadAsset(fontAssetPath.data());
                 fontFamily = fontAssetPath;
                 while (stringExtractUpTo(fontFamily, "/", true).length() > 0) {}
                 stringEndsWith(fontFamily, ".ttf", true);
                 stringEndsWith(fontFamily, ".otf", true);
-                //oakLog("Custom font %s loaded from %s", fontFamily.data(), fontAssetPath.data());
+                //app.log("Custom font %s loaded from %s", fontFamily.data(), fontAssetPath.data());
                 string fontDataStr = "@font-face { font-family:\"";
                 fontDataStr += fontFamily;
                 fontDataStr += "\"; src: url(data:application/font-sfnt;base64,";

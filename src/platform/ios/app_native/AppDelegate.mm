@@ -71,10 +71,10 @@ extern dispatch_queue_t oakQueue;
         
     
     if (!_calledMain) {
-        oakMain();
+        app.main();
         _calledMain = true;
     }
-    mainWindow->draw();
+    app._window->draw();
     
     [glContext presentRenderbuffer:GL_RENDERBUFFER];
     
@@ -93,7 +93,7 @@ extern dispatch_queue_t oakQueue;
 	int scale = [UIScreen mainScreen].scale;
     CGRect bounds = self.bounds;
     //dispatch_async(oakQueue, ^{
-        mainWindow->resizeSurface(bounds.size.width * scale, bounds.size.height * scale, scale);
+        app._window->resizeSurface(bounds.size.width * scale, bounds.size.height * scale, scale);
     //});
 }
 
@@ -119,7 +119,7 @@ extern dispatch_queue_t oakQueue;
 		}
 
         //dispatch_async(oakQueue, ^{
-            mainWindow->dispatchInputEvent(eventType, MAKE_SOURCE(INPUT_SOURCE_TYPE_FINGER, touchSlot), touch.timestamp*1000, pt.x, pt.y);
+            app._window->dispatchInputEvent(eventType, MAKE_SOURCE(INPUT_SOURCE_TYPE_FINGER, touchSlot), touch.timestamp*1000, pt.x, pt.y);
             [self setNeedsDisplay];
         //});
 	}
@@ -217,7 +217,7 @@ extern dispatch_queue_t oakQueue;
 
 static OaknutView* s_oaknutView;
 
-void oakRequestRedraw() {
+void App::requestRedraw() {
     [s_oaknutView setNeedsDisplay2];
 }
 
@@ -243,8 +243,8 @@ void oakRequestRedraw() {
     viewController.view = s_oaknutView;
     self.window.rootViewController = viewController;
  
-	mainWindow = new Window();
-	mainWindow->_scale = s_oaknutView.contentScaleFactor;//[UIScreen mainScreen].scale;
+	app._window = new Window();
+	app._window->_scale = s_oaknutView.contentScaleFactor;//[UIScreen mainScreen].scale;
 	
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];

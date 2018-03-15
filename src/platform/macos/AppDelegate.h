@@ -7,6 +7,7 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#include <oaknut.h>
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 

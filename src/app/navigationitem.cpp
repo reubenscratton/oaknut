@@ -46,7 +46,7 @@ void NavigationItem::setTitleView(View* titleView) {
 ToolbarButton* NavigationItem::createIconButton(const string& src, OnClickDelegate onClickDelegate) {
 	ToolbarButton* button = new ToolbarButton();
 	button->setMeasureSpecs(MEASURESPEC_UseAspect(1), MEASURESPEC_FillParent);
-    Data* data = oakLoadAsset(src.data());
+    Data* data = app.loadAsset(src.data());
     oakBitmapCreateFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
         button->setImageBitmap(bitmap);
     });

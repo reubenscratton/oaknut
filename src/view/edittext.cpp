@@ -80,7 +80,7 @@ void EditText::updateCursor() {
 
 void EditText::setPadding(EDGEINSETS padding) {
     if (_showClearButtonWhenNotEmpty) {
-        padding.right += dp(16);
+        padding.right += app.dp(16);
     }
     Label::setPadding(padding);
 }
@@ -91,7 +91,7 @@ void EditText::setText(string text) {
     _insertionPoint = min(_insertionPoint, (int)text.length());
     updateClearButton();
     if (isFirstResponder()) {
-        oakKeyboardNotifyTextChanged();
+        app.keyboardNotifyTextChanged();
     }
 }
 

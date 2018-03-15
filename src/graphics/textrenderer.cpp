@@ -125,7 +125,7 @@ void TextRenderer::measure(SIZE maxSize) {
             continue;
         }
         if (ch=='\t') {
-            oakLog("todo: tabstops!");
+            app.log("todo: tabstops!");
             ch = ' ';
         }
         if (ch == ' ') { // TODO: there are many more space chars in unicode
@@ -176,7 +176,7 @@ void TextRenderer::measure(SIZE maxSize) {
 
         // Soft line break:
         if (whitespaceStartIndex >=0) {
-            oakLog("TODO: soft line breaks!");
+            app.log("TODO: soft line breaks!");
             whitespaceStartIndex = -1;
         }
         

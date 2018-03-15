@@ -11,7 +11,7 @@ static KeyValueMap s_userdefaults;
 static bool s_init;
 
 static string getUserDefaultsPath() {
-    string str = oakGetAppHomeDir();
+    string str = app.getAppHomeDir();
     str.append("_userdefaults.dat");
     return str;
 }

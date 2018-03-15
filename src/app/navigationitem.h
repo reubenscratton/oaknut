@@ -7,12 +7,12 @@
 
 class NavigationItem : public Object {
 public:
-	ObjPtr<View> _titleView;
+	ObjPtr<class View> _titleView;
     ObjPtr<class LinearLayout> _leftButtonsFrame;
     ObjPtr<LinearLayout> _rightButtonsFrame;
 	
     NavigationItem();
-	static ToolbarButton* createIconButton(const string& src, OnClickDelegate onClickDelegate);
+	static class ToolbarButton* createIconButton(const string& src, std::function<void(View*)> onClickDelegate);
 	void setTitle(const string& title);
 	void setTitleView(View* titleView);
 	void addLeftButton(ToolbarButton* button);

@@ -92,7 +92,7 @@ Font* Styles::getFont(const string &key) {
 string Styles::getString(const string& keypath) {
     StyleValue* value = s_root.getValue(keypath);
     if (!value) {
-        oakLog("Warning: missing string style info '%s'", keypath.data());
+        app.log("Warning: missing string style info '%s'", keypath.data());
         return "";
     }
     if (value->type==StyleValue::Type::String) return value->str;
@@ -104,7 +104,7 @@ string Styles::getString(const string& keypath) {
 float Styles::getFloat(const string& keypath) {
     StyleValue* value = s_root.getValue(keypath);
     if (!value) {
-        oakLog("Warning: missing float style info '%s'", keypath.data());
+        app.log("Warning: missing float style info '%s'", keypath.data());
         return 0;
     }
     return value->getAsFloat();
@@ -112,7 +112,7 @@ float Styles::getFloat(const string& keypath) {
 COLOUR Styles::getColour(const string& key) {
     StyleValue* value = s_root.getValue(key);
     if (!value) {
-        oakLog("Warning: missing colour style info '%s'", key.data());
+        app.log("Warning: missing colour style info '%s'", key.data());
         return 0;
     }
     if (value->type==StyleValue::Type::Int) return value->i;
@@ -137,7 +137,7 @@ StyleValue* StyleValueUber::select() {
             applies = true;
 #endif
         } else {
-            oakLog("Warning: unsupported qualifier '%s'", qual.data());
+            app.log("Warning: unsupported qualifier '%s'", qual.data());
         }
         if (applies) {
             // TODO: apply precedence that favours higher specificity
@@ -162,7 +162,7 @@ StyleValue* StyleMap::getValue(const string& keypath) {
                 return NULL;
             }
             if (val->type != StyleValue::Type::StyleMap) {
-                oakLog("Error: map was expected for '%s'", key.data());
+                app.log("Error: map was expected for '%s'", key.data());
                 return NULL;
             }
             return val->styleMap->getValue(subkey);
@@ -184,7 +184,7 @@ StyleValue* StyleMap::getValue(const string& keypath) {
 }
 
 void Styles::loadAsset(const string& assetPath) {
-    ObjPtr<Data> data = oakLoadAsset(assetPath.data());
+    ObjPtr<Data> data = app.loadAsset(assetPath.data());
     if (!data) {
         return;
     }
@@ -196,7 +196,7 @@ void Styles::loadAsset(const string& assetPath) {
 bool StyleMap::parse(Utf8Iterator& it) {
     it.skipWhitespace();
     if ('{' != it.next()) {
-        oakLog("Error: expected '{'");
+        app.log("Error: expected '{'");
         return false;
     }
     while (!it.eof()) {
@@ -207,7 +207,7 @@ bool StyleMap::parse(Utf8Iterator& it) {
         }
         string fieldName = it.nextToken();
         if (fieldName.length() == 0) {
-            oakLog("Error: expected a field name");
+            app.log("Error: expected a field name");
             return false;
         }
         
@@ -227,7 +227,7 @@ bool StyleMap::parse(Utf8Iterator& it) {
         
         it.skipWhitespace();
         if (it.next() != ':') {
-            oakLog("Error: expected \':\' after identifier \'%s\'", fieldName.data());
+            app.log("Error: expected \':\' after identifier \'%s\'", fieldName.data());
             return false;
         }
         it.skipWhitespace();
@@ -243,7 +243,7 @@ bool StyleMap::parse(Utf8Iterator& it) {
         } else {
             string str = it.nextToEndOfLine();
             if (str.length() == 0) {
-                oakLog("Error: expected a value");
+                app.log("Error: expected a value");
                 return false;
             }
             char ch = *str.begin();
@@ -344,7 +344,7 @@ float StyleValue::getAsFloat() {
     else if (type==Type::Int) f= i;
     else assert(0);
     if (unit==StyleValue::DP) {
-        f = dp(f);
+        f = app.dp(f);
     }
     return f;
 }
@@ -385,7 +385,7 @@ static View* inflateFromResource(pair<string, StyleValue*> r, View* parent) {
 }
 
 View* Styles::layoutInflate(const string& assetPath) {
-    ObjPtr<Data> data = oakLoadAsset(assetPath.data());
+    ObjPtr<Data> data = app.loadAsset(assetPath.data());
     if (!data) {
         return NULL;
     }

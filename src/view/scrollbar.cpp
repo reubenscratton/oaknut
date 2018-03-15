@@ -58,7 +58,7 @@ void Scrollbar::updateRect() {
     float visibleContentHeight = view->_contentSize.height - insets;
     float scale = (view->_frame.size.height-insets) / visibleContentHeight;
     float scrollbarLength = (view->_frame.size.height-insets) * scale;
-    scrollbarLength = fmaxf(scrollbarLength, dp(40));
+    scrollbarLength = fmaxf(scrollbarLength, app.dp(40));
     RECT rect = view->getBounds();
     rect.origin.x = rect.size.width - 9;
     rect.origin.y = view->_scrollInsets.top + view->_contentOffset.y * scale
@@ -79,7 +79,7 @@ bool Scrollbar::computeScrollOffset() {
         return false;
     }
     
-    int timePassed = (int)(oakCurrentMillis() - mStartTime);
+    int timePassed = (int)(app.currentMillis() - mStartTime);
     
     if (timePassed < mDuration) {
         if (mMode == SCROLL_MODE) {
@@ -125,7 +125,7 @@ void Scrollbar::startScroll(float start, float d, int duration) {
     mMode = SCROLL_MODE;
     mFinished = false;
     mDuration = duration;
-    mStartTime = oakCurrentMillis();
+    mStartTime = app.currentMillis();
     mStart = start;
     mFinal = start + d;
     mDelta = d;
@@ -142,7 +142,7 @@ void Scrollbar::fling(float start, float velocity, float min, float max) {
     mVelocity = velocity;
     mDuration = (int) (1000 * velocity / mDeceleration); // Duration is in milliseconds
     //assert(mDuration > 0);
-    mStartTime = oakCurrentMillis();
+    mStartTime = app.currentMillis();
     mStart = start;
     
     float totalDistance = ((velocity * velocity) / (2 * mDeceleration));
@@ -415,7 +415,7 @@ SplineOverScroller::SplineOverScroller() {
     mState = SPLINE;
     mFlingFriction = SCROLL_FRICTION;
     mFinished = true;
-    float ppi = mainWindow->_scale * 160.0f;
+    float ppi = app._window->_scale * 160.0f;
     mPhysicalCoeff = 9.80665 // SensorManager.GRAVITY_EARTH // g (m/s^2)
     * 39.37f // inch/meter
     * ppi

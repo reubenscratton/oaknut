@@ -61,7 +61,7 @@ void oakAudioInputClose(const void* osobj) {
 }
 
 JAVA_FN(void, AudioInput, nativeOnGotData)(JNIEnv *env, jobject javaobj, jlong nativeObj, jshortArray buffer, jint offset, jint len) {
-    //oakLog("Got audio data!");
+    //app.log("Got audio data!");
     AudioInput* audioInput = (AudioInput*)nativeObj;
     jshort* vals = env->GetShortArrayElements(buffer, NULL);
     audioInput->delegate(len, vals+offset);

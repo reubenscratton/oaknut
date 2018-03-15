@@ -16,13 +16,13 @@ string oakGetAppHomeDir() {
 
 
 
-Data* oakLoadAsset(const char* assetPath) {
+Data* App::loadAsset(const char* assetPath) {
     
     string str = "assets/";
     str.append(assetPath);
     FILE* asset = fopen(str.data(), "rb");
     if (!asset) {
-        oakLog("Failed to open asset: %s", assetPath);
+        app.log("Failed to open asset: %s", assetPath);
         return NULL;
     }
     

@@ -50,7 +50,7 @@ void RenderBatch::render(Window* window, Surface* surface, RenderOp* firstOp) {
             renderBase += numQuads;
             op->_batchGeometryValid = true;
         }
-        //oakLog("Buffering %d quads", _alloc->count);
+        //app.log("Buffering %d quads", _alloc->count);
         check_gl(glBufferSubData, GL_ARRAY_BUFFER, _alloc->offset*sizeof(QUAD), _alloc->count*sizeof(QUAD), _alloc->addr());
     }
     
@@ -135,7 +135,7 @@ void RenderBatch::render(Window* window, Surface* surface, RenderOp* firstOp) {
                   rect.size.width, rect.size.height);
     }
 
-    //   oakLog("Drawing %d quads at once", numQuadsThisChunk);
+    //   app.log("Drawing %d quads at once", numQuadsThisChunk);
     check_gl(glDrawElements, GL_TRIANGLES, 6 * numQuadsThisChunk, GL_UNSIGNED_SHORT, (void*)((_alloc->offset+firstOp->_renderBase)*6*sizeof(GLshort)));
 
     // Iterate next rect of invalid region, if there is any

@@ -359,7 +359,7 @@ void Surface::render(View* view, Window* window) {
     /** PHASE 2: THE ACTUAL OPENGL DRAW COMMANDS **/
     renderPhase2(NULL, view, window);
     
-    //oakLog("batch count:%d", _listBatches.size());
+    //app.log("batch count:%d", _listBatches.size());
 }
 
 

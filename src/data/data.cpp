@@ -51,7 +51,7 @@ bool Data::writeSelfToStream(Stream* stream) {
 Data* Data::createFromFile(const string &path) {
     FILE *file = fopen(path.data(), "rb");
     if (!file) {
-        oakLog("Failed to open file: %s", path.data());
+        app.log("Failed to open file: %s", path.data());
         return NULL;
     }
     Data* data = new Data();
@@ -68,7 +68,7 @@ Data* Data::createFromFile(const string &path) {
 void Data::saveToFile(const string& path) {
     FILE *file = fopen(path.data(), "w+b");
     if (!file) {
-        oakLog("Failed to open %s", path.data());
+        app.log("Failed to open %s", path.data());
         return;
     }
     fwrite(data, cb, 1, file);
@@ -206,12 +206,12 @@ int KeyValueMap::getInt(const string& key) const {
             case INT8: return val->second.i8;
             case INT16: return val->second.i16;
             case INT32: return val->second.i32;
-            case INT64: oakLog("Warning: possible data loss truncating int64 to int");
+            case INT64: app.log("Warning: possible data loss truncating int64 to int");
                 return (int)val->second.i64;
             case UINT8: return val->second.u8;
             case UINT16: return val->second.u16;
             case UINT32: return val->second.u32;
-            case UINT64: oakLog("Warning: possible data loss truncating uint64 to int");
+            case UINT64: app.log("Warning: possible data loss truncating uint64 to int");
                 return (int)val->second.u64;
             default: break;
         }
@@ -371,7 +371,7 @@ bool DataStream::writeBytes(size_t cb, const void* bytes) {
 }
 
 bool DataStream::readBytes(size_t cb, void* bytes) {
-	size_t cbRead = MIN(cb, _data.cb - offsetRead);
+	size_t cbRead = min(cb, _data.cb - offsetRead);
 	memcpy(bytes, _data.data+offsetRead, cbRead);
 	offsetRead += cbRead;
 	return cbRead==cb;
@@ -389,7 +389,7 @@ bool FileStream::openForRead() {
     assert(!_file);
     _file = fopen(_path.data(), "rb");
     if (!_file) {
-        oakLog("Failed to open file: %s", _path.data());
+        app.log("Failed to open file: %s", _path.data());
         return false;
     }
     return true;
@@ -399,7 +399,7 @@ bool FileStream::openForWrite() {
     assert(!_file);
     _file = fopen(_path.data(), "wb");
     if (!_file) {
-        oakLog("Failed to open file: %s", _path.data());
+        app.log("Failed to open file: %s", _path.data());
         return false;
     }
     return true;

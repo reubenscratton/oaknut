@@ -166,7 +166,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 - (OSStatus)encoderCallback:(UInt32*)ioNumberDataPackets ioData:(AudioBufferList*)ioData {
     UInt32 cbWanted = *ioNumberDataPackets * self.audioConverterInputFormat.mBytesPerPacket;
-    //oakLog("Callback wants %d packets (%d bytes) we have %d bytes available", *ioNumberDataPackets, cbWanted, self.audioConverterInputBuffer.length);
+    //app.log("Callback wants %d packets (%d bytes) we have %d bytes available", *ioNumberDataPackets, cbWanted, self.audioConverterInputBuffer.length);
     //assert(cbWanted <= self.audioConverterInputBuffer.length);
     if (self.audioConverterInputBuffer.length == 0) {
         ioData->mBuffers[0].mData = NULL;

@@ -20,7 +20,7 @@ Bitmap::Bitmap(int awidth, int aheight, int format) : Bitmap() {
 }
 
 Bitmap::~Bitmap() {
-	//oakLog("~Bitmap %d x %d", _width, _height);
+	//app.log("~Bitmap %d x %d", _width, _height);
     if (_textureId) {
         check_gl(glDeleteTextures, 1, &_textureId);
     }

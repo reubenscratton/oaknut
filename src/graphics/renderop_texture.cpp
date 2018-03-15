@@ -21,7 +21,7 @@ void SimpleBitmapProvider::removeCallback(Callback *callback) {
 
 AsyncBitmapProvider::AsyncBitmapProvider(const char* assetPath) {
     // todo: maybe defer loading until first getBitmap()?
-    Data *data = oakLoadAsset(assetPath);
+    Data *data = app.loadAsset(assetPath);
     oakBitmapCreateFromData(data->data, (int) data->cb, [&](Bitmap *bitmap) {
         _bitmap = bitmap;
         for (auto it : _callbacks) {
@@ -146,7 +146,7 @@ TextureRenderOp::TextureRenderOp(View* view, const char* assetPath, int tintColo
     _prog = &glprogTextureTintAlpha;
     _alpha = 1.0f;
     _colour = tintColour;
-    Data* data = oakLoadAsset(assetPath);
+    Data* data = app.loadAsset(assetPath);
     oakBitmapCreateFromData(data->data, (int)data->cb, [&](Bitmap* bitmap) {
         _bitmapProvider = new SimpleBitmapProvider(bitmap);
         _rect = RECT_Make(0,0,bitmap->_width,bitmap->_height);

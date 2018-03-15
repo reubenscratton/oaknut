@@ -12,14 +12,14 @@
 
 static GtkWidget* glarea=NULL;
 
-void oakRequestRedraw() {
+void App::requestRedraw() {
     gtk_gl_area_queue_render(GTK_GL_AREA(glarea));
 }
 
-void oakKeyboardShow(bool show) {
+void App::keyboardShow(bool show) {
 
 }
-void oakKeyboardNotifyTextChanged() {
+void App::keyboardNotifyTextChanged() {
 
 }
 
@@ -28,11 +28,11 @@ static bool called_main;
 static gboolean render(GtkGLArea *area, GdkGLContext *context)  {
     if (!called_main) {
         called_main = true;
-        oakMain();
+        app.main();
         gtk_widget_set_size_request(glarea, Styles::getFloat("window.default-width"), Styles::getFloat("window.default-height")); /* minimum size */
     }
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    mainWindow->draw();
+    app._window->draw();
     glFlush();
     return TRUE;
 }
@@ -40,7 +40,7 @@ static gboolean render(GtkGLArea *area, GdkGLContext *context)  {
 
 
 void glarea_size_allocate(GtkWidget *widget, GdkRectangle *allocation, gpointer  user_data) {
-    mainWindow->resizeSurface(allocation->width, allocation->height, 2);
+    app._window->resizeSurface(allocation->width, allocation->height, 2);
 }
 
 
@@ -71,11 +71,11 @@ gint glarea_mouse_event(GtkWidget *widget, GdkEventMotion *event) {
             oakEvent = INPUT_EVENT_UP;
             break;
         default:
-            oakLog("unhandled mouse event type=%d", event->type);
+            app.log("unhandled mouse event type=%d", event->type);
             return FALSE;
     }
-            //oakLog("x=%d y=%d", x, y);
-    mainWindow->dispatchInputEvent(oakEvent, MAKE_SOURCE(INPUT_SOURCE_TYPE_MOUSE,0), event->time, x, y);
+            //app.log("x=%d y=%d", x, y);
+    app._window->dispatchInputEvent(oakEvent, MAKE_SOURCE(INPUT_SOURCE_TYPE_MOUSE,0), event->time, x, y);
 
     /*if(state & GDK_BUTTON1_MASK) {
         g_print("Mouse motion button 1 at coordinates (%d,%d)\n",x,y);
@@ -94,11 +94,11 @@ gint glarea_mouse_event(GtkWidget *widget, GdkEventMotion *event) {
 
 
 gint glarea_key_press_event(GtkWidget *widget, GdkEventKey *event) {
-    mainWindow->dispatchInputEvent(INPUT_EVENT_DOWN, MAKE_SOURCE(INPUT_SOURCE_TYPE_KEY,0), event->time, event->keyval, 0);
+    app._window->dispatchInputEvent(INPUT_EVENT_DOWN, MAKE_SOURCE(INPUT_SOURCE_TYPE_KEY,0), event->time, event->keyval, 0);
     return (TRUE);
 }
 gint glarea_key_release_event(GtkWidget *widget, GdkEventKey *event) {
-    mainWindow->dispatchInputEvent(INPUT_EVENT_UP, MAKE_SOURCE(INPUT_SOURCE_TYPE_KEY,0), event->time, event->keyval, 0);
+    app._window->dispatchInputEvent(INPUT_EVENT_UP, MAKE_SOURCE(INPUT_SOURCE_TYPE_KEY,0), event->time, event->keyval, 0);
     return (TRUE);
 }
 
@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
     gtk_init(&argc, &argv);
 
 
-    mainWindow = new Window();
+    app._window = new Window();
 
     glwindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     if(!glwindow) {

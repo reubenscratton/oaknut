@@ -17,15 +17,15 @@ public:
     URLDataType _type;
     union value {
         Data* data;
-        JsonValue* json;
-        Bitmap* bitmap;
-        value(Data* data) {this->data=data; data->retain();}
-        value(JsonValue* json) {this->json=json; }
-        value(Bitmap* bitmap) {this->bitmap=bitmap; bitmap->retain();}
+        class JsonValue* json;
+        class Bitmap* bitmap;
+        value(Data* data);
+        value(JsonValue* json);
+        value(Bitmap* bitmap);
     } _value;
-    URLData(class Data* data);
+    URLData(Data* data);
     URLData(JsonValue* json);
-    URLData(class Bitmap* bitmap);
+    URLData(Bitmap* bitmap);
     ~URLData();
 };
 

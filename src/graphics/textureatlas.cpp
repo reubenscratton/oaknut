@@ -15,7 +15,7 @@ AtlasNode::AtlasNode(AtlasPage* page) {
 }
 
 void AtlasPage::importAsset(const string& assetPath, std::function<void(AtlasNode*)> callback) {
-    ObjPtr<Data> data = oakLoadAsset(assetPath.data());
+    ObjPtr<Data> data = app.loadAsset(assetPath.data());
     assert(data);
     oakBitmapCreateFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
         assert(bitmap);

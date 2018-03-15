@@ -8,7 +8,7 @@
 
 #include <oaknut.h>
 
-long oakCurrentMillis() {
+long App::currentMillis() {
     struct timeval te;
     gettimeofday(&te, NULL);
     long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000;

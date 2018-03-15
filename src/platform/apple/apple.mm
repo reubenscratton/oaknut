@@ -11,11 +11,11 @@
 #import "oaknut.h"
 
 
-long oakCurrentMillis() {
+long App::currentMillis() {
     return CACurrentMediaTime()*1000;
 }
 
-string oakGetAppHomeDir() {
+string App::getAppHomeDir() {
     NSURL* url = [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
     return string([[url.absoluteString substringFromIndex:7] UTF8String]);
     
@@ -110,8 +110,8 @@ void TaskQueue::postToMainThread(function<void(void)> func) {
 
 
 
-Data* oakLoadAsset(const char* assetPath) {
-    
+Data* App::loadAsset(const char* assetPath) {
+
     NSString* path = [NSBundle mainBundle].bundlePath;
     string str = string([path UTF8String]);
 #if TARGET_OS_OSX
@@ -121,7 +121,7 @@ Data* oakLoadAsset(const char* assetPath) {
     str.append(assetPath);
     FILE* asset = fopen(str.data(), "rb");
     if (!asset) {
-        oakLog("Failed to open asset: %s", assetPath);
+        app.log("Failed to open asset: %s", assetPath);
         return NULL;
     }
     

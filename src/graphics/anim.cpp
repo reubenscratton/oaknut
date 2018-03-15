@@ -32,7 +32,7 @@ void Animation::start(Window* window, int duration, int delay) {
     _duration = duration;
     _delay = delay;
     _state = ANIMATION_STATE_STARTED;
-    _timeStarted = oakCurrentMillis();
+    _timeStarted = app.currentMillis();
 	_window = window;
 	_window->_animations.insert(_window->_animations.end(), this);
     _window->requestRedraw();
@@ -52,14 +52,14 @@ void Animation::pause() {
         return;
     }
     _state = ANIMATION_STATE_PAUSED;
-    _elapsedAtPause = oakCurrentMillis() - _timeStarted;
+    _elapsedAtPause = app.currentMillis() - _timeStarted;
 }
 
 void Animation::unpause() {
     if (_state != ANIMATION_STATE_PAUSED) {
         return;
     }
-    _timeStarted = oakCurrentMillis() - _elapsedAtPause;
+    _timeStarted = app.currentMillis() - _elapsedAtPause;
     _elapsedAtPause = 0;
     _state = ANIMATION_STATE_STARTED;
 }

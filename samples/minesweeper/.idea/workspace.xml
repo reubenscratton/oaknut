@@ -2,32 +2,106 @@
 <project version="4">
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true" buildAllGenerated="true">
     <generated>
-      <config projectName="Minesweeper" targetName="Minesweeper_web" />
+      <config projectName="Minesweeper" targetName="Minesweeper_ios" />
+      <config projectName="Minesweeper" targetName="Minesweeper_do_not_build" />
+      <config projectName="Minesweeper" targetName="Minesweeper_macos" />
       <config projectName="Minesweeper" targetName="Minesweeper_linux" />
       <config projectName="Minesweeper" targetName="Minesweeper_android" />
-      <config projectName="Minesweeper" targetName="Minesweeper_do_not_build" />
+      <config projectName="Minesweeper" targetName="Minesweeper_web" />
     </generated>
   </component>
   <component name="CMakeSettings">
     <configurations>
-      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" />
+      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" GENERATION_OPTIONS="-DDEBUG=1" />
+      <configuration PROFILE_NAME="Release" CONFIG_NAME="Release" />
     </configurations>
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b7ef45b6-2785-4763-8b94-6065aea96bea" name="Default" comment="">
+      <change beforePath="$OAKNUT_DIR$/CMakeLists.txt" afterPath="$OAKNUT_DIR$/CMakeLists.txt" />
+      <change beforePath="$OAKNUT_DIR$/README.md" afterPath="$OAKNUT_DIR$/README.md" />
+      <change beforePath="$OAKNUT_DIR$/oaknut.make" afterPath="$OAKNUT_DIR$/oaknut.make" />
+      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/Minesweeper_android.xml" afterPath="$PROJECT_DIR$/.idea/runConfigurations/Minesweeper_android.xml" />
+      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/Minesweeper_firefox.xml" afterPath="$PROJECT_DIR$/.idea/runConfigurations/Minesweeper_firefox.xml" />
+      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/Minesweeper_ios.xml" afterPath="$PROJECT_DIR$/.idea/runConfigurations/Minesweeper_ios.xml" />
+      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/Minesweeper_macos.xml" afterPath="$PROJECT_DIR$/.idea/runConfigurations/Minesweeper_macos.xml" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change beforePath="$PROJECT_DIR$/../../src/app/viewcontroller.cpp" afterPath="$PROJECT_DIR$/../../src/app/viewcontroller.cpp" />
-      <change beforePath="$PROJECT_DIR$/../../src/graphics/window.cpp" afterPath="$PROJECT_DIR$/../../src/graphics/window.cpp" />
-      <change beforePath="$PROJECT_DIR$/../../src/graphics/window.h" afterPath="$PROJECT_DIR$/../../src/graphics/window.h" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/android/oaknut.make" afterPath="$PROJECT_DIR$/../../src/platform/android/oaknut.make" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/linux/main.cpp" afterPath="$PROJECT_DIR$/../../src/platform/linux/main.cpp" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/linux/oaknut.make" afterPath="$PROJECT_DIR$/../../src/platform/linux/oaknut.make" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/web/oaknut.make" afterPath="$PROJECT_DIR$/../../src/platform/web/oaknut.make" />
-      <change beforePath="$PROJECT_DIR$/../../src/platform/web/web.cpp" afterPath="$PROJECT_DIR$/../../src/platform/web/web.cpp" />
-      <change beforePath="$PROJECT_DIR$/../../src/view/view.cpp" afterPath="$PROJECT_DIR$/../../src/view/view.cpp" />
-      <change beforePath="$PROJECT_DIR$/../../src/view/view.h" afterPath="$PROJECT_DIR$/../../src/view/view.h" />
+      <change beforePath="$PROJECT_DIR$/app/app.cpp" afterPath="$PROJECT_DIR$/app/app.cpp" />
+      <change beforePath="$PROJECT_DIR$/app/game.cpp" afterPath="$PROJECT_DIR$/app/game.cpp" />
+      <change beforePath="$PROJECT_DIR$/app/gameview.cpp" afterPath="$PROJECT_DIR$/app/gameview.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/app/navigationitem.cpp" afterPath="$OAKNUT_DIR$/src/app/navigationitem.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/app/navigationitem.h" afterPath="$OAKNUT_DIR$/src/app/navigationitem.h" />
+      <change beforePath="$OAKNUT_DIR$/src/app/styles.cpp" afterPath="$OAKNUT_DIR$/src/app/styles.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/app/styles.h" afterPath="$OAKNUT_DIR$/src/app/styles.h" />
+      <change beforePath="$OAKNUT_DIR$/src/app/urlrequest.cpp" afterPath="$OAKNUT_DIR$/src/app/urlrequest.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/app/urlrequest.h" afterPath="$OAKNUT_DIR$/src/app/urlrequest.h" />
+      <change beforePath="$OAKNUT_DIR$/src/app/userdefaults.cpp" afterPath="$OAKNUT_DIR$/src/app/userdefaults.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/base/oaknut.cpp" afterPath="$OAKNUT_DIR$/src/base/oaknut.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/base/object.cpp" afterPath="$OAKNUT_DIR$/src/base/object.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/base/object.h" afterPath="$OAKNUT_DIR$/src/base/object.h" />
+      <change beforePath="$OAKNUT_DIR$/src/data/data.cpp" afterPath="$OAKNUT_DIR$/src/data/data.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/graphics/anim.cpp" afterPath="$OAKNUT_DIR$/src/graphics/anim.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/graphics/bitmap.cpp" afterPath="$OAKNUT_DIR$/src/graphics/bitmap.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/graphics/glhelp.cpp" afterPath="$OAKNUT_DIR$/src/graphics/glhelp.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/graphics/glhelp.h" afterPath="$OAKNUT_DIR$/src/graphics/glhelp.h" />
+      <change beforePath="$OAKNUT_DIR$/src/graphics/quadbuffer.cpp" afterPath="$OAKNUT_DIR$/src/graphics/quadbuffer.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/graphics/renderbatch.cpp" afterPath="$OAKNUT_DIR$/src/graphics/renderbatch.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/graphics/renderop_text.cpp" afterPath="$OAKNUT_DIR$/src/graphics/renderop_text.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/graphics/renderop_texture.cpp" afterPath="$OAKNUT_DIR$/src/graphics/renderop_texture.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/graphics/surface.cpp" afterPath="$OAKNUT_DIR$/src/graphics/surface.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/graphics/textrenderer.cpp" afterPath="$OAKNUT_DIR$/src/graphics/textrenderer.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/graphics/textureatlas.cpp" afterPath="$OAKNUT_DIR$/src/graphics/textureatlas.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/graphics/window.cpp" afterPath="$OAKNUT_DIR$/src/graphics/window.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/graphics/window.h" afterPath="$OAKNUT_DIR$/src/graphics/window.h" />
+      <change beforePath="$OAKNUT_DIR$/src/media/audiooutput.cpp" afterPath="$OAKNUT_DIR$/src/media/audiooutput.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/oaknut.h" afterPath="$OAKNUT_DIR$/src/oaknut.h" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/android/android.cpp" afterPath="$OAKNUT_DIR$/src/platform/android/android.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/android/audio.cpp" afterPath="$OAKNUT_DIR$/src/platform/android/audio.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/android/camera.cpp" afterPath="$OAKNUT_DIR$/src/platform/android/camera.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/android/canvas.cpp" afterPath="$OAKNUT_DIR$/src/platform/android/canvas.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/android/facedetect.cpp" afterPath="$OAKNUT_DIR$/src/platform/android/facedetect.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/android/oaknut.make" afterPath="$OAKNUT_DIR$/src/platform/android/oaknut.make" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/android/platform.h" afterPath="$OAKNUT_DIR$/src/platform/android/platform.h" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/apple/apple.mm" afterPath="$OAKNUT_DIR$/src/platform/apple/apple.mm" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/apple/audio.mm" afterPath="$OAKNUT_DIR$/src/platform/apple/audio.mm" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/apple/bitmap.mm" afterPath="$OAKNUT_DIR$/src/platform/apple/bitmap.mm" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/apple/canvas.mm" afterPath="$OAKNUT_DIR$/src/platform/apple/canvas.mm" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/apple/facedetect.mm" afterPath="$OAKNUT_DIR$/src/platform/apple/facedetect.mm" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/apple/oaknut.make" afterPath="$OAKNUT_DIR$/src/platform/apple/oaknut.make" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/ios/app_native/AppDelegate.mm" afterPath="$OAKNUT_DIR$/src/platform/ios/app_native/AppDelegate.mm" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/ios/text_input.mm" afterPath="$OAKNUT_DIR$/src/platform/ios/text_input.mm" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/linux/canvas.cpp" afterPath="$OAKNUT_DIR$/src/platform/linux/canvas.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/linux/linux.cpp" afterPath="$OAKNUT_DIR$/src/platform/linux/linux.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/linux/main.cpp" afterPath="$OAKNUT_DIR$/src/platform/linux/main.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/linux/oaknut.make" afterPath="$OAKNUT_DIR$/src/platform/linux/oaknut.make" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/linux/platform.h" afterPath="$OAKNUT_DIR$/src/platform/linux/platform.h" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/linux/task.cpp" afterPath="$OAKNUT_DIR$/src/platform/linux/task.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/linux/timer.cpp" afterPath="$OAKNUT_DIR$/src/platform/linux/timer.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/linux/urlrequest.cpp" afterPath="$OAKNUT_DIR$/src/platform/linux/urlrequest.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/macos/AppDelegate.h" afterPath="$OAKNUT_DIR$/src/platform/macos/AppDelegate.h" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/macos/AppDelegate.mm" afterPath="$OAKNUT_DIR$/src/platform/macos/AppDelegate.mm" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/macos/main.m" afterPath="" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/macos/oaknut.make" afterPath="$OAKNUT_DIR$/src/platform/macos/oaknut.make" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/macos/text_input.mm" afterPath="$OAKNUT_DIR$/src/platform/macos/text_input.mm" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/web/bitmap.cpp" afterPath="$OAKNUT_DIR$/src/platform/web/bitmap.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/web/canvas.cpp" afterPath="$OAKNUT_DIR$/src/platform/web/canvas.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/web/oaknut.make" afterPath="$OAKNUT_DIR$/src/platform/web/oaknut.make" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/web/urlrequest.cpp" afterPath="$OAKNUT_DIR$/src/platform/web/urlrequest.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/platform/web/web.cpp" afterPath="$OAKNUT_DIR$/src/platform/web/web.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/text/json.cpp" afterPath="$OAKNUT_DIR$/src/text/json.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/text/utf8.cpp" afterPath="$OAKNUT_DIR$/src/text/utf8.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/view/button.cpp" afterPath="$OAKNUT_DIR$/src/view/button.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/view/edittext.cpp" afterPath="$OAKNUT_DIR$/src/view/edittext.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/view/imageview.cpp" afterPath="$OAKNUT_DIR$/src/view/imageview.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/view/listview.cpp" afterPath="$OAKNUT_DIR$/src/view/listview.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/view/scrollbar.cpp" afterPath="$OAKNUT_DIR$/src/view/scrollbar.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/view/searchbox.cpp" afterPath="$OAKNUT_DIR$/src/view/searchbox.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/view/segmentedcontrol.cpp" afterPath="$OAKNUT_DIR$/src/view/segmentedcontrol.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/view/view.cpp" afterPath="$OAKNUT_DIR$/src/view/view.cpp" />
+      <change beforePath="$OAKNUT_DIR$/src/view/view.h" afterPath="$OAKNUT_DIR$/src/view/view.h" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
+    <ignored path="$PROJECT_DIR$/cmake-build-release/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -38,66 +112,71 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="main.cpp" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/../../src/platform/linux/main.cpp">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="892">
-              <caret line="155" column="0" lean-forward="false" selection-start-line="155" selection-start-column="0" selection-end-line="155" selection-end-column="0" />
-              <folding>
-                <element signature="e#23#42#0" expanded="true" />
-                <element signature="e#113#131#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="window.cpp" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../src/graphics/window.cpp">
+        <entry file="file://$OAKNUT_DIR$/src/graphics/window.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="288">
+            <state relative-caret-position="0">
               <caret line="16" column="0" lean-forward="false" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
-              <folding>
-                <element signature="e#5187#5231#0" expanded="true" />
-              </folding>
+              <folding />
             </state>
           </provider>
         </entry>
       </file>
       <file leaf-file-name="oaknut.make" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../src/platform/web/oaknut.make">
+        <entry file="file://$OAKNUT_DIR$/oaknut.make">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="450">
+            <state relative-caret-position="435">
+              <caret line="29" column="0" lean-forward="false" selection-start-line="29" selection-start-column="0" selection-end-line="29" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="oaknut.make" pinned="false" current-in-tab="false">
+        <entry file="file://$OAKNUT_DIR$/src/platform/web/oaknut.make">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="375">
               <caret line="25" column="0" lean-forward="false" selection-start-line="25" selection-start-column="0" selection-end-line="25" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="CMakeLists.txt" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../CMakeLists.txt">
+      <file leaf-file-name="oaknut.make" pinned="false" current-in-tab="false">
+        <entry file="file://$OAKNUT_DIR$/src/platform/macos/oaknut.make">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="396">
-              <caret line="22" column="20" lean-forward="false" selection-start-line="22" selection-start-column="20" selection-end-line="22" selection-end-column="20" />
+            <state relative-caret-position="211">
+              <caret line="47" column="0" lean-forward="false" selection-start-line="46" selection-start-column="0" selection-end-line="47" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
       <file leaf-file-name="oaknut.make" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../src/platform/linux/oaknut.make">
+        <entry file="file://$OAKNUT_DIR$/src/platform/linux/oaknut.make">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="162">
-              <caret line="9" column="9" lean-forward="false" selection-start-line="9" selection-start-column="9" selection-end-line="9" selection-end-column="19" />
+            <state relative-caret-position="286">
+              <caret line="40" column="19" lean-forward="false" selection-start-line="40" selection-start-column="19" selection-end-line="40" selection-end-column="19" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Makefile" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Makefile">
+      <file leaf-file-name="CMakeLists.txt" pinned="false" current-in-tab="true">
+        <entry file="file://$OAKNUT_DIR$/CMakeLists.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="414">
-              <caret line="23" column="0" lean-forward="false" selection-start-line="23" selection-start-column="0" selection-end-line="23" selection-end-column="0" />
+            <state relative-caret-position="225">
+              <caret line="26" column="0" lean-forward="false" selection-start-line="26" selection-start-column="0" selection-end-line="26" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="bitmap.h" pinned="false" current-in-tab="false">
+        <entry file="file://$OAKNUT_DIR$/src/platform/apple/bitmap.h">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="150">
+              <caret line="10" column="0" lean-forward="false" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -107,17 +186,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>vertex_array</find>
-      <find>glEnable</find>
-      <find>conte</find>
-      <find>glFrontFace</find>
-      <find>glEnableVertexAttribArray</find>
-      <find>_gameView</find>
-      <find>gdkdev</find>
-      <find>device</find>
-      <find>buffer</find>
-      <find>pixbuf</find>
-      <find>stride</find>
       <find>surface</find>
       <find>PangoGlyphInfo</find>
       <find>INVALID_V</find>
@@ -137,53 +205,70 @@
       <find>IOS_WEBGL_BUG</find>
       <find>EMSCRIPTEN_DIR</find>
       <find>OAKNUT_DIR</find>
+      <find>Glfloat</find>
+      <find>CFLAGS</find>
+      <find>CFLAGS_COMPILE</find>
+      <find>CFLAGS_COMMON</find>
+      <find>CFLAGS_LINK</find>
+      <find>ssets_</find>
+      <find>DEPFLAGS</find>
+      <find>PROJECT_NAME</find>
+      <find>deps</find>
+      <find>OBJ_DIR</find>
+      <find>clean:</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+    <option name="RECENT_GIT_ROOT_PATH" value="$OAKNUT_DIR$" />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/CMakeLists.txt" />
-        <option value="$PROJECT_DIR$/../../src/platform/linux/main.c" />
-        <option value="$PROJECT_DIR$/../../src/platform/apple/apple.mm" />
-        <option value="$PROJECT_DIR$/../../src/platform/linux/async.cpp" />
-        <option value="$PROJECT_DIR$/../../doc/intro.md" />
-        <option value="$PROJECT_DIR$/../../src/platform/linux/urlrequest.cpp" />
-        <option value="$PROJECT_DIR$/../../src/oaknut.h" />
-        <option value="$PROJECT_DIR$/../../src/graphics/bitmap.h" />
-        <option value="$PROJECT_DIR$/../../src/platform/apple/bitmap.h" />
-        <option value="$PROJECT_DIR$/../../src/platform/android/bitmap.h" />
-        <option value="$PROJECT_DIR$/../../src/graphics/glhelp.cpp" />
-        <option value="$PROJECT_DIR$/../../src/graphics/glhelp.h" />
-        <option value="$PROJECT_DIR$/../../src/graphics/quadbuffer.h" />
-        <option value="$PROJECT_DIR$/../../src/graphics/renderbatch.cpp" />
-        <option value="$PROJECT_DIR$/../../src/graphics/canvas.cpp" />
+        <option value="$OAKNUT_DIR$/src/platform/linux/main.c" />
+        <option value="$OAKNUT_DIR$/src/platform/apple/apple.mm" />
+        <option value="$OAKNUT_DIR$/src/platform/linux/async.cpp" />
+        <option value="$OAKNUT_DIR$/doc/intro.md" />
+        <option value="$OAKNUT_DIR$/src/platform/linux/urlrequest.cpp" />
+        <option value="$OAKNUT_DIR$/src/graphics/bitmap.h" />
+        <option value="$OAKNUT_DIR$/src/platform/android/bitmap.h" />
+        <option value="$OAKNUT_DIR$/src/graphics/glhelp.cpp" />
+        <option value="$OAKNUT_DIR$/src/graphics/glhelp.h" />
+        <option value="$OAKNUT_DIR$/src/graphics/quadbuffer.h" />
+        <option value="$OAKNUT_DIR$/src/graphics/renderbatch.cpp" />
+        <option value="$OAKNUT_DIR$/src/graphics/canvas.cpp" />
         <option value="$PROJECT_DIR$/assets/layout/main.res" />
-        <option value="$PROJECT_DIR$/../../src/graphics/geom.h" />
-        <option value="$PROJECT_DIR$/../../src/graphics/surface.cpp" />
+        <option value="$OAKNUT_DIR$/src/graphics/geom.h" />
+        <option value="$OAKNUT_DIR$/src/graphics/surface.cpp" />
         <option value="$PROJECT_DIR$/app/app.cpp" />
-        <option value="$PROJECT_DIR$/../../src/graphics/renderop_texture.cpp" />
-        <option value="$PROJECT_DIR$/../../src/graphics/bitmap.cpp" />
-        <option value="$PROJECT_DIR$/../../src/platform/linux/oaknut.make" />
-        <option value="$PROJECT_DIR$/../../src/platform/linux/bitmap.h" />
-        <option value="$PROJECT_DIR$/../../src/platform/linux/bitmap.cpp" />
-        <option value="$PROJECT_DIR$/../../src/platform/linux/canvas.cpp" />
-        <option value="$PROJECT_DIR$/../../src/platform/linux/linux.cpp" />
-        <option value="$PROJECT_DIR$/../../src/platform/linux/timer.cpp" />
-        <option value="$PROJECT_DIR$/../../src/graphics/canvas.h" />
-        <option value="$PROJECT_DIR$/../../src/platform/web/web.cpp" />
-        <option value="$PROJECT_DIR$/../../src/graphics/window.h" />
-        <option value="$PROJECT_DIR$/../../src/graphics/window.cpp" />
+        <option value="$OAKNUT_DIR$/src/graphics/renderop_texture.cpp" />
+        <option value="$OAKNUT_DIR$/src/graphics/bitmap.cpp" />
+        <option value="$OAKNUT_DIR$/src/platform/linux/bitmap.h" />
+        <option value="$OAKNUT_DIR$/src/platform/linux/bitmap.cpp" />
+        <option value="$OAKNUT_DIR$/src/platform/linux/canvas.cpp" />
+        <option value="$OAKNUT_DIR$/src/platform/linux/linux.cpp" />
+        <option value="$OAKNUT_DIR$/src/platform/linux/timer.cpp" />
+        <option value="$OAKNUT_DIR$/src/graphics/canvas.h" />
+        <option value="$OAKNUT_DIR$/src/graphics/window.h" />
         <option value="$PROJECT_DIR$/Makefile" />
-        <option value="$PROJECT_DIR$/../../CMakeLists.txt" />
-        <option value="$PROJECT_DIR$/../../src/media/audiooutput.h" />
-        <option value="$PROJECT_DIR$/../../src/platform/web/oaknut.make" />
-        <option value="$PROJECT_DIR$/../../src/graphics/quadbuffer.cpp" />
-        <option value="$PROJECT_DIR$/../../src/graphics/font.cpp" />
-        <option value="$PROJECT_DIR$/../../src/platform/web/canvas.cpp" />
-        <option value="$PROJECT_DIR$/../../src/platform/linux/main.cpp" />
+        <option value="$OAKNUT_DIR$/src/media/audiooutput.h" />
+        <option value="$OAKNUT_DIR$/src/graphics/quadbuffer.cpp" />
+        <option value="$OAKNUT_DIR$/src/graphics/font.cpp" />
+        <option value="$OAKNUT_DIR$/src/platform/linux/main.cpp" />
+        <option value="$OAKNUT_DIR$/src/graphics/window.cpp" />
+        <option value="$PROJECT_DIR$/app/gameview.cpp" />
+        <option value="$OAKNUT_DIR$/src/platform/web/web.cpp" />
+        <option value="$OAKNUT_DIR$/src/platform/android/platform.h" />
+        <option value="$OAKNUT_DIR$/src/platform/web/canvas.cpp" />
+        <option value="$PROJECT_DIR$/app/game.cpp" />
+        <option value="$OAKNUT_DIR$/src/platform/apple/bitmap.h" />
+        <option value="$OAKNUT_DIR$/src/oaknut.h" />
+        <option value="$PROJECT_DIR$/app/game.h" />
+        <option value="$OAKNUT_DIR$/src/platform/macos/oaknut.make" />
+        <option value="$OAKNUT_DIR$/oaknut.make" />
+        <option value="$OAKNUT_DIR$/src/platform/web/oaknut.make" />
+        <option value="$OAKNUT_DIR$/src/platform/linux/oaknut.make" />
+        <option value="$OAKNUT_DIR$/CMakeLists.txt" />
       </list>
     </option>
   </component>
@@ -194,11 +279,11 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
-  <component name="ProjectFrameBounds">
-    <option name="x" value="75" />
-    <option name="y" value="41" />
-    <option name="width" value="1617" />
-    <option name="height" value="1152" />
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="49" />
+    <option name="y" value="25" />
+    <option name="width" value="1391" />
+    <option name="height" value="793" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
@@ -241,7 +326,7 @@
               <item name="oaknut" type="462c0819:PsiDirectoryNode" />
               <item name="samples" type="462c0819:PsiDirectoryNode" />
               <item name="minesweeper" type="462c0819:PsiDirectoryNode" />
-              <item name="build" type="462c0819:PsiDirectoryNode" />
+              <item name="app" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="Minesweeper" type="dad4c3:CidrFilesViewHelper$MyProjectTreeStructure$1" />
@@ -249,15 +334,6 @@
               <item name="samples" type="462c0819:PsiDirectoryNode" />
               <item name="minesweeper" type="462c0819:PsiDirectoryNode" />
               <item name="build" type="462c0819:PsiDirectoryNode" />
-              <item name="linux" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Minesweeper" type="dad4c3:CidrFilesViewHelper$MyProjectTreeStructure$1" />
-              <item name="oaknut" type="462c0819:PsiDirectoryNode" />
-              <item name="samples" type="462c0819:PsiDirectoryNode" />
-              <item name="minesweeper" type="462c0819:PsiDirectoryNode" />
-              <item name="build" type="462c0819:PsiDirectoryNode" />
-              <item name="web" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="Minesweeper" type="dad4c3:CidrFilesViewHelper$MyProjectTreeStructure$1" />
@@ -266,7 +342,15 @@
               <item name="minesweeper" type="462c0819:PsiDirectoryNode" />
               <item name="build" type="462c0819:PsiDirectoryNode" />
               <item name="web" type="462c0819:PsiDirectoryNode" />
-              <item name="webroot" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="Minesweeper" type="dad4c3:CidrFilesViewHelper$MyProjectTreeStructure$1" />
+              <item name="oaknut" type="462c0819:PsiDirectoryNode" />
+              <item name="samples" type="462c0819:PsiDirectoryNode" />
+              <item name="minesweeper" type="462c0819:PsiDirectoryNode" />
+              <item name="build" type="462c0819:PsiDirectoryNode" />
+              <item name="web" type="462c0819:PsiDirectoryNode" />
+              <item name="debug" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="Minesweeper" type="dad4c3:CidrFilesViewHelper$MyProjectTreeStructure$1" />
@@ -314,6 +398,13 @@
               <item name="oaknut" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="platform" type="462c0819:PsiDirectoryNode" />
+              <item name="android" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="Minesweeper" type="dad4c3:CidrFilesViewHelper$MyProjectTreeStructure$1" />
+              <item name="oaknut" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="platform" type="462c0819:PsiDirectoryNode" />
               <item name="apple" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -322,6 +413,13 @@
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="platform" type="462c0819:PsiDirectoryNode" />
               <item name="linux" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="Minesweeper" type="dad4c3:CidrFilesViewHelper$MyProjectTreeStructure$1" />
+              <item name="oaknut" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="platform" type="462c0819:PsiDirectoryNode" />
+              <item name="macos" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="Minesweeper" type="dad4c3:CidrFilesViewHelper$MyProjectTreeStructure$1" />
@@ -340,11 +438,11 @@
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$USER_HOME$/embeeb" />
-    <property name="settings.editor.selected.configurable" value="CMakeSettings" />
+    <property name="settings.editor.selected.configurable" value="preferences.externalTools" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/../../src/platform/linux" />
+      <recent name="$OAKNUT_DIR$/src/platform/linux" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -359,24 +457,27 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Application.Minesweeper_linux">
-    <configuration name="Build All" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" CONFIG_NAME="Debug" EXPLICIT_BUILD_TARGET_NAME="all">
+  <component name="RunManager" selected="Application.Minesweeper_firefox">
+    <configuration name="Build All" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" CONFIG_NAME="Release" EXPLICIT_BUILD_TARGET_NAME="all">
       <envs />
     </configuration>
     <configuration name="Minesweeper_android" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Minesweeper" TARGET_NAME="Minesweeper_android" CONFIG_NAME="Debug">
       <envs />
     </configuration>
-    <configuration name="Minesweeper_linux" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Minesweeper" TARGET_NAME="Minesweeper_linux" CONFIG_NAME="Debug" RUN_PATH="$PROJECT_DIR$/build/linux/Minesweeper_linux">
+    <configuration name="Minesweeper_linux" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Minesweeper" TARGET_NAME="Minesweeper_linux" CONFIG_NAME="Release" RUN_PATH="$PROJECT_DIR$/build/linux/Minesweeper_linux">
       <envs />
     </configuration>
-    <configuration name="Minesweeper_web" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="$USER_HOME$/Downloads/emsdk-portable/emscripten/1.37.35/emrun.py --browser=firefox $PROJECT_DIR$/build/web/webroot/xx.html" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Minesweeper" TARGET_NAME="Minesweeper_web" CONFIG_NAME="Debug" RUN_PATH="/usr/bin/python">
+    <configuration name="Minesweeper_web" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="$USER_HOME$/Downloads/emsdk-portable/emscripten/1.37.22/emrun.py --browser=firefox $PROJECT_DIR$/build/web/webroot/xx.html" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Minesweeper" TARGET_NAME="Minesweeper_web" CONFIG_NAME="Release" RUN_PATH="/usr/bin/python">
       <envs />
     </configuration>
-    <list size="4">
-      <item index="0" class="java.lang.String" itemvalue="Application.Build All" />
-      <item index="1" class="java.lang.String" itemvalue="Application.Minesweeper_android" />
-      <item index="2" class="java.lang.String" itemvalue="Application.Minesweeper_linux" />
-      <item index="3" class="java.lang.String" itemvalue="Application.Minesweeper_web" />
+    <list size="7">
+      <item index="0" class="java.lang.String" itemvalue="Application.Minesweeper_firefox" />
+      <item index="1" class="java.lang.String" itemvalue="Application.Minesweeper_ios" />
+      <item index="2" class="java.lang.String" itemvalue="Application.Minesweeper_macos" />
+      <item index="3" class="java.lang.String" itemvalue="Application.Build All" />
+      <item index="4" class="java.lang.String" itemvalue="Application.Minesweeper_android" />
+      <item index="5" class="java.lang.String" itemvalue="Application.Minesweeper_linux" />
+      <item index="6" class="java.lang.String" itemvalue="Application.Minesweeper_web" />
     </list>
   </component>
   <component name="ShelveChangesManager" show_recycled="false">
@@ -422,32 +523,38 @@
       <workItem from="1520240874375" duration="605000" />
       <workItem from="1520253050698" duration="699000" />
       <workItem from="1520277321207" duration="599000" />
+      <workItem from="1520507877139" duration="96000" />
+      <workItem from="1520534241427" duration="602000" />
+      <workItem from="1520622639805" duration="1938000" />
+      <workItem from="1520856287669" duration="184000" />
+      <workItem from="1520859143920" duration="16600000" />
+      <workItem from="1521101149789" duration="8478000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="141613000" />
+    <option name="totallyTimeSpent" value="169511000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="75" y="41" width="1617" height="1152" extended-state="0" />
+    <frame x="49" y="23" width="1391" height="877" extended-state="6" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17068645" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24442847" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="CMake" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.23613767" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.27453417" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="CMake" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.23602484" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3288719" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3298279" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3279503" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39961758" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2753346" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3298279" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
     <layout-to-restore>
@@ -481,201 +588,24 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/../../src/graphics/glhelp.cpp</url>
+          <url>file://$OAKNUT_DIR$/src/graphics/glhelp.cpp</url>
           <line>168</line>
           <option name="timeStamp" value="22" />
         </line-breakpoint>
       </breakpoints>
-      <option name="time" value="88" />
+      <option name="time" value="89" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file:///usr/include/pango-1.0/pango/pango-item.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="523">
-          <caret line="66" column="7" lean-forward="false" selection-start-line="66" selection-start-column="7" selection-end-line="66" selection-end-column="7" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/pango-1.0/pango/pangocairo.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="199">
-          <caret line="132" column="5" lean-forward="false" selection-start-line="132" selection-start-column="5" selection-end-line="132" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/pango-1.0/pango/pango-glyph.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3204">
-          <caret line="178" column="33" lean-forward="false" selection-start-line="178" selection-start-column="20" selection-end-line="178" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/gtk-3.0/gdk/gdkcairo.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="198">
-          <caret line="33" column="0" lean-forward="false" selection-start-line="33" selection-start-column="0" selection-end-line="33" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/graphics/textureatlas.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2736">
-          <caret line="152" column="0" lean-forward="false" selection-start-line="152" selection-start-column="0" selection-end-line="152" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/GL/gl.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="199">
-          <caret line="1329" column="22" lean-forward="false" selection-start-line="1329" selection-start-column="22" selection-end-line="1329" selection-end-column="22" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/graphics/glhelp.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3060">
-          <caret line="170" column="0" lean-forward="false" selection-start-line="170" selection-start-column="0" selection-end-line="170" selection-end-column="0" />
-          <folding>
-            <element signature="e#476#613#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/graphics/renderop_text.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1260">
-          <caret line="70" column="0" lean-forward="false" selection-start-line="70" selection-start-column="0" selection-end-line="70" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/graphics/renderop_text.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/pango-1.0/pango/pango-attributes.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="232">
-          <caret line="505" column="47" lean-forward="false" selection-start-line="505" selection-start-column="19" selection-end-line="505" selection-end-column="47" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/pango-1.0/pango/pango-context.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="404">
-          <caret line="100" column="35" lean-forward="false" selection-start-line="100" selection-start-column="35" selection-end-line="100" selection-end-column="35" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/graphics/bitmap.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="199">
-          <caret line="73" column="0" lean-forward="false" selection-start-line="73" selection-start-column="0" selection-end-line="73" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/graphics/bitmap.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-518">
-          <caret line="56" column="8" lean-forward="false" selection-start-line="56" selection-start-column="8" selection-end-line="56" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/gtk-3.0/gtk/gtk.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-3902">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/graphics/font.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/platform/apple/canvas.mm">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2088">
-          <caret line="128" column="6" lean-forward="false" selection-start-line="128" selection-start-column="6" selection-end-line="128" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/app/styles.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1170">
-          <caret line="65" column="1" lean-forward="true" selection-start-line="65" selection-start-column="1" selection-end-line="65" selection-end-column="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/app/styles.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="432">
-          <caret line="66" column="33" lean-forward="false" selection-start-line="66" selection-start-column="18" selection-end-line="66" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/harfbuzz/hb-ft.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1534">
-          <caret line="99" column="0" lean-forward="false" selection-start-line="99" selection-start-column="0" selection-end-line="99" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/cairo/cairo-ft.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="972">
-          <caret line="54" column="30" lean-forward="false" selection-start-line="54" selection-start-column="13" selection-end-line="54" selection-end-column="30" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/freetype2/freetype/freetype.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="45090">
-          <caret line="2505" column="2" lean-forward="false" selection-start-line="2505" selection-start-column="2" selection-end-line="2505" selection-end-column="2" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/harfbuzz/hb-common.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-4366">
-          <caret line="75" column="16" lean-forward="false" selection-start-line="75" selection-start-column="16" selection-end-line="75" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/harfbuzz/hb-font.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="864">
-          <caret line="85" column="11" lean-forward="true" selection-start-line="85" selection-start-column="11" selection-end-line="85" selection-end-column="11" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/harfbuzz/hb.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="540">
-          <caret line="30" column="0" lean-forward="false" selection-start-line="30" selection-start-column="0" selection-end-line="30" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/cairo/cairo-deprecated.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="316">
-          <caret line="110" column="8" lean-forward="false" selection-start-line="110" selection-start-column="8" selection-end-line="110" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/include/cairo/cairo.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="199">
-          <caret line="1176" column="11" lean-forward="false" selection-start-line="1176" selection-start-column="11" selection-end-line="1176" selection-end-column="11" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file:///usr/include/harfbuzz/hb-ft.h" />
+    <entry file="file:///usr/include/cairo/cairo-ft.h" />
+    <entry file="file:///usr/include/freetype2/freetype/freetype.h" />
+    <entry file="file:///usr/include/harfbuzz/hb-common.h" />
+    <entry file="file:///usr/include/harfbuzz/hb-font.h" />
+    <entry file="file:///usr/include/harfbuzz/hb.h" />
+    <entry file="file:///usr/include/cairo/cairo-deprecated.h" />
+    <entry file="file:///usr/include/cairo/cairo.h" />
     <entry file="file://$PROJECT_DIR$/assets/styles.res">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -690,169 +620,255 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/platform/linux/bitmap.cpp">
+    <entry file="file://$OAKNUT_DIR$/src/platform/linux/bitmap.cpp">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="584">
           <caret line="105" column="0" lean-forward="false" selection-start-line="105" selection-start-column="0" selection-end-line="105" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/platform/linux/bitmap.h">
+    <entry file="file://$OAKNUT_DIR$/src/platform/linux/bitmap.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="432">
           <caret line="24" column="21" lean-forward="false" selection-start-line="24" selection-start-column="21" selection-end-line="24" selection-end-column="21" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/platform/linux/canvas.cpp">
+    <entry file="file://$OAKNUT_DIR$/src/platform/linux/canvas.cpp">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1260">
           <caret line="70" column="38" lean-forward="false" selection-start-line="70" selection-start-column="38" selection-end-line="70" selection-end-column="38" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/platform/apple/timer.mm">
+    <entry file="file://$OAKNUT_DIR$/src/platform/apple/timer.mm">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/platform/linux/linux.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="720">
-          <caret line="40" column="0" lean-forward="false" selection-start-line="40" selection-start-column="0" selection-end-line="40" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/base/timer.hpp">
+    <entry file="file://$OAKNUT_DIR$/src/base/timer.hpp">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/platform/linux/timer.cpp">
+    <entry file="file://$OAKNUT_DIR$/src/platform/linux/timer.cpp">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="162">
           <caret line="9" column="0" lean-forward="false" selection-start-line="9" selection-start-column="0" selection-end-line="9" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/oaknut.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2538">
-          <caret line="141" column="0" lean-forward="false" selection-start-line="141" selection-start-column="0" selection-end-line="141" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/platform/web/web.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="412">
-          <caret line="23" column="0" lean-forward="true" selection-start-line="23" selection-start-column="0" selection-end-line="23" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/graphics/window.h">
+    <entry file="file://$OAKNUT_DIR$/src/graphics/window.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="846">
           <caret line="47" column="0" lean-forward="false" selection-start-line="47" selection-start-column="0" selection-end-line="47" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/graphics/window.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="288">
-          <caret line="16" column="0" lean-forward="false" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
-          <folding>
-            <element signature="e#5187#5231#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Makefile">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="414">
-          <caret line="23" column="0" lean-forward="false" selection-start-line="23" selection-start-column="0" selection-end-line="23" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="108">
-          <caret line="6" column="0" lean-forward="true" selection-start-line="3" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../CMakeLists.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="396">
-          <caret line="22" column="20" lean-forward="false" selection-start-line="22" selection-start-column="20" selection-end-line="22" selection-end-column="20" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../oaknut.make">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="144">
-          <caret line="8" column="30" lean-forward="false" selection-start-line="8" selection-start-column="30" selection-end-line="8" selection-end-column="30" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/platform/linux/oaknut.make">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="162">
-          <caret line="9" column="9" lean-forward="false" selection-start-line="9" selection-start-column="9" selection-end-line="9" selection-end-column="19" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/media/audiooutput.h">
+    <entry file="file://$OAKNUT_DIR$/src/media/audiooutput.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="288">
           <caret line="24" column="8" lean-forward="false" selection-start-line="24" selection-start-column="8" selection-end-line="24" selection-end-column="8" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/platform/web/oaknut.make">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="450">
-          <caret line="25" column="0" lean-forward="false" selection-start-line="25" selection-start-column="0" selection-end-line="25" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/graphics/quadbuffer.cpp">
+    <entry file="file://$OAKNUT_DIR$/src/graphics/quadbuffer.cpp">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="440">
           <caret line="131" column="4" lean-forward="false" selection-start-line="131" selection-start-column="4" selection-end-line="131" selection-end-column="4" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/graphics/renderstate.h" />
-    <entry file="file://$PROJECT_DIR$/../../src/graphics/font.cpp">
+    <entry file="file://$OAKNUT_DIR$/src/graphics/renderstate.h" />
+    <entry file="file://$OAKNUT_DIR$/src/graphics/font.cpp">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="540">
           <caret line="30" column="106" lean-forward="false" selection-start-line="30" selection-start-column="106" selection-end-line="30" selection-end-column="106" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/platform/web/canvas.cpp">
+    <entry file="file://$OAKNUT_DIR$/src/platform/linux/main.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="18">
-          <caret line="37" column="42" lean-forward="true" selection-start-line="37" selection-start-column="42" selection-end-line="37" selection-end-column="42" />
+        <state relative-caret-position="747">
+          <caret line="155" column="0" lean-forward="false" selection-start-line="155" selection-start-column="0" selection-end-line="155" selection-end-column="0" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../src/platform/linux/main.cpp">
+    <entry file="file://$PROJECT_DIR$/app/app.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="892">
-          <caret line="155" column="0" lean-forward="false" selection-start-line="155" selection-start-column="0" selection-end-line="155" selection-end-column="0" />
-          <folding>
-            <element signature="e#23#42#0" expanded="true" />
-            <element signature="e#113#131#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$OAKNUT_DIR$/src/platform/web/web.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="230">
+          <caret line="90" column="30" lean-forward="true" selection-start-line="90" selection-start-column="30" selection-end-line="90" selection-end-column="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$OAKNUT_DIR$/src/graphics/geom.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="60">
+          <caret line="4" column="51" lean-forward="true" selection-start-line="4" selection-start-column="51" selection-end-line="4" selection-end-column="51" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$OAKNUT_DIR$/src/platform/android/platform.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="30">
+          <caret line="2" column="22" lean-forward="false" selection-start-line="2" selection-start-column="22" selection-end-line="2" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$OAKNUT_DIR$/src/graphics/window.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="16" column="0" lean-forward="false" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/gameview.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="390">
+          <caret line="26" column="20" lean-forward="false" selection-start-line="26" selection-start-column="20" selection-end-line="26" selection-end-column="20" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$OAKNUT_DIR$/src/platform/apple/oaknut.make">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="315">
+          <caret line="21" column="0" lean-forward="true" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/app.Td" />
+    <entry file="file://$PROJECT_DIR$/app.d" />
+    <entry file="file://$PROJECT_DIR$/build/macos/obj/app/gameview.cpp.o.d" />
+    <entry file="file://$PROJECT_DIR$/app/game.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="480">
+          <caret line="32" column="29" lean-forward="false" selection-start-line="32" selection-start-column="29" selection-end-line="32" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/build/macos/obj/app/game.cpp.o.d" />
+    <entry file="file://$OAKNUT_DIR$/src/platform/web/canvas.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="95">
+          <caret line="14" column="0" lean-forward="false" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/build/macos/obj/app/app.cpp.o.d" />
+    <entry file="file://$PROJECT_DIR$/build/macos/obj/Users/reuben/oaknut/samples/minesweeper/app/app.cpp.o.d" />
+    <entry file="file://$PROJECT_DIR$/build/macos/obj/Users/reuben/oaknut/samples/minesweeper/app/app.cpp.d" />
+    <entry file="file://$PROJECT_DIR$/app/gameview.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$OAKNUT_DIR$/src/platform/apple/bitmap.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="10" column="0" lean-forward="false" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$OAKNUT_DIR$/src/oaknut.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="657">
+          <caret line="145" column="0" lean-forward="false" selection-start-line="145" selection-start-column="0" selection-end-line="145" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Makefile">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="345">
+          <caret line="23" column="0" lean-forward="false" selection-start-line="23" selection-start-column="0" selection-end-line="23" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="135">
+          <caret line="9" column="0" lean-forward="true" selection-start-line="9" selection-start-column="0" selection-end-line="9" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/game.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="225">
+          <caret line="15" column="8" lean-forward="false" selection-start-line="15" selection-start-column="8" selection-end-line="15" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/build/cmake/debug/Makefile">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="185">
+          <caret line="88" column="0" lean-forward="false" selection-start-line="88" selection-start-column="0" selection-end-line="88" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$OAKNUT_DIR$/src/platform/linux/linux.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="526">
+          <caret line="40" column="0" lean-forward="false" selection-start-line="40" selection-start-column="0" selection-end-line="40" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$OAKNUT_DIR$/oaknut.make">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="435">
+          <caret line="29" column="0" lean-forward="false" selection-start-line="29" selection-start-column="0" selection-end-line="29" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$OAKNUT_DIR$/src/platform/web/oaknut.make">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="375">
+          <caret line="25" column="0" lean-forward="false" selection-start-line="25" selection-start-column="0" selection-end-line="25" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$OAKNUT_DIR$/src/platform/macos/oaknut.make">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="211">
+          <caret line="47" column="0" lean-forward="false" selection-start-line="46" selection-start-column="0" selection-end-line="47" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$OAKNUT_DIR$/src/platform/linux/oaknut.make">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="286">
+          <caret line="40" column="19" lean-forward="false" selection-start-line="40" selection-start-column="19" selection-end-line="40" selection-end-column="19" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$OAKNUT_DIR$/CMakeLists.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="225">
+          <caret line="26" column="0" lean-forward="false" selection-start-line="26" selection-start-column="0" selection-end-line="26" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>

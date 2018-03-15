@@ -27,15 +27,16 @@
 #include <stdio.h>
 #ifdef __cplusplus
 #include <cmath>
+#include <cstdarg>
 #else
 #include <math.h>
+#include <stdarg.h>
 #endif
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
-#include <cstdarg>
 #include <typeinfo>
 #include <map>
 #include <unordered_map>
@@ -64,39 +65,12 @@ using namespace std;
 #include <platform/linux/platform.h>
 #endif
 
-// These defs need removing
-#ifdef __LP64__
-typedef double CGFloat;
-#else
-typedef float CGFloat;
-#endif
 #ifndef GL_BGRA
 #define GL_BGRA 0x80E1
 #endif
-#ifndef MIN
-#define MIN(X,Y) (((X) < (Y)) ? (X) : (Y))
-#define MAX(X,Y) (((X) > (Y)) ? (X) : (Y))
-#endif
-
 
 // Configuration
 //#define CONFIG_SLOW_ANIMATIONS 1
-
-
-void oakMain();
-long oakCurrentMillis(); // millis
-void oakLog(char const* fmt, ...);
-void oakRequestRedraw();
-string oakGetAppHomeDir();
-
-float dp(float dp); // dp to pixels
-float idp(float pixels); // pixels to dp
-
-
-
-void oakKeyboardShow(bool show);
-void oakKeyboardNotifyTextChanged();
-
 
 // Camera
 #if OAKNUT_WANT_CAMERA
@@ -122,22 +96,17 @@ int oakFaceDetectorDetectFaces(void* osobj, class Bitmap* bitmap);
 void oakFaceDetectorClose(void* osobj);
 
 // The order here matters!
-#include "graphics/matrix.h"
-#include "graphics/geom.h"
-#include "text/utf8.h"
 #include "base/object.h"
-#include "data/data.h"
 #include "base/timer.hpp"
 #include "base/task.h"
-
-Data* oakLoadAsset(const char* assetPath);
-
+#include "data/data.h"
+#include "graphics/matrix.h"
+#include "graphics/geom.h"
 #include "graphics/quadbuffer.h"
 #include "graphics/glhelp.h"
 #include "graphics/region.h"
 #include "graphics/bitmap.h"
 #include "graphics/textureatlas.h"
-#include "app/styles.h"
 #include "graphics/font.h"
 #include "graphics/renderop.h"
 #include "graphics/renderop_fillrect.h"
@@ -148,33 +117,31 @@ Data* oakLoadAsset(const char* assetPath);
 #include "graphics/surface.h"
 #include "graphics/renderop_blur.h"
 #include "graphics/window.h"
-#include "view/scrollbar.h"
-#include "view/view.h"
 #include "graphics/textrenderer.h"
-#include "view/label.h"
 #include "graphics/anim.h"
-#include "view/edittext.h"
+#include "graphics/canvas.h"
+#include "app/app.h"
+#include "app/navigationitem.h"
+#include "app/styles.h"
+#include "app/urlrequest.h"
+#include "app/userdefaults.h"
+#include "app/viewcontroller.h"
+#include "text/utf8.h"
 #include "text/json.h"
 #include "util/cache.h"
-#include "app/urlrequest.h"
+#include "util/circularbuffer.h"
+#include "media/audiooutput.h"
+#include "view/scrollbar.h"
+#include "view/view.h"
+#include "view/label.h"
+#include "view/edittext.h"
 #include "view/imageview.h"
 #include "view/listview.h"
 #include "view/button.h"
-#include "app/navigationitem.h"
 #include "view/navigationbar.h"
-#include "app/viewcontroller.h"
 #include "view/linearlayout.h"
 #include "view/segmentedcontrol.h"
 #include "view/searchbox.h"
-#include "app/userdefaults.h"
-#include "util/circularbuffer.h"
-#include "media/audiooutput.h"
-#include "graphics/canvas.h"
 #include "view/canvasview.h"
-
-
-extern Window* mainWindow;
-
-
 
 #endif 

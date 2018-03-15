@@ -12,6 +12,19 @@
 #define VERTEXATTRIBS_CONFIG_NORMAL     1 // float x,y; uint16 s,t; uint32 color = 16 bytes
 #define VERTEXATTRIBS_CONFIG_ROUNDRECT  2 // float x,y; uint16 dist_xy; uint32 fillColor; uint32 strokeColor; strokeWidth; radii
 
+typedef uint32_t COLOUR;
+
+// Gravity
+#define GRAVITY_LEFT 0
+#define GRAVITY_RIGHT 1
+#define GRAVITY_CENTER 2
+#define GRAVITY_TOP 0
+#define GRAVITY_BOTTOM 1
+typedef struct {
+    uint8_t horz:4;
+    uint8_t vert:4;
+} GRAVITY;
+
 
 // NB: DONT leave error checking in release builds! It's weirdly slow in JS...
 #if 0

@@ -4,15 +4,15 @@
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
 //
-#if PLATFORM_MACOS
 
-#import "AppDelegate.h"
+#include <oaknut.h>
 
+App app;
 
-void App::keyboardShow(bool show) {
+float App::dp(float dp) {
+    return dp*_window->_scale;
+}
+float App::idp(float pix) {
+    return pix/_window->_scale;
 }
 
-void App::keyboardNotifyTextChanged() {
-}
-
-#endif

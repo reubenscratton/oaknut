@@ -158,7 +158,7 @@ void ListView::setContentOffset(POINT contentOffset) {
 }
 
 pair<LISTINDEX,View*> ListView::createItemView(LISTINDEX index, bool atFront, float itemHeight, float top) {
-    //oakLog("creating index=%d", index);
+    //app.log("creating index=%d", index);
     View* itemView = _adapter->createItemView(index);
     assert(itemView);
     _adapter->bindItemView(itemView, _adapter->getItem(index));
@@ -316,22 +316,22 @@ void ListView::updateVisibleItems() {
 
 
 SimpleListAdapter::ItemView::ItemView() {
-    setPadding(EDGEINSETS(dp(16),dp(8),dp(16),dp(8)));
+    setPadding(EDGEINSETS(app.dp(16),app.dp(8),app.dp(16),app.dp(8)));
     _imageView = new ImageView();
-    _imageView->setMeasureSpecs(MEASURESPEC_Abs(dp(40)), MEASURESPEC_Abs(dp(52)));
+    _imageView->setMeasureSpecs(MEASURESPEC_Abs(app.dp(40)), MEASURESPEC_Abs(app.dp(52)));
     _imageView->setAlignSpecs(ALIGNSPEC_Left, ALIGNSPEC_Center);
     _imageView->setBackgroundColour(0xff333333);
-    _imageView->setPadding(EDGEINSETS(dp(1),dp(1),dp(1),dp(1)));
+    _imageView->setPadding(EDGEINSETS(app.dp(1),app.dp(1),app.dp(1),app.dp(1)));
     addSubview(_imageView);
     _titleLabel = new Label();
     _titleLabel->setStyle("listview.item-title");
     _titleLabel->setMeasureSpecs(MEASURESPEC_FillParent, MEASURESPEC_WrapContent);
-    _titleLabel->setAlignSpecs(ALIGNSPEC_ToRightOf(_imageView, dp(8)), ALIGNSPEC_Top);
+    _titleLabel->setAlignSpecs(ALIGNSPEC_ToRightOf(_imageView, app.dp(8)), ALIGNSPEC_Top);
     addSubview(_titleLabel);
     _subtitleLabel = new Label();
     _subtitleLabel->setStyle("listview.item-subtitle");
     _subtitleLabel->setMeasureSpecs(MEASURESPEC_FillParent, MEASURESPEC_WrapContent);
-    _subtitleLabel->setAlignSpecs(ALIGNSPEC_ToRightOf(_imageView, dp(8)), ALIGNSPEC_Bottom);
+    _subtitleLabel->setAlignSpecs(ALIGNSPEC_ToRightOf(_imageView, app.dp(8)), ALIGNSPEC_Bottom);
     addSubview(_subtitleLabel);
 }
 
@@ -349,7 +349,7 @@ int SimpleListAdapter::getItemCount(int section) {
     return (int)_items.size();
 }
 float SimpleListAdapter::getItemHeight(LISTINDEX index) {
-    return dp(64);
+    return app.dp(64);
 }
 View* SimpleListAdapter::createItemView(LISTINDEX index) {
     return new ItemView();
@@ -381,7 +381,7 @@ int SimpleListAdapter::getSectionCount() {
 float SimpleListAdapter::getHeaderHeight(int section) {
     if (_filterText.length()) return 0;
     string title = getSectionTitle(section);
-    return title.length() ? dp(30) : 0;
+    return title.length() ? app.dp(30) : 0;
 }
 
 string SimpleListAdapter::getSectionTitle(int section) {
@@ -391,7 +391,7 @@ string SimpleListAdapter::getSectionTitle(int section) {
 View* SimpleListAdapter::createHeaderView(int section) {
     Label* label = new Label();
     label->setMeasureSpecs(MEASURESPEC_FillParent, MEASURESPEC_WrapContent);
-    label->setPadding(EDGEINSETS(dp(16),dp(4),dp(16),dp(4)));
+    label->setPadding(EDGEINSETS(app.dp(16),app.dp(4),app.dp(16),app.dp(4)));
     label->setText(getSectionTitle(section));
     label->setBackgroundColour(0xFFeeeeee);
     return label;

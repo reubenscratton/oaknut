@@ -1,7 +1,6 @@
 # This makefile is expected to be include'd by PROJECT_ROOT/proj/Makefile
 # It should not be run directly.
 
-CFLAGS+= -DPLATFORM_ANDROID=1
 # Derived paths
 JAVA_FILES:=$(wildcard $(OAKNUT_DIR)/src/platform/android/java/org.oaknut.main/*.java)
 RESOURCES_DIR:=$(PROJECT_ROOT)/platform/android/res
@@ -37,6 +36,7 @@ CFLAGS_COMMON := \
     --sysroot=$(ANDROID_NDK_DIR)/sysroot \
     -isystem $(ANDROID_NDK_DIR)/sysroot/usr/include/$(TARGET_ABI)-linux-android \
     -D__ANDROID_API__=$(ANDROID_VER) \
+	-DPLATFORM_ANDROID=1 \
     -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes \
     -Wa,--noexecstack -Wformat -Werror=format-security \
     -g -DANDROID \
@@ -110,17 +110,3 @@ $(APK): $(DEX) $(CPP_LIB) $(BUILT_RES)
 
 
 android: $(APK)
-
-
-
-$(BUILD_DIR):
-	@mkdir -p $@
-
-$(OBJ_DIR):
-	@mkdir -p $@
-
-clean:
-	@rm -f $(BUILD_DIR)/org/oaknut/main/*.class
-	@rm -f $(CPP_OBJ_FILES)
-	@rm -f $(CPP_LIB)
-	@rm -f $(APK)

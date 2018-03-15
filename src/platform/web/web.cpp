@@ -11,7 +11,7 @@
 
 
 
-long oakCurrentMillis() {
+long App::currentMillis() {
     static val jsfn_getTimestamp = val::global("getTimestamp");
     return jsfn_getTimestamp().as<int>();
     //return (clock() * 1000) / CLOCKS_PER_SEC;
@@ -19,10 +19,10 @@ long oakCurrentMillis() {
 
 EMSCRIPTEN_KEEPALIVE
 extern "C" void dispatchMainWindowDraw() {
-    mainWindow->draw();
+    app._window->draw();
 }
 
-void oakRequestRedraw() {
+void App::requestRedraw() {
     EM_ASM({ requestAnimationFrame( function() { _dispatchMainWindowDraw(); }) });
 }
 
@@ -65,32 +65,35 @@ Timer* Timer::start(const TimerDelegate& del, int intervalMillis, bool repeats) 
 
 
 static void Emma_setWindowSize(int width, int height, int scale) {
-    oakLog("window size %d x %d, scale=%d", width, height, scale);
-    mainWindow->resizeSurface(width, height, scale);
+    app.log("window size %d x %d, scale=%d", width, height, scale);
+    app._window->resizeSurface(width, height, scale);
     //glutReshapeWindow(width, height);
 }
 
 static void Emma_userEvent(int eventType, int eventSourceId, int x, int y) {
-    //oakLog("userEv type=%d src=%d x=%d,y=%d", eventType, eventSourceId, x, y);
-    x *= mainWindow->_scale;
-    y *= mainWindow->_scale;
-    mainWindow->dispatchInputEvent(eventType, (INPUT_SOURCE_TYPE_MOUSE<<8) | eventSourceId, oakCurrentMillis(), x, y);
+    //app.log("userEv type=%d src=%d x=%d,y=%d", eventType, eventSourceId, x, y);
+    x *= app._window->_scale;
+    y *= app._window->_scale;
+    app._window->dispatchInputEvent(eventType, (INPUT_SOURCE_TYPE_MOUSE<<8) | eventSourceId, app.currentMillis(), x, y);
 }
 
 void oakMessageLoop() {
-    //    mainWindow->draw();
+    //    app._window->draw();
 }
 
+static void appMain() {
+    app.main();
+}
 
 EMSCRIPTEN_BINDINGS(libbeeb) {
     emscripten::function("Emma_setWindowSize", &Emma_setWindowSize);
     emscripten::function("Emma_userEvent", &Emma_userEvent);
-    emscripten::function("Emma_main", &oakMain);
+    emscripten::function("Emma_main", &appMain);
 }
 
 
 int main(int argc, char *argv[]) {
-    oakLog("main()\n");
+    app.log("main()\n");
     
     EmscriptenWebGLContextAttributes attr;
     emscripten_webgl_init_context_attributes(&attr);
@@ -112,7 +115,7 @@ int main(int argc, char *argv[]) {
     emscripten_webgl_make_context_current(ctx);
     
     
-    mainWindow = new Window();
+    app._window = new Window();
     
     // Run the main loop (which does nothing)
     emscripten_set_main_loop(oakMessageLoop, 1, 1);
@@ -121,17 +124,17 @@ int main(int argc, char *argv[]) {
 }
 
 static void onDataXLoad(OnDataLoadCompleteDelegate* delegate, void* val) {
-    oakLog("onDataLoad! %X", val);
+    app.log("onDataLoad! %X", val);
 }
 
 
-Data* oakLoadAsset(const char* assetPath) {
+Data* App::loadAsset(const char* assetPath) {
     
     string str = "/assets/";
     str.append(assetPath);
     FILE* asset = fopen(str.data(), "rb");
     if (!asset) {
-        oakLog("Failed to open asset: %s", assetPath);
+        app.log("Failed to open asset: %s", assetPath);
         return NULL;
     }
     
@@ -167,14 +170,14 @@ void oakSaveAppFile(const char* path, Data* data) {
 }*/
 
 
-string oakGetAppHomeDir() {
+string App::getAppHomeDir() {
     return ".";
 }
 
-void oakKeyboardShow(bool show) {
+void App::keyboardShow(bool show) {
     
 }
-void oakKeyboardNotifyTextChanged() {
+void App::keyboardNotifyTextChanged() {
     
 }
 

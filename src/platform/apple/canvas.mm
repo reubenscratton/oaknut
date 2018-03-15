@@ -20,7 +20,7 @@ public:
     
     CTFontRef createCTFont() {
         CTFontRef ctfont = NULL;
-        CGFloat size = dp(_size);
+        CGFloat size = app.dp(_size);
         if (_name.length() == 0) {
 #if TARGET_OS_IOS
             UIFont* font = [UIFont systemFontOfSize:size];
@@ -37,7 +37,7 @@ public:
 #endif
             
         } else {
-            ObjPtr<Data> data = oakLoadAsset(_name.data());
+            ObjPtr<Data> data = app.loadAsset(_name.data());
             CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, data->data, data->cb, NULL);
             CGFontRef cgfont = CGFontCreateWithDataProvider(dataProvider);
             assert(cgfont);
@@ -59,7 +59,7 @@ public:
     }
     
     Glyph* createGlyph(char32_t ch, Atlas* atlas) {
-        //oakLog("Creating glyph for char code %d in font %X", ch, this);
+        //app.log("Creating glyph for char code %d in font %X", ch, this);
         UniChar uch = ch;
         CGGlyph cgglyph = 0;
         if (!CTFontGetGlyphsForCharacters(_ctfont, &uch, &cgglyph, 1)) {
@@ -71,7 +71,7 @@ public:
                 assert(false); // glyph is not in the font, TODO: fall back to another font
                 return NULL;
             }
-            oakLog("Warning: a stupid Core Text bug caused us to waste time recreating a font");
+            app.log("Warning: a stupid Core Text bug caused us to waste time recreating a font");
         }
         Glyph* glyph = new Glyph(this, ch, cgglyph);
         

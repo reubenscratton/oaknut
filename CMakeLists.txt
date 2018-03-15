@@ -20,18 +20,25 @@ set(SOURCES ${SOURCES_APP} ${SOURCES_ASSETS} ${SOURCES_PLATFORM} ${SOURCES_OAKNU
 # Web
 set(PROJECT_NAME_WEB ${PROJECT_NAME}_web)
 add_custom_target(${PROJECT_NAME_WEB} COMMAND make -C ${PROJECT_SOURCE_DIR}
-        PLATFORM=web web SOURCES ${SOURCES})
+        PLATFORM=web
+        PROJECT_NAME=${PROJECT_NAME}
+        DEBUG=${DEBUG}
+        web SOURCES ${SOURCES})
 
 # Android
 set(PROJECT_NAME_ANDROID ${PROJECT_NAME}_android)
 add_custom_target(${PROJECT_NAME_ANDROID} COMMAND make -C ${PROJECT_SOURCE_DIR}
-        PLATFORM=android android SOURCES ${SOURCES})
+        PLATFORM=android
+        PROJECT_NAME=${PROJECT_NAME}
+        DEBUG=${DEBUG}
+        android SOURCES ${SOURCES})
 
 # Linux
 set(PROJECT_NAME_LINUX ${PROJECT_NAME}_linux)
 add_custom_target(${PROJECT_NAME_LINUX} COMMAND make -C ${PROJECT_SOURCE_DIR}
         PLATFORM=linux
-        PROJECT_NAME=${PROJECT_NAME_LINUX}
+        PROJECT_NAME=${PROJECT_NAME}
+        DEBUG=${DEBUG}
         linux SOURCES ${SOURCES})
 add_definitions(-DPLATFORM_LINUX=1)
 
@@ -41,14 +48,16 @@ if (APPLE)
     set(PROJECT_NAME_MACOS ${PROJECT_NAME}_macos)
     add_custom_target(${PROJECT_NAME_MACOS} COMMAND make -C ${PROJECT_SOURCE_DIR}
             PLATFORM=macos
-            PROJECT_NAME=${PROJECT_NAME_MACOS}
+            PROJECT_NAME=${PROJECT_NAME}
+            DEBUG=${DEBUG}
             macos SOURCES ${SOURCES})
 
     # iOS
     set(PROJECT_NAME_IOS ${PROJECT_NAME}_ios)
     add_custom_target(${PROJECT_NAME_IOS} COMMAND make -C ${PROJECT_SOURCE_DIR}
         PLATFORM=ios
-        PROJECT_NAME=${PROJECT_NAME_IOS}
+        PROJECT_NAME=${PROJECT_NAME}
+        DEBUG=${DEBUG}
         ios SOURCES ${SOURCES})
 
 endif ()

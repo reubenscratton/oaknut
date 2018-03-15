@@ -45,7 +45,7 @@ public:
         void dispatchInputEvent(int event, long time, POINT pt, Window* window);
 
         int source;
-        class View* touchedView;
+        ObjPtr<class View>  touchedView;
         long timeOfDownEvent;
         POINT ptDown;
         int numClicks;

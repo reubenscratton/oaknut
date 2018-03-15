@@ -23,7 +23,7 @@ struct android_app {
     float scale;
 };
 
-android_app* app;
+android_app* aapp;
 
 AAssetManager *assetManager;
 JavaVM* g_jvm;
@@ -43,7 +43,7 @@ JNIEnv* getJNIEnv() {
     int getEnvStat = g_jvm->GetEnv((void **)&env, JNI_VERSION_1_6);
     if (getEnvStat == JNI_EDETACHED) {
         if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
-            oakLog("Failed to attach to jvm");
+            app.log("Failed to attach to jvm");
             assert(0);
         }
     }
@@ -53,29 +53,28 @@ JNIEnv* getJNIEnv() {
 bool _calledMain = false;
 
 static void engine_draw_frame() {
-    if (app->display == NULL) {
+    if (aapp->display == NULL) {
         return;
     }
 
     if (!_calledMain) {
-        oakMain();
+        app.main();
         _calledMain = true;
     }
+    app._window->draw();
 
-    mainWindow->draw();
 
-
-    eglSwapBuffers(app->display, app->surface);
+    eglSwapBuffers(aapp->display, aapp->surface);
 }
 
 
 JAVA_FN(void, MainActivity, onCreateNative)(JNIEnv *env, jobject obj,
-                                                                         jobject jassetManager, jfloat screenScale) {
+                                            jobject jassetManager, jfloat screenScale) {
     // Create our app object
-    app = (struct android_app*)malloc(sizeof(struct android_app));
-    memset(app, 0, sizeof(struct android_app));
+    aapp = (struct android_app*)malloc(sizeof(struct android_app));
+    memset(aapp, 0, sizeof(struct android_app));
 
-    app->scale = screenScale;
+    aapp->scale = screenScale;
 
     /*
     if (savedState != NULL) {
@@ -84,12 +83,12 @@ JAVA_FN(void, MainActivity, onCreateNative)(JNIEnv *env, jobject obj,
         memcpy(app->savedState, savedState, savedStateSize);
     }*/
 
-    //app->config = AConfiguration_new();
-    //AConfiguration_fromAssetManager(app->config, app->activity->assetManager);
+    //aapp->config = AConfiguration_new();
+    //AConfiguration_fromAssetManager(aapp->config, aapp->activity->assetManager);
     //print_cur_config(app);
 
 
-    mainWindow = new Window();
+    app._window = new Window();
 
     assetManager = AAssetManager_fromJava(env, jassetManager);
     jclassApp = env->FindClass(PACKAGE "/App");
@@ -143,15 +142,15 @@ JAVA_FN(void, MainActivity, onConfigurationChangedNative)(JNIEnv *env, jobject o
 
 JAVA_FN(void, MainActivity, onWindowFocusChangedNative)(JNIEnv *env, jobject obj, jboolean focused) {
     if (focused) {
-        app->animating = 1;
+        aapp->animating = 1;
     } else {
-        app->animating = 0;
+        aapp->animating = 0;
     }
 }
 
 
 JAVA_FN(void, MainActivity, onSurfaceCreatedNative)(JNIEnv* env, jobject clazz, jobject jsurface) {
-    app->window = ANativeWindow_fromSurface(env, jsurface);
+    aapp->window = ANativeWindow_fromSurface(env, jsurface);
 
     // initialize OpenGL ES and EGL
     const EGLint attribs[] = {
@@ -174,9 +173,9 @@ JAVA_FN(void, MainActivity, onSurfaceCreatedNative)(JNIEnv* env, jobject clazz, 
     eglChooseConfig(display, attribs, &config, 1, &numConfigs);
     eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &format);
 
-    ANativeWindow_setBuffersGeometry(app->window, 0, 0, format);
+    ANativeWindow_setBuffersGeometry(aapp->window, 0, 0, format);
 
-    surface = eglCreateWindowSurface(display, config, app->window, NULL);
+    surface = eglCreateWindowSurface(display, config, aapp->window, NULL);
 
     const EGLint attrib_list[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
     context = eglCreateContext(display, config, NULL, attrib_list);
@@ -189,17 +188,17 @@ JAVA_FN(void, MainActivity, onSurfaceCreatedNative)(JNIEnv* env, jobject clazz, 
     eglQuerySurface(display, surface, EGL_WIDTH, &w);
     eglQuerySurface(display, surface, EGL_HEIGHT, &h);
 
-    app->display = display;
-    app->context = context;
-    app->surface = surface;
-    app->width = w;
-    app->height = h;
+    aapp->display = display;
+    aapp->context = context;
+    aapp->surface = surface;
+    aapp->width = w;
+    aapp->height = h;
 
     // Initialize GL state.
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
 
-    mainWindow->resizeSurface(w, h, app->scale);
+    app._window->resizeSurface(w, h, aapp->scale);
 
     engine_draw_frame();
 
@@ -208,7 +207,7 @@ JAVA_FN(void, MainActivity, onSurfaceCreatedNative)(JNIEnv* env, jobject clazz, 
 JAVA_FN(void, MainActivity, onSurfaceChangedNative)(JNIEnv* env, jobject obj, jobject jsurface,
                                 jint format, jint width, jint height) {
 
-    app->window = ANativeWindow_fromSurface(env, jsurface);
+    aapp->window = ANativeWindow_fromSurface(env, jsurface);
     // TODO: handle size changes. But how likely is that?
 }
 
@@ -223,31 +222,31 @@ JAVA_FN(void, MainActivity, onSurfaceRedrawNeededNative)(JNIEnv* env, jobject ob
 
 JAVA_FN(void, MainActivity, onSurfaceDestroyedNative)(JNIEnv* env, jobject obj, jobject jsurface) {
 
-    if (app->window) {
-        ANativeWindow_release(app->window);
-        app->window = NULL;
+    if (aapp->window) {
+        ANativeWindow_release(aapp->window);
+        aapp->window = NULL;
     }
 
-    if (app->display != EGL_NO_DISPLAY) {
-        eglMakeCurrent(app->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-        if (app->context != EGL_NO_CONTEXT) {
-            eglDestroyContext(app->display, app->context);
+    if (aapp->display != EGL_NO_DISPLAY) {
+        eglMakeCurrent(aapp->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        if (aapp->context != EGL_NO_CONTEXT) {
+            eglDestroyContext(aapp->display, aapp->context);
         }
-        if (app->surface != EGL_NO_SURFACE) {
-            eglDestroySurface(app->display, app->surface);
+        if (aapp->surface != EGL_NO_SURFACE) {
+            eglDestroySurface(aapp->display, aapp->surface);
         }
-        eglTerminate(app->display);
+        eglTerminate(aapp->display);
     }
-    app->animating = 0;
-    app->display = EGL_NO_DISPLAY;
-    app->context = EGL_NO_CONTEXT;
-    app->surface = EGL_NO_SURFACE;
+    aapp->animating = 0;
+    aapp->display = EGL_NO_DISPLAY;
+    aapp->context = EGL_NO_CONTEXT;
+    aapp->surface = EGL_NO_SURFACE;
 }
 
 
 JAVA_FN(void, MainActivity, onContentRectChangedNative)(JNIEnv* env, jobject obj,
                                     jint x, jint y, jint w, jint h) {
-    //mainWindow->resizeClientArea(x,y,w,h);
+    //app._window->resizeClientArea(x,y,w,h);
     check_gl(glClear, GL_COLOR_BUFFER_BIT);
 }
 
@@ -255,17 +254,17 @@ JAVA_FN(void, MainActivity, onContentRectChangedNative)(JNIEnv* env, jobject obj
 JAVA_FN(void, MainActivity, onTouchEventNative)(JNIEnv* env, jobject obj, jint finger, jint action, jlong time, jfloat x, jfloat y) {
     int32_t em_action=0;
     switch (action) {
-        case AMOTION_EVENT_ACTION_DOWN: em_action=TOUCH_EVENT_DOWN; break;
-        case AMOTION_EVENT_ACTION_MOVE: em_action=TOUCH_EVENT_MOVE; break;
-        case AMOTION_EVENT_ACTION_UP: em_action=TOUCH_EVENT_UP; break;
-        case AMOTION_EVENT_ACTION_CANCEL: em_action=TOUCH_EVENT_CANCEL; break;
+        case AMOTION_EVENT_ACTION_DOWN: em_action=INPUT_EVENT_DOWN; break;
+        case AMOTION_EVENT_ACTION_MOVE: em_action=INPUT_EVENT_MOVE; break;
+        case AMOTION_EVENT_ACTION_UP: em_action=INPUT_EVENT_UP; break;
+        case AMOTION_EVENT_ACTION_CANCEL: em_action=INPUT_EVENT_CANCEL; break;
     }
     //LOGI("ev %d %f,%f", em_action, x, y);
-    mainWindow->dispatchTouchEvent(em_action, finger, time, x ,y);
+    app._window->dispatchInputEvent(em_action, MAKE_SOURCE(INPUT_SOURCE_TYPE_FINGER,finger), time, x ,y);
 }
 
 
-void oakLog(char const* fmt, ...) {
+void App::log(char const* fmt, ...) {
     char ach[512];
     va_list args;
     va_start(args, fmt);
@@ -274,7 +273,7 @@ void oakLog(char const* fmt, ...) {
 }
 
 
-long oakCurrentMillis() {
+long App::currentMillis() {
     timespec t;
     clock_gettime(CLOCK_REALTIME, &t);
     long l = t.tv_sec*1000 + (t.tv_nsec / 1000000);
@@ -282,7 +281,7 @@ long oakCurrentMillis() {
     return l;
 }
 
-string oakGetAppHomeDir() {
+string App::getAppHomeDir() {
     JNIEnv* env = getJNIEnv();
     jstring result = (jstring)env->CallStaticObjectMethod(jclassApp, jmethodIDAppGetDocsPath);
     const char* cstr = env->GetStringUTFChars(result, NULL);
@@ -291,7 +290,7 @@ string oakGetAppHomeDir() {
     return str;
 }
 
-Data* oakLoadAsset(const char* assetPath) {
+Data* App::loadAsset(const char* assetPath) {
     JNIEnv* env = getJNIEnv();
     jobject jstr = env->NewStringUTF(assetPath);
     jbyteArray result = (jbyteArray)env->CallStaticObjectMethod(jclassApp, jmethodIDAppLoadAsset, jstr);
@@ -307,15 +306,15 @@ Data* oakLoadAsset(const char* assetPath) {
 
 
 
-void oakRequestRedraw() {
+void App::requestRedraw() {
 
 }
 
-void oakKeyboardShow(bool show) {
+void App::keyboardShow(bool show) {
 
 }
 
-void oakKeyboardNotifyTextChanged() {
+void App::keyboardNotifyTextChanged() {
 
 }
 

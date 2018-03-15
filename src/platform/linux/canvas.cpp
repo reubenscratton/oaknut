@@ -39,7 +39,7 @@ public:
     }
     
     Glyph* createGlyph(char32_t ch, Atlas* atlas) {
-        oakLog("Creating glyph for char code %d in font %X", ch, this);
+        app.log("Creating glyph for char code %d in font %X", ch, this);
         //UniChar uch = ch;
 
         hb_codepoint_t glyphIndex = 0;

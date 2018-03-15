@@ -8,25 +8,15 @@
 #include "../oaknut.h"
 
 
-Window* mainWindow;
 
-
-
-float dp(float dp) {
-	return dp*mainWindow->_scale;
-}
-float idp(float pix) {
-	return pix/mainWindow->_scale;
-}
 
 
 #ifndef ANDROID
-void oakLog(char const* fmt, ...) {
-	char ach[2048];
+void App::log(char const* fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
-	vsnprintf(ach, sizeof(ach), fmt, args);
-	printf("%s\n", ach);
+	vprintf(fmt, args);
+	printf("\n");
 }
 #endif
 

@@ -88,7 +88,7 @@ void OSBitmap::lock(PIXELDATA* pixelData, bool forWriting) {
     }
     
     if (!_pixelData.data) {
-        oakLog("oo-er, lock() called on bitmap with no data or image");
+        app.log("oo-er, lock() called on bitmap with no data or image");
         return;
     }
 
@@ -115,7 +115,7 @@ void OSBitmap::bind() {
     } else if (!_buff.isNull()) {
         gl.call<void>("texImage2D", GL_TEXTURE_2D, 0, format, _width, _height, 0, format, type, _buff);
     } else {
-        oakLog("bind() called on data-less bitmap");
+        app.log("bind() called on data-less bitmap");
     }
 }
 
@@ -169,7 +169,7 @@ static void onImageLoadedFromData(OSBitmap* bitmap) {
     bitmap->_height = bitmap->_img["height"].as<int>();
     bitmap->_format = BITMAPFORMAT_RGBA32;
     if (bitmap->_width<=0) { // image failed to decode
-        oakLog("Warning: bitmap failed to decode");
+        app.log("Warning: bitmap failed to decode");
         bitmap->_img = val::null();
     }
     bitmap->_tmp(bitmap);
@@ -178,7 +178,7 @@ void oakBitmapCreateFromData(const void* data, int cb, std::function<void(Bitmap
     string str = base64_encode((const char*)data, cb);
     string sstr = "data:image/png;base64,";
     sstr.append(str);
-    //oakLog("bitmap is %s", sstr.data());
+    //app.log("bitmap is %s", sstr.data());
 
     OSBitmap* bitmap = new OSBitmap();
     bitmap->_tmp = callback;

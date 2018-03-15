@@ -27,7 +27,7 @@ public:
         req->_req->dispatchOnLoad(NULL);
     }
     static void OnImageLoad(NativeRequest* req) {
-        oakLog("OnImageLoad %s", req->_req->_url.data());
+        app.log("OnImageLoad %s", req->_req->_url.data());
         bool isPng = string::npos!=req->_req->_url.find(".png", 0);
         ObjPtr<OSBitmap> bitmap = new OSBitmap(req->_val, isPng);
         req->_val = val::null();

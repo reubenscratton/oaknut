@@ -22,7 +22,7 @@ void Object::flushAutodeletePool() {
 }
 
 Object::Object() : _refs(0) {
-	//oakLog("new %s", getClassName(this).data());
+	//app.log("new %s", getClassName(this).data());
 }
 Object::~Object() {
 }

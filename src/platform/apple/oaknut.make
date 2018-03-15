@@ -91,7 +91,10 @@ FRAMEWORKS:=-framework CoreText \
 			-framework GLKit \
 			-framework SceneKit \
 			-framework AudioToolbox \
-			-framework OpenAL
+			-framework OpenAL \
+			-framework CoreImage \
+			-framework CoreVideo \
+			-framework QuartzCore
 
 ifdef OAKNUT_WANT_CAMERA
 	FRAMEWORKS+= -framework AVFoundation -framework CoreMedia

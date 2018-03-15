@@ -11,3 +11,5 @@
 #include <cairo-ft.h>
 #include <cairo.h>
 #include <curl/curl.h>
+
+#define HAS_VAO

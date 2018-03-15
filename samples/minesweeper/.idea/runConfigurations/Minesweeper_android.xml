@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Minesweeper_android" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Minesweeper" TARGET_NAME="Minesweeper_android" CONFIG_NAME="Debug">
+  <configuration default="false" name="Minesweeper_android" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Minesweeper" TARGET_NAME="Minesweeper_android" CONFIG_NAME="Release">
     <envs />
     <method />
   </configuration>

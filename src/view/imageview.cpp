@@ -74,7 +74,7 @@ void ImageView::detachFromWindow() {
 }
 
 void ImageView::loadImage() {
-	_startLoadTime = oakCurrentMillis();
+	_startLoadTime = app.currentMillis();
 	URLRequest::request(_url, this, URL_FLAG_BITMAP);
 }
 
@@ -94,7 +94,7 @@ void ImageView::onEffectiveTintColourChanged() {
 void ImageView::onUrlRequestLoad(URLData* data) {
     if (data) {
         if (data->_type != URLDataTypeBitmap) {
-            oakLog("Warning: Unexpected urldata type");
+            app.log("Warning: Unexpected urldata type");
             return;
         }
         setBitmap(data->_value.bitmap);

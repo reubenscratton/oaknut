@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Minesweeper_firefox" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="$USER_HOME$/Downloads/emsdk-portable/emscripten/1.37.22/emrun.py --browser=firefox xx.html" WORKING_DIR="file://$PROJECT_DIR$/build/web/webroot" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Minesweeper" TARGET_NAME="Minesweeper_web" CONFIG_NAME="Debug" RUN_PATH="/usr/bin/python">
+  <configuration default="false" name="Minesweeper_firefox" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="$USER_HOME$/Downloads/emsdk-portable/emscripten/1.37.22/emrun.py --browser=firefox xx.html" WORKING_DIR="file://$PROJECT_DIR$/build/web/webroot" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Minesweeper" TARGET_NAME="Minesweeper_web" CONFIG_NAME="Release" RUN_PATH="/usr/bin/python">
     <envs />
     <method />
   </configuration>

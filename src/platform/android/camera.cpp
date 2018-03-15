@@ -97,7 +97,7 @@ public:
         check_gl(glGetIntegerv, GL_ELEMENT_ARRAY_BUFFER_BINDING, &oldIndexBuffer);
 
         // Reset the canvas' vertex config since our binding to another VBO trashed existing attrib config
-        mainWindow->_canvas->_currentVertexConfig = -1;
+        app._window->_canvas->_currentVertexConfig = -1;
 
         // Create a framebuffer and a normal 2D texture to render to
         GLuint texId2 = 0;

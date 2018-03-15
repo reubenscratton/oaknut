@@ -24,7 +24,7 @@ GameView::GameView() {
     _imgNumbers[7] = new AsyncBitmapProvider("images/7.png");
     _imgNumbers[8] = new AsyncBitmapProvider("images/8.png");
 
-    _cellSize = dp(25);
+    _cellSize = app.dp(25);
 }
 
 void GameView::setGame(Game* game) {

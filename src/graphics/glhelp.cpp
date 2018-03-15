@@ -166,7 +166,7 @@ void GLProgram::setAlpha(float alpha) {
 
 void checkGlErr(const char* file, int line, const char* cmd) {
     for (GLint error = glGetError(); error; error = glGetError()) {
-        oakLog("GL ERROR: %s(%d) %s() err=0x%x", file, line, cmd, error);
+        app.log("GL ERROR: %s(%d) %s() err=0x%x", file, line, cmd, error);
     }
 }
 

@@ -418,7 +418,7 @@ void oakBitmapCreateFromData(const void* data, int cb, std::function<void(Bitmap
  CFNumberGetValue(glFormat, kCFNumberSInt32Type, &glFormatVal);
  CFNumberGetValue(glInternalFormat, kCFNumberSInt32Type, &glInternalFormatVal);
  CFNumberGetValue(glType, kCFNumberSInt32Type, &glTypeVal);
- oakLog("gl %d %d %d", glFormat, glInternalFormat, glType);
+ app.log("gl %d %d %d", glFormat, glInternalFormat, glType);
  }
  
  CFShow(pixelFormat);

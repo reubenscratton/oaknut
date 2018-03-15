@@ -75,11 +75,11 @@ public:
 
 };
 
-void oakMain() {
+void App::main() {
     Styles::loadAsset("styles.res");
 
     MainViewController* mainVC = new MainViewController();
-    mainWindow->setRootViewController(mainVC);
+    _window->setRootViewController(mainVC);
 }
 
 

@@ -49,7 +49,7 @@ public:
             s_jmidDrawGlyph = env->GetMethodID(s_jclass, "drawGlyph", "(ILandroid/graphics/Bitmap;FF)V");
         }
         jstring strAssetPath = env->NewStringUTF(fontAssetPath.data());
-        _obj = env->NewObject(s_jclass, s_jmidConstructor, (jlong)this, strAssetPath, dp(size));
+        _obj = env->NewObject(s_jclass, s_jmidConstructor, (jlong)this, strAssetPath, app.dp(size));
         _obj = env->NewGlobalRef(_obj);
     }
 
@@ -97,13 +97,40 @@ JAVA_FN(jlong, Font, nativeCreateGlyph)(JNIEnv *env, jobject jfont, jlong cfont,
     return (jlong)glyph;
 }
 
-
-class OSCanvas {
+class AndroidPath : public Path {
 public:
-    OSCanvas(jobject canvas) {
+    jobject _path;
+
+    AndroidPath() {
+        JNIEnv* env = getJNIEnv();
+        jobject path = env->NewObject(jclassPath, jmidPathConstructor);
+        _path = env->NewGlobalRef(path);
+    }
+    ~AndroidPath() {
+        getJNIEnv()->DeleteGlobalRef(_path);
+    }
+
+    void moveTo(POINT pt) {
+        getJNIEnv()->CallVoidMethod(_path, jmidPathMoveTo, (jfloat)pt.x, (jfloat)pt.y);
+    }
+    void lineTo(POINT pt) {
+        getJNIEnv()->CallVoidMethod(_path, jmidPathLineTo, (jfloat)pt.x, (jfloat)pt.y);
+    }
+    void curveTo(POINT ctrl1, POINT ctrl2, POINT pt) {
+        getJNIEnv()->CallVoidMethod(_path, jmidPathCubicTo,
+                              (jfloat)ctrl1.x, (jfloat)ctrl1.y,
+                              (jfloat)ctrl2.x, (jfloat)ctrl2.y,
+                              (jfloat)pt.x,    (jfloat)pt.y);
+    }
+
+};
+
+class AndroidCanvas : public Canvas {
+public:
+    AndroidCanvas(jobject canvas) {
         _canvas = getJNIEnv()->NewGlobalRef(canvas);
     }
-    ~OSCanvas() {
+    ~AndroidCanvas() {
         getJNIEnv()->DeleteGlobalRef(_canvas);
     }
     void resize(int width, int height) {
@@ -112,7 +139,7 @@ public:
         jobject jbitmap = getJNIEnv()->CallObjectMethod(_canvas, jmidGetBitmap);
         _bitmap = new OSBitmap(jbitmap);
     }
-    void clearToColour(COLOUR colour) {
+    void clear(COLOUR colour) {
         getJNIEnv()->CallVoidMethod(_canvas, jmidClear, (jint)colour);
         _bitmap->_needsUpload = true;
     }
@@ -135,7 +162,7 @@ public:
             getJNIEnv()->CallVoidMethod(_canvas, jmidClearTransform);
         }
     }
-    void drawRect(const RECT& rect) {
+    void drawRect(RECT rect) {
         getJNIEnv()->CallVoidMethod(_canvas, jmidDrawRect,
                                     (jfloat)rect.origin.x,
                                     (jfloat)rect.origin.y,
@@ -143,7 +170,7 @@ public:
                                     (jfloat)rect.size.height);
         _bitmap->_needsUpload = true;
     }
-    void drawOval(const RECT& rect) {
+    void drawOval(RECT rect) {
         getJNIEnv()->CallVoidMethod(_canvas, jmidDrawOval,
                                     (jfloat)rect.origin.x,
                                     (jfloat)rect.origin.y,
@@ -151,13 +178,17 @@ public:
                                     (jfloat)rect.size.height);
         _bitmap->_needsUpload = true;
     }
-    void drawPath(void* ospath) {
-        jobject path = (jobject)ospath;
-        getJNIEnv()->CallVoidMethod(_canvas, jmidDrawPath, path);
+    void drawPath(Path* path) {
+        AndroidPath* androidPath = (AndroidPath*)path;
+        getJNIEnv()->CallVoidMethod(_canvas, jmidDrawPath, androidPath->_path);
         _bitmap->_needsUpload = true;
     }
-
-
+    Bitmap* getBitmap() {
+        return _bitmap;
+    }
+    Path* createPath() {
+        return new AndroidPath();
+    }
 
 
     jobject _canvas;
@@ -165,7 +196,7 @@ public:
 };
 
 // API
-void* oakCanvasCreate() {
+Canvas* Canvas::create() {
     JNIEnv* env = getJNIEnv();
     jclassCanvas = env->FindClass(PACKAGE "/Canvas");
     jclassCanvas = (jclass)env->NewGlobalRef(jclassCanvas);
@@ -191,66 +222,9 @@ void* oakCanvasCreate() {
     jmidPathCubicTo = env->GetMethodID(jclassPath, "cubicTo", "(FFFFFF)V");
     
     jobject jcanvas = env->NewObject(jclassCanvas, jmidCanvasConstructor);
-    return new OSCanvas(jcanvas);
-}
-void oakCanvasResize(void* oscanvas, int width, int height) {
-    ((OSCanvas*)oscanvas)->resize(width, height);
-}
-Bitmap* oakCanvasGetBitmap(void* oscanvas) {
-    return ((OSCanvas*)oscanvas)->_bitmap;
-}
-void oakCanvasClear(void* oscanvas, COLOUR colour) {
-    ((OSCanvas*)oscanvas)->clearToColour(colour);
-}
-void oakCanvasSetFillColour(void* oscanvas, COLOUR colour) {
-    ((OSCanvas*)oscanvas)->setFillColour(colour);
-}
-void oakCanvasSetStrokeColour(void* oscanvas, COLOUR colour) {
-    ((OSCanvas*)oscanvas)->setStrokeColour(colour);
-}
-void oakCanvasSetStrokeWidth(void* oscanvas, float strokeWidth) {
-    ((OSCanvas*)oscanvas)->setStrokeWidth(strokeWidth);
-}
-void oakCanvasSetAffineTransform(void* oscanvas, AffineTransform* t) {
-    ((OSCanvas*)oscanvas)->setAffineTransform(t);
-}
-void oakCanvasDrawRect(void* oscanvas, RECT rect) {
-    ((OSCanvas*)oscanvas)->drawRect(rect);
-}
-void oakCanvasDrawOval(void* oscanvas, RECT rect) {
-    ((OSCanvas*)oscanvas)->drawOval(rect);
-}
-void oakCanvasDrawPath(void* oscanvas, void* ospath) {
-    ((OSCanvas*)oscanvas)->drawPath(ospath);
-}
-void oakCanvasRelease(void* oscanvas) {
-    delete (OSCanvas*)oscanvas;
+    return new AndroidCanvas(jcanvas);
 }
 
-void* oakCanvasPathCreate() {
-    JNIEnv* env = getJNIEnv();
-    jobject path = env->NewObject(jclassPath, jmidPathConstructor);
-    return (void*)env->NewGlobalRef(path);
-}
-void oakCanvasPathMoveTo(void* ospath, POINT pt) {
-    jobject path = (jobject)ospath;
-    getJNIEnv()->CallVoidMethod(path, jmidPathMoveTo, (jfloat)pt.x, (jfloat)pt.y);
-}
-void oakCanvasPathLineTo(void* ospath, POINT pt) {
-    jobject path = (jobject)ospath;
-    getJNIEnv()->CallVoidMethod(path, jmidPathLineTo, (jfloat)pt.x, (jfloat)pt.y);
-}
-void oakCanvasPathCurveTo(void* ospath, POINT ctrl1, POINT ctrl2, POINT pt) {
-    jobject path = (jobject)ospath;
-    getJNIEnv()->CallVoidMethod(path, jmidPathCubicTo,
-                          (jfloat)ctrl1.x, (jfloat)ctrl1.y,
-                          (jfloat)ctrl2.x, (jfloat)ctrl2.y,
-                          (jfloat)pt.x,    (jfloat)pt.y);
-}
-void oakCanvasPathRelease(void* ospath) {
-    jobject path = (jobject)ospath;
-    getJNIEnv()->DeleteGlobalRef(path);
-}
 
 
 #endif

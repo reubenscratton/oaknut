@@ -58,11 +58,11 @@ static bool _renderNeeded;
 - (void)handleTouches:(NSEvent*)event eventType:(int)eventType remove:(BOOL)remove {
     CGPoint pt = event.locationInWindow;
     pt.y = self.frame.size.height - pt.y;
-    mainWindow->dispatchInputEvent(eventType, MAKE_SOURCE(INPUT_SOURCE_TYPE_MOUSE, 0), event.timestamp*1000, pt.x*mainWindow->_scale, pt.y*mainWindow->_scale);
+    app._window->dispatchInputEvent(eventType, MAKE_SOURCE(INPUT_SOURCE_TYPE_MOUSE, 0), event.timestamp*1000, pt.x*app._window->_scale, pt.y*app._window->_scale);
     [self setNeedsDisplay:YES];
     /*NSSet<NSTouch*>* touches = event.allTouches;
     for (NSTouch* touch in touches) {
-        oakLog("touch %d %f,%f", eventType, pt.x, pt.y);
+        app.log("touch %d %f,%f", eventType, pt.x, pt.y);
         
         int touchSlot = 9;
         for (int i=0 ; i<10 ; i++) {
@@ -82,7 +82,7 @@ static bool _renderNeeded;
         }
         
         //dispatch_async(oakQueue, ^{
-        mainWindow->dispatchTouchEvent(eventType, touchSlot, event.timestamp*1000, pt.x, pt.y);
+        app._window->dispatchTouchEvent(eventType, touchSlot, event.timestamp*1000, pt.x, pt.y);
         [self setNeedsDisplay:YES];
         //});
     }*/
@@ -106,7 +106,7 @@ static bool s_mouseIsDown;
 //}
 - (void)touchesMovedWithEvent:(NSEvent*)event {
     if (s_mouseIsDown) {
-//    oakLog("move!");
+//    app.log("move!");
         [self handleTouches:event eventType:INPUT_EVENT_MOVE remove:NO];
     }
 }
@@ -124,8 +124,8 @@ static bool s_mouseIsDown;
     self.acceptsTouchEvents = YES;
     
     s_oaknutView = self;
-    mainWindow = new Window();
-    mainWindow->_scale = [NSScreen mainScreen].backingScaleFactor;
+    app._window = new Window();
+    app._window->_scale = [NSScreen mainScreen].backingScaleFactor;
 
     NSOpenGLPixelFormatAttribute attrs[] = {
         NSOpenGLPFADoubleBuffer,
@@ -182,7 +182,7 @@ static bool s_mouseIsDown;
     
     CGFloat scale = viewRectPixels.size.width / viewRectPoints.size.width;
     
-    mainWindow->resizeSurface(viewRectPixels.size.width, viewRectPixels.size.height, scale);
+    app._window->resizeSurface(viewRectPixels.size.width, viewRectPixels.size.height, scale);
 
     CGLUnlockContext([[self openGLContext] CGLContextObj]);
 }
@@ -198,11 +198,11 @@ static bool s_mouseIsDown;
     [context makeCurrentContext];
     CGLLockContext([context CGLContextObj]);
     if (!_calledMain) {
-        oakMain();
+        app.main();
         _calledMain = true;
     }
     _renderNeeded = NO;
-    mainWindow->draw();
+    app._window->draw();
     CGLFlushDrawable([context CGLContextObj]);
     CGLUnlockContext([context CGLContextObj]);
 }
@@ -219,7 +219,7 @@ static bool s_mouseIsDown;
 @end
 
 
-void oakRequestRedraw() {
+void App::requestRedraw() {
     [s_oaknutView setNeedsDisplay2];
 }
 

@@ -19,8 +19,8 @@ void Button::applyStyleValues(const StyleValueList& values) {
     _textRenderer.setGravity(_gravity);
     
     if (_borderColour) {
-        setBackground(new RoundRectRenderOp(this, _backgroundColour, dp(2), _borderColour,  dp(6)));
-        setBackground(new RoundRectRenderOp(this, _pressedFillColour, dp(2), _borderColour,  dp(6)), {STATE_PRESSED,STATE_PRESSED});
+        setBackground(new RoundRectRenderOp(this, _backgroundColour, app.dp(2), _borderColour,  app.dp(6)));
+        setBackground(new RoundRectRenderOp(this, _pressedFillColour, app.dp(2), _borderColour,  app.dp(6)), {STATE_PRESSED,STATE_PRESSED});
     } else {
         if (_backgroundColour) {
             setBackground(new ColorRectFillRenderOp(this, getBounds(), _backgroundColour));
@@ -81,7 +81,7 @@ void ToolbarButton::lazyCreateImageView() {
         _imageView->setMeasureSpecs(MEASURESPEC_FillParent, MEASURESPEC_FillParent);
         //_imageView->setMeasureSpecs(MEASURESPEC_WrapContent, MEASURESPEC_WrapContent);
         _imageView->setAlignSpecs(ALIGNSPEC_Top, ALIGNSPEC_Left);
-        _imageView->setPadding(EDGEINSETS(dp(8),dp(8),dp(8),dp(8)));
+        _imageView->setPadding(EDGEINSETS(app.dp(8),app.dp(8),app.dp(8),app.dp(8)));
         _imageView->setTintColour(_tintColour);
         addSubview(_imageView);
     }

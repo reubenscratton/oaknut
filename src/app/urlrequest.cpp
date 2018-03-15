@@ -17,11 +17,16 @@ URLData::~URLData() {
         _value.data->release();
     }
 }
+URLData::value::value(Data* data) {this->data=data; data->retain();}
+URLData::value::value(JsonValue* json) {this->json=json; }
+URLData::value::value(Bitmap* bitmap) {this->bitmap=bitmap; bitmap->retain();}
+
 
 static MruCache<string> s_urldataCache(4*1024*1024);
 static list<ObjPtr<URLRequest>> s_workQueue;
 static ObjPtr<URLRequest> s_currentReq;
 static map<string, ObjPtr<URLRequest>> s_reqs;
+
 
 void URLRequest::flushWorkQueue() {
 	if (s_workQueue.size() == 0) {
@@ -39,7 +44,7 @@ void URLRequest::start() {
 	assert(!_osobj);
 	_status = RUNNING;
 	retain(); // ensure urlrequest is alive for duration of network request
-    //oakLog("starting %s", _url.data());
+    //app.log("starting %s", _url.data());
     nativeStart();
 	assert(_osobj);
 }
@@ -84,7 +89,7 @@ URLRequest::URLRequest(const string& url, IURLRequestDelegate* delegate, int fla
     _flags = flags;
 }
 URLRequest::~URLRequest() {
-	//oakLog("~URLRequest %lX", (int64_t)this);
+	//app.log("~URLRequest %lX", (int64_t)this);
 	assert(_delegates.size()==0);
 }
 

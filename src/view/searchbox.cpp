@@ -11,13 +11,13 @@
 DECLARE_DYNCREATE(SearchBox);
 
 SearchBox::SearchBox() {
-    _roundRectOp = new RoundRectRenderOp(this, 0xFFFFFFFF, 0, 0, dp(5));
+    _roundRectOp = new RoundRectRenderOp(this, 0xFFFFFFFF, 0, 0, app.dp(5));
     addRenderOp(_roundRectOp);
     _searchIconOp = new TextureRenderOp(this, "images/search.png", 0xff555555);
     addRenderOp(_searchIconOp);
     setBackgroundColour(0xffcccccc);
     setGravity({GRAVITY_LEFT,GRAVITY_CENTER});
-    setPadding(EDGEINSETS(dp(16), dp(2), dp(16), dp(2)));
+    setPadding(EDGEINSETS(app.dp(16), app.dp(2), app.dp(16), app.dp(2)));
     _showClearButtonWhenNotEmpty = true;
     setTextColour(0xff000000);
 }
@@ -27,7 +27,7 @@ void SearchBox::setSearchTextChangedDelegate(SEARCHTEXTCHANGED delegate) {
 }
 
 float SearchBox::spaceForSearchIcon() {
-    return dp(18);
+    return app.dp(18);
 }
 void SearchBox::setPadding(EDGEINSETS padding) {
     padding.left += spaceForSearchIcon();
@@ -37,10 +37,10 @@ void SearchBox::setPadding(EDGEINSETS padding) {
 void SearchBox::layout() {
     EditText::layout();
     RECT rect = getBounds();
-    RECT_inset(rect, dp(12), dp(6));
+    RECT_inset(rect, app.dp(12), app.dp(6));
     _roundRectOp->setRect(rect);
     
-    SIZE searchIconSize = SIZE_Make(dp(16),dp(16));
+    SIZE searchIconSize = SIZE_Make(app.dp(16),app.dp(16));
     _searchIconOp->setRect( RECT_Make(rect.origin.x+(rect.size.width-searchIconSize.width)/2,rect.origin.y+(rect.size.height-searchIconSize.height)/2, searchIconSize.width, searchIconSize.height));
 }
 
@@ -51,7 +51,7 @@ bool SearchBox::becomeFirstResponder() {
         anim->_interpolater = linear;
         anim->_delegate = [=](float val) {
             RECT iconRect;
-            iconRect.size = SIZE_Make(dp(16), dp(16));
+            iconRect.size = SIZE_Make(app.dp(16), app.dp(16));
             RECT paddedBounds = getBoundsWithPadding();
             float spaceForSearchIcon = this->spaceForSearchIcon();
             paddedBounds.origin.x -= spaceForSearchIcon;

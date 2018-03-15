@@ -1,34 +1,28 @@
 
-CFLAGS+= -DPLATFORM_WEB=1
-
-HTML_FILE := $(OAKNUT_DIR)/src/platform/web/web.html
-
 ifndef EMSCRIPTEN_ROOT
 $(error EMSCRIPTEN_ROOT must point to the root of the Emscripten SDK)
 endif
 
+HTML_FILE := $(OAKNUT_DIR)/src/platform/web/web.html
 OUTPUT_DIR := $(BUILD_DIR)/webroot
-OBJ_DIR:=$(BUILD_DIR)/obj
-OBJS_CPP := $(patsubst %,$(OBJ_DIR)%.bc,$(SOURCES_CPP))
-OBJS_C := $(patsubst %,$(OBJ_DIR)%.bc,$(SOURCES_C))
-OBJS := $(OBJS_CPP) $(OBJS_C)
+OBJS:=$(OBJS:.o=.bc)
 
-#OPTS:=-O3 -s TOTAL_MEMORY=33554432
-#OPTS:=-O2 -s TOTAL_MEMORY=33554432
-OPTS:=-O0 --profiling -s USE_PTHREADS=1 -s DEMANGLE_SUPPORT=1 -s TOTAL_MEMORY=33554432 -DEMSCRIPTEN
-#OPTS:=-O3 -s TOTAL_MEMORY=33554432
 
-OPTS+= -isystem $(EMSCRIPTEN_ROOT)/system/include
-
-$(OBJS_CPP): $(OBJ_DIR)%.bc : % | $(OBJ_DIR)
+$(OBJ_DIR)%.bc : %
+$(OBJ_DIR)%.bc : % $(OBJ_DIR)%.d
 	@echo web: Compiling $(notdir $<)
 	@mkdir -p $(dir $@)
-	@$(EMSCRIPTEN_ROOT)/emcc --bind -std=c++11 $(CFLAGS) $(OPTS) -I$(OAKNUT_DIR)/src $< -o $@
+	@$(EMSCRIPTEN_ROOT)/emcc --bind \
+	 	-MT $@ -MD -MP -MF $(@:.bc=.Td) \
+		$(if $(filter $(suffix $<),.cpp),-std=c++11,) \
+		$(CFLAGS) -DPLATFORM_WEB=1 -DEMSCRIPTEN $(OPTS) \
+		-I$(OAKNUT_DIR)/src \
+		-isystem $(EMSCRIPTEN_ROOT)/system/include \
+		$(if $(DEBUG),-O0 --profiling  -s DEMANGLE_SUPPORT=1,-O3) \
+		-s USE_PTHREADS=1 -s TOTAL_MEMORY=33554432 \
+		$< -o $@
+	@mv -f $(@:.bc=.Td) $(@:.bc=.d) && touch $@
 
-$(OBJS_C): $(OBJ_DIR)%.bc : % | $(OBJ_DIR)
-	@echo web: Compiling $(notdir $<)
-	@mkdir -p $(dir $@)
-	@$(EMSCRIPTEN_ROOT)/emcc --bind $(CFLAGS) $(OPTS) -I$(OAKNUT_DIR)/src $< -o $@
 
 EXECUTABLE=$(OUTPUT_DIR)/xx.html
 
@@ -38,12 +32,5 @@ $(EXECUTABLE): $(OBJS) $(HTML_FILE)
 	@$(EMSCRIPTEN_ROOT)/emcc --bind $(OPTS) --emrun --preload-file $(PROJECT_ROOT)/assets@/assets --shell-file $(HTML_FILE) $(OBJS) -o $@
 
 
-
-$(OBJ_DIR):
-	@mkdir -p $@
-
 web: $(EXECUTABLE)
 
-
-clean:
-	@rm -rf $(OBJS)

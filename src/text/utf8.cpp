@@ -33,7 +33,7 @@ float stringParseDimension(string str) {
     }
     float val = stringParseDouble(str);
     if (isDP) {
-        val = dp(val);
+        val = app.dp(val);
     }
     return val;
 }
@@ -259,7 +259,7 @@ string Utf8Iterator::nextToken() {
             str.push_back(ch);
             return str;
         } else {
-            oakLog("Warning: invalid char '%c'", ch);
+            app.log("Warning: invalid char '%c'", ch);
         }
     }
     return "";

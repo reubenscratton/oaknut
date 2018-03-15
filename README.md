@@ -15,7 +15,7 @@ i.e. `macos`, `web`, `ios`, `android`, `linux`, or `windows`.
 
 Immediate Todos
 ---------------
-- Linux bindings
+- Linux urlrequest
 - Initial non-ref documentation
 - Lose _platform extension from compiled bundles/apk/etc.
 - Implement release vs debug configs

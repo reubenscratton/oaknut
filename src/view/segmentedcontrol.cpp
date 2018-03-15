@@ -37,9 +37,9 @@ void SegmentedControl::addSegment(const string& label) {
     segment.label->setDefaultColour(actualColour);
     float r[2] = {0,0};
     if (_segments.size() == 0) {
-        r[0] = dp(4);
+        r[0] = app.dp(4);
     } else {
-        r[1] = dp(4);
+        r[1] = app.dp(4);
     }
     segment.rectOp = new RoundRectRenderOp(this, 0, _lineWidth, _effectiveTintColour, r);
     addRenderOp(segment.rectOp);
@@ -100,8 +100,8 @@ void SegmentedControl::updateContentSize(float parentWidth, float parentHeight) 
         Segment& segment = _segments.at(i);
         segment.label->measure();
         SIZE labelSize = segment.label->measuredSize();
-		segment.rect.size.width = dp(8) + labelSize.width + dp(8);
-		segment.rect.size.height = dp(4) + labelSize.height + dp(4);
+		segment.rect.size.width = app.dp(8) + labelSize.width + app.dp(8);
+		segment.rect.size.height = app.dp(4) + labelSize.height + app.dp(4);
 		_contentSize.width += segment.rect.size.width;
 		_contentSize.height = max(_contentSize.height, segment.rect.size.height);
 	}

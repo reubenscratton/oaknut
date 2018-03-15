@@ -16,7 +16,7 @@ string parseJsonString(Utf8Iterator& it, int flags) {
 	if (!allowLite) {
 		ch = it.next();
 		if (ch != '\"') {
-			oakLog("Expected: \"");
+			app.log("Expected: \"");
 			return str;
 		}
 	}
@@ -44,7 +44,7 @@ string parseJsonString(Utf8Iterator& it, int flags) {
 					legalEscape |= (ch == ',' || ch==':' || ch=='}');
 				}
 				if (!legalEscape) {
-					oakLog("Warning: illegal escape \'\\%c\'", ch);
+					app.log("Warning: illegal escape \'\\%c\'", ch);
 					continue;
 				}
 			}
@@ -180,17 +180,17 @@ JsonObject::JsonObject(Utf8Iterator &it, int flags) {
 		it.skipWhitespace();
 		string fieldName = parseJsonString(it, flags);
 		if (!fieldName.length()) {
-			oakLog("Invalid json: field name expected");
+			app.log("Invalid json: field name expected");
 			return;
 		}
 		it.skipWhitespace();
 		if (it.next() != ':') {
-			oakLog("Invalid json: ':' expected");
+			app.log("Invalid json: ':' expected");
 			return;
 		}
 		JsonValue fieldValue = JsonValue::parse(it, flags);
 		if (fieldValue._type == jsonInvalid) {
-			oakLog("Invalid json: value expected");
+			app.log("Invalid json: value expected");
 			return;
 		}
 		_fields[fieldName] = fieldValue;
@@ -200,7 +200,7 @@ JsonObject::JsonObject(Utf8Iterator &it, int flags) {
 			it.next();
 		} else {
 			if (sep != '}') {
-				oakLog("Invalid json: ',' or object end expected");
+				app.log("Invalid json: ',' or object end expected");
 				break;
 			}
 			it.next();
@@ -263,7 +263,7 @@ JsonArray::JsonArray(Utf8Iterator& it, int flags) {
 			it.next();
 		} else {
 			if (sep != ']') {
-				oakLog("Invalid json: ',' or array end expected");
+				app.log("Invalid json: ',' or array end expected");
 				break;
 			}
 			it.next();

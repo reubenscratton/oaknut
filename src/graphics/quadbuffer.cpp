@@ -118,7 +118,7 @@ QuadBuffer::QuadBuffer() : ItemPool(sizeof(QUAD), 256) {
 
 void QuadBuffer::bind() {
     if (_indexBufferId == 0) {
-#ifndef PLATFORM_WEB
+#ifdef HAS_VAO
         check_gl(glGenVertexArrays, 1, &_vao);
         check_gl(glBindVertexArray, _vao);
 #endif
@@ -127,7 +127,7 @@ void QuadBuffer::bind() {
         check_gl(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, _indexBufferId);
         check_gl(glBindBuffer, GL_ARRAY_BUFFER, _vertexBufferId);
     }
-#ifdef PLATFORM_WEB
+#ifndef HAS_VAO
     check_gl(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, _indexBufferId);
     check_gl(glBindBuffer, GL_ARRAY_BUFFER, _vertexBufferId);
 #else

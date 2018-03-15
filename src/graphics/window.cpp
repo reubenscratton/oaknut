@@ -35,7 +35,7 @@ void Window::resizeSurface(int width, int height, float scale) {
     if (_surface->_size.width==width && _surface->_size.height==height) {
         return;
     }
-	//oakLog("Window::resize %d %d %d", width, height, scale);
+	//app.log("Window::resize %d %d %d", width, height, scale);
     _surfaceRect = RECT_Make(0,0,width,height);
 	_scale = scale;
     _surface->setSize(SIZE_Make(width, height));
@@ -54,6 +54,9 @@ Window::MotionTracker::MotionTracker(int source) {
 }
 
 void Window::MotionTracker::dispatchInputEvent(int event, long time, POINT pt, Window* window) {
+    if (touchedView && !touchedView->_window) {
+        touchedView = NULL; // avoid sending events to detached views
+    }
     if (event == INPUT_EVENT_DOWN) {
         if (multiclickTimer) {
             multiclickTimer->stop();
@@ -85,7 +88,7 @@ void Window::MotionTracker::dispatchInputEvent(int event, long time, POINT pt, W
             float dx = pt.x - ptDown.x;
             float dy = pt.y - ptDown.y;
             float dist = sqrtf(dx * dx + dy * dy);
-            if (idp(dist) >= TOUCH_SLOP) {
+            if (app.idp(dist) >= TOUCH_SLOP) {
                 isDragging = true;
                 View *interceptView = window->_rootViewController->_view->dispatchInputEvent(INPUT_EVENT_DRAG, source, time, pt);
                 if (interceptView) {
@@ -107,14 +110,14 @@ void Window::MotionTracker::dispatchInputEvent(int event, long time, POINT pt, W
             // TAP!
             if (touchedView) {
                 touchedView->dispatchInputEvent(INPUT_EVENT_TAP, source, time, pt);
-                oakLog("tap %d", numClicks);
+                app.log("tap %d", numClicks);
             }
             multiclickTimer = Timer::start([&] {
                 if (touchedView) {
                     touchedView->dispatchInputEvent(INPUT_EVENT_TAP_CONFIRMED, source, time, pt);
                 }
                 multiclickTimer = NULL;
-                oakLog("tap confirmed at %d", numClicks);
+                app.log("tap confirmed at %d", numClicks);
                 numClicks = 0;
                 touchedView = NULL;
             }, MULTI_CLICK_THRESHOLD, false);
@@ -156,7 +159,7 @@ void Window::MotionTracker::dispatchInputEvent(int event, long time, POINT pt, W
 }
 
 void Window::dispatchInputEvent(int event, int source, long time, int x, int y) {
-	//oakLog("Window::dispatchTouch %d %d %d %d", event, finger, x, y);
+	//app.log("Window::dispatchTouch %d %d %d %d", event, finger, x, y);
     //x *= _scale;
     //y *= _scale;
     POINT pt = POINT_Make(x, y);
@@ -212,7 +215,7 @@ void Window::draw() {
 	if (rootVC) {
 		View* view = rootVC->_view;
 		if (!_viewLayoutValid) {
-			//oakLog("Performing measure() and layout() %d", _surfaceRect.size.width);
+			//app.log("Performing measure() and layout() %d", _surfaceRect.size.width);
 			_inLayoutPass = true;
 			view->measure(_surfaceRect.size.width, _surfaceRect.size.height);
 			view->layout();
@@ -227,7 +230,7 @@ void Window::draw() {
 	incFrames();
 
     // Tick animations
-    long now = oakCurrentMillis();
+    long now = app.currentMillis();
     auto it = _animations.begin();
     while (it != _animations.end()) {
         Animation* anim = *it;
@@ -262,7 +265,7 @@ void Window::requestRedraw() {
 		return;
 	}
 	_redrawNeeded = true;
-    oakRequestRedraw();
+    app.requestRedraw();
 }
 
 POINT Window::offsetToView(View* view) {
@@ -284,10 +287,10 @@ bool Window::setFirstResponder(View* view) {
     if (view) {
         _keyboardHandler = view->getKeyboardInputHandler();
         if (_keyboardHandler != NULL) {
-            oakKeyboardShow(true);
+            app.keyboardShow(true);
         }
     } else {
-         oakKeyboardShow(false);
+         app.keyboardShow(false);
     }
     return true;
 }

@@ -37,7 +37,7 @@ int oakFaceDetectorDetectFaces(void* osobj, Bitmap* bitmap) {
     //[CIImage imageWithTexture:tex->_textureId size: flipped:NO colorSpace:nil];
     NSArray *features = [detector featuresInImage:image options:@{}];
     bitmap->unlock(&pixeldata, false);
-    //oakLog("faces: %d", features.count);
+    //app.log("faces: %d", features.count);
     return (int)features.count;
 }
 void oakFaceDetectorClose(void* osobj) {

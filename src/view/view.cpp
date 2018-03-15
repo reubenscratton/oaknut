@@ -44,14 +44,14 @@ View::View() : _alpha(1.0f), _touchEnabled(true) {
 }
 
 View::~View() {
-//	oakLog("~View()");
+//	app.log("~View()");
 }
 
 void View::applyStyleValues(const StyleValueList& values) {
     for (auto i : values) {
         if (!applyStyleValue(i.first, i.second)) {
             if (_parent && !_parent->applyStyleValueFromChild(i.first, i.second, this)) {
-                oakLog("Warning: ignored unknown attribute '%s'", i.first.data());
+                app.log("Warning: ignored unknown attribute '%s'", i.first.data());
             }
         }
     }
@@ -415,15 +415,15 @@ void View::layout() {
     // Get anchor dimensions
     float anchorY = 0;
     float anchorX = 0;
-    float anchorWidth = anchorHorz ? anchorHorz->_frame.size.width : mainWindow->_surfaceRect.size.width;
-    float anchorHeight = anchorVert ? anchorVert->_frame.size.height : mainWindow->_surfaceRect.size.height;
+    float anchorWidth = anchorHorz ? anchorHorz->_frame.size.width : app._window->_surfaceRect.size.width;
+    float anchorHeight = anchorVert ? anchorVert->_frame.size.height : app._window->_surfaceRect.size.height;
 	if (anchorHorz) {
 		if (anchorHorz == _parent) {
 			anchorX = _parent->_padding.left;
 			anchorWidth -= (anchorHorz->_padding.left+anchorHorz->_padding.right);
 		} else {
 			if (anchorHorz->_parent != _parent) {
-				oakLog("Warning! View::layout() is not clever enough for non-sibling anchors");
+				app.log("Warning! View::layout() is not clever enough for non-sibling anchors");
 			}
 			anchorX = anchorHorz->_frame.origin.x;
 		}
@@ -434,7 +434,7 @@ void View::layout() {
 			anchorHeight -= (anchorVert->_padding.top+anchorVert->_padding.bottom);
 		} else {
 			if (anchorVert->_parent != _parent) {
-				oakLog("Warning! View::layout() is not clever enough for non-sibling anchors");
+				app.log("Warning! View::layout() is not clever enough for non-sibling anchors");
 			}
 			anchorY = anchorVert->_frame.origin.y;
 		}
@@ -1007,7 +1007,7 @@ bool View::onTouchEvent(int eventType, int eventSource, POINT pt) {
         _isDragging = true;
     }
     if (eventType == INPUT_EVENT_FLING) {
-        //oakLog("fling! %f", -pt.y);
+        //app.log("fling! %f", -pt.y);
         if (_scrollbarVert) {
             _scrollbarVert->fling(_contentOffset.y, -pt.y, 0, _contentSize.height-_frame.size.height);
             setNeedsFullRedraw();
@@ -1158,7 +1158,7 @@ void View::debugDumpTree(int depth) {
     string line;
     for (int i=0 ; i<depth ; i++) line.push_back('-');
     line.append(debugDescription());
-    oakLog(line.data());
+    app.log(line.data());
 
     for (auto it=_renderList.begin() ; it!=_renderList.end() ; it++) {
         RenderOp* op = *it;
