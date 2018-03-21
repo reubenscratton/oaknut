@@ -76,25 +76,35 @@ ALIGNSPEC alignspecFromResourceVal(StyleValue* value, View* view) {
     assert(value->type == StyleValue::Type::String);
     ALIGNSPEC spec;
     string str = value->str;
-    if (stringStartsWith(str,"center",true)) spec=ALIGNSPEC_Center;
-    else if (stringStartsWith(str, "centre", true)) spec=ALIGNSPEC_Center;
-    else if (stringStartsWith(str, "left", true)) spec=ALIGNSPEC_Left;
-    else if (stringStartsWith(str, "right", true)) spec=ALIGNSPEC_Right;
-    else if (stringStartsWith(str, "top", true)) spec=ALIGNSPEC_Top;
-    else if (stringStartsWith(str, "bottom", true)) spec=ALIGNSPEC_Bottom;
-    else if (stringStartsWith(str, "below(", true)) {
-        string anchorId = stringExtractUpTo(str, ")", true);
-        View* anchor = view->_parent->findViewById(anchorId);
-        assert(anchor); // NB: anchor must be previously declared. TODO: remove this restriction
-        spec= ALIGNSPEC_Below(anchor, 0);
+    string type = stringExtractUpTo(str, "(", true);
+    if (type.size() == 0) {
+        type = str;
+        str = "";
     } else {
-        assert(false); // unknown alignspec
+        str = stringExtractUpTo(str, ")", true);
     }
-    stringTrim(str);
-    if (stringStartsWith(str, ",", true)) {
+    if (type=="center") spec=ALIGNSPEC_Center;
+    else if (type=="centre") spec=ALIGNSPEC_Center;
+    else if (type=="left") spec=ALIGNSPEC_Left;
+    else if (type=="right") spec=ALIGNSPEC_Right;
+    else if (type=="toLeftOf") spec=ALIGNSPEC_Make(NULL, 1.0f,  -1.0f, 0);
+    else if (type=="toRightOf") spec=ALIGNSPEC_Make(NULL, 1.0f,  0.0f, 0);
+    else if (type=="top") spec=ALIGNSPEC_Top;
+    else if (type=="above") spec=ALIGNSPEC_Top;
+    else if (type=="bottom") spec=ALIGNSPEC_Bottom;
+    else if (type=="below") spec=ALIGNSPEC_Bottom;
+    else assert(false); // unknown alignspec
+
+    if (str.size() > 0) {
+        string anchorId = stringExtractUpTo(str, ",", true);
+        spec.anchor = view->_parent->findViewById(anchorId);
+        assert(spec.anchor); // NB: anchor must be previously declared. TODO: remove this restriction
         stringTrim(str);
-        spec.margin = stringParseDimension(str);
+        if (str.size() > 0) {
+            spec.margin = stringParseDimension(str);
+        }
     }
+
     return spec;
 }
 

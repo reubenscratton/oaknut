@@ -28,10 +28,11 @@ $(ASSETS_DIR)/assets: $(ASSETS_DIR)
 	rsync -rupE --delete $(PROJECT_ROOT)/assets $(ASSETS_DIR)
 
 $(OBJ_DIR)%.o : %
-$(OBJ_DIR)%.o : % $(OBJ_DIR)%.d
+$(OBJ_DIR)%.o : % $(OBJ_DIR)%.dep
 	@echo linux: Compiling $(notdir $<)
 	@mkdir -p $(dir $@)
 	g++ $(CFLAGS) \
+	 	-MT $@ -MD -MP -MF $(@:.o=.Td) \
 		$(if $(filter $(suffix $<),.cpp),-x c++ -std=c++11,) \
 		$(if $(filter $(suffix $<),.c),-x c -std=gnu99,) \
 		$(if $(DEBUG),-g -O0,-O3) \
@@ -39,7 +40,7 @@ $(OBJ_DIR)%.o : % $(OBJ_DIR)%.d
         -isystem $(OAKNUT_DIR)/src \
         $(SYSINCS) \
 		-o $@ -c $<
-	@mv -f $(@:.o=.Td) $(@:.o=.d) && touch $@
+	@mv -f $(@:.o=.Td) $(@:.o=.dep) && touch $@
 
 
 $(EXECUTABLE) : $(OBJS) $(BUNDLE_DIR) $(ASSETS_DIR)/assets

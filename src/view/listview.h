@@ -22,7 +22,7 @@ public:
 	virtual View* createItemView(LISTINDEX index) = 0;
     virtual View* createHeaderView(int section) = 0;
 	virtual Object* getItem(LISTINDEX index) = 0;
-    virtual void bindItemView(View*, Object*) = 0;
+    virtual void bindItemView(View* itemview, LISTINDEX index, Object* item) = 0;
 };
 
 class ListView : public View {
@@ -65,46 +65,4 @@ protected:
 };
 
 
-
-class SimpleListAdapter : public Object, public IListAdapter {
-public:
-    class Item : public Object {
-    public:
-        virtual string getTitle() = 0;
-        virtual string getSubtitle() = 0;
-        virtual string getImageUrl() = 0;
-    };
-    
-    class ItemView : public View {
-    public:
-        ImageView* _imageView;
-        Label* _titleLabel;
-        Label* _subtitleLabel;
-        
-        ItemView();
-    };
-    
-    
-    // API
-    virtual void addItem(Item* item);
-    virtual string getSectionTitle(int section);
-    virtual void setFilter(const string& filterText);
-    
-    // Overrides
-    virtual void setListView(ListView* listView);
-    virtual int getSectionCount();
-    virtual float getHeaderHeight(int section);
-    virtual int getItemCount(int section);
-    virtual float getItemHeight(LISTINDEX index);
-    virtual View* createItemView(LISTINDEX index);
-    virtual View* createHeaderView(int section);
-    virtual void bindItemView(ItemView* itemView, Object* item);
-    virtual Object* getItem(LISTINDEX index);
-
-protected:
-    ListView* _adapterView;
-    vector<ObjPtr<Item>> _items;
-    vector<ObjPtr<Item>> _itemsFiltered;
-    string _filterText;
-};
 

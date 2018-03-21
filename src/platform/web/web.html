@@ -92,7 +92,7 @@ function onresize() {
 	if (scale == 3) scale=2; // 6+ has too many pixels
     s.width = sc.clientWidth * scale;
     s.height = sc.clientHeight * scale;
-    Module.Emma_setWindowSize(s.width, s.height, scale);
+    Module.oak_setWindowSize(s.width, s.height, scale);
 }
 
 window.addEventListener('resize', onresize);
@@ -124,13 +124,13 @@ var leftButtonDown = false;
 
 window.onmousedown = function(e) {
 	if(e.which === 1) leftButtonDown = true;
-	Module.Emma_userEvent(0, e.which, e.pageX, e.pageY);
+	Module.oak_userEvent(0, e.which, e.pageX, e.pageY);
 };
 window.ontouchstart = function(e) {
 	e.preventDefault();
 	for (var i=0; i < e.changedTouches.length; i++) {
 		var touch = e.changedTouches[i];
-		Module.Emma_userEvent(0, touchIdToIndex(touch.identifier), touch.pageX, touch.pageY);
+		Module.oak_userEvent(0, touchIdToIndex(touch.identifier), touch.pageX, touch.pageY);
 	}
 };
 window.onmousemove = function(e) {
@@ -138,26 +138,26 @@ window.onmousemove = function(e) {
 		return;
 	}
 	if (e.which > 0) {
-		Module.Emma_userEvent(1, e.which, e.pageX, e.pageY);
+		Module.oak_userEvent(1, e.which, e.pageX, e.pageY);
 	}
 };
 window.ontouchmove = function(e) {
 	e.preventDefault();
 	for (var i=0; i < e.changedTouches.length; i++) {
 		var touch = e.changedTouches[i];
-		Module.Emma_userEvent(1, touchIdToIndex(touch.identifier), touch.pageX, touch.pageY);
+		Module.oak_userEvent(1, touchIdToIndex(touch.identifier), touch.pageX, touch.pageY);
 	}
 };
 window.onmouseup = function(e) {
 	if(e.which === 1) leftButtonDown = false;
-	Module.Emma_userEvent(2, e.which, e.pageX, e.pageY);
+	Module.oak_userEvent(2, e.which, e.pageX, e.pageY);
 };
 window.ontouchend = window.ontouchcancel = function(e) {
 	e.preventDefault();
 	for (var i=0; i < e.changedTouches.length; i++) {
 		var touch = e.changedTouches[i];
 		var index = touchIdToIndex(touch.identifier);
-		Module.Emma_userEvent(2, index, touch.pageX, touch.pageY);
+		Module.oak_userEvent(2, index, touch.pageX, touch.pageY);
 		touchState[index] = null;
 	}
 };
@@ -205,7 +205,7 @@ canvas2D = document.createElement('canvas').getContext("2d");
         preRun: [],
         postRun: [
 			function () {
-				Module.Emma_main();
+				Module.oak_main();
 			},
 			onresize],
         print: function(text) {log(text);},

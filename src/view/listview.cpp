@@ -5,7 +5,7 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#include "../oaknut.h"
+#include <oaknut.h>
 
 DECLARE_DYNCREATE(ListView);
 
@@ -160,8 +160,8 @@ void ListView::setContentOffset(POINT contentOffset) {
 pair<LISTINDEX,View*> ListView::createItemView(LISTINDEX index, bool atFront, float itemHeight, float top) {
     //app.log("creating index=%d", index);
     View* itemView = _adapter->createItemView(index);
-    assert(itemView);
-    _adapter->bindItemView(itemView, _adapter->getItem(index));
+    assert(itemView); // dude, where's my itemview??
+    _adapter->bindItemView(itemView, index, _adapter->getItem(index));
     itemView->setMeasureSpecs(MEASURESPEC_FillParent, MEASURESPEC_Abs(itemHeight));
     insertSubview(itemView, (int)_itemViews.size());
     itemView->measure(_frame.size.width, itemHeight);
@@ -305,125 +305,6 @@ void ListView::updateVisibleItems() {
             headerViewIt++;
         }
     }
-}
-
-
-
-
-
-
-
-
-
-SimpleListAdapter::ItemView::ItemView() {
-    setPadding(EDGEINSETS(app.dp(16),app.dp(8),app.dp(16),app.dp(8)));
-    _imageView = new ImageView();
-    _imageView->setMeasureSpecs(MEASURESPEC_Abs(app.dp(40)), MEASURESPEC_Abs(app.dp(52)));
-    _imageView->setAlignSpecs(ALIGNSPEC_Left, ALIGNSPEC_Center);
-    _imageView->setBackgroundColour(0xff333333);
-    _imageView->setPadding(EDGEINSETS(app.dp(1),app.dp(1),app.dp(1),app.dp(1)));
-    addSubview(_imageView);
-    _titleLabel = new Label();
-    _titleLabel->setStyle("listview.item-title");
-    _titleLabel->setMeasureSpecs(MEASURESPEC_FillParent, MEASURESPEC_WrapContent);
-    _titleLabel->setAlignSpecs(ALIGNSPEC_ToRightOf(_imageView, app.dp(8)), ALIGNSPEC_Top);
-    addSubview(_titleLabel);
-    _subtitleLabel = new Label();
-    _subtitleLabel->setStyle("listview.item-subtitle");
-    _subtitleLabel->setMeasureSpecs(MEASURESPEC_FillParent, MEASURESPEC_WrapContent);
-    _subtitleLabel->setAlignSpecs(ALIGNSPEC_ToRightOf(_imageView, app.dp(8)), ALIGNSPEC_Bottom);
-    addSubview(_subtitleLabel);
-}
-
-
-void SimpleListAdapter::addItem(Item* item) {
-    _items.push_back(item);
-}
-
-void SimpleListAdapter::setListView(ListView* listView) {
-    _adapterView = listView;
-}
-
-int SimpleListAdapter::getItemCount(int section) {
-    assert(section<=0);
-    return (int)_items.size();
-}
-float SimpleListAdapter::getItemHeight(LISTINDEX index) {
-    return app.dp(64);
-}
-View* SimpleListAdapter::createItemView(LISTINDEX index) {
-    return new ItemView();
-}
-
-void SimpleListAdapter::bindItemView(ItemView* itemView, Object* objItem) {
-    Item* item = (Item*)objItem;
-    itemView->_titleLabel->setText(item->getTitle());
-    string subtitle = item->getSubtitle();
-    if (subtitle.length()) {
-        itemView->_titleLabel->setMaxLines(1);
-        itemView->_subtitleLabel->setText(subtitle);
-    }
-    string imageUrl = item->getImageUrl();
-    if (imageUrl.length()) {
-        itemView->_imageView->setImageUrl(imageUrl);
-    }
-}
-
-Object* SimpleListAdapter::getItem(LISTINDEX index) {
-    assert(LISTINDEX_SECTION(index)==0);
-    if (_filterText.length()) return _itemsFiltered.at(LISTINDEX_ITEM(index));
-    return _items.at(LISTINDEX_ITEM(index));
-}
-
-int SimpleListAdapter::getSectionCount() {
-    return 1;
-}
-float SimpleListAdapter::getHeaderHeight(int section) {
-    if (_filterText.length()) return 0;
-    string title = getSectionTitle(section);
-    return title.length() ? app.dp(30) : 0;
-}
-
-string SimpleListAdapter::getSectionTitle(int section) {
-    return "";
-}
-
-View* SimpleListAdapter::createHeaderView(int section) {
-    Label* label = new Label();
-    label->setMeasureSpecs(MEASURESPEC_FillParent, MEASURESPEC_WrapContent);
-    label->setPadding(EDGEINSETS(app.dp(16),app.dp(4),app.dp(16),app.dp(4)));
-    label->setText(getSectionTitle(section));
-    label->setBackgroundColour(0xFFeeeeee);
-    return label;
-}
-
-bool stringStartsWith(const string& s1, const string& s2) {
-    Utf8Iterator i1(s1);
-    Utf8Iterator i2(s2);
-    char32_t ch;
-    while (0 != (ch = i2.next())) {
-        if (ch != i1.next()) {
-            return false;
-        }
-    }
-    return true;
-}
-
-void SimpleListAdapter::setFilter(const string& filterText) {
-    _filterText = filterText;
-    _itemsFiltered.clear();
-    vector<ObjPtr<Item>> secondaryMatches;
-    for (auto i : _items) {
-        const string title = i->getTitle();
-        if (stringStartsWith(title, filterText)) {
-            _itemsFiltered.push_back(i);
-        } else if (title.find(filterText) < title.length()) {
-            secondaryMatches.push_back(i);
-        }
-    }
-    _itemsFiltered.insert(_itemsFiltered.end(), secondaryMatches.begin(), secondaryMatches.end());
-    _adapterView->setContentOffset(POINT_Make(0,0));
-    _adapterView->reload();
 }
 
 

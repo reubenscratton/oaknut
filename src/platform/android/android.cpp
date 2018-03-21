@@ -259,7 +259,9 @@ JAVA_FN(void, MainActivity, onTouchEventNative)(JNIEnv* env, jobject obj, jint f
         case AMOTION_EVENT_ACTION_UP: em_action=INPUT_EVENT_UP; break;
         case AMOTION_EVENT_ACTION_CANCEL: em_action=INPUT_EVENT_CANCEL; break;
     }
-    //LOGI("ev %d %f,%f", em_action, x, y);
+    //LOGI("ev %d %f,%f scale=%f", em_action, x, y, app._window->_scale);
+    x *= app._window->_scale;
+    y *= app._window->_scale;
     app._window->dispatchInputEvent(em_action, MAKE_SOURCE(INPUT_SOURCE_TYPE_FINGER,finger), time, x ,y);
 }
 

@@ -5,7 +5,7 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#include "../oaknut.h"
+#include <oaknut.h>
 
 
 Window::Window() : _rootViewController(NULL), _scale(1) {
@@ -113,7 +113,7 @@ void Window::MotionTracker::dispatchInputEvent(int event, long time, POINT pt, W
                 app.log("tap %d", numClicks);
             }
             multiclickTimer = Timer::start([&] {
-                if (touchedView) {
+                if (touchedView && touchedView->_window) {
                     touchedView->dispatchInputEvent(INPUT_EVENT_TAP_CONFIRMED, source, time, pt);
                 }
                 multiclickTimer = NULL;
@@ -159,9 +159,7 @@ void Window::MotionTracker::dispatchInputEvent(int event, long time, POINT pt, W
 }
 
 void Window::dispatchInputEvent(int event, int source, long time, int x, int y) {
-	//app.log("Window::dispatchTouch %d %d %d %d", event, finger, x, y);
-    //x *= _scale;
-    //y *= _scale;
+	//app.log("Window::dispatchTouch %d %d %d %d", event, source, x, y);
     POINT pt = POINT_Make(x, y);
 
     if (SOURCE_TYPE(source)==INPUT_SOURCE_TYPE_MOUSE || SOURCE_TYPE(source)==INPUT_SOURCE_TYPE_FINGER) {

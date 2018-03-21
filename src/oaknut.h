@@ -137,6 +137,7 @@ void oakFaceDetectorClose(void* osobj);
 #include "view/edittext.h"
 #include "view/imageview.h"
 #include "view/listview.h"
+#include "view/simplelistadapter.h"
 #include "view/button.h"
 #include "view/navigationbar.h"
 #include "view/linearlayout.h"

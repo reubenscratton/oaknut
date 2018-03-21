@@ -49,7 +49,7 @@ public:
             s_jmidDrawGlyph = env->GetMethodID(s_jclass, "drawGlyph", "(ILandroid/graphics/Bitmap;FF)V");
         }
         jstring strAssetPath = env->NewStringUTF(fontAssetPath.data());
-        _obj = env->NewObject(s_jclass, s_jmidConstructor, (jlong)this, strAssetPath, app.dp(size));
+        _obj = env->NewObject(s_jclass, s_jmidConstructor, (jlong)this, strAssetPath, size);
         _obj = env->NewGlobalRef(_obj);
     }
 

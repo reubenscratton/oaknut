@@ -17,23 +17,21 @@ CFLAGS_COMMON := \
 
 BUNDLE_DIR:=$(BUILD_DIR)/$(PROJECT_NAME).app
 EXECUTABLE:=$(BUNDLE_DIR)/Contents/MacOS/macos_app
-ASSETS_DIR:=$(BUNDLE_DIR)/Contents/Resources
 
+ASSETS_DIR:=$(BUNDLE_DIR)/Contents/Resources
+BUNDLED_ASSETS:=$(addprefix $(ASSETS_DIR)/assets/,$(subst $(PROJECT_ROOT)/assets/,,$(ASSETS)))
 
 $(BUNDLE_DIR): $(BUILD_DIR)
 	@mkdir -p $@
 
-$(ASSETS_DIR): $(BUNDLE_DIR)
-	@mkdir -p $@
-
-$(ASSETS_DIR)/assets: $(ASSETS_DIR)
-	rsync -rupE --delete $(PROJECT_ROOT)/assets $(ASSETS_DIR)
+$(BUNDLED_ASSETS): $(ASSETS)
+	rsync -rup --inplace --delete $(PROJECT_ROOT)/assets $(ASSETS_DIR)
 
 $(OBJ_DIR):
 	@mkdir -p $@
 
 $(OBJ_DIR)%.o : %
-$(OBJ_DIR)%.o : % $(OBJ_DIR)%.d
+$(OBJ_DIR)%.o : % $(OBJ_DIR)%.dep
 	@echo macOS: Compiling $(notdir $<)
 	@mkdir -p $(dir $@)
 	@$(CLANG) -arch x86_64 \
@@ -46,13 +44,13 @@ $(OBJ_DIR)%.o : % $(OBJ_DIR)%.d
 		-isystem $(OAKNUT_DIR)/src \
 		$(if $(DEBUG),-g -O0,-O3) \
 		-c -o $@ $<
-	@mv -f $(@:.o=.Td) $(@:.o=.d) && touch $@
+	mv -f $(@:.o=.Td) $(@:.o=.dep) && touch $@
 
 
-$(EXECUTABLE) : $(OBJS) $(BUNDLE_DIR) $(ASSETS_DIR)/assets
+$(EXECUTABLE) : $(OBJS) $(BUNDLE_DIR) $(BUNDLED_ASSETS)
 	@echo macOS: Linking app
 	@mkdir -p $(dir $(EXECUTABLE))
-	$(CLANG)++ -arch x86_64 -fobjc-link-runtime -dead_strip \
+	@$(CLANG)++ -arch x86_64 -fobjc-link-runtime -dead_strip \
                -Xlinker -object_path_lto -Xlinker $(BUILD_DIR)/app_lto.o \
                -o $@ $(FRAMEWORKS) $(OBJS)
 	plutil -convert binary1 $(PROJECT_ROOT)/platform/macos/Info.plist -o $(BUNDLE_DIR)/Contents/Info.plist

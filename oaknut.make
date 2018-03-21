@@ -11,10 +11,12 @@ SOURCES := $(call rwildcard,$(PROJECT_ROOT)/app/,*)
 SOURCES += $(call rwildcard,$(OAKNUT_DIR)/src/,*)
 endif
 
+ASSETS:=$(call rwildcard,$(PROJECT_ROOT)/assets/,*)
+
 SOURCES := $(filter %.cpp %.c %.m %.mm,$(SOURCES))
 
 OBJS := $(patsubst %,$(OBJ_DIR)%.o,$(SOURCES))
-DEPS:=$(OBJS:.o=.d)
+DEPS:=$(OBJS:.o=.dep)
 
 ifdef OAKNUT_WANT_CAMERA
 	CFLAGS+= -DOAKNUT_WANT_CAMERA
@@ -23,10 +25,13 @@ ifdef OAKNUT_WANT_AUDIOINPUT
 	CFLAGS+= -DOAKNUT_WANT_AUDIOINPUT
 endif
 
+# This prevents make from automatically deleting .dep files cos it regards them as intermediate
+.PRECIOUS: $(DEPS)
 
 include $(OAKNUT_DIR)/src/platform/$(PLATFORM)/oaknut.make
 
-$(OBJ_DIR)%.d: ;
+$(OBJ_DIR)%.dep: ;
+
 
 $(BUILD_DIR):
 	@mkdir -p $@

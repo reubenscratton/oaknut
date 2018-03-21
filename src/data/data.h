@@ -164,6 +164,3 @@ protected:
 
 typedef std::function<void(class Data*)> OnDataLoadCompleteDelegate;
 
-
-
-

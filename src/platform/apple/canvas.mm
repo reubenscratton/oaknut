@@ -20,7 +20,7 @@ public:
     
     CTFontRef createCTFont() {
         CTFontRef ctfont = NULL;
-        CGFloat size = app.dp(_size);
+        CGFloat size = _size;
         if (_name.length() == 0) {
 #if TARGET_OS_IOS
             UIFont* font = [UIFont systemFontOfSize:size];

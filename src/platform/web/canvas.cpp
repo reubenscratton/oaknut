@@ -18,7 +18,7 @@ public:
     val _canvas;
     val _ctxt;
     
-    WebFont(const string& fontAssetPath, float size) : Font(fontAssetPath, app.dp(size)), _canvas(val::null()), _ctxt(val::null()) {
+    WebFont(const string& fontAssetPath, float size) : Font(fontAssetPath, size), _canvas(val::null()), _ctxt(val::null()) {
         _canvas = val::global("document").call<val>("createElement", val("canvas"));
         _canvas.set("width", _size);
         _canvas.set("height", _size);

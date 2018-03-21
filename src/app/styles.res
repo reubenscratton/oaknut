@@ -1,5 +1,5 @@
 R"({
-font-size: 17.0
+font-size: 17dp
 
 colours: {
     table_bkgnd: 0xffefeff4
@@ -30,7 +30,7 @@ navbar: {
     height: 44dp
     background: 0xfff6f6f9
     title: {
-        font-size: 17.0
+        font-size: 17dp
         forecolour: 0xff000000
     }
     bottom-divider-colour: 0xffa7a7aa

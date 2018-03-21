@@ -65,6 +65,10 @@ bool Label::applyStyleValue(const string& name, StyleValue* value) {
         setText(value->str);
         return true;
     }
+    if (name=="maxLines") {
+        setMaxLines(value->i);
+        return true;
+    }
     if (name=="gravityX") {
         if (value->str == "left") {
             _gravity.horz = GRAVITY_LEFT;

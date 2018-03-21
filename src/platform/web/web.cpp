@@ -64,13 +64,12 @@ Timer* Timer::start(const TimerDelegate& del, int intervalMillis, bool repeats) 
 
 
 
-static void Emma_setWindowSize(int width, int height, int scale) {
+static void oak_setWindowSize(int width, int height, int scale) {
     app.log("window size %d x %d, scale=%d", width, height, scale);
     app._window->resizeSurface(width, height, scale);
-    //glutReshapeWindow(width, height);
 }
 
-static void Emma_userEvent(int eventType, int eventSourceId, int x, int y) {
+static void oak_userEvent(int eventType, int eventSourceId, int x, int y) {
     //app.log("userEv type=%d src=%d x=%d,y=%d", eventType, eventSourceId, x, y);
     x *= app._window->_scale;
     y *= app._window->_scale;
@@ -86,9 +85,9 @@ static void appMain() {
 }
 
 EMSCRIPTEN_BINDINGS(libbeeb) {
-    emscripten::function("Emma_setWindowSize", &Emma_setWindowSize);
-    emscripten::function("Emma_userEvent", &Emma_userEvent);
-    emscripten::function("Emma_main", &appMain);
+    emscripten::function("oak_setWindowSize", &oak_setWindowSize);
+    emscripten::function("oak_userEvent", &oak_userEvent);
+    emscripten::function("oak_main", &appMain);
 }
 
 
