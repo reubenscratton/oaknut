@@ -8,7 +8,6 @@ include $(OAKNUT_DIR)/src/platform/apple/oaknut.make
 
 CFLAGS_COMMON := \
 	$(CFLAGS) \
-    -stdlib=libc++ \
 	-isysroot $(XCODE_APP)/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/$(IOS_SDK) \
 	$(FLAGS) \
 	$(WARNINGS) \
@@ -28,49 +27,37 @@ CFLAGS_LINK := \
     -Xlinker $(BUILD_DIR)/app_lto.o
 
 
-CFLAGS_COMPILE_CPP:=-x c++ -std=c++11 $(WARNINGS_CPP)
-CFLAGS_COMPILE_C:=-x c -std=gnu99
-CFLAGS_COMPILE_M:=-x objective-c -std=gnu99 -fobjc-arc $(WARNINGS_OBJC) -DNS_BLOCK_ASSERTIONS=1 -DOBJC_OLD_DISPATCH_PROTOTYPES=0
-CFLAGS_COMPILE_MM:=-x objective-c++ -std=c++11 -fobjc-arc $(WARNINGS_CPP) $(WARNINGS_OBJC) -DNS_BLOCK_ASSERTIONS=1 -DOBJC_OLD_DISPATCH_PROTOTYPES=0
-
+DEPS:=
 
 define ABI_template
 
-$(1)_OBJ_DIR:=$(BUILD_DIR)/obj/$(1)
-$(1)_OBJS_CPP := $(patsubst %,$$($(1)_OBJ_DIR)/%.o,$(SOURCES_CPP))
-$(1)_OBJS_C := $(patsubst %,$$($(1)_OBJ_DIR)/%.o,$(SOURCES_C))
-$(1)_OBJS_M := $(patsubst %,$$($(1)_OBJ_DIR)/%.o,$(SOURCES_M))
-$(1)_OBJS_MM := $(patsubst %,$$($(1)_OBJ_DIR)/%.o,$(SOURCES_MM))
-$(1)_OBJS := $$($(1)_OBJS_CPP) $$($(1)_OBJS_C) $$($(1)_OBJS_M) $$($(1)_OBJS_MM)
+$(1)_OBJ_DIR:=$(OBJ_DIR)/$(1)
+$(1)_OBJS:=$$(patsubst %,$$($(1)_OBJ_DIR)%.o,$(SOURCES))
 $(1)_APP:=$$($(1)_OBJ_DIR)/ios_app
 
-$$($(1)_OBJ_DIR):
-	@mkdir -p $$@
+DEPS+=$$($(1)_OBJS:.o=.dep)
 
-$$($(1)_OBJS_CPP): $$($(1)_OBJ_DIR)/%.o : % | $$($(1)_OBJ_DIR)
-	@echo Compiling $$(notdir $$@)
-	@mkdir -p $$(dir $$@)
-	$(CLANG) -arch $(1) $(CFLAGS_COMMON) $(CFLAGS_COMPILE_CPP) $(CFLAGS_COMPILE) -o $$@ -c $$<
 
-$$($(1)_OBJS_C): $$($(1)_OBJ_DIR)/%.o : % | $$($(1)_OBJ_DIR)
-	@echo Compiling $$(notdir $$@)
+$$($(1)_OBJ_DIR)%.o : %
+$$($(1)_OBJ_DIR)%.o : % $$($(1)_OBJ_DIR)%.dep
+	@echo iOS\($(1)\): Compiling $$(notdir $$<)
 	@mkdir -p $$(dir $$@)
-	$(CLANG) -arch $(1) $(CFLAGS_COMMON) $(CFLAGS_COMPILE_C) $(CFLAGS_COMPILE) -o $$@ -c $$<
+	$(CLANG) -arch $(1) -MT $$@ -MD -MP -MF $$(@:.o=.Td) \
+		$(CFLAGS_COMMON) \
+		$(if $$(filter $$(suffix $$<),.cpp),-x c++ -std=c++11 $(WARNINGS_CPP),) \
+        $(if $$(filter $$(suffix $$<),.c),-x c -std=gnu99,) \
+        $(if $$(filter $$(suffix $$<),.m),-x objective-c -std=gnu99 -fobjc-arc $(WARNINGS_OBJC) -DNS_BLOCK_ASSERTIONS=1 -DOBJC_OLD_DISPATCH_PROTOTYPES=0,) \
+        $(if $$(filter $$(suffix $$<),.mm),-x objective-c++ -std=c++11 -fobjc-arc $(WARNINGS_CPP) $(WARNINGS_OBJC) -DNS_BLOCK_ASSERTIONS=1 -DOBJC_OLD_DISPATCH_PROTOTYPES=0,) \
+		$(CFLAGS_COMPILE) \
+		$(if $(DEBUG),-g -O0,-O3) \
+		-o $$@ -c $$<
+	@mv -f $$(@:.o=.Td) $$(@:.o=.dep) && touch $$@
 
-$$($(1)_OBJS_M): $$($(1)_OBJ_DIR)/%.o : % | $$($(1)_OBJ_DIR)
-	@echo Compiling $$(notdir $$@)
-	@mkdir -p $$(dir $$@)
-	$(CLANG) -arch $(1) $(CFLAGS_COMMON) $(CFLAGS_COMPILE_M) $(CFLAGS_COMPILE) -o $$@ -c $$<
-
-$$($(1)_OBJS_MM): $$($(1)_OBJ_DIR)/%.o : % | $$($(1)_OBJ_DIR)
-	@echo Compiling $$(notdir $$@)
-	@mkdir -p $$(dir $$@)
-	$(CLANG) -arch $(1) $(CFLAGS_COMMON) $(CFLAGS_COMPILE_MM) $(CFLAGS_COMPILE) -o $$@ -c $$<
 
 $$($(1)_APP) : $$($(1)_OBJS)
 	@echo Linking $(1) app
 	@mkdir -p $$(dir $$@)
-	$(CLANG)++ -arch $(1) $(CFLAGS_COMMON) -o $$@ $(FRAMEWORKS) $$($(1)_OBJS) $(CFLAGS_LINK)
+	$(CLANG)++ -arch $(1) $(CFLAGS_COMMON) -o $$@ -framework UIKit -framework CoreGraphics -framework OpenGLES $(FRAMEWORKS) $$($(1)_OBJS) $(CFLAGS_LINK)
 
 
 endef
@@ -112,12 +99,3 @@ $(EXECUTABLE): $(APP_ABIS) $(BUNDLE_DIR)/assets $(BUNDLE_DIR)/embedded.mobilepro
 
 
 ios: $(EXECUTABLE)
-
-
-
-$(BUILD_DIR):
-	@mkdir -p $@
-
-clean:
-	@rm -f $(CPP_OBJ_FILES)
-	@rm -f $(CPP_LIB)

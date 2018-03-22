@@ -3,7 +3,8 @@
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 #if TARGET_OS_IOS
-#include <OpenGLES/ES3/gl.h>
+#include <OpenGLES/gltypes.h>
+ #include <OpenGLES/ES3/gl.h>
   #include <OpenGLES/ES3/glext.h>
   #if __OBJC__
   #include <OpenGLES/EAGL.h>

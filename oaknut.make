@@ -25,10 +25,10 @@ ifdef OAKNUT_WANT_AUDIOINPUT
 	CFLAGS+= -DOAKNUT_WANT_AUDIOINPUT
 endif
 
+include $(OAKNUT_DIR)/src/platform/$(PLATFORM)/oaknut.make
+
 # This prevents make from automatically deleting .dep files cos it regards them as intermediate
 .PRECIOUS: $(DEPS)
-
-include $(OAKNUT_DIR)/src/platform/$(PLATFORM)/oaknut.make
 
 $(OBJ_DIR)%.dep: ;
 

@@ -58,6 +58,7 @@ void Window::MotionTracker::dispatchInputEvent(int event, long time, POINT pt, W
         touchedView = NULL; // avoid sending events to detached views
     }
     if (event == INPUT_EVENT_DOWN) {
+        isDragging = false;
         if (multiclickTimer) {
             multiclickTimer->stop();
             multiclickTimer = NULL;

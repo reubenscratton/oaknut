@@ -165,17 +165,13 @@ void OSBitmap::lock(PIXELDATA* pixelData, bool forWriting) {
     // If wanting to write then try to create a Core Video image buffer that will give us direct
     // texture access. Not all pixel formats are supported so this is allowed to fail.
     // NB: This optimization is currently broken on OSX cos of GL_TEXTURE_RECTANGLE
-#if TARGET_OS_IOS
+#if TARGET_OS_IOS && !TARGET_OS_SIMULATOR
     if (forWriting && !_cvImageBuffer) {
         OSType pixelFormat = 0;
         switch (_format) {
             case BITMAPFORMAT_RGBA32: pixelFormat = kCVPixelFormatType_32BGRA; break;
             case BITMAPFORMAT_BGRA32:
-#if TARGET_OS_SIMULATOR
             pixelFormat = kCVPixelFormatType_32BGRA; break;
-#else
-            pixelFormat = kCVPixelFormatType_32BGRA; break;
-#endif
             case BITMAPFORMAT_RGB565: pixelFormat = kCVPixelFormatType_16LE565; break;
             case BITMAPFORMAT_A8: pixelFormat = kCVPixelFormatType_OneComponent8; break;
             default: assert(0); break;
@@ -183,11 +179,7 @@ void OSBitmap::lock(PIXELDATA* pixelData, bool forWriting) {
 
         NSDictionary* pixelBufferAttributes = @{
             (id)kCVPixelBufferPixelFormatTypeKey : @(pixelFormat),
-#if TARGET_OS_IOS
             (id)kCVPixelFormatOpenGLESCompatibility : @YES,
-#else
-            (id)kCVPixelFormatOpenGLCompatibility : @YES,
-#endif
             (id)kCVPixelBufferIOSurfacePropertiesKey : @{}
         };
         CVReturn err = CVPixelBufferCreate(kCFAllocatorDefault, _width, _height, pixelFormat,

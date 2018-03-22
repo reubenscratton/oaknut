@@ -26,6 +26,7 @@ extern dispatch_queue_t oakQueue;
     return self;
 }
 
+
 - (void)didMoveToWindow {
     [super didMoveToWindow];
     //dispatch_async(oakQueue, ^{
@@ -119,6 +120,8 @@ extern dispatch_queue_t oakQueue;
 		}
 
         //dispatch_async(oakQueue, ^{
+        pt.x *= app._window->_scale;
+        pt.y *= app._window->_scale;
             app._window->dispatchInputEvent(eventType, MAKE_SOURCE(INPUT_SOURCE_TYPE_FINGER, touchSlot), touch.timestamp*1000, pt.x, pt.y);
             [self setNeedsDisplay];
         //});
@@ -244,7 +247,7 @@ void App::requestRedraw() {
     self.window.rootViewController = viewController;
  
 	app._window = new Window();
-	app._window->_scale = s_oaknutView.contentScaleFactor;//[UIScreen mainScreen].scale;
+	app._window->_scale = s_oaknutView.contentScaleFactor;
 	
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];

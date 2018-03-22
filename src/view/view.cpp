@@ -87,16 +87,20 @@ ALIGNSPEC alignspecFromResourceVal(StyleValue* value, View* view) {
     else if (type=="centre") spec=ALIGNSPEC_Center;
     else if (type=="left") spec=ALIGNSPEC_Left;
     else if (type=="right") spec=ALIGNSPEC_Right;
+    else if (type=="top") spec=ALIGNSPEC_Top;
+    else if (type=="bottom") spec=ALIGNSPEC_Bottom;
     else if (type=="toLeftOf") spec=ALIGNSPEC_Make(NULL, 1.0f,  -1.0f, 0);
     else if (type=="toRightOf") spec=ALIGNSPEC_Make(NULL, 1.0f,  0.0f, 0);
-    else if (type=="top") spec=ALIGNSPEC_Top;
-    else if (type=="above") spec=ALIGNSPEC_Top;
-    else if (type=="bottom") spec=ALIGNSPEC_Bottom;
-    else if (type=="below") spec=ALIGNSPEC_Bottom;
+    else if (type=="above") spec=ALIGNSPEC_Make(NULL, 1.0f,  -1.0f, 0);
+    else if (type=="below") spec=ALIGNSPEC_Make(NULL, 1.0f,  0.0f, 0);
     else assert(false); // unknown alignspec
 
     if (str.size() > 0) {
         string anchorId = stringExtractUpTo(str, ",", true);
+        if (anchorId.size()==0) {
+            anchorId=str;
+            str="";
+        }
         spec.anchor = view->_parent->findViewById(anchorId);
         assert(spec.anchor); // NB: anchor must be previously declared. TODO: remove this restriction
         stringTrim(str);

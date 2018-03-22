@@ -1,4 +1,3 @@
 {
-   font-size: 18.0
-
+   font-size: 18dp
 }
