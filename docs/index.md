@@ -6,7 +6,7 @@ layout: default
 </iframe>
 Oaknut is an experimental GUI framework for truly cross-platform C++ apps. An Oaknut
 app can be built to run natively on any major OS, or it can run in a web browser
-via WebAssembly and WebGL. The sample project 'Minesweeper' should be
+via WebAssembly and WebGL. The 'Minesweeper' sample app is
 running in an iframe to the right of this text.
 
 Oaknut is currently at the "proof of concept" stage, almost no part of it is
@@ -14,6 +14,15 @@ anywhere near fully-featured. However all the main problems are solved - as far 
 can see - and so almost all the work from the current point lies in
 building out the remaining APIs and UI widgetry that modern app developers
 expect to be available.
+
+## Getting started
+Firstly clone the Oaknut repository:
+
+```
+git clone https://github.com/reubenscratton/oaknut
+```
+
+## Design notes
 
 Oaknut is extremely lightweight. The whole source code is compiled
 into each app. It may switch to a precompiled and/or dynamic library form at
@@ -115,7 +124,7 @@ in the same sorta-JSON text files. Style
 One of the more attractive features of Oaknut is the ability
 to debug on the native platform (Mac, Linux, Windows) and then
 later deploy to another (Android, iOS, Web). The fast build system
-and not having to deploy to another machine make incremental
-rebuild times a fraction of what is normal for mobile development.
+and not having to deploy to another machine or virtual machine make 
+incremental rebuild times a fraction of what is normal for mobile development.
 
 
