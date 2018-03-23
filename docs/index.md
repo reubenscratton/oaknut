@@ -2,122 +2,119 @@
 layout: default
 ---
 
-Text can be **bold**, _italic_, or ~~strikethrough~~.
+# Oaknut
 
-[Link to another page](another-page).
+Oaknut is an experimental GUI framework for truly cross-platform C++ apps. An Oaknut
+app can be built to run natively on any major OS, or it can run in a web browser
+via WebAssembly and WebGL.
 
-There should be whitespace between paragraphs.
+Oaknut is currently at the "proof of concept" stage, almost no part of it is
+anywhere near fully-featured. However all the main problems are solved - as far as I
+can see - and so almost all the work from the current point lies in
+building out the remaining APIs and UI widgetry that modern app developers
+expect to be available.
 
-There should be whitespace between paragraphs. We recommend including a README, or a file with information about your project.
+Oaknut is extremely lightweight. The whole source code is compiled
+into each app. It may switch to a precompiled and/or dynamic library form at
+a later date but at this early stage it's convenient to work with this
+way. Some lesser-used parts are opt-in via preprocessor definitions,
+e.g. `OAKNUT_WANT_CAMERA`.
 
-# [](#header-1)Header 1
+#### Threading
+Oaknut apps are based on a simple event model. The application implements `App::main()`
+whose job is to set a root ViewController on the global Window object. After that
+everything happens in event handlers or on background threads. All drawing is done
+via OpenGL on the primary/main thread.
 
-This is a normal paragraph following a header. GitHub is a code hosting platform for version control and collaboration. It lets you and others work together on projects from anywhere.
+Oaknut offers no way to directly create background threads. Downloading is performed
+by background system threads (see `URLRequest`) but you may add code to process data
+on the background thread as it is downloaded.
 
-## [](#header-2)Header 2
+Instead of threads Oaknut offers 'queues', one of which may execute on one or many
+background threads, or none at all (i.e. on the main thread!) Obviously that last
+thing is less than desirable and is only likely to happen on the web if
+web workers are disabled.
 
-> This is a blockquote following a header.
->
-> When something is important enough, you do it even if the odds are not in your favor.
 
-### [](#header-3)Header 3
+#### Use of underlying OS
+Oaknut aims to minimise wheel reinvention by leveraging those parts of the underlying
+OS that are more or less identical to corresponding parts of other OSes. For example,
+most of the 2D graphics APIs are a thin wrapper around OS APIs. Drawing rectangles,
+lines, circles, decompressing JPEGs and PNGs, is all done by the OS since there's so
+little variance in how these things are done.
 
-```js
-// Javascript code with syntax highlighting.
-var fun = function lang(l) {
-  dateformat.i18n = require('./lang/' + l)
-  return true;
+Glyph rasterization is another job given to the OS, however glyph and text layout
+is done by Oaknut, mainly for performance reasons (I may revisit this decision soon).
+
+
+#### Object lifetimes
+Oaknut objects are reference-counted via the APIs `Object::retain()` and
+`Object::release()`. Released objects (i.e. those whose refcount has decremented to zero)
+are `free()`d between frames.
+
+
+#### C++
+Oaknut's use of C++ aims to avoid unnecessary complexity. It has very little
+use of templates beyond a few STL containers, it avoids multiple inheritance,
+operator overloading, RTTI, 'friend', 'mutable', traits, metaprogramming, etc.
+As a rule I distrust source code that is harder to read than the machine
+code it compiles to, hence no Boost.
+
+
+
+#### Build system
+Oaknut apps are built through plain old Make.
+```
+make PLATFORM=macos CONFIG=debug
+```
+A subdirectory named `build` is created under the application source tree and
+all object and other intermediate build files are placed there.
+
+CMake is also supported, but mainly only so the excellent CLion
+IDE could be used. All that the `CMakeLists.txt` files do is define
+custom targets that all delegate to Make.
+
+The platform makefiles expect information to be passed by variable,
+for example the Android makefile needs to know where the Android SDK
+is installed and you specify this via the `ANDROID_SDK_DIR` variable.
+
+
+#### Layout
+Oaknut supports declarative layout that is broadly similar to Android's
+except that it is sorta-JSON instead of XML and has far less
+redundant declarations. Unlike Android, resource qualifiers are
+allowed on individual attributes as well as files, e.g.
+
+```
+Label: {
+id: hello
+text@en_GB: "Hello!"
+text@en_US: "Hi ya!"
+text@fr_FR: "Bonjour!"
 }
 ```
 
-```ruby
-# Ruby code with syntax highlighting
-GitHubPages::Dependencies.gems.each do |gem, version|
-  s.add_dependency(gem, "= #{version}")
-end
-```
+Oaknut has also borrowed from Android's view layout system in that
+the layout process is split into a measuring pass and a positioning
+pass. Each view is asked (in `View::measure()`) to update it's own
+intrinsic content size (if necessary), and then to set the size it
+would like to be given that content size, the parent size,
+and the view's sizing rules in the `_widthMeasureSpec` and
+`_heightMeasureSpec` members. After all views have decided what size
+they are, they are all positioned via calls to their `layout()` methods,
+the default implementation of which uses the `_alignspecX` and
+`_alignspecY` members to determine position.
 
-#### [](#header-4)Header 4
+#### Styles
+As well as declarative layout Oaknut also supports declarative styling
+in the same sorta-JSON text files. Style
 
-*   This is an unordered list following a header.
-*   This is an unordered list following a header.
-*   This is an unordered list following a header.
+#### Debugging
 
-##### [](#header-5)Header 5
-
-1.  This is an ordered list following a header.
-2.  This is an ordered list following a header.
-3.  This is an ordered list following a header.
-
-###### [](#header-6)Header 6
-
-| head1        | head two          | three |
-|:-------------|:------------------|:------|
-| ok           | good swedish fish | nice  |
-| out of stock | good and plenty   | nice  |
-| ok           | good `oreos`      | hmm   |
-| ok           | good `zoute` drop | yumm  |
-
-### There's a horizontal rule below this.
-
-* * *
-
-### Here is an unordered list:
-
-*   Item foo
-*   Item bar
-*   Item baz
-*   Item zip
-
-### And an ordered list:
-
-1.  Item one
-1.  Item two
-1.  Item three
-1.  Item four
-
-### And a nested list:
-
-- level 1 item
-  - level 2 item
-  - level 2 item
-    - level 3 item
-    - level 3 item
-- level 1 item
-  - level 2 item
-  - level 2 item
-  - level 2 item
-- level 1 item
-  - level 2 item
-  - level 2 item
-- level 1 item
-
-### Small image
-
-![](https://assets-cdn.github.com/images/icons/emoji/octocat.png)
-
-### Large image
-
-![](https://guides.github.com/activities/hello-world/branching.png)
+One of the more attractive features of Oaknut is the ability
+to debug on the native platform (Mac, Linux, Windows) and then
+later deploy to another (Android, iOS, Web). The fast build system
+and not having to deploy to another machine make incremental
+rebuild times a fraction of what is normal for mobile development.
 
 
-### Definition lists can be used with HTML syntax.
-
-<dl>
-<dt>Name</dt>
-<dd>Godzilla</dd>
-<dt>Born</dt>
-<dd>1952</dd>
-<dt>Birthplace</dt>
-<dd>Japan</dd>
-<dt>Color</dt>
-<dd>Green</dd>
-</dl>
-
-```
-Long, single-line code blocks should not wrap. They should horizontally scroll if they are too long. This line should be long enough to demonstrate this.
-```
-
-```
-The final element.
-```
