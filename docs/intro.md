@@ -10,6 +10,12 @@ can see - and so almost all the work from the current point lies in
 building out the remaining APIs and UI widgetry that modern app developers 
 expect to be available.
 
+Oaknut is extremely lightweight. The whole source code is compiled
+into each app. It may switch to a precompiled and/or dynamic library form at
+a later date but at this early stage it's convenient to work with this 
+way. Some lesser-used parts are opt-in via preprocessor definitions, 
+e.g. `OAKNUT_WANT_CAMERA`.
+
 #### Threading
 Oaknut apps are based on a simple event model. The application implements `App::main()`
 whose job is to set a root ViewController on the global Window object. After that 
@@ -30,7 +36,7 @@ web workers are disabled.
 Oaknut aims to minimise wheel reinvention by leveraging those parts of the underlying
 OS that are more or less identical to corresponding parts of other OSes. For example,
 most of the 2D graphics APIs are a thin wrapper around OS APIs. Drawing rectangles,
-lines, circles, decompressing JPEGs and PNGS, is all done by the OS since there's so 
+lines, circles, decompressing JPEGs and PNGs, is all done by the OS since there's so 
 little variance in how these things are done. 
 
 Glyph rasterization is another job given to the OS, however glyph and text layout 

@@ -7,36 +7,6 @@
 #if PLATFORM_MACOS
 
 #import "AppDelegate.h"
-#import <Cocoa/Cocoa.h>
-#import <QuartzCore/CVDisplayLink.h>
-#import "oaknut.h"
-
-#if TARGET_IOS
-#import <OpenGLES/ES2/gl.h>
-#import <OpenGLES/ES2/glext.h>
-#define glBindVertexArray glBindVertexArrayOES
-#define glGenVertexArrays glGenVertexArraysOES
-#define glDeleteVertexArrays glDeleteVertexArraysOES
-#else
-#import <OpenGL/OpenGL.h>
-#if CGL_VERSION_1_3
-#define ESSENTIAL_GL_PRACTICES_SUPPORT_GL3 1
-#else
-#define ESSENTIAL_GL_PRACTICES_SUPPORT_GL3 0
-#endif
-#import <OpenGL/gl.h>
-#if ESSENTIAL_GL_PRACTICES_SUPPORT_GL3
-//#define glBindVertexArray glBindVertexArray
-//#define glGenVertexArrays glGenVertexArrays
-#define glGenerateMipmap glGenerateMipmap
-#define glDeleteVertexArrays glDeleteVertexArrays
-#else
-#define glBindVertexArray glBindVertexArrayAPPLE
-#define glGenVertexArrays glGenVertexArraysAPPLE
-#define glGenerateMipmap glGenerateMipmapEXT
-#define glDeleteVertexArrays glDeleteVertexArraysAPPLE
-#endif
-#endif
 
 
 
@@ -50,8 +20,7 @@
 static GLView* s_oaknutView;
 static bool _calledMain = false;
 static bool _renderNeeded;
-
-#define SUPPORT_RETINA_RESOLUTION 1
+static bool s_mouseIsDown;
 
 @implementation GLView
 
@@ -60,36 +29,7 @@ static bool _renderNeeded;
     pt.y = self.frame.size.height - pt.y;
     app._window->dispatchInputEvent(eventType, MAKE_SOURCE(INPUT_SOURCE_TYPE_MOUSE, 0), event.timestamp*1000, pt.x*app._window->_scale, pt.y*app._window->_scale);
     [self setNeedsDisplay:YES];
-    /*NSSet<NSTouch*>* touches = event.allTouches;
-    for (NSTouch* touch in touches) {
-        app.log("touch %d %f,%f", eventType, pt.x, pt.y);
-        
-        int touchSlot = 9;
-        for (int i=0 ; i<10 ; i++) {
-            if (touch == _touches[i]) {
-                if (remove) {
-                    _touches[i] = nil;
-                }
-                touchSlot = i;
-                break;
-            }
-            if  (i<touchSlot && !_touches[i]) {
-                touchSlot = i;
-            }
-        }
-        if (!remove) {
-            _touches[touchSlot] = touch;
-        }
-        
-        //dispatch_async(oakQueue, ^{
-        app._window->dispatchTouchEvent(eventType, touchSlot, event.timestamp*1000, pt.x, pt.y);
-        [self setNeedsDisplay:YES];
-        //});
-    }*/
 }
-
-static bool s_mouseIsDown;
-
 - (void)mouseDown:(NSEvent *)event {
     s_mouseIsDown = true;
     [self handleTouches:event eventType:INPUT_EVENT_DOWN remove:NO];
@@ -106,13 +46,11 @@ static bool s_mouseIsDown;
 //}
 - (void)touchesMovedWithEvent:(NSEvent*)event {
     if (s_mouseIsDown) {
-//    app.log("move!");
         [self handleTouches:event eventType:INPUT_EVENT_MOVE remove:NO];
     }
 }
 //- (void)touchesEndedWithEvent:(NSEvent*)event {
 //}
-
 - (void)touchesCancelledWithEvent:(NSEvent*)event {
     [self handleTouches:event eventType:INPUT_EVENT_CANCEL remove:YES];
 }
@@ -124,8 +62,6 @@ static bool s_mouseIsDown;
     self.acceptsTouchEvents = YES;
     
     s_oaknutView = self;
-    app._window = new Window();
-    app._window->_scale = [NSScreen mainScreen].backingScaleFactor;
 
     NSOpenGLPixelFormatAttribute attrs[] = {
         NSOpenGLPFADoubleBuffer,
@@ -198,7 +134,6 @@ static bool s_mouseIsDown;
     [context makeCurrentContext];
     CGLLockContext([context CGLContextObj]);
     if (!_calledMain) {
-        app.main();
         _calledMain = true;
     }
     _renderNeeded = NO;

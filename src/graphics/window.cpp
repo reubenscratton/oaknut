@@ -9,29 +9,39 @@
 
 
 Window::Window() : _rootViewController(NULL), _scale(1) {
-    _surface = new Surface();
-    _quadBuffer = new QuadBuffer();
 }
 
 
 
 void Window::setRootViewController(ViewController* viewController) {
-	ViewController* currentRootVC = _rootViewController;
-	if (currentRootVC) {
-		viewController->onWillPause();
-		currentRootVC->detachFromWindow();
-		viewController->onDidPause();
-	}
-	_rootViewController = viewController;
-	if (viewController) {
-		viewController->onWillResume();
+    if (viewController == _rootViewController) {
+        return;
+    }
+    ViewController *currentRootVC = _rootViewController;
+    if (currentRootVC) {
+        viewController->onWillPause();
+        currentRootVC->detachFromWindow();
+        viewController->onDidPause();
+    }
+    _rootVcAttached = false;
+    _rootViewController = viewController;
+    attachRootVC();
+}
+void Window::attachRootVC() {
+	if (_rootViewController && _surface && !_rootVcAttached) {
+        _rootViewController->onWillResume();
 		prepareToDraw();
-		viewController->attachToWindow(this);
-		viewController->onDidResume();
+        _rootViewController->attachToWindow(this);
+        _rootViewController->onDidResume();
+        _rootVcAttached = true;
 	}
 }
 
 void Window::resizeSurface(int width, int height, float scale) {
+    if (!_surface) {
+        _surface = new Surface();
+        _quadBuffer = new QuadBuffer();
+    }
     if (_surface->_size.width==width && _surface->_size.height==height) {
         return;
     }
@@ -39,9 +49,11 @@ void Window::resizeSurface(int width, int height, float scale) {
     _surfaceRect = RECT_Make(0,0,width,height);
 	_scale = scale;
     _surface->setSize(SIZE_Make(width, height));
-	ViewController* rootVC = _rootViewController;
-	if (rootVC) {
-		rootVC->_view->setNeedsLayout();
+	if (_rootViewController) {
+        if (!_rootVcAttached) {
+            attachRootVC();
+        }
+        _rootViewController->_view->setNeedsLayout();
 	}
 }
 

@@ -11,7 +11,11 @@
 
 int main(int argc, const char * argv[]) {
     NSApplication * application = [NSApplication sharedApplication];
-    
+
+    app._window = new Window();
+    app._window->_scale = [NSScreen mainScreen].backingScaleFactor;
+    app.main();
+
     NSMenu* menubar = [NSMenu new];
     NSMenuItem* appMenuItem = [NSMenuItem new];
     [menubar addItem:appMenuItem];
@@ -24,7 +28,9 @@ int main(int argc, const char * argv[]) {
     [appMenu addItem:quitMenuItem];
     [appMenuItem setSubmenu:appMenu];
     AppDelegate* del = [AppDelegate new];
-    del.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 480, 720)
+    float width = Styles::getFloat("window.default-width") / app._window->_scale;
+    float height = Styles::getFloat("window.default-height") / app._window->_scale;
+    del.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, width, height)
                                              styleMask:NSWindowStyleMaskTitled
                                                backing:NSBackingStoreBuffered
                                                  defer:NO];

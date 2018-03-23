@@ -74,9 +74,11 @@ public:
 	virtual POINT offsetToView(View* view);
     
     virtual bool setFirstResponder(View* view);
+	void attachRootVC();
 
 	// Render state
 	int _doneGlInit;
+	bool _rootVcAttached;
 	QuadBuffer* _quadBuffer;
 	struct {
 		//GLint blend:1;
