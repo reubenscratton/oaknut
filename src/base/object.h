@@ -32,15 +32,15 @@ class ObjPtr {
 public:
 	T* _obj;
     
-#if DEBUG
+/*#if DEBUG
     void dbgLog(bool retain) {
         if (_obj && _obj==DBGOBJ) {
             app.log("DBGOBJ:%s=%d", retain?"+1":"-1", _obj->_refs);
         }
     }
-#else
+#else*/
 #define dbgLog(x)
-#endif
+//#endif
 
     ObjPtr() : _obj(NULL) {
     }

@@ -1,8 +1,14 @@
 # This makefile is expected to be include'd by PROJECT_ROOT/proj/Makefile
 # It should not be run directly.
 
+# If ANDROID_SDK_DIR not set explicitly, guess
 ifndef ANDROID_SDK_DIR
-$(error ANDROID_SDK_DIR must be set to point to the root of your Android SDK installation)
+ANDROID_SDK_DIR:=~/Library/Android/sdk
+endif
+ANDROID_SDK_DIR:=$(wildcard $(ANDROID_SDK_DIR))
+
+ifndef ANDROID_SDK_DIR
+$(error ANDROID_SDK_DIR must be set to point to the root of a valid Android SDK)
 endif
 
 # Derived paths
@@ -78,7 +84,7 @@ $$($(1)_OBJ_DIR)%.o : %
 $$($(1)_OBJ_DIR)%.o : % $$($(1)_OBJ_DIR)%.dep
 	@echo android\($(1)\): Compiling $$(notdir $$<)
 	@mkdir -p $$(dir $$@)
-	$$($(1)_CC) $$($(1)_CFLAGS_COMMON) \
+	@$$($(1)_CC) $$($(1)_CFLAGS_COMMON) \
 		  -MT $$@ -MD -MP -MF $$(@:.o=.Td) \
 		  $(if $(DEBUG),-g -O0,-O3) \
 		  -isystem $(ANDROID_NDK_DIR)/sources/cxx-stl/gnu-libstdc++/4.9/include \
@@ -108,14 +114,14 @@ $(BUILT_RES): $(shell find $(RESOURCES_DIR) -type f) $(MANIFEST_FILE)
 	$(ANDROID_BUILDTOOLS)/aapt package -v -f -I "$(ANDROID_JAR)" -M $(MANIFEST_FILE) -S "$(RESOURCES_DIR)" -m -J "$(BUILD_DIR)/gen" -F "$@"
 
 $(DEX): $(JAVA_FILES)
-	@echo Compiling java $(JAVA_FILES)
+	@echo Compiling java
 	@mkdir -p $(BUILD_DIR)/classes
 	@mkdir -p $(dir $(DEX))
-	javac -classpath "$(ANDROID_JAR):$(BUILD_DIR)" $(JAVA_FILES) -d $(BUILD_DIR)/classes
-	$(ANDROID_BUILDTOOLS)/dx --dex --output="$(DEX)" $(BUILD_DIR)/classes
+	@javac -classpath "$(ANDROID_JAR):$(BUILD_DIR)" $(JAVA_FILES) -d $(BUILD_DIR)/classes
+	@$(ANDROID_BUILDTOOLS)/dx --dex --output="$(DEX)" $(BUILD_DIR)/classes
 
 $(APK): $(DEX) $(LIBS) $(BUILT_RES)
-	cd $(BUILD_DIR)/bin && \
+	@cd $(BUILD_DIR)/bin && \
 	rm -f oaknut.ap_ && \
     cp resources.ap_ oaknut.ap_ && \
 	$(ANDROID_BUILDTOOLS)/aapt add oaknut.ap_ classes.dex $(patsubst %,lib/%/liboaknutapp.so,$(ANDROID_ABIS)) && \

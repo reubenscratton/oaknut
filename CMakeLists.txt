@@ -8,57 +8,48 @@
 # NB: CMake docs say to not use glob to build source lists but I don't see the harm in it.
 # All you have to do is remember to reset your CMake cache when you add or remove source files.
 # To me that's a faintly better deal than having to remember to add and remove things from
-# CMakeLists explicitly. Really CMake is broken in this regard, it should track source dirs
-# rather than individual files and be run as a prebuild step. Alternatively IDEs could just be
-# intelligent about makefiles, but I guess that'll never happen.
-file(GLOB_RECURSE SOURCES_APP  "app/*.*")
-file(GLOB_RECURSE SOURCES_ASSETS  "assets/*.*")
-file(GLOB_RECURSE SOURCES_PLATFORM  "platform/*.*")
-file(GLOB_RECURSE SOURCES_OAKNUT  "${CMAKE_CURRENT_LIST_DIR}/src/*.*")
-set(SOURCES ${SOURCES_APP} ${SOURCES_ASSETS} ${SOURCES_PLATFORM} ${SOURCES_OAKNUT})
+# CMakeLists explicitly.
+file(GLOB_RECURSE SOURCES  "app/*.*" "assets/*.*" "platform/*.*" "${CMAKE_CURRENT_LIST_DIR}/src/*.*")
 
 # Web
-set(PROJECT_NAME_WEB ${PROJECT_NAME}_web)
-add_custom_target(${PROJECT_NAME_WEB} COMMAND make -C ${PROJECT_SOURCE_DIR}
+add_custom_target(${PROJECT_NAME}_web COMMAND make -C ${PROJECT_SOURCE_DIR}
         PLATFORM=web
         PROJECT_NAME=${PROJECT_NAME}
         DEBUG=${DEBUG}
-        web SOURCES ${SOURCES})
+        SOURCES ${SOURCES})
 
 # Android
-set(PROJECT_NAME_ANDROID ${PROJECT_NAME}_android)
-add_custom_target(${PROJECT_NAME_ANDROID} COMMAND make -C ${PROJECT_SOURCE_DIR}
+add_custom_target(${PROJECT_NAME}_android COMMAND make -C ${PROJECT_SOURCE_DIR}
         PLATFORM=android
         PROJECT_NAME=${PROJECT_NAME}
         DEBUG=${DEBUG}
-        android SOURCES ${SOURCES})
+        SOURCES ${SOURCES})
 
 # Linux
-set(PROJECT_NAME_LINUX ${PROJECT_NAME}_linux)
-add_custom_target(${PROJECT_NAME_LINUX} COMMAND make -C ${PROJECT_SOURCE_DIR}
+if(UNIX AND NOT APPLE)
+add_custom_target(${PROJECT_NAME}_linux COMMAND make -C ${PROJECT_SOURCE_DIR}
         PLATFORM=linux
         PROJECT_NAME=${PROJECT_NAME}
         DEBUG=${DEBUG}
-        linux SOURCES ${SOURCES})
+        SOURCES ${SOURCES})
 add_definitions(-DPLATFORM_LINUX=1)
+endif()
 
 if (APPLE)
 
     # MacOS
-    set(PROJECT_NAME_MACOS ${PROJECT_NAME}_macos)
-    add_custom_target(${PROJECT_NAME_MACOS} COMMAND make -C ${PROJECT_SOURCE_DIR}
+    add_custom_target(${PROJECT_NAME}_macos COMMAND make -C ${PROJECT_SOURCE_DIR}
             PLATFORM=macos
             PROJECT_NAME=${PROJECT_NAME}
             DEBUG=${DEBUG}
-            macos SOURCES ${SOURCES})
+            SOURCES ${SOURCES})
 
     # iOS
-    set(PROJECT_NAME_IOS ${PROJECT_NAME}_ios)
-    add_custom_target(${PROJECT_NAME_IOS} COMMAND make -C ${PROJECT_SOURCE_DIR}
+    add_custom_target(${PROJECT_NAME}_ios COMMAND make -C ${PROJECT_SOURCE_DIR}
         PLATFORM=ios
         PROJECT_NAME=${PROJECT_NAME}
         DEBUG=${DEBUG}
-        ios SOURCES ${SOURCES})
+        SOURCES ${SOURCES})
 
 endif ()
 

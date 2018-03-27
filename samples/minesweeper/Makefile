@@ -1,8 +1,7 @@
-
+PROJECT_NAME=Minesweeper
 
 # Android
-ABI=x86
-#ABI=arm64-v8a
+ANDROID_ABIS=x86 arm64-v8a
 ANDROID_VER:=26
 ANDROID_BUILDTOOLS:=26.0.2
 ANDROID_KEYSTORE:=/Users/reuben/.android/debug.keystore
@@ -19,8 +18,35 @@ IOS_PROVISIONING_PROFILE=/Users/reuben/Library/MobileDevice/Provisioning\ Profil
 # macOS
 MACOS_SDK=MacOSX10.13.sdk
 
-# Should be provided by environment variables
-ANDROID_SDK_DIR:=/Users/reuben/Library/Android/sdk
-
+# Include the Oaknut makefile
+OAKNUT_DIR:=$(wildcard $(OAKNUT_DIR))
+ifndef OAKNUT_DIR
+$(error OAKNUT_DIR must point to the Oaknut root)
+endif
 include $(OAKNUT_DIR)/oaknut.make
 
+
+
+
+
+
+$(PROJECT_NAME).xcproj/project.pbxproj:
+	@mkdir -p $(dir $@)
+
+
+#PBXFILEREFS:=
+#PBXGROUPS:=
+#define ADD_PBXGROUP
+#PBXGROUPS+=$1
+#$(foreach d,$(wildcard $1*),$(call ADD_PBXGROUP,$d/,$2) PBXFILEREFS+=$(filter $(subst *,%,$2),$d))
+#endef
+
+#$(call ADD_PBXGROUP,app,)
+
+#FOO:=$(foreach s,$(SOURCES),$(shell md5 -q -s $(s)))
+#$(info PBXGROUPS are $(PBXGROUPS))
+#$(info PBXFILEREFS are $(PBXFILEREFS))
+
+
+xcode: $(PROJECT_NAME).xcproj/project.pbxproj
+	echo hello sailor | sed 's/hello/world/' > $<

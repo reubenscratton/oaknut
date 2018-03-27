@@ -25,7 +25,8 @@ $(BUNDLE_DIR): $(BUILD_DIR)
 	@mkdir -p $@
 
 $(BUNDLED_ASSETS): $(ASSETS)
-	rsync -rup --inplace --delete $(PROJECT_ROOT)/assets $(ASSETS_DIR)
+	@mkdir -p $(ASSETS_DIR)
+	@rsync -rup --inplace --delete $(PROJECT_ROOT)/assets $(ASSETS_DIR)
 
 $(OBJ_DIR):
 	@mkdir -p $@
@@ -44,7 +45,7 @@ $(OBJ_DIR)%.o : % $(OBJ_DIR)%.dep
 		-isystem $(OAKNUT_DIR)/src \
 		$(if $(DEBUG),-g -O0,-O3) \
 		-c -o $@ $<
-	mv -f $(@:.o=.Td) $(@:.o=.dep) && touch $@
+	@mv -f $(@:.o=.Td) $(@:.o=.dep) && touch $@
 
 
 $(EXECUTABLE) : $(OBJS) $(BUNDLE_DIR) $(BUNDLED_ASSETS)
@@ -53,9 +54,9 @@ $(EXECUTABLE) : $(OBJS) $(BUNDLE_DIR) $(BUNDLED_ASSETS)
 	@$(CLANG)++ -arch x86_64 -fobjc-link-runtime -dead_strip \
                -Xlinker -object_path_lto -Xlinker $(BUILD_DIR)/app_lto.o \
                -o $@ $(FRAMEWORKS) $(OBJS)
-	plutil -convert binary1 $(PROJECT_ROOT)/platform/macos/Info.plist -o $(BUNDLE_DIR)/Contents/Info.plist
-	touch -c $(BUNDLE_DIR)
-	CODESIGN_ALLOCATE=$(XCODE_TOOLCHAIN)/usr/bin/codesign_allocate \
+	@plutil -convert binary1 $(PROJECT_ROOT)/platform/macos/Info.plist -o $(BUNDLE_DIR)/Contents/Info.plist
+	@touch -c $(BUNDLE_DIR)
+	@CODESIGN_ALLOCATE=$(XCODE_TOOLCHAIN)/usr/bin/codesign_allocate \
 	codesign --force \
 			 --sign - \
 			 --timestamp=none \
