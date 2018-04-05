@@ -47,7 +47,7 @@ endif
 
 # This bit builds a single platform+config. This will need templating if we want to build multiple.
 
-BUILD_DIR := $(PROJECT_ROOT)/build/$(PLATFORM)/$(CONFIG)
+BUILD_DIR := $(PROJECT_ROOT)/.build/$(PLATFORM)/$(CONFIG)
 OBJ_DIR:=$(BUILD_DIR)/obj
 
 OBJS := $(patsubst %,$(OBJ_DIR)%.o,$(SOURCES))
