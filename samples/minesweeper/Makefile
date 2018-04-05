@@ -24,29 +24,3 @@ ifndef OAKNUT_DIR
 $(error OAKNUT_DIR must point to the Oaknut root)
 endif
 include $(OAKNUT_DIR)/oaknut.make
-
-
-
-
-
-
-$(PROJECT_NAME).xcproj/project.pbxproj:
-	@mkdir -p $(dir $@)
-
-
-#PBXFILEREFS:=
-#PBXGROUPS:=
-#define ADD_PBXGROUP
-#PBXGROUPS+=$1
-#$(foreach d,$(wildcard $1*),$(call ADD_PBXGROUP,$d/,$2) PBXFILEREFS+=$(filter $(subst *,%,$2),$d))
-#endef
-
-#$(call ADD_PBXGROUP,app,)
-
-#FOO:=$(foreach s,$(SOURCES),$(shell md5 -q -s $(s)))
-#$(info PBXGROUPS are $(PBXGROUPS))
-#$(info PBXFILEREFS are $(PBXFILEREFS))
-
-
-xcode: $(PROJECT_NAME).xcproj/project.pbxproj
-	echo hello sailor | sed 's/hello/world/' > $<

@@ -2,7 +2,7 @@
 # It should not be run directly.
 
 CFLAGS+= -DPLATFORM_IOS=1
-
+FRAMEWORKS+= UIKit CoreGraphics OpenGLES
 
 include $(OAKNUT_DIR)/src/platform/apple/oaknut.make
 
@@ -57,7 +57,7 @@ $$($(1)_OBJ_DIR)%.o : % $$($(1)_OBJ_DIR)%.dep
 $$($(1)_APP) : $$($(1)_OBJS)
 	@echo Linking $(1) app
 	@mkdir -p $$(dir $$@)
-	$(CLANG)++ -arch $(1) $(CFLAGS_COMMON) -o $$@ -framework UIKit -framework CoreGraphics -framework OpenGLES $(FRAMEWORKS) $$($(1)_OBJS) $(CFLAGS_LINK)
+	$(CLANG)++ -arch $(1) $(CFLAGS_COMMON) -o $$@ $(addprefix -framework ,$(FRAMEWORKS)) $$($(1)_OBJS) $(CFLAGS_LINK)
 
 
 endef

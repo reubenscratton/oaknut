@@ -87,18 +87,21 @@ WARNINGS_OBJC := \
 	-Wno-deprecated-implementations \
 	-Wprotocol
 
-FRAMEWORKS:=-framework CoreText \
-			-framework GLKit \
-			-framework SceneKit \
-			-framework AudioToolbox \
-			-framework OpenAL \
-			-framework CoreImage \
-			-framework CoreVideo \
-			-framework QuartzCore
+FRAMEWORKS:=CoreText GLKit SceneKit AudioToolbox \
+			OpenAL CoreImage CoreVideo QuartzCore
 
 ifdef OAKNUT_WANT_CAMERA
-	FRAMEWORKS+= -framework AVFoundation -framework CoreMedia
+	FRAMEWORKS+= AVFoundation CoreMedia
 endif
 ifdef OAKNUT_WANT_AUDIOINPUT
-	FRAMEWORKS+= -framework AudioToolbox -framework CoreMedia
+	FRAMEWORKS+= AudioToolbox CoreMedia
 endif
+
+
+XCODE_PROJECT_FILE=$(PROJECT_NAME).xcodeproj/project.pbxproj
+
+$(XCODE_PROJECT_FILE):
+	@mkdir -p $(dir $@)
+
+xcode: $(XCODE_PROJECT_FILE)
+	@perl $(OAKNUT_DIR)/src/platform/apple/xcode.pl -projectname $(PROJECT_NAME) $(addprefix -framework ,$(FRAMEWORKS)) > $<

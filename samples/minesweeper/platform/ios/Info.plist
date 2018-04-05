@@ -7,7 +7,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>Minesweeper</string>
 	<key>CFBundleExecutable</key>
-	<string>ios_app</string>
+	<string>Minesweeper</string>
 	<key>CFBundleIdentifier</key>
 	<string>org.oaknut.samples.minesweeper</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -26,6 +26,8 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.puzzle-games</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>MinimumOSVersion</key>

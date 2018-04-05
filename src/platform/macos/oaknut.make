@@ -5,7 +5,7 @@
 include $(OAKNUT_DIR)/src/platform/apple/oaknut.make
 
 CFLAGS+= -DPLATFORM_MACOS=1
-FRAMEWORKS+= -framework AppKit -framework OpenGL
+FRAMEWORKS+= AppKit OpenGL
 
 CFLAGS_COMMON := \
     -stdlib=libc++ \
@@ -16,7 +16,7 @@ CFLAGS_COMMON := \
 	-Wunguarded-availability
 
 BUNDLE_DIR:=$(BUILD_DIR)/$(PROJECT_NAME).app
-EXECUTABLE:=$(BUNDLE_DIR)/Contents/MacOS/macos_app
+EXECUTABLE:=$(BUNDLE_DIR)/Contents/MacOS/$(PROJECT_NAME)
 
 ASSETS_DIR:=$(BUNDLE_DIR)/Contents/Resources
 BUNDLED_ASSETS:=$(addprefix $(ASSETS_DIR)/assets/,$(subst $(PROJECT_ROOT)/assets/,,$(ASSETS)))
@@ -53,7 +53,7 @@ $(EXECUTABLE) : $(OBJS) $(BUNDLE_DIR) $(BUNDLED_ASSETS)
 	@mkdir -p $(dir $(EXECUTABLE))
 	@$(CLANG)++ -arch x86_64 -fobjc-link-runtime -dead_strip \
                -Xlinker -object_path_lto -Xlinker $(BUILD_DIR)/app_lto.o \
-               -o $@ $(FRAMEWORKS) $(OBJS)
+               -o $@ $(addprefix -framework ,$(FRAMEWORKS)) $(OBJS)
 	@plutil -convert binary1 $(PROJECT_ROOT)/platform/macos/Info.plist -o $(BUNDLE_DIR)/Contents/Info.plist
 	@touch -c $(BUNDLE_DIR)
 	@CODESIGN_ALLOCATE=$(XCODE_TOOLCHAIN)/usr/bin/codesign_allocate \
