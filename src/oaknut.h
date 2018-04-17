@@ -52,6 +52,7 @@
 
 using namespace std;
 
+// Platform headers
 #ifdef PLATFORM_WEB
 #include <platform/web/platform.h>
 #endif
@@ -65,16 +66,25 @@ using namespace std;
 #include <platform/linux/platform.h>
 #endif
 
-#ifndef GL_BGRA
-#define GL_BGRA 0x80E1
-#endif
 
-// Configuration
-//#define CONFIG_SLOW_ANIMATIONS 1
+// Oaknut types (The order here matters!)
+#include "base/object.h"
+#include "base/timer.hpp"
+#include "base/task.h"
+#include "data/stream.h"
+#include "data/filestream.h"
+#include "data/serializablebase.h"
+#include "data/serializable.h"
+#include "data/bytebuffer.h"
+#include "data/bytebufferstream.h"
+#include "data/variant.h"
+#include "data/variantmap.h"
+#include "data/localstorage.h"
+#include "graphics/bitmap.h"
 
 // Camera
 #if OAKNUT_WANT_CAMERA
-typedef std::function<void (class Bitmap* cameraFrame, float brightness)> CameraPreviewDelegate;
+typedef std::function<void (Bitmap* cameraFrame, float brightness)> CameraPreviewDelegate;
 void* oakCameraOpen(int cameraId);
 void oakCameraPreviewStart(void* osobj, CameraPreviewDelegate delegate);
 void oakCameraPreviewStop(void* osobj);
@@ -95,17 +105,11 @@ void* oakFaceDetectorCreate();
 int oakFaceDetectorDetectFaces(void* osobj, class Bitmap* bitmap);
 void oakFaceDetectorClose(void* osobj);
 
-// The order here matters!
-#include "base/object.h"
-#include "base/timer.hpp"
-#include "base/task.h"
-#include "data/data.h"
 #include "graphics/matrix.h"
 #include "graphics/geom.h"
 #include "graphics/quadbuffer.h"
 #include "graphics/glhelp.h"
 #include "graphics/region.h"
-#include "graphics/bitmap.h"
 #include "graphics/textureatlas.h"
 #include "graphics/font.h"
 #include "graphics/renderop.h"
@@ -144,5 +148,20 @@ void oakFaceDetectorClose(void* osobj);
 #include "view/segmentedcontrol.h"
 #include "view/searchbox.h"
 #include "view/canvasview.h"
+
+// Platform-specific types
+#ifdef PLATFORM_WEB
+#include <platform/web/bitmap.h>
+#endif
+#ifdef PLATFORM_ANDROID
+#include <platform/android/bitmap.h>
+#endif
+#ifdef PLATFORM_APPLE
+#include <platform/apple/bitmap.h>
+#endif
+#ifdef PLATFORM_LINUX
+#include <platform/linux/bitmap.h>
+#endif
+
 
 #endif 

@@ -5,7 +5,7 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#include "../oaknut.h"
+#include <oaknut.h>
 
 
 AtlasNode::AtlasNode(AtlasPage* page) {
@@ -15,9 +15,9 @@ AtlasNode::AtlasNode(AtlasPage* page) {
 }
 
 void AtlasPage::importAsset(const string& assetPath, std::function<void(AtlasNode*)> callback) {
-    ObjPtr<Data> data = app.loadAsset(assetPath.data());
+    ObjPtr<ByteBuffer> data = app.loadAsset(assetPath.data());
     assert(data);
-    oakBitmapCreateFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
+    Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
         assert(bitmap);
         if (bitmap->_format != _bitmap->_format) {
             bitmap = bitmap->convertToFormat(_bitmap->_format);
@@ -96,7 +96,7 @@ AtlasNode* AtlasNode::insertRect(RECT* r) {
 
 
 AtlasPage::AtlasPage(int width, int height, int bitmapFormat) {
-    _bitmap = oakBitmapCreate(width, height, bitmapFormat);
+    _bitmap = new Bitmap(width, height, bitmapFormat);
     _bitmap->_texSampleMethod = GL_NEAREST;
     start_node = new AtlasNode(this);
     start_node->rect = RECT_Make(0, 0, width, height);

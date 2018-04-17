@@ -15,10 +15,17 @@ long App::currentMillis() {
     return CACurrentMediaTime()*1000;
 }
 
-string App::getAppHomeDir() {
-    NSURL* url = [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
-    return string([[url.absoluteString substringFromIndex:7] UTF8String]);
-    
+string App::getDirectoryForFileType(FileType fileType) {
+    NSSearchPathDirectory spd;
+    switch (fileType) {
+        case UserDocument: spd=NSDocumentDirectory; break;
+        case General: spd=NSApplicationSupportDirectory; break;
+        case Cache: spd=NSCachesDirectory;
+        default: return ".";
+    }
+    // TODO: Create a 'appname' subdirectory for app support and cache options rather than blart all over the root dir
+    NSURL* url = [[[NSFileManager defaultManager] URLsForDirectory:spd inDomains:NSUserDomainMask] lastObject];
+    return string(url.fileSystemRepresentation);
 }
 
 
@@ -110,7 +117,7 @@ void TaskQueue::postToMainThread(function<void(void)> func) {
 
 
 
-Data* App::loadAsset(const char* assetPath) {
+ByteBuffer* App::loadAsset(const char* assetPath) {
 
     NSString* path = [NSBundle mainBundle].bundlePath;
     string str = string([path UTF8String]);
@@ -125,7 +132,7 @@ Data* App::loadAsset(const char* assetPath) {
         return NULL;
     }
     
-    Data* data = new Data();
+    ByteBuffer* data = new ByteBuffer();
     fseek (asset, 0, SEEK_END);
     data->cb = ftell(asset);
     data->data = (uint8_t*) malloc (sizeof(char)*data->cb);

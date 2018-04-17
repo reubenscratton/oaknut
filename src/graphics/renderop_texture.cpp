@@ -5,7 +5,7 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#include "../oaknut.h"
+#include <oaknut.h>
 
 SimpleBitmapProvider::SimpleBitmapProvider(Bitmap *bitmap) {
     _bitmap = bitmap;
@@ -21,8 +21,8 @@ void SimpleBitmapProvider::removeCallback(Callback *callback) {
 
 AsyncBitmapProvider::AsyncBitmapProvider(const char* assetPath) {
     // todo: maybe defer loading until first getBitmap()?
-    Data *data = app.loadAsset(assetPath);
-    oakBitmapCreateFromData(data->data, (int) data->cb, [&](Bitmap *bitmap) {
+    ByteBuffer *data = app.loadAsset(assetPath);
+    Bitmap::createFromData(data->data, (int) data->cb, [&](Bitmap *bitmap) {
         _bitmap = bitmap;
         for (auto it : _callbacks) {
             it->onBitmapChanged();
@@ -146,8 +146,8 @@ TextureRenderOp::TextureRenderOp(View* view, const char* assetPath, int tintColo
     _prog = &glprogTextureTintAlpha;
     _alpha = 1.0f;
     _colour = tintColour;
-    Data* data = app.loadAsset(assetPath);
-    oakBitmapCreateFromData(data->data, (int)data->cb, [&](Bitmap* bitmap) {
+    ByteBuffer* data = app.loadAsset(assetPath);
+    Bitmap::createFromData(data->data, (int)data->cb, [&](Bitmap* bitmap) {
         _bitmapProvider = new SimpleBitmapProvider(bitmap);
         _rect = RECT_Make(0,0,bitmap->_width,bitmap->_height);
     });

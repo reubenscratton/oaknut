@@ -94,7 +94,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         
         // Create the new bitmap
         CVPixelBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
-        ObjPtr<OSBitmap> bitmap = new OSBitmap(imageBuffer, true);
+        ObjPtr<Bitmap> bitmap = new Bitmap(imageBuffer, true);
         
         // Call delegate
         _delegate(bitmap, brightnessValue);

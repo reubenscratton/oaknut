@@ -2,14 +2,14 @@
 #include <oaknut.h>
 
 
-class OSBitmap : public Bitmap {
+class Bitmap : public BitmapBase {
 public:
     jobject _androidBitmap;
 
-    OSBitmap(int width, int height, int format);
-    OSBitmap(jobject androidBitmap);
-    OSBitmap(GLuint textureId);
-    ~OSBitmap();
+    Bitmap(int width, int height, int format);
+    Bitmap(jobject androidBitmap);
+    Bitmap(GLuint textureId);
+    ~Bitmap();
 
     // Overrides
     virtual void lock(PIXELDATA* pixelData, bool forWriting);

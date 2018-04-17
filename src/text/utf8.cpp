@@ -5,7 +5,7 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#include "../oaknut.h"
+#include <oaknut.h>
 
 int stringIndexOfChar(const string& str, char32_t ch) {
     return (int) str.find((char)ch); // todo: make unicode aware
@@ -158,7 +158,7 @@ Utf8Iterator::Utf8Iterator(const string& str) {
     _p = str.data();
     _cb = str.length();
 }
-Utf8Iterator::Utf8Iterator(const Data* data) {
+Utf8Iterator::Utf8Iterator(const ByteBuffer* data) {
     _p = (const char*)data->data;
     _cb = data->cb;
 }

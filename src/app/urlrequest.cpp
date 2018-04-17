@@ -5,9 +5,9 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#include "../oaknut.h"
+#include <oaknut.h>
 
-URLData::URLData(Data* data) : _value(data), _type(URLDataTypeData) {}
+URLData::URLData(ByteBuffer* data) : _value(data), _type(URLDataTypeData) {}
 URLData::URLData(JsonValue* json) : _value(json), _type(URLDataTypeJson) {}
 URLData::URLData(Bitmap* bitmap) : _value(bitmap), _type(URLDataTypeBitmap) {}
 URLData::~URLData() {
@@ -17,7 +17,7 @@ URLData::~URLData() {
         _value.data->release();
     }
 }
-URLData::value::value(Data* data) {this->data=data; data->retain();}
+URLData::value::value(ByteBuffer* data) {this->data=data; data->retain();}
 URLData::value::value(JsonValue* json) {this->json=json; }
 URLData::value::value(Bitmap* bitmap) {this->bitmap=bitmap; bitmap->retain();}
 

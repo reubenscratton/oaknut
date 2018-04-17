@@ -6,7 +6,7 @@
 //
 #if PLATFORM_ANDROID
 
-#include "bitmap.h"
+#include <oaknut.h>
 
 
 static jclass jclassBitmap;
@@ -18,11 +18,7 @@ static jobject configARGB8888;
 static jobject configRGB565;
 
 
-Bitmap* oakBitmapCreate(int width, int height, int format) {
-    return new OSBitmap(width, height, format);
-}
-
-OSBitmap::OSBitmap(int width, int height, int format) : Bitmap(width,height,format) {
+Bitmap::Bitmap(int width, int height, int format) : BitmapBase(width,height,format) {
     _texTarget = GL_TEXTURE_2D;
     JNIEnv* env = getJNIEnv();
     if (!jclassBitmap) {
@@ -49,7 +45,7 @@ OSBitmap::OSBitmap(int width, int height, int format) : Bitmap(width,height,form
     _needsUpload = true;
 }
 
-OSBitmap::OSBitmap(jobject jbitmap) {
+Bitmap::Bitmap(jobject jbitmap) {
     JNIEnv* env = getJNIEnv();
     assert(jbitmap);
     _androidBitmap = env->NewGlobalRef(jbitmap);
@@ -67,19 +63,19 @@ OSBitmap::OSBitmap(jobject jbitmap) {
     }
     _needsUpload = true;
 }
-OSBitmap::OSBitmap(GLuint textureId) {
+Bitmap::Bitmap(GLuint textureId) {
     _texTarget = GL_TEXTURE_2D;
     _textureId = textureId;
 }
 
-OSBitmap::~OSBitmap() {
+Bitmap::~Bitmap() {
     if (_androidBitmap) {
         getJNIEnv()->DeleteGlobalRef(_androidBitmap);
         _androidBitmap = NULL;
     }
 }
 
-void oakBitmapCreateFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
+void Bitmap::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
     JNIEnv* env = getJNIEnv();
     if (!jclassBitmapFactory) {
         jclassBitmapFactory = env->FindClass("android/graphics/BitmapFactory");
@@ -91,7 +87,7 @@ void oakBitmapCreateFromData(const void* data, int cb, std::function<void(Bitmap
     env->SetByteArrayRegion(jbuff, 0, cb, (jbyte*)data);
     jobject jbitmap = env->CallStaticObjectMethod(jclassBitmapFactory, jmidDecodeByteArray, jbuff, 0, cb);
     env->DeleteLocalRef(jbuff);
-    OSBitmap* bitmap = new OSBitmap(jbitmap);
+    Bitmap* bitmap = new Bitmap(jbitmap);
     bitmap->retain();
     //dispatch_async(dispatch_get_main_queue(), ^() ;
     callback(bitmap);
@@ -99,7 +95,7 @@ void oakBitmapCreateFromData(const void* data, int cb, std::function<void(Bitmap
 }
 
 
-void OSBitmap::lock(PIXELDATA* pixelData, bool forWriting) {
+void Bitmap::lock(PIXELDATA* pixelData, bool forWriting) {
     JNIEnv* env = getJNIEnv();
     assert(_androidBitmap);
     AndroidBitmapInfo info;
@@ -108,15 +104,15 @@ void OSBitmap::lock(PIXELDATA* pixelData, bool forWriting) {
     pixelData->cb = info.stride * info.height;
     AndroidBitmap_lockPixels(env, _androidBitmap, &pixelData->data);
 }
-void OSBitmap::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
+void Bitmap::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
     JNIEnv* env = getJNIEnv();
     AndroidBitmap_unlockPixels(env, _androidBitmap);
     _needsUpload |= pixelDataChanged;
 }
 
-void OSBitmap::bind() {
+void Bitmap::bind() {
 
-    Bitmap::bind();
+    BitmapBase::bind();
 
 
     // If bitmap data changed we may need to update texture data

@@ -5,7 +5,6 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#include "oaknut.h"
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreVideo/CoreVideo.h>
 
@@ -21,20 +20,26 @@
 #define CVOpenGLESTextureCacheCreate CVOpenGLTextureCacheCreate
 #endif
 
-class OSBitmap : public Bitmap {
+class Bitmap : public BitmapBase {
 public:
     CGContextRef _context; // nil if bitmap is texture-only
-    CVImageBufferRef _cvImageBuffer; 
+    CVImageBufferRef _cvImageBuffer;
     CVOpenGLESTextureRef _cvTexture;
     CVOpenGLESTextureCacheRef _cvTextureCache;
-
-    OSBitmap(int width, int height, int format, void* pixels, int stride);
-    OSBitmap(CVPixelBufferRef cvImageBuffer, bool fromCamera);
-    ~OSBitmap();
+    
+    Bitmap(int width, int height, int format);
+    Bitmap(int width, int height, int format, void* pixels, int stride);
+    Bitmap(CVPixelBufferRef cvImageBuffer, bool fromCamera);
+    ~Bitmap();
     
     // Overrides
     virtual void lock(PIXELDATA* pixelData, bool forWriting);
     virtual void unlock(PIXELDATA* pixelData, bool pixelDataChanged);
     virtual void bind();
+
+    Bitmap(const VariantMap* map);
+    virtual void writeSelf(VariantMap* map);
+
 };
+
 

@@ -10,13 +10,8 @@
 #include <sys/time.h>
 
 
-string oakGetAppHomeDir() {
-    return string("."); // will this work in AppImage?
-}
 
-
-
-Data* App::loadAsset(const char* assetPath) {
+ByteBuffer* App::loadAsset(const char* assetPath) {
     
     string str = "assets/";
     str.append(assetPath);
@@ -26,7 +21,7 @@ Data* App::loadAsset(const char* assetPath) {
         return NULL;
     }
     
-    Data* data = new Data();
+    ByteBuffer* data = new ByteBuffer();
     fseek (asset, 0, SEEK_END);
     data->cb = ftell(asset);
     data->data = (uint8_t*) malloc (sizeof(char)*data->cb);

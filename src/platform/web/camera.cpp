@@ -6,10 +6,10 @@
 //
 #if PLATFORM_WEB && OAKNUT_WANT_CAMERA
 
-#include "bitmap.h"
+#include <oaknut.h>
 
 
-class WebCamera : public OSBitmap  {
+class WebCamera : public Bitmap  {
 public:
     WebCamera(int cameraId);
     ~WebCamera();

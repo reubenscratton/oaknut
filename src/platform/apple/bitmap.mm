@@ -5,8 +5,7 @@
 // See the LICENSE file in the root of this installation for details.
 //
 #if PLATFORM_APPLE
-
-#include "bitmap.h"
+#include <oaknut.h>
 
 static CVOpenGLESTextureCacheRef s_cvTextureCacheCamera;
 static CVOpenGLESTextureCacheRef s_cvTextureCacheOther;
@@ -59,8 +58,10 @@ static int bytesPerPixelForFormat(int format) {
     return 0;
 }
 
+Bitmap::Bitmap(int width, int height, int format) : Bitmap(width, height, format, NULL, 0) {
+}
 
-OSBitmap::OSBitmap(int width, int height, int format, void* pixels, int stride) : Bitmap(width, height, format) {
+Bitmap::Bitmap(int width, int height, int format, void* pixels, int stride) : BitmapBase(width, height, format) {
     if (stride == 0) {
         stride = width*bytesPerPixelForFormat(format);
     }
@@ -73,7 +74,7 @@ OSBitmap::OSBitmap(int width, int height, int format, void* pixels, int stride) 
     _needsUpload = true;
 }
 
-OSBitmap::OSBitmap(CVImageBufferRef cvImageBuffer, bool fromCamera) : Bitmap((int)CVPixelBufferGetWidth(cvImageBuffer), (int)CVPixelBufferGetHeight(cvImageBuffer), BITMAPFORMAT_RGBA32) {
+Bitmap::Bitmap(CVImageBufferRef cvImageBuffer, bool fromCamera) : BitmapBase((int)CVPixelBufferGetWidth(cvImageBuffer), (int)CVPixelBufferGetHeight(cvImageBuffer), BITMAPFORMAT_RGBA32) {
     _cvImageBuffer = cvImageBuffer;
     _cvTextureCache = getTextureCache(fromCamera);
     
@@ -137,7 +138,7 @@ OSBitmap::OSBitmap(CVImageBufferRef cvImageBuffer, bool fromCamera) : Bitmap((in
     assert(err==0);
 }
 
-OSBitmap::~OSBitmap() {
+Bitmap::~Bitmap() {
     if (_textureId) {
         if (!_cvTextureCache) {
             check_gl(glDeleteTextures, 1, &_textureId);
@@ -160,7 +161,7 @@ OSBitmap::~OSBitmap() {
     }
 }
 
-void OSBitmap::lock(PIXELDATA* pixelData, bool forWriting) {
+void Bitmap::lock(PIXELDATA* pixelData, bool forWriting) {
 
     // If wanting to write then try to create a Core Video image buffer that will give us direct
     // texture access. Not all pixel formats are supported so this is allowed to fail.
@@ -204,7 +205,7 @@ void OSBitmap::lock(PIXELDATA* pixelData, bool forWriting) {
 
 
 
-void OSBitmap::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
+void Bitmap::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
     if (_cvImageBuffer) {
         CVReturn err = CVPixelBufferUnlockBaseAddress(_cvImageBuffer, 0);
         assert(err == kCVReturnSuccess);
@@ -217,7 +218,7 @@ void OSBitmap::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
     }
 }
 
-void OSBitmap::bind() {
+void Bitmap::bind() {
 
     // If we have a core video buffer then create a special core video texture than uses the buffer directly
     if (_cvImageBuffer && !_textureId) {
@@ -249,7 +250,7 @@ void OSBitmap::bind() {
         _textureId = CVOpenGLESTextureGetName(_cvTexture);
     }
     
-    Bitmap::bind();
+    BitmapBase::bind();
 
     // If bitmap data changed we may need to update texture data
     if (!_needsUpload) {
@@ -271,10 +272,6 @@ void OSBitmap::bind() {
     }
 }
 
-
-Bitmap* oakBitmapCreate(int width, int height, int format) {
-    return new OSBitmap(width, height, format, NULL, 0);
-}
 
 
 Bitmap* bitmapFromData(const void* data, int cb) {
@@ -362,12 +359,29 @@ Bitmap* bitmapFromData(const void* data, int cb) {
     }
 
     // Create the native bitmap
-    Bitmap* bitmap = new OSBitmap(width, height, format, pixels, (int)cbUncompressed/height);
+    Bitmap* bitmap = new Bitmap(width, height, format, pixels, (int)cbUncompressed/height);
     CGImageRelease(fullImage);
     return bitmap;
 }
 
-void oakBitmapCreateFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
+Bitmap::Bitmap(const VariantMap* map) : BitmapBase(map) {
+    int stride = map->getInt("s");
+    ObjPtr<ByteBuffer> bb = map->getByteBuffer("bb");
+    CGColorSpaceRef colorspace = (_format==BITMAPFORMAT_A8) ? CGColorSpaceCreateDeviceGray() : CGColorSpaceCreateDeviceRGB();
+    _context = CGBitmapContextCreateWithData(bb->data, _width, _height, 8, stride, colorspace, bitmapInfoForFormat(_format), nil, nil);
+    assert(_context);
+}
+void Bitmap::writeSelf(VariantMap* map) {
+    BitmapBase::writeSelf(map);
+    int stride = (int)CGBitmapContextGetBytesPerRow(_context);
+    map->setInt("s", stride);
+    void* data = CGBitmapContextGetData(_context);
+    int cb = stride * CGBitmapContextGetHeight(_context);
+    ObjPtr<ByteBuffer> bb = new ByteBuffer((uint8_t*)data, cb);
+    map->setByteBuffer("bb", bb);
+}
+
+void BitmapBase::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
     Bitmap* bitmap = bitmapFromData(data, cb);
     dispatch_async(dispatch_get_main_queue(), ^() {
         callback(bitmap);

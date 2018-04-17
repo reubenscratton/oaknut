@@ -7,12 +7,12 @@
 
 #include <oaknut.h>
 
-class OSBitmap : public Bitmap {
+class Bitmap : public BitmapBase {
 public:
 
-    OSBitmap(GdkPixbuf* pixbuf);
-    OSBitmap(int width, int height, int format);
-    ~OSBitmap();
+    Bitmap(GdkPixbuf* pixbuf);
+    Bitmap(int width, int height, int format);
+    ~Bitmap();
     
     // Overrides
     virtual void lock(PIXELDATA* pixelData, bool forWriting);

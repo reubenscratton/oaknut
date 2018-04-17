@@ -6,7 +6,7 @@
 #include <oaknut.h>
 
 
-class OSBitmap : public Bitmap {
+class Bitmap : public BitmapBase {
 public:
     val _img;
     val _buff;
@@ -14,15 +14,20 @@ public:
     bool _isPng; // TODO: remove, now we have _format
     std::function<void(Bitmap*)> _tmp;
     
-    OSBitmap();
-    OSBitmap(int width, int height, int format);
-    OSBitmap(val img, bool isPng);
-    ~OSBitmap();
+    Bitmap();
+    Bitmap(int width, int height, int format);
+    Bitmap(val img, bool isPng);
+    ~Bitmap();
 
     virtual void lock(PIXELDATA* pixelData, bool forWriting);
     virtual void unlock(PIXELDATA* pixelData, bool pixelsChanged);
 
-    virtual void bind();    
+    virtual void bind();
+    
+    // ISerializable
+    Bitmap(const VariantMap* map);
+    virtual void writeSelf(VariantMap* map);
+
 };
 
 

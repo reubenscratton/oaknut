@@ -36,7 +36,7 @@ void URLRequest::nativeStop() {
 
 JAVA_FN(void, URLRequest, nativeOnGotBitmap)(JNIEnv *env, jobject jobj, jlong cobj, jobject jbitmap) {
     URLRequest* req = (URLRequest*)cobj;
-    OSBitmap* bitmap = new OSBitmap(jbitmap);
+    Bitmap* bitmap = new Bitmap(jbitmap);
     bitmap->retain();
     req->dispatchOnLoad(new URLData(bitmap));
     req->release(); // match retain() in nativeStart();
@@ -45,7 +45,7 @@ JAVA_FN(void, URLRequest, nativeOnGotBitmap)(JNIEnv *env, jobject jobj, jlong co
 
 JAVA_FN(void, URLRequest, nativeOnGotGenericData)(JNIEnv *env, jobject jobj, jlong cobj, jbyteArray array) {
     URLRequest* req = (URLRequest*)cobj;
-    Data* data = new Data();
+    ByteBuffer* data = new ByteBuffer();
     data->cb = env->GetArrayLength(array);
     data->data = (uint8_t*)malloc(data->cb);
     env->GetByteArrayRegion(array, 0, data->cb, reinterpret_cast<jbyte*>(data->data));

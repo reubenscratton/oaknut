@@ -59,7 +59,7 @@ public:
         if (glyph) {
             glyph->charCode = ch;
             POINT pt = glyph->atlasNode->rect.origin;
-            OSBitmap* bitmap = (OSBitmap*)glyph->atlasNode->page->_bitmap._obj;
+            Bitmap* bitmap = (Bitmap*)glyph->atlasNode->page->_bitmap._obj;
             env->CallVoidMethod(_obj, s_jmidDrawGlyph, (jint)ch, bitmap->_androidBitmap, pt.x-glyph->bitmapLeft, pt.y+glyph->bitmapHeight+glyph->bitmapTop);
             bitmap->_needsUpload = true;
         }
@@ -137,7 +137,7 @@ public:
         //jobject directBuffer = getJNIEnv()->NewDirectByteBuffer(pixelBuffer->data, pixelBuffer->cb);
         getJNIEnv()->CallVoidMethod(_canvas, jmidResize, width, height);
         jobject jbitmap = getJNIEnv()->CallObjectMethod(_canvas, jmidGetBitmap);
-        _bitmap = new OSBitmap(jbitmap);
+        _bitmap = new Bitmap(jbitmap);
     }
     void clear(COLOUR colour) {
         getJNIEnv()->CallVoidMethod(_canvas, jmidClear, (jint)colour);
@@ -192,7 +192,7 @@ public:
 
 
     jobject _canvas;
-    ObjPtr<OSBitmap> _bitmap;
+    ObjPtr<Bitmap> _bitmap;
 };
 
 // API

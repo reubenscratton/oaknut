@@ -27,6 +27,7 @@ public:
     virtual void drawRect(RECT rect)=0;
     virtual void drawOval(RECT rect)=0;
     virtual void drawPath(Path* path)=0;
+    virtual void drawBitmap(Bitmap* bitmap, const RECT& rectSrc, const RECT& rectDst)=0;
     virtual Path* createPath()=0;
 
 protected:

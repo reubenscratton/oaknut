@@ -5,7 +5,7 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#include "../oaknut.h"
+#include <oaknut.h>
 
 NavigationItem::NavigationItem() {
     _leftButtonsFrame = new LinearLayout();
@@ -46,8 +46,8 @@ void NavigationItem::setTitleView(View* titleView) {
 ToolbarButton* NavigationItem::createIconButton(const string& src, OnClickDelegate onClickDelegate) {
 	ToolbarButton* button = new ToolbarButton();
 	button->setMeasureSpecs(MEASURESPEC_UseAspect(1), MEASURESPEC_FillParent);
-    Data* data = app.loadAsset(src.data());
-    oakBitmapCreateFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
+    ByteBuffer* data = app.loadAsset(src.data());
+    Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
         button->setImageBitmap(bitmap);
     });
 	button->_onClickDelegate = onClickDelegate;

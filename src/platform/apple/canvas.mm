@@ -6,7 +6,8 @@
 //
 #if PLATFORM_APPLE
 
-#include "bitmap.h"
+#include <oaknut.h>
+
 #if TARGET_OS_IOS
 #include <UIKit/UIKit.h>
 #include <CoreText/CoreText.h>
@@ -37,7 +38,7 @@ public:
 #endif
             
         } else {
-            ObjPtr<Data> data = app.loadAsset(_name.data());
+            ObjPtr<ByteBuffer> data = app.loadAsset(_name.data());
             CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, data->data, data->cb, NULL);
             CGFontRef cgfont = CGFontCreateWithDataProvider(dataProvider);
             assert(cgfont);
@@ -68,8 +69,13 @@ public:
             CFRelease(_ctfont);
             _ctfont = createCTFont();
             if (!CTFontGetGlyphsForCharacters(_ctfont, &uch, &cgglyph, 1)) {
-                assert(false); // glyph is not in the font, TODO: fall back to another font
-                return NULL;
+                app.log("Warning: glyph '%c' not in chosen font", ch);
+                uch = '?';
+                if (!CTFontGetGlyphsForCharacters(_ctfont, &uch, &cgglyph, 1)) {
+                    assert(false); // glyph is not in the font, TODO: fall back to another font
+
+                    return NULL;
+                }
             }
             app.log("Warning: a stupid Core Text bug caused us to waste time recreating a font");
         }
@@ -99,7 +105,7 @@ public:
         glyph->bitmapTop = boundingRect.origin.y;
         
         // Get the atlas bitmap context
-        OSBitmap* bitmap = (OSBitmap*)glyph->atlasNode->page->_bitmap._obj;
+        Bitmap* bitmap = (Bitmap*)glyph->atlasNode->page->_bitmap._obj;
         CGContext* c = bitmap->_context;
         
         POINT origin = glyph->atlasNode->rect.origin;
@@ -167,7 +173,7 @@ public:
 
 class AppleCanvas : public Canvas {
 public:
-    ObjPtr<OSBitmap> _bitmap;
+    ObjPtr<Bitmap> _bitmap;
     CGSize _size;
     CGColorRef _fillColor;
     CGColorRef _strokeColor;
@@ -181,7 +187,7 @@ public:
     void resize(int width, int height) {
         _size.width = width;
         _size.height = height;
-        _bitmap = new OSBitmap(width, height, BITMAPFORMAT_RGBA32, NULL, 0);
+        _bitmap = new Bitmap(width, height, BITMAPFORMAT_RGBA32);
     }
     void clear(COLOUR colour) {
         CGContextSetBlendMode(_bitmap->_context, kCGBlendModeCopy);
@@ -262,6 +268,13 @@ public:
             CGPathRelease(cgpath);
         }
     }
+    
+    virtual void drawBitmap(Bitmap* bitmap, const RECT& rectSrc, const RECT& rectDst) {
+        CGRect cgrectDst = CGRectMake(rectDst.origin.x,rectDst.origin.y,rectDst.size.width,rectDst.size.height);
+        CGImageRef image = CGBitmapContextCreateImage(bitmap->_context);
+        CGContextDrawImage(_bitmap->_context, cgrectDst, image);
+    }
+
 
 };
 

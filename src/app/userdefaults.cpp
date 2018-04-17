@@ -5,33 +5,38 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#include "../oaknut.h"
+#include <oaknut.h>
 
-static KeyValueMap s_userdefaults;
-static bool s_init;
+/**
+ UserDefaults is implemented by a single LocalStore containing a single VariantMap
+ */
 
-static string getUserDefaultsPath() {
-    string str = app.getAppHomeDir();
-    str.append("_userdefaults.dat");
-    return str;
-}
+static LocalStore* s_localstore;
+static VariantMap* s_userdefaults;
+
 
 static void ensureLoaded() {
-    if (s_init) {
-        return;
+    if (!s_localstore) {
+        s_localstore = LocalStore::create("_userdefaults", "unused");
     }
-    s_init = true;
-    FileStream stream(getUserDefaultsPath());
+    if (s_localstore->moveFirst()) {
+        s_userdefaults = s_localstore->readCurrent();
+    }
+    if (!s_userdefaults) {
+        s_userdefaults = new VariantMap();
+        s_userdefaults->setInt("unused", 0); // set a primary key value although it's not used
+    }
+/*    FileStream stream(getUserDefaultsPath());
     if (stream.openForRead()) {
         s_userdefaults.readSelfFromStream(&stream);
-    }
+    }*/
 }
 
 
 int UserDefaults::getInteger(const char *key, const int defaultValue) {
     ensureLoaded();
-    if (s_userdefaults.hasValue(key)) {
-        return s_userdefaults.getInt(key);
+    if (s_userdefaults->hasValue(key)) {
+        return s_userdefaults->getInt(key);
     }
 	return defaultValue;
 }
@@ -39,27 +44,28 @@ int UserDefaults::getInteger(const char *key, const int defaultValue) {
 
 void UserDefaults::setInteger(const char* key, const int value) {
     ensureLoaded();
-	s_userdefaults.setInt(key, value);
+	s_userdefaults->setInt(key, value);
 }
 
 string UserDefaults::getString(const char* key, const char* defaultValue) {
     ensureLoaded();
-    if (s_userdefaults.hasValue(key)) {
-        return s_userdefaults.getString(key);
+    if (s_userdefaults->hasValue(key)) {
+        return s_userdefaults->getString(key);
     }
 	return defaultValue;
 }
 
 void UserDefaults::setString(const char* key, const char* value) {
     ensureLoaded();
-    s_userdefaults.setString(key, value);
+    s_userdefaults->setString(key, value);
 }
 
 void UserDefaults::save() {
-    FileStream stream(getUserDefaultsPath());
+    //s_localstore->save();
+    /*FileStream stream(getUserDefaultsPath());
     if (stream.openForWrite()) {
-        s_userdefaults.writeSelfToStream(&stream);
+        s_userdefaults->writeSelfToStream(&stream);
         stream.close();
-    }
+    }*/
 }
 

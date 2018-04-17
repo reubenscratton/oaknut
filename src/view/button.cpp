@@ -5,13 +5,13 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#include "../oaknut.h"
+#include <oaknut.h>
 
 DECLARE_DYNCREATE(Button);
 DECLARE_DYNCREATE(ToolbarButton);
 
 Button::Button() {
-    _gravity = {GRAVITY_CENTER,GRAVITY_CENTER};
+    setGravity({GRAVITY_CENTER,GRAVITY_CENTER});
 }
 
 void Button::applyStyleValues(const StyleValueList& values) {

@@ -1,49 +1,64 @@
 //
-// Copyright © 2017 Sandcastle Software Ltd. All rights reserved.
+// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
 //
 
 
-#include "../oaknut.h"
+#include <oaknut.h>
 
-Bitmap::Bitmap() {
+BitmapBase::BitmapBase() {
     _texSampleMethod = GL_LINEAR;
     _texTarget = GL_TEXTURE_2D;
 }
 
-Bitmap::Bitmap(int awidth, int aheight, int format) : Bitmap() {
+BitmapBase::BitmapBase(int awidth, int aheight, int format) : BitmapBase() {
     _width = awidth;
     _height = aheight;
     _format = format;
 }
 
-Bitmap::~Bitmap() {
+BitmapBase::BitmapBase(const VariantMap* map) {
+    _width = map->getInt("w");
+    _height = map->getInt("h");
+    _format = map->getInt("f");
+    /*PIXELDATA pixeldata;
+    lock(&pixeldata, true);
+    pixeldata.stride = map->getInt("s");
+    ObjPtr<ByteBuffer> bb = map->getByteBuffer("d");
+    pixeldata.data = bb->data;
+    pixeldata.cb = bb->cb;
+    app.log("here!");
+    unlock(&pixeldata, true);*/
+}
+
+
+BitmapBase::~BitmapBase() {
 	//app.log("~Bitmap %d x %d", _width, _height);
     if (_textureId) {
         check_gl(glDeleteTextures, 1, &_textureId);
     }
 }
 
-// ISerializableKeyed
-void Bitmap::readSelfFromKeyValueMap(const KeyValueMap* map) {
-    _width = map->getInt("w");
-    _height = map->getInt("h");
-    _format = map->getInt("f");
-    //_stride = map->getInt("s");
-    //_data = map->getData("d");
-}
-void Bitmap::writeSelfToKeyValueMap(KeyValueMap* map) {
+// ISerializable
+void BitmapBase::writeSelf(VariantMap* map) {
     map->setInt("w", _width);
     map->setInt("h", _height);
     map->setInt("f", _format);
-    //map->setInt("s", _stride);
-    //map->setData("d", _data);
+   /* PIXELDATA pixeldata;
+    lock(&pixeldata, false);
+    map->setInt("s", pixeldata.stride);
+    ByteBuffer bb;
+    bb.data = (uint8_t*)pixeldata.data;
+    bb.cb = pixeldata.cb;
+    map->setByteBuffer("d", &bb);
+    bb.data = NULL;
+    unlock(&pixeldata, false);*/
 }
 
 
-GLenum Bitmap::getGlFormat() {
+GLenum BitmapBase::getGlFormat() {
     switch (_format) {
         case BITMAPFORMAT_RGBA32: return GL_RGBA;
         case BITMAPFORMAT_BGRA32: return GL_BGRA;
@@ -58,7 +73,7 @@ GLenum Bitmap::getGlFormat() {
     }
     assert(0);
 }
-GLenum Bitmap::getGlInternalFormat() {
+GLenum BitmapBase::getGlInternalFormat() {
     switch (_format) {
         case BITMAPFORMAT_RGBA32: return GL_RGBA;
         case BITMAPFORMAT_BGRA32: return GL_RGBA;
@@ -73,7 +88,7 @@ GLenum Bitmap::getGlInternalFormat() {
     assert(0);
 }
 
-int Bitmap::getGlPixelType() {
+int BitmapBase::getGlPixelType() {
     switch (_format) {
         case BITMAPFORMAT_RGBA32: return GL_UNSIGNED_BYTE;
         case BITMAPFORMAT_BGRA32: return GL_UNSIGNED_BYTE;
@@ -83,11 +98,11 @@ int Bitmap::getGlPixelType() {
     assert(0);
 }
 
-bool Bitmap::hasAlpha() {
+bool BitmapBase::hasAlpha() {
     return _format!=BITMAPFORMAT_RGB565;
 }
 
-int Bitmap::getBytesPerPixel() {
+int BitmapBase::getBytesPerPixel() {
     switch (_format) {
         case BITMAPFORMAT_RGBA32: return 4;
         case BITMAPFORMAT_BGRA32: return 4;
@@ -97,19 +112,19 @@ int Bitmap::getBytesPerPixel() {
     assert(0);
 }
 
-int Bitmap::sizeInBytes() {
+int BitmapBase::sizeInBytes() {
     return _width*_height*getBytesPerPixel();
 }
 
 
 
-uint8_t* Bitmap::pixelAddress(PIXELDATA* pixelData, int x, int y) {
+uint8_t* BitmapBase::pixelAddress(PIXELDATA* pixelData, int x, int y) {
 	return ((uint8_t*)pixelData->data) + y*pixelData->stride + x*getBytesPerPixel();
 }
 
 
 
-void Bitmap::bind() {
+void BitmapBase::bind() {
     if (!_textureId) {
         check_gl(glGenTextures, 1, &_textureId);
     }
@@ -125,10 +140,10 @@ void Bitmap::bind() {
 
 
 
-Bitmap* Bitmap::convertToFormat(int newFormat) {
+Bitmap* BitmapBase::convertToFormat(int newFormat) {
     PIXELDATA pixeldataSrc;
     lock(&pixeldataSrc, false);
-    Bitmap* bitmap = oakBitmapCreate(_width, _height, newFormat);
+    Bitmap* bitmap = new Bitmap(_width, _height, newFormat);
     PIXELDATA pixeldataDst;
     bitmap->lock(&pixeldataDst, true);
     if (newFormat == BITMAPFORMAT_A8) {

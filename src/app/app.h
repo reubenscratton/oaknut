@@ -14,14 +14,19 @@ public:
 
     float dp(float dp);
     float idp(float pix);
-    class Data* loadAsset(const char* assetPath);
+    class ByteBuffer* loadAsset(const char* assetPath);
     long currentMillis(); // millis
     void log(char const* fmt, ...);
     void requestRedraw();
-    string getAppHomeDir();
     void keyboardShow(bool show);
     void keyboardNotifyTextChanged();
 
+    typedef enum {
+        General,
+        UserDocument,
+        Cache
+    } FileType;
+    string getDirectoryForFileType(FileType fileType);
 };
 
 extern App app;

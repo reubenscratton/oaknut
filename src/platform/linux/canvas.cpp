@@ -6,7 +6,7 @@
 //
 #if PLATFORM_LINUX
 
-#include "bitmap.h"
+#include <oaknut.h>
 
 static FT_Library ft_library;
 static cairo_t* cairo_for_measuring;
@@ -27,7 +27,7 @@ public:
         //_pangoFont = pango_font_map_load_font (fm, _pangoContext, pfd);
         if (!ft_library) {
             FT_Init_FreeType(&ft_library);
-            OSBitmap* bmp2 = new OSBitmap(1,1,BITMAPFORMAT_RGBA32); // lives forever
+            Bitmap* bmp2 = new Bitmap(1,1,BITMAPFORMAT_RGBA32); // lives forever
             cairo_for_measuring = bmp2->getCairo();
         }
 
@@ -64,7 +64,7 @@ public:
         glyph->bitmapTop = glyph->bitmapHeight + floorf(cairo_text_extents.y_bearing);
 
         // Get the atlas bitmap context
-        OSBitmap* bitmap = (OSBitmap*)glyph->atlasNode->page->_bitmap._obj;
+        Bitmap* bitmap = (Bitmap*)glyph->atlasNode->page->_bitmap._obj;
         cairo_t* cr = bitmap->getCairo();
         cairo_glyph.x = glyph->atlasNode->rect.origin.x - glyph->bitmapLeft;
         cairo_glyph.y = glyph->atlasNode->rect.origin.y+glyph->atlasNode->rect.size.height-glyph->bitmapTop;
@@ -101,7 +101,7 @@ public:
 
 class LinuxCanvas : public Canvas {
 public:
-    ObjPtr<OSBitmap> _bitmap;
+    ObjPtr<Bitmap> _bitmap;
     //CGSize _size;
     //CGColorRef _fillColor;
     //CGColorRef _strokeColor;
@@ -115,7 +115,7 @@ public:
 
     void resize(int width, int height) {
     //    _size = size;
-    //_bitmap = new OSBitmap(size.width, size.height, BITMAPFORMAT_RGBA32, NULL, 0);
+    //_bitmap = new Bitmap(size.width, size.height, BITMAPFORMAT_RGBA32, NULL, 0);
     }
 
     void clear(COLOUR colour) {

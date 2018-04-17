@@ -29,13 +29,13 @@ public:
     static void OnImageLoad(NativeRequest* req) {
         app.log("OnImageLoad %s", req->_req->_url.data());
         bool isPng = string::npos!=req->_req->_url.find(".png", 0);
-        ObjPtr<OSBitmap> bitmap = new OSBitmap(req->_val, isPng);
+        ObjPtr<Bitmap> bitmap = new Bitmap(req->_val, isPng);
         req->_val = val::null();
         req->_req->dispatchOnLoad(new URLData(bitmap));
     }
     static void OnDone(NativeRequest* req, uint8_t* data, int data_size, int timestamp) {
         //printf("done data_size:%d\n", data_size);
-        ObjPtr<Data> emdata = new Data();
+        ObjPtr<ByteBuffer> emdata = new ByteBuffer();
         emdata->data = (uint8_t*)malloc(data_size);
         memcpy(emdata->data, data, data_size);
         emdata->cb = data_size;

@@ -45,11 +45,11 @@ static int gltypeForFormat(int format) {
 
 
 
-OSBitmap::OSBitmap() : _img(val::null()), _buff(val::null()) {
+Bitmap::Bitmap() : _img(val::null()), _buff(val::null()) {
 }
 
 // Writeable bitmap constructor, creates a 2D pixel array accessible to both javascript and C++
-OSBitmap::OSBitmap(int width, int height, int format) : Bitmap(width, height, format), _img(val::null()), _buff(val::null()) {
+Bitmap::Bitmap(int width, int height, int format) : BitmapBase(width, height, format), _img(val::null()), _buff(val::null()) {
     _pixelData.stride = width*bytesPerPixelForFormat(format);
     _pixelData.cb = _pixelData.stride*height;
     _pixelData.data = malloc(_pixelData.cb);
@@ -57,18 +57,18 @@ OSBitmap::OSBitmap(int width, int height, int format) : Bitmap(width, height, fo
 }
 
 // Read-only bitmap constructor, wraps the Image created by an ImageRequest
-OSBitmap::OSBitmap(val img, bool isPng)  : _img(img), _isPng(isPng), _buff(val::null()) {
+Bitmap::Bitmap(val img, bool isPng)  : _img(img), _isPng(isPng), _buff(val::null()) {
     _width = img["width"].as<int>();
     _height = img["height"].as<int>();
     _format = BITMAPFORMAT_RGBA32;
 }
-OSBitmap::~OSBitmap() {
+Bitmap::~Bitmap() {
     if (_pixelData.data) {
         free(_pixelData.data);
     }
 }
 
-void OSBitmap::lock(PIXELDATA* pixelData, bool forWriting) {
+void Bitmap::lock(PIXELDATA* pixelData, bool forWriting) {
     // If we have an Image then we have to create a Canvas, draw the Image to it, and extract the ImageData.
     if (!_img.isNull()) {
         val canvas = val::global("document").call<val>("createElement", val("canvas"));
@@ -88,7 +88,7 @@ void OSBitmap::lock(PIXELDATA* pixelData, bool forWriting) {
     }
     
     if (!_pixelData.data) {
-        app.log("oo-er, lock() called on bitmap with no data or image");
+        app.log("Warning: lock() called on bitmap with no data or image");
         return;
     }
 
@@ -97,15 +97,15 @@ void OSBitmap::lock(PIXELDATA* pixelData, bool forWriting) {
     pixelData->cb = _pixelData.cb;
 }
 
-void OSBitmap::unlock(PIXELDATA* pixelData, bool pixelsChanged) {
+void Bitmap::unlock(PIXELDATA* pixelData, bool pixelsChanged) {
     // NB: Nothing happens here. Once an image has been lock()d into heap memory
     // there's no real point copying back to Javascript-only memory and then copying all
     // over again on the next lock() call. Better (I think) to just keep the
     // buffer hanging around until the object is freed.
 }
 
-void OSBitmap::bind() {
-    Bitmap::bind();
+void Bitmap::bind() {
+    BitmapBase::bind();
     val gl = val::global("gl");
     int format = _isPng ? GL_RGBA : GL_RGB;
     format = glformatForFormat(_format);
@@ -159,12 +159,20 @@ string base64_encode(const char* input, size_t len) {
     return  string(pp);
 }
 
+// ISerializable
+Bitmap::Bitmap(const VariantMap* map) : BitmapBase(map), _img(val::null()), _buff(val::null())  {
+    app.log("TODO! finish Bitmap serialization");
+}
+void Bitmap::writeSelf(VariantMap* map) {
+    BitmapBase::writeSelf(map);
+    
+    PIXELDATA pixelData;
+    lock(&pixelData, false);
+    app.log("TODO! finish Bitmap serialization");
+}
 
 // Platform-specific
-Bitmap* oakBitmapCreate(int width, int height, int format) {
-    return new OSBitmap(width, height, format);
-}
-static void onImageLoadedFromData(OSBitmap* bitmap) {
+static void onImageLoadedFromData(Bitmap* bitmap) {
     bitmap->_width = bitmap->_img["width"].as<int>();
     bitmap->_height = bitmap->_img["height"].as<int>();
     bitmap->_format = BITMAPFORMAT_RGBA32;
@@ -174,13 +182,13 @@ static void onImageLoadedFromData(OSBitmap* bitmap) {
     }
     bitmap->_tmp(bitmap);
 }
-void oakBitmapCreateFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
+void BitmapBase::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
     string str = base64_encode((const char*)data, cb);
     string sstr = "data:image/png;base64,";
     sstr.append(str);
     //app.log("bitmap is %s", sstr.data());
 
-    OSBitmap* bitmap = new OSBitmap();
+    Bitmap* bitmap = new Bitmap();
     bitmap->_tmp = callback;
     bitmap->_img = val::global("Image").new_();
     val got = val::global("GlobalObjectTracker");

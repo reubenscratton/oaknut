@@ -5,7 +5,7 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#include "../oaknut.h"
+#include <oaknut.h>
 
 static StyleMap s_root;
 
@@ -184,7 +184,7 @@ StyleValue* StyleMap::getValue(const string& keypath) {
 }
 
 void Styles::loadAsset(const string& assetPath) {
-    ObjPtr<Data> data = app.loadAsset(assetPath.data());
+    ObjPtr<ByteBuffer> data = app.loadAsset(assetPath.data());
     if (!data) {
         return;
     }
@@ -385,7 +385,7 @@ static View* inflateFromResource(pair<string, StyleValue*> r, View* parent) {
 }
 
 View* Styles::layoutInflate(const string& assetPath) {
-    ObjPtr<Data> data = app.loadAsset(assetPath.data());
+    ObjPtr<ByteBuffer> data = app.loadAsset(assetPath.data());
     if (!data) {
         return NULL;
     }

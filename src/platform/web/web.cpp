@@ -122,12 +122,12 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-static void onDataXLoad(OnDataLoadCompleteDelegate* delegate, void* val) {
+/*static void onDataXLoad(OnDataLoadCompleteDelegate* delegate, void* val) {
     app.log("onDataLoad! %X", val);
-}
+}*/
 
 
-Data* App::loadAsset(const char* assetPath) {
+ByteBuffer* App::loadAsset(const char* assetPath) {
     
     string str = "/assets/";
     str.append(assetPath);
@@ -137,7 +137,7 @@ Data* App::loadAsset(const char* assetPath) {
         return NULL;
     }
     
-    Data* data = new Data();
+    ByteBuffer* data = new ByteBuffer();
     fseek (asset, 0, SEEK_END);
     data->cb = ftell(asset);
     data->data = (uint8_t*) malloc (sizeof(char)*data->cb);
@@ -160,7 +160,7 @@ void oakLoadAppFile(const char* path, OnDataLoadCompleteDelegate delegate) {
     }, onDataXLoad, &delegate, path);
 }
 
-void oakSaveAppFile(const char* path, Data* data) {
+void oakSaveAppFile(const char* path, ByteBuffer* data) {
     EM_ASM_({
         var subarray = HEAP8.subarray($1, $1+$2);
         subarray = bytesToHex(subarray);
@@ -168,10 +168,6 @@ void oakSaveAppFile(const char* path, Data* data) {
     }, path, data, cb);    
 }*/
 
-
-string App::getAppHomeDir() {
-    return ".";
-}
 
 void App::keyboardShow(bool show) {
     

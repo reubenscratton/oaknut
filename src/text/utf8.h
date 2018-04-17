@@ -12,7 +12,7 @@ public:
     long _cb;
  
     Utf8Iterator(const string& str);
-    Utf8Iterator(const class Data* data);
+    Utf8Iterator(const class ByteBuffer* data);
     bool eof();
 	char32_t next();
 	char32_t peek();

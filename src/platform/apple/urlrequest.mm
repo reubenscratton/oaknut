@@ -30,20 +30,18 @@ void URLRequest::nativeStart() {
             NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
             NSString* contentType = httpResponse.allHeaderFields[@"Content-Type"];
             if ([@"image/jpeg" isEqualToString:contentType]) {
-                oakBitmapCreateFromData(data.bytes, (int)data.length, [&](Bitmap* bitmap) {
+                Bitmap::createFromData(data.bytes, (int)data.length, [&](Bitmap* bitmap) {
                     dispatchResult(this, new URLData(bitmap));
                 });
                 return;
             } else if ([@"image/png" isEqualToString:contentType]) {
-                oakBitmapCreateFromData(data.bytes, (int)data.length, [&](Bitmap* bitmap) {
+                Bitmap::createFromData(data.bytes, (int)data.length, [&](Bitmap* bitmap) {
                     dispatchResult(this, new URLData(bitmap));
                 });
                 return;
             }
             // Get a contiguous copy of the data
-            Data* emdata = new Data();
-            emdata->data = (uint8_t*)malloc(data.length);
-            emdata->cb = data.length;
+            ByteBuffer* emdata = new ByteBuffer(data.length);
             [data enumerateByteRangesUsingBlock:^(const void * _Nonnull bytes, NSRange byteRange, BOOL * _Nonnull stop) {
                 memcpy(emdata->data+byteRange.location, bytes, byteRange.length);
             }];

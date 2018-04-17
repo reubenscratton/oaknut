@@ -7,50 +7,39 @@
 #pragma once
 
 /*
+ Bitmap is a platform type, i.e. apps always instantiate them via one of the
+ Bitmap::createXXX() APIs, never with operator new().
  
- The ideal bitmap is one whose pixel data and texture data are one and the same
- block of RAM. If we want to read or write pixel data we should be able to do
- that without having to copy things around for no damn reason. Unfortunately
- things are seldom that simple.
- 
- For this reason the Bitmap class does not directly own a block of RAM, the
+ The Bitmap class does not directly own a block of RAM for its pixels, the
  storage of pixel data is left to the platform layer. When application or
  Oaknut code needs to access the pixel data it has to lock() and unlock() the
- bitmap.
+ bitmap. This may or may not cause an expensive blit, it's up to the platform.
+ Only access pixel data when you really need to.
  
- On iOS there are two types of Bitmap: there is the CoreGraphics CGBitmapContext
+ Bitmap formats
+ ==============
+ Oaknut bitmaps have three core formats: RGBA32, RGB16, and A8. Apple platform
+ allows a fourth format, BGRA32, in order to avoid needless conversion.
+ 
+ On the web the only format supported is RGBA32 so bitmap data in other formats
+ will be converted.
+ 
+ Platform notes
+ ==============
+ iOS: Two types of Bitmap: there is the CoreGraphics CGBitmapContext
  we all know and love, and then there is CoreVideo's CVImageBufferRef which
  has the amazingly useful property of being usable as texture data, i.e. we can
  directly write texture without having to glTexSubImage2D etc.
  
- On Android there is just ye olde android.graphics.Bitmap which is a pain in
- the arse to work with. Since we don't always need this object the
- Android osbitmap implementation is a proxy object that instantiates
- an android.graphics.Bitmap only when it's actually needed (eg for
- use with a canvas API)
+ Android: Only one type of bitmap, ye olde android.graphics.Bitmap which is
+ generally speaking a pain to work with. Every Bitmap on android always has
+ an associated android.graphics.Bitmap java object.
  
- 
- Relationship to Texture:
- I wonder if Bitmaps and Textures are so tightly interwoven that they shouldn't be
- the same class?
- 
- Sometimes we have bitmaps without textures (e.g. font glyphs and anything loaded
- or created dynamically for insertion into an atlas) and sometimes we have Textures
- without any Bitmap (e.g. camera preview frame textures).
- 
- Bitmap
-  - Size : ALWAYS PRESENT
-  - Format : ALWAYS PRESENT
-  - OSBitmap : ALWAYS PRESENT
-  - GLuint textureTarget : OPTIONAL
-  - GLuint textureId : OPTIONAL
- 
-
  */
 
 /**
  Supported bitmap formats. Bitmaps in other formats must be converted by platform code
- into one of these (see Bitmap::createFromData_()).
+ into one of these (see Bitmap::createXXX()).
 */
 #define BITMAPFORMAT_UNKNOWN 0
 #define BITMAPFORMAT_RGBA32  1
@@ -64,7 +53,13 @@ typedef struct {
     int stride;
 } PIXELDATA;
 
-class Bitmap : public Object, ISerializableKeyed {
+#ifndef GL_BGRA
+#define GL_BGRA 0x80E1
+#endif
+
+
+class Bitmap; // defined in platform layer
+class BitmapBase : public Object, public ISerializable {
 public:
     int _width;
     int _height;
@@ -76,11 +71,11 @@ public:
     bool _paramsValid;
     bool _needsUpload;
 
-    // Constructor is protected, use oakBitmapCreate...() APIs to instantiate
+    BitmapBase(int width, int height, int format);
+    // Constructor is protected, use Bitmap::createXXX() APIs to instantiate
 protected:
-    Bitmap();
-    Bitmap(int width, int height, int format);
-    ~Bitmap();
+    BitmapBase();
+    ~BitmapBase();
 public:
 
     // Accessing pixel data
@@ -100,13 +95,14 @@ public:
     int sizeInBytes();
     Bitmap* convertToFormat(int newFormat);
     
-    // ISerializableKeyed
-    virtual void readSelfFromKeyValueMap(const KeyValueMap* map);
-    virtual void writeSelfToKeyValueMap(KeyValueMap* map);
+    // ISerializable
+    BitmapBase(const VariantMap* map);
+    virtual void writeSelf(VariantMap* map);
+    
+
+    // Platform-specific instantiation
+    static void createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback);
 
 };
 
-// Platform-specific
-Bitmap* oakBitmapCreate(int awidth, int aheight, int format);
-void oakBitmapCreateFromData(const void* data, int cb, std::function<void(Bitmap*)> callback);
 

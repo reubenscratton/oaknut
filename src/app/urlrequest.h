@@ -16,14 +16,14 @@ class URLData : public Object {
 public:
     URLDataType _type;
     union value {
-        Data* data;
+        ByteBuffer* data;
         class JsonValue* json;
         class Bitmap* bitmap;
-        value(Data* data);
+        value(ByteBuffer* data);
         value(JsonValue* json);
         value(Bitmap* bitmap);
     } _value;
-    URLData(Data* data);
+    URLData(ByteBuffer* data);
     URLData(JsonValue* json);
     URLData(Bitmap* bitmap);
     ~URLData();

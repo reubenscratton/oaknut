@@ -40,6 +40,7 @@ public:
         int totalHeight;
     } SECTION_METRICS;
     vector<SECTION_METRICS> _sectionMetrics;
+    View* _headerView;
 	
 	// Public API
     ListView();
@@ -47,10 +48,12 @@ public:
 	virtual void removeAllItemViews();
 	virtual void onItemTap(View* itemView, LISTINDEX index);
     virtual void reload();
+    virtual void setHeaderView(View* headerView);
     
 	// Overrides
 	virtual void measure(float parentWidth, float parentHeight);
 	virtual void updateContentSize(float parentWidth, float parentHeight);
+    virtual void layout();
     virtual void setContentOffset(POINT contentOffset);
 	virtual bool onTouchEvent(int eventType, int finger, POINT pt);
     virtual void removeSubview(View* subview);

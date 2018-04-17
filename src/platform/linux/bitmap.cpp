@@ -20,7 +20,7 @@ static int bytesPerPixelForFormat(int format) {
     return 0;
 }
 
-OSBitmap::OSBitmap(GdkPixbuf* pixbuf) : Bitmap() {
+Bitmap::Bitmap(GdkPixbuf* pixbuf) : Bitmap() {
     //_pixbuf = pixbuf;
     int nc = gdk_pixbuf_get_n_channels(pixbuf);
     int bpc = gdk_pixbuf_get_bits_per_sample(pixbuf);
@@ -33,7 +33,7 @@ OSBitmap::OSBitmap(GdkPixbuf* pixbuf) : Bitmap() {
     _needsUpload = true;
 
 }
-OSBitmap::OSBitmap(int width, int height, int format) : Bitmap(width, height, format) {
+Bitmap::Bitmap(int width, int height, int format) : BitmapBase(width, height, format) {
     cairo_format_t cairo_format;
     switch (format) {
         case BITMAPFORMAT_RGBA32: cairo_format = CAIRO_FORMAT_ARGB32; break;
@@ -45,7 +45,7 @@ OSBitmap::OSBitmap(int width, int height, int format) : Bitmap(width, height, fo
     _needsUpload = true;
 }
 
-OSBitmap::~OSBitmap() {
+Bitmap::~Bitmap() {
     if (_cairo_surface) {
         cairo_surface_destroy(_cairo_surface);
         _cairo_surface = NULL;
@@ -56,7 +56,7 @@ OSBitmap::~OSBitmap() {
     }
 }
 
-void OSBitmap::lock(PIXELDATA* pixelData, bool forWriting) {
+void Bitmap::lock(PIXELDATA* pixelData, bool forWriting) {
     pixelData->data = cairo_image_surface_get_data(_cairo_surface);
     pixelData->stride = cairo_image_surface_get_stride(_cairo_surface);
     pixelData->cb = _height * pixelData->stride;
@@ -65,16 +65,15 @@ void OSBitmap::lock(PIXELDATA* pixelData, bool forWriting) {
 
 
 
-void OSBitmap::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
+void Bitmap::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
     if (pixelDataChanged) {
         _needsUpload = true;
     }
 }
 
-void OSBitmap::bind() {
-
-
-    Bitmap::bind();
+void Bitmap::bind() {
+    
+    BitmapBase::bind();
 
     // If bitmap data changed we may need to update texture data
     if (!_needsUpload) {
@@ -96,26 +95,22 @@ void OSBitmap::bind() {
 
 }
 
-cairo_t* OSBitmap::getCairo() {
+cairo_t* Bitmap::getCairo() {
     if (!_cairo) {
         _cairo = cairo_create(_cairo_surface);
     }
     return _cairo;
 }
 
-Bitmap* oakBitmapCreate(int width, int height, int format) {
-    return new OSBitmap(width, height, format);
-}
-
 static void on_area_prepared(GdkPixbufLoader *loader, gpointer user_data) {
     GdkPixbuf* pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
-    OSBitmap* bitmap = new OSBitmap(pixbuf);
+    Bitmap* bitmap = new Bitmap(pixbuf);
     GError* error = NULL;
     std::function<void(Bitmap*)>* callback = (std::function<void(Bitmap*)>*)user_data;
     (*callback)(bitmap);
     //g_object_unref(loader);
 }
-void oakBitmapCreateFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
+void Bitmap::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
     GError* error = NULL;
     GdkPixbufLoader* loader = gdk_pixbuf_loader_new();
     g_signal_connect(loader, "area_prepared", G_CALLBACK(on_area_prepared), &callback);

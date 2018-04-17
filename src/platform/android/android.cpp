@@ -283,22 +283,14 @@ long App::currentMillis() {
     return l;
 }
 
-string App::getAppHomeDir() {
-    JNIEnv* env = getJNIEnv();
-    jstring result = (jstring)env->CallStaticObjectMethod(jclassApp, jmethodIDAppGetDocsPath);
-    const char* cstr = env->GetStringUTFChars(result, NULL);
-    string str(cstr);
-    env->ReleaseStringUTFChars(result, cstr);
-    return str;
-}
 
-Data* App::loadAsset(const char* assetPath) {
+ByteBuffer* App::loadAsset(const char* assetPath) {
     JNIEnv* env = getJNIEnv();
     jobject jstr = env->NewStringUTF(assetPath);
     jbyteArray result = (jbyteArray)env->CallStaticObjectMethod(jclassApp, jmethodIDAppLoadAsset, jstr);
-    Data* data = NULL;
+    ByteBuffer* data = NULL;
     if (result != NULL) {
-        data = new Data();
+        data = new ByteBuffer();
         data->cb = env->GetArrayLength(result);
         data->data = (uint8_t*)malloc(data->cb);
         env->GetByteArrayRegion(result, 0, data->cb, reinterpret_cast<jbyte*>(data->data));

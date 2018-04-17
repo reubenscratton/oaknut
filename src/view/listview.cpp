@@ -21,6 +21,19 @@ void ListView::setAdapter(IListAdapter* adapter) {
     reload();
 }
 
+void ListView::setHeaderView(View *headerView) {
+    if (_headerView == headerView) {
+        return;
+    }
+    if (_headerView) {
+        removeSubview(_headerView);
+    }
+    _headerView = headerView;
+    if (_headerView) {
+        addSubview(_headerView);
+    }
+    setNeedsLayout();
+}
 void ListView::removeAllItemViews() {
 	while (_itemViews.size() > 0) {
         auto it = _itemViews.begin();
@@ -58,6 +71,10 @@ void ListView::updateContentSize(float parentWidth, float parentHeight) {
 	_contentSize.height = _scrollInsets.top;
     IListAdapter* adapter = _adapter;
     _sectionMetrics.clear();
+    if (_headerView) {
+        _headerView->_alignspecVert = ALIGNSPEC_Make(NULL, 0, 0, _contentSize.height);
+        _contentSize.height += _headerView->_frame.size.height;
+    }
     if (adapter) {
         int numSections = adapter->getSectionCount();
         for (int j=0 ; j<numSections ; j++) {
@@ -77,6 +94,9 @@ void ListView::updateContentSize(float parentWidth, float parentHeight) {
     _contentSize.height += _scrollInsets.bottom;
 }
 
+void ListView::layout() {
+    View::layout();
+}
 
 View* ListView::indexToView(LISTINDEX index) {
     for (auto it=_itemViews.begin() ; it != _itemViews.end() ; it++) {

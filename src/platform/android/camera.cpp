@@ -169,7 +169,7 @@ public:
         check_gl(glUseProgram, oldProg);
 
 
-        ObjPtr<Bitmap> bitmap = new OSBitmap(texId2);
+        ObjPtr<Bitmap> bitmap = new Bitmap(texId2);
         bitmap->_width = width;
         bitmap->_height = height;
 

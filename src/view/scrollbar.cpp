@@ -5,7 +5,7 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#include "../oaknut.h"
+#include <oaknut.h>
 
 static const int DEFAULT_DURATION = 250;
 static const int SCROLL_MODE = 0;

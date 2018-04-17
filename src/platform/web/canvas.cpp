@@ -6,7 +6,7 @@
 //
 #if PLATFORM_WEB
 
-#include "bitmap.h"
+#include <oaknut.h>
 
 extern string base64_encode(const char* input, size_t len);
 
@@ -28,7 +28,7 @@ public:
             if (it != s_customFonts.end()) {
                 fontFamily = it->second;
             } else {
-                Data* fontData = app.loadAsset(fontAssetPath.data());
+                ByteBuffer* fontData = app.loadAsset(fontAssetPath.data());
                 fontFamily = fontAssetPath;
                 while (stringExtractUpTo(fontFamily, "/", true).length() > 0) {}
                 stringEndsWith(fontFamily, ".ttf", true);
@@ -74,7 +74,7 @@ public:
  
         glyph->atlasNode = atlas->reserve(glyph->bitmapWidth, glyph->bitmapHeight, 1);
         POINT pt = glyph->atlasNode->rect.origin;
-        OSBitmap* bitmap = (OSBitmap*)glyph->atlasNode->page->_bitmap._obj;
+        Bitmap* bitmap = (Bitmap*)glyph->atlasNode->page->_bitmap._obj;
 
         EM_ASM_({
             var ctxt = GlobalObjectTracker[7];
@@ -167,7 +167,7 @@ public:
     vector<PathElement*> _pathElements;
 };
 
-class WebCanvas : public Canvas, public OSBitmap {
+class WebCanvas : public Canvas, public Bitmap {
 public:
     val _canvas;
     val _ctxt;
@@ -276,6 +276,12 @@ public:
         _ctxt.call<void>("stroke");
         _ctxt.call<void>("restore");
         _hasChanged = true;
+    }
+
+    virtual void drawBitmap(Bitmap* bitmap, const RECT& rectSrc, const RECT& rectDst) {
+        _ctxt.call<void>("drawImage", bitmap->_img,
+                         val(rectSrc.origin.x), val(rectSrc.origin.y), val(rectSrc.size.width), val(rectSrc.size.height),
+                         val(rectDst.origin.x), val(rectDst.origin.y), val(rectDst.size.width), val(rectDst.size.height));
     }
 
     Path* createPath() {
