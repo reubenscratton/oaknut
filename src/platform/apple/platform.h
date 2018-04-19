@@ -1,20 +1,30 @@
 #include <TargetConditionals.h>
 #if __OBJC__
-#include <CoreFoundation/CoreFoundation.h>
+ #include <CoreFoundation/CoreFoundation.h>
+ #include <Foundation/Foundation.h>
+ #include <QuartzCore/QuartzCore.h>
+ #if TARGET_OS_IOS
+  #include <UIKit/UIKit.h>
+ #else
+  #include <AppKit/AppKit.h>
+ #endif
 #endif
+#include <CoreText/CoreText.h>
+#include <CoreGraphics/CoreGraphics.h>
+#include <CoreVideo/CoreVideo.h>
 #if TARGET_OS_IOS
-#include <OpenGLES/gltypes.h>
+ #include <OpenGLES/gltypes.h>
  #include <OpenGLES/ES3/gl.h>
-  #include <OpenGLES/ES3/glext.h>
-  #if __OBJC__
+ #include <OpenGLES/ES3/glext.h>
+ #if __OBJC__
   #include <OpenGLES/EAGL.h>
-  #endif
+ #endif
 #else
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#include <OpenGL/glext.h>
-#define glGenVertexArrays glGenVertexArraysAPPLE
-#define glBindVertexArray glBindVertexArrayAPPLE
+ #include <OpenGL/gl.h>
+ #include <OpenGL/glu.h>
+ #include <OpenGL/glext.h>
+ #define glGenVertexArrays glGenVertexArraysAPPLE
+ #define glBindVertexArray glBindVertexArrayAPPLE
 #endif
 #include <objc/runtime.h>
 #include <objc/message.h>

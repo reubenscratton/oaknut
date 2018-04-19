@@ -7,7 +7,7 @@
 
 #if PLATFORM_ANDROID
 
-#include "bitmap.h"
+#include <oaknut.h>
 
 struct android_app {
     AConfiguration* config;

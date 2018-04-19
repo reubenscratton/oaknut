@@ -8,7 +8,7 @@
 
 #if OAKNUT_WANT_AUDIOINPUT
 
-#include "android.h"
+#include <oaknut.h>
 
 static jclass jclassAudioInput;
 static jmethodID jmidConstructor;

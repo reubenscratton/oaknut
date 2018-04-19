@@ -84,7 +84,7 @@ Font* Styles::getFont(const string &key) {
     if (it != s_loadedFonts.end()) {
         return it->second;
     }
-    Font* font = oakFontGet(fontName, fontSize);
+    Font* font = new Font(fontName, fontSize);
     s_loadedFonts[fkey] = font;
     return font;
 }

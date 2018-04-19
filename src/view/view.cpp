@@ -711,6 +711,9 @@ void View::removeSubview(View* subview) {
 	}
 }
 void View::removeFromParent() {
+    if (!_surface) {
+        assert(!_surface->_renderInProgress); // naughty!
+    }
 	if (_parent) {
 		_parent->removeSubview(this);
 	}

@@ -5,9 +5,6 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#include <CoreGraphics/CoreGraphics.h>
-#include <CoreVideo/CoreVideo.h>
-
 #if TARGET_OS_IOS
 #define GLGetCurrentContext() [EAGLContext currentContext]
 #else

@@ -6,9 +6,7 @@
 //
 #if PLATFORM_APPLE
 
-#import <Foundation/Foundation.h>
-#import <QuartzCore/QuartzCore.h>
-#import "oaknut.h"
+#import <oaknut.h>
 
 
 long App::currentMillis() {
@@ -24,8 +22,10 @@ string App::getDirectoryForFileType(FileType fileType) {
         default: return ".";
     }
     // TODO: Create a 'appname' subdirectory for app support and cache options rather than blart all over the root dir
-    NSURL* url = [[[NSFileManager defaultManager] URLsForDirectory:spd inDomains:NSUserDomainMask] lastObject];
-    return string(url.fileSystemRepresentation);
+    NSURL* url = [[[NSFileManager defaultManager] URLsForDirectory:spd inDomains:NSUserDomainMask] lastObject];\
+    string str = url.fileSystemRepresentation;
+    [[NSFileManager defaultManager] createDirectoryAtPath:[NSString stringWithCString:str.data() encoding:NSUTF8StringEncoding] withIntermediateDirectories:YES attributes:nil error:nil];
+    return str;
 }
 
 

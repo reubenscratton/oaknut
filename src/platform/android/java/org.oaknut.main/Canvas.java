@@ -23,11 +23,15 @@ public class Canvas {
     int fillColour;
     int strokeColour;
     float strokeWidth;
+    Rect rectSrc;
+    Rect rectDst;
 
     public Canvas() {
         canvas = new android.graphics.Canvas();
         paint = new Paint();
         rect = new Rect();
+        rectSrc = new Rect();
+        rectDst = new Rect();
 
         paint.setStrokeCap(Paint.Cap.ROUND);
         paint.setStrokeJoin(Paint.Join.ROUND);
@@ -122,6 +126,17 @@ public class Canvas {
             paint.setStyle(Paint.Style.STROKE);
             canvas.drawPath(path, paint);
         }
+    }
+    public void drawBitmap(Bitmap bitmap, float sx, float sy, float sw, float sh, float dx, float dy, float dw, float dh) {
+        rectSrc.left = (int)sx;
+        rectSrc.top = (int)sy;
+        rectSrc.right = (int)(sx+sw);
+        rectSrc.bottom = (int)(sy+sh);
+        rectDst.left = (int)dx;
+        rectDst.top = (int)dy;
+        rectDst.right = (int)(dx+dw);
+        rectDst.bottom = (int)(dy+dh);
+        canvas.drawBitmap(bitmap, rectSrc, rectDst, paint);
     }
 
     public Bitmap getBitmap() {

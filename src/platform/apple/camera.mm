@@ -6,7 +6,7 @@
 //
 #if PLATFORM_APPLE && OAKNUT_WANT_CAMERA
 
-#include "bitmap.h"
+#include <oaknut.h>
 #import <AVFoundation/AVFoundation.h>
 #import <CoreImage/CoreImage.h>
 

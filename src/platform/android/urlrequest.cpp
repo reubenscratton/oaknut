@@ -6,7 +6,7 @@
 //
 #ifdef PLATFORM_ANDROID
 
-#include "bitmap.h"
+#include <oaknut.h>
 
 static jclass s_jclass;
 static jmethodID s_jmidConstructor;

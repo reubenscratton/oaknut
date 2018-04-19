@@ -54,18 +54,22 @@ using namespace std;
 
 // Platform headers
 #ifdef PLATFORM_WEB
-#include <platform/web/platform.h>
+#define PLATFORM web
 #endif
 #ifdef PLATFORM_ANDROID
-#include <platform/android/platform.h>
+#define PLATFORM android
 #endif
 #ifdef PLATFORM_APPLE
-#include <platform/apple/platform.h>
+#define PLATFORM apple
 #endif
 #ifdef PLATFORM_LINUX
-#include <platform/linux/platform.h>
+#define PLATFORM linux
 #endif
+#define __xincstr(x) #x
+#define __incstr(x) __xincstr(x)
 
+// Include platform headers
+#include __incstr(platform/PLATFORM/platform.h)
 
 // Oaknut types (The order here matters!)
 #include "base/object.h"
@@ -150,18 +154,8 @@ void oakFaceDetectorClose(void* osobj);
 #include "view/canvasview.h"
 
 // Platform-specific types
-#ifdef PLATFORM_WEB
-#include <platform/web/bitmap.h>
-#endif
-#ifdef PLATFORM_ANDROID
-#include <platform/android/bitmap.h>
-#endif
-#ifdef PLATFORM_APPLE
-#include <platform/apple/bitmap.h>
-#endif
-#ifdef PLATFORM_LINUX
-#include <platform/linux/bitmap.h>
-#endif
+#include __incstr(platform/PLATFORM/bitmap.h)
+#include __incstr(platform/PLATFORM/font.h)
 
 
 #endif 

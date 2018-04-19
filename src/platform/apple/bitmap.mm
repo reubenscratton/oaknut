@@ -66,6 +66,7 @@ Bitmap::Bitmap(int width, int height, int format, void* pixels, int stride) : Bi
         stride = width*bytesPerPixelForFormat(format);
     }
     CGColorSpaceRef colorspace = (format==BITMAPFORMAT_A8) ? CGColorSpaceCreateDeviceGray() : CGColorSpaceCreateDeviceRGB();
+    
     _context = CGBitmapContextCreate(pixels, width, height, 8, stride, colorspace, bitmapInfoForFormat(format));
     // Flip Y. CoreGraphics bitmaps have origin at lower left but Oaknut coords are top left.
     CGContextScaleCTM(_context, 1, -1);
@@ -369,6 +370,9 @@ Bitmap::Bitmap(const VariantMap* map) : BitmapBase(map) {
     ObjPtr<ByteBuffer> bb = map->getByteBuffer("bb");
     CGColorSpaceRef colorspace = (_format==BITMAPFORMAT_A8) ? CGColorSpaceCreateDeviceGray() : CGColorSpaceCreateDeviceRGB();
     _context = CGBitmapContextCreateWithData(bb->data, _width, _height, 8, stride, colorspace, bitmapInfoForFormat(_format), nil, nil);
+    // Flip Y. CoreGraphics bitmaps have origin at lower left but Oaknut coords are top left.
+    CGContextScaleCTM(_context, 1, -1);
+    CGContextTranslateCTM(_context, 0, -_height);
     assert(_context);
 }
 void Bitmap::writeSelf(VariantMap* map) {

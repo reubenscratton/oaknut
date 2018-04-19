@@ -6,7 +6,7 @@
 //
 #if PLATFORM_ANDROID
 
-#include "bitmap.h"
+#include <oaknut.h>
 
 
 static jclass jclassCanvas;
@@ -22,6 +22,7 @@ static jmethodID jmidClearTransform;
 static jmethodID jmidDrawRect;
 static jmethodID jmidDrawOval;
 static jmethodID jmidDrawPath;
+static jmethodID jmidDrawBitmap;
 //static jmethodID jmidCommitChanges;
 
 static jclass jclassPath;
@@ -29,73 +30,6 @@ static jmethodID jmidPathConstructor;
 static jmethodID jmidPathMoveTo;
 static jmethodID jmidPathLineTo;
 static jmethodID jmidPathCubicTo;
-
-class AndroidFont : public Font {
-public:
-    jobject _obj;
-
-    static jclass s_jclass;
-    static jmethodID s_jmidConstructor;
-    static jmethodID s_jmidCreateGlyph;
-    static jmethodID s_jmidDrawGlyph;
-
-    AndroidFont(const string& fontAssetPath, float size) : Font(fontAssetPath, size) {
-        JNIEnv *env = getJNIEnv();
-        if (!s_jclass) {
-            s_jclass = env->FindClass(PACKAGE "/Font");
-            s_jclass = (jclass) env->NewGlobalRef(s_jclass);
-            s_jmidConstructor = env->GetMethodID(s_jclass, "<init>", "(JLjava/lang/String;F)V");
-            s_jmidCreateGlyph = env->GetMethodID(s_jclass, "createGlyph", "(JI)J");
-            s_jmidDrawGlyph = env->GetMethodID(s_jclass, "drawGlyph", "(ILandroid/graphics/Bitmap;FF)V");
-        }
-        jstring strAssetPath = env->NewStringUTF(fontAssetPath.data());
-        _obj = env->NewObject(s_jclass, s_jmidConstructor, (jlong)this, strAssetPath, size);
-        _obj = env->NewGlobalRef(_obj);
-    }
-
-    Glyph* createGlyph(char32_t ch, Atlas* atlas) {
-        JNIEnv *env = getJNIEnv();
-        Glyph* glyph = (Glyph*)env->CallLongMethod(_obj, s_jmidCreateGlyph, (jlong)atlas, (jint)ch);
-        if (glyph) {
-            glyph->charCode = ch;
-            POINT pt = glyph->atlasNode->rect.origin;
-            Bitmap* bitmap = (Bitmap*)glyph->atlasNode->page->_bitmap._obj;
-            env->CallVoidMethod(_obj, s_jmidDrawGlyph, (jint)ch, bitmap->_androidBitmap, pt.x-glyph->bitmapLeft, pt.y+glyph->bitmapHeight+glyph->bitmapTop);
-            bitmap->_needsUpload = true;
-        }
-        return glyph;
-    }
-};
-
-jclass AndroidFont::s_jclass;
-jmethodID AndroidFont::s_jmidConstructor;
-jmethodID AndroidFont::s_jmidCreateGlyph;
-jmethodID AndroidFont::s_jmidDrawGlyph;
-
-Font* oakFontGet(const string& fontAssetPath, float size) {
-    return new AndroidFont(fontAssetPath, size);
-}
-
-JAVA_FN(void, Font, nativeSetMetrics)(JNIEnv *env, jobject jfont, jlong cobj, jfloat ascent, jfloat descent, jfloat leading) {
-    AndroidFont* font = (AndroidFont*)cobj;
-    font->_ascent = ascent;
-    font->_descent = descent;
-    font->_leading = leading;
-    font->_height = (ascent-descent) + leading;
-}
-
-JAVA_FN(jlong, Font, nativeCreateGlyph)(JNIEnv *env, jobject jfont, jlong cfont, jlong cAtlas, jint charcode, jint left, jint descent, jint width, jint height, jfloat advance) {
-    Font* font = (Font*)cfont;
-    Glyph *glyph = new Glyph(font, charcode, 0);
-    glyph->advance.width = advance;
-    glyph->bitmapLeft = left;
-    glyph->bitmapTop = descent;
-    glyph->bitmapWidth = width;
-    glyph->bitmapHeight = height;
-    Atlas* atlas = (Atlas*)cAtlas;
-    glyph->atlasNode = atlas->reserve(glyph->bitmapWidth, glyph->bitmapHeight, 1);
-    return (jlong)glyph;
-}
 
 class AndroidPath : public Path {
 public:
@@ -183,6 +117,10 @@ public:
         getJNIEnv()->CallVoidMethod(_canvas, jmidDrawPath, androidPath->_path);
         _bitmap->_needsUpload = true;
     }
+    virtual void drawBitmap(Bitmap* bitmap, const RECT& rectSrc, const RECT& rectDst) {
+        getJNIEnv()->CallVoidMethod(_canvas, jmidDrawBitmap, bitmap->_androidBitmap);
+        _bitmap->_needsUpload = true;
+    }
     Bitmap* getBitmap() {
         return _bitmap;
     }
@@ -214,6 +152,7 @@ Canvas* Canvas::create() {
     jmidDrawRect = env->GetMethodID(jclassCanvas, "drawRect", "(FFFF)V");
     jmidDrawOval = env->GetMethodID(jclassCanvas, "drawOval", "(FFFF)V");
     jmidDrawPath = env->GetMethodID(jclassCanvas, "drawPath", "(Landroid/graphics/Path;)V");
+    jmidDrawBitmap = env->GetMethodID(jclassCanvas, "drawBitmap", "(Landroid/graphics/Bitmap;FFFFFFFF)V");
     //jmidCommitChanges = env->GetMethodID(jclassCanvas, "commitChanges", "()V");
 
     jmidPathConstructor = env->GetMethodID(jclassPath, "<init>", "()V");

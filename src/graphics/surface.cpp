@@ -30,13 +30,14 @@ Surface::Surface(View* owningView) : Surface() {
 
     _supportsPartialRedraw = true;
 
-#if TARGET_OS_OSX
-    _pixelFormat = GL_RGBA;
-    _pixelType = GL_UNSIGNED_BYTE;
-#else
+#ifndef PLATFORM_MACOS
     check_gl(glGetIntegerv, GL_IMPLEMENTATION_COLOR_READ_TYPE, &_pixelType);
     check_gl(glGetIntegerv, GL_IMPLEMENTATION_COLOR_READ_FORMAT, &_pixelFormat);
 #endif
+    if(_pixelFormat == 0) {
+        _pixelFormat = GL_RGBA;
+        _pixelType = GL_UNSIGNED_BYTE;
+    }
     check_gl(glGenTextures, 1, &_tex);
     check_gl(glGenFramebuffers, 1, &_fb);
 }
@@ -56,10 +57,13 @@ void Surface::setupPrivateFbo() {
     check_gl(glBindTexture, GL_TEXTURE_2D, oldTex);
     
     check_gl(glBindFramebuffer, GL_FRAMEBUFFER, _fb);
+    app.log("pf=%d fb=%d tex=%d", pixelFormat, _fb, _tex);
     check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _tex, 0);
     check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
     check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
-    assert(GL_FRAMEBUFFER_COMPLETE == glCheckFramebufferStatus(GL_FRAMEBUFFER));
+    GLenum x = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    app.log("x2=%X", x);
+    assert(x==GL_FRAMEBUFFER_COMPLETE);
     check_gl(glBindFramebuffer, GL_FRAMEBUFFER, oldFBO);
 }
 
@@ -351,6 +355,8 @@ static void renderPhase2(Surface* surface, View* view, Window* window) {
 
 void Surface::render(View* view, Window* window) {
 
+    _renderInProgress = true;
+    
     _mvpNum = 0;
     
     /** PHASE 1: ENSURE ALL RENDER LISTS ARE VALID **/
@@ -360,6 +366,8 @@ void Surface::render(View* view, Window* window) {
     renderPhase2(NULL, view, window);
     
     //app.log("batch count:%d", _listBatches.size());
+
+    _renderInProgress = false;
 }
 
 

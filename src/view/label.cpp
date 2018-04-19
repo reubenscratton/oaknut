@@ -40,7 +40,7 @@ DECLARE_DYNCREATE(Label);
 
 
 Label::Label() : View() {
-    _textRenderer.setDefaultFont(oakFontGet(Styles::defaultFontName(), Styles::defaultFontSize()));
+    _textRenderer.setDefaultFont(new Font(Styles::defaultFontName(), Styles::defaultFontSize()));
     _textRenderer.setDefaultColour(0xFF000000);
     _textRenderer.setGravity(_gravity);
 }
@@ -50,11 +50,11 @@ Label::~Label() {
 
 bool Label::applyStyleValue(const string& name, StyleValue* value) {
     if (name=="font-name") {
-        setFont(oakFontGet(value->str, _textRenderer.getDefaultFont()->_size));
+        setFont(new Font(value->str, _textRenderer.getDefaultFont()->_size));
         return true;
     }
     if (name=="font-size") {
-        setFont(oakFontGet(_textRenderer.getDefaultFont()->_name, value->getAsFloat()));
+        setFont(new Font(_textRenderer.getDefaultFont()->_name, value->getAsFloat()));
         return true;
     }
     if (name=="forecolour") {
@@ -215,7 +215,7 @@ void Label::setStyle(string styleName) {
     string fontName = Styles::getString(styleName + ".font-name");
     float fontSize = Styles::getFloat(styleName + ".font-size");
     if (fontName.size() && fontSize) {
-        setFont(oakFontGet(fontName, fontSize));
+        setFont(new Font(fontName, fontSize));
     }
     COLOUR textColour = Styles::getColour(styleName + ".forecolour");
     if (textColour) {

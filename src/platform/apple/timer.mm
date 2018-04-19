@@ -6,9 +6,7 @@
 //
 #if PLATFORM_APPLE
 
-#import <Foundation/Foundation.h>
-#import <QuartzCore/QuartzCore.h>
-#import "oaknut.h"
+#import <oaknut.h>
 
 
 @interface TimerTarget : NSObject

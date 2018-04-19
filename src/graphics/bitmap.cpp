@@ -19,18 +19,11 @@ BitmapBase::BitmapBase(int awidth, int aheight, int format) : BitmapBase() {
     _format = format;
 }
 
-BitmapBase::BitmapBase(const VariantMap* map) {
+BitmapBase::BitmapBase(const VariantMap* map) : BitmapBase() {
     _width = map->getInt("w");
     _height = map->getInt("h");
     _format = map->getInt("f");
-    /*PIXELDATA pixeldata;
-    lock(&pixeldata, true);
-    pixeldata.stride = map->getInt("s");
-    ObjPtr<ByteBuffer> bb = map->getByteBuffer("d");
-    pixeldata.data = bb->data;
-    pixeldata.cb = bb->cb;
-    app.log("here!");
-    unlock(&pixeldata, true);*/
+    _needsUpload = true;
 }
 
 

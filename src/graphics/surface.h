@@ -30,6 +30,7 @@ public:
     bool _supportsPartialRedraw;
     ObjPtr<PrivateSurfaceRenderOp> _op;
     int _mvpNum;
+    bool _renderInProgress;
     
     Surface();
     Surface(View* owningView);

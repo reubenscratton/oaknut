@@ -6,7 +6,8 @@
 //
 #if PLATFORM_ANDROID && OAKNUT_WANT_CAMERA
 
-#include "bitmap.h"
+#include <oaknut.h>
+
 
 static jclass jclassCamera;
 static jmethodID jmidConstructor;

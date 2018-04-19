@@ -5,7 +5,8 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-class Font : public Object {
+class Font;
+class FontBase : public Object {
 public:
     string _name;
     float _size;
@@ -15,18 +16,18 @@ public:
     float _descent;
     float _leading;
 
+    // Gets a font at a particular size. If asset path is zero-length then the system font is used. If size
+    // is zero then 12 is the default.
+    FontBase(const string& name, float size);
+    ~FontBase();
+
 protected:
-    Font(const string& name, float size); // don't try to use this, use oakFontCreate...()
-    ~Font();
     virtual Glyph* createGlyph(char32_t ch, Atlas* atlas) = 0;
     
 public:
     Glyph* getGlyph(char32_t ch);
 };
 
-// Gets a font at a particular size. If asset path is zero-length then the system font is used. If size
-// is zero then 12 is the default.
-Font* oakFontGet(const string& fontAssetPath, float size);
 
 
 class Glyph : public Object {

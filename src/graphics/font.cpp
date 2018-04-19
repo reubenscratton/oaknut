@@ -9,12 +9,12 @@
 
 
 
-Font::Font(const string& name, float size) {
+FontBase::FontBase(const string& name, float size) {
     _name = name;
 	_size = size;
 }
 
-Font::~Font() {
+FontBase::~FontBase() {
 }
 
 
@@ -24,7 +24,7 @@ static ObjPtr<Atlas> atlas;
 static bool s_inited;
 
 
-Glyph* Font::getGlyph(char32_t ch) {
+Glyph* FontBase::getGlyph(char32_t ch) {
     if (!s_inited) {
         s_inited = true;
 #ifdef PLATFORM_LINUX
