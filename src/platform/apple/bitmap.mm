@@ -39,7 +39,7 @@ static CVOpenGLESTextureCacheRef getTextureCache(bool camera) {
 static CGBitmapInfo bitmapInfoForFormat(int format) {
     switch (format) {
         case BITMAPFORMAT_RGBA32: return kCGImageAlphaPremultipliedLast;
-        case BITMAPFORMAT_BGRA32: return kCGImageAlphaPremultipliedLast;
+        case BITMAPFORMAT_BGRA32: return kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst;
         case BITMAPFORMAT_RGB565: return kCGImageAlphaNone;
         case BITMAPFORMAT_A8: return kCGImageAlphaOnly;
         default: assert(0);

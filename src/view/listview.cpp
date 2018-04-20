@@ -243,6 +243,9 @@ void ListView::updateVisibleItems() {
     if (_itemViews.size() == 0) {
         float bottom = _contentOffset.y + _frame.size.height;
         float y = _scrollInsets.top;
+        if (_headerView) {
+            y += _headerView->_frame.size.height;
+        }
         for (int s=0 ; s<sectionCount && !item.second ; s++) {
             for (int i=0 ; i<_adapter->getItemCount(s) ; i++) {
                 LISTINDEX index = LISTINDEX_MAKE(s,i);
