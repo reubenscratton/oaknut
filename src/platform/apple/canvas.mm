@@ -148,19 +148,25 @@ public:
         CGRect cgrectDst = CGRectMake(rectDst.origin.x,rectDst.origin.y,rectDst.size.width,rectDst.size.height);
         CGImageRef image = CGBitmapContextCreateImage(bitmap->_context);
         
+        // Transform source origin from Oaknut coords (top-left origin) to core graphics (bot-left origin)
+        cgrectSrc.origin.y = cgrectBmp.size.height - (cgrectSrc.origin.y+cgrectSrc.size.height);
+        
         // If we're only drawing a part of the source image then we need to transform the destination rect
         // to be as if we were drawing the whole source image and then clip to the bit we want
         if (!CGRectEqualToRect(cgrectBmp, cgrectSrc)) {
+            // Get the transform that maps source rect to destination rect
             CGFloat sx = cgrectDst.size.width / rectSrc.size.width;
             CGFloat sy = cgrectDst.size.height / rectSrc.size.height;
             CGFloat tx = -cgrectSrc.origin.x * sx;
             CGFloat ty = -cgrectSrc.origin.y * sy;
             CGAffineTransform t = CGAffineTransformMake(sx, 0, 0, sy, tx, ty);
+            // Apply the transform to the whole source image to get the virtual destination rect
             cgrectDst = CGRectApplyAffineTransform(cgrectBmp, t);
+            // todo: clip
         }
         
         // CGContextDrawImage seems to ignore the Y-inversion on the source context, so we have to
-        // undo the canvas bitmap context's Y-inversion to avoid drawing upside-down.
+        // undo the destination context's Y-inversion to avoid drawing upside-down.
         CGContextScaleCTM(_bitmap->_context, 1, -1);
         CGContextTranslateCTM(_bitmap->_context, 0, -_bitmap->_height);
         CGContextDrawImage(_bitmap->_context, cgrectDst, image);
