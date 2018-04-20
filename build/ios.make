@@ -1,10 +1,11 @@
 # This makefile is expected to be include'd by PROJECT_ROOT/proj/Makefile
 # It should not be run directly.
 
-CFLAGS+= -DPLATFORM_IOS=1
-FRAMEWORKS+= UIKit CoreGraphics OpenGLES
 
 include $(OAKNUT_DIR)/build/apple.make
+
+CFLAGS+= -DPLATFORM_IOS=1
+FRAMEWORKS+= UIKit CoreGraphics OpenGLES
 
 
 CFLAGS_COMMON := \

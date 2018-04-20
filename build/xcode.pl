@@ -10,7 +10,7 @@
 #   1. Set the executable to be /usr/bin/perl and untick the 'Debug executable' box.
 #   2. Add this single launch argument:
 #
-#         $(EMSCRIPTEN_ROOT)/emrun.py $(SRCROOT)/build/web/debug/webroot/xx.html
+#         $(EMSCRIPTEN_ROOT)/emrun.py $(SRCROOT)/.build/web/debug/webroot/xx.html
 #
 # Now you should be able to run your app in your web browser directly from Xcode.
 #
@@ -29,8 +29,12 @@ use Getopt::Long;
 
 my $projectname="app";
 my @frameworks=();
+my @frameworks_macos=();
+my @frameworks_ios=();
 GetOptions ("projectname=s" => \$projectname,
-			"framework=s" => \@frameworks);
+			"framework=s" => \@frameworks,
+            "framework_macos=s" => \@frameworks_macos,
+            "framework_ios=s" => \@frameworks_ios);
 
 my $ref_prefix=sprintf("%08X%08X", int(rand(0xFFFFFFFF)), int(rand(0xFFFFFFFF)));
 my $current_ref=1;
@@ -55,20 +59,30 @@ my $sources_decls="";
 my $assets_fileref=genref();
 my $frameworksRefGroup=genref();
 my $productRefGroup=genref();
-my $frameworks_refs="";
-my $frameworks_buildrefs="";
+#my $frameworks_refs="";
+#my $frameworks_buildrefs="";
 my $product_refs="";
 
 
 $fileref_decls.="$assets_fileref /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = \"<group>\"; };\n";
-foreach my $framework (@frameworks) {
-	my $ref=genref();
-	$fileref_decls.="$ref /* $framework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = $framework.framework; path = System/Library/Frameworks/$framework.framework; sourceTree = SDKROOT; };\n";
-	$frameworks_refs.="$ref,\n";
-	my $buildref=genref();
-	$buildfile_decls .= "$buildref /* $framework.framework */ = {isa = PBXBuildFile; fileRef = $ref /* $framework.framework */; };\n";
-	$frameworks_buildrefs.="$buildref,\n";
+
+sub gen_framework_decls {
+	my $refs="";
+	my $buildrefs="";
+	foreach my $framework (@_) {
+		my $ref=genref();
+		$fileref_decls.="$ref /* $framework.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = $framework.framework; path = System/Library/Frameworks/$framework.framework; sourceTree = SDKROOT; };\n";
+		$refs.="$ref,\n";
+		my $buildref=genref();
+		$buildfile_decls .= "$buildref /* $framework.framework */ = {isa = PBXBuildFile; fileRef = $ref /* $framework.framework */; };\n";
+		$buildrefs.="$buildref,\n";
+	}
+	return ($refs, $buildrefs)
 }
+
+my ($frameworks_refs, $frameworks_buildrefs)=gen_framework_decls(@frameworks);
+my ($frameworks_refs_macos, $frameworks_buildrefs_macos)=gen_framework_decls(@frameworks_macos);
+my ($frameworks_refs_ios, $frameworks_buildrefs_ios)=gen_framework_decls(@frameworks_ios);
 
 
 sub filetype {
@@ -139,7 +153,7 @@ sub add_source_group {
 
 
 sub gen_target {
-	my ($target_name, $info_plist_path, $build_settings)=@_;
+	my ($target_name, $info_plist_path, $frameworks_buildrefs_extra, $build_settings)=@_;
 	my $target_ref = genref();
 	my $bcl_native_ref=genref();
 	my $bc_native_debug_ref=genref();
@@ -162,7 +176,9 @@ sub gen_target {
 	my $i2 = index($info, "<string>", $i1) + 8;
 	my $i3 = index($info, "</string>", $i2);
 	my $bundle_id = substr($info, $i2, $i3-$i2);
-	if ($bundle_id eq "\${PRODUCT_BUNDLE_IDENTIFIER}") { die "CFBundleIdentifier is set to PRODUCT_BUNDLE_IDENTIFIER, indicating that it was set in XCode. In Oaknut bundle IDs must be specified in Info.plist files rather than referencing the transient .pbxproj file"; }
+	if ($bundle_id eq "\${PRODUCT_BUNDLE_IDENTIFIER}") {
+		die "CFBundleIdentifier is set to PRODUCT_BUNDLE_IDENTIFIER, indicating that it was set in XCode. In Oaknut bundle IDs must be specified in Info.plist files rather than referencing the transient .pbxproj file";
+	}
 
 	$build_settings="{\n".$build_settings."\n"
 				   ."INFOPLIST_FILE = $info_plist_path;\n"
@@ -219,6 +235,7 @@ sub gen_target {
 		buildActionMask = 2147483647;
 		files = (
 			$frameworks_buildrefs
+			$frameworks_buildrefs_extra
 		);
 		runOnlyForDeploymentPostprocessing = 0;
 	};
@@ -286,7 +303,7 @@ my $common_project_build_settings=qq(
 );
 
 my ($macos_target_ref, $macos_target_decls)=gen_target("macOS",
- 		"platform/macos/Info.plist", qq(
+ 		"platform/macos/Info.plist", $frameworks_buildrefs_macos, qq(
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -298,7 +315,7 @@ my ($macos_target_ref, $macos_target_decls)=gen_target("macOS",
 				));
 
 my ($ios_target_ref, $ios_target_decls)=gen_target("iOS",
- 		"platform/ios/Info.plist", qq(
+ 		"platform/ios/Info.plist", $frameworks_buildrefs_ios, qq(
 				CODE_SIGN_STYLE = Automatic;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"\$(inherited)",
@@ -411,6 +428,8 @@ objects = {
 		isa = PBXGroup;
 		children = (
 			$frameworks_refs
+			$frameworks_refs_macos
+			$frameworks_refs_ios
 		);
 		name = Frameworks;
 		sourceTree = "<group>";

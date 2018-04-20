@@ -45,9 +45,6 @@ ifdef OAKNUT_WANT_AUDIOINPUT
 endif
 
 
-cmake:
-	@perl $(OAKNUT_DIR)/build/cmake.pl -projectname $(PROJECT_NAME) > CMakeLists.txt
-
 
 # This bit builds a single platform+config. This will need templating if we want to build multiple.
 
@@ -58,6 +55,19 @@ OBJS := $(patsubst %,$(OBJ_DIR)%.o,$(SOURCES))
 DEPS:=$(OBJS:.o=.dep)
 
 include $(OAKNUT_DIR)/build/$(PLATFORM).make
+
+
+# Project file generators
+XCODE_PROJECT_FILE=$(PROJECT_NAME).xcodeproj/project.pbxproj
+
+$(XCODE_PROJECT_FILE):
+	@mkdir -p $(dir $@)
+
+xcode: $(XCODE_PROJECT_FILE)
+	@perl $(OAKNUT_DIR)/build/xcode.pl -projectname $(PROJECT_NAME) $(addprefix -framework ,$(FRAMEWORKS)) $(addprefix -framework_macos ,$(FRAMEWORKS_MACOS)) $(addprefix -framework_ios ,$(FRAMEWORKS_IOS)) > $<
+
+cmake:
+	@perl $(OAKNUT_DIR)/build/cmake.pl -projectname $(PROJECT_NAME) > CMakeLists.txt
 
 
 # This prevents make from automatically deleting .dep files cos it regards them as intermediate

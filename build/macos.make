@@ -5,7 +5,7 @@
 include $(OAKNUT_DIR)/build/apple.make
 
 CFLAGS+= -DPLATFORM_MACOS=1
-FRAMEWORKS+= AppKit OpenGL
+FRAMEWORKS_MACOS+= AppKit OpenGL
 
 CFLAGS_COMMON := \
     -stdlib=libc++ \
@@ -53,7 +53,7 @@ $(EXECUTABLE) : $(OBJS) $(BUNDLE_DIR) $(BUNDLED_ASSETS)
 	@mkdir -p $(dir $(EXECUTABLE))
 	@$(CLANG)++ -arch x86_64 -fobjc-link-runtime -dead_strip \
                -Xlinker -object_path_lto -Xlinker $(BUILD_DIR)/app_lto.o \
-               -o $@ $(addprefix -framework ,$(FRAMEWORKS)) $(OBJS)
+               -o $@ $(addprefix -framework ,$(FRAMEWORKS) $(FRAMEWORKS_MACOS)) $(OBJS)
 	@plutil -convert binary1 $(PROJECT_ROOT)/platform/macos/Info.plist -o $(BUNDLE_DIR)/Contents/Info.plist
 	@touch -c $(BUNDLE_DIR)
 	@CODESIGN_ALLOCATE=$(XCODE_TOOLCHAIN)/usr/bin/codesign_allocate \
