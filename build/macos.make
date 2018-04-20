@@ -2,7 +2,7 @@
 # It should not be run directly.
 
 
-include $(OAKNUT_DIR)/src/platform/apple/oaknut.make
+include $(OAKNUT_DIR)/build/apple.make
 
 CFLAGS+= -DPLATFORM_MACOS=1
 FRAMEWORKS+= AppKit OpenGL

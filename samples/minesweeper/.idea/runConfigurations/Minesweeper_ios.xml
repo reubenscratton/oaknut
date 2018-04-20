@@ -1,6 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Minesweeper_ios" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="-L -b minesweeper_ios.app" WORKING_DIR="file://$PROJECT_DIR$/build/ios" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Minesweeper" TARGET_NAME="Minesweeper_ios" CONFIG_NAME="Release" RUN_PATH="/usr/local/bin/ios-deploy">
-    <envs />
-    <method />
-  </configuration>
-</component>

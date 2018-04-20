@@ -45,6 +45,10 @@ ifdef OAKNUT_WANT_AUDIOINPUT
 endif
 
 
+cmake:
+	@perl $(OAKNUT_DIR)/build/cmake.pl -projectname $(PROJECT_NAME) > CMakeLists.txt
+
+
 # This bit builds a single platform+config. This will need templating if we want to build multiple.
 
 BUILD_DIR := $(PROJECT_ROOT)/.build/$(PLATFORM)/$(CONFIG)
@@ -53,7 +57,7 @@ OBJ_DIR:=$(BUILD_DIR)/obj
 OBJS := $(patsubst %,$(OBJ_DIR)%.o,$(SOURCES))
 DEPS:=$(OBJS:.o=.dep)
 
-include $(OAKNUT_DIR)/src/platform/$(PLATFORM)/oaknut.make
+include $(OAKNUT_DIR)/build/$(PLATFORM).make
 
 
 # This prevents make from automatically deleting .dep files cos it regards them as intermediate

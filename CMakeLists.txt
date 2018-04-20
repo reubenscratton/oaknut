@@ -15,14 +15,14 @@ file(GLOB_RECURSE SOURCES  "app/*.*" "assets/*.*" "platform/*.*" "${CMAKE_CURREN
 add_custom_target(${PROJECT_NAME}_web COMMAND make -C ${PROJECT_SOURCE_DIR}
         PLATFORM=web
         PROJECT_NAME=${PROJECT_NAME}
-        DEBUG=${DEBUG}
+        CONFIG=$ENV{CONFIG}
         SOURCES ${SOURCES})
 
 # Android
 add_custom_target(${PROJECT_NAME}_android COMMAND make -C ${PROJECT_SOURCE_DIR}
         PLATFORM=android
         PROJECT_NAME=${PROJECT_NAME}
-        DEBUG=${DEBUG}
+        CONFIG=$ENV{CONFIG}
         SOURCES ${SOURCES})
 
 # Linux
@@ -30,7 +30,7 @@ if(UNIX AND NOT APPLE)
 add_custom_target(${PROJECT_NAME}_linux COMMAND make -C ${PROJECT_SOURCE_DIR}
         PLATFORM=linux
         PROJECT_NAME=${PROJECT_NAME}
-        DEBUG=${DEBUG}
+        CONFIG=$ENV{CONFIG}
         SOURCES ${SOURCES})
 add_definitions(-DPLATFORM_LINUX=1)
 endif()
@@ -39,16 +39,16 @@ if (APPLE)
 
     # MacOS
     add_custom_target(${PROJECT_NAME}_macos COMMAND make -C ${PROJECT_SOURCE_DIR}
-            PLATFORM=macos
-            PROJECT_NAME=${PROJECT_NAME}
-            DEBUG=${DEBUG}
-            SOURCES ${SOURCES})
+        PLATFORM=macos
+        PROJECT_NAME=${PROJECT_NAME}
+        CONFIG=$ENV{CONFIG}
+        SOURCES ${SOURCES})
 
     # iOS
     add_custom_target(${PROJECT_NAME}_ios COMMAND make -C ${PROJECT_SOURCE_DIR}
         PLATFORM=ios
         PROJECT_NAME=${PROJECT_NAME}
-        DEBUG=${DEBUG}
+        CONFIG=$ENV{CONFIG}
         SOURCES ${SOURCES})
 
 endif ()

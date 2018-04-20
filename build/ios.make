@@ -4,7 +4,8 @@
 CFLAGS+= -DPLATFORM_IOS=1
 FRAMEWORKS+= UIKit CoreGraphics OpenGLES
 
-include $(OAKNUT_DIR)/src/platform/apple/oaknut.make
+include $(OAKNUT_DIR)/build/apple.make
+
 
 CFLAGS_COMMON := \
 	$(CFLAGS) \
