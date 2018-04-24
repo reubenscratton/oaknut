@@ -4,45 +4,65 @@ layout: default
 
 <iframe src="minesweeper/xx.html" width="320" height="480" align="right">
 </iframe>
-Oaknut is an experimental GUI framework for truly cross-platform C++ apps. An Oaknut
-app can be built to run natively on any major OS, and can also run in 
+Oaknut is an experimental GUI framework for truly cross-platform C++ apps. An 
+Oaknut app can be built to run natively on any major OS, and can also run in 
 a web browser via WebAssembly and WebGL. The 'Minesweeper' sample app is
-running in an iframe to the right of this text.
-
+running in an iframe to the right of this text. 
+ 
 Oaknut is currently at the "proof of concept" stage, almost no part of it is
 anywhere near fully-featured. However all the main problems are solved - as far as I
-can see - and so almost all the work from the current point lies in
-building out the remaining APIs and UI widgetry that modern app developers
-expect to be available.
+can see - and all work from the current point lies in building out the remaining 
+APIs and UI widgetry that modern app developers need.
 
 ## Getting started
 1. Clone the Oaknut repository:
 
-```
-git clone https://github.com/reubenscratton/oaknut
-```
+    `git clone https://github.com/reubenscratton/oaknut`
 
-2. Set the `OAKNUT_DIR` environment variable to point to it
-```
-export set OAKNUT_DIR=/path/to/oaknut
-```
+2. Set the `OAKNUT_DIR` environment variable to point to it:
 
-3. Build one of the samples in `oaknut/samples`
-```
-make
-```
+    `export set OAKNUT_DIR=/path/to/oaknut`
 
-## IDEs
-Oaknut is make-driven and therefore IDE-agnostic. CMake is supported, 
-but the CMake targets are custom ones which wrap make invocations. CMake
-support exists mainly to support the CLion IDE, and also CMake's project
-file generation feature can be used.
- 
+3. Select and build one of the samples in `oaknut/samples`
+        
+	`cd oaknut/samples/xxx`
+	
+    `make`
+
+## Compiling
+By default `make` without arguments will build the app version native to your
+operating system. To build an app for the web or a mobile OS you specify it
+with the `PLATFORM` variable, e.g.:
+
+    make PLATFORM=web
+
+Supported platforms are `macos`, `linux`, `web`, `ios`, `android`, 
+with `windows` coming soon. 
+
+Note that Oaknut's build system expects platform-specific information to be 
+passed by variable, for example `make PLATFORM=android` will expect to find
+the location of the Android SDK in the `ANDROID_SDK_DIR` variable.
+
+Another optional variable is `CONFIG` which may be either `debug` or `release`. The
+default is `debug`.
+
+The built app will be found along with all intermediate build files in the
+projects `.build/<platform>/<config>` subdirectory.
+
+
+## IDE support
+Oaknut is not tied to any particular IDE, instead there are special make commands
+which generate project files for several major IDEs:
+    
+- XCode `make xcode`
+- CLion `make cmake`
+- (more coming soon)
+
 
 ## Design notes
 
 Oaknut is extremely lightweight. The whole source code is compiled
-into each app. It may switch to a precompiled and/or dynamic library form at
+into each app. It may switch to a precompiled library form at
 a later date but at this early stage it's convenient to work with this
 way. Some lesser-used parts are opt-in via preprocessor definitions,
 e.g. `OAKNUT_WANT_CAMERA`.
@@ -54,8 +74,8 @@ everything happens in event handlers or on background threads. All drawing is do
 via OpenGL on the primary/main thread.
 
 Oaknut offers no way to directly create background threads. Downloading is performed
-by background system threads (see `URLRequest`) but you may add code to process data
-on the background thread as it is downloaded.
+by background system threads (see `URLRequest`) but you may add code to process 
+that data on the background thread as it is downloaded.
 
 Instead of threads Oaknut offers 'queues', one of which may execute on one or many
 background threads, or none at all (i.e. on the main thread!) Obviously that last
@@ -72,7 +92,7 @@ lines, circles, decompressing JPEGs and PNGs, is all done by the OS since there'
 little variance in how these things are done.
 
 Glyph rasterization is another job given to the OS, however glyph and text layout
-is done by Oaknut, mainly for performance reasons (I may revisit this decision soon).
+is done by Oaknut (currently with custom logic but soon to be replaced by Pango).
 
 
 #### Object lifetimes
@@ -81,46 +101,46 @@ Oaknut objects are reference-counted via the APIs `Object::retain()` and
 are `free()`d between frames.
 
 
-#### C++
-Oaknut's use of C++ aims to avoid unnecessary complexity. It has very little
-use of templates beyond a few STL containers, it avoids multiple inheritance,
-operator overloading, RTTI, 'friend', 'mutable', traits, metaprogramming, etc.
-As a rule I distrust source code that is harder to read than the machine
-code it compiles to, hence no Boost.
+#### C++ usage
+Oaknut uses a subset of C++11 in order to minimise the learning curve for those coming
+from other languages and platforms. If you don't know a vtable from a r-value reference, 
+`it doesn't matter`. The general aim is for application code to look reasonably
+close to what the equivalent code would have been in Java or Obj-C or Swift, rather 
+than be impenetrable blobs of pure C++. 
 
+Therefore Oaknut has little use of templates beyond a few indispensable STL containers
+(`map`, `set`, and so on), it avoids multiple inheritance, operator overloading, RTTI,
+'friend', 'mutable', traits, metaprogramming, etc. Without wishing to generate controversy 
+I personally dislike source code that is harder to read than the machine code it 
+compiles to, hence no use of Boost.
 
+(One newish C++ feature Oaknut enthusiastically embraces is lambdas,
+an indispensible and long overdue language feature.)
 
-#### Build system
-Oaknut apps are built through plain old Make.
-```
-make PLATFORM=macos CONFIG=debug
-```
-A subdirectory named `build` is created under the application source tree and
-all object and other intermediate build files are placed there.
-
-CMake is also supported, but mainly only so the excellent CLion
-IDE could be used. All that the `CMakeLists.txt` files do is define
-custom targets that all delegate to Make.
-
-The platform makefiles expect information to be passed by variable,
-for example the Android makefile needs to know where the Android SDK
-is installed and you specify this via the `ANDROID_SDK_DIR` variable.
 
 
 #### Layout
 Oaknut supports declarative layout that is broadly similar to Android's
-except that it is sorta-JSON instead of XML and has far less
-redundant declarations. Unlike Android, resource qualifiers are
+except that the syntax is a "light" form of JSON instead of XML, with fewer
+redundant declarations. Unlike Android resource qualifiers are
 allowed on individual attributes as well as files, e.g.
 
 ```
 Label: {
-id: hello
-text@en_GB: "Hello!"
-text@en_US: "Hi ya!"
-text@fr_FR: "Bonjour!"
+  id: hello
+  text@en_GB: "Hello!"
+  text@en_US: "Hi!"
+  text@fr_FR: "Bonjour!"
 }
 ```
+
+In this "light" JSON quotes are unnecessary for field names and are
+optional for string values - the only real use for quotes is for multiline 
+text.  There is also no need for commas to separate fields.
+
+In a layout file each object declaration must be the name of a View-derived 
+class, and each non-object attribute is some property supported by that class.
+ 
 
 Oaknut has also borrowed from Android's view layout system in that
 the layout process is split into a measuring pass and a positioning
