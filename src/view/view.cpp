@@ -49,9 +49,13 @@ View::~View() {
 
 void View::applyStyleValues(const StyleValueList& values) {
     for (auto i : values) {
+        StyleValue* val = i.second;
+        while (val->type == StyleValue::Reference) {
+            val = app.getStyleValue(val->str);
+        }
         if (!applyStyleValue(i.first, i.second)) {
             if (_parent && !_parent->applyStyleValueFromChild(i.first, i.second, this)) {
-                app.log("Warning: ignored unknown attribute '%s'", i.first.data());
+                app.warn("Ignored unknown attribute '%s'", i.first.data());
             }
         }
     }
@@ -119,6 +123,10 @@ bool View::applyStyleValue(const string& name, StyleValue* value) {
         return true;
     } else if (name == "style") {
         StyleValueList styles;
+        while (value->type == StyleValue::Reference) {
+            value = app.getStyleValue(value->str);
+        }
+        assert(value->type == StyleValue::StyleMap);
         for (auto i : value->styleMap->_valuesList) {
             styles.push_back(make_pair(i.first, i.second->select()));
         }
@@ -437,7 +445,7 @@ void View::layout() {
 			anchorWidth -= (anchorHorz->_padding.left+anchorHorz->_padding.right);
 		} else {
 			if (anchorHorz->_parent != _parent) {
-				app.log("Warning! View::layout() is not clever enough for non-sibling anchors");
+				app.warn("View::layout() is not clever enough for non-sibling anchors");
 			}
 			anchorX = anchorHorz->_frame.origin.x;
 		}
@@ -448,7 +456,7 @@ void View::layout() {
 			anchorHeight -= (anchorVert->_padding.top+anchorVert->_padding.bottom);
 		} else {
 			if (anchorVert->_parent != _parent) {
-				app.log("Warning! View::layout() is not clever enough for non-sibling anchors");
+				app.warn("View::layout() is not clever enough for non-sibling anchors");
 			}
 			anchorY = anchorVert->_frame.origin.y;
 		}

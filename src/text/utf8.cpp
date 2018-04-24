@@ -259,7 +259,7 @@ string Utf8Iterator::nextToken() {
             str.push_back(ch);
             return str;
         } else {
-            app.log("Warning: invalid char '%c'", ch);
+            app.warn("Invalid char '%c'", ch);
         }
     }
     return "";

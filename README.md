@@ -17,17 +17,10 @@ Immediate Todos
 ---------------
 - Linux urlrequest
 - Initial non-ref documentation
-- Lose _platform extension from compiled bundles/apk/etc.
-- Implement release vs debug configs
-- Android multiple ABI support
 - Clean target
-- Lose "macos_app" as name in macOS menu. Should be app name
 - Sample : Hello world
 - Sample : Todo list
 - Project template
-- Work out where run configs are stored, ensure they are under 
-source control, the goal being that people can check out projects
-and it Just Works in CLion.
 - Fix imageview bug I just added. Maybe move or remove the 
 BitmapProvider thing, I don't think renderops should support 
 being notified like that. It's a view-level responsibility

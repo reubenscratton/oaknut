@@ -28,8 +28,8 @@ void NavigationItem::setTitle(const string& title) {
 	titleLabel->setAlignSpecs(ALIGNSPEC_Center, ALIGNSPEC_Make(NULL, 0.5f, -0.5f, 0));
 	
     // Todo: use an "apply style" method here
-	titleLabel->setFont(Styles::getFont("navbar.title"));
-	titleLabel->setTextColour(Styles::getColour("navbar.title.forecolour"));
+	titleLabel->setFont(app.getFont("navbar.title"));
+	titleLabel->setTextColour(app.getColour("navbar.title.forecolour"));
 	titleLabel->setText(title);
 
 }

@@ -5,8 +5,6 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-
-
 class StyleValue {
 public:
     enum Type {
@@ -21,13 +19,12 @@ public:
         DP,
         SP
     } unit;
-    //union  { god i fucking detest C++ sometimes. CANNOT get this simple thing to work! Should be trivial in C++11.
-    string str;
-    float d;
-    int i;
-    ObjPtr<class StyleMap> styleMap;
-    //  Variant& operator=(const string& s) { new(&str) string(s); return *this; }
-    //} var;
+    union {
+        string str;
+        float d;
+        int i;
+        ObjPtr<class StyleMap> styleMap;
+    };
     StyleValue();
     StyleValue(const StyleValue&);
     ~StyleValue();
@@ -58,21 +55,6 @@ public:
 
 typedef vector<pair<string,StyleValue*>> StyleValueList;
 
-
-
-class Styles {
-public:
-    static void loadAsset(const string& assetPath);
-    static string defaultFontName();
-    static float defaultFontSize();
-    static class Font* getFont(const string& key);
-    static string getString(const string& key);
-    static string getLocalizedString(const string& key);
-    static float getFloat(const string& key);
-    static COLOUR getColour(const string& key);
-    
-    static class View* layoutInflate(const string& assetPath);
-};
 
 
 

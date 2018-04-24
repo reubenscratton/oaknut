@@ -60,7 +60,7 @@ Glyph* Font::createGlyph(char32_t ch, Atlas* atlas) {
         CFRelease(_ctfont);
         _ctfont = createCTFont();
         if (!CTFontGetGlyphsForCharacters(_ctfont, &uch, &cgglyph, 1)) {
-            app.log("Warning: glyph '%c' not in chosen font", ch);
+            app.warn("Glyph '%c' not in chosen font", ch);
             uch = '?';
             if (!CTFontGetGlyphsForCharacters(_ctfont, &uch, &cgglyph, 1)) {
                 assert(false); // glyph is not in the font, TODO: fall back to another font
@@ -68,7 +68,7 @@ Glyph* Font::createGlyph(char32_t ch, Atlas* atlas) {
                 return NULL;
             }
         }
-        app.log("Warning: a stupid Core Text bug caused us to waste time recreating a font");
+        app.warn("Stupid Core Text bug caused us to waste time recreating a font");
     }
     Glyph* glyph = new Glyph(this, ch, cgglyph);
     

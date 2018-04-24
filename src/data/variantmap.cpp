@@ -67,12 +67,12 @@ int VariantMap::getInt(const string& key) const {
             case INT8: return val->second.i8;
             case INT16: return val->second.i16;
             case INT32: return val->second.i32;
-            case INT64: app.log("Warning: possible data loss truncating int64 to int");
+            case INT64: app.warn("Possible data loss truncating int64 to int");
                 return (int)val->second.i64;
             case UINT8: return val->second.u8;
             case UINT16: return val->second.u16;
             case UINT32: return val->second.u32;
-            case UINT64: app.log("Warning: possible data loss truncating uint64 to int");
+            case UINT64: app.warn("Possible data loss truncating uint64 to int");
                 return (int)val->second.u64;
             default: break;
         }

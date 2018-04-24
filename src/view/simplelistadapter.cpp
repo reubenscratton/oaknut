@@ -33,7 +33,7 @@ float SimpleListAdapter::getItemHeight(LISTINDEX index) {
     return app.dp(64);
 }
 View* SimpleListAdapter::createItemView(LISTINDEX index) {
-    return Styles::layoutInflate(_itemLayoutId);
+    return app.layoutInflate(_itemLayoutId);
 }
 
 View* SimpleListAdapter::createHeaderView(int section) {

@@ -28,8 +28,8 @@ int main(int argc, const char * argv[]) {
     [appMenu addItem:quitMenuItem];
     [appMenuItem setSubmenu:appMenu];
     AppDelegate* del = [AppDelegate new];
-    float width = Styles::getFloat("window.default-width") / app._window->_scale;
-    float height = Styles::getFloat("window.default-height") / app._window->_scale;
+    float width = app.getFloat("window.default-width") / app._window->_scale;
+    float height = app.getFloat("window.default-height") / app._window->_scale;
     del.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, width, height)
                                              styleMask:NSWindowStyleMaskTitled
                                                backing:NSBackingStoreBuffered

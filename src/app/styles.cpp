@@ -7,9 +7,7 @@
 
 #include <oaknut.h>
 
-static StyleMap s_root;
-
-/**
+/*
 
  - Resources are a hierarchy of JSON-style key-value pairs but without quote marks around everything.
  - No commas needed to separate fields, field ends at newline unless it is a quoted string which is
@@ -24,17 +22,6 @@ static StyleMap s_root;
 
 */
 
-class DefaultStylesLoader {
-public:
-    DefaultStylesLoader() {
-        string DEFAULT_STYLES=
-#include "styles.res"
-        ;
-        Utf8Iterator it(DEFAULT_STYLES);
-        s_root.parse(it);
-    }
-};
-static DefaultStylesLoader s_DefaultStylesLoader;
 
 
 void StyleValueUber::setValue(const string& qual, StyleValue* value) {
@@ -61,64 +48,6 @@ void StyleValueUber::setValue(const string& qual, StyleValue* value) {
 
 
 
-string Styles::getLocalizedString(const string& key) {
-    return getString(key);
-}
-
-string Styles::defaultFontName() {
-    return getString("font-name");
-}
-float Styles::defaultFontSize() {
-    return getFloat("font-size");
-}
-
-static map<string, Font*> s_loadedFonts;
-
-Font* Styles::getFont(const string &key) {
-    string fontName = getString(key + ".font-name");
-    float fontSize = getFloat(key + ".font-size");
-    char ach[260];
-    sprintf(ach, "%f-%s", fontSize, fontName.data());
-    string fkey(ach);
-    auto it = s_loadedFonts.find(fkey);
-    if (it != s_loadedFonts.end()) {
-        return it->second;
-    }
-    Font* font = new Font(fontName, fontSize);
-    s_loadedFonts[fkey] = font;
-    return font;
-}
-
-string Styles::getString(const string& keypath) {
-    StyleValue* value = s_root.getValue(keypath);
-    if (!value) {
-        app.log("Warning: missing string style info '%s'", keypath.data());
-        return "";
-    }
-    if (value->type==StyleValue::Type::String) return value->str;
-    else if (value->type==StyleValue::Type::Int) return stringFromInt(value->i);
-    else if (value->type==StyleValue::Type::Double) return stringFromDouble(value->d);
-    return "";
-}
-
-float Styles::getFloat(const string& keypath) {
-    StyleValue* value = s_root.getValue(keypath);
-    if (!value) {
-        app.log("Warning: missing float style info '%s'", keypath.data());
-        return 0;
-    }
-    return value->getAsFloat();
-}
-COLOUR Styles::getColour(const string& key) {
-    StyleValue* value = s_root.getValue(key);
-    if (!value) {
-        app.log("Warning: missing colour style info '%s'", key.data());
-        return 0;
-    }
-    if (value->type==StyleValue::Type::Int) return value->i;
-    return 0;
-}
-
 StyleValue* StyleValueUber::select() {
     StyleValue* val = _defaultValue;
     for (auto it : _qualifiedValues) {
@@ -137,16 +66,14 @@ StyleValue* StyleValueUber::select() {
             applies = true;
 #endif
         } else {
-            app.log("Warning: unsupported qualifier '%s'", qual.data());
+            app.warn("Unsupported qualifier '%s'", qual.data());
         }
         if (applies) {
             // TODO: apply precedence that favours higher specificity
             val = it.second;
         }
     }
-    while (val && val->type == StyleValue::Type::Reference) {
-        val = s_root.getValue(val->str);
-    }
+    
     return val;
 }
 
@@ -181,15 +108,6 @@ StyleValue* StyleMap::getValue(const string& keypath) {
         }
     }
     return NULL;
-}
-
-void Styles::loadAsset(const string& assetPath) {
-    ObjPtr<ByteBuffer> data = app.loadAsset(assetPath.data());
-    if (!data) {
-        return;
-    }
-    Utf8Iterator it(data);
-    s_root.parse(it);
 }
 
 
@@ -347,55 +265,6 @@ float StyleValue::getAsFloat() {
         f = app.dp(f);
     }
     return f;
-}
-
-static View* inflateFromResource(pair<string, StyleValue*> r, View* parent) {
-    string viewClassName = r.first;
-    View* view = DYNCREATE(viewClassName);
-    if (parent) {
-        parent->addSubview(view);
-    }
-    
-    // Extract the attributes from the uber
-    StyleValue* props = r.second;
-    assert(props->type == StyleValue::Type::StyleMap);
-    vector<pair<string, StyleValue*>> attribs;
-    vector<pair<string, StyleValue*>> subviews;
-    for (auto i : props->styleMap->_valuesList)  {
-        StyleValue* val = i.second->select();
-        if (val) {
-            auto a = make_pair(i.first, val);
-            if (val->type == StyleValue::Type::StyleMap && i.first != "style") {
-                subviews.push_back(a);
-            } else {
-                attribs.push_back(a);
-            }
-        }
-    }
-    
-    // Apply the attributes to the inflated view
-    view->applyStyleValues(attribs);
-    
-    // Inflate the subviews
-    for (auto j : subviews) {
-        inflateFromResource(j, view);
-    }
-    
-    return view;
-}
-
-View* Styles::layoutInflate(const string& assetPath) {
-    ObjPtr<ByteBuffer> data = app.loadAsset(assetPath.data());
-    if (!data) {
-        return NULL;
-    }
-    Utf8Iterator it(data);
-    StyleMap layoutRoot;
-    bool parsed = layoutRoot.parse(it);
-    assert(parsed);
-    assert(layoutRoot._values.size()==1);
-    auto i = layoutRoot._values.begin();
-    return inflateFromResource(make_pair(i->first, i->second->select()), NULL);
 }
 
 

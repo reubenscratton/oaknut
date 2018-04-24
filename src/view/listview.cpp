@@ -11,7 +11,7 @@ DECLARE_DYNCREATE(ListView);
 
 ListView::ListView() {
     _dividerHeight = 1;//dp(1);
-    _dividerColour = Styles::getColour("listview.selected-bkgnd-colour");
+    _dividerColour = app.getColour("listview.selected-bkgnd-colour");
 	_selectedIndex = LISTINDEX_NONE;
 }
 
@@ -121,7 +121,7 @@ void ListView::setSelectedIndex(LISTINDEX index) {
 		if (itemView) {
             // TODO: Am not wild about poking at item view backgrounds like this, perhaps
             // we need an ItemView type which has a "background overlay" renderop.
-            itemView->setBackgroundColour(Styles::getColour("listview.selected-bkgnd-colour"));
+            itemView->setBackgroundColour(app.getColour("listview.selected-bkgnd-colour"));
 		}
 	}
 }

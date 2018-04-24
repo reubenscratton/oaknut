@@ -8,15 +8,19 @@
 #include <oaknut.h>
 
 
-
-
-
 #ifndef ANDROID
 void App::log(char const* fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
 	vprintf(fmt, args);
 	printf("\n");
+}
+void App::warn(char const* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    printf("Warning: ");
+    vprintf(fmt, args);
+    printf("\n");
 }
 #endif
 

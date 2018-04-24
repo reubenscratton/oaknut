@@ -29,7 +29,7 @@ public:
         _bmpFaceWon = new AsyncBitmapProvider("images/face_won.png");
         _bmpFaceLost = new AsyncBitmapProvider("images/face_lost.png");
 
-        View* view = Styles::layoutInflate("layout/main.res");
+        View* view = app.layoutInflate("layout/main.res");
         _gameView = (GameView*)view->findViewById("game");
         _labelNumFlags = (Label*)view->findViewById("flags");
         _imageViewFace = (ImageView*)view->findViewById("face");
@@ -76,7 +76,7 @@ public:
 };
 
 void App::main() {
-    Styles::loadAsset("styles.res");
+    loadStyleAsset("styles.res");
 
     MainViewController* mainVC = new MainViewController();
     _window->setRootViewController(mainVC);

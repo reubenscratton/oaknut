@@ -94,7 +94,7 @@ void ImageView::onEffectiveTintColourChanged() {
 void ImageView::onUrlRequestLoad(URLData* data) {
     if (data) {
         if (data->_type != URLDataTypeBitmap) {
-            app.log("Warning: Unexpected urldata type");
+            app.warn("Unexpected urldata type");
             return;
         }
         setBitmap(data->_value.bitmap);

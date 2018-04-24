@@ -88,7 +88,7 @@ void Bitmap::lock(PIXELDATA* pixelData, bool forWriting) {
     }
     
     if (!_pixelData.data) {
-        app.log("Warning: lock() called on bitmap with no data or image");
+        app.warn("lock() called on bitmap with no data or image");
         return;
     }
 
@@ -177,7 +177,7 @@ static void onImageLoadedFromData(Bitmap* bitmap) {
     bitmap->_height = bitmap->_img["height"].as<int>();
     bitmap->_format = BITMAPFORMAT_RGBA32;
     if (bitmap->_width<=0) { // image failed to decode
-        app.log("Warning: bitmap failed to decode");
+        app.warn("Bitmap failed to decode");
         bitmap->_img = val::null();
     }
     bitmap->_tmp(bitmap);

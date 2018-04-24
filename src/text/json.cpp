@@ -44,7 +44,7 @@ string parseJsonString(Utf8Iterator& it, int flags) {
 					legalEscape |= (ch == ',' || ch==':' || ch=='}');
 				}
 				if (!legalEscape) {
-					app.log("Warning: illegal escape \'\\%c\'", ch);
+					app.warn("Illegal escape \'\\%c\'", ch);
 					continue;
 				}
 			}

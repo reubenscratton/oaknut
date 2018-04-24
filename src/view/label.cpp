@@ -40,7 +40,7 @@ DECLARE_DYNCREATE(Label);
 
 
 Label::Label() : View() {
-    _textRenderer.setDefaultFont(new Font(Styles::defaultFontName(), Styles::defaultFontSize()));
+    _textRenderer.setDefaultFont(new Font(app.defaultFontName(), app.defaultFontSize()));
     _textRenderer.setDefaultColour(0xFF000000);
     _textRenderer.setGravity(_gravity);
 }
@@ -212,12 +212,12 @@ void Label::setGravity(GRAVITY gravity) {
 
 void Label::setStyle(string styleName) {
     // TODO: this method should just fetch the named map from Styles:: and call View::applyStyleValues()
-    string fontName = Styles::getString(styleName + ".font-name");
-    float fontSize = Styles::getFloat(styleName + ".font-size");
+    string fontName = app.getString(styleName + ".font-name");
+    float fontSize = app.getFloat(styleName + ".font-size");
     if (fontName.size() && fontSize) {
         setFont(new Font(fontName, fontSize));
     }
-    COLOUR textColour = Styles::getColour(styleName + ".forecolour");
+    COLOUR textColour = app.getColour(styleName + ".forecolour");
     if (textColour) {
         setTextColour(textColour);
     }
