@@ -51,3 +51,10 @@ string Object::debugDescription() {
     return string(ach);
 }
 #endif
+
+
+map<string, Object* (*)()>* s_classRegister;
+
+Object* Object::createByName(const string& className) {
+    return s_classRegister->find(className)->second();
+}

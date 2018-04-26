@@ -7,39 +7,16 @@
 
 #include <oaknut.h>
 
-map<string, View* (*)()>* s_classRegister;
-View* DYNCREATE(const string& className) {
-    return s_classRegister->find(className)->second();
-}
 
 DECLARE_DYNCREATE(View);
 
-MEASURESPEC MEASURESPEC_Make(int refType, View* refView, float refSizeMultiplier, float abs) {
-    MEASURESPEC r;
-    r.refType = refType;
-    r.refView = refView;
-    r.refSizeMultiplier = refSizeMultiplier;
-    r.abs = abs;
-    return r;    
-}
-
-#define NO_ANCHOR ((View*)-1)
-
-ALIGNSPEC ALIGNSPEC_Make(View* anchor, float multiplierAnchor, float multiplierSelf, float margin) {
-    ALIGNSPEC r;
-    r.anchor = anchor;
-    r.multiplierAnchor = multiplierAnchor;
-    r.multiplierSelf = multiplierSelf;
-    r.margin = margin;
-    return r;
-}
-
-View::View() : _alpha(1.0f), _touchEnabled(true) {
+View::View() : _alpha(1.0f), _touchEnabled(true),
+                _alignspecHorz(ALIGNSPEC::None()),
+                _alignspecVert(ALIGNSPEC::None()),
+                _widthMeasureSpec(MEASURESPEC::None()),
+                _heightMeasureSpec(MEASURESPEC::None())
+{
     _visibility = VISIBILITY_VISIBLE;
-	_widthMeasureSpec = MEASURESPEC_None;
-	_heightMeasureSpec = MEASURESPEC_None;
-	_alignspecHorz = ALIGNSPEC_None;
-	_alignspecVert = ALIGNSPEC_None;
 	onTouchEventDelegate = NULL;
 }
 
@@ -63,58 +40,19 @@ void View::applyStyleValues(const StyleValueList& values) {
 
 MEASURESPEC measurespecFromResourceVal(StyleValue* value) {
     if (value->type == StyleValue::Type::Int || value->type == StyleValue::Type::Double) {
-        return MEASURESPEC_Abs(value->getAsFloat());
+        return MEASURESPEC::Abs(value->getAsFloat());
     }
     assert(value->type == StyleValue::Type::String);
-    if (value->str == "wrap_content") return MEASURESPEC_WrapContent;
-    if (value->str == "fill_parent") return MEASURESPEC_FillParent;
-    if (value->str == "match_parent") return MEASURESPEC_FillParent;
+    if (value->str == "wrap_content") return MEASURESPEC::WrapContent();
+    if (value->str == "fill_parent") return MEASURESPEC::FillParent();
+    if (value->str == "match_parent") return MEASURESPEC::FillParent();
     if (stringStartsWith(value->str, "aspect(", true)) {
-        return MEASURESPEC_UseAspect(stringParseDouble(value->str));
+        return MEASURESPEC::UseAspect(stringParseDouble(value->str));
     }
     assert(false); // unknown measurespec
-    return MEASURESPEC_WrapContent;
+    return MEASURESPEC::WrapContent();
 }
 
-ALIGNSPEC alignspecFromResourceVal(StyleValue* value, View* view) {
-    assert(value->type == StyleValue::Type::String);
-    ALIGNSPEC spec;
-    string str = value->str;
-    string type = stringExtractUpTo(str, "(", true);
-    if (type.size() == 0) {
-        type = str;
-        str = "";
-    } else {
-        str = stringExtractUpTo(str, ")", true);
-    }
-    if (type=="center") spec=ALIGNSPEC_Center;
-    else if (type=="centre") spec=ALIGNSPEC_Center;
-    else if (type=="left") spec=ALIGNSPEC_Left;
-    else if (type=="right") spec=ALIGNSPEC_Right;
-    else if (type=="top") spec=ALIGNSPEC_Top;
-    else if (type=="bottom") spec=ALIGNSPEC_Bottom;
-    else if (type=="toLeftOf") spec=ALIGNSPEC_Make(NULL, 1.0f,  -1.0f, 0);
-    else if (type=="toRightOf") spec=ALIGNSPEC_Make(NULL, 1.0f,  0.0f, 0);
-    else if (type=="above") spec=ALIGNSPEC_Make(NULL, 1.0f,  -1.0f, 0);
-    else if (type=="below") spec=ALIGNSPEC_Make(NULL, 1.0f,  0.0f, 0);
-    else assert(false); // unknown alignspec
-
-    if (str.size() > 0) {
-        string anchorId = stringExtractUpTo(str, ",", true);
-        if (anchorId.size()==0) {
-            anchorId=str;
-            str="";
-        }
-        spec.anchor = view->_parent->findViewById(anchorId);
-        assert(spec.anchor); // NB: anchor must be previously declared. TODO: remove this restriction
-        stringTrim(str);
-        if (str.size() > 0) {
-            spec.margin = stringParseDimension(str);
-        }
-    }
-
-    return spec;
-}
 
 
 bool View::applyStyleValue(const string& name, StyleValue* value) {
@@ -139,10 +77,10 @@ bool View::applyStyleValue(const string& name, StyleValue* value) {
         _widthMeasureSpec = measurespecFromResourceVal(value);
         return true;
     } else if (name == "alignX") {
-        _alignspecHorz = alignspecFromResourceVal(value, this);
+        _alignspecHorz = ALIGNSPEC(value, this);
         return true;
     } else if (name == "alignY") {
-        _alignspecVert = alignspecFromResourceVal(value, this);
+        _alignspecVert = ALIGNSPEC(value, this);
         return true;
     } else if (name == "background") {
         assert(value->type == StyleValue::Type::Int);
@@ -314,7 +252,7 @@ void View::setNeedsLayout() {
 
 void View::invalidateContentSize() {
 	_contentSizeValid = false;
-	if (_widthMeasureSpec.refType==REFTYPE_CONTENT || _heightMeasureSpec.refType==REFTYPE_CONTENT) {
+    if (_widthMeasureSpec.refType==MEASURESPEC::RefTypeContent || _heightMeasureSpec.refType==MEASURESPEC::RefTypeContent) {
 		setNeedsLayout();
     } else {
         setNeedsFullRedraw();
@@ -360,11 +298,11 @@ void View::measure(float parentWidth, float parentHeight) {
 	}
     
     // Width
-	if (REFTYPE_CONTENT == _widthMeasureSpec.refType) {
+	if (MEASURESPEC::RefTypeContent == _widthMeasureSpec.refType) {
         _frame.size.width = _contentSize.width + _padding.left + _padding.right;
-	} else if (REFTYPE_ABS == _widthMeasureSpec.refType) {
+	} else if (MEASURESPEC::RefTypeAbs == _widthMeasureSpec.refType) {
         _frame.size.width = _widthMeasureSpec.abs;
-    } else if (REFTYPE_VIEW == _widthMeasureSpec.refType) {
+    } else if (MEASURESPEC::RefTypeView == _widthMeasureSpec.refType) {
         float refWidth = (_widthMeasureSpec.refView == NULL) ? parentWidth : _widthMeasureSpec.refView->_frame.size.width;
         _frame.size.width = refWidth * _widthMeasureSpec.refSizeMultiplier;
 		_frame.size.width += _widthMeasureSpec.abs;
@@ -372,20 +310,20 @@ void View::measure(float parentWidth, float parentHeight) {
 
     
     // Height
-	if (REFTYPE_CONTENT == _heightMeasureSpec.refType) {
+	if (MEASURESPEC::RefTypeContent == _heightMeasureSpec.refType) {
 		_frame.size.height = _contentSize.height + _padding.top + _padding.bottom;
-	} else if (REFTYPE_ABS == _heightMeasureSpec.refType) {
+	} else if (MEASURESPEC::RefTypeAbs == _heightMeasureSpec.refType) {
 		_frame.size.height = _heightMeasureSpec.abs;
-	} else if (REFTYPE_VIEW == _heightMeasureSpec.refType) {
+	} else if (MEASURESPEC::RefTypeView == _heightMeasureSpec.refType) {
 		float refHeight = (_heightMeasureSpec.refView == NULL) ? parentHeight : _heightMeasureSpec.refView->_frame.size.height;
 		_frame.size.height = refHeight * _heightMeasureSpec.refSizeMultiplier;
 		_frame.size.height += _heightMeasureSpec.abs;
 	}
 	
     // Aspect
-    if (REFTYPE_ASPECT == _widthMeasureSpec.refType) {
+    if (MEASURESPEC::RefTypeAspect == _widthMeasureSpec.refType) {
         _frame.size.width = _frame.size.height * _widthMeasureSpec.refSizeMultiplier;
-    } else if (REFTYPE_ASPECT == _heightMeasureSpec.refType) {
+    } else if (MEASURESPEC::RefTypeAspect == _heightMeasureSpec.refType) {
         _frame.size.height = _frame.size.width * _heightMeasureSpec.refSizeMultiplier;
     }
 	
@@ -393,8 +331,8 @@ void View::measure(float parentWidth, float parentHeight) {
 	    
     // At this point we've done relative-to-parent sizing. But if a size value depends on
     // wrapping subview size(s) then pass down the parent size.
-	bool wrapWidth = _contentSize.width<=0 && _widthMeasureSpec.refType == REFTYPE_CONTENT;
-	bool wrapHeight =  _contentSize.height<=0 && _heightMeasureSpec.refType == REFTYPE_CONTENT;
+	bool wrapWidth = _contentSize.width<=0 && _widthMeasureSpec.refType == MEASURESPEC::RefTypeContent;
+	bool wrapHeight =  _contentSize.height<=0 && _heightMeasureSpec.refType == MEASURESPEC::RefTypeContent;
 	float widthForSubviewMeasure = wrapWidth ? parentWidth : _frame.size.width;
 	float heightForSubviewMeasure = wrapHeight ? parentHeight : _frame.size.height;
 

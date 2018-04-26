@@ -5,13 +5,26 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+/**
+ * \class Object
+ * \brief Base class for all reference-counted types.
+ */
 class Object {
 public:
 	int _refs;
 
 	Object();
 	virtual ~Object();
+    
+    /**
+     Increments the internal reference counter. NB: Not threadsafe.
+     */
 	void retain();
+    
+    /**
+     Decrements the internal reference counter. If the counter reaches zero the object is moved
+     to a queue of objects that will be free()d between frames. NB: Not threadsafe.
+     */
 	void release();
 	
 	void* operator new(size_t sz);
@@ -21,12 +34,19 @@ public:
 #endif
     
     static void flushAutodeletePool();
+    
+    static Object* createByName(const string& className);
+
 };
 
 #if DEBUG
 extern void* DBGOBJ;
 #endif
 
+/**
+ * \class ObjPtr<T>
+ * \brief A smart pointer class that holds a strong reference to an Object-derived type.
+ */
 template<class T>
 class ObjPtr {
 public:
@@ -99,4 +119,24 @@ public:
     }
     
 };
+
+/**
+ Declare a type as being dynamically creatable. The type must have a public constructor that takes no arguments.
+ */
+#define DECLARE_DYNCREATE(X) static ClassRegistrar<X> s_classReg##X(#X)
+
+extern map<string, Object* (*)()>* s_classRegister;
+
+template<typename T>
+class ClassRegistrar {
+private: static Object* createT() {return new T(); }
+public:
+    ClassRegistrar(const string& className) {
+        if (!s_classRegister) {
+            s_classRegister = new map<string, Object*(*)()>();
+        }
+        s_classRegister->insert(std::make_pair(className, &createT));
+    }
+};
+
 

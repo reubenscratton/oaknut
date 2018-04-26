@@ -208,8 +208,8 @@ static void renderPhase1(Surface* surface, View* view, Window* window, POINT ori
     
     // If view's content size is invalid, now's a great time to update it
     if (!view->_contentSizeValid) {
-        assert(view->_widthMeasureSpec.refType!=REFTYPE_CONTENT); // shoulda been done in measure()!
-        assert(view->_heightMeasureSpec.refType!=REFTYPE_CONTENT);
+        assert(view->_widthMeasureSpec.refType!=MEASURESPEC::RefType::RefTypeContent); // shoulda been done in measure()!
+        assert(view->_heightMeasureSpec.refType!=MEASURESPEC::RefType::RefTypeContent);
         float parentWidth = view->_parent?view->_parent->_frame.size.width : view->_window->_surfaceRect.size.width;
         float parentHeight = view->_parent?view->_parent->_frame.size.height : view->_window->_surfaceRect.size.height;
         view->updateContentSize(parentWidth, parentHeight);

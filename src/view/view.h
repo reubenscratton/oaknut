@@ -24,75 +24,45 @@ typedef struct {
 } STATESET;
 
 
-//
-// View measurements.
-//
-typedef struct _MEASURESPEC {
-    int refType;
-    class View* refView;
-    float refSizeMultiplier;
-    float abs;
-} MEASURESPEC;
-#define REFTYPE_NONE      0  // no measuring is done, frame must be set in code
-#define REFTYPE_ABS       1  // measurement is absolute (i.e. abs field)
-#define REFTYPE_CONTENT   2  // measurement is taken from intrinsic content size, plus padding
-#define REFTYPE_VIEW      3  // measure relative to another view (normally the parent)
-#define REFTYPE_ASPECT    4  // measure relative to opposite dimension
-
-MEASURESPEC MEASURESPEC_Make(int refType, View* refView, float refSizeMultiplier, float delta);
-#define MEASURESPEC_None		 MEASURESPEC_Make(REFTYPE_NONE, NULL, 0, 0)
-#define MEASURESPEC_Abs(x)       MEASURESPEC_Make(REFTYPE_ABS, NULL, 0, x)
-#define MEASURESPEC_WrapContent  MEASURESPEC_Make(REFTYPE_CONTENT, NULL, 1, 0)
-#define MEASURESPEC_UseAspect(x) MEASURESPEC_Make(REFTYPE_ASPECT, NULL,  x, 0)
-#define MEASURESPEC_FillParent   MEASURESPEC_Make(REFTYPE_VIEW, NULL, 1, 0)
-
-
-//
-// View alignment/positioning
-//
-// View alignment is always relative to an anchor, which defaults to the parent view or (for root views) the screen.
-//
-// View alignment along a single axis involves two multipliers and a margin. The first multiplier is
-// that of the anchor's width, the second is that of one's own width, and the margin is a delta in pixels.
-//
-typedef struct _ALIGNSPEC {
-    View* anchor;
-    float multiplierAnchor;
-    float multiplierSelf;
-	float margin;
-} ALIGNSPEC;
-
-ALIGNSPEC ALIGNSPEC_Make(View* anchor, float multiplierAnchor, float multiplierOwn, float margin);
-
-#define ALIGNSPEC_None		 ALIGNSPEC_Make(NO_ANCHOR, 0,0,0)
-#define ALIGNSPEC_Left       ALIGNSPEC_Make(NULL, 0.0f, 0.0f, 0)
-#define ALIGNSPEC_Center     ALIGNSPEC_Make(NULL, 0.5f,-0.5f, 0)
-#define ALIGNSPEC_Right      ALIGNSPEC_Make(NULL, 1.0f,-1.0f, 0)
-#define ALIGNSPEC_Top        ALIGNSPEC_Make(NULL, 0.0f, 0.0f, 0)
-#define ALIGNSPEC_Bottom     ALIGNSPEC_Make(NULL, 1.0f,-1.0f, 0)
-#define ALIGNSPEC_ToLeftOf(view, margin)   ALIGNSPEC_Make(view, 0.0f, -1.0f, margin)
-#define ALIGNSPEC_ToRightOf(view, margin)  ALIGNSPEC_Make(view, 1.0f,  0.0f, margin)
-#define ALIGNSPEC_Above(view, margin)	   ALIGNSPEC_Make(view, 0.0f, -1.0f, margin)
-#define ALIGNSPEC_Below(view, margin)	   ALIGNSPEC_Make(view, 1.0f,  0.0f, margin)
-
-class IKeyboardInputHandler {
-public:
-    virtual void insertText(string text, int replaceStart, int replaceEnd) = 0;
-    virtual void deleteBackward() = 0;
-    virtual int getTextLength() = 0;
-    virtual int getSelectionStart() = 0;
-    virtual int getInsertionPoint() = 0;    // NB: insertion point is also the end of selection
-    virtual void setSelectedRange(int start, int end) = 0;
-    virtual string textInRange(int start, int end) = 0;
-};
-
+/**
+ * \class View
+ * \brief Base class for all views.
+ */
 class View : public Object {
 public:
-    string _id;
-	Window* _window;
-	View* _parent;
-	vector<ObjPtr<View>> _subviews; // in back-to-front order
-	int tag;
+    
+    /** @name Identity & Hierarchy
+     * @{
+     */
+    string _id; /// Identifies this view among it's peers in a layout file. See findViewById().
+	Window* _window; /// The Window that this view is attached to. In practice this is the main application window or NULL.
+    View* _parent; /// The view that owns and contains this one. NB: Weak ref cos parent holds strong ref on this.
+	vector<ObjPtr<View>> _subviews; /// List of child views, in back-to-front order
+    /**@}*/
+    
+    /** @name Size & Location
+     * @{
+     */
+    RECT _frame; /// The visible area of the view, in parent view coords. "Bounds" rect is {_contentOffset, _frame.size}.
+    POINT _surfaceOrigin; /// The offset from the top-left of this view to the top left of the surface. Set in onWindowAttach() and updated when self or ancestor frame origin changes.
+    MEASURESPEC _widthMeasureSpec;
+    MEASURESPEC _heightMeasureSpec;
+    ALIGNSPEC _alignspecHorz;
+    ALIGNSPEC _alignspecVert;
+    void setFrameOrigin(const POINT& pt);
+    void adjustSurfaceOrigin(const POINT& d);
+    /**@}*/
+
+    /** @name Content Size
+     * @{
+     */
+    SIZE _contentSize;
+    POINT _contentOffset;
+    EDGEINSETS _padding;
+    bool _contentSizeValid;
+    GRAVITY _gravity;
+    /**@}*/
+
 	STATE _state;
     int _visibility;
 	bool _touchEnabled;
@@ -119,23 +89,6 @@ public:
     virtual void updateRenderOps();
     
     
-	// Size and location
-	RECT _frame; // in parent view coords. "Bounds" rect is {_contentOffset, _frame.size}.
-    POINT _surfaceOrigin; // offset of top-left corner to surface-origin. Set in onWindowAttach()
-                         // and updated when self or ancestor frame origin changes.
-	MEASURESPEC _widthMeasureSpec;
-	MEASURESPEC _heightMeasureSpec;
-	ALIGNSPEC _alignspecHorz;
-	ALIGNSPEC _alignspecVert;
-	void setFrameOrigin(const POINT& pt);
-    void adjustSurfaceOrigin(const POINT& d);
-
-	// Content
-	SIZE _contentSize;
-	POINT _contentOffset;
-	EDGEINSETS _padding;
-	bool _contentSizeValid;
-    GRAVITY _gravity;
     
 	// Scrolling
     bool _isDragging;
@@ -263,20 +216,4 @@ public:
 };
 
 
-extern map<string, View* (*)()>* s_classRegister;
-
-template<typename T>
-class ClassRegistrar {
-private: static View* createT() {return new T(); }
-public:
-    ClassRegistrar(const string& className) {
-        if (!s_classRegister) {
-            s_classRegister = new map<string, View*(*)()>();
-        }
-        s_classRegister->insert(std::make_pair(className, &createT));
-    }
-};
-
-#define DECLARE_DYNCREATE(X) static ClassRegistrar<X> s_classReg##X(#X)
-View* DYNCREATE(const string& className);
 

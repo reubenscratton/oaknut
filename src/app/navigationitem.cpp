@@ -10,12 +10,12 @@
 NavigationItem::NavigationItem() {
     _leftButtonsFrame = new LinearLayout();
     _leftButtonsFrame->_orientation = LinearLayout::Horizontal;
-    _leftButtonsFrame->setMeasureSpecs(MEASURESPEC_WrapContent, MEASURESPEC_WrapContent);
-    _leftButtonsFrame->setAlignSpecs(ALIGNSPEC_Left, ALIGNSPEC_Center);
+    _leftButtonsFrame->setMeasureSpecs(MEASURESPEC::WrapContent(), MEASURESPEC::WrapContent());
+    _leftButtonsFrame->setAlignSpecs(ALIGNSPEC::Left(), ALIGNSPEC::Center());
     _rightButtonsFrame = new LinearLayout();
     _rightButtonsFrame->_orientation = LinearLayout::Horizontal;
-    _rightButtonsFrame->setMeasureSpecs(MEASURESPEC_WrapContent, MEASURESPEC_WrapContent);
-    _rightButtonsFrame->setAlignSpecs(ALIGNSPEC_Right, ALIGNSPEC_Center);
+    _rightButtonsFrame->setMeasureSpecs(MEASURESPEC::WrapContent(), MEASURESPEC::WrapContent());
+    _rightButtonsFrame->setAlignSpecs(ALIGNSPEC::Right(), ALIGNSPEC::Center());
 }
 
 void NavigationItem::setTitle(const string& title) {
@@ -24,12 +24,12 @@ void NavigationItem::setTitle(const string& title) {
 	}
 	Label* titleLabel = new Label();
 	_titleView = titleLabel;
-	titleLabel->setMeasureSpecs(MEASURESPEC_WrapContent, MEASURESPEC_WrapContent);
-	titleLabel->setAlignSpecs(ALIGNSPEC_Center, ALIGNSPEC_Make(NULL, 0.5f, -0.5f, 0));
+	titleLabel->setMeasureSpecs(MEASURESPEC::WrapContent(), MEASURESPEC::WrapContent());
+    titleLabel->setAlignSpecs(ALIGNSPEC::Center(), ALIGNSPEC(NULL, 0.5f, -0.5f, 0));
 	
     // Todo: use an "apply style" method here
-	titleLabel->setFont(app.getFont("navbar.title"));
-	titleLabel->setTextColour(app.getColour("navbar.title.forecolour"));
+	titleLabel->setFont(app.getStyleFont("navbar.title"));
+	titleLabel->setTextColour(app.getStyleColour("navbar.title.forecolour"));
 	titleLabel->setText(title);
 
 }
@@ -38,14 +38,14 @@ void NavigationItem::setTitleView(View* titleView) {
 	if (_titleView) {
 		_titleView->removeFromParent();
 	}
-	titleView->setMeasureSpecs(MEASURESPEC_WrapContent, MEASURESPEC_WrapContent);
-	titleView->setAlignSpecs(ALIGNSPEC_Center, ALIGNSPEC_Make(NULL, 0.5f, -0.5f, 0));
+	titleView->setMeasureSpecs(MEASURESPEC::WrapContent(), MEASURESPEC::WrapContent());
+    titleView->setAlignSpecs(ALIGNSPEC::Center(), ALIGNSPEC(NULL, 0.5f, -0.5f, 0));
 	_titleView = titleView;
 }
 
 ToolbarButton* NavigationItem::createIconButton(const string& src, OnClickDelegate onClickDelegate) {
 	ToolbarButton* button = new ToolbarButton();
-	button->setMeasureSpecs(MEASURESPEC_UseAspect(1), MEASURESPEC_FillParent);
+    button->setMeasureSpecs(MEASURESPEC::UseAspect(1), MEASURESPEC::FillParent());
     ByteBuffer* data = app.loadAsset(src.data());
     Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
         button->setImageBitmap(bitmap);

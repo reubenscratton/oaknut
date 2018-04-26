@@ -12,8 +12,8 @@ DECLARE_DYNCREATE(SegmentedControl);
 
 
 SegmentedControl::SegmentedControl() {
-	_font = app.getFont("segmentedcontrol");
-    _lineWidth = app.getFloat("segmentedcontrol.stroke-width");
+	_font = app.getStyleFont("segmentedcontrol");
+    _lineWidth = app.getStyleFloat("segmentedcontrol.stroke-width");
 	_selectedIndex = _pressedIndex = -1;
 	_selectedTextColour = 0xff000000;
 }

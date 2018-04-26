@@ -53,7 +53,7 @@ void Window::resizeSurface(int width, int height, float scale) {
         if (!_rootVcAttached) {
             attachRootVC();
         }
-        _rootViewController->_view->setNeedsLayout();
+        _rootViewController->getView()->setNeedsLayout();
 	}
 }
 
@@ -79,7 +79,7 @@ void Window::MotionTracker::dispatchInputEvent(int event, long time, POINT pt, W
         pastIndex = pastCount = 0;
         ptDown = pt;
         timeOfDownEvent = time;
-        touchedView = window->_rootViewController->_view->dispatchInputEvent(INPUT_EVENT_DOWN, source, time, pt);
+        touchedView = window->_rootViewController->getView()->dispatchInputEvent(INPUT_EVENT_DOWN, source, time, pt);
     }
     if (event == INPUT_EVENT_DOWN || event == INPUT_EVENT_MOVE) {
         if (event == INPUT_EVENT_MOVE) { // filter out spurious move events (seen on iOS 10)
@@ -103,7 +103,7 @@ void Window::MotionTracker::dispatchInputEvent(int event, long time, POINT pt, W
             float dist = sqrtf(dx * dx + dy * dy);
             if (app.idp(dist) >= TOUCH_SLOP) {
                 isDragging = true;
-                View *interceptView = window->_rootViewController->_view->dispatchInputEvent(INPUT_EVENT_DRAG, source, time, pt);
+                View *interceptView = window->_rootViewController->getView()->dispatchInputEvent(INPUT_EVENT_DRAG, source, time, pt);
                 if (interceptView) {
                     if (touchedView) {
                         touchedView->dispatchInputEvent(INPUT_EVENT_CANCEL, source, time, pt);
@@ -224,7 +224,7 @@ void Window::draw() {
 	// Draw view controllers
 	ViewController* rootVC = _rootViewController;
 	if (rootVC) {
-		View* view = rootVC->_view;
+		View* view = rootVC->getView();
 		if (!_viewLayoutValid) {
 			//app.log("Performing measure() and layout() %d", _surfaceRect.size.width);
 			_inLayoutPass = true;
@@ -282,7 +282,7 @@ void Window::requestRedraw() {
 POINT Window::offsetToView(View* view) {
 	POINT pt = {0,0};
 	ViewController* rootVC = _rootViewController;
-	while (view && view != rootVC->_view) {
+	while (view && view != rootVC->getView()) {
 		pt.x += view->_frame.origin.x;
 		pt.y += view->_frame.origin.y;
 		view = view->_parent;

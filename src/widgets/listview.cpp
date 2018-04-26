@@ -11,7 +11,7 @@ DECLARE_DYNCREATE(ListView);
 
 ListView::ListView() {
     _dividerHeight = 1;//dp(1);
-    _dividerColour = app.getColour("listview.selected-bkgnd-colour");
+    _dividerColour = app.getStyleColour("listview.selected-bkgnd-colour");
 	_selectedIndex = LISTINDEX_NONE;
 }
 
@@ -72,7 +72,7 @@ void ListView::updateContentSize(float parentWidth, float parentHeight) {
     IListAdapter* adapter = _adapter;
     _sectionMetrics.clear();
     if (_headerView) {
-        _headerView->_alignspecVert = ALIGNSPEC_Make(NULL, 0, 0, _contentSize.height);
+        _headerView->_alignspecVert = ALIGNSPEC(NULL, 0, 0, _contentSize.height);
         _contentSize.height += _headerView->_frame.size.height;
     }
     if (adapter) {
@@ -121,7 +121,7 @@ void ListView::setSelectedIndex(LISTINDEX index) {
 		if (itemView) {
             // TODO: Am not wild about poking at item view backgrounds like this, perhaps
             // we need an ItemView type which has a "background overlay" renderop.
-            itemView->setBackgroundColour(app.getColour("listview.selected-bkgnd-colour"));
+            itemView->setBackgroundColour(app.getStyleColour("listview.selected-bkgnd-colour"));
 		}
 	}
 }
@@ -182,7 +182,7 @@ pair<LISTINDEX,View*> ListView::createItemView(LISTINDEX index, bool atFront, fl
     View* itemView = _adapter->createItemView(index);
     assert(itemView); // dude, where's my itemview??
     _adapter->bindItemView(itemView, index, _adapter->getItem(index));
-    itemView->setMeasureSpecs(MEASURESPEC_FillParent, MEASURESPEC_Abs(itemHeight));
+    itemView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::Abs(itemHeight));
     insertSubview(itemView, (int)_itemViews.size());
     itemView->measure(_frame.size.width, itemHeight);
     itemView->layout();
@@ -315,7 +315,7 @@ void ListView::updateVisibleItems() {
             if (headerViewIt==_headerViews.end() || section != headerViewIt->first) {
                 View* headerView = _adapter->createHeaderView(section);
                 assert(headerView);
-                headerView->setMeasureSpecs(MEASURESPEC_FillParent, MEASURESPEC_Abs(it->headerHeight));
+                headerView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::Abs(it->headerHeight));
                 addSubview(headerView);
                 headerView->measure(_frame.size.width, it->headerHeight);
                 headerView->layout();

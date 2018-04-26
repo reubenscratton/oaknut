@@ -78,9 +78,9 @@ void ToolbarButton::setImageBitmap(Bitmap* bitmap) {
 void ToolbarButton::lazyCreateImageView() {
     if (!_imageView) {
         _imageView = new ImageView();
-        _imageView->setMeasureSpecs(MEASURESPEC_FillParent, MEASURESPEC_FillParent);
-        //_imageView->setMeasureSpecs(MEASURESPEC_WrapContent, MEASURESPEC_WrapContent);
-        _imageView->setAlignSpecs(ALIGNSPEC_Top, ALIGNSPEC_Left);
+        _imageView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::FillParent());
+        //_imageView->setMeasureSpecs(MEASURESPEC::WrapContent(), MEASURESPEC::WrapContent());
+        _imageView->setAlignSpecs(ALIGNSPEC::Top(), ALIGNSPEC::Left());
         _imageView->setPadding(EDGEINSETS(app.dp(8),app.dp(8),app.dp(8),app.dp(8)));
         _imageView->setTintColour(_tintColour);
         addSubview(_imageView);

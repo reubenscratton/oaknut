@@ -15,8 +15,25 @@ App::App() {
     ;
     Utf8Iterator it(DEFAULT_STYLES);
     _styles.parse(it);
-
 }
+
+#ifndef ANDROID
+void App::log(char const* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vprintf(fmt, args);
+    printf("\n");
+}
+void App::warn(char const* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    printf("Warning: ");
+    vprintf(fmt, args);
+    printf("\n");
+}
+#endif
+
+
 float App::dp(float dp) {
     return dp*_window->_scale;
 }
@@ -34,23 +51,13 @@ void App::loadStyleAsset(const string& assetPath) {
     _styles.parse(it);
 }
 
-string App::getLocalizedString(const string& key) {
-    return getString(key);
-}
-
-string App::defaultFontName() {
-    return getString("font-name");
-}
-float App::defaultFontSize() {
-    return getFloat("font-size");
-}
 
 static map<string, Font*> s_loadedFonts;
 
 
-Font* App::getFont(const string &key) {
-    string fontName = getString(key + ".font-name");
-    float fontSize = getFloat(key + ".font-size");
+Font* App::getStyleFont(const string &key) {
+    string fontName = getStyleString(key + ".font-name");
+    float fontSize = getStyleFloat(key + ".font-size");
     char ach[260];
     sprintf(ach, "%f-%s", fontSize, fontName.data());
     string fkey(ach);
@@ -71,7 +78,7 @@ StyleValue* App::getStyleValue(const string& keypath) {
     return value;
 }
 
-string App::getString(const string& keypath) {
+string App::getStyleString(const string& keypath) {
     StyleValue* value = getStyleValue(keypath);
     if (!value) {
         app.warn("Missing string style info '%s'", keypath.data());
@@ -83,7 +90,7 @@ string App::getString(const string& keypath) {
     return "";
 }
 
-float App::getFloat(const string& keypath) {
+float App::getStyleFloat(const string& keypath) {
     StyleValue* value = getStyleValue(keypath);
     if (!value) {
         app.warn("Missing float style info '%s'", keypath.data());
@@ -91,7 +98,7 @@ float App::getFloat(const string& keypath) {
     }
     return value->getAsFloat();
 }
-COLOUR App::getColour(const string& key) {
+COLOUR App::getStyleColour(const string& key) {
     StyleValue* value = getStyleValue(key);
     if (!value) {
         app.warn("Missing colour style info '%s'", key.data());
@@ -103,7 +110,7 @@ COLOUR App::getColour(const string& key) {
 
 static View* inflateFromResource(pair<string, StyleValue*> r, View* parent) {
     string viewClassName = r.first;
-    View* view = DYNCREATE(viewClassName);
+    View* view = (View*)Object::createByName(viewClassName);
     if (parent) {
         parent->addSubview(view);
     }
@@ -153,3 +160,64 @@ View* App::layoutInflate(const string& assetPath) {
 
 
 
+/**
+ Settings is implemented by a single LocalStore containing a single VariantMap
+ */
+
+static LocalStore* s_localstore;
+static VariantMap* s_userdefaults;
+
+
+static void ensureLoaded() {
+    if (!s_localstore) {
+        s_localstore = LocalStore::create("_userdefaults", "unused");
+    }
+    if (s_localstore->moveFirst()) {
+        s_userdefaults = s_localstore->readCurrent();
+    }
+    if (!s_userdefaults) {
+        s_userdefaults = new VariantMap();
+        s_userdefaults->setInt("unused", 0); // set a primary key value although it's not used
+    }
+    /*    FileStream stream(getUserDefaultsPath());
+     if (stream.openForRead()) {
+     s_userdefaults.readSelfFromStream(&stream);
+     }*/
+}
+
+
+int App::getIntSetting(const char *key, const int defaultValue) {
+    ensureLoaded();
+    if (s_userdefaults->hasValue(key)) {
+        return s_userdefaults->getInt(key);
+    }
+    return defaultValue;
+}
+
+
+void App::setIntSetting(const char* key, const int value) {
+    ensureLoaded();
+    s_userdefaults->setInt(key, value);
+}
+
+string App::getStringSetting(const char* key, const char* defaultValue) {
+    ensureLoaded();
+    if (s_userdefaults->hasValue(key)) {
+        return s_userdefaults->getString(key);
+    }
+    return defaultValue;
+}
+
+void App::setStringSetting(const char* key, const char* value) {
+    ensureLoaded();
+    s_userdefaults->setString(key, value);
+}
+
+void App::saveSettings() {
+    //s_localstore->save();
+    /*FileStream stream(getUserDefaultsPath());
+     if (stream.openForWrite()) {
+     s_userdefaults->writeSelfToStream(&stream);
+     stream.close();
+     }*/
+}

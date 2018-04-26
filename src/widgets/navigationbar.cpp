@@ -10,8 +10,8 @@
 DECLARE_DYNCREATE(NavigationBar);
 
 NavigationBar::NavigationBar() {
-    float statusBarHeight = app.getFloat("statusbar.height");
-	setMeasureSpecs(MEASURESPEC_FillParent, MEASURESPEC_Abs(app.getFloat("navbar.height")+statusBarHeight));
+    float statusBarHeight = app.getStyleFloat("statusbar.height");
+    setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::Abs(app.getStyleFloat("navbar.height")+statusBarHeight));
 	_padding = EDGEINSETS(0,statusBarHeight,0,0);
 	setBackgroundColour(0xffffffff);
 }

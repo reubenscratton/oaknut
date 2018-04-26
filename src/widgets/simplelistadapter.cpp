@@ -38,7 +38,7 @@ View* SimpleListAdapter::createItemView(LISTINDEX index) {
 
 View* SimpleListAdapter::createHeaderView(int section) {
     Label* label = new Label();
-    label->setMeasureSpecs(MEASURESPEC_FillParent, MEASURESPEC_WrapContent);
+    label->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::WrapContent());
     label->setPadding(EDGEINSETS(app.dp(16),app.dp(4),app.dp(16),app.dp(4)));
     label->setText(getSectionTitle(section));
     label->setBackgroundColour(0xFFeeeeee);
