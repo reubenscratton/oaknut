@@ -72,8 +72,8 @@ void ListView::updateContentSize(float parentWidth, float parentHeight) {
     IListAdapter* adapter = _adapter;
     _sectionMetrics.clear();
     if (_headerView) {
-        _headerView->_alignspecVert = ALIGNSPEC(NULL, 0, 0, _contentSize.height);
-        _contentSize.height += _headerView->_frame.size.height;
+        _headerView->setAlignSpecs(ALIGNSPEC::Top(), ALIGNSPEC(NULL, 0, 0, _contentSize.height));
+        _contentSize.height += _headerView->getHeight();
     }
     if (adapter) {
         int numSections = adapter->getSectionCount();
@@ -142,7 +142,7 @@ bool ListView::onTouchEvent(int eventType, int finger, POINT pt) {
         
         for (auto it = _itemViews.begin() ; it!= _itemViews.end() ; it++) {
             View* itemView = it->second;
-            if (itemView->_frame.contains(pt)) {
+            if (itemView->getRect().contains(pt)) {
                 setSelectedIndex(it->first);
                 break;
             }
@@ -184,14 +184,16 @@ pair<LISTINDEX,View*> ListView::createItemView(LISTINDEX index, bool atFront, fl
     _adapter->bindItemView(itemView, index, _adapter->getItem(index));
     itemView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::Abs(itemHeight));
     insertSubview(itemView, (int)_itemViews.size());
-    itemView->measure(_frame.size.width, itemHeight);
+    itemView->measure(_rect.size.width, itemHeight);
     itemView->layout();
-    itemView->setFrameOrigin(POINT_Make(itemView->_frame.origin.x, top));
+    RECT rect = itemView->getRect();
+    rect.origin.y = top;
+    itemView->setRectOrigin(rect.origin);
     pair<LISTINDEX,View*> result(index,itemView);
     _itemViews.insert(atFront ? _itemViews.begin() : _itemViews.end(), result);
     ColorRectFillRenderOp* dividerOp = new ColorRectFillRenderOp(itemView);
     dividerOp->setColour(_dividerColour);
-    RECT dividerRect = itemView->getBounds();
+    RECT dividerRect = itemView->getOwnRect();
     dividerRect.origin.y = dividerRect.bottom() - _dividerHeight;
     dividerRect.size.height = _dividerHeight;
     dividerOp->_rect = dividerRect;
@@ -241,10 +243,10 @@ void ListView::updateVisibleItems() {
     // walking the items list to find the first visible item
     pair<LISTINDEX,View*> item = {0,NULL};
     if (_itemViews.size() == 0) {
-        float bottom = _contentOffset.y + _frame.size.height;
+        float bottom = _contentOffset.y + _rect.size.height;
         float y = _scrollInsets.top;
         if (_headerView) {
-            y += _headerView->_frame.size.height;
+            y += _headerView->getHeight();
         }
         for (int s=0 ; s<sectionCount && !item.second ; s++) {
             for (int i=0 ; i<_adapter->getItemCount(s) ; i++) {
@@ -269,7 +271,7 @@ void ListView::updateVisibleItems() {
     
     // Fill the listview upwards from the current top itemview
     item = _itemViews.at(0);
-    float prevTop = item.second->_frame.origin.y;
+    float prevTop = item.second->getRect().origin.y;
     while (prevTop > _contentOffset.y && item.first>0) {
         LISTINDEX newIndex = offsetIndex(item.first, -1);
         if (newIndex == LISTINDEX_NONE) break;
@@ -283,8 +285,8 @@ void ListView::updateVisibleItems() {
     
     // Fill listview downwards from the current bottom itemview
     item = _itemViews.at(_itemViews.size()-1);
-    while (item.second->_frame.bottom() < _frame.bottom() + _contentOffset.y) {
-        float prevBottom = item.second->_frame.bottom();
+    while (item.second->getRect().bottom() < _rect.bottom() + _contentOffset.y) {
+        float prevBottom = item.second->getRect().bottom();
         LISTINDEX newIndex = offsetIndex(item.first, 1);
         if (newIndex == LISTINDEX_NONE) break;
         if (LISTINDEX_ITEM(newIndex)==0) { // first in section
@@ -297,7 +299,7 @@ void ListView::updateVisibleItems() {
     // Ensure all header items present. The header for the topmost item floats and is always present.
     auto headerViewIt = _headerViews.begin();
     float floatingHeaderAnchorY = _contentOffset.y  + _scrollInsets.top;
-    float bottom = _contentOffset.y + _frame.size.height;
+    float bottom = _contentOffset.y + _rect.size.height;
     int section = LISTINDEX_SECTION(_itemViews.begin()->first);
     for (auto it = _sectionMetrics.begin() + section ; it!=_sectionMetrics.end() ; it++, section++) {
         if (it->headerHeight <= 0) {
@@ -317,13 +319,13 @@ void ListView::updateVisibleItems() {
                 assert(headerView);
                 headerView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::Abs(it->headerHeight));
                 addSubview(headerView);
-                headerView->measure(_frame.size.width, it->headerHeight);
+                headerView->measure(_rect.size.width, it->headerHeight);
                 headerView->layout();
-                headerView->setFrameOrigin(POINT_Make(headerView->_frame.origin.x, headerTop));
+                headerView->setRectOrigin(POINT_Make(0, headerTop));
                 pair<int,View*> result(section,headerView);
                 headerViewIt = _headerViews.insert(headerViewIt, result);
             } else {
-                headerViewIt->second->setFrameOrigin(POINT_Make(0,headerTop));
+                headerViewIt->second->setRectOrigin(POINT_Make(0,headerTop));
             }
             headerViewIt++;
         }

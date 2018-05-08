@@ -125,7 +125,7 @@ void Window::MotionTracker::dispatchInputEvent(int event, long time, POINT pt, W
                 touchedView->dispatchInputEvent(INPUT_EVENT_TAP, source, time, pt);
                 app.log("tap %d", numClicks);
             }
-            multiclickTimer = Timer::start([&] {
+            multiclickTimer = Timer::start([=] {
                 if (touchedView && touchedView->_window) {
                     touchedView->dispatchInputEvent(INPUT_EVENT_TAP_CONFIRMED, source, time, pt);
                 }
@@ -243,13 +243,18 @@ void Window::draw() {
     // Tick animations
     long now = app.currentMillis();
     auto it = _animations.begin();
+    _animationsModified = false;
     while (it != _animations.end()) {
-        Animation* anim = *it;
-        if (anim->_state == ANIMATION_STATE_STOPPED) {
-            _animations.erase(it++);
-        } else {
-            anim->tick(now);
-            it++;
+        ObjPtr<Animation> anim = *it++;
+        if (!anim->_paused) {
+            bool stillGoing = anim->tick(now);
+            if (!stillGoing) {
+                stopAnimation(anim);
+            }
+            if (_animationsModified) {
+                _animationsModified = false;
+                it = _animations.begin(); // bit crap
+            }
         }
     }
     
@@ -260,6 +265,56 @@ void Window::draw() {
         requestRedraw();
     }
     
+}
+
+void Window::startAnimation(Animation* animation, int duration) {
+    startAnimation(animation, duration, 0);
+}
+void Window::startAnimation(Animation* animation, int duration, int delay) {
+    if (animation->_window) {
+        return;
+    }
+#if CONFIG_SLOW_ANIMATIONS
+    duration *= 10;
+#endif
+    animation->_duration = duration;
+    animation->_delay = delay;
+    animation->_paused = false;
+    animation->_timeStarted = app.currentMillis();
+    animation->_window = this;
+    animation->_windowAnimationsListIterator = _animations.insert(_animations.end(), animation);
+    if (animation->_view) {
+        animation->_view->_animationCount++;
+    }
+    requestRedraw();
+}
+
+void Window::stopAnimation(Animation* animation) {
+    if (animation->_window) {
+        assert(animation->_window == this);
+        animation->retain();
+        //animation->apply(1.0);
+        _animations.erase(animation->_windowAnimationsListIterator);
+        _animationsModified = true;
+        animation->_window = NULL;
+        animation->_timeStarted = 0;
+        if (animation->_view) {
+            animation->_view->_animationCount--;
+        }
+        animation->release();
+    }
+}
+
+void Window::detachView(View* view) {
+    if (view->_animationCount > 0) {
+        for (auto it=_animations.begin() ; it!=_animations.end(); ) {
+            auto anim = *it++;
+            if (anim->_view == view) {
+                stopAnimation(anim);
+            }
+        }
+        assert(view->_animationCount == 0);
+    }
 }
 
 void Window::setNeedsLayout() {
@@ -283,19 +338,23 @@ POINT Window::offsetToView(View* view) {
 	POINT pt = {0,0};
 	ViewController* rootVC = _rootViewController;
 	while (view && view != rootVC->getView()) {
-		pt.x += view->_frame.origin.x;
-		pt.y += view->_frame.origin.y;
+		pt.x += view->_rect.origin.x;
+		pt.y += view->_rect.origin.y;
 		view = view->_parent;
 	}
 	return pt;
 }
 
-bool Window::setFirstResponder(View* view) {
-    if (_firstResponder == view) {
+bool Window::setFocusedView(View* view) {
+    if (_focusedView == view) {
         return false;
     }
-    _firstResponder = view;
+    if (_focusedView) {
+        _focusedView->setState({STATE_FOCUSED, 0});
+    }
+    _focusedView = view;
     if (view) {
+        view->setState({STATE_FOCUSED, STATE_FOCUSED});
         _keyboardHandler = view->getKeyboardInputHandler();
         if (_keyboardHandler != NULL) {
             app.keyboardShow(true);

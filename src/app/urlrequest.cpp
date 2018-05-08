@@ -7,6 +7,26 @@
 
 #include <oaknut.h>
 
+/*
+ 
+ We definitely need a 'Fetch' style API.
+ 
+ fetch("https://foo.com", OBJ(
+    "method", "POST",
+    "headers",  OBJ(
+        "Accept", "text/xml",
+        "Authorization", this->orgToken,
+        "Content-Type", "text/json"
+    ),
+    [=] (Response) {
+        ...
+    }
+ );
+
+ 
+ */
+ 
+
 URLData::URLData(ByteBuffer* data) : _value(data), _type(URLDataTypeData) {}
 URLData::URLData(JsonValue* json) : _value(json), _type(URLDataTypeJson) {}
 URLData::URLData(Bitmap* bitmap) : _value(bitmap), _type(URLDataTypeBitmap) {}

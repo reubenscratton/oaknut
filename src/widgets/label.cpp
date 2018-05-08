@@ -193,7 +193,7 @@ void Label::updateContentSize(float parentWidth, float parentHeight) {
 
 void Label::updateRenderOps() {
     if (_textRendererMustRelayout) {
-        _textRenderer.layout(getBoundsWithPadding());
+        _textRenderer.layout(getOwnRectPadded());
         _textRendererMustRelayout = false;
     }
     _textRenderer.updateRenderOps(this);
@@ -202,7 +202,7 @@ void Label::updateRenderOps() {
 void Label::layout() {
 	View::layout();
 
-    _textRenderer.layout(getBoundsWithPadding());
+    _textRenderer.layout(getOwnRectPadded());
     _textRendererMustRelayout = false;
     _updateRenderOpsNeeded = true;
 }

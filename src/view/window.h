@@ -57,11 +57,19 @@ public:
         ObjPtr<Timer> multiclickTimer;
     };
 
+    // Animations
+    list<ObjPtr<class Animation>> _animations;
+    void startAnimation(Animation* animation, int duration);
+    void startAnimation(Animation* animation, int duration, int delay);
+    void stopAnimation(Animation* animation);
+    void detachView(View* view);
+    bool _animationsModified;
+    
+
     vector<MotionTracker*> _motionTrackers;
-	list<ObjPtr<class Animation>> _animations;
 	bool _viewLayoutValid;
 	bool _redrawNeeded;
-    View* _firstResponder;
+    View* _focusedView;
     class IKeyboardInputHandler* _keyboardHandler;
 	
 	Window();
@@ -73,7 +81,7 @@ public:
 	virtual void dispatchInputEvent(int event, int source, long time, int x, int y);
 	virtual POINT offsetToView(View* view);
     
-    virtual bool setFirstResponder(View* view);
+    virtual bool setFocusedView(View* view);
 	void attachRootVC();
 
 	// Render state

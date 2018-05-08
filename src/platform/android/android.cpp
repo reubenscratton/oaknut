@@ -52,7 +52,7 @@ JNIEnv* getJNIEnv() {
 
 bool _calledMain = false;
 
-static void engine_draw_frame() {
+static void engine_draw_rect() {
     if (aapp->display == NULL) {
         return;
     }
@@ -200,7 +200,7 @@ JAVA_FN(void, MainActivity, onSurfaceCreatedNative)(JNIEnv* env, jobject clazz, 
 
     app._window->resizeSurface(w, h, aapp->scale);
 
-    engine_draw_frame();
+    engine_draw_rect();
 
 }
 
@@ -213,11 +213,11 @@ JAVA_FN(void, MainActivity, onSurfaceChangedNative)(JNIEnv* env, jobject obj, jo
 
 
 JAVA_FN(void, MainActivity, redrawNative)(JNIEnv* env, jobject obj) {
-    engine_draw_frame();
+    engine_draw_rect();
 }
 
 JAVA_FN(void, MainActivity, onSurfaceRedrawNeededNative)(JNIEnv* env, jobject obj, jobject jsurface) {
-    engine_draw_frame();
+    engine_draw_rect();
 }
 
 JAVA_FN(void, MainActivity, onSurfaceDestroyedNative)(JNIEnv* env, jobject obj, jobject jsurface) {

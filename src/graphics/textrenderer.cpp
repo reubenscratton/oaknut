@@ -278,8 +278,8 @@ void TextRenderer::updateRenderOps(View* view) {
 
     // TODO: optimize for multiline text
 
-    RECT visibleRect = view->getBounds();
-    visibleRect.origin.y = view->_contentOffset.y;
+    RECT visibleRect = view->getOwnRect();
+    visibleRect.origin.y = view->getContentOffset().y;
 
     
     // Clear old ops

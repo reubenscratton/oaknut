@@ -11,7 +11,6 @@
 Animation::Animation() : Animation(0,1) {
 }
 Animation::Animation(float fromVal, float toVal) : _interpolater(linear),
-												   _state(ANIMATION_STATE_STOPPED),
 												   _fromVal(fromVal),
 												   _toVal(toVal) {
 }
@@ -20,55 +19,40 @@ Animation::~Animation() {
 }
 
 void Animation::start(Window* window, int duration) {
-#if CONFIG_SLOW_ANIMATIONS
-    duration *= 10;
-#endif
-    start(window, duration,0);
+    window->startAnimation(this, duration,0);
 }
 void Animation::start(Window* window, int duration, int delay) {
-    if (_state == ANIMATION_STATE_STARTED || _state == ANIMATION_STATE_PAUSED) {
-        return;
-    }
-    _duration = duration;
-    _delay = delay;
-    _state = ANIMATION_STATE_STARTED;
-    _timeStarted = app.currentMillis();
-	_window = window;
-	_window->_animations.insert(_window->_animations.end(), this);
-    _window->requestRedraw();
+    window->startAnimation(this, duration, delay);
 }
 
 void Animation::stop() {
-    if (_state != ANIMATION_STATE_STOPPED) {
-        _window = NULL;
-        _timeStarted = 0;
-        _state = ANIMATION_STATE_STOPPED;
-        // todo: delegate here?
+    if (_window) {
+        _window->stopAnimation(this);
     }
 }
 
 void Animation::pause() {
-    if (_state != ANIMATION_STATE_STARTED) {
+    if (!_window || _paused) {
         return;
     }
-    _state = ANIMATION_STATE_PAUSED;
+    _paused = true;
     _elapsedAtPause = app.currentMillis() - _timeStarted;
 }
 
 void Animation::unpause() {
-    if (_state != ANIMATION_STATE_PAUSED) {
+    if (!_paused) {
         return;
     }
     _timeStarted = app.currentMillis() - _elapsedAtPause;
     _elapsedAtPause = 0;
-    _state = ANIMATION_STATE_STARTED;
+    _paused = false;
 }
 
 
-void Animation::tick(long now) {
+bool Animation::tick(long now) {
 	float elapsed = now - (_timeStarted + _delay);
 	if (elapsed<0) { // not started yet
-		return;
+		return true;
 	}
 
 	// Clamp elapsed time to duration. If duration has been exceeded set 'finished' true.
@@ -84,11 +68,11 @@ void Animation::tick(long now) {
         
 	// If animation has finished
 	if (finished) {
-		stop();
 		if (_onFinished) {
 			_onFinished(this);
         }
     }
+    return !finished;
 }
 
 
@@ -98,16 +82,13 @@ void DelegateAnimation::apply(float val) {
 
 
 
-AlphaAnimation::AlphaAnimation(View* view, float target) : _view(view) {
+AlphaAnimation::AlphaAnimation(View* view, float target) {
+    _view = view;
 	_fromVal = view->getAlpha();
 	_toVal = target;
 }
 void AlphaAnimation::apply(float val) {
     _view->setAlpha(val);
-}
-void AlphaAnimation::stop() {
-	_view = NULL;
-	Animation::stop();
 }
 
 

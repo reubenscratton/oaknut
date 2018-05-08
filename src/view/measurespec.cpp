@@ -22,3 +22,19 @@ MEASURESPEC MEASURESPEC::WrapContent() { return MEASURESPEC(RefTypeContent, NULL
 MEASURESPEC MEASURESPEC::UseAspect(float x) { return MEASURESPEC(RefTypeAspect, NULL,  x, 0); }
 MEASURESPEC MEASURESPEC::FillParent() { return MEASURESPEC(RefTypeView, NULL, 1, 0); }
 
+MEASURESPEC::MEASURESPEC(StyleValue* value) {
+    if (value->type == StyleValue::Type::Int || value->type == StyleValue::Type::Double) {
+        *this = Abs(value->getAsFloat());
+        return;
+    }
+    assert(value->type == StyleValue::Type::String);
+    if (value->str == "wrap_content") { *this = WrapContent(); return; }
+    if (value->str == "fill_parent") { *this = FillParent(); return; }
+    if (value->str == "match_parent") { *this = FillParent(); return; }
+    if (stringStartsWith(value->str, "aspect(", true)) {
+        *this = UseAspect(stringParseDouble(value->str));
+        return;
+    }
+    assert(false); // unknown measurespec
+    *this =  WrapContent();
+}

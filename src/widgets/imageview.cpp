@@ -80,7 +80,7 @@ void ImageView::loadImage() {
 
 void ImageView::layout() {
     View::layout();
-    RECT bounds = getBounds();
+    RECT bounds = getOwnRect();
     _padding.applyToRect(bounds);
     _renderOp->setRect(bounds);
 }

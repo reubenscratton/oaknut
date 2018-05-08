@@ -21,7 +21,8 @@ typedef struct MEASURESPEC {
     float abs;
     
     MEASURESPEC(RefType refType, class View* refView, float refSizeMultiplier, float delta);
-
+    MEASURESPEC(class StyleValue* value);
+    
     static MEASURESPEC None();//         MEASURESPEC_Make(REFTYPE_NONE, NULL, 0, 0)
     static MEASURESPEC Abs(float x);//       MEASURESPEC_Make(REFTYPE_ABS, NULL, 0, x)
     static MEASURESPEC WrapContent();//  MEASURESPEC_Make(REFTYPE_CONTENT, NULL, 1, 0)

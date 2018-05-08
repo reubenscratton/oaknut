@@ -152,7 +152,7 @@ bool StyleMap::parse(Utf8Iterator& it) {
         
         StyleValue* value = new StyleValue();
         if (it.peek() == '{') {
-            value->type = StyleValue::Type::StyleMap;
+            value->setType(StyleValue::Type::StyleMap);
             value->styleMap = new StyleMap();
             if (!value->styleMap->parse(it)) {
                 return false;
@@ -172,10 +172,10 @@ bool StyleMap::parse(Utf8Iterator& it) {
                     isFloat = true;
                 }
                 if (isFloat) {
-                    value->type = StyleValue::Type::Double;
+                    value->setType(StyleValue::Type::Double);
                     value->d = stringParseDouble(str);
                 } else {
-                    value->type = StyleValue::Type::Int;
+                    value->setType(StyleValue::Type::Int);
                     value->i = stringParseInt(str);
                 }
             } else {
@@ -201,9 +201,9 @@ bool StyleMap::parse(Utf8Iterator& it) {
                 }
                 
                 if (stringStartsWith(str, "$", true)) {
-                    value->type = StyleValue::Type::Reference;
+                    value->setType(StyleValue::Type::Reference);
                 } else {
-                    value->type = StyleValue::Type::String;
+                    value->setType(StyleValue::Type::String);
                 }
                 value->str = str;
             }
@@ -230,9 +230,7 @@ bool StyleMap::parse(Utf8Iterator& it) {
     return true;
 }
 
-StyleValue::StyleValue() {
-    //new(&str) string();
-    //new(&styleMap) ObjPtr();
+StyleValue::StyleValue() : type(Int) {
 }
 StyleValue::StyleValue(const StyleValue& rval) : type(rval.type) {
 	switch (rval.type) {
@@ -243,9 +241,37 @@ StyleValue::StyleValue(const StyleValue& rval) : type(rval.type) {
 	case Double: d = rval.d; break;
 	}
 }
+StyleValue::~StyleValue() {
+    if (type == StyleMap) {
+        styleMap.~ObjPtr();
+    } else if (type == String) {
+        str.~string();
+    }
+}
+void StyleValue::setType(Type newType) {
+    if (type == newType) return;
+    
+    // Handle non-trivial type changes
+    if (type == StyleMap && newType != StyleMap) {
+        styleMap.~ObjPtr();
+    } else if (type != StyleMap && newType == StyleMap) {
+        new (&styleMap) ObjPtr<class StyleMap>();
+    }
+    bool typeIsString = (type==String || type==Reference);
+    bool newTypeIsString = (newType==String || newType==Reference);
+    if (typeIsString && !newTypeIsString) {
+        str.~string();
+    } else if (!typeIsString && newTypeIsString) {
+        new (&str) string();
+    }
+    
+    type = newType;
+    
+}
+
 StyleValue& StyleValue::operator=(const StyleValue& other) {
 	if (this != &other)  {
-		type = other.type;
+		setType(other.type);
 		switch (other.type) {
 		case String: str = other.str; break;
         case Reference: str = other.str; break;

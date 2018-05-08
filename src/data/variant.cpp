@@ -16,7 +16,28 @@ Variant::Variant(VariantType type) : type(EMPTY) {
 Variant::Variant(const Variant& var) : Variant(var.type) {
     assign(var);
 }
+Variant::Variant(int32_t val) : type(INT32), i32(val) {
+}
+Variant::Variant(int64_t val) : type(INT64), i64(val) {
+}
+Variant::Variant(uint32_t val) : type(UINT32), u32(val) {
+}
+Variant::Variant(uint64_t val) : type(UINT64), u64(val) {
+}
+Variant::Variant(float val) : type(FLOAT32), f(val) {
+}
+Variant::Variant(double val) : type(FLOAT64), d(val) {
+}
+Variant::Variant(const char* val) : type(STRING), str(val) {
+}
+Variant::Variant(vector<pair<const string&,const Variant&>> vals) : type(MAP), map(NULL) {
+    map = new VariantMap(vals);
+}
+
 Variant::~Variant() {
+    if (type == STRING) {
+        str.~string();
+    }
     if (type == BYTEBUFFER) {
         data.~ObjPtr();
     }
@@ -28,12 +49,15 @@ void Variant::setType(VariantType newType) {
     if (type == newType) return;
     
     // Handle smart-pointer type changes
-    if (type == BYTEBUFFER && newType != BYTEBUFFER) {
+    if (type == STRING && newType != STRING) {
+        str.~string();
+    } else if (type != STRING && newType == STRING) {
+        new (&str) string();
+    } else if (type == BYTEBUFFER && newType != BYTEBUFFER) {
         data.~ObjPtr();
     } else if (type != BYTEBUFFER && newType == BYTEBUFFER) {
         new (&data) ObjPtr<ByteBuffer>();
-    }
-    if (type == MAP && newType != MAP) {
+    } else if (type == MAP && newType != MAP) {
         map.~ObjPtr();
     } else if (type != MAP && newType == MAP) {
         new (&map) ObjPtr<VariantMap>();
@@ -56,6 +80,7 @@ void Variant::assign(const Variant& src) {
         case UINT64: u64 = src.u64; break;
         case FLOAT32: f = src.f; break;
         case FLOAT64: d = src.d; break;
+        case STRING: str = src.str; break;
         case BYTEBUFFER: data = src.data; break;
         case MAP: map = src.map; break;
     }
@@ -78,6 +103,7 @@ bool Variant::operator<(const Variant& rhs) const {
         case UINT64: return u64 < rhs.u64;
         case FLOAT32: return f < rhs.f;
         case FLOAT64: return d < rhs.d;
+        case STRING: return str < rhs.str;
         case BYTEBUFFER: {
             size_t cb = min(data->cb, rhs.data->cb);
             int cv = memcmp(data->data, rhs.data->data, cb);
@@ -108,6 +134,7 @@ bool Variant::readSelfFromStream(Stream* stream) {
         case UINT64:return stream->readBytes(8, &u64);
         case FLOAT32:return stream->readBytes(sizeof(float), &f);
         case FLOAT64:return stream->readBytes(sizeof(double), &d);
+        case STRING:return stream->readString(&str);
         case BYTEBUFFER: {
             data = new ByteBuffer();
             return data->readSelfFromStream(stream);
@@ -135,6 +162,7 @@ bool Variant::writeSelfToStream(Stream* stream) const {
         case UINT64:return stream->writeBytes(8, &u64);
         case FLOAT32:return stream->writeBytes(sizeof(float), &f);
         case FLOAT64:return stream->writeBytes(sizeof(double), &d);
+        case STRING:return stream->writeString(str);
         case BYTEBUFFER: return data->writeSelfToStream(stream);
         case MAP: return map->writeSelfToStream(stream);
     }

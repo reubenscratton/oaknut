@@ -74,11 +74,11 @@ void NavigationItem::applyTransition(NavigationBar* navBar, float val, bool inco
 	if (_titleView) {
 		_titleView->setAlpha(alpha);
 		float tx = incoming ? (1-val) : -val;
-		float titleDistance = _titleView->_frame.size.width/2 + navBar->_frame.size.width/2;
+		float titleDistance = _titleView->getWidth()/2 + navBar->getWidth()/2;
 		if (isPop) {
-			_titleView->setAnimTranslate(POINT_Make(-tx * titleDistance,0));
+			_titleView->setTranslate(POINT_Make(-tx * titleDistance,0));
         } else {
-            _titleView->setAnimTranslate(POINT_Make(tx * titleDistance,0));
+            _titleView->setTranslate(POINT_Make(tx * titleDistance,0));
         }
 	}
     _rightButtonsFrame->setAlpha(alpha);

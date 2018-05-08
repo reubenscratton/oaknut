@@ -47,11 +47,11 @@ void LinearLayout::measure(float parentWidth, float parentHeight) {
 	for (int i=0 ; i<_subviews.size() ; i++) {
 		View* view = _subviews.at(i);
 		if (_orientation == Vertical) {
-            _contentSize.height += view->_frame.size.height;
-			_contentSize.width = fmaxf(_contentSize.width, view->_frame.size.width);
+            _contentSize.height += view->getHeight();
+			_contentSize.width = fmaxf(_contentSize.width, view->getWidth());
         } else {
-            _contentSize.height = fmaxf(_contentSize.height, view->_frame.size.height);
-			_contentSize.width += view->_frame.size.width;
+            _contentSize.height = fmaxf(_contentSize.height, view->getHeight());
+			_contentSize.width += view->getWidth();
         }
     }
 	
@@ -59,21 +59,25 @@ void LinearLayout::measure(float parentWidth, float parentHeight) {
 	if (_weightsTotal > 0) {
 		if (_orientation == Vertical) {
             if (_heightMeasureSpec.refType == MEASURESPEC::RefTypeView && _heightMeasureSpec.refView==nullptr) {
-				float excess = (_frame.size.height - _contentSize.height) - (_padding.top+_padding.bottom);
+				float excess = (_rect.size.height - _contentSize.height) - (_padding.top+_padding.bottom);
 				for (int i=0 ; i<_subviews.size() ; i++) {
 					View* view = _subviews.at(i);
 					float excessForThisSubview = (_weights[i]/_weightsTotal)*excess;
-					view->_frame.size.height += excessForThisSubview;
+                    RECT rect = view->getRect();
+					rect.size.height += excessForThisSubview;
+                    view->setRectSize(rect.size);
 					_contentSize.height += excessForThisSubview;
 				}
 			}
         } else {
 			if (_widthMeasureSpec.refType == MEASURESPEC::RefTypeView && _widthMeasureSpec.refView==nullptr) {
-				float excess = (_frame.size.width - _contentSize.width) - (_padding.left+_padding.right);
+				float excess = (_rect.size.width - _contentSize.width) - (_padding.left+_padding.right);
 				for (int i=0 ; i<_subviews.size() ; i++) {
 					View* view = _subviews.at(i);
 					float excessForThisSubview = (_weights[i]/_weightsTotal)*excess;
-					view->_frame.size.width += excessForThisSubview;
+                    RECT rect = view->getRect();
+					rect.size.width += excessForThisSubview;
+                    view->setRectSize(rect.size);
 					_contentSize.width += excessForThisSubview;
 				}
 			}
@@ -83,10 +87,10 @@ void LinearLayout::measure(float parentWidth, float parentHeight) {
 	
 	// If we're wrap-content, update to reflect the change in content size
 	if (_widthMeasureSpec.refType == MEASURESPEC::RefTypeContent) {
-		_frame.size.width = _padding.left + _contentSize.width + _padding.right;
+		_rect.size.width = _padding.left + _contentSize.width + _padding.right;
 	}
 	if (_heightMeasureSpec.refType == MEASURESPEC::RefTypeContent) {
-		_frame.size.height = _padding.top + _contentSize.height + _padding.bottom;
+		_rect.size.height = _padding.top + _contentSize.height + _padding.bottom;
 	}
 
 }
@@ -101,15 +105,15 @@ void LinearLayout::layout() {
         for (int i=0 ; i<_subviews.size() ; i++) {
             View* view = _subviews.at(i);
 			view->layout();
-            view->setFrameOrigin(pt);
-            pt.y += view->_frame.size.height;
+            view->setRectOrigin(pt);
+            pt.y += view->getHeight();
         }
     } else if (_orientation == Horizontal) {
         for (int i=0 ; i<_subviews.size() ; i++) {
             View* view = _subviews.at(i);
 			view->layout();
-            view->setFrameOrigin(pt);
-            pt.x += view->_frame.size.width;
+            view->setRectOrigin(pt);
+            pt.x += view->getWidth();
         }
     }
 }

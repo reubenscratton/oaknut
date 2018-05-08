@@ -23,10 +23,10 @@ void Button::applyStyleValues(const StyleValueList& values) {
         setBackground(new RoundRectRenderOp(this, _pressedFillColour, app.dp(2), _borderColour,  app.dp(6)), {STATE_PRESSED,STATE_PRESSED});
     } else {
         if (_backgroundColour) {
-            setBackground(new ColorRectFillRenderOp(this, getBounds(), _backgroundColour));
+            setBackground(new ColorRectFillRenderOp(this, getOwnRect(), _backgroundColour));
         }
         if (_pressedFillColour) {
-            setBackground(new ColorRectFillRenderOp(this, getBounds(), _pressedFillColour), {STATE_PRESSED,STATE_PRESSED});
+            setBackground(new ColorRectFillRenderOp(this, getOwnRect(), _pressedFillColour), {STATE_PRESSED,STATE_PRESSED});
         }
 
     }
@@ -89,11 +89,10 @@ void ToolbarButton::lazyCreateImageView() {
 
 bool ToolbarButton::onTouchEvent(int eventType, int finger, POINT pt) {
 	if (eventType == INPUT_EVENT_DOWN) {
-		_alpha = 0.5f;
-		setNeedsFullRedraw();
+		setAlpha(0.5f);
 	}
 	if (eventType == INPUT_EVENT_CANCEL || eventType==INPUT_EVENT_UP) {
-		if (!_alphaAnim) {
+		if (_alpha == 0.5f) {
 			animateAlpha(1.0, 350);
 		}
 	}

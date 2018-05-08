@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2017 Sandcastle Software Ltd
+// Copyright (c) 2018 Sandcastle Software Ltd
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -124,9 +124,9 @@ void oakFaceDetectorClose(void* osobj);
 #include "graphics/renderbatch.h"
 #include "graphics/surface.h"
 #include "graphics/renderop_blur.h"
-#include "graphics/window.h"
+#include "view/window.h"
 #include "graphics/textrenderer.h"
-#include "graphics/anim.h"
+#include "view/anim.h"
 #include "graphics/canvas.h"
 #include "app/styles.h"
 #include "app/app.h"
@@ -139,7 +139,7 @@ void oakFaceDetectorClose(void* osobj);
 #include "util/cache.h"
 #include "util/circularbuffer.h"
 #include "media/audiooutput.h"
-#include "widgets/scrollbar.h"
+#include "view/scrollbar.h"
 #include "view/alignspec.h"
 #include "view/measurespec.h"
 #include "view/ikeyboardinputhandler.h"

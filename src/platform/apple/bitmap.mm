@@ -380,7 +380,7 @@ void Bitmap::writeSelf(VariantMap* map) {
     int stride = (int)CGBitmapContextGetBytesPerRow(_context);
     map->setInt("s", stride);
     void* data = CGBitmapContextGetData(_context);
-    int cb = stride * CGBitmapContextGetHeight(_context);
+    unsigned long cb = stride * CGBitmapContextGetHeight(_context);
     ObjPtr<ByteBuffer> bb = new ByteBuffer((uint8_t*)data, cb);
     map->setByteBuffer("bb", bb);
 }

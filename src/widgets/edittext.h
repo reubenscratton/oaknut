@@ -15,7 +15,7 @@ public:
     virtual void setPadding(EDGEINSETS padding);
     virtual IKeyboardInputHandler* getKeyboardInputHandler();
     virtual bool onTouchEvent(int eventType, int eventSource, POINT pt);
-    virtual bool becomeFirstResponder();
+    virtual bool setFocused(bool focused);
     virtual void updateRenderOps();
     virtual void layout();
     virtual void detachFromWindow();

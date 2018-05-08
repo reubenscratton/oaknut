@@ -110,7 +110,7 @@ void Surface::attachViewOps(View* view) {
  returns -1 if view1 renders before view2
  returns +1 if view1 renders after view2
  */
-int renderOrder(View* view1, View* view2) {
+int Surface::renderOrder(View* view1, View* view2) {
     if (view1==view2) return 0;
     for (View* prev=view2->_previousView ; prev ; prev=prev->_previousView) { // surely there's a better/faster way than this?
         if (view1==prev) return -1;
@@ -170,28 +170,29 @@ void Surface::removeRenderOp(RenderOp* op) {
 
 
 
-static void renderPhase1(Surface* surface, View* view, Window* window, POINT origin) {
+void Surface::renderPhase1(View* view, Window* window, POINT origin) {
 
-    if (view->_visibility != VISIBILITY_VISIBLE) {
+    if (view->_visibility != Visible) {
         return;
     }
+    Surface* surface = this;
     
     // If view has a private surface, ensure surface has same size as view
     if (view->_surface != surface) {
         bool sizeChanged = false;
-        if (view->_surface->_size.width != view->_frame.size.width || view->_surface->_size.height != view->_frame.size.height) {
-            view->_surface->setSize(view->_frame.size);
+        if (view->_surface->_size.width != view->_rect.size.width || view->_surface->_size.height != view->_rect.size.height) {
+            view->_surface->setSize(view->_rect.size);
             sizeChanged = true;
         }
         
         // Create the private surface op, allocating vertex space from the host surface's vbo
         if (!view->_surface->_op) {
-            RECT rect = view->getBounds();
+            RECT rect = view->getOwnRect();
             view->_surface->_op = new PrivateSurfaceRenderOp(view, rect);
             view->_surface->_op->_alloc = window->_quadBuffer->alloc(1, NULL);
         } else {
             if (sizeChanged) {
-                view->_surface->_op->setRect(view->getBounds());
+                view->_surface->_op->setRect(view->getOwnRect());
             }
         }
 
@@ -202,26 +203,26 @@ static void renderPhase1(Surface* surface, View* view, Window* window, POINT ori
     } else {
 
         // Adjust origin
-        origin.x += view->_frame.origin.x;
-        origin.y += view->_frame.origin.y;
+        origin.x += view->_rect.origin.x;
+        origin.y += view->_rect.origin.y;
     }
     
     // If view's content size is invalid, now's a great time to update it
     if (!view->_contentSizeValid) {
         assert(view->_widthMeasureSpec.refType!=MEASURESPEC::RefType::RefTypeContent); // shoulda been done in measure()!
         assert(view->_heightMeasureSpec.refType!=MEASURESPEC::RefType::RefTypeContent);
-        float parentWidth = view->_parent?view->_parent->_frame.size.width : view->_window->_surfaceRect.size.width;
-        float parentHeight = view->_parent?view->_parent->_frame.size.height : view->_window->_surfaceRect.size.height;
+        float parentWidth = view->_parent?view->_parent->_rect.size.width : view->_window->_surfaceRect.size.width;
+        float parentHeight = view->_parent?view->_parent->_rect.size.height : view->_window->_surfaceRect.size.height;
         view->updateContentSize(parentWidth, parentHeight);
         view->_contentSizeValid = true;
     }
     
     bool changesMvp = view->_matrix || view->_contentOffset.y != 0.0f;
     if (changesMvp) {
-        surface->_mvpNum++;
+        _mvpNum++;
     }
     for (auto r:view->_renderList) {
-        r->_mvpNum = surface->_mvpNum;
+        r->_mvpNum = _mvpNum;
     }
     
     // Give the view a chance to update its renderOps now that layout is complete
@@ -233,11 +234,11 @@ static void renderPhase1(Surface* surface, View* view, Window* window, POINT ori
     // Recurse
     for (auto it = view->_subviews.begin(); it!=view->_subviews.end() ; it++) {
         ObjPtr<View>& subview = *it;
-        renderPhase1(surface, subview, window, origin);
+        surface->renderPhase1(subview, window, origin);
     }
  
     if (changesMvp) {
-        surface->_mvpNum--;
+        _mvpNum--;
     }
 
 }
@@ -274,12 +275,12 @@ void PrivateSurfaceRenderOp::render(Window* window, Surface* surface) {
 }
 
 
-static void renderPhase2(Surface* surface, View* view, Window* window) {
-    if (view->_visibility != VISIBILITY_VISIBLE) {
+void Surface::renderPhase2(Surface* prevsurf, View* view, Window* window) {
+    if (view->_visibility != Visible) {
         return;
     }
     
-    Surface* prevsurf = surface;
+    Surface* surface = this;
     bool surfaceIsCurrent = view->_surface == surface;
     if (!surfaceIsCurrent) {
         surface = view->_surface;
@@ -319,7 +320,7 @@ static void renderPhase2(Surface* surface, View* view, Window* window) {
     
     // Recurse subviews
     for (auto it=view->_subviews.begin() ; it != view->_subviews.end() ; it++) {
-        renderPhase2(surface, *it, window);
+        surface->renderPhase2(surface, *it, window);
     }
         
     // Pop draw state
@@ -360,7 +361,7 @@ void Surface::render(View* view, Window* window) {
     _mvpNum = 0;
     
     /** PHASE 1: ENSURE ALL RENDER LISTS ARE VALID **/
-    renderPhase1(this, view, window, POINT_Make(0,0));
+    renderPhase1(view, window, POINT_Make(0,0));
     
     /** PHASE 2: THE ACTUAL OPENGL DRAW COMMANDS **/
     renderPhase2(NULL, view, window);

@@ -95,7 +95,7 @@ void NavigationController::applyNavTransitionToViewController(ViewController* vc
 	else  {
 		tx = incoming ? (val-1) : val/2;
 	}
-	vc->getView()->setAnimTranslate(POINT_Make(tx * _view->_frame.size.width, 0));
+	vc->getView()->setTranslate(POINT_Make(tx * _view->getWidth(), 0));
 	vc->_navigationItem->applyTransition(_navBar, val, incoming, _animationState == Pop);
 }
 

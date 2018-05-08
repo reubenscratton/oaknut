@@ -22,6 +22,7 @@ typedef enum {
     UINT64,
     FLOAT32,
     FLOAT64,
+    STRING,
     BYTEBUFFER,
     MAP
 } VariantType;
@@ -46,12 +47,21 @@ public:
         uint64_t u64;
         float f;
         double d;
+        string str;
         ObjPtr<ByteBuffer> data;
         ObjPtr<class VariantMap> map;
     };
     Variant();
     Variant(VariantType type);
+    Variant(int32_t val);
+    Variant(int64_t val);
+    Variant(uint32_t val);
+    Variant(uint64_t val);
+    Variant(float val);
+    Variant(double val);
+    Variant(const char* val);
     Variant(const Variant& var);
+    Variant(vector<pair<const string&,const Variant&>> vals);
     Variant& operator=(const Variant& rhs);
     bool operator<(const Variant& rhs) const;
     ~Variant();

@@ -13,6 +13,7 @@ class VariantMap : public Object, ISerializableBase {
 public:
     
     VariantMap();
+    VariantMap(vector<pair<const string&,const Variant&>> vals);
     
     bool hasValue(const string& key) const;
     Variant get(const string& key) const;

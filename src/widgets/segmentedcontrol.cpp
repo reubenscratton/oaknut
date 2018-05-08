@@ -111,8 +111,8 @@ void SegmentedControl::updateContentSize(float parentWidth, float parentHeight) 
 
 void SegmentedControl::measure(float parentWidth, float parentHeight) {
 	View::measure(parentWidth, parentHeight);
-	if (1==(((int)_frame.size.height)&1)) {
-		_frame.size.height+=1;
+	if (1==(((int)_rect.size.height)&1)) {
+		_rect.size.height+=1;
 	}
 	
 }

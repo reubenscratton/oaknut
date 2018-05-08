@@ -16,7 +16,7 @@ public:
     
     // Overrides
     virtual void layout();
-    virtual bool becomeFirstResponder();
+    virtual bool setFocused(bool focused);
     virtual void setPadding(EDGEINSETS padding);
     virtual void setText(string text);
 

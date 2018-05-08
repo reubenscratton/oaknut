@@ -10,6 +10,12 @@
 
 VariantMap::VariantMap() {
 }
+VariantMap::VariantMap(vector<pair<const string&, const Variant&>> vals) {
+    for (auto it : vals) {
+        _map.insert(it);
+    }
+}
+
 
 bool VariantMap::readSelfFromStream(Stream* stream) {
     uint32_t num = 0;

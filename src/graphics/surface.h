@@ -47,6 +47,11 @@ public:
     void addRenderOp(RenderOp* op);
     void removeRenderOp(RenderOp* op);
     
+private:
+    void renderPhase1(View* view, Window* window, POINT origin);
+    void renderPhase2(Surface* prevsurf, View* view, Window* window);
+    static int renderOrder(View* view1, View* view2);
+    
 #ifdef DEBUG
     string _renderLog;
 #endif

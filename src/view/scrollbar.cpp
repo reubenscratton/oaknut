@@ -54,17 +54,19 @@ Scrollbar::Scrollbar(View* view) {
 
 void Scrollbar::updateRect() {
     View* view = _renderOp->_view;
+    SIZE contentSize = view->getContentSize();
+    POINT contentOffset = view->getContentOffset();
     float insets = view->_scrollInsets.top+view->_scrollInsets.bottom;
-    float visibleContentHeight = view->_contentSize.height - insets;
-    float scale = (view->_frame.size.height-insets) / visibleContentHeight;
-    float scrollbarLength = (view->_frame.size.height-insets) * scale;
-    scrollbarLength = fmaxf(scrollbarLength, app.dp(40));
-    RECT rect = view->getBounds();
-    rect.origin.x = rect.size.width - 9;
-    rect.origin.y = view->_scrollInsets.top + view->_contentOffset.y * scale
-        +view->_contentOffset.y; // Add the unscaled contentOffset because we have to correct for
+    float visibleContentHeight = contentSize.height - insets;
+    float scale = (view->getHeight()-insets) / visibleContentHeight;
+    float scrollbarLength = (view->getHeight()-insets) * scale;
+    scrollbarLength = fmaxf(scrollbarLength, app.dp(40)); // todo: style!
+    RECT rect = view->getOwnRect();
+    rect.origin.x = rect.size.width - 9; // todo: style!
+    rect.origin.y = view->_scrollInsets.top + contentOffset.y * scale
+        +contentOffset.y; // Add the unscaled contentOffset because we have to correct for
                                  // contentOffset now being part of MVP translation!
-    rect.size.width = 5;
+    rect.size.width = 5; // todo: style!
     rect.size.height = scrollbarLength;
     _renderOp->setRect(rect);
 }

@@ -36,7 +36,7 @@ void SearchBox::setPadding(EDGEINSETS padding) {
 
 void SearchBox::layout() {
     EditText::layout();
-    RECT rect = getBounds();
+    RECT rect = getOwnRect();
     RECT_inset(rect, app.dp(12), app.dp(6));
     _roundRectOp->setRect(rect);
     
@@ -44,15 +44,15 @@ void SearchBox::layout() {
     _searchIconOp->setRect( RECT_Make(rect.origin.x+(rect.size.width-searchIconSize.width)/2,rect.origin.y+(rect.size.height-searchIconSize.height)/2, searchIconSize.width, searchIconSize.height));
 }
 
-bool SearchBox::becomeFirstResponder() {
-    bool r = EditText::becomeFirstResponder();
-    if (r) {
+bool SearchBox::setFocused(bool focused) {
+    bool r = EditText::setFocused(focused);
+    if (focused && r) {
         DelegateAnimation* anim = new DelegateAnimation();
         anim->_interpolater = linear;
         anim->_delegate = [=](float val) {
             RECT iconRect;
             iconRect.size = SIZE_Make(app.dp(16), app.dp(16));
-            RECT paddedBounds = getBoundsWithPadding();
+            RECT paddedBounds = getOwnRectPadded();
             float spaceForSearchIcon = this->spaceForSearchIcon();
             paddedBounds.origin.x -= spaceForSearchIcon;
             paddedBounds.size.width += spaceForSearchIcon;

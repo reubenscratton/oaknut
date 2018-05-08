@@ -58,7 +58,7 @@ ALIGNSPEC::ALIGNSPEC(StyleValue* value, View* view) {
             anchorId=str;
             str="";
         }
-        anchor = view->_parent->findViewById(anchorId);
+        anchor = view->getParent()->findViewById(anchorId);
         assert(anchor); // NB: anchor must be previously declared. TODO: remove this restriction
         stringTrim(str);
         if (str.size() > 0) {

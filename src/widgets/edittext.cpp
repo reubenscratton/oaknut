@@ -23,14 +23,14 @@ bool EditText::onTouchEvent(int eventType, int eventSource, POINT pt) {
             setText("");
             return true;
         }
-        becomeFirstResponder();
+        setFocused(true);
     }
     return true;//View::onTouchEvent(eventType, eventSource, pt);
 }
 
 void EditText::detachFromWindow() {
-    if (isFirstResponder()) {
-        resignFirstResponder();
+    if (isFocused()) {
+        setFocused(false);
     }
     Label::detachFromWindow();
     if (_blinkCursorTimer) {
@@ -38,9 +38,9 @@ void EditText::detachFromWindow() {
     }
 }
 
-bool EditText::becomeFirstResponder() {
-    bool r = Label::becomeFirstResponder();
-    if (r) {
+bool EditText::setFocused(bool focused) {
+    bool r = Label::setFocused(focused);
+    if (r && focused) {
         _blinkCursorTimer = Timer::start(std::bind(&EditText::blinkCursor, this), 500, true);
         blinkCursor();
     }
@@ -60,7 +60,7 @@ void EditText::blinkCursor() {
 }
 
 void EditText::updateCursor() {
-    if (!isFirstResponder()) {
+    if (!isFocused()) {
         if (_cursorRenderOp) {
             removeRenderOp(_cursorRenderOp);
             _cursorRenderOp = NULL;
@@ -90,7 +90,7 @@ void EditText::setText(string text) {
     _selectionStart = min(_selectionStart, (int)text.length());
     _insertionPoint = min(_insertionPoint, (int)text.length());
     updateClearButton();
-    if (isFirstResponder()) {
+    if (isFocused()) {
         app.keyboardNotifyTextChanged();
     }
 }
@@ -105,7 +105,7 @@ void EditText::updateClearButton() {
         if (_showClearButtonWhenNotEmpty) {
             if (!_clearButtonOp) {
                 _clearButtonOp = new TextureRenderOp(this, "images/edittext_clear.png", 0xff999999);
-                RECT rect = getBoundsWithPadding();
+                RECT rect = getOwnRectPadded();
                 _clearButtonOp->_rect.origin.x = rect.origin.x+rect.size.width-_clearButtonOp->_rect.size.width;
                 _clearButtonOp->_rect.origin.y = rect.origin.y+(rect.size.height-_clearButtonOp->_rect.size.height) / 2;
                 addRenderOp(_clearButtonOp);

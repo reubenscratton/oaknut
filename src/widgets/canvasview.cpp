@@ -17,10 +17,10 @@ CanvasView::CanvasView() {
 
 void CanvasView::layout() {
     View::layout();
-    RECT bounds = getBounds();
+    RECT bounds = getOwnRect();
     _textureRenderOp->setRect(bounds);
     
-    _canvas->resize(_frame.size.width, _frame.size.height);
+    _canvas->resize(_rect.size.width, _rect.size.height);
     Bitmap* bitmap = _canvas->getBitmap();
     bitmap->_texSampleMethod = GL_NEAREST;
     _textureRenderOp->setBitmap(bitmap);

@@ -8,9 +8,9 @@
 class StyleValue {
 public:
     enum Type {
+        Int,
         String,
         Double,
-        Int,
         StyleMap,
         Reference
     } type;
@@ -31,6 +31,8 @@ public:
     StyleValue& operator=(const StyleValue& other);
     
     float getAsFloat();
+
+    void setType(Type newType);
 };
 
 class StyleValueUber : public Object {

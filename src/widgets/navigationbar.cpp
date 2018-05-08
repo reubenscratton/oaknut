@@ -37,7 +37,7 @@ void NavigationBar::setBackground(RenderOp* renderOp) {
 void NavigationBar::setBackgroundColour(COLOUR colour) {
     _backgroundColour = colour;
     RenderOp* op = _blurEnabled ? (RenderOp*)new BlurRenderOp(this) :
-                                  new ColorRectFillRenderOp(this, getBounds(), colour);
+                                  new ColorRectFillRenderOp(this, getOwnRect(), colour);
     op->setColour(_backgroundColour);
     View::setBackground(op);
 }

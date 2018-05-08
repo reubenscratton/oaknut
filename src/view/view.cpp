@@ -1,5 +1,5 @@
 //
-// Copyright © 2017 Sandcastle Software Ltd. All rights reserved.
+// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
@@ -10,13 +10,13 @@
 
 DECLARE_DYNCREATE(View);
 
-View::View() : _alpha(1.0f), _touchEnabled(true),
+View::View() : _alpha(1.0f),
                 _alignspecHorz(ALIGNSPEC::None()),
                 _alignspecVert(ALIGNSPEC::None()),
                 _widthMeasureSpec(MEASURESPEC::None()),
                 _heightMeasureSpec(MEASURESPEC::None())
 {
-    _visibility = VISIBILITY_VISIBLE;
+    _visibility = Visible;
 	onTouchEventDelegate = NULL;
 }
 
@@ -38,21 +38,6 @@ void View::applyStyleValues(const StyleValueList& values) {
     }
 }
 
-MEASURESPEC measurespecFromResourceVal(StyleValue* value) {
-    if (value->type == StyleValue::Type::Int || value->type == StyleValue::Type::Double) {
-        return MEASURESPEC::Abs(value->getAsFloat());
-    }
-    assert(value->type == StyleValue::Type::String);
-    if (value->str == "wrap_content") return MEASURESPEC::WrapContent();
-    if (value->str == "fill_parent") return MEASURESPEC::FillParent();
-    if (value->str == "match_parent") return MEASURESPEC::FillParent();
-    if (stringStartsWith(value->str, "aspect(", true)) {
-        return MEASURESPEC::UseAspect(stringParseDouble(value->str));
-    }
-    assert(false); // unknown measurespec
-    return MEASURESPEC::WrapContent();
-}
-
 
 
 bool View::applyStyleValue(const string& name, StyleValue* value) {
@@ -71,10 +56,10 @@ bool View::applyStyleValue(const string& name, StyleValue* value) {
         applyStyleValues(styles);
         return true;
     } else if (name == "height") {
-        _heightMeasureSpec = measurespecFromResourceVal(value);
+        _heightMeasureSpec = MEASURESPEC(value);
         return true;
     } else if (name == "width") {
-        _widthMeasureSpec = measurespecFromResourceVal(value);
+        _widthMeasureSpec = MEASURESPEC(value);
         return true;
     } else if (name == "alignX") {
         _alignspecHorz = ALIGNSPEC(value, this);
@@ -123,7 +108,7 @@ void View::setNeedsFullRedraw() {
 			view->setNeedsFullRedraw();
 		}
 		if (_parent && !_opaque) {
-			_parent->invalidateRect(_frame);
+			_parent->invalidateRect(_rect);
 		}
 	}
     if (!_window->_redrawNeeded) {
@@ -169,8 +154,8 @@ void View::invalidateRect(const RECT& rect) {
         // If this view is not opaque then whatever is behind it must also redraw
 		if (_parent && !_opaque) {
 			RECT prect = rect;
-			prect.origin.x += _frame.origin.x;
-			prect.origin.y += _frame.origin.y;
+			prect.origin.x += _rect.origin.x;
+			prect.origin.y += _rect.origin.y;
 			_parent->invalidateRect(prect);
 		}
 	}
@@ -186,12 +171,23 @@ void View::setUsePrivateSurface(bool usePrivateSurface) {
 }
 
 
-void View::setFrameOrigin(const POINT& pt) {
+float View::getWidth() const {
+    return _rect.size.width;
+}
+float View::getHeight() const {
+    return _rect.size.height;
+}
+
+RECT View::getRect() const {
+    return _rect;
+}
+
+void View::setRectOrigin(const POINT& origin) {
     POINT d;
-    d.x = pt.x - _frame.origin.x;
-    d.y = pt.y - _frame.origin.y;
+    d.x = origin.x - _rect.origin.x;
+    d.y = origin.y - _rect.origin.y;
     if (d.x || d.y) {
-        _frame.origin = pt;
+        _rect.origin = origin;
         adjustSurfaceOrigin(d);
     }
 }
@@ -222,13 +218,20 @@ void View::adjustSurfaceOrigin(const POINT& d) {
     }
 }
 
-/*void View::setFrameSize(SIZE frameSize) {
-	_frame = frame;
-	if (_background) {
-		_background->setBounds(frame);
-	}
-	setNeedsRedraw();
-}*/
+void View::setRectSize(const SIZE& size) {
+    SIZE d;
+    d.width = size.width - _rect.size.width;
+    d.height = size.height - _rect.size.height;
+    if (d.width || d.height) {
+        _rect.size = size;
+        if (_currentBackgroundOp) {
+            _currentBackgroundOp->setRect(getOwnRect());
+        }
+        setNeedsFullRedraw();
+    }
+}
+
+
 
 void View::setMeasureSpecs(MEASURESPEC widthMeasureSpec, MEASURESPEC heightMeasureSpec) {
 	_widthMeasureSpec = widthMeasureSpec;
@@ -268,14 +271,14 @@ void View::setGravity(GRAVITY gravity) {
 	setNeedsLayout();
 }
 
-void View::setVisibility(int visibility) {
+void View::setVisibility(Visibility visibility) {
     if (_visibility != visibility) {
-        if ((_visibility==VISIBILITY_GONE && visibility!=VISIBILITY_GONE) ||
-            (_visibility!=VISIBILITY_GONE && visibility==VISIBILITY_GONE)) {
+        if ((_visibility==Gone && visibility!=Gone) ||
+            (_visibility!=Gone && visibility==Gone)) {
             setNeedsLayout();
         }
         _visibility = visibility;
-        if (visibility == VISIBILITY_VISIBLE) {
+        if (visibility == Visible) {
             if (_parent && _parent->_window) {
                 attachToWindow(_parent->_window);
             }
@@ -299,32 +302,32 @@ void View::measure(float parentWidth, float parentHeight) {
     
     // Width
 	if (MEASURESPEC::RefTypeContent == _widthMeasureSpec.refType) {
-        _frame.size.width = _contentSize.width + _padding.left + _padding.right;
+        _rect.size.width = _contentSize.width + _padding.left + _padding.right;
 	} else if (MEASURESPEC::RefTypeAbs == _widthMeasureSpec.refType) {
-        _frame.size.width = _widthMeasureSpec.abs;
+        _rect.size.width = _widthMeasureSpec.abs;
     } else if (MEASURESPEC::RefTypeView == _widthMeasureSpec.refType) {
-        float refWidth = (_widthMeasureSpec.refView == NULL) ? parentWidth : _widthMeasureSpec.refView->_frame.size.width;
-        _frame.size.width = refWidth * _widthMeasureSpec.refSizeMultiplier;
-		_frame.size.width += _widthMeasureSpec.abs;
+        float refWidth = (_widthMeasureSpec.refView == NULL) ? parentWidth : _widthMeasureSpec.refView->_rect.size.width;
+        _rect.size.width = refWidth * _widthMeasureSpec.refSizeMultiplier;
+		_rect.size.width += _widthMeasureSpec.abs;
     }
 
     
     // Height
 	if (MEASURESPEC::RefTypeContent == _heightMeasureSpec.refType) {
-		_frame.size.height = _contentSize.height + _padding.top + _padding.bottom;
+		_rect.size.height = _contentSize.height + _padding.top + _padding.bottom;
 	} else if (MEASURESPEC::RefTypeAbs == _heightMeasureSpec.refType) {
-		_frame.size.height = _heightMeasureSpec.abs;
+		_rect.size.height = _heightMeasureSpec.abs;
 	} else if (MEASURESPEC::RefTypeView == _heightMeasureSpec.refType) {
-		float refHeight = (_heightMeasureSpec.refView == NULL) ? parentHeight : _heightMeasureSpec.refView->_frame.size.height;
-		_frame.size.height = refHeight * _heightMeasureSpec.refSizeMultiplier;
-		_frame.size.height += _heightMeasureSpec.abs;
+		float refHeight = (_heightMeasureSpec.refView == NULL) ? parentHeight : _heightMeasureSpec.refView->_rect.size.height;
+		_rect.size.height = refHeight * _heightMeasureSpec.refSizeMultiplier;
+		_rect.size.height += _heightMeasureSpec.abs;
 	}
 	
     // Aspect
     if (MEASURESPEC::RefTypeAspect == _widthMeasureSpec.refType) {
-        _frame.size.width = _frame.size.height * _widthMeasureSpec.refSizeMultiplier;
+        _rect.size.width = _rect.size.height * _widthMeasureSpec.refSizeMultiplier;
     } else if (MEASURESPEC::RefTypeAspect == _heightMeasureSpec.refType) {
-        _frame.size.height = _frame.size.width * _heightMeasureSpec.refSizeMultiplier;
+        _rect.size.height = _rect.size.width * _heightMeasureSpec.refSizeMultiplier;
     }
 	
 	
@@ -333,8 +336,8 @@ void View::measure(float parentWidth, float parentHeight) {
     // wrapping subview size(s) then pass down the parent size.
 	bool wrapWidth = _contentSize.width<=0 && _widthMeasureSpec.refType == MEASURESPEC::RefTypeContent;
 	bool wrapHeight =  _contentSize.height<=0 && _heightMeasureSpec.refType == MEASURESPEC::RefTypeContent;
-	float widthForSubviewMeasure = wrapWidth ? parentWidth : _frame.size.width;
-	float heightForSubviewMeasure = wrapHeight ? parentHeight : _frame.size.height;
+	float widthForSubviewMeasure = wrapWidth ? parentWidth : _rect.size.width;
+	float heightForSubviewMeasure = wrapHeight ? parentHeight : _rect.size.height;
 
 	// Adjust for padding
 	widthForSubviewMeasure -= (_padding.left+_padding.right);
@@ -346,21 +349,21 @@ void View::measure(float parentWidth, float parentHeight) {
     for (int i=0 ; i<_subviews.size() ; i++) {
         View* view = _subviews.at(i);
         view->measure(widthForSubviewMeasure, heightForSubviewMeasure);
-        largestChildWidth = fmaxf(largestChildWidth, view->_frame.size.width);
-        largestChildHeight = fmaxf(largestChildHeight, view->_frame.size.height);
+        largestChildWidth = fmaxf(largestChildWidth, view->_rect.size.width);
+        largestChildHeight = fmaxf(largestChildHeight, view->_rect.size.height);
     }
     
     // wrap_content
     if (wrapWidth) {
-        _frame.size.width = _padding.left + largestChildWidth + _padding.right;
+        _rect.size.width = _padding.left + largestChildWidth + _padding.right;
     }
     if (wrapHeight) {
-        _frame.size.height = _padding.bottom + largestChildHeight + _padding.top;
+        _rect.size.height = _padding.bottom + largestChildHeight + _padding.top;
     }
 	
 	// Align view sizes to pixel grid
-	_frame.size.width = floorf(_frame.size.width);
-	_frame.size.height = floorf(_frame.size.height);
+	_rect.size.width = floorf(_rect.size.width);
+	_rect.size.height = floorf(_rect.size.height);
 
 }
 
@@ -375,8 +378,8 @@ void View::layout() {
     // Get anchor dimensions
     float anchorY = 0;
     float anchorX = 0;
-    float anchorWidth = anchorHorz ? anchorHorz->_frame.size.width : app._window->_surfaceRect.size.width;
-    float anchorHeight = anchorVert ? anchorVert->_frame.size.height : app._window->_surfaceRect.size.height;
+    float anchorWidth = anchorHorz ? anchorHorz->_rect.size.width : app._window->_surfaceRect.size.width;
+    float anchorHeight = anchorVert ? anchorVert->_rect.size.height : app._window->_surfaceRect.size.height;
 	if (anchorHorz) {
 		if (anchorHorz == _parent) {
 			anchorX = _parent->_padding.left;
@@ -385,7 +388,7 @@ void View::layout() {
 			if (anchorHorz->_parent != _parent) {
 				app.warn("View::layout() is not clever enough for non-sibling anchors");
 			}
-			anchorX = anchorHorz->_frame.origin.x;
+			anchorX = anchorHorz->_rect.origin.x;
 		}
     }
 	if (anchorVert) {
@@ -396,7 +399,7 @@ void View::layout() {
 			if (anchorVert->_parent != _parent) {
 				app.warn("View::layout() is not clever enough for non-sibling anchors");
 			}
-			anchorY = anchorVert->_frame.origin.y;
+			anchorY = anchorVert->_rect.origin.y;
 		}
     }
 	
@@ -406,41 +409,41 @@ void View::layout() {
     POINT pt;
     if (anchorHorz) {
         pt.x = anchorX + (_alignspecHorz.multiplierAnchor * anchorWidth)
-								  + (_alignspecHorz.multiplierSelf * _frame.size.width)
+								  + (_alignspecHorz.multiplierSelf * _rect.size.width)
 								  + _alignspecHorz.margin;
         pt.x = floorf(pt.x);
     }
     if (anchorVert) {
         pt.y = anchorY + (_alignspecVert.multiplierAnchor * anchorHeight)
-                       + (_alignspecVert.multiplierSelf * _frame.size.height);
+                       + (_alignspecVert.multiplierSelf * _rect.size.height);
         pt.y = floorf(pt.y);
         pt.y += _alignspecVert.margin;
     }
     if (anchorHorz || anchorVert) {
-        if (!anchorHorz) pt.x = _frame.origin.x;
-        if (!anchorVert) pt.y = _frame.origin.y;
-        setFrameOrigin(pt);
+        if (!anchorHorz) pt.x = _rect.origin.x;
+        if (!anchorVert) pt.y = _rect.origin.y;
+        setRectOrigin(pt);
     }
 	
     if (_currentBackgroundOp) {
-        _currentBackgroundOp->setRect(RECT_Make(0, 0, _frame.size.width, _frame.size.height));
+        _currentBackgroundOp->setRect(RECT_Make(0, 0, _rect.size.width, _rect.size.height));
     }    
 
 
 	/*
 	if (_widthMeasureSpec.refType != REFTYPE_NONE) {
-		_frame.origin.x = 0; // todo: apply grabbity
+		_rect.origin.x = 0; // todo: apply grabbity
 	}
 	if (_heightMeasureSpec.refType != REFTYPE_NONE) {
-		_frame.origin.y = 0; // todo: apply grabbity
+		_rect.origin.y = 0; // todo: apply grabbity
 	}*/
     
 
     for (int i=0 ; i<_subviews.size() ; i++) {
         View* view = _subviews.at(i);
         view->layout();
-        //view->_frame.origin.x += _padding.left;
-        //view->_frame.origin.y += _padding.bottom;
+        //view->_rect.origin.x += _padding.left;
+        //view->_rect.origin.y += _padding.bottom;
     }
 	
     updateScrollbars();
@@ -472,14 +475,14 @@ void View::updatePrivateSurface(bool updateSubviews) {
 
 
 void View::attachToWindow(Window *window) {
-    if (_visibility != VISIBILITY_VISIBLE) {
+    if (_visibility != Visible) {
         return;
     }
 	_window = window;
     if (_parent) {
-        _surfaceOrigin = POINT_Make(_parent->_surfaceOrigin.x + _frame.origin.x, _parent->_surfaceOrigin.y + _frame.origin.y);
+        _surfaceOrigin = POINT_Make(_parent->_surfaceOrigin.x + _rect.origin.x, _parent->_surfaceOrigin.y + _rect.origin.y);
     } else {
-        _surfaceOrigin = _frame.origin;
+        _surfaceOrigin = _rect.origin;
     }
 
     updatePrivateSurface(false);
@@ -492,7 +495,7 @@ void View::attachToWindow(Window *window) {
     
 	for (auto it = _subviews.begin(); it!=_subviews.end() ; it++) {
 		ObjPtr<View> subview = *it;
-        if (subview->_visibility == VISIBILITY_VISIBLE) {
+        if (subview->_visibility == Visible) {
             subview->attachToWindow(window);
         }
 	}
@@ -503,11 +506,11 @@ void View::detachFromWindow() {
 	if (!_window) {
         return;
     }
-    
     if (_scrollFadeAnim) {
-        _scrollFadeAnim->stop();
         _scrollFadeAnim = NULL;
     }
+    _window->detachView(this);
+    
     if (_scrollFadeTimer) {
         _scrollFadeTimer->stop();
         _scrollFadeTimer = NULL;
@@ -554,6 +557,14 @@ View* View::findViewById(const string& id) {
         }
     }
     return NULL;
+}
+
+Window* View::getWindow() const {
+    return _window;
+}
+
+View* View::getParent() const {
+    return _parent;
 }
 
 void View::addSubview(View* subview) {
@@ -668,8 +679,8 @@ void View::removeSubviewsNotInVisibleArea() {
     for (int i=0 ; i<_subviews.size() ; i++) {
         auto it = _subviews.at(i);
         View* subview = it;
-        if (subview->_frame.bottom() < _contentOffset.y
-            || subview->_frame.top() >= _frame.size.height+_contentOffset.y) {
+        if (subview->_rect.bottom() < _contentOffset.y
+            || subview->_rect.top() >= _rect.size.height+_contentOffset.y) {
             i--;
             removeSubview(subview);
         }
@@ -683,7 +694,7 @@ void View::setBackground(RenderOp* drawableOp) {
 
 void View::setBackground(RenderOp* drawableOp, STATESET stateset) {
     RenderOp* replacedOp = NULL;
-    for (vector<pair<ObjPtr<RenderOp>,STATESET>>::iterator i = _backgroundOps.begin() ; i!=_backgroundOps.end() ; i++) {
+    for (auto i = _backgroundOps.begin() ; i!=_backgroundOps.end() ; i++) {
         if (i->second.mask == stateset.mask && i->second.state == stateset.state) {
             replacedOp = i->first;
             i->first = drawableOp;
@@ -713,14 +724,14 @@ void View::updateBackgroundOp() {
         }
         _currentBackgroundOp = selectedOp;
         if (_currentBackgroundOp) {
-            _currentBackgroundOp->setRect(getBounds());
+            _currentBackgroundOp->setRect(getOwnRect());
             addRenderOp(_currentBackgroundOp, true);
         }
     }
 
 }
 void View::setBackgroundColour(COLOUR colour) {
-    setBackground(new ColorRectFillRenderOp(this, getBounds(), colour));
+    setBackground(new ColorRectFillRenderOp(this, getOwnRect(), colour));
 }
 
 
@@ -729,6 +740,9 @@ bool View::isPressed() {
 }
 void View::setPressed(bool isPressed) {
     setState({STATE_PRESSED, (STATE)(isPressed?STATE_PRESSED:0)});
+}
+bool View::isEnabled() {
+    return (_state & STATE_DISABLED)==0;
 }
 void View::setEnabled(bool isEnabled) {
     setState({STATE_DISABLED, (STATE)(isEnabled?0:STATE_DISABLED)});
@@ -748,9 +762,7 @@ void View::onStateChanged(STATESET changedStates) {
 }
 
 bool View::isTouchable() {
-	return _touchEnabled
-		&& _visibility==VISIBILITY_VISIBLE
-		&& !(_state&STATE_DISABLED);
+	return _visibility==Visible && !(_state&STATE_DISABLED);
 }
 
 void View::addRenderOp(RenderOp* renderOp) {
@@ -770,11 +782,11 @@ void View::removeRenderOp(RenderOp* renderOp) {
 }
 
 
-RECT View::getBounds() {
-	return RECT_Make(0,0,_frame.size.width,_frame.size.height);
+RECT View::getOwnRect() {
+	return RECT_Make(0,0,_rect.size.width,_rect.size.height);
 }
-RECT View::getBoundsWithPadding() {
-    return RECT_Make(_padding.left,_padding.top, _frame.size.width-(_padding.left+_padding.right), _frame.size.height - (_padding.top+_padding.bottom));
+RECT View::getOwnRectPadded() {
+    return RECT_Make(_padding.left,_padding.top, _rect.size.width-(_padding.left+_padding.right), _rect.size.height - (_padding.top+_padding.bottom));
 }
 
 void View::setScrollInsets(EDGEINSETS scrollInsets) {
@@ -782,6 +794,13 @@ void View::setScrollInsets(EDGEINSETS scrollInsets) {
 	setNeedsLayout();
 }
 
+SIZE View::getContentSize() const {
+    return _contentSize;
+}
+
+POINT View::getContentOffset() const {
+    return _contentOffset;
+}
 
 void View::setContentOffset(POINT contentOffset) {
 	if (!contentOffset.equals(_contentOffset)) {
@@ -796,8 +815,12 @@ void View::setContentOffset(POINT contentOffset) {
 
 
 void View::scrollStartFadeAnim(float targetAlpha) {
+    if (!_window) {
+        return;
+    }
     if (!_scrollFadeAnim) {
         _scrollFadeAnim = new DelegateAnimation();
+        _scrollFadeAnim->_view = this;
         _scrollFadeAnim->_delegate = [=](float val) {
             _scrollAlpha = val;
             if (_scrollbarVert) {
@@ -813,9 +836,7 @@ void View::scrollStartFadeAnim(float targetAlpha) {
     _scrollFadeAnim->stop();
     _scrollFadeAnim->_fromVal = _scrollAlpha;
     _scrollFadeAnim->_toVal = targetAlpha;
-    if (_window) {
-        _scrollFadeAnim->start(_window, 300);
-    }
+    _scrollFadeAnim->start(_window, 3000);
 }
 
 
@@ -828,7 +849,7 @@ void View::updateScrollbars() {
     float visibleContentHeight = _contentSize.height - (_scrollInsets.top+_scrollInsets.bottom);
     float visibleContentWidth = _contentSize.width - (_scrollInsets.left+_scrollInsets.right);
     bool createdBar = false;
-	if (visibleContentHeight>0 && _frame.size.height < visibleContentHeight) {
+	if (visibleContentHeight>0 && _rect.size.height < visibleContentHeight) {
         if (!_scrollbarVert) {
             _scrollbarVert = new Scrollbar(this);
             createdBar = true;
@@ -840,7 +861,7 @@ void View::updateScrollbars() {
             _scrollbarVert = NULL;
         }
     }
-    if (visibleContentWidth>0 && _frame.size.width < (int)visibleContentWidth) {
+    if (visibleContentWidth>0 && _rect.size.width < (int)visibleContentWidth) {
         if (!_scrollbarHorz) {
             _scrollbarHorz = new Scrollbar(this);
             createdBar = true;
@@ -874,8 +895,8 @@ void View::updateScrollbars() {
 View* View::subviewContainingPoint(POINT pt) {
 	for (long i=_subviews.size()-1 ; i>=0 ; i--) {
 		View* subview = _subviews.at(i);
-		if (subview->_visibility == VISIBILITY_VISIBLE) {
-			if (RECT_contains(subview->_frame, pt)) {
+		if (subview->_visibility == Visible) {
+			if (RECT_contains(subview->_rect, pt)) {
 				return subview;
 			}
 		}
@@ -886,8 +907,8 @@ View* View::subviewContainingPoint(POINT pt) {
 int View::indexOfSubviewContainingPoint(POINT pt) {
 	for (long i=_subviews.size()-1 ; i>=0 ; i--) {
 		View* subview = _subviews.at(i);
-		if (subview->_visibility == VISIBILITY_VISIBLE) {
-			if (RECT_contains(subview->_frame, pt)) {
+		if (subview->_visibility == Visible) {
+			if (RECT_contains(subview->_rect, pt)) {
 				return (int)i;
 			}
 		}
@@ -898,10 +919,10 @@ int View::indexOfSubviewContainingPoint(POINT pt) {
 View* View::hitTest(POINT pt, POINT* ptRel) {
 	
 	// Find the leaf view that corresponds to the given point
-	if (_visibility==VISIBILITY_VISIBLE && RECT_contains(_frame, pt)) {
+	if (_visibility==Visible && RECT_contains(_rect, pt)) {
 		POINT ptClient = pt;
-		ptClient.x -= _frame.origin.x;
-		ptClient.y -= _frame.origin.y;
+		ptClient.x -= _rect.origin.x;
+		ptClient.y -= _rect.origin.y;
 		for (long i=_subviews.size()-1 ; i>=0 ; i--) {
 			View* subview = _subviews.at(i);
 			View* hitTestSubview = subview->hitTest(ptClient, ptRel);
@@ -917,9 +938,9 @@ View* View::hitTest(POINT pt, POINT* ptRel) {
 	return NULL;
 }
 
-/**
-dispatches an input event to a view.
-*/
+//
+// dispatches an input event to a view.
+//
 View* View::dispatchInputEvent(int eventType, int eventSource, long time, POINT pt) {
 	if (_state & STATE_DISABLED) {
         return NULL;
@@ -935,8 +956,8 @@ View* View::dispatchInputEvent(int eventType, int eventSource, long time, POINT 
 		if (view->onTouchEvent(eventType, eventSource, ptRel)) {
 			return view;
 		}
-		ptRel.x += view->_frame.origin.x;
-		ptRel.y += view->_frame.origin.y;
+		ptRel.x += view->_rect.origin.x;
+		ptRel.y += view->_rect.origin.y;
 		view = view->_parent;
 	}
 
@@ -972,7 +993,7 @@ bool View::onTouchEvent(int eventType, int eventSource, POINT pt) {
     if (eventType == INPUT_EVENT_FLING) {
         //app.log("fling! %f", -pt.y);
         if (_scrollbarVert) {
-            _scrollbarVert->fling(_contentOffset.y, -pt.y, 0, _contentSize.height-_frame.size.height);
+            _scrollbarVert->fling(_contentOffset.y, -pt.y, 0, _contentSize.height-_rect.size.height);
             setNeedsFullRedraw();
         }
     }
@@ -990,22 +1011,24 @@ bool View::onTouchEvent(int eventType, int eventSource, POINT pt) {
 IKeyboardInputHandler* View::getKeyboardInputHandler() {
     return NULL;
 }
-bool View::becomeFirstResponder() {
-    if (_window) {
-        return _window->setFirstResponder(this);
+bool View::setFocused(bool focused) {
+    if (focused) {
+        if (_window) {
+            return _window->setFocusedView(this);
+        }
+    } else {
+        if (isFocused()) {
+            _window->setFocusedView(NULL);
+            return true;
+        }
     }
     return false;
 }
-bool View::isFirstResponder() {
+bool View::isFocused() {
     if (_window) {
-        return _window->_firstResponder == this;
+        return _window->_focusedView == this;
     }
     return false;
-}
-void View::resignFirstResponder() {
-    if (isFirstResponder()) {
-        _window->setFirstResponder(NULL);
-    }
 }
 
 
@@ -1013,19 +1036,28 @@ POINT View::mapPointToWindow(POINT pt) {
 	if (_window) {
 		View* view = this;
 		while (view) {
-			pt.x += view->_frame.origin.x;
-			pt.y += view->_frame.origin.y;
+			pt.x += view->_rect.origin.x;
+			pt.y += view->_rect.origin.y;
 			view = view->_parent;
 		}
 	}
 	return pt;
 }
 
+float View::getAlpha() {
+    return _alpha;
+}
+
 void View::setAlpha(float alpha) {
     if (alpha != _alpha) {
         _alpha = alpha;
         updateEffectiveAlpha();
+        setNeedsFullRedraw();
     }
+}
+
+COLOUR View::getTintColour() {
+    return _tintColour;
 }
 
 void View::setTintColour(COLOUR tintColour) {
@@ -1065,25 +1097,17 @@ void View::onEffectiveTintColourChanged() {
 
 
 void View::animateAlpha(float target, float duration) {
-	if (_alphaAnim) {
-		_alphaAnim->stop();
-		_alphaAnim = NULL;
-	}
 	if (duration <= 0) {
-		_alpha = target;
+		setAlpha(target);
 	} else {
 		if (_window) {
-			_alphaAnim = new AlphaAnimation(this, target);
-            _alphaAnim->_onFinished = [=](Animation* animation) {
-                _alphaAnim = NULL;
-            };
-			_alphaAnim->start(_window, duration);
+            _window->startAnimation(new AlphaAnimation(this, target), duration);
 		}
 	}
 }
 
 
-void View::setAnimTranslate(POINT translation) {
+void View::setTranslate(POINT translation) {
     if (translation.x==0 && translation.y==0) {
         if (_matrix) {
             delete _matrix;
