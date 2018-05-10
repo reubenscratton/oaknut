@@ -19,10 +19,10 @@ BitmapBase::BitmapBase(int awidth, int aheight, int format) : BitmapBase() {
     _format = format;
 }
 
-BitmapBase::BitmapBase(const VariantMap* map) : BitmapBase() {
-    _width = map->getInt("w");
-    _height = map->getInt("h");
-    _format = map->getInt("f");
+BitmapBase::BitmapBase(const VariantMap& map) : BitmapBase() {
+    _width = map.get("w");
+    _height = map.get("h");
+    _format = map.get("f");
     _needsUpload = true;
 }
 
@@ -35,19 +35,10 @@ BitmapBase::~BitmapBase() {
 }
 
 // ISerializable
-void BitmapBase::writeSelf(VariantMap* map) {
-    map->setInt("w", _width);
-    map->setInt("h", _height);
-    map->setInt("f", _format);
-   /* PIXELDATA pixeldata;
-    lock(&pixeldata, false);
-    map->setInt("s", pixeldata.stride);
-    ByteBuffer bb;
-    bb.data = (uint8_t*)pixeldata.data;
-    bb.cb = pixeldata.cb;
-    map->setByteBuffer("d", &bb);
-    bb.data = NULL;
-    unlock(&pixeldata, false);*/
+void BitmapBase::writeSelfToVariantMap(VariantMap& map) {
+    map.set("w", _width);
+    map.set("h", _height);
+    map.set("f", _format);
 }
 
 

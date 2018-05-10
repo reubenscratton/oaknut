@@ -7,11 +7,11 @@
 
 
 /**
- High-level interface for serializable types
+ Base interface for all serializable things, i.e. that can be read from and written to a stream
  */
 class ISerializable {
 public:
-    //virtual void readSelf(const class VariantMap* map) =0;
-    virtual void writeSelf(class VariantMap* map) =0;
+    virtual bool readSelfFromStream(Stream* stream) =0;
+    virtual bool writeSelfToStream(Stream* stream) const =0;
 };
 

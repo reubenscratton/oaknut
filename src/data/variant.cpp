@@ -10,9 +10,6 @@
 
 Variant::Variant() : Variant(EMPTY) {
 }
-Variant::Variant(VariantType type) : type(EMPTY) {
-    setType(type);
-}
 Variant::Variant(const Variant& var) : Variant(var.type) {
     assign(var);
 }
@@ -28,15 +25,26 @@ Variant::Variant(float val) : type(FLOAT32), f(val) {
 }
 Variant::Variant(double val) : type(FLOAT64), d(val) {
 }
-Variant::Variant(const char* val) : type(STRING), str(val) {
+Variant::Variant(const char* val) : type(STRING), str(new string(val)) {
 }
+Variant::Variant(const string& val) : type(STRING), str(new string(val)) {
+}
+Variant::Variant(ByteBuffer* val) : type(BYTEBUFFER), data(val) {
+}
+Variant::Variant(ObjPtr<ByteBuffer>& val) : Variant(val._obj) {
+}
+Variant::Variant(ISerializeToVariantMap* val) : type(MAP) {
+    map = new VariantMap();
+    val->writeSelfToVariantMap(*map);
+}
+
 Variant::Variant(vector<pair<const string&,const Variant&>> vals) : type(MAP), map(NULL) {
     map = new VariantMap(vals);
 }
 
 Variant::~Variant() {
     if (type == STRING) {
-        str.~string();
+        delete str;
     }
     if (type == BYTEBUFFER) {
         data.~ObjPtr();
@@ -50,10 +58,10 @@ void Variant::setType(VariantType newType) {
     
     // Handle smart-pointer type changes
     if (type == STRING && newType != STRING) {
-        str.~string();
-    } else if (type != STRING && newType == STRING) {
+        delete str;
+    } /*else if (type != STRING && newType == STRING) {
         new (&str) string();
-    } else if (type == BYTEBUFFER && newType != BYTEBUFFER) {
+    } */else if (type == BYTEBUFFER && newType != BYTEBUFFER) {
         data.~ObjPtr();
     } else if (type != BYTEBUFFER && newType == BYTEBUFFER) {
         new (&data) ObjPtr<ByteBuffer>();
@@ -80,7 +88,7 @@ void Variant::assign(const Variant& src) {
         case UINT64: u64 = src.u64; break;
         case FLOAT32: f = src.f; break;
         case FLOAT64: d = src.d; break;
-        case STRING: str = src.str; break;
+        case STRING: str = new string(*src.str); break;
         case BYTEBUFFER: data = src.data; break;
         case MAP: map = src.map; break;
     }
@@ -103,7 +111,7 @@ bool Variant::operator<(const Variant& rhs) const {
         case UINT64: return u64 < rhs.u64;
         case FLOAT32: return f < rhs.f;
         case FLOAT64: return d < rhs.d;
-        case STRING: return str < rhs.str;
+        case STRING: return *str < *(rhs.str);
         case BYTEBUFFER: {
             size_t cb = min(data->cb, rhs.data->cb);
             int cv = memcmp(data->data, rhs.data->data, cb);
@@ -134,7 +142,7 @@ bool Variant::readSelfFromStream(Stream* stream) {
         case UINT64:return stream->readBytes(8, &u64);
         case FLOAT32:return stream->readBytes(sizeof(float), &f);
         case FLOAT64:return stream->readBytes(sizeof(double), &d);
-        case STRING:return stream->readString(&str);
+        case STRING:{str = new string(); return stream->readString(str);};
         case BYTEBUFFER: {
             data = new ByteBuffer();
             return data->readSelfFromStream(stream);
@@ -162,9 +170,32 @@ bool Variant::writeSelfToStream(Stream* stream) const {
         case UINT64:return stream->writeBytes(8, &u64);
         case FLOAT32:return stream->writeBytes(sizeof(float), &f);
         case FLOAT64:return stream->writeBytes(sizeof(double), &d);
-        case STRING:return stream->writeString(str);
+        case STRING:return stream->writeString(*str);
         case BYTEBUFFER: return data->writeSelfToStream(stream);
         case MAP: return map->writeSelfToStream(stream);
     }
     return false;
 }
+
+
+/*operator int32_t() const { assert(type==INT32); return i32; };
+operator uint32_t() const { assert(type==UINT32); return u32; };
+int getInt(const string& key) const {
+    auto val = _map.find(key);
+    if (val != _map.end()) {
+        switch (val->second.type) {
+            case Variant::INT8: return val->second.i8;
+            case Variant::INT16: return val->second.i16;
+            case Variant::INT32: return val->second.i32;
+            case Variant::INT64: app.warn("Possible data loss truncating int64 to int");
+            return (int)val->second.i64;
+            case Variant::UINT8: return val->second.u8;
+            case Variant::UINT16: return val->second.u16;
+            case Variant::UINT32: return val->second.u32;
+            case Variant::UINT64: app.warn("Possible data loss truncating uint64 to int");
+            return (int)val->second.u64;
+            default: break;
+        }
+    }
+    return 0;
+}*/

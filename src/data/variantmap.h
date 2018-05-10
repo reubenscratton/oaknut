@@ -6,10 +6,18 @@
 //
 
 /**
- A key-value store that lives in memory. It is expected that most app types
- will elect to serialize themselves via ISerializable.
+ Interface for objects that serialize to and from VariantMap. Necessary for LocalStorage
  */
-class VariantMap : public Object, ISerializableBase {
+class ISerializeToVariantMap {
+public:
+    virtual void writeSelfToVariantMap(class VariantMap& map) =0;
+};
+
+
+/**
+ A collection of named values. Or, more accurately, a serializable std::map<string,Variant>.
+ */
+class VariantMap : public Object, ISerializable {
 public:
     
     VariantMap();
@@ -17,31 +25,31 @@ public:
     
     bool hasValue(const string& key) const;
     Variant get(const string& key) const;
-    int getInt(const string& key) const;
-    uint64_t getUint64(const string& key) const;
+    void set(const string& key, const Variant& val);
+    void set(const string& key, ISerializeToVariantMap* object);
+
     template <typename T>
-    T* getSerializable(const string& key) const {
+    T* get(const string& key) const {
         auto val = _map.find(key);
-        if (val == _map.end() || val->second.type != MAP) {
+        if (val == _map.end() || val->second.type != Variant::MAP) {
             return NULL;
         }
-        T* obj = new T(val->second.map); // T must be constructable from a VariantMap
+        T* obj = new T(*(val->second.map)); // T must be constructable from a VariantMap
         return obj;
     }
-    void setSerializable(const string& key, class ISerializable* val);
-    float getFloat(const string& key) const;
-    void setFloat(const string& key, float val);
-    void setInt(const string& key, int val);
-    void setUint64(const string& key, uint64_t val);
-    string getString(const string& key) const;
-    void setString(const string& key, const string& val);
-    ByteBuffer* getByteBuffer(const string& key) const;
-    void setByteBuffer(const string& key, const ByteBuffer* val);
+    
+    const Variant operator[](const string& key) const {
+        return get(key);
+    }
+    Variant& operator[](const string& key) {
+        return (*((_map.insert(make_pair(key,Variant()))).first)).second;
+    }
+
 
     map<string, Variant> _map;
     
     
-    // ISerializableBase
+    // ISerializable
     virtual bool readSelfFromStream(Stream* stream);
     virtual bool writeSelfToStream(Stream* stream) const;
 };

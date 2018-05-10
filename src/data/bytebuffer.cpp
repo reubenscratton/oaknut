@@ -38,7 +38,7 @@ ByteBuffer::~ByteBuffer() {
     }
 }
 
-// ISerializableBase
+// ISerializable
 bool ByteBuffer::readSelfFromStream(Stream* stream) {
     if (!stream->readBytes(sizeof(cb), &cb)) {
         return false;

@@ -59,11 +59,11 @@ typedef struct {
 
 
 class Bitmap; // defined in platform layer
-class BitmapBase : public Object, public ISerializable {
+class BitmapBase : public Object, public ISerializeToVariantMap {
 public:
-    int _width;
-    int _height;
-    int _format;
+    int32_t _width;
+    int32_t _height;
+    int32_t _format;
     GLuint _texSampleMethod; // default GL_LINEAR
     GLuint _texTarget;       // default GL_TEXTURE_2D
     GLuint _textureId;
@@ -95,9 +95,9 @@ public:
     int sizeInBytes();
     Bitmap* convertToFormat(int newFormat);
     
-    // ISerializable
-    BitmapBase(const VariantMap* map);
-    virtual void writeSelf(VariantMap* map);
+    // ISerializeToVariantMap
+    BitmapBase(const VariantMap& map);
+    virtual void writeSelfToVariantMap(VariantMap& map);
     
 
     // Platform-specific instantiation

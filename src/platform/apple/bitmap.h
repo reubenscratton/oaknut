@@ -34,8 +34,8 @@ public:
     virtual void unlock(PIXELDATA* pixelData, bool pixelDataChanged);
     virtual void bind();
 
-    Bitmap(const VariantMap* map);
-    virtual void writeSelf(VariantMap* map);
+    Bitmap(const VariantMap& map);
+    virtual void writeSelfToVariantMap(VariantMap& map);
 
 };
 

@@ -177,7 +177,7 @@ static void ensureLoaded() {
     }
     if (!s_userdefaults) {
         s_userdefaults = new VariantMap();
-        s_userdefaults->setInt("unused", 0); // set a primary key value although it's not used
+        s_userdefaults->set("unused", 0); // set a primary key value although it's not used
     }
     /*    FileStream stream(getUserDefaultsPath());
      if (stream.openForRead()) {
@@ -189,7 +189,7 @@ static void ensureLoaded() {
 int App::getIntSetting(const char *key, const int defaultValue) {
     ensureLoaded();
     if (s_userdefaults->hasValue(key)) {
-        return s_userdefaults->getInt(key);
+        return (int32_t)s_userdefaults->get(key);
     }
     return defaultValue;
 }
@@ -197,20 +197,20 @@ int App::getIntSetting(const char *key, const int defaultValue) {
 
 void App::setIntSetting(const char* key, const int value) {
     ensureLoaded();
-    s_userdefaults->setInt(key, value);
+    s_userdefaults->set(key, value);
 }
 
 string App::getStringSetting(const char* key, const char* defaultValue) {
     ensureLoaded();
     if (s_userdefaults->hasValue(key)) {
-        return s_userdefaults->getString(key);
+        return (string)s_userdefaults->get(key);
     }
     return defaultValue;
 }
 
 void App::setStringSetting(const char* key, const char* value) {
     ensureLoaded();
-    s_userdefaults->setString(key, value);
+    s_userdefaults->set(key, value);
 }
 
 void App::saveSettings() {

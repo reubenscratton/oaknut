@@ -23,7 +23,6 @@
 #ifndef _OAKNUT_H_INCLUDED_
 #define _OAKNUT_H_INCLUDED_
 
-
 #include <stdio.h>
 #ifdef __cplusplus
 #include <cmath>
@@ -33,7 +32,6 @@
 #include <stdarg.h>
 #endif
 #include <stdlib.h>
-#include <string.h>
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
@@ -51,6 +49,7 @@
 #include <assert.h>
 
 using namespace std;
+
 
 // Platform headers
 #ifdef PLATFORM_WEB
@@ -77,7 +76,6 @@ using namespace std;
 #include "base/task.h"
 #include "data/stream.h"
 #include "data/filestream.h"
-#include "data/serializablebase.h"
 #include "data/serializable.h"
 #include "data/bytebuffer.h"
 #include "data/bytebufferstream.h"

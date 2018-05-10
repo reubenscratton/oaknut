@@ -48,7 +48,7 @@ public:
 
     // Update
     virtual void remove(const Variant& primaryKeyVal)=0;
-    virtual void put(class ISerializable* object)=0; // Insert a new record or replace an existing one
+    virtual void put(ISerializeToVariantMap* object)=0; // Insert a new record or replace an existing one
     
 protected:
     LocalStore(const string& name, const string& primaryKeyName);

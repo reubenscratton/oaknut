@@ -114,12 +114,12 @@ public:
             _indexDirty = true;
         }
     }
-    virtual void put(ISerializable* object) {
+    virtual void put(ISerializeToVariantMap* object) {
         VariantMap map;
-        object->writeSelf(&map);
+        object->writeSelfToVariantMap(map);
         
         Variant key = map.get(_primaryKeyName);
-        assert(key.type != EMPTY); // key is mandatory! (that might change)
+        assert(key.type != Variant::EMPTY); // key is mandatory! (that might change)
         _indexDirty = true;
         openFile();
 
