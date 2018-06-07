@@ -8,7 +8,6 @@
 class RenderBatch : public Object {
 public:
     list<ObjPtr<RenderOp>> _ops;
-    //QuadBuffer* _quadBuffer;
     QuadBuffer::Alloc* _alloc;
     int _numQuads;
     int _head;
@@ -16,14 +15,10 @@ public:
     bool _log;
     class Surface* _surface;
     list<ObjPtr<RenderBatch>>::iterator _renderBatchListIterator;
-    //list<ObjPtr<RenderOp>>::iterator _renderIterator;
-    //int _renderBase;
-
     
     RenderBatch();
     ~RenderBatch();
     void render(Window* window, Surface* surface, RenderOp* firstOp);
-
     
     void invalidateGeometry(RenderOp* op);
 

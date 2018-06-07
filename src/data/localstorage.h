@@ -44,7 +44,7 @@ public:
     virtual bool find(const Variant& primaryKeyVal)=0;
 
     // Deserialise the current object (also advances record pointer)
-    virtual VariantMap* readCurrent()=0;
+    virtual bool readAndAdvance(VariantMap& map)=0;
 
     // Update
     virtual void remove(const Variant& primaryKeyVal)=0;

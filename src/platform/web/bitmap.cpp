@@ -160,11 +160,11 @@ string base64_encode(const char* input, size_t len) {
 }
 
 // ISerializable
-Bitmap::Bitmap(const VariantMap* map) : BitmapBase(map), _img(val::null()), _buff(val::null())  {
+Bitmap::Bitmap(const VariantMap& map) : BitmapBase(map), _img(val::null()), _buff(val::null())  {
     app.log("TODO! finish Bitmap serialization");
 }
-void Bitmap::writeSelf(VariantMap* map) {
-    BitmapBase::writeSelf(map);
+void Bitmap::writeSelfToVariantMap(VariantMap& map) {
+    BitmapBase::writeSelfToVariantMap(map);
     
     PIXELDATA pixelData;
     lock(&pixelData, false);

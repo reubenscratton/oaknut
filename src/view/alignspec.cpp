@@ -23,11 +23,18 @@ ALIGNSPEC ALIGNSPEC::Right()  { return ALIGNSPEC(NULL, 1.0f,-1.0f, 0); }
 ALIGNSPEC ALIGNSPEC::Top()    { return ALIGNSPEC(NULL, 0.0f, 0.0f, 0); }
 ALIGNSPEC ALIGNSPEC::Bottom() { return ALIGNSPEC(NULL, 1.0f,-1.0f, 0); }
 
-/*static ALIGNSPEC ToLeftOf(View* view, float margin);
-static ALIGNSPEC ToRightOf(View* view, float margin);
-static ALIGNSPEC Above(View* view, float margin);
-static ALIGNSPEC Below(View* view, float margin);*/
-
+ALIGNSPEC ALIGNSPEC::ToLeftOf(View* view, float margin) {
+    return ALIGNSPEC(view, 1.0f,  -1.0f, -margin);
+}
+ALIGNSPEC ALIGNSPEC::ToRightOf(View* view, float margin) {
+    return ALIGNSPEC(view, 1.0f,  0.0f, margin);
+}
+ALIGNSPEC ALIGNSPEC::Above(View* view, float margin) {
+    return ALIGNSPEC(view, 1.0f,  -1.0f, -margin);
+}
+ALIGNSPEC ALIGNSPEC::Below(View* view, float margin) {
+    return ALIGNSPEC(view, 1.0f,  0.0f, margin);
+}
 
 
 ALIGNSPEC::ALIGNSPEC(StyleValue* value, View* view) {
@@ -46,20 +53,22 @@ ALIGNSPEC::ALIGNSPEC(StyleValue* value, View* view) {
     else if (type=="right") *this=Right();
     else if (type=="top") *this=Top();
     else if (type=="bottom") *this=Bottom();
-    else if (type=="toLeftOf") *this=ALIGNSPEC(NULL, 1.0f,  -1.0f, 0);
-    else if (type=="toRightOf") *this=ALIGNSPEC(NULL, 1.0f,  0.0f, 0);
-    else if (type=="above") *this=ALIGNSPEC(NULL, 1.0f,  -1.0f, 0);
-    else if (type=="below") *this=ALIGNSPEC(NULL, 1.0f,  0.0f, 0);
+    else if (type=="toLeftOf") *this=ALIGNSPEC(NO_ANCHOR, 1.0f,  -1.0f, 0);
+    else if (type=="toRightOf") *this=ALIGNSPEC(NO_ANCHOR, 1.0f,  0.0f, 0);
+    else if (type=="above") *this=ALIGNSPEC(NO_ANCHOR, 1.0f,  -1.0f, 0);
+    else if (type=="below") *this=ALIGNSPEC(NO_ANCHOR, 1.0f,  0.0f, 0);
     else assert(false); // unknown alignspec
     
     if (str.size() > 0) {
-        string anchorId = stringExtractUpTo(str, ",", true);
-        if (anchorId.size()==0) {
-            anchorId=str;
-            str="";
+        if (anchor == NO_ANCHOR) {
+            string anchorId = stringExtractUpTo(str, ",", true);
+            if (anchorId.size()==0) {
+                anchorId=str;
+                str="";
+            }
+            anchor = view->getParent()->findViewById(anchorId);
+            assert(anchor); // NB: anchor must be previously declared. TODO: remove this restriction
         }
-        anchor = view->getParent()->findViewById(anchorId);
-        assert(anchor); // NB: anchor must be previously declared. TODO: remove this restriction
         stringTrim(str);
         if (str.size() > 0) {
             margin = stringParseDimension(str);

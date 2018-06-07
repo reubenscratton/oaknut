@@ -39,6 +39,7 @@ CTFontRef Font::createCTFont() {
         
     } else {
         ObjPtr<ByteBuffer> data = app.loadAsset(_name.data());
+        assert(data->data);
         CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, data->data, data->cb, NULL);
         CGFontRef cgfont = CGFontCreateWithDataProvider(dataProvider);
         assert(cgfont);

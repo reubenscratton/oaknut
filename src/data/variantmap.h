@@ -27,6 +27,7 @@ public:
     Variant get(const string& key) const;
     void set(const string& key, const Variant& val);
     void set(const string& key, ISerializeToVariantMap* object);
+    void clear();
 
     template <typename T>
     T* get(const string& key) const {
@@ -45,12 +46,13 @@ public:
         return (*((_map.insert(make_pair(key,Variant()))).first)).second;
     }
 
-
-    map<string, Variant> _map;
-    
     
     // ISerializable
     virtual bool readSelfFromStream(Stream* stream);
     virtual bool writeSelfToStream(Stream* stream) const;
+
+protected:
+    map<string, Variant> _map;
+    
 };
 

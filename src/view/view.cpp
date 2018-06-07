@@ -30,7 +30,7 @@ void View::applyStyleValues(const StyleValueList& values) {
         while (val->type == StyleValue::Reference) {
             val = app.getStyleValue(val->str);
         }
-        if (!applyStyleValue(i.first, i.second)) {
+        if (!applyStyleValue(i.first, val)) {
             if (_parent && !_parent->applyStyleValueFromChild(i.first, i.second, this)) {
                 app.warn("Ignored unknown attribute '%s'", i.first.data());
             }
@@ -68,6 +68,9 @@ bool View::applyStyleValue(const string& name, StyleValue* value) {
         _alignspecVert = ALIGNSPEC(value, this);
         return true;
     } else if (name == "background") {
+        while (value->type == StyleValue::Reference) {
+            value = app.getStyleValue(value->str);
+        }
         assert(value->type == StyleValue::Type::Int);
         setBackgroundColour(value->i);
         return true;
@@ -247,7 +250,6 @@ void View::setAlignSpecs(ALIGNSPEC alignspecHorz, ALIGNSPEC alignspecVert) {
 
 
 void View::setNeedsLayout() {
-	//needsLayout = true;
 	if (_window) {
 		_window->setNeedsLayout();
 	}
@@ -446,7 +448,7 @@ void View::layout() {
         //view->_rect.origin.y += _padding.bottom;
     }
 	
-    updateScrollbars();
+    updateScrollbarVisibility();
     setNeedsFullRedraw();
 }
 
@@ -506,16 +508,10 @@ void View::detachFromWindow() {
 	if (!_window) {
         return;
     }
-    if (_scrollFadeAnim) {
-        _scrollFadeAnim = NULL;
-    }
+    _scrollHorz.detach();
+    _scrollVert.detach();
     _window->detachView(this);
     
-    if (_scrollFadeTimer) {
-        _scrollFadeTimer->stop();
-        _scrollFadeTimer = NULL;
-    }
-
     
     // Unbatch our ops
     if (_surface) {
@@ -571,6 +567,11 @@ void View::addSubview(View* subview) {
 	insertSubview(subview, (int)_subviews.size());
 }
 void View::insertSubview(View* subview, int index) {
+    
+    // If adding to end of list, make sure we don't draw on top of scrollbars view
+    if (_scrollbarsView && (index >= _subviews.size())) {
+        index = (int)_subviews.size() - 1;
+    }
     
     /*
      
@@ -679,6 +680,7 @@ void View::removeSubviewsNotInVisibleArea() {
     for (int i=0 ; i<_subviews.size() ; i++) {
         auto it = _subviews.at(i);
         View* subview = it;
+        if (subview == _scrollbarsView) continue;
         if (subview->_rect.bottom() < _contentOffset.y
             || subview->_rect.top() >= _rect.size.height+_contentOffset.y) {
             i--;
@@ -765,6 +767,33 @@ bool View::isTouchable() {
 	return _visibility==Visible && !(_state&STATE_DISABLED);
 }
 
+void View::addScrollbarOp(RenderOp* renderOp) {
+    bool layoutValid = _window->_viewLayoutValid; // we preserve this flag to avoid scrollbars triggering layout
+    if (!_scrollbarsView) {
+        ScrollbarsView* scrollbarsView = new ScrollbarsView();
+        scrollbarsView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::FillParent());
+        scrollbarsView->setAlignSpecs(ALIGNSPEC::Top(), ALIGNSPEC::Left());
+        addSubview(scrollbarsView);
+        scrollbarsView->_rect = getOwnRect();
+        _scrollbarsView = scrollbarsView;
+    }
+    renderOp->_view = _scrollbarsView;
+    _scrollbarsView->addRenderOp(renderOp);
+    _window->_viewLayoutValid = layoutValid;
+}
+
+void View::removeScrollbarOp(RenderOp* renderOp) {
+    bool layoutValid = _window->_viewLayoutValid; // we preserve this flag to avoid scrollbars triggering layout
+    assert(_scrollbarsView);
+    _scrollbarsView->removeRenderOp(renderOp);
+    if (_scrollbarsView->_renderList.size() == 0) {
+        removeSubview(_scrollbarsView);
+        _scrollbarsView = NULL;
+    }
+    _window->_viewLayoutValid = layoutValid;
+}
+
+
 void View::addRenderOp(RenderOp* renderOp) {
     addRenderOp(renderOp, false);
 }
@@ -805,7 +834,7 @@ POINT View::getContentOffset() const {
 void View::setContentOffset(POINT contentOffset) {
 	if (!contentOffset.equals(_contentOffset)) {
 		_contentOffset = contentOffset;
-        updateScrollbars();
+        updateScrollbarVisibility();
 	}
     if (_window) {
         _window->requestRedraw();
@@ -813,82 +842,28 @@ void View::setContentOffset(POINT contentOffset) {
 }
 
 
-
-void View::scrollStartFadeAnim(float targetAlpha) {
-    if (!_window) {
-        return;
-    }
-    if (!_scrollFadeAnim) {
-        _scrollFadeAnim = new DelegateAnimation();
-        _scrollFadeAnim->_view = this;
-        _scrollFadeAnim->_delegate = [=](float val) {
-            _scrollAlpha = val;
-            if (_scrollbarVert) {
-                _scrollbarVert->_renderOp->setAlpha(val);
-                invalidateRect(_scrollbarVert->_renderOp->_rect);
-            }
-            if (_scrollbarHorz) {
-                _scrollbarHorz->_renderOp->setAlpha(val);
-                invalidateRect(_scrollbarHorz->_renderOp->_rect);
-            }
-        };
-    }
-    _scrollFadeAnim->stop();
-    _scrollFadeAnim->_fromVal = _scrollAlpha;
-    _scrollFadeAnim->_toVal = targetAlpha;
-    _scrollFadeAnim->start(_window, 3000);
+bool View::canScrollVertically() {
+    return _scrollVert.canScroll(this, true);
+}
+bool View::canScrollHorizontally() {
+    return _scrollHorz.canScroll(this, false);
 }
 
+void View::updateScrollbarVisibility() {
+    _scrollVert.updateVisibility(this, true);
+    _scrollHorz.updateVisibility(this, false);
+}
 
-
-
-void View::updateScrollbars() {
-    //if (!_window->_viewLayoutValid) {
-    //    return;
-    //}
-    float visibleContentHeight = _contentSize.height - (_scrollInsets.top+_scrollInsets.bottom);
-    float visibleContentWidth = _contentSize.width - (_scrollInsets.left+_scrollInsets.right);
-    bool createdBar = false;
-	if (visibleContentHeight>0 && _rect.size.height < visibleContentHeight) {
-        if (!_scrollbarVert) {
-            _scrollbarVert = new Scrollbar(this);
-            createdBar = true;
+void View::updateScrollOffsets() {
+    if (_scrollVert._fling || _scrollHorz._fling) {
+        POINT newContentOffset = _contentOffset;
+        if (_scrollHorz._fling) {
+            newContentOffset.x = _scrollHorz.flingUpdate();
         }
-        _scrollbarVert->updateRect();
-    } else {
-        if (_scrollbarVert) {
-            removeRenderOp(_scrollbarVert->_renderOp);
-            _scrollbarVert = NULL;
+        if (_scrollVert._fling) {
+            newContentOffset.y = _scrollVert.flingUpdate();
         }
-    }
-    if (visibleContentWidth>0 && _rect.size.width < (int)visibleContentWidth) {
-        if (!_scrollbarHorz) {
-            _scrollbarHorz = new Scrollbar(this);
-            createdBar = true;
-        }
-        _scrollbarHorz->updateRect();
-    } else {
-        if (_scrollbarHorz) {
-            removeRenderOp(_scrollbarHorz->_renderOp);
-            _scrollbarHorz = NULL;
-        }
-    }
-
-    // If scrollbar created, autofade the scrollbars in
-    if (_scrollbarHorz || _scrollbarVert) {
-        if (_scrollAlpha<1 && (!_scrollFadeAnim || _scrollFadeAnim->_toVal != 1.0f)) {
-            scrollStartFadeAnim(1.0f);
-        }
-    }
-
-    // Schedule scrollbars to autofade
-    if (_scrollbarVert || _scrollbarHorz) {
-        if (_scrollFadeTimer) {
-            _scrollFadeTimer->stop();
-        }
-        _scrollFadeTimer = Timer::start([=]() {
-            scrollStartFadeAnim(0.0f);
-        }, 500, false);
+        setContentOffset(newContentOffset);
     }
 }
 
@@ -923,7 +898,7 @@ View* View::hitTest(POINT pt, POINT* ptRel) {
 		POINT ptClient = pt;
 		ptClient.x -= _rect.origin.x;
 		ptClient.y -= _rect.origin.y;
-		for (long i=_subviews.size()-1 ; i>=0 ; i--) {
+        for (long i=_subviews.size()-(_scrollbarsView?2:1) ; i>=0 ; i--) {
 			View* subview = _subviews.at(i);
 			View* hitTestSubview = subview->hitTest(ptClient, ptRel);
 			if (hitTestSubview) {
@@ -972,33 +947,9 @@ bool View::onTouchEvent(int eventType, int eventSource, POINT pt) {
     //if (!touchable) {
     //    return false;
     //}
-    
-    if (eventType == INPUT_EVENT_DOWN) {
-        _ptDrag = pt;
-        _isDragging = false;
-        if (_scrollbarVert) {
-            _scrollbarVert->mFinished = true;
-        }
-    }
-    if (eventType == INPUT_EVENT_MOVE) {
-        if (_scrollbarVert) {
-            float dy = pt.y - _ptDrag.y;
-            setContentOffset(POINT_Make(_contentOffset.x, _contentOffset.y - dy));
-        }
-        _ptDrag = pt;
-    }
-    if (eventType == INPUT_EVENT_DRAG) {
-        _isDragging = true;
-    }
-    if (eventType == INPUT_EVENT_FLING) {
-        //app.log("fling! %f", -pt.y);
-        if (_scrollbarVert) {
-            _scrollbarVert->fling(_contentOffset.y, -pt.y, 0, _contentSize.height-_rect.size.height);
-            setNeedsFullRedraw();
-        }
-    }
-    
-    
+
+    _scrollVert.handleTouchEvent(this, true, eventType, eventSource, pt);
+    _scrollHorz.handleTouchEvent(this, false, eventType, eventSource, pt);
     
 	if (onTouchEventDelegate) {
 		if (onTouchEventDelegate(this, eventType, eventSource, pt)) {

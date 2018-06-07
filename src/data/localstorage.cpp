@@ -8,6 +8,73 @@
 #include <oaknut.h>
 #include <fstream>
 
+#ifdef PLATFORM_WEB
+
+class WebLocalStore : public LocalStore {
+public:
+    
+    
+    WebLocalStore(const string& name, const string& primaryKeyName) : LocalStore(name, primaryKeyName) {
+    }
+    
+    // Open & close methods.
+    virtual void open() {
+        EM_ASM_({
+        var request = window.indexedDB.open("LocalStorage", 1);
+        request.onerror = function(event) {
+            alert("Why didn't you allow my web app to use IndexedDB?!");
+        };
+        request.onsuccess = function(event) {
+            alert("Database opened ok!");
+            db = event.target.result;
+        };
+        request.onupgradeneeded = function(event) {
+            var db = event.target.result;
+            var objectStore = db.createObjectStore("name", { keyPath: "myKey" });
+        };
+        },0);
+    }
+    virtual void close() {
+    }
+    
+    virtual void flush() {
+    }
+    
+    
+    virtual int getCount() {
+        return 0;
+    }
+    virtual bool moveFirst() {
+        return false;
+    }
+    virtual bool find(const Variant& primaryKeyVal) {
+        return false;
+    }
+    
+    bool readAndAdvance(VariantMap& map) {
+        return false;
+    }
+    
+    void remove(const Variant& primaryKeyVal) {
+    }
+    virtual void put(ISerializeToVariantMap* object) {
+        VariantMap map;
+        object->writeSelfToVariantMap(map);
+        
+    }
+    
+    
+protected:
+    
+    
+};
+
+LocalStore* LocalStore::create(const string& name, const string& primaryKeyName) {
+    return new WebLocalStore(name, primaryKeyName);
+}
+
+#else
+
 /**
  FileLocalStore
  
@@ -90,9 +157,9 @@ public:
         return _it != _index.end();
     }
 
-    VariantMap* readCurrent() {
+    bool readAndAdvance(VariantMap& map) {
         if (_it == _index.end()) {
-            return NULL;
+            return false;
         }
         ByteBufferStream bbs(_it->second.size);
         openFile();
@@ -100,9 +167,9 @@ public:
         _file.read((char*)bbs._data.data, _it->second.size);
         assert(_file.gcount() == _it->second.size);
         _it++;
-        VariantMap* map = new VariantMap();
-        map->readSelfFromStream(&bbs);
-        return map;
+        map.clear();
+        map.readSelfFromStream(&bbs);
+        return true;
     }
     
     void remove(const Variant& primaryKeyVal) {
@@ -185,6 +252,7 @@ protected:
 LocalStore* LocalStore::create(const string& name, const string& primaryKeyName) {
     return new FileLocalStore(name, primaryKeyName);
 }
+#endif
 
 LocalStore::LocalStore(const string& name, const string& primaryKeyName) {
     _primaryKeyName = primaryKeyName;

@@ -46,6 +46,7 @@ void LinearLayout::measure(float parentWidth, float parentHeight) {
 	_contentSize.width = 0;
 	for (int i=0 ; i<_subviews.size() ; i++) {
 		View* view = _subviews.at(i);
+        if (view == _scrollbarsView) continue;
 		if (_orientation == Vertical) {
             _contentSize.height += view->getHeight();
 			_contentSize.width = fmaxf(_contentSize.width, view->getWidth());
@@ -62,6 +63,7 @@ void LinearLayout::measure(float parentWidth, float parentHeight) {
 				float excess = (_rect.size.height - _contentSize.height) - (_padding.top+_padding.bottom);
 				for (int i=0 ; i<_subviews.size() ; i++) {
 					View* view = _subviews.at(i);
+                    if (view == _scrollbarsView) continue;
 					float excessForThisSubview = (_weights[i]/_weightsTotal)*excess;
                     RECT rect = view->getRect();
 					rect.size.height += excessForThisSubview;
@@ -74,6 +76,7 @@ void LinearLayout::measure(float parentWidth, float parentHeight) {
 				float excess = (_rect.size.width - _contentSize.width) - (_padding.left+_padding.right);
 				for (int i=0 ; i<_subviews.size() ; i++) {
 					View* view = _subviews.at(i);
+                    if (view == _scrollbarsView) continue;
 					float excessForThisSubview = (_weights[i]/_weightsTotal)*excess;
                     RECT rect = view->getRect();
 					rect.size.width += excessForThisSubview;
@@ -104,6 +107,7 @@ void LinearLayout::layout() {
     if (_orientation == Vertical) {
         for (int i=0 ; i<_subviews.size() ; i++) {
             View* view = _subviews.at(i);
+            if (view == _scrollbarsView) continue;
 			view->layout();
             view->setRectOrigin(pt);
             pt.y += view->getHeight();
@@ -111,6 +115,7 @@ void LinearLayout::layout() {
     } else if (_orientation == Horizontal) {
         for (int i=0 ; i<_subviews.size() ; i++) {
             View* view = _subviews.at(i);
+            if (view == _scrollbarsView) continue;
 			view->layout();
             view->setRectOrigin(pt);
             pt.x += view->getWidth();

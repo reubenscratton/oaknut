@@ -21,6 +21,13 @@
  
  */
 
+
+#define log2f(x) (logf(x)*1.4426950408889634)
+#ifndef GL_TEXTURE_MAX_LEVEL
+#define GL_TEXTURE_MAX_LEVEL 0x813D
+#endif
+
+
 #define BLUR_RADIUS 4			// 12
 
 #if EMSCRIPTEN
@@ -29,13 +36,6 @@
 #define MAX_OPTIMIZED_OFFSETS 7
 #endif
 
-class GLProgramBlur : public GLProgram {
-public:
-    GLuint _posTexOffset;
-    
-    virtual void load();
-    virtual void setTexOffset(POINT texOffset);
-};
 
 class GLProgramPostBlur : public GLProgram {
 public:
@@ -45,7 +45,7 @@ public:
 
 extern Matrix4 setOrthoFrustum(float l, float r, float b, float t, float n, float f);
 
-static GLProgramBlur s_progBlur;
+static GLProgramBlur s_progBlur(BLUR_RADIUS, BLUR_RADIUS);
 static GLProgramPostBlur s_progBlurPost;
 
 
@@ -97,8 +97,6 @@ void BlurRenderOp::setRect(const RECT &rect) {
     _downsampledSize.width = (int)(_rect.size.width/4);
     _downsampledSize.height = (int)(_rect.size.height/4);
 
-#define log2f(x) (logf(x)*1.4426950408889634)
-
     // Round fullsize tex up to pow2
     _fullSizePow2.width = (int)_rect.size.width;
     _fullSizePow2.height = (int)_rect.size.height;
@@ -108,9 +106,10 @@ void BlurRenderOp::setRect(const RECT &rect) {
     GLint otex;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &otex);
 
+    
     check_gl(glBindTexture, GL_TEXTURE_2D, _textureIds[0]);
     check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-    check_gl(glTexParameteri, GL_TEXTURE_2D, 0x813D, 2);
+    check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 2);
     check_gl(glTexImage2D, GL_TEXTURE_2D, 0, GL_RGB, _fullSizePow2.width, _fullSizePow2.height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, NULL);
 
     check_gl(glBindTexture, GL_TEXTURE_2D, _textureIds[1]);
@@ -187,40 +186,40 @@ void BlurRenderOp::render(Window* window, Surface* surface) {
 }
 
 
+GLProgramBlur::GLProgramBlur(int blurRadius, int sigma) : _blurRadius(blurRadius) {
+    int32_t blurRadiusInPixels = round(_blurRadius);
+    uint32_t calculatedSampleRadius = 0;
+    if (blurRadiusInPixels >= 1) {
+        float minimumWeightToFindEdgeOfSamplingArea = 1.0/256.0;
+        calculatedSampleRadius = floor(sqrt(-2.0 * pow(blurRadiusInPixels, 2.0) * log(minimumWeightToFindEdgeOfSamplingArea * sqrt(2.0 * M_PI * pow(blurRadiusInPixels, 2.0))) ));
+        calculatedSampleRadius += calculatedSampleRadius % 2;
+    }
+    _blurRadius = calculatedSampleRadius;
+    _sigma = sigma;
+}
+
 
 void GLProgramBlur::load() {
 
-    
-	int blurRadius = BLUR_RADIUS;
-
-	int32_t blurRadiusInPixels = round(blurRadius);
-	uint32_t calculatedSampleRadius = 0;
-	if (blurRadiusInPixels >= 1) {
-		float minimumWeightToFindEdgeOfSamplingArea = 1.0/256.0;
-		calculatedSampleRadius = floor(sqrt(-2.0 * pow(blurRadiusInPixels, 2.0) * log(minimumWeightToFindEdgeOfSamplingArea * sqrt(2.0 * M_PI * pow(blurRadiusInPixels, 2.0))) ));
-		calculatedSampleRadius += calculatedSampleRadius % 2;
-	}
-	blurRadius = calculatedSampleRadius;
-	float sigma = blurRadiusInPixels;
 	
 	
 	// First, generate the normal Gaussian weights for a given sigma
-	GLfloat standardGaussianWeights[blurRadius + 1];
+	GLfloat standardGaussianWeights[_blurRadius + 1];
     GLfloat sumOfWeights = 0.0;
-    for (uint32_t i = 0; i < blurRadius + 1; i++) {
-        standardGaussianWeights[i] = (1.0 / sqrt(2.0 * M_PI * pow(sigma, 2.0))) * exp(-pow(i, 2.0) / (2.0 * pow(sigma, 2.0)));
+    for (uint32_t i = 0; i < _blurRadius + 1; i++) {
+        standardGaussianWeights[i] = (1.0 / sqrt(2.0 * M_PI * pow(_sigma, 2.0))) * exp(-pow(i, 2.0) / (2.0 * pow(_sigma, 2.0)));
 		sumOfWeights += ((i==0)?1:2) * standardGaussianWeights[i];
     }
 
 
     // Next, normalize these weights to prevent the clipping of the Gaussian curve
 	// at the end of the discrete samples from reducing luminance
-    for (uint32_t i = 0; i < blurRadius + 1; i++) {
+    for (uint32_t i = 0; i < _blurRadius + 1; i++) {
         standardGaussianWeights[i] = standardGaussianWeights[i] / sumOfWeights;
     }
 	
     // From these weights we calculate the offsets to read interpolated values from
-	uint32_t numberOfOptimizedOffsets = min(blurRadius / 2 + (blurRadius % 2), MAX_OPTIMIZED_OFFSETS);
+	uint32_t numberOfOptimizedOffsets = min(_blurRadius / 2 + (_blurRadius % 2), MAX_OPTIMIZED_OFFSETS);
 	GLfloat optimizedGaussianOffsets[numberOfOptimizedOffsets];
     for (uint32_t i = 0; i < numberOfOptimizedOffsets; i++) {
         GLfloat firstWeight = standardGaussianWeights[i*2 + 1];
@@ -230,7 +229,7 @@ void GLProgramBlur::load() {
     }
 	
 	
-	uint32_t trueNumberOfOptimizedOffsets = blurRadius / 2 + (blurRadius % 2);
+	uint32_t trueNumberOfOptimizedOffsets = _blurRadius / 2 + (_blurRadius % 2);
 	
 
 	char ach[128];
@@ -302,7 +301,7 @@ void GLProgramBlur::load() {
         }
     }
 	
-	fragShader.append("   gl_FragColor = c;\n"
+    fragShader.append("   gl_FragColor = c;\n"
 //     gl_FragColor = vec4((textureColor.rgb) + (luminanceRatio), textureColor.w);
 		"}\n");
 

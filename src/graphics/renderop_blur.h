@@ -5,6 +5,18 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+class GLProgramBlur : public GLProgram {
+public:
+    GLuint _posTexOffset;
+    int _blurRadius;
+    float _sigma;
+    
+    GLProgramBlur(int blurRadius, int sigma);
+
+    virtual void load();
+    virtual void setTexOffset(POINT texOffset);
+};
+
 
 class BlurRenderOp : public RenderOp {
 public:

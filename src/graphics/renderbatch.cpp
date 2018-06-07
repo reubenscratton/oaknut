@@ -24,8 +24,6 @@ void RenderBatch::invalidateGeometry(RenderOp* op) {
     _dirty = true;
 }
 
-extern int renderOrder(View* view1, View* view2);
-
 void RenderBatch::render(Window* window, Surface* surface, RenderOp* firstOp) {
 
     // Upload any changed vertex data
@@ -63,7 +61,6 @@ void RenderBatch::render(Window* window, Surface* surface, RenderOp* firstOp) {
     // Determine how much many ops we can draw right now without breaking render order
     int numQuadsThisChunk = 0;
     auto it = firstOp->_batchIterator;
-    //RenderOp* baseOp = firstOp;
     RenderOp* currentOp = firstOp;
     RenderOp* nextOpInBatch = firstOp;
     

@@ -60,6 +60,11 @@ public:
     bool operator<(const Variant& rhs) const;
     ~Variant();
     
+    // Comparison
+    bool operator ==(float val) {return type==FLOAT32 && f==val; }
+    bool operator ==(int val) {return (type==INT32 && i32==val) || (type==UINT32 && u32==val); }
+    bool operator ==(const string& val) {return type==STRING && str->compare(val)==0; }
+
     // Implicit conversions
     operator int32_t() const { assert(type==INT32); return i32; };
     operator uint32_t() const { assert(type==UINT32); return u32; };

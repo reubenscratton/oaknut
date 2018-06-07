@@ -7,7 +7,25 @@
 
 #include <oaknut.h>
 
-
+/**
+ 
+ A deep dive into rendering
+ ==========================
+ 
+ The view tree maintains a doubly-linked list of each view in render order. Each view contains
+ its list of render ops. In this way we have a list of all the render ops in the logical
+ order that they should be rendered.
+ 
+ We also maintain a list of renderop *batches*, i.e. groups of related ops that can be drawn in
+ a single OpenGL draw call. The renderer walks the view tree and the render op list, and for
+ each op it finds, if it hasn't yet been drawn then it gets the batch it belongs to and draws
+ as much as possible of that batch without breaking render order (a break would be to draw a
+ later op that clips an earlier op before the earlier op has drawn).
+ 
+ If a view has scrollbars those must be drawn after all child views.
+ 
+ 
+ */
 
 Matrix4 setOrthoFrustum(float l, float r, float b, float t, float n, float f) {
     Matrix4 mat;
@@ -62,7 +80,6 @@ void Surface::setupPrivateFbo() {
     check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
     check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
     GLenum x = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    app.log("x2=%X", x);
     assert(x==GL_FRAMEBUFFER_COMPLETE);
     check_gl(glBindFramebuffer, GL_FRAMEBUFFER, oldFBO);
 }
@@ -146,8 +163,7 @@ void Surface::addRenderOp(RenderOp* op) {
     op->_batch = batch;
     batch->_dirty = true;
     for (auto it=batch->_ops.begin() ; it!=batch->_ops.end() ;it++) {
-        RenderOp* op2 = *it;
-        if (renderOrder(op->_view, op2->_view) <0) {
+        if (renderOrder(op->_view, (*it)->_view) <0) {
             op->_batchIterator = batch->_ops.insert(it, op);
             return;
         }
@@ -300,7 +316,7 @@ void Surface::renderPhase2(Surface* prevsurf, View* view, Window* window) {
         tm.translate(0, -view->_contentOffset.y, 0);
         surface->_mvp *= tm;
     }
-
+    
     // Walk the ops for the current view
     for (auto it=view->_renderList.begin() ; it!=view->_renderList.end() ; it++) {
         RenderOp* op = *it;
@@ -322,7 +338,7 @@ void Surface::renderPhase2(Surface* prevsurf, View* view, Window* window) {
     for (auto it=view->_subviews.begin() ; it != view->_subviews.end() ; it++) {
         surface->renderPhase2(surface, *it, window);
     }
-        
+    
     // Pop draw state
     if (changesMvp) {
         surface->_mvp = savedMatrix;
@@ -344,12 +360,7 @@ void Surface::renderPhase2(Surface* prevsurf, View* view, Window* window) {
     }
     
     // Update scroll offset if scroller is in use
-    if (view->_scrollbarVert) {
-        if (!view->_scrollbarVert->mFinished) {
-            view->_scrollbarVert->computeScrollOffset();
-            view->setContentOffset(POINT_Make(0, view->_scrollbarVert->mCurr));
-        }
-    }
+    view->updateScrollOffsets();
     
 }
 

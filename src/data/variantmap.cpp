@@ -78,6 +78,10 @@ void VariantMap::set(const string& key, ISerializeToVariantMap* val) {
     _map[key] = v;
 }
 
+void VariantMap::clear() {
+    _map.clear();
+}
+
 /*
 void VariantMap::setInt(const string& key, int val) {
     if (sizeof(int)==8) {

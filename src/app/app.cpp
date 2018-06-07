@@ -165,7 +165,7 @@ View* App::layoutInflate(const string& assetPath) {
  */
 
 static LocalStore* s_localstore;
-static VariantMap* s_userdefaults;
+static VariantMap s_userdefaults;
 
 
 static void ensureLoaded() {
@@ -173,23 +173,17 @@ static void ensureLoaded() {
         s_localstore = LocalStore::create("_userdefaults", "unused");
     }
     if (s_localstore->moveFirst()) {
-        s_userdefaults = s_localstore->readCurrent();
+        s_localstore->readAndAdvance(s_userdefaults);
     }
-    if (!s_userdefaults) {
-        s_userdefaults = new VariantMap();
-        s_userdefaults->set("unused", 0); // set a primary key value although it's not used
-    }
-    /*    FileStream stream(getUserDefaultsPath());
-     if (stream.openForRead()) {
-     s_userdefaults.readSelfFromStream(&stream);
-     }*/
+    s_userdefaults.set("unused", 0); // set a primary key value although it's not used
+
 }
 
 
 int App::getIntSetting(const char *key, const int defaultValue) {
     ensureLoaded();
-    if (s_userdefaults->hasValue(key)) {
-        return (int32_t)s_userdefaults->get(key);
+    if (s_userdefaults.hasValue(key)) {
+        return (int32_t)s_userdefaults.get(key);
     }
     return defaultValue;
 }
@@ -197,20 +191,20 @@ int App::getIntSetting(const char *key, const int defaultValue) {
 
 void App::setIntSetting(const char* key, const int value) {
     ensureLoaded();
-    s_userdefaults->set(key, value);
+    s_userdefaults.set(key, value);
 }
 
 string App::getStringSetting(const char* key, const char* defaultValue) {
     ensureLoaded();
-    if (s_userdefaults->hasValue(key)) {
-        return (string)s_userdefaults->get(key);
+    if (s_userdefaults.hasValue(key)) {
+        return (string)s_userdefaults.get(key);
     }
     return defaultValue;
 }
 
 void App::setStringSetting(const char* key, const char* value) {
     ensureLoaded();
-    s_userdefaults->set(key, value);
+    s_userdefaults.set(key, value);
 }
 
 void App::saveSettings() {

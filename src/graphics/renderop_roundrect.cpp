@@ -7,7 +7,6 @@
 
 #include <oaknut.h>
 
-
 class GLProgramRoundRect : public GLProgram {
 public:
     UniformColour _strokeColour;
@@ -151,13 +150,9 @@ void GLProgramRoundRectOne::load() {
         "void main() {\n"
         "    vec2 b = u.xy - vec2(radius); \n"
         "    float dist = length(max(abs(v_texcoord)-b, 0.0)) - radius; \n"
-        "    lowp vec4 col = v_colour;\n"
-        "    //col.a *= (1.0-dist);\n"
-        "    if (u.w > 0.0) {\n"
-        "        float alpha1 = clamp(dist + u.w, 0.0, 1.0);\n"
-        "        float alpha2 = clamp(dist, 0.0, 1.0);\n"
-        "        col = mix(col, strokeColour, alpha1 - alpha2);\n"
-        "    }\n"
+        "    vec4 col = strokeColour;\n"
+        "    col.a = mix(0.0, strokeColour.a, clamp(-dist, 0.0, 1.0));\n"   // outer edge blend
+        "    col = mix(col, v_colour, clamp(-(dist + u.w), 0.0, 1.0));\n"
         "    col.a *= alpha;\n"
         "    gl_FragColor = col;\n"
         "}\n"

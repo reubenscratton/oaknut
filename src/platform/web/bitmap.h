@@ -24,9 +24,9 @@ public:
 
     virtual void bind();
     
-    // ISerializable
-    Bitmap(const VariantMap* map);
-    virtual void writeSelf(VariantMap* map);
+    // ISerializeToVariantMap
+    Bitmap(const VariantMap& map);
+    virtual void writeSelfToVariantMap(VariantMap& map);
 
 };
 

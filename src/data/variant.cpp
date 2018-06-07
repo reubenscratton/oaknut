@@ -33,9 +33,11 @@ Variant::Variant(ByteBuffer* val) : type(BYTEBUFFER), data(val) {
 }
 Variant::Variant(ObjPtr<ByteBuffer>& val) : Variant(val._obj) {
 }
-Variant::Variant(ISerializeToVariantMap* val) : type(MAP) {
-    map = new VariantMap();
-    val->writeSelfToVariantMap(*map);
+Variant::Variant(ISerializeToVariantMap* val) : type(val?MAP:EMPTY) {
+    if (val) {
+        map = new VariantMap();
+        val->writeSelfToVariantMap(*map);
+    }
 }
 
 Variant::Variant(vector<pair<const string&,const Variant&>> vals) : type(MAP), map(NULL) {

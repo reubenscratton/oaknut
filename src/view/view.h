@@ -40,7 +40,7 @@ public:
     friend class PrivateSurfaceRenderOp;
     friend class Window;
     friend class ViewController;
-    friend class Scrollbar;
+    friend class ScrollInfo;
     
     // Construction
     View();
@@ -226,6 +226,8 @@ public:
     virtual POINT getContentOffset() const;
     virtual void setContentOffset(POINT contentOffset);
     virtual void setScrollInsets(EDGEINSETS scrollInsets);
+    virtual bool canScrollHorizontally();
+    virtual bool canScrollVertically();
 
 
 protected:
@@ -235,13 +237,10 @@ protected:
     bool _contentSizeValid;
     GRAVITY _gravity;
     EDGEINSETS _scrollInsets;
-    ObjPtr<Scrollbar> _scrollbarVert;
-    ObjPtr<Scrollbar> _scrollbarHorz;
-    float _scrollAlpha;
-    ObjPtr<class DelegateAnimation> _scrollFadeAnim;
-    ObjPtr<Timer> _scrollFadeTimer;
-    virtual void scrollStartFadeAnim(float targetAlpha);
-    virtual void updateScrollbars();
+    ScrollInfo _scrollVert;
+    ScrollInfo _scrollHorz;
+    virtual void updateScrollbarVisibility();
+    virtual void updateScrollOffsets();
     /** @} */
 /**  \endcond */
 /**@}*/
@@ -294,6 +293,9 @@ protected:
     bool _updateRenderOpsNeeded;
     bool _opaque;
     Matrix4* _matrix;
+    class ScrollbarsView* _scrollbarsView;
+    void addScrollbarOp(RenderOp* renderOp);
+    void removeScrollbarOp(RenderOp* renderOp);
 
     /** Links to the adjacent views in the render order. All views attached to the window
         form a doubly-linked list used in rendering. */
@@ -367,7 +369,6 @@ protected:
     virtual View* dispatchInputEvent(int eventType, int finger, long time, POINT pt);
     virtual bool onTouchEvent(int eventType, int finger, POINT pt);
 	
-    bool _isDragging;
     POINT _ptDrag;
     /**  \endcond */
     /**@}*/
@@ -394,4 +395,8 @@ public:
 };
 
 
+class ScrollbarsView : public View {
+public:
+    
+};
 
