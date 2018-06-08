@@ -10,7 +10,7 @@
 
 Animation::Animation() : Animation(0,1) {
 }
-Animation::Animation(float fromVal, float toVal) : _interpolater(linear),
+Animation::Animation(float fromVal, float toVal) : _interpolator(linear),
 												   _fromVal(fromVal),
 												   _toVal(toVal) {
 }
@@ -24,6 +24,31 @@ void Animation::start(Window* window, int duration) {
 void Animation::start(Window* window, int duration, int delay) {
     window->startAnimation(this, duration, delay);
 }
+
+class SimpleAnimation : public Animation {
+public:
+    SimpleAnimation(std::function<void(float)> callback) : _callback(callback) {
+        _fromVal = 0;
+        _toVal = 1;
+    }
+    
+    void apply(float val) {
+        _callback(val);
+    }
+
+    
+protected:
+    std::function<void(float)> _callback;
+};
+
+Animation* Animation::start(Window* window, int duration, std::function<void(float)> callback, InterpolateFunc interpolator) {
+    Animation* anim = new SimpleAnimation(callback);
+    anim->_interpolator = interpolator;
+    anim->retain();
+    anim->start(window, duration);
+    return anim;
+}
+
 
 void Animation::stop() {
     if (_window) {
@@ -63,7 +88,7 @@ bool Animation::tick(long now) {
 	}
         
 	// Call apply()
-    float val = _interpolater(elapsed, 0, 1, _duration);
+    float val = finished?1:_interpolator(elapsed, 0, 1, _duration);
 	apply(_fromVal + (_toVal-_fromVal)*val);
         
 	// If animation has finished
@@ -92,6 +117,77 @@ void AlphaAnimation::apply(float val) {
 }
 
 
+
+
+LayoutAnimation::LayoutAnimation(View* view, InterpolateFunc interpolator) : Animation(0,1) {
+    _interpolator = interpolator;
+    _view = view;
+}
+
+LayoutAnimation* LayoutAnimation::startHorizontal(View* view, ALIGNSPEC newAlignspec, int duration, InterpolateFunc interpolator) {
+    LayoutAnimation* anim = new LayoutAnimation(view, interpolator);
+    anim->_affectsAlignspecHorz = true;
+    anim->_newAlignspecHorz = newAlignspec;
+    anim->start(view->_window, duration, 0);
+    return anim;
+}
+
+
+LayoutAnimation* LayoutAnimation::startVertical(View* view, ALIGNSPEC newAlignspec, int duration, InterpolateFunc interpolator) {
+    LayoutAnimation* anim = new LayoutAnimation(view, interpolator);
+    anim->_affectsAlignspecVert = true;
+    anim->_newAlignspecVert = newAlignspec;
+    anim->start(view->_window, duration, 0);
+    return anim;
+}
+
+LayoutAnimation* LayoutAnimation::startPositional(View* view, ALIGNSPEC newAlignspecHorz, ALIGNSPEC newAlignspecVert, int duration, InterpolateFunc interpolator) {
+    LayoutAnimation* anim = new LayoutAnimation(view, interpolator);
+    anim->_affectsAlignspecHorz = true;
+    anim->_affectsAlignspecVert = true;
+    anim->_newAlignspecHorz = newAlignspecHorz;
+    anim->_newAlignspecVert = newAlignspecVert;
+    anim->start(view->_window, duration, 0);
+    return anim;
+}
+
+void LayoutAnimation::apply(float val) {
+    if (val >= 1.0f) {
+        if (_affectsAlignspecHorz) {
+            _view->_alignspecHorz = _newAlignspecHorz;
+        }
+        if (_affectsAlignspecVert) {
+            _view->_alignspecVert = _newAlignspecVert;
+        }
+        _view->setNeedsLayout();
+        return;
+    }
+    if (!_valid) {
+        if (_affectsAlignspecHorz) {
+            _originHorzStart = _view->getAlignspecVal(_view->_alignspecHorz, false);
+            _originHorzEnd = _view->getAlignspecVal(_newAlignspecHorz, false);
+        }
+        if (_affectsAlignspecVert) {
+            _originVertStart = _view->getAlignspecVal(_view->_alignspecVert, true);
+            _originVertEnd = _view->getAlignspecVal(_newAlignspecVert, true);
+        }
+        _valid = true;
+    }
+    if (_affectsAlignspecHorz || _affectsAlignspecVert) {
+        POINT origin;
+        if (_affectsAlignspecHorz) {
+            origin.x = _originHorzStart + (_originHorzEnd - _originHorzStart) * val;
+        } else {
+            origin.x = _view->_rect.origin.x;
+        }
+        if (_affectsAlignspecVert) {
+            origin.y = _originVertStart + (_originVertEnd - _originVertStart) * val;
+        } else {
+            origin.y = _view->_rect.origin.y;
+        }
+        _view->setRectOrigin(origin);
+    }
+}
 
 
 float linear(float t, float b, float c, float d) {

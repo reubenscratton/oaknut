@@ -28,12 +28,29 @@ public:
 class ListView : public View {
 public:
 	IListAdapter* _adapter;
-    vector<pair<LISTINDEX,View*>> _itemViews;
+    
+    class ItemView : public View {
+    public:
+        ListView* _listView;
+        View* _contentView;
+        ImageView* _deleteButton;
+        View* _reorderHandle;
+        
+        ItemView(ListView* listView, View* contentView);
+        void updateDeleteButton(bool animate);
+        void attachToWindow(Window* window);
+    };
+    
+    Bitmap* _bmpDelete;
+    bool _editMode;
+
+    vector<pair<LISTINDEX,ItemView*>> _itemViews;
     vector<pair<int,View*>> _headerViews;
 	float _dividerHeight;
     COLOUR _dividerColour;
     LISTINDEX _selectedIndex;
     std::function<void(View*, LISTINDEX index)> _onItemTapDelegate;
+    std::function<void(View*, LISTINDEX index)> _onItemLongPressDelegate;
     typedef struct {
         int top;
         int headerHeight;
@@ -41,7 +58,8 @@ public:
     } SECTION_METRICS;
     vector<SECTION_METRICS> _sectionMetrics;
     View* _headerView;
-	
+    ViewController* _editingViewController;
+    
 	// Public API
     ListView();
 	virtual void setAdapter(IListAdapter* adapter);
@@ -49,6 +67,7 @@ public:
 	virtual void onItemTap(View* itemView, LISTINDEX index);
     virtual void reload();
     virtual void setHeaderView(View* headerView);
+    virtual void startEditing(ViewController* editingViewController);
     
 	// Overrides
 	virtual void measure(float parentWidth, float parentHeight);

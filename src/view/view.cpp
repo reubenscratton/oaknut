@@ -8,6 +8,7 @@
 #include <oaknut.h>
 
 
+
 DECLARE_DYNCREATE(View);
 
 View::View() : _alpha(1.0f),
@@ -17,7 +18,6 @@ View::View() : _alpha(1.0f),
                 _heightMeasureSpec(MEASURESPEC::None())
 {
     _visibility = Visible;
-	onTouchEventDelegate = NULL;
 }
 
 View::~View() {
@@ -370,82 +370,50 @@ void View::measure(float parentWidth, float parentHeight) {
 }
 
 
+float View::getAlignspecVal(const ALIGNSPEC& spec, bool isVertical) {
+
+    View* anchor = (spec.anchor == NO_ANCHOR) ? NULL : (spec.anchor?spec.anchor:_parent);
+    float anchorVal = 0;
+    RECT& refRect = anchor ? anchor->_rect : app._window->_surfaceRect;
+    float anchorSize = isVertical ? refRect.size.height : refRect.size.width;
+    float ownSize = isVertical ? _rect.size.height : _rect.size.width;
+    if (anchor) {
+        if (anchor == _parent) {
+            anchorVal = isVertical ? _parent->_padding.top : _parent->_padding.left;
+            anchorSize -= isVertical ? (anchor->_padding.top+anchor->_padding.bottom):  (anchor->_padding.left+anchor->_padding.right);
+        } else {
+            if (anchor->_parent != _parent) {
+                app.warn("View layout is not clever enough for non-sibling anchors");
+            }
+            anchorVal = isVertical ? anchor->_rect.origin.y : anchor->_rect.origin.x;
+        }
+    }
+    float val = 0;
+    if (anchor) {
+        val = anchorVal + (spec.multiplierAnchor * anchorSize)
+                         + (spec.multiplierSelf * ownSize)
+                         + spec.margin;
+        val = floorf(val);
+    } else {
+        val = isVertical ? _rect.origin.y : _rect.origin.x;
+    }
+    return val;
+
+}
 
 void View::layout() {
-
-	// Get anchor view size
-	View* anchorHorz = (_alignspecHorz.anchor == NO_ANCHOR) ? NULL : (_alignspecHorz.anchor?_alignspecHorz.anchor:_parent);
-	View* anchorVert = (_alignspecVert.anchor == NO_ANCHOR) ? NULL : (_alignspecVert.anchor?_alignspecVert.anchor:_parent);
-	
-    // Get anchor dimensions
-    float anchorY = 0;
-    float anchorX = 0;
-    float anchorWidth = anchorHorz ? anchorHorz->_rect.size.width : app._window->_surfaceRect.size.width;
-    float anchorHeight = anchorVert ? anchorVert->_rect.size.height : app._window->_surfaceRect.size.height;
-	if (anchorHorz) {
-		if (anchorHorz == _parent) {
-			anchorX = _parent->_padding.left;
-			anchorWidth -= (anchorHorz->_padding.left+anchorHorz->_padding.right);
-		} else {
-			if (anchorHorz->_parent != _parent) {
-				app.warn("View::layout() is not clever enough for non-sibling anchors");
-			}
-			anchorX = anchorHorz->_rect.origin.x;
-		}
-    }
-	if (anchorVert) {
-		if (anchorVert == _parent) {
-			anchorY = _parent->_padding.top;
-			anchorHeight -= (anchorVert->_padding.top+anchorVert->_padding.bottom);
-		} else {
-			if (anchorVert->_parent != _parent) {
-				app.warn("View::layout() is not clever enough for non-sibling anchors");
-			}
-			anchorY = anchorVert->_rect.origin.y;
-		}
-    }
-	
-	
-
-    // Positioning
     POINT pt;
-    if (anchorHorz) {
-        pt.x = anchorX + (_alignspecHorz.multiplierAnchor * anchorWidth)
-								  + (_alignspecHorz.multiplierSelf * _rect.size.width)
-								  + _alignspecHorz.margin;
-        pt.x = floorf(pt.x);
-    }
-    if (anchorVert) {
-        pt.y = anchorY + (_alignspecVert.multiplierAnchor * anchorHeight)
-                       + (_alignspecVert.multiplierSelf * _rect.size.height);
-        pt.y = floorf(pt.y);
-        pt.y += _alignspecVert.margin;
-    }
-    if (anchorHorz || anchorVert) {
-        if (!anchorHorz) pt.x = _rect.origin.x;
-        if (!anchorVert) pt.y = _rect.origin.y;
-        setRectOrigin(pt);
-    }
-	
+    pt.x = getAlignspecVal(_alignspecHorz, false);
+    pt.y = getAlignspecVal(_alignspecVert, true);
+    setRectOrigin(pt);
+
     if (_currentBackgroundOp) {
         _currentBackgroundOp->setRect(RECT_Make(0, 0, _rect.size.width, _rect.size.height));
-    }    
-
-
-	/*
-	if (_widthMeasureSpec.refType != REFTYPE_NONE) {
-		_rect.origin.x = 0; // todo: apply grabbity
-	}
-	if (_heightMeasureSpec.refType != REFTYPE_NONE) {
-		_rect.origin.y = 0; // todo: apply grabbity
-	}*/
-    
+    }
 
     for (int i=0 ; i<_subviews.size() ; i++) {
         View* view = _subviews.at(i);
         view->layout();
-        //view->_rect.origin.x += _padding.left;
-        //view->_rect.origin.y += _padding.bottom;
     }
 	
     updateScrollbarVisibility();
@@ -947,14 +915,13 @@ bool View::onTouchEvent(int eventType, int eventSource, POINT pt) {
     //if (!touchable) {
     //    return false;
     //}
+    
 
     _scrollVert.handleTouchEvent(this, true, eventType, eventSource, pt);
     _scrollHorz.handleTouchEvent(this, false, eventType, eventSource, pt);
     
 	if (onTouchEventDelegate) {
-		if (onTouchEventDelegate(this, eventType, eventSource, pt)) {
-			return true;
-		}
+        return onTouchEventDelegate(this, eventType, eventSource, pt);
 	}
 	return false;
 }

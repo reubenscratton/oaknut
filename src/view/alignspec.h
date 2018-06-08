@@ -24,6 +24,7 @@ typedef struct ALIGNSPEC {
     float multiplierSelf;
     float margin;
     
+    ALIGNSPEC();
     ALIGNSPEC(View* anchor, float multiplierAnchor, float multiplierOwn, float margin);
     ALIGNSPEC(StyleValue* value, View* view);
     

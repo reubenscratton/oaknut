@@ -41,6 +41,7 @@ public:
     friend class Window;
     friend class ViewController;
     friend class ScrollInfo;
+    friend class LayoutAnimation;
     
     // Construction
     View();
@@ -198,6 +199,7 @@ protected:
     Visibility _visibility;
     void adjustRectSize(const SIZE& d);
     void adjustSurfaceOrigin(const POINT& d);
+    float getAlignspecVal(const ALIGNSPEC& spec, bool isVertical);
     /**  \endcond */
     /**@}*/
 

@@ -21,13 +21,14 @@
 #define INPUT_EVENT_TAP 6
 #define INPUT_EVENT_TAP_CONFIRMED 7
 #define INPUT_EVENT_FLING 8
+#define INPUT_EVENT_LONG_PRESS 9
 
 #define NUM_PAST 10
 
 // TODO: these constants should be in platform styles
 #define TOUCH_SLOP 10 // DPs
 #define MULTI_CLICK_THRESHOLD 400 // ms
-
+#define LONG_PRESS_THRESHOLD 1000 // ms
 
 
 class Window : public Object {
@@ -55,6 +56,8 @@ public:
         long pastTime[NUM_PAST];
         int pastIndex, pastCount;
         ObjPtr<Timer> multiclickTimer;
+        ObjPtr<Timer> _longpressTimer;
+        bool _didSendLongpressEvent;
     };
 
     // Animations

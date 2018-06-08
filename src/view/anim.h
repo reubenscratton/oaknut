@@ -8,6 +8,7 @@
 typedef std::function<void(class Animation*)> OnAnimationFinishedDelegate;
 
 typedef float (*InterpolateFunc)(float t, float b, float c, float d);
+float linear(float t, float b, float c, float d);
 
 
 class Animation : public Object {
@@ -25,7 +26,7 @@ public:
     int _delay;
     int _flags;
     bool _paused;
-	InterpolateFunc _interpolater;
+	InterpolateFunc _interpolator;
 	float _fromVal;
 	float _toVal;
     
@@ -39,6 +40,8 @@ public:
     virtual void unpause();
 	virtual bool tick(long now);
     virtual void apply(float val) = 0;
+    
+    static Animation* start(Window* window, int duration, std::function<void(float)> callback, InterpolateFunc interpolater = linear);
 };
 
 class DelegateAnimation : public Animation {
@@ -55,8 +58,33 @@ public:
     virtual void apply(float val);
 };
 
+class LayoutAnimation : public Animation {
+public:
+    
+    static LayoutAnimation* startHorizontal(View* view, ALIGNSPEC newAlignspec, int duration, InterpolateFunc interpolator = linear);
+    static LayoutAnimation* startVertical(View* view, ALIGNSPEC newAlignspec, int duration, InterpolateFunc interpolator = linear);
+    static LayoutAnimation* startPositional(View* view, ALIGNSPEC newAlignspecHorz, ALIGNSPEC newAlignspecVert, int duration, InterpolateFunc interpolator = linear);
+    
+protected:
+    
+    LayoutAnimation(View* view, InterpolateFunc interpolator = linear);
+    
+    View* _view;
+    bool _affectsAlignspecHorz;
+    bool _affectsAlignspecVert;
+    ALIGNSPEC _newAlignspecHorz;
+    ALIGNSPEC _newAlignspecVert;
+    float _originHorzStart;
+    float _originHorzEnd;
+    float _originVertStart;
+    float _originVertEnd;
+    bool _valid;
+    
+    void apply(float val);
+    
+};
 
-float linear(float t, float b, float c, float d);
+
 float strongEaseInOut(float t, float b, float c, float d);
 float regularEaseIn(float t, float b, float c, float d);
 float regularEaseInOut(float t, float b, float c, float d);

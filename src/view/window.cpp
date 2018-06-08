@@ -80,6 +80,16 @@ void Window::MotionTracker::dispatchInputEvent(int event, long time, POINT pt, W
         ptDown = pt;
         timeOfDownEvent = time;
         touchedView = window->_rootViewController->getView()->dispatchInputEvent(INPUT_EVENT_DOWN, source, time, pt);
+        if (touchedView) {
+            _didSendLongpressEvent = false;
+            _longpressTimer = Timer::start([=] {
+                if (touchedView && touchedView->_window) {
+                    touchedView->dispatchInputEvent(INPUT_EVENT_LONG_PRESS, source, time, pt);
+                    _didSendLongpressEvent = true;
+                }
+                _longpressTimer = NULL;
+            }, LONG_PRESS_THRESHOLD, false);
+        }
     }
     if (event == INPUT_EVENT_DOWN || event == INPUT_EVENT_MOVE) {
         if (event == INPUT_EVENT_MOVE) { // filter out spurious move events (seen on iOS 10)
@@ -110,58 +120,68 @@ void Window::MotionTracker::dispatchInputEvent(int event, long time, POINT pt, W
                     }
                     touchedView = interceptView;
                 }
+                if (_longpressTimer) {
+                    _longpressTimer->stop();
+                    _longpressTimer = NULL;
+                }
             }
         }
         if (touchedView) {
             touchedView->dispatchInputEvent(INPUT_EVENT_MOVE, source, time, pt);
         }
     } else if (event == INPUT_EVENT_UP) {
+        if (_longpressTimer) {
+            _longpressTimer->stop();
+            _longpressTimer = NULL;
+        }
         if (touchedView) {
             touchedView->dispatchInputEvent(INPUT_EVENT_UP, source, time, pt);
         }
-        if (!isDragging) {
-            // TAP!
-            if (touchedView) {
-                touchedView->dispatchInputEvent(INPUT_EVENT_TAP, source, time, pt);
-                app.log("tap %d", numClicks);
-            }
-            multiclickTimer = Timer::start([=] {
-                if (touchedView && touchedView->_window) {
-                    touchedView->dispatchInputEvent(INPUT_EVENT_TAP_CONFIRMED, source, time, pt);
-                }
-                multiclickTimer = NULL;
-                app.log("tap confirmed at %d", numClicks);
-                numClicks = 0;
-                touchedView = NULL;
-            }, MULTI_CLICK_THRESHOLD, false);
-        } else {
-            // FLING!
-
-            // Work out the drag velocity by getting the distance travelled from the oldest historical point
-            // and extrapolating an average distance per second.
-            int numPoints = min(pastCount, NUM_PAST);
-            int index = pastIndex - numPoints;
-            if (index < 0) index += NUM_PAST;
-            while (numPoints-- > 1) {
-                POINT ptFrom = pastPts[index];
-                long timeFrom = pastTime[index];
-                index = (index + 1) % NUM_PAST;
-                if (time - timeFrom >= 333) { // ignore historical points that are too old
-                    continue;
-                }
-                int dTime = (int) (time - timeFrom);
-                if (dTime <= 0) continue;
-                float dx = pt.x - ptFrom.x;
-                float dy = pt.y - ptFrom.y;
-                float thisVeloX = dx * 1000.0f / dTime;
-                float thisVeloY = dy * 1000.0f / dTime;
-                POINT velocity = {0, 0};
-                velocity.x = (velocity.x == 0) ? thisVeloX : ((velocity.x + thisVeloX) / 2);
-                velocity.y = (velocity.y == 0) ? thisVeloY : ((velocity.y + thisVeloY) / 2);
+        if (!_didSendLongpressEvent) {
+            if (!isDragging) {
+                // TAP!
                 if (touchedView) {
-                    touchedView->dispatchInputEvent(INPUT_EVENT_FLING, source, time, velocity);
+                    touchedView->dispatchInputEvent(INPUT_EVENT_TAP, source, time, pt);
+                    app.log("tap %d", numClicks);
                 }
-                break;
+                multiclickTimer = Timer::start([=] {
+                    if (touchedView && touchedView->_window) {
+                        touchedView->dispatchInputEvent(INPUT_EVENT_TAP_CONFIRMED, source, time, pt);
+                    }
+                    multiclickTimer = NULL;
+                    app.log("tap confirmed at %d", numClicks);
+                    numClicks = 0;
+                    touchedView = NULL;
+                }, MULTI_CLICK_THRESHOLD, false);
+            } else {
+                // FLING!
+
+                // Work out the drag velocity by getting the distance travelled from the oldest historical point
+                // and extrapolating an average distance per second.
+                int numPoints = min(pastCount, NUM_PAST);
+                int index = pastIndex - numPoints;
+                if (index < 0) index += NUM_PAST;
+                while (numPoints-- > 1) {
+                    POINT ptFrom = pastPts[index];
+                    long timeFrom = pastTime[index];
+                    index = (index + 1) % NUM_PAST;
+                    if (time - timeFrom >= 333) { // ignore historical points that are too old
+                        continue;
+                    }
+                    int dTime = (int) (time - timeFrom);
+                    if (dTime <= 0) continue;
+                    float dx = pt.x - ptFrom.x;
+                    float dy = pt.y - ptFrom.y;
+                    float thisVeloX = dx * 1000.0f / dTime;
+                    float thisVeloY = dy * 1000.0f / dTime;
+                    POINT velocity = {0, 0};
+                    velocity.x = (velocity.x == 0) ? thisVeloX : ((velocity.x + thisVeloX) / 2);
+                    velocity.y = (velocity.y == 0) ? thisVeloY : ((velocity.y + thisVeloY) / 2);
+                    if (touchedView) {
+                        touchedView->dispatchInputEvent(INPUT_EVENT_FLING, source, time, velocity);
+                    }
+                    break;
+                }
             }
         }
         //touchedView = NULL;

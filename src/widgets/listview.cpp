@@ -7,6 +7,7 @@
 
 #include <oaknut.h>
 
+
 DECLARE_DYNCREATE(ListView);
 
 ListView::ListView() {
@@ -164,6 +165,13 @@ bool ListView::onTouchEvent(int eventType, int finger, POINT pt) {
 		}
 		return true;
 	}
+    if (eventType == INPUT_EVENT_LONG_PRESS) {
+        if (_selectedIndex != LISTINDEX_NONE) {
+            _onItemLongPressDelegate(indexToView(_selectedIndex), _selectedIndex);
+            //setSelectedIndex(LISTINDEX_NONE);
+        }
+        return true;
+    }
 
 	return false;
 }
@@ -177,11 +185,90 @@ void ListView::setContentOffset(POINT contentOffset) {
     }
 }
 
+
+ListView::ItemView::ItemView(ListView* listView, View* contentView) {
+    _listView = listView;
+    _contentView = contentView;
+    contentView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::FillParent());
+    addSubview(contentView);
+}
+
+void ListView::ItemView::attachToWindow(Window *window) {
+    View::attachToWindow(window);
+    updateDeleteButton(false);
+}
+
+void ListView::ItemView::updateDeleteButton(bool animate) {
+    if (_listView->_editMode && !_deleteButton) {
+        float deleteButtonWidth = 16+45+16; // TODO: styles mofo, have you heard of them??
+        _deleteButton = new ImageView();
+        _deleteButton->setMeasureSpecs(MEASURESPEC::Abs(deleteButtonWidth), MEASURESPEC::Abs(8+45+8));
+        _deleteButton->setPadding(_EDGEINSETS(16, 8, 16, 8));
+        _deleteButton->setAlignSpecs(ALIGNSPEC(NULL, 0, animate?-1:0, 0), ALIGNSPEC::Center());
+        if (!_listView->_bmpDelete) {
+            ByteBuffer* data = app.loadAsset("images/delete.png"); // TODO: need a different way to do platform assets
+            Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
+                _listView->_bmpDelete = bitmap;
+                _deleteButton->setBitmap(bitmap);
+            });
+        } else {
+            _deleteButton->setBitmap(_listView->_bmpDelete);
+        }
+        _deleteButton->onTouchEventDelegate = [&] (View* view, int eventType, int eventSource, POINT pt)  -> bool {
+            if (eventType == INPUT_EVENT_TAP) {
+                app.log("Delete row here!");
+            }
+            return true;
+        };
+        addSubview(_deleteButton);
+        
+        LayoutAnimation::startHorizontal(_deleteButton, ALIGNSPEC(NULL,0,0,0), animate?300:0);
+        LayoutAnimation::startHorizontal(_contentView, ALIGNSPEC(NULL,0,0,deleteButtonWidth), animate?300:0);
+    }
+    else if (!_listView->_editMode && _deleteButton) {
+        removeSubview(_deleteButton);
+        _deleteButton = NULL;
+    }
+}
+
+/*
+void ListView::ItemView::setEditMode(bool editMode) {
+    ListView* listView = (ListView*)_parent;
+    if (editMode) {
+        float deleteButtonWidth = 16+45+16; // TODO: styles mofo, have you heard of them??
+        _deleteButton = new ImageView();
+        _deleteButton->setMeasureSpecs(MEASURESPEC::Abs(deleteButtonWidth), MEASURESPEC::Abs(8+45+8));
+        _deleteButton->setPadding(_EDGEINSETS(16, 8, 16, 8));
+        _deleteButton->setAlignSpecs(ALIGNSPEC(NULL, 0, -1, 0), ALIGNSPEC::Center());
+        if (!listView->_bmpDelete) {
+            ByteBuffer* data = app.loadAsset("images/delete.png"); // TODO: need a different way to do platform assets
+            Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
+                listView->_bmpDelete = bitmap;
+                _deleteButton->setBitmap(bitmap);
+            });
+        } else {
+             _deleteButton->setBitmap(listView->_bmpDelete);
+        }
+        _deleteButton->onTouchEventDelegate = [&] (View* view, int eventType, int eventSource, POINT pt)  -> bool {
+            if (eventType == INPUT_EVENT_TAP) {
+                app.log("Delete row here!");
+            }
+            return true;
+        };
+        addSubview(_deleteButton);
+        
+    } else {
+        LayoutAnimation::startHorizontal(_deleteButton, ALIGNSPEC(NULL, 0, -1, 0), 300);
+        LayoutAnimation::startHorizontal(_contentView, ALIGNSPEC(NULL,0,0,0), 300);
+    }
+}
+*/
+
 pair<LISTINDEX,View*> ListView::createItemView(LISTINDEX index, bool atFront, float itemHeight, float top) {
-    //app.log("creating index=%d", index);
-    View* itemView = _adapter->createItemView(index);
-    assert(itemView); // dude, where's my itemview??
-    _adapter->bindItemView(itemView, index, _adapter->getItem(index));
+    View* contentView = _adapter->createItemView(index);
+    assert(contentView); // dude, where's my itemview??
+    _adapter->bindItemView(contentView, index, _adapter->getItem(index));
+    ItemView* itemView = new ItemView(this, contentView);
     itemView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::Abs(itemHeight));
     insertSubview(itemView, (int)_itemViews.size());
     itemView->measure(_rect.size.width, itemHeight);
@@ -189,7 +276,7 @@ pair<LISTINDEX,View*> ListView::createItemView(LISTINDEX index, bool atFront, fl
     RECT rect = itemView->getRect();
     rect.origin.y = top;
     itemView->setRectOrigin(rect.origin);
-    pair<LISTINDEX,View*> result(index,itemView);
+    pair<LISTINDEX,ItemView*> result(index,itemView);
     _itemViews.insert(atFront ? _itemViews.begin() : _itemViews.end(), result);
     ColorRectFillRenderOp* dividerOp = new ColorRectFillRenderOp(itemView);
     dividerOp->setColour(_dividerColour);
@@ -332,5 +419,20 @@ void ListView::updateVisibleItems() {
     }
 }
 
+void ListView::startEditing(ViewController* editingViewController) {
+    assert(_adapter->getSectionCount()==1); // Oops! multisection data is not editable, yet.
+    _editingViewController = editingViewController;
+    /*Animation::start(_window, 300, [=](float val) {
+        for (auto it : _itemViews) {
+            ItemView* itemView = it.second;
+            itemView->setEditingState(val);
+        }
+    }, easeOut);*/
+    _editMode = true;
+    for (auto it : _itemViews) {
+        ItemView* itemView = it.second;
+        itemView->updateDeleteButton(true);
+    }
 
+}
 

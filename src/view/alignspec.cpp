@@ -8,7 +8,8 @@
 #include <oaknut.h>
 
 
-
+ALIGNSPEC::ALIGNSPEC() {
+}
 ALIGNSPEC::ALIGNSPEC(View* anchor, float multiplierAnchor, float multiplierSelf, float margin) {
     this->anchor = anchor;
     this->multiplierAnchor = multiplierAnchor;
