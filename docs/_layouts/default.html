@@ -6,21 +6,101 @@
 {% seo %}
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#157878">
+    <link rel="icon" type="image/png" href="/assets/favicon.png">
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
   </head>
   <body>
-    <section class="page-header" height="65px">
-      <section float="left" height="35px">
-        <img src="oaknut_logo.png" height="35px"/>
-        <span class="project-name">Oaknut</span>
-      </section>    
-    </section>
 
-    <section class="main-content">
-      {{ content }}
+<!-- Header bar -->
+<span class="page-header">
+  <span float="left" height="35px">
+    <img src="/assets/icon.svg" height="40px" style="position:relative;bottom:0px;"/>&nbsp;
+    <img src="/assets/logo.svg" height="24px" style="position:relative;bottom:5px;"/>
+  </span>
+  <span style="float:right; height:35px; width:35px; margin-top:4px">
+    <a href="https://github.com/reubenscratton/oaknut" title="GitHub"><img width="36" height="36" src="/assets/github.svg"></a>
+  </span>
+</span>
 
-    </section>
+<div id="sidenav" class="sidenav"></div>
+
+<div id="main-content" class="main-content">
+  {{ content }}
+</div>
+
+<script type="text/javascript" src="/ref/navmodel.js"></script>
+<script>
+
+var navmodel = [
+    { t: "Home", u:"/" },
+    { t: "Guides",
+    i: [
+        { t: "Principles" },
+        { t: "Building" },
+      ]
+    },
+    { t: "Samples",
+      i: [
+        { t: "Todo List" },
+        { t: "Minesweeper" },
+        { t: "BBC Micro" },
+      ],
+    },
+    { t: "API Reference",
+      i: navmodelRef
+    }
+];
+
+
+function toggleTocNode(node) {
+  var children = node.getElementsByClassName("tocNode");
+  for (var i=0 ; i<children.length ; i++) {
+    var item = children[i];
+    item.style.display = (item.style.display=="none") ? "block" : "none";
+  }
+}
+
+function addTocNodes(parentDiv, items) {
+  for (var j = 0; j < items.length; j++) {
+      var item = items[j];
+      var itemDiv = document.createElement("div");
+      itemDiv.classList.add('tocNode');
+
+      var toggle = document.createElement("span");
+      toggle.classList.add('tocNodeToggle');
+      toggle.addEventListener("click", (e) => {
+        toggleTocNode(itemDiv);
+        e.stopPropagation();
+        e.preventDefault();
+      });
+      itemDiv.appendChild(toggle);
+
+
+      var link = document.createElement("A");
+      link.href = item.hasOwnProperty("u") ? item.u : "#";
+      link.innerHTML = item.t;
+      itemDiv.appendChild(link);
+
+      parentDiv.appendChild(itemDiv);
+
+      if (item.hasOwnProperty("i")) {
+        if (item.i.length > 0) {
+          addTocNodes(itemDiv, item.i);
+        }
+      }
+
+  }
+}
+
+// Populate the sidebar
+var sidenav = document.getElementById("sidenav");
+addTocNodes(sidenav, navmodel);
+
+
+</script>
+
+
 
   </body>
 </html>

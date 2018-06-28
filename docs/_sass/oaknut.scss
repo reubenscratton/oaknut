@@ -33,6 +33,85 @@ body {
   color: $body-text-color;
 }
 
+.page-header {
+  color: $header-heading-color;
+  text-align: left;
+  background-color: $header-bg-color;
+  padding: 8px 16px;
+  position: fixed;
+  top: 0px;
+  height: 59px;
+  width:100%;
+  margin: auto 0;
+}
+
+.sidenav {
+    height: 100%;
+    position: fixed;
+    width: 220px;
+    z-index: 1;
+    top: 59px;
+    left: 0;
+    background-color: #f0f0f0;
+    overflow-x: hidden;
+    padding-top: 20px;
+}
+.tocNode {
+  margin-left: 20px;
+  user-select: none;
+  white-space: nowrap;
+  font-family: Roboto,"Helvetica Neue Light","Helvetica Neue",Helvetica,Arial,"Lucida Grande",sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  transition: background-color 0.2s;
+  text-transform: uppercase;
+}
+.tocNode > .tocNode {
+  text-transform: none;
+}
+.tocNode > a:link {
+    color: #444;
+    text-decoration: none;
+}
+.tocNode > a:visited {
+    color: #444;
+}
+
+.tocNode > .tocNode > a:link {
+    color: #777;
+}
+.tocNode > .tocNode > a:visited {
+    color: #777;
+}
+.tocNode > .tocNode > .tocNode > a:link  {
+    color: #999;
+}
+.tocNode > .tocNode > .tocNode > a:visited  {
+    color: #999;
+}
+
+.tocNodeToggle  {
+  content:'M';
+  display: inline-block;
+  position: relative;
+  left: 3px;
+  border-left-color: #666;
+}
+
+.tocNodeToggleOpen {
+  border: 6px solid transparent;
+}
+
+
+.gutter {
+    background-color: #eee;
+    background-repeat: no-repeat;
+    background-position: 50%;
+    height: calc(100vh - 70px);
+    cursor: ns-resize;
+    background-image:  url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=');
+}
+
 a {
   color: $body-link-color;
   text-decoration: none;
@@ -86,39 +165,20 @@ a {
   }
 }
 
-.page-header {
-  color: $header-heading-color;
-  text-align: center;
-  background-color: $header-bg-color;
-  background-image: linear-gradient(120deg, $header-bg-color-secondary, $header-bg-color);
-
-  @include large {
-    padding: 5rem 6rem;
-  }
-
-  @include medium {
-    padding: 3rem 4rem;
-  }
-
-  @include small {
-    padding: 2rem 1rem;
-  }
-}
-
 .project-name {
   margin-top: 0;
   margin-bottom: 0.1rem;
 
   @include large {
-    font-size: 3.25rem;
+    font-size: 24px;
   }
 
   @include medium {
-    font-size: 2.25rem;
+    font-size: 1.25rem;
   }
 
   @include small {
-    font-size: 1.75rem;
+    font-size: 0.75rem;
   }
 }
 
@@ -148,9 +208,8 @@ a {
   }
 
   @include large {
-    max-width: 64rem;
     padding: 2rem 6rem;
-    margin: 0 auto;
+    margin-top:65px;
     font-size: 1.1rem;
   }
 
@@ -315,6 +374,11 @@ a {
     background-color: $hr-border-color;
     border: 0;
   }
+
+  z-index: -1;
+  position:absolute;
+  left: 180px;
+  width: calc(100% - 180px);
 }
 
 .site-footer {

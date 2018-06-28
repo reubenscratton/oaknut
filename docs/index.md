@@ -1,17 +1,16 @@
 ---
 layout: default
 ---
-
-<iframe src="minesweeper/xx.html" width="320" height="480" align="right">
+<iframe src="minesweeper/xx.html" style="margin-top:24px; margin-left:16px;" width="320" height="400" align="right">
 </iframe>
-Oaknut is an experimental GUI framework for truly cross-platform C++ apps. An 
-Oaknut app can be built to run natively on any major OS, and can also run in 
+Oaknut is an experimental GUI framework for truly cross-platform C++ apps. An
+Oaknut app can be built to run natively on any major OS, and can also run in
 a web browser via WebAssembly and WebGL. The 'Minesweeper' sample app is
-running in an iframe to the right of this text. 
- 
+running in an iframe to the right of this text.
+
 Oaknut is currently at the "proof of concept" stage, almost no part of it is
 anywhere near fully-featured. However all the main problems are solved - as far as I
-can see - and all work from the current point lies in building out the remaining 
+can see - and all work from the current point lies in building out the remaining
 APIs and UI widgetry that modern app developers need.
 
 ## Getting started
@@ -24,9 +23,9 @@ APIs and UI widgetry that modern app developers need.
     `export set OAKNUT_DIR=/path/to/oaknut`
 
 3. Select and build one of the samples in `oaknut/samples`
-        
+
 	`cd oaknut/samples/xxx`
-	
+
     `make`
 
 ## Compiling
@@ -36,10 +35,10 @@ with the `PLATFORM` variable, e.g.:
 
     make PLATFORM=web
 
-Supported platforms are `macos`, `linux`, `web`, `ios`, `android`, 
-with `windows` coming soon. 
+Supported platforms are `macos`, `linux`, `web`, `ios`, `android`,
+with `windows` coming soon.
 
-Note that Oaknut's build system expects platform-specific information to be 
+Note that Oaknut's build system expects platform-specific information to be
 passed by variable, for example `make PLATFORM=android` will expect to find
 the location of the Android SDK in the `ANDROID_SDK_DIR` variable.
 
@@ -53,7 +52,7 @@ projects `.build/<platform>/<config>` subdirectory.
 ## IDE support
 Oaknut is not tied to any particular IDE, instead there are special make commands
 which generate project files for several major IDEs:
-    
+
 - XCode `make xcode`
 - CLion `make cmake`
 - (more coming soon)
@@ -74,7 +73,7 @@ everything happens in event handlers or on background threads. All drawing is do
 via OpenGL on the primary/main thread.
 
 Oaknut offers no way to directly create background threads. Downloading is performed
-by background system threads (see `URLRequest`) but you may add code to process 
+by background system threads (see `URLRequest`) but you may add code to process
 that data on the background thread as it is downloaded.
 
 Instead of threads Oaknut offers 'queues', one of which may execute on one or many
@@ -103,15 +102,15 @@ are `free()`d between frames.
 
 #### C++ usage
 Oaknut uses a subset of C++11 in order to minimise the learning curve for those coming
-from other languages and platforms. If you don't know a vtable from a r-value reference, 
+from other languages and platforms. If you don't know a vtable from a r-value reference,
 `it doesn't matter`. The general aim is for application code to look reasonably
-close to what the equivalent code would have been in Java or Obj-C or Swift, rather 
-than be impenetrable blobs of pure C++. 
+close to what the equivalent code would have been in Java or Obj-C or Swift, rather
+than be impenetrable blobs of pure C++.
 
 Therefore Oaknut has little use of templates beyond a few indispensable STL containers
 (`map`, `set`, and so on), it avoids multiple inheritance, operator overloading, RTTI,
-'friend', 'mutable', traits, metaprogramming, etc. Without wishing to generate controversy 
-I personally dislike source code that is harder to read than the machine code it 
+'friend', 'mutable', traits, metaprogramming, etc. Without wishing to generate controversy
+I personally dislike source code that is harder to read than the machine code it
 compiles to, hence no use of Boost.
 
 (One newish C++ feature Oaknut enthusiastically embraces is lambdas,
@@ -135,12 +134,12 @@ Label: {
 ```
 
 In this "light" JSON quotes are unnecessary for field names and are
-optional for string values - the only real use for quotes is for multiline 
+optional for string values - the only real use for quotes is for multiline
 text.  There is also no need for commas to separate fields.
 
-In a layout file each object declaration must be the name of a View-derived 
+In a layout file each object declaration must be the name of a View-derived
 class, and each non-object attribute is some property supported by that class.
- 
+
 
 Oaknut has also borrowed from Android's view layout system in that
 the layout process is split into a measuring pass and a positioning
@@ -162,7 +161,5 @@ in the same sorta-JSON text files. Style
 One of the more attractive features of Oaknut is the ability
 to debug on the native platform (Mac, Linux, Windows) and then
 later deploy to another (Android, iOS, Web). The fast build system
-and not having to deploy to another machine or virtual machine make 
+and not having to deploy to another machine or virtual machine make
 incremental rebuild times a fraction of what is normal for mobile development.
-
-
