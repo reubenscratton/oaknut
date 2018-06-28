@@ -47,9 +47,7 @@ void SearchBox::layout() {
 bool SearchBox::setFocused(bool focused) {
     bool r = EditText::setFocused(focused);
     if (focused && r) {
-        DelegateAnimation* anim = new DelegateAnimation();
-        anim->_interpolater = linear;
-        anim->_delegate = [=](float val) {
+        Animation::start(this, 250,  [=](float val) {
             RECT iconRect;
             iconRect.size = SIZE_Make(app.dp(16), app.dp(16));
             RECT paddedBounds = getOwnRectPadded();
@@ -61,8 +59,7 @@ bool SearchBox::setFocused(bool focused) {
             float x2 = paddedBounds.origin.x;
             iconRect.origin.x = x1 + (x2-x1)*val;
             _searchIconOp->setRect(iconRect);
-        };
-        anim->start(_window, 250);
+        });
     }
     return r;
 }

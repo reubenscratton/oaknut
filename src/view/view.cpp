@@ -1024,6 +1024,16 @@ void View::animateAlpha(float target, float duration) {
 	}
 }
 
+void View::animateTranslate(POINT translation, float duration) {
+    if (duration <= 0) {
+        setTranslate(translation);
+    } else {
+        Animation::start(this, duration, [=](float val) {
+            setTranslate(POINT_Make(translation.x*val, translation.y*val));
+        });
+    }
+}
+
 
 void View::setTranslate(POINT translation) {
     if (translation.x==0 && translation.y==0) {

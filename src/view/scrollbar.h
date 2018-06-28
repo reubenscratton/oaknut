@@ -54,7 +54,7 @@ protected:
     float _offsetStart;
     bool _overscroll;
     float _alpha;
-    ObjPtr<class DelegateAnimation> _fadeAnim;
+    ObjPtr<class Animation> _fadeAnim;
     ObjPtr<Timer> _fadeTimer;
     Fling* _fling;
     RoundRectRenderOp* _renderOp;

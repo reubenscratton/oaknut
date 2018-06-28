@@ -40,7 +40,7 @@ DECLARE_DYNCREATE(Label);
 
 
 Label::Label() : View() {
-    string defaultFontName = app.getStyleString("font-name");
+    string defaultFontName = app.getStyleString("font-name", "");
     float defaultFontSize = app.getStyleFloat("font-size");
     _textRenderer.setDefaultFont(new Font(defaultFontName, defaultFontSize));
     _textRenderer.setDefaultColour(0xFF000000);

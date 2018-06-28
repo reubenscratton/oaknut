@@ -15,7 +15,9 @@ public:
 
 
 /**
- A collection of named values. Or, more accurately, a serializable std::map<string,Variant>.
+ * @ingroup data_group
+ * \class VariantMap
+ * A collection of named values. Or, more accurately, a serializable std::map<string,Variant>.
  */
 class VariantMap : public Object, ISerializable {
 public:

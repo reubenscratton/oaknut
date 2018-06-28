@@ -22,8 +22,24 @@ public:
     }
 };
 
+class GLProgramSolidFillAlpha : public GLProgram {
+public:
+    
+    virtual void load() {
+        GLProgram::loadShaders(
+                               STANDARD_VERTEX_SHADER,
+                               "varying lowp vec4 v_colour;\n"
+                               "uniform mediump float alpha;\n"
+                               "void main() {\n"
+                               "    gl_FragColor = v_colour;\n"
+                               "    gl_FragColor.a *= alpha;\n"
+                               "}\n"
+                               );
+    }
+};
 
 static GLProgramSolidFill glprogSolidFill;
+static GLProgramSolidFillAlpha glprogSolidFillAlpha;
 
 
 
@@ -39,5 +55,18 @@ ColorRectFillRenderOp::ColorRectFillRenderOp(View* view, const RECT& rect, COLOU
     _blendMode = ((colour>>24) < 255) ? BLENDMODE_NORMAL : BLENDMODE_NONE;
 }
 
+void ColorRectFillRenderOp::setAlpha(float alpha) {
+    if (alpha != _alpha) {
+        _alpha = alpha;
+        if (alpha<1.0f) {
+            _prog = &glprogSolidFillAlpha;
+            _blendMode = BLENDMODE_NORMAL;
+        } else {
+            _prog = &glprogSolidFill;
+            _blendMode = ((_colour>>24) < 255) ? BLENDMODE_NORMAL : BLENDMODE_NONE;
+        }
+        rebatchIfNecessary();
+    }
+}
 
 

@@ -36,6 +36,10 @@ public:
 
 #define URL_FLAG_BITMAP 1   // use this when requesting images. Exists so web can use Image rather than XHR
 
+/**
+ * @ingroup app_group
+ * @brief General purpose async networking support.
+ */
 class URLRequest : public Object {
 public:
     static void request(const string& url, IURLRequestDelegate* delegate, int flags);

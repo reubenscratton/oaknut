@@ -5,7 +5,9 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+
 /**
+ * @ingroup app_group
  * \class App
  * \brief The single instance of this class is accessed through the global 'app' variable.
  */
@@ -75,7 +77,7 @@ public:
     StyleValue* getStyleValue(const string& keypath);
     
     /** Get a named style value and coerce to a string */
-    string getStyleString(const string& key);
+    string getStyleString(const string& key, const char* defaultString = NULL);
 
     /** Get a named style value and coerce to a float */
     float getStyleFloat(const string& key);
@@ -127,6 +129,8 @@ public:
 
     /**@}*/
 
+    
+    string friendlyTimeString(long timestamp);
     
 protected:
     StyleMap _styles;

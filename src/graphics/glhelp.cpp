@@ -153,7 +153,7 @@ void GLProgram::setMvp(const Matrix4& mvp) {
 
 void GLProgram::lazyLoadUniforms() {
     _sampler.use();
-    if (_alpha.position) {
+    if (_alpha.position>=0) {
         _alpha.use();
     }
 }

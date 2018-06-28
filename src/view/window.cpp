@@ -6,6 +6,7 @@
 //
 
 #include <oaknut.h>
+//#include <thread>
 
 
 Window::Window() : _rootViewController(NULL), _scale(1) {
@@ -254,6 +255,7 @@ void Window::draw() {
 			_inLayoutPass = false;
 		}
         
+//        std::this_thread::sleep_for (std::chrono::milliseconds(100));
         _surface->render(view, this);
 	}
 
@@ -305,6 +307,12 @@ void Window::startAnimation(Animation* animation, int duration, int delay) {
     animation->_windowAnimationsListIterator = _animations.insert(_animations.end(), animation);
     if (animation->_view) {
         animation->_view->_animationCount++;
+    }
+    
+    // If animation has zero duration then it's effectively finished before it starts.
+    // Applying the final value now rather than on next frame avoids unwanted in-between frames.
+    if (delay<=0 && duration<=0) {
+        animation->apply(1.0);
     }
     requestRedraw();
 }

@@ -16,6 +16,10 @@ public:
     virtual void render(class Window* window, Surface* surface);
 };
 
+/*
+ * @ingroup graphics_group
+ * \class Surface
+*/
 class Surface : public Object {
 public:
 	SIZE _size;

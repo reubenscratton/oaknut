@@ -6,8 +6,8 @@
 //
 
 /**
- * \class ViewController
- * \brief Owner of a set of views that collectively make up a discrete piece of user-facing behaviour.
+ * @ingroup app_group
+ * @brief Owner of a set of views that collectively make up a discrete piece of user-facing behaviour.
  * It is most often a complete screen but doesn't have to be.
  */
 class ViewController : public Object {

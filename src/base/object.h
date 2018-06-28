@@ -6,8 +6,9 @@
 //
 
 /**
- * \class Object
- * \brief Base class for all reference-counted types.
+ * @ingroup base_group
+ * @class Object
+ * @brief Base class for all reference-counted types.
  */
 class Object {
 public:
@@ -44,8 +45,9 @@ extern void* DBGOBJ;
 #endif
 
 /**
- * \class ObjPtr<T>
- * \brief A smart pointer class that holds a strong reference to an Object-derived type.
+ * @ingroup base_group
+ * @class ObjPtr<T>
+ * @brief A smart pointer class that holds a strong reference to an Object-derived type.
  */
 template<class T>
 class ObjPtr {

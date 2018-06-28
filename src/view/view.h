@@ -27,8 +27,8 @@ typedef struct {
 
 
 /**
- * \class View
- * \brief Base class for all views
+ *  @brief Fundamental UI building block
+ *  @ingroup views
  */
 class View : public Object {
 public:
@@ -41,6 +41,7 @@ public:
     friend class Window;
     friend class ViewController;
     friend class ScrollInfo;
+    friend class Animation;
     friend class LayoutAnimation;
     
     // Construction
@@ -385,6 +386,7 @@ public:
 
 	// Animation
 	virtual void animateAlpha(float target, float duration);
+    virtual void animateTranslate(POINT translation, float duration);
 	virtual void setTranslate(POINT translation);
     int _animationCount; // number of active animations currently attached to the view
     

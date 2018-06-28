@@ -6,7 +6,9 @@
 //
 
 /**
- A discriminated union of all elementary types plus a couple of useful extras.
+ * @ingroup data_group
+ * @class Variant
+ * A discriminated union of all elementary types plus a couple of useful extras.
  */
 
 class Variant : public ISerializable {

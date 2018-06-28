@@ -1,12 +1,10 @@
-//
-//  _module.h
-//  embeeb
-//
-//  Created by Reuben on 22/06/2018.
-//
-
-#ifndef _module_h
-#define _module_h
-
-
-#endif /* _module_h */
+/** @defgroup app_group App
+ *
+ * An Oaknut application has a single instance of the 'App' class, accessed
+ * through the global `app` variable. The app object controls access to
+ * resources and styling information.
+ *
+ * The application has one or more ViewControllers that represent the screens
+ * users interact with.
+ *
+ */

@@ -23,6 +23,8 @@ public:
     virtual View* createHeaderView(int section) = 0;
 	virtual Object* getItem(LISTINDEX index) = 0;
     virtual void bindItemView(View* itemview, LISTINDEX index, Object* item) = 0;
+    virtual bool canDeleteItem(LISTINDEX index) = 0;
+    virtual void deleteItem(LISTINDEX index) = 0;
 };
 
 class ListView : public View {
@@ -32,13 +34,16 @@ public:
     class ItemView : public View {
     public:
         ListView* _listView;
+        LISTINDEX _listIndex;
         View* _contentView;
         ImageView* _deleteButton;
+        Label* _deleteConfirmButton;
         View* _reorderHandle;
         
-        ItemView(ListView* listView, View* contentView);
+        ItemView(ListView* listView, LISTINDEX listIndex, View* contentView);
         void updateDeleteButton(bool animate);
         void attachToWindow(Window* window);
+        void showDeleteConfirmButton(bool show);
     };
     
     Bitmap* _bmpDelete;
@@ -59,6 +64,7 @@ public:
     vector<SECTION_METRICS> _sectionMetrics;
     View* _headerView;
     ViewController* _editingViewController;
+    LISTINDEX _deleteConfirmIndex;
     
 	// Public API
     ListView();
@@ -68,6 +74,7 @@ public:
     virtual void reload();
     virtual void setHeaderView(View* headerView);
     virtual void startEditing(ViewController* editingViewController);
+    virtual void deleteRow(LISTINDEX index);
     
 	// Overrides
 	virtual void measure(float parentWidth, float parentHeight);
@@ -79,11 +86,12 @@ public:
 	
 	
 protected:
-	virtual View* indexToView(LISTINDEX index);
+	virtual ItemView* indexToView(LISTINDEX index);
 	virtual void setSelectedIndex(LISTINDEX index);
     virtual void updateVisibleItems();
     virtual pair<LISTINDEX,View*> createItemView(LISTINDEX index, bool atFront, float itemHeight, float top);
     LISTINDEX offsetIndex(LISTINDEX index, int offset);
+    virtual void showDeleteConfirmButton(ItemView* itemView);
 };
 
 

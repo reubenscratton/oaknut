@@ -20,6 +20,8 @@ public:
     virtual void bindItemView(View*, LISTINDEX index, Object*);
     virtual View* createHeaderView(int section);
     virtual Object* getItem(LISTINDEX index);
+    virtual bool canDeleteItem(LISTINDEX index);
+    virtual void deleteItem(LISTINDEX index);
 
     // API
     virtual string getSectionTitle(int section);
@@ -33,4 +35,6 @@ protected:
     vector<ObjPtr<Object>> _itemsFiltered;
     std::function<void(View*, LISTINDEX, Object*)> _itemViewBindFunc;
     string _filterText;
+    
+    int listIndexToRealIndex(LISTINDEX index);
 };

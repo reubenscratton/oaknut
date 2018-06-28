@@ -8,6 +8,11 @@
 
 typedef std::function<void ()> TimerDelegate;
 
+/**
+ * @ingroup base_group
+ * @class Timer
+ * @brief A simple timer class.
+ */
 class Timer : public Object {
 public:
     static Timer* start(const TimerDelegate& del, int intervalMillis, bool repeats);

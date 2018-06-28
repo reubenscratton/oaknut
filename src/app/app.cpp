@@ -56,7 +56,7 @@ static map<string, Font*> s_loadedFonts;
 
 
 Font* App::getStyleFont(const string &key) {
-    string fontName = getStyleString(key + ".font-name");
+    string fontName = getStyleString(key + ".font-name", "");
     float fontSize = getStyleFloat(key + ".font-size");
     char ach[260];
     sprintf(ach, "%f-%s", fontSize, fontName.data());
@@ -78,9 +78,13 @@ StyleValue* App::getStyleValue(const string& keypath) {
     return value;
 }
 
-string App::getStyleString(const string& keypath) {
+
+string App::getStyleString(const string& keypath, const char* defaultString) {
     StyleValue* value = getStyleValue(keypath);
     if (!value) {
+        if (defaultString) {
+            return string(defaultString);
+        }
         app.warn("Missing string style info '%s'", keypath.data());
         return "";
     }
@@ -214,4 +218,26 @@ void App::saveSettings() {
      s_userdefaults->writeSelfToStream(&stream);
      stream.close();
      }*/
+}
+
+string App::friendlyTimeString(long timestamp) {
+    long now = currentMillis();
+    long age = now - timestamp;
+    long seconds = age / 1000;
+    long minutes = seconds / 60;
+    seconds = seconds % 60;
+    long hours = minutes / 60;
+    minutes = minutes % 60;
+    
+    if (minutes<1) {
+        return "Just now";
+    }
+    if (hours <1) {
+        return stringFormat("%d min", minutes);
+    }
+    char buff[256];
+    time_t time = timestamp / 1000;
+    struct tm* tm = localtime(&time);
+    strftime(buff, sizeof(buff), "%d %b %Y", tm);
+    return buff;
 }

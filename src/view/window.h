@@ -28,10 +28,13 @@
 // TODO: these constants should be in platform styles
 #define TOUCH_SLOP 10 // DPs
 #define MULTI_CLICK_THRESHOLD 400 // ms
-#define LONG_PRESS_THRESHOLD 1000 // ms
+#define LONG_PRESS_THRESHOLD 800 // ms
 
 
-class Window : public Object {
+/** @class Window
+ *  @brief A window is the top level container for app UI. There is usually only one Window instance, accessible through `app.window`.
+ *  @ingroup views
+ */class Window : public Object {
 public:
 	
 	ObjPtr<class ViewController> _rootViewController;

@@ -66,8 +66,8 @@ public:
 bool ScrollInfo::canScroll(View* view, bool isVertical) {
     float visibleSize = isVertical ? view->_rect.size.height : view->_rect.size.width;
     float scrollableSize = isVertical
-                        ? (view->_contentSize.height - (view->_scrollInsets.top+view->_scrollInsets.bottom))
-                        :  view->_contentSize.width - (view->_scrollInsets.left+view->_scrollInsets.right);
+                        ? (view->_contentSize.height + (view->_scrollInsets.top+view->_scrollInsets.bottom))
+                        :  view->_contentSize.width + (view->_scrollInsets.left+view->_scrollInsets.right);
     return scrollableSize>0 && visibleSize < scrollableSize;
 }
 
@@ -117,20 +117,18 @@ void ScrollInfo::startFadeAnim(float targetAlpha) {
         return;
     }
     if (!_fadeAnim) {
-        _fadeAnim = new DelegateAnimation();
-        _fadeAnim->_view = view;
-        _fadeAnim->_delegate = [=](float val) {
+        _fadeAnim = Animation::start(view, 300, [=](float val) {
             _alpha = val;
             if (_renderOp) {
                 _renderOp->setAlpha(val);
                 view->invalidateRect(_renderOp->_rect);
             }
-        };
+        });
     }
     _fadeAnim->stop();
     _fadeAnim->_fromVal = _alpha;
     _fadeAnim->_toVal = targetAlpha;
-    _fadeAnim->start(view->_window, 300);
+    _fadeAnim->start(300);
 }
 
 void ScrollInfo::handleTouchEvent(View* view, bool isVertical, int eventType, int eventSource, POINT& pt) {
@@ -138,8 +136,11 @@ void ScrollInfo::handleTouchEvent(View* view, bool isVertical, int eventType, in
     float val = isVertical ? pt.y : pt.x;
     float offset = isVertical ? view->_contentOffset.y : view->_contentOffset.x;
     float contentSize = isVertical ? view->_contentSize.height : view->_contentSize.width;
+    float scrollableSize = isVertical
+                            ? (view->_contentSize.height + (view->_scrollInsets.top+view->_scrollInsets.bottom))
+                            :  view->_contentSize.width + (view->_scrollInsets.left+view->_scrollInsets.right);
     float viewSize = isVertical ? view->_rect.size.height : view->_rect.size.width;
-    float maxScroll = fmax(0, contentSize - viewSize);
+    float maxScroll = fmax(0, scrollableSize - viewSize);
 
     if (eventType == INPUT_EVENT_DOWN) {
         _dragStart = _dragLast = val;
@@ -159,11 +160,11 @@ void ScrollInfo::handleTouchEvent(View* view, bool isVertical, int eventType, in
                     _overscroll = false;
                     if (newContentOffset.y < 0) {
                         _overscroll = true;
-                        //_dragTotal = fmin(_dragTotal, viewSize);
-                        newContentOffset.y /= log10(_dragTotal);
+                        newContentOffset.y /= fmax(1.0f, log10(_dragTotal));
                     } else if (newContentOffset.y > maxScroll) {
+                        _overscroll = true;
                         float overshoot = newContentOffset.y - maxScroll;
-                        newContentOffset.y = maxScroll + overshoot / log10(overshoot);
+                        newContentOffset.y = maxScroll + overshoot / fmax(1.0f, log10(overshoot));
                     }
                     view->setContentOffset(newContentOffset);
                 }
@@ -177,7 +178,7 @@ void ScrollInfo::handleTouchEvent(View* view, bool isVertical, int eventType, in
     if (eventType == INPUT_EVENT_UP) {
         if (_overscroll) {
             flingCancel();
-            _fling = new Bounce(view->_contentOffset.y, 0);
+            _fling = new Bounce(offset, (offset<0)?0:contentSize-viewSize);
             view->setNeedsFullRedraw();
 
         }

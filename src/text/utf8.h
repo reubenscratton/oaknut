@@ -28,6 +28,7 @@ private:
 
 };
 
+string stringFormat(const string& fmt, ...);
 void stringAppendCodepoint(string& str, char32_t ch);
 void stringTrim(string& str);
 bool stringStartsWith(string& str, const string& prefix, bool remove);

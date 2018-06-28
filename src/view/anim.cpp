@@ -8,9 +8,9 @@
 #include <oaknut.h>
 
 
-Animation::Animation() : Animation(0,1) {
+Animation::Animation(View* view) : Animation(view, 0,1) {
 }
-Animation::Animation(float fromVal, float toVal) : _interpolator(linear),
+Animation::Animation(View* view, float fromVal, float toVal) : _view(view), _interpolator(linear),
 												   _fromVal(fromVal),
 												   _toVal(toVal) {
 }
@@ -18,16 +18,18 @@ Animation::Animation(float fromVal, float toVal) : _interpolator(linear),
 Animation::~Animation() {
 }
 
-void Animation::start(Window* window, int duration) {
-    window->startAnimation(this, duration,0);
+void Animation::start(int duration) {
+    assert(_view && _view->_window);
+    _view->_window->startAnimation(this, duration,0);
 }
-void Animation::start(Window* window, int duration, int delay) {
-    window->startAnimation(this, duration, delay);
+void Animation::start(int duration, int delay) {
+    assert(_view && _view->_window);
+    _view->_window->startAnimation(this, duration, delay);
 }
 
 class SimpleAnimation : public Animation {
 public:
-    SimpleAnimation(std::function<void(float)> callback) : _callback(callback) {
+    SimpleAnimation(View* view, std::function<void(float)> callback) : Animation(view), _callback(callback) {
         _fromVal = 0;
         _toVal = 1;
     }
@@ -41,11 +43,10 @@ protected:
     std::function<void(float)> _callback;
 };
 
-Animation* Animation::start(Window* window, int duration, std::function<void(float)> callback, InterpolateFunc interpolator) {
-    Animation* anim = new SimpleAnimation(callback);
+Animation* Animation::start(View* view, int duration, std::function<void(float)> callback, InterpolateFunc interpolator) {
+    ObjPtr<Animation> anim = new SimpleAnimation(view, callback);
     anim->_interpolator = interpolator;
-    anim->retain();
-    anim->start(window, duration);
+    anim->start(duration);
     return anim;
 }
 
@@ -101,14 +102,8 @@ bool Animation::tick(long now) {
 }
 
 
-void DelegateAnimation::apply(float val) {
-	_delegate(val);
-}
 
-
-
-AlphaAnimation::AlphaAnimation(View* view, float target) {
-    _view = view;
+AlphaAnimation::AlphaAnimation(View* view, float target) : Animation(view) {
 	_fromVal = view->getAlpha();
 	_toVal = target;
 }
@@ -119,16 +114,15 @@ void AlphaAnimation::apply(float val) {
 
 
 
-LayoutAnimation::LayoutAnimation(View* view, InterpolateFunc interpolator) : Animation(0,1) {
+LayoutAnimation::LayoutAnimation(View* view, InterpolateFunc interpolator) : Animation(view) {
     _interpolator = interpolator;
-    _view = view;
 }
 
 LayoutAnimation* LayoutAnimation::startHorizontal(View* view, ALIGNSPEC newAlignspec, int duration, InterpolateFunc interpolator) {
     LayoutAnimation* anim = new LayoutAnimation(view, interpolator);
     anim->_affectsAlignspecHorz = true;
     anim->_newAlignspecHorz = newAlignspec;
-    anim->start(view->_window, duration, 0);
+    anim->start(duration, 0);
     return anim;
 }
 
@@ -137,7 +131,7 @@ LayoutAnimation* LayoutAnimation::startVertical(View* view, ALIGNSPEC newAlignsp
     LayoutAnimation* anim = new LayoutAnimation(view, interpolator);
     anim->_affectsAlignspecVert = true;
     anim->_newAlignspecVert = newAlignspec;
-    anim->start(view->_window, duration, 0);
+    anim->start(duration, 0);
     return anim;
 }
 
@@ -147,7 +141,7 @@ LayoutAnimation* LayoutAnimation::startPositional(View* view, ALIGNSPEC newAlign
     anim->_affectsAlignspecVert = true;
     anim->_newAlignspecHorz = newAlignspecHorz;
     anim->_newAlignspecVert = newAlignspecVert;
-    anim->start(view->_window, duration, 0);
+    anim->start(duration, 0);
     return anim;
 }
 

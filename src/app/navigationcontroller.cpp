@@ -63,11 +63,10 @@ void NavigationController::startNavAnimation(ViewController* incomingVC, Animati
 	onNavTransitionApply(0);
 
 	// Create the animation
-	DelegateAnimation* anim = new DelegateAnimation();
-	anim->_interpolater = regularEaseInOut;
-    anim->_delegate = [=](float val) {
+    Animation* anim = Animation::start(_view, 350, [=](float val) {
         onNavTransitionApply(val);
-    };
+    });
+    anim->_interpolator = regularEaseInOut;
     anim->_onFinished = [=](Animation* anim) {
         _currentViewController->getView()->removeFromParent();
         _navBar->removeNavigationItem(_currentViewController->_navigationItem);
@@ -77,7 +76,6 @@ void NavigationController::startNavAnimation(ViewController* incomingVC, Animati
         _currentViewController->onDidResume();
         _animationState = None;
     };
-	anim->start(_window, 350);
 	_view->setNeedsLayout();
 }
 

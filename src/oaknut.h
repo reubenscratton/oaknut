@@ -47,6 +47,7 @@
 #include <set>
 #include <functional>
 #include <assert.h>
+#include <chrono>
 
 using namespace std;
 
@@ -124,7 +125,6 @@ void oakFaceDetectorClose(void* osobj);
 #include "graphics/renderop_blur.h"
 #include "view/window.h"
 #include "graphics/textrenderer.h"
-#include "view/anim.h"
 #include "graphics/canvas.h"
 #include "app/styles.h"
 #include "app/app.h"
@@ -141,6 +141,7 @@ void oakFaceDetectorClose(void* osobj);
 #include "view/alignspec.h"
 #include "view/measurespec.h"
 #include "view/ikeyboardinputhandler.h"
+#include "view/anim.h"
 #include "view/view.h"
 #include "widgets/label.h"
 #include "widgets/edittext.h"

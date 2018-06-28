@@ -33,8 +33,9 @@ Variant::Variant(ByteBuffer* val) : type(BYTEBUFFER), data(val) {
 }
 Variant::Variant(ObjPtr<ByteBuffer>& val) : Variant(val._obj) {
 }
-Variant::Variant(ISerializeToVariantMap* val) : type(val?MAP:EMPTY) {
+Variant::Variant(ISerializeToVariantMap* val) : type(EMPTY) {
     if (val) {
+        setType(MAP);
         map = new VariantMap();
         val->writeSelfToVariantMap(*map);
     }

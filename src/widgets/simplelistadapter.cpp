@@ -44,8 +44,16 @@ View* SimpleListAdapter::createHeaderView(int section) {
     label->setBackgroundColour(0xFFeeeeee);
     return label;
 }
+int SimpleListAdapter::listIndexToRealIndex(LISTINDEX index) {
+    int s = LISTINDEX_SECTION(index);
+    int i = LISTINDEX_ITEM(index);
+    while (--s >= 0) {
+        i += getItemCount(s);
+    }
+    return i;
+}
 Object* SimpleListAdapter::getItem(LISTINDEX index) {
-    return _items[LISTINDEX_ITEM(index)];
+    return _items[listIndexToRealIndex(index)];
 }
 
 void SimpleListAdapter::invalidate() {
@@ -67,6 +75,14 @@ void SimpleListAdapter::bindItemView(View* itemView, LISTINDEX index, Object* it
 }
 
 
+bool SimpleListAdapter::canDeleteItem(LISTINDEX index) {
+    return true;
+}
+void SimpleListAdapter::deleteItem(LISTINDEX index) {
+    int realIndex = listIndexToRealIndex(index);
+    _items.erase(_items.begin()+realIndex);
+    invalidate();
+}
 
 void SimpleListAdapter::setFilter(const string& filterText) {
     app.log("TODO! filter");

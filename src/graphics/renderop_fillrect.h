@@ -10,5 +10,8 @@ public:
     
     ColorRectFillRenderOp(View* view);
     ColorRectFillRenderOp(View* view, const RECT& rect, COLOUR colour);
+    
+    // Overrides
+    virtual void setAlpha(float alpha);
 };
 

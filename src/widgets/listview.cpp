@@ -14,6 +14,7 @@ ListView::ListView() {
     _dividerHeight = 1;//dp(1);
     _dividerColour = app.getStyleColour("listview.selected-bkgnd-colour");
 	_selectedIndex = LISTINDEX_NONE;
+    _deleteConfirmIndex = LISTINDEX_NONE;
 }
 
 void ListView::setAdapter(IListAdapter* adapter) {
@@ -99,7 +100,7 @@ void ListView::layout() {
     View::layout();
 }
 
-View* ListView::indexToView(LISTINDEX index) {
+ListView::ItemView* ListView::indexToView(LISTINDEX index) {
     for (auto it=_itemViews.begin() ; it != _itemViews.end() ; it++) {
         if (index == it->first) {
             return it->second;
@@ -186,8 +187,9 @@ void ListView::setContentOffset(POINT contentOffset) {
 }
 
 
-ListView::ItemView::ItemView(ListView* listView, View* contentView) {
+ListView::ItemView::ItemView(ListView* listView, LISTINDEX listIndex, View* contentView) {
     _listView = listView;
+    _listIndex = listIndex;
     _contentView = contentView;
     contentView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::FillParent());
     addSubview(contentView);
@@ -216,7 +218,7 @@ void ListView::ItemView::updateDeleteButton(bool animate) {
         }
         _deleteButton->onTouchEventDelegate = [&] (View* view, int eventType, int eventSource, POINT pt)  -> bool {
             if (eventType == INPUT_EVENT_TAP) {
-                app.log("Delete row here!");
+                _listView->showDeleteConfirmButton(this);
             }
             return true;
         };
@@ -231,44 +233,63 @@ void ListView::ItemView::updateDeleteButton(bool animate) {
     }
 }
 
-/*
-void ListView::ItemView::setEditMode(bool editMode) {
-    ListView* listView = (ListView*)_parent;
-    if (editMode) {
-        float deleteButtonWidth = 16+45+16; // TODO: styles mofo, have you heard of them??
-        _deleteButton = new ImageView();
-        _deleteButton->setMeasureSpecs(MEASURESPEC::Abs(deleteButtonWidth), MEASURESPEC::Abs(8+45+8));
-        _deleteButton->setPadding(_EDGEINSETS(16, 8, 16, 8));
-        _deleteButton->setAlignSpecs(ALIGNSPEC(NULL, 0, -1, 0), ALIGNSPEC::Center());
-        if (!listView->_bmpDelete) {
-            ByteBuffer* data = app.loadAsset("images/delete.png"); // TODO: need a different way to do platform assets
-            Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
-                listView->_bmpDelete = bitmap;
-                _deleteButton->setBitmap(bitmap);
-            });
-        } else {
-             _deleteButton->setBitmap(listView->_bmpDelete);
+void ListView::ItemView::showDeleteConfirmButton(bool show) {
+    const int CONFIRM_BUTTON_WIDTH = 160;
+    if (show) {
+        if (!_deleteConfirmButton) {
+            _deleteConfirmButton = new Label();
+            _deleteConfirmButton->setBackgroundColour(0xFFf1453d);
+            _deleteConfirmButton->setTextColour(0xFFFFFFFF);
+            _deleteConfirmButton->setText("Delete");
+            _deleteConfirmButton->setGravity({GRAVITY_CENTER, GRAVITY_CENTER});
+            _deleteConfirmButton->setMeasureSpecs(MEASURESPEC::Abs(CONFIRM_BUTTON_WIDTH), MEASURESPEC::FillParent());
+            _deleteConfirmButton->setAlignSpecs(ALIGNSPEC(NULL,1,0,0), ALIGNSPEC::Top());
+            _deleteConfirmButton->onTouchEventDelegate = [&] (View* view, int eventType, int eventSource, POINT pt)  -> bool {
+                if (eventType == INPUT_EVENT_TAP) {
+                    _listView->deleteRow(_listIndex);
+                }
+                return true;
+            };
+            addSubview(_deleteConfirmButton);
         }
-        _deleteButton->onTouchEventDelegate = [&] (View* view, int eventType, int eventSource, POINT pt)  -> bool {
-            if (eventType == INPUT_EVENT_TAP) {
-                app.log("Delete row here!");
-            }
-            return true;
-        };
-        addSubview(_deleteButton);
-        
+        LayoutAnimation::startHorizontal(_deleteButton, ALIGNSPEC(NULL,0,0,-CONFIRM_BUTTON_WIDTH-_deleteButton->getWidth()),300);
+        LayoutAnimation::startHorizontal(_contentView, ALIGNSPEC(NULL,0,0,-CONFIRM_BUTTON_WIDTH),300);
+        LayoutAnimation::startHorizontal(_deleteConfirmButton, ALIGNSPEC(NULL,1,-1,0),300);
     } else {
-        LayoutAnimation::startHorizontal(_deleteButton, ALIGNSPEC(NULL, 0, -1, 0), 300);
-        LayoutAnimation::startHorizontal(_contentView, ALIGNSPEC(NULL,0,0,0), 300);
+        LayoutAnimation::startHorizontal(_deleteButton, ALIGNSPEC(NULL,0,0,0),300);
+        LayoutAnimation::startHorizontal(_contentView, ALIGNSPEC(NULL,0,0,_deleteButton->getWidth()),300);
+        if (_deleteConfirmButton) {
+            LayoutAnimation::startHorizontal(_deleteConfirmButton, ALIGNSPEC(NULL,1,0,0),300);
+        }
     }
 }
-*/
+
+void ListView::deleteRow(LISTINDEX index) {
+    ItemView* itemView = indexToView(index);
+    if (itemView) {
+        itemView->animateAlpha(0, 300);
+    }
+    
+    // Every visible item below the deleted one must move up
+    float dy = _adapter->getItemHeight(index);
+    for (auto it : _itemViews) {
+        if (it.first > index) {
+            it.second->animateTranslate(POINT_Make(0,-dy), 300);
+        }
+    }
+    
+    // Remove item from data store
+    Timer::start([=]() {
+        _adapter->deleteItem(index);
+        reload();
+    }, 300, false);
+}
 
 pair<LISTINDEX,View*> ListView::createItemView(LISTINDEX index, bool atFront, float itemHeight, float top) {
     View* contentView = _adapter->createItemView(index);
-    assert(contentView); // dude, where's my itemview??
+    assert(contentView); // dude, where's my item content view??
     _adapter->bindItemView(contentView, index, _adapter->getItem(index));
-    ItemView* itemView = new ItemView(this, contentView);
+    ItemView* itemView = new ItemView(this, index, contentView);
     itemView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::Abs(itemHeight));
     insertSubview(itemView, (int)_itemViews.size());
     itemView->measure(_rect.size.width, itemHeight);
@@ -421,18 +442,24 @@ void ListView::updateVisibleItems() {
 
 void ListView::startEditing(ViewController* editingViewController) {
     assert(_adapter->getSectionCount()==1); // Oops! multisection data is not editable, yet.
+    setSelectedIndex(LISTINDEX_NONE);
     _editingViewController = editingViewController;
-    /*Animation::start(_window, 300, [=](float val) {
-        for (auto it : _itemViews) {
-            ItemView* itemView = it.second;
-            itemView->setEditingState(val);
-        }
-    }, easeOut);*/
     _editMode = true;
     for (auto it : _itemViews) {
         ItemView* itemView = it.second;
         itemView->updateDeleteButton(true);
     }
+}
 
+void ListView::showDeleteConfirmButton(ItemView* itemView) {
+    if (_deleteConfirmIndex != -1) {
+        ItemView* currentDeleteConfirmItemView = indexToView(_deleteConfirmIndex);
+        if (currentDeleteConfirmItemView) {
+            currentDeleteConfirmItemView->showDeleteConfirmButton(false);
+        }
+        // hide existing confirm button
+    }
+    _deleteConfirmIndex = itemView->_listIndex;
+    itemView->showDeleteConfirmButton(true);
 }
 

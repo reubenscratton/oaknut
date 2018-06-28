@@ -16,9 +16,9 @@ public:
     
     friend class Window;
     
+    View* _view;
 	Window* _window;
     list<ObjPtr<Animation>>::iterator _windowAnimationsListIterator;
-    View* _view;
     OnAnimationFinishedDelegate _onFinished;
     long _timeStarted;
     long _elapsedAtPause;
@@ -30,26 +30,20 @@ public:
 	float _fromVal;
 	float _toVal;
     
-    Animation();
-    Animation(float fromVal, float toVal);
+    Animation(View* view);
+    Animation(View* view, float fromVal, float toVal);
     ~Animation();
-    virtual void start(Window* window, int duration);
-    virtual void start(Window* window, int duration, int delay);
+    virtual void start(int duration);
+    virtual void start(int duration, int delay);
     virtual void stop();
     virtual void pause();
     virtual void unpause();
 	virtual bool tick(long now);
     virtual void apply(float val) = 0;
     
-    static Animation* start(Window* window, int duration, std::function<void(float)> callback, InterpolateFunc interpolater = linear);
+    static Animation* start(View* view, int duration, std::function<void(float)> callback, InterpolateFunc interpolater = linear);
 };
 
-class DelegateAnimation : public Animation {
-public:
-    std::function<void(float)> _delegate;
-    
-    virtual void apply(float val);
-};
 
 class AlphaAnimation : public Animation {
 public:
@@ -69,7 +63,6 @@ protected:
     
     LayoutAnimation(View* view, InterpolateFunc interpolator = linear);
     
-    View* _view;
     bool _affectsAlignspecHorz;
     bool _affectsAlignspecVert;
     ALIGNSPEC _newAlignspecHorz;

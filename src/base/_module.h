@@ -1,12 +1,6 @@
-//
-//  _module.h
-//  embeeb
-//
-//  Created by Reuben on 22/06/2018.
-//
-
-#ifndef _module_h
-#define _module_h
-
-
-#endif /* _module_h */
+/** @defgroup base_group Base
+ *
+ * Core stuff used by everything else, includes the Object base class (and smart
+ * pointer helper), timers, and tasks.
+ *
+ */

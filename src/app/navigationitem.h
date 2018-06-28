@@ -5,6 +5,11 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+
+/**
+ * @ingroup app_group
+ * @brief Contains the UI elements displayed in the nav bar in a NavigationController.
+ */
 class NavigationItem : public Object {
 public:
 	ObjPtr<class View> _titleView;
