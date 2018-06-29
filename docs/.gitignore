@@ -2,5 +2,5 @@ _site
 .sass-cache
 Gemfile.lock
 *.gem
-doxypp/bin/
-doxygen/xml/
+_doxygen/xml/
+_doxypp/bin/

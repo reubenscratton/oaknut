@@ -1,7 +1,7 @@
 ---
 layout: default
 ---
-<iframe src="minesweeper/xx.html" style="margin-top:24px; margin-left:16px;" width="320" height="400" align="right">
+<iframe src="samples/minesweeper/xx.html" style="margin-top:24px; margin-left:16px;" width="320" height="400" align="right">
 </iframe>
 Oaknut is an experimental GUI framework for truly cross-platform C++ apps. An
 Oaknut app can be built to run natively on any major OS, and can also run in

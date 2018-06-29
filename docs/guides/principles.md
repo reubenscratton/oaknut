@@ -15,5 +15,9 @@ discovery of [Mozilla's Emscripten project](http://kripken.github.io/emscripten-
 mobile but on the web as well. All that was missing was the framework ...
 
 
-In my opinion the choice of programming language is far less important than
-good and powerful APIs in that language.
+## Language vs APIs
+
+In my opinion the choice of programming language matters less than having
+good and powerful APIs. Oaknut is implemented in C++ because
+that was the only language I knew that was common to all platforms. However,
+it may be that Rust works equally well or better.  
