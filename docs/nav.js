@@ -45,7 +45,7 @@ function addTocNodes(parentDiv, items) {
 
       var link = document.createElement("A");
       if (item.hasOwnProperty("u")) {
-        link.href = siteroot + item.u.substring(1);
+        link.href = siteroot + item.u;
       } else {
         link.href =  "#";
       }
