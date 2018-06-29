@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="/assets/favicon.png">
+    <link rel="icon" type="image/png" href="{{ '/assets/favicon.png' | relative_url }}">
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
   </head>
@@ -12,8 +12,8 @@
 <!-- Header bar -->
 <span class="page-header">
   <span float="left" height="35px">
-    <img src="/assets/icon.svg" height="40px" style="position:relative;bottom:0px;"/>&nbsp;
-    <img src="/assets/logo.svg" height="24px" style="position:relative;bottom:5px;"/>
+    <img src="{{ '/assets/icon.svg' | relative_url }}" height="40px" style="position:relative;bottom:0px;"/>&nbsp;
+    <img src="{{ '/assets/logo.svg' | relative_url }}" height="24px" style="position:relative;bottom:5px;"/>
   </span>
   <span style="float:right; height:35px; width:35px; margin-top:4px">
     <a href="https://github.com/reubenscratton/oaknut" title="GitHub"><img width="36" height="36" src="/assets/github.svg"></a>
@@ -26,8 +26,8 @@
   {{ content }}
 </div>
 
-<script type="text/javascript" src="/ref/navmodel.js"></script>
-<script type="text/javascript" src="/nav.js"></script>
+<script type="text/javascript" src="{{ '/ref/navmodel.js' | relative_url }}"></script>
+<script type="text/javascript" src="{{ '/nav.js' | relative_url }}"></script>
 <script>
   var sidenav = document.getElementById("sidenav");
   addTocNodes(sidenav, navmodel);
