@@ -44,7 +44,11 @@ function addTocNodes(parentDiv, items) {
       itemDiv.appendChild(toggle);
 
       var link = document.createElement("A");
-      link.href = item.hasOwnProperty("u") ? item.u : "#";
+      if (item.hasOwnProperty("u")) {
+        link.href = siteroot + item.u.substring(1);
+      } else {
+        link.href =  "#";
+      }
       link.innerHTML = item.t;
       itemDiv.appendChild(link);
 

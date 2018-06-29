@@ -16,7 +16,9 @@
     <img src="{{ 'assets/logo.svg' | relative_url }}" height="24px" style="position:relative;bottom:5px;"/>
   </span>
   <span style="float:right; height:35px; width:35px; margin-top:4px">
-    <a href="https://github.com/reubenscratton/oaknut" title="GitHub"><img width="36" height="36" src="/assets/github.svg"></a>
+    <a href="https://github.com/reubenscratton/oaknut" title="GitHub">
+      <img width="36" height="36" src="{{ 'assets/github.svg' | relative_url }}">
+    </a>
   </span>
 </span>
 
@@ -30,6 +32,7 @@
 <script type="text/javascript" src="{{ 'nav.js' | relative_url }}"></script>
 <script>
   var sidenav = document.getElementById("sidenav");
+  var siteroot = "{{ '' | relative_url }}";
   addTocNodes(sidenav, navmodel);
 </script>
 
