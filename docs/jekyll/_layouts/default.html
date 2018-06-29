@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: "en-US" }}">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="/assets/favicon.png">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
+  </head>
+  <body>
+
+<!-- Header bar -->
+<span class="page-header">
+  <span float="left" height="35px">
+    <img src="/assets/icon.svg" height="40px" style="position:relative;bottom:0px;"/>&nbsp;
+    <img src="/assets/logo.svg" height="24px" style="position:relative;bottom:5px;"/>
+  </span>
+  <span style="float:right; height:35px; width:35px; margin-top:4px">
+    <a href="https://github.com/reubenscratton/oaknut" title="GitHub"><img width="36" height="36" src="/assets/github.svg"></a>
+  </span>
+</span>
+
+<div id="sidenav" class="sidenav"></div>
+
+<div id="main-content" class="main-content">
+  {{ content }}
+</div>
+
+<script type="text/javascript" src="/ref/navmodel.js"></script>
+<script type="text/javascript" src="/nav.js"></script>
+<script>
+  var sidenav = document.getElementById("sidenav");
+  addTocNodes(sidenav, navmodel);
+</script>
+
+
+
+  </body>
+</html>

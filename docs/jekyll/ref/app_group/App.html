@@ -1,0 +1,159 @@
+---
+title: App
+layout: default
+---
+
+<h1>App</h1>
+
+<code>
+class App
+    : public Todo
+</code>
+
+<h2>Logging</h2>
+
+<table>
+<tr><td>void <a href="todo">log</a>(char const * fmt, ... )</td><td>Log an informational message.</td></tr>
+<tr><td>void <a href="todo">warn</a>(char const * fmt, ... )</td><td>Log a warning message prefixed with "Warning: ".</td></tr>
+<table>
+
+<h2>Keyboard</h2>
+
+<table>
+<tr><td>void <a href="todo">keyboardShow</a>(bool show)</td><td>Show or hide the system soft keyboard, if there is one.</td></tr>
+<table>
+
+<h2>Styles</h2>
+
+<table>
+<tr><td>void <a href="todo">loadStyleAsset</a>(const string & assetPath)</td><td>Load a style asset from the assets directory.</td></tr>
+<tr><td>StyleValue * <a href="todo">getStyleValue</a>(const string & keypath)</td><td>Get a named style value.</td></tr>
+<tr><td>string <a href="todo">getStyleString</a>(const string & key, const char * defaultString)</td><td>Get a named style value and coerce to a string.</td></tr>
+<tr><td>float <a href="todo">getStyleFloat</a>(const string & key)</td><td>Get a named style value and coerce to a float.</td></tr>
+<tr><td>COLOUR <a href="todo">getStyleColour</a>(const string & key)</td><td>Get a named style value and coerce to a COLOUR.</td></tr>
+<tr><td>class Font * <a href="todo">getStyleFont</a>(const string & key)</td><td>Get the Font for a named font style.</td></tr>
+<table>
+
+<h2>Layout</h2>
+
+<table>
+<tr><td>class <a href="class_view.html">View</a> * <a href="todo">layoutInflate</a>(const string & assetPath)</td><td>Loads a view from an asset file.</td></tr>
+<tr><td>float <a href="todo">dp</a>(float dp)</td><td>Converts a 'dp' measurement into physical pixels.</td></tr>
+<tr><td>float <a href="todo">idp</a>(float pix)</td><td>Converts a 'dp' measurement into physical pixels and floor()s the result to an integer.</td></tr>
+<table>
+
+<h2>Settings</h2>
+
+<table>
+<tr><td>int <a href="todo">getIntSetting</a>(const char * key, const int defaultValue)</td><td>Gets a named integer setting.</td></tr>
+<tr><td>void <a href="todo">setIntSetting</a>(const char * key, int value)</td><td>Sets a named integer setting.</td></tr>
+<tr><td>string <a href="todo">getStringSetting</a>(const char * key, const char * defaultValue)</td><td>Gets a named string setting.</td></tr>
+<tr><td>void <a href="todo">setStringSetting</a>(const char * key, const char * value)</td><td>Sets a named string setting.</td></tr>
+<tr><td>void <a href="todo">saveSettings</a>()</td><td>Commits any changes to settings to permanent storage.</td></tr>
+<table>
+
+<h2></h2>
+
+<table>
+<table>
+
+<h2></h2>
+
+<table>
+<table>
+
+<h2></h2>
+
+<table>
+<table>
+
+<h2></h2>
+
+<table>
+<tr><td> <a href="todo">App</a>()</td><td></td></tr>
+<tr><td>void <a href="todo">main</a>()</td><td>Application entry point.</td></tr>
+<tr><td>class <a href="class_byte_buffer.html">ByteBuffer</a> * <a href="todo">loadAsset</a>(const char * assetPath)</td><td>Load a file from the assets directory, synchronously.</td></tr>
+<tr><td>long <a href="todo">currentMillis</a>()</td><td>Gets the current system time, in milliseconds.</td></tr>
+<tr><td>void <a href="todo">requestRedraw</a>()</td><td>Ask the underlying OS to schedule a redraw.</td></tr>
+<tr><td>void <a href="todo">keyboardNotifyTextChanged</a>()</td><td></td></tr>
+<tr><td>string <a href="todo">getDirectoryForFileType</a>(FileType fileType)</td><td></td></tr>
+<tr><td>string <a href="todo">friendlyTimeString</a>(long timestamp)</td><td></td></tr>
+<table>
+
+<h1>Methods</h1>
+
+<h3>log</h3>
+<code>void <a href="todo">log</a>(char const * fmt, ... )</code><p></p>
+
+<h3>warn</h3>
+<code>void <a href="todo">warn</a>(char const * fmt, ... )</code><p></p>
+
+<h3>keyboardShow</h3>
+<code>void <a href="todo">keyboardShow</a>(bool show)</code><p></p>
+
+<h3>loadStyleAsset</h3>
+<code>void <a href="todo">loadStyleAsset</a>(const string & assetPath)</code><p>Generally used in App::main()</p>
+
+<h3>getStyleValue</h3>
+<code>StyleValue * <a href="todo">getStyleValue</a>(const string & keypath)</code><p></p>
+
+<h3>getStyleString</h3>
+<code>string <a href="todo">getStyleString</a>(const string & key, const char * defaultString)</code><p></p>
+
+<h3>getStyleFloat</h3>
+<code>float <a href="todo">getStyleFloat</a>(const string & key)</code><p></p>
+
+<h3>getStyleColour</h3>
+<code>COLOUR <a href="todo">getStyleColour</a>(const string & key)</code><p></p>
+
+<h3>getStyleFont</h3>
+<code>class Font * <a href="todo">getStyleFont</a>(const string & key)</code><p></p>
+
+<h3>layoutInflate</h3>
+<code>class <a href="class_view.html">View</a> * <a href="todo">layoutInflate</a>(const string & assetPath)</code><p>See the Layout Guide for details</p>
+
+<h3>dp</h3>
+<code>float <a href="todo">dp</a>(float dp)</code><p>Dp is a device-independent pixel and is based on 320dpi</p>
+
+<h3>idp</h3>
+<code>float <a href="todo">idp</a>(float pix)</code><p></p>
+
+<h3>getIntSetting</h3>
+<code>int <a href="todo">getIntSetting</a>(const char * key, const int defaultValue)</code><p></p>
+
+<h3>setIntSetting</h3>
+<code>void <a href="todo">setIntSetting</a>(const char * key, int value)</code><p>NB: call saveSettings() when finished updating settings</p>
+
+<h3>getStringSetting</h3>
+<code>string <a href="todo">getStringSetting</a>(const char * key, const char * defaultValue)</code><p></p>
+
+<h3>setStringSetting</h3>
+<code>void <a href="todo">setStringSetting</a>(const char * key, const char * value)</code><p>NB: call saveSettings() when finished updating settings.</p>
+
+<h3>saveSettings</h3>
+<code>void <a href="todo">saveSettings</a>()</code><p></p>
+
+<h3>App</h3>
+<code> <a href="todo">App</a>()</code><p></p>
+
+<h3>main</h3>
+<code>void <a href="todo">main</a>()</code><p>Your implementation of this must instantiate a ViewController and set it as _window.rootViewController before returning</p>
+
+<h3>loadAsset</h3>
+<code>class <a href="class_byte_buffer.html">ByteBuffer</a> * <a href="todo">loadAsset</a>(const char * assetPath)</code><p>Since this does IO it's best to limit use to app startup and background threads</p>
+
+<h3>currentMillis</h3>
+<code>long <a href="todo">currentMillis</a>()</code><p></p>
+
+<h3>requestRedraw</h3>
+<code>void <a href="todo">requestRedraw</a>()</code><p></p>
+
+<h3>keyboardNotifyTextChanged</h3>
+<code>void <a href="todo">keyboardNotifyTextChanged</a>()</code><p></p>
+
+<h3>getDirectoryForFileType</h3>
+<code>string <a href="todo">getDirectoryForFileType</a>(FileType fileType)</code><p></p>
+
+<h3>friendlyTimeString</h3>
+<code>string <a href="todo">friendlyTimeString</a>(long timestamp)</code><p></p>
+
