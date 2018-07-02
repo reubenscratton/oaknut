@@ -120,7 +120,7 @@ static GLProgramTextureTintAlpha glprogTextureTintAlpha;
 TextureRenderOp::TextureRenderOp(View* view) : RenderOp(view) {
     _alpha = 1.0f;
     _prog = &glprogTexture;
-    _rectTex = RECT_Make(0,0,1,1);
+    _rectTex = RECT(0,0,1,1);
 }
 TextureRenderOp::TextureRenderOp(View* view, const RECT& rect, Bitmap* bitmap, const RECT* rectTex, COLOUR tintColour) : RenderOp(view) {
     _bitmapProvider = new SimpleBitmapProvider(bitmap);
@@ -135,7 +135,7 @@ TextureRenderOp::TextureRenderOp(View* view, const RECT& rect, Bitmap* bitmap, c
     if (rectTex) {
         _rectTex = *rectTex;
     } else {
-        _rectTex = RECT_Make(0,1,1,-1);
+        _rectTex = RECT(0,1,1,-1);
     }
 }
 
@@ -149,9 +149,9 @@ TextureRenderOp::TextureRenderOp(View* view, const char* assetPath, int tintColo
     ByteBuffer* data = app.loadAsset(assetPath);
     Bitmap::createFromData(data->data, (int)data->cb, [&](Bitmap* bitmap) {
         _bitmapProvider = new SimpleBitmapProvider(bitmap);
-        _rect = RECT_Make(0,0,bitmap->_width,bitmap->_height);
+        _rect = RECT(0,0,bitmap->_width,bitmap->_height);
     });
-    _rectTex = RECT_Make(0,0,1,1);
+    _rectTex = RECT(0,0,1,1);
     setBlendMode(BLENDMODE_NORMAL);
 }
 

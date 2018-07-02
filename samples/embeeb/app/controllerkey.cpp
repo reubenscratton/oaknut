@@ -36,7 +36,7 @@ ControllerKey::ControllerKey(const ControllerKey& src) {
 
 JsonObject* ControllerKey::toJson() {
 	JsonObject* json = new JsonObject();
-	json->putValue("rect", RECTtoString(_rect));
+	json->putValue("rect", _rect.toString());
 	return json;
 }
 
@@ -50,15 +50,15 @@ RECT ControllerKey::drawRect() {
 }*/
 
 RECT ControllerKey::normalizeRect(RECT rect) {
-	RECT_scale(rect, 320.0/_view->getWidth(), 216.0/_view->getHeight());
+	rect.scale(320.0/_view->getWidth(), 216.0/_view->getHeight());
 	return rect;
 }
 
 void ControllerKey::layout() {
 	_drawRect = _rect;
-	RECT_scale(_drawRect, _view->getWidth()/320.0, _view->getHeight()/216.0);
+	_drawRect.scale(_view->getWidth()/320.0, _view->getHeight()/216.0);
     RECT rect = _drawRect;
-    RECT_inset(rect, 1, 1);
+    rect.inset(1, 1);
     _bkgndOp->setRect(rect);    
 }
 
@@ -66,7 +66,7 @@ void ControllerKey::attachToView(ControllerView* view) {
     _view = view;
 
     RECT rect = _drawRect;
-    RECT_inset(rect, 1, 1);
+    rect.inset(1, 1);
     //_bkgndOp = new RoundRectRenderOp(_view, rect, _isTouched ? colourForPressedKey : colourForKeyBackground, 0,0, 4);
     //COLOUR fillColour = (_isTouched||_highlighted)? colourForPressedKey : _keyColour;
     _bkgndOp = new ColorRectFillRenderOp(_view, rect, _keyColour);

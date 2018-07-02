@@ -110,7 +110,7 @@ uint32_t SnapshotsViewController::saveSnapshot(Snapshot* snapshot) {
     // Create a scaled-down thumbnail of the beeb's display
     ObjPtr<Canvas> canvas = Canvas::create();
     RECT rectSrc = _beebView->_visibleArea;
-    RECT_scale(rectSrc, _beebView->_bitmap->_width, _beebView->_bitmap->_height);
+    rectSrc.scale(_beebView->_bitmap->_width, _beebView->_bitmap->_height);
     RECT rectDst = {0,0, app.dp(72), app.dp(52)}; // matches layout
     canvas->resize(rectDst.size.width, rectDst.size.height);
     canvas->drawBitmap(_beebView->_bitmap, rectSrc, rectDst);

@@ -47,7 +47,7 @@ void Window::resizeSurface(int width, int height, float scale) {
         return;
     }
 	//app.log("Window::resize %d %d %d", width, height, scale);
-    _surfaceRect = RECT_Make(0,0,width,height);
+    _surfaceRect = RECT(0,0,width,height);
 	_scale = scale;
     _surface->setSize(SIZE_Make(width, height));
 	if (_rootViewController) {

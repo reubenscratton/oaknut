@@ -57,9 +57,14 @@ typedef struct RECT {
 	SIZE size;
 	float midX();
 	float midY();
+    
+    RECT();
+    RECT(float x, float y, float width, float height);
+
 	
-	bool contains(const POINT& pt);
-	bool contains(const struct RECT& r);
+	bool contains(const POINT& pt) const;
+	bool contains(const struct RECT& r) const;
+    bool equal(const RECT& r) const;
 	
 	float left() const;
 	float right() const;
@@ -80,24 +85,16 @@ typedef struct RECT {
         size.height -= dy*2;
         return *this;
     }
+    void scale(float sx, float sy);
 
+    string toString() const;
 	
 } RECT;
 
-RECT RECT_Make(float x, float y, float width, float height);
-float RECT_left(const RECT& r);
-float RECT_right(const RECT& r);
-float RECT_top(const RECT& r);
-float RECT_bottom(const RECT& r);
-void RECT_inset(RECT& r, float dx, float dy);
-bool RECT_contains(RECT& r, POINT& p);
-bool RECT_equal(const RECT& r, const RECT& r2);
-void RECT_scale(RECT& r, float sx, float sy);
 RECT RECTfromString(const string& str);
-string RECTtoString(const RECT& r);
 RECT RECT_union(const RECT&r1, const RECT& r2);
 
-#define RECT_Zero RECT_Make(0,0,0,0)
+#define RECT_Zero RECT(0,0,0,0)
 
 
 bool QUADintersectsRECT(const QUAD& q, const RECT& r);

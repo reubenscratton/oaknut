@@ -72,33 +72,17 @@ float RECT::midY() {
 	return origin.y + size.height/2;
 }
 
-float RECT_left(const RECT& r) {
-	return r.origin.x;
+RECT::RECT() {
+    origin.x = 0;
+    origin.y = 0;
+    size.width = 0;
+    size.height = 0;
 }
-float RECT_right(const RECT& r) {
-	return r.origin.x + r.size.width;
-}
-float RECT_top(const RECT& r) {
-	return r.origin.y;
-}
-float RECT_bottom(const RECT& r) {
-	return r.origin.y + r.size.height;
-}
-
-void RECT_inset(RECT& r, float dx, float dy) {
-	r.origin.x += dx;
-	r.origin.y += dy;
-	r.size.width -= dx*2;
-	r.size.height -= dy*2;
-}
-
-RECT RECT_Make(float x, float y, float width, float height) {
-	RECT rect;
-	rect.origin.x = x;
-	rect.origin.y = y;
-	rect.size.width = width;
-	rect.size.height = height;
-	return rect;
+RECT::RECT(float x, float y, float width, float height) {
+	origin.x = x;
+	origin.y = y;
+	size.width = width;
+	size.height = height;
 }
 
 RECT RECT_union(const RECT&r1, const RECT& r2) {
@@ -214,30 +198,26 @@ POINT RECT::bottomRight() const {
 	return POINT_Make(origin.x+size.width, origin.y+size.height);
 }
 
-bool RECT::contains(const RECT& r) {
+bool RECT::contains(const RECT& r) const {
    return contains(r.origin) && contains(r.bottomRight());
 }
 
-bool RECT::contains(const POINT& p) {
+bool RECT::contains(const POINT& p) const {
    return (p.x>=origin.x && p.x<(origin.x+size.width)) && (p.y>=origin.y && p.y<(origin.y+size.height));
 }
 
-bool RECT_contains(RECT& r, POINT& p) {
-    return (p.x>=r.origin.x && p.x<(r.origin.x+r.size.width)) && (p.y>=r.origin.y && p.y<(r.origin.y+r.size.height));
+bool RECT::equal(const RECT& r2) const {
+	return origin.x==r2.origin.x
+		&& origin.y==r2.origin.y
+		&& size.width==r2.size.width
+		&& size.height==r2.size.height;
 }
 
-bool RECT_equal(const RECT& r, const RECT& r2) {
-	return r.origin.x==r2.origin.x
-		&& r.origin.y==r2.origin.y
-		&& r.size.width==r2.size.width
-		&& r.size.height==r2.size.height;
-}
-
-void RECT_scale(RECT& r, float sx, float sy) {
-	r.origin.x *= sx;
-	r.origin.y *= sy;
-	r.size.width *= sx;
-	r.size.height *= sy;
+void RECT::scale(float sx, float sy) {
+	origin.x *= sx;
+	origin.y *= sy;
+	size.width *= sx;
+	size.height *= sy;
 }
 
 
@@ -267,10 +247,10 @@ RECT RECTfromString(const string& str) {
 }
 
 
-string RECTtoString(const RECT& r) {
+string RECT::toString() const {
 	// "{{0, 0}, {100, 100}}"
 	char ach[64];
-	snprintf(ach, sizeof(ach), "{{%f, %f}, {%f, %f}}", r.origin.x, r.origin.y, r.size.width, r.size.height);
+	snprintf(ach, sizeof(ach), "{{%f, %f}, {%f, %f}}", origin.x, origin.y, size.width, size.height);
 	return string(ach);
 }
 

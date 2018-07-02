@@ -82,13 +82,13 @@ AtlasNode* AtlasNode::insertRect(RECT* r) {
     
     if(width_diff > height_diff) {
         // split literally into left and right, putting the rect on the left.
-        left->rect = RECT_Make(RECT_left(rect), RECT_top(rect), r->size.width, rect.size.height);
-        right->rect = RECT_Make(RECT_left(rect) + r->size.width, RECT_top(rect), rect.size.width - r->size.width, rect.size.height);
+        left->rect = RECT(rect.left(), rect.top(), r->size.width, rect.size.height);
+        right->rect = RECT(rect.left() + r->size.width, rect.top(), rect.size.width - r->size.width, rect.size.height);
     }
     else {
         // split into top and bottom, putting rect on top.
-        left->rect = RECT_Make(RECT_left(rect), RECT_top(rect), rect.size.width, r->size.height);
-        right->rect = RECT_Make(RECT_left(rect), RECT_top(rect) + r->size.height, rect.size.width, rect.size.height - r->size.height);
+        left->rect = RECT(rect.left(), rect.top(), rect.size.width, r->size.height);
+        right->rect = RECT(rect.left(), rect.top() + r->size.height, rect.size.width, rect.size.height - r->size.height);
     }
     
     return left->insertRect(r);
@@ -99,12 +99,12 @@ AtlasPage::AtlasPage(int width, int height, int bitmapFormat) {
     _bitmap = new Bitmap(width, height, bitmapFormat);
     _bitmap->_texSampleMethod = GL_NEAREST;
     start_node = new AtlasNode(this);
-    start_node->rect = RECT_Make(0, 0, width, height);
+    start_node->rect = RECT(0, 0, width, height);
 }
 
 
 AtlasNode* AtlasPage::reserve(int w, int h) {
-    RECT r = RECT_Make(0, 0, w, h);
+    RECT r = RECT(0, 0, w, h);
     AtlasNode* node = start_node->insertRect(&r);
     if (node == NULL) {
         return NULL;
@@ -144,7 +144,7 @@ AtlasNode* Atlas::reserve(int w, int h, int padding) {
     }
     if (node != NULL) {
 		if (padding > 0) {
-			RECT_inset(node->rect, padding, padding);
+			node->rect.inset(padding, padding);
 		}
         node->page = currentPage;
         nodes.push_back(node);

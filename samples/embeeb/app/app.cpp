@@ -41,9 +41,9 @@ void App::main() {
     vm2.readSelfFromStream(&bb);
     */
     
-	//MainViewController* mainVC = new MainViewController();
+	MainViewController* mainVC = new MainViewController();
     //DisksViewController* mainVC = new DisksViewController(NULL);
-    SnapshotsViewController* mainVC = new SnapshotsViewController(NULL, NULL, NULL, NULL);
+    //SnapshotsViewController* mainVC = new SnapshotsViewController(NULL, NULL, NULL, NULL);
 	rootVC->pushViewController(mainVC);
 	_window->setRootViewController(rootVC);
 }

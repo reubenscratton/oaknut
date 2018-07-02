@@ -124,7 +124,7 @@ void BeebKeyboardController::KeyRow::layout(const RECT& bounds) {
 	float excess_unit = (sumweights==0) ? 0 : (excess_space / sumweights);
 	for (auto it = _keys.begin() ; it!=_keys.end() ; it++) {
 		float keywidth =  excess_unit * (*it)->_weight;
-		(*it)->setRect(RECT_Make(x, bounds.origin.y, keywidth, bounds.size.height));
+		(*it)->setRect(RECT(x, bounds.origin.y, keywidth, bounds.size.height));
 		x += keywidth;
 	}
 }
@@ -226,7 +226,7 @@ BeebKeyboardController::BeebKeyboardController() {
 	row->_keys.push_back(new BeebKeyboardKey(this, &beebKeyCopy));
 	row->_keys.push_back(new BeebKeyboardKey(this, &beebKeyReturn, 2.f));
 	
-	RECT keybdRect = RECT_Make(0,0,320,216-8); // -8 to leave a small gap at bottom
+	RECT keybdRect = RECT(0,0,320,216-8); // -8 to leave a small gap at bottom
 	keybdRect.size.height /= _rows.size();
 	for (auto it = _rows.begin() ; it!=_rows.end() ; it++) {
 		(*it)->layout(keybdRect);

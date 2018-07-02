@@ -19,7 +19,7 @@ bool RenderOp::canMergeWith(const RenderOp* op) {
 }
 
 void RenderOp::setRect(const RECT& rect) {
-    if (!RECT_equal(rect, _rect)) {
+    if (!rect.equal(_rect)) {
         _rect = rect;
         if (_batch) {
             _batch->invalidateGeometry(this);

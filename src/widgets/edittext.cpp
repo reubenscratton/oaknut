@@ -74,7 +74,7 @@ void EditText::updateCursor() {
     POINT cursorOrigin;
     float ascent, descent;
     _textRenderer.getGlyphOrigin(_insertionPoint, &cursorOrigin, &ascent, &descent);
-    _cursorRenderOp->setRect(RECT_Make(cursorOrigin.x,cursorOrigin.y-ascent,4,ascent-descent));
+    _cursorRenderOp->setRect(RECT(cursorOrigin.x,cursorOrigin.y-ascent,4,ascent-descent));
     _cursorValid = true;
 }
 

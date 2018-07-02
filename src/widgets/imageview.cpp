@@ -36,13 +36,13 @@ void ImageView::setImageUrl(const string& url) {
 void ImageView::setBitmapProvider(BitmapProvider *bitmapProvider) {
     if (bitmapProvider != _renderOp->_bitmapProvider) {
         _renderOp->setBitmapProvider(bitmapProvider);
-        _rectTex = RECT_Make(0, 0, 1, 1);
+        _rectTex = RECT(0, 0, 1, 1);
         invalidateContentSize();
     }
 }
 void ImageView::setBitmap(Bitmap *bitmap) {
     _renderOp->setBitmap(bitmap);
-    _rectTex = RECT_Make(0,0,1,1);
+    _rectTex = RECT(0,0,1,1);
     invalidateContentSize();
 }
 

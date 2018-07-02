@@ -408,7 +408,7 @@ void View::layout() {
     setRectOrigin(pt);
 
     if (_currentBackgroundOp) {
-        _currentBackgroundOp->setRect(RECT_Make(0, 0, _rect.size.width, _rect.size.height));
+        _currentBackgroundOp->setRect(RECT(0, 0, _rect.size.width, _rect.size.height));
     }
 
     for (int i=0 ; i<_subviews.size() ; i++) {
@@ -780,10 +780,10 @@ void View::removeRenderOp(RenderOp* renderOp) {
 
 
 RECT View::getOwnRect() {
-	return RECT_Make(0,0,_rect.size.width,_rect.size.height);
+	return RECT(0,0,_rect.size.width,_rect.size.height);
 }
 RECT View::getOwnRectPadded() {
-    return RECT_Make(_padding.left,_padding.top, _rect.size.width-(_padding.left+_padding.right), _rect.size.height - (_padding.top+_padding.bottom));
+    return RECT(_padding.left,_padding.top, _rect.size.width-(_padding.left+_padding.right), _rect.size.height - (_padding.top+_padding.bottom));
 }
 
 void View::setScrollInsets(EDGEINSETS scrollInsets) {
@@ -839,7 +839,7 @@ View* View::subviewContainingPoint(POINT pt) {
 	for (long i=_subviews.size()-1 ; i>=0 ; i--) {
 		View* subview = _subviews.at(i);
 		if (subview->_visibility == Visible) {
-			if (RECT_contains(subview->_rect, pt)) {
+			if (subview->_rect.contains(pt)) {
 				return subview;
 			}
 		}
@@ -851,7 +851,7 @@ int View::indexOfSubviewContainingPoint(POINT pt) {
 	for (long i=_subviews.size()-1 ; i>=0 ; i--) {
 		View* subview = _subviews.at(i);
 		if (subview->_visibility == Visible) {
-			if (RECT_contains(subview->_rect, pt)) {
+			if (subview->_rect.contains(pt)) {
 				return (int)i;
 			}
 		}
@@ -862,7 +862,7 @@ int View::indexOfSubviewContainingPoint(POINT pt) {
 View* View::hitTest(POINT pt, POINT* ptRel) {
 	
 	// Find the leaf view that corresponds to the given point
-	if (_visibility==Visible && RECT_contains(_rect, pt)) {
+	if (_visibility==Visible && _rect.contains(pt)) {
 		POINT ptClient = pt;
 		ptClient.x -= _rect.origin.x;
 		ptClient.y -= _rect.origin.y;

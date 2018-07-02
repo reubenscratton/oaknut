@@ -232,6 +232,8 @@ void TextRenderer::measure(SIZE maxSize) {
  layout the lines of text w.r.t. their size and gravity within the
  frame into which they are rendered
  */
+//void TextRenderer::layout(const RECT& arect) {
+//    RECT rect = arect;
 void TextRenderer::layout(RECT rect) {
     
     _layoutRect = rect;
@@ -262,10 +264,10 @@ void TextRenderer::layout(RECT rect) {
         float y=line.bounds.origin.y;
         for (auto j=line.glyphinfos.begin() ; j!=line.glyphinfos.end() ; j++) {
             Glyph* glyph = j->glyph;
-            j->rect = RECT_Make(x + glyph->bitmapLeft,
-                                y + line.baseline - (glyph->bitmapHeight+ glyph->bitmapTop),
-                                glyph->atlasNode->rect.size.width,
-                                glyph->atlasNode->rect.size.height);
+            j->rect = RECT(x + glyph->bitmapLeft,
+                            y + line.baseline - (glyph->bitmapHeight+ glyph->bitmapTop),
+                            glyph->atlasNode->rect.size.width,
+                            glyph->atlasNode->rect.size.height);
             x += glyph->advance.width;
         }
         

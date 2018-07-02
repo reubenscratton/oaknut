@@ -68,7 +68,7 @@ bool ControllerView::onTouchEvent(int eventType, int source, POINT pt) {
 
 
 void ControllerView::layout() {
-    if (!RECT_equal(_cachedFrameRect, _rect)) {
+    if (!_cachedFrameRect.equal(_rect)) {
         _cachedFrameRect = _rect;
         View::layout();
         for (auto it = _controller->_keys.begin() ; it!=_controller->_keys.end() ; it++) {

@@ -11,7 +11,7 @@ CanvasView::CanvasView() {
     _canvas = Canvas::create();
     _textureRenderOp = new TextureRenderOp(this);
     _textureRenderOp->setBlendMode(BLENDMODE_PREMULTIPLIED);
-    _textureRenderOp->setTexRect(RECT_Make(0,1,1,-1));
+    _textureRenderOp->setTexRect(RECT(0,1,1,-1));
     addRenderOp(_textureRenderOp);
 }
 

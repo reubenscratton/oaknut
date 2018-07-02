@@ -111,7 +111,7 @@ public:
             check_gl(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, indexBufferId);
             check_gl(glBindBuffer, GL_ARRAY_BUFFER, vertexBufferId);
             GLshort indexes[] = {0,1,2,2,1,3};
-            QUAD quad = QUADFromRECT(RECT_Make(-1,0,2,2),0); // I don't know why y be 0 rather than -1 but it do...
+            QUAD quad = QUADFromRECT(RECT(-1,0,2,2),0); // I don't know why y be 0 rather than -1 but it do...
             check_gl(glBufferData, GL_ELEMENT_ARRAY_BUFFER, sizeof(GLshort) * 6, indexes, GL_STATIC_DRAW);
             check_gl(glBufferData, GL_ARRAY_BUFFER, sizeof(quad), &quad, GL_DYNAMIC_DRAW);
 

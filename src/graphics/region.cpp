@@ -11,26 +11,26 @@ class RegionTest {
 public:
 	RegionTest() {
 		REGION oregion;
-		oregion.addRect(RECT_Make(0,0,10,10));
+		oregion.addRect(RECT(0,0,10,10));
 		
 		// Verify that adding a rect already in the region has no effect
 		REGION region = oregion;
-		region.addRect(RECT_Make(2, 2, 1, 1));
-		assert(region.rects.size()==1 && region.rects[0]==RECT_Make(0,0,10,10));
+		region.addRect(RECT(2, 2, 1, 1));
+		assert(region.rects.size()==1 && region.rects[0]==RECT(0,0,10,10));
 
 		// Overlap left edge only
 		region = oregion;
-		region.addRect(RECT_Make(-5, 2, 10, 5));
-		assert(region.rects.size()==2 && region.rects[0]==RECT_Make(0,0,10,10)
-									  && region.rects[1]==RECT_Make(-5,2,5,5));
+		region.addRect(RECT(-5, 2, 10, 5));
+		assert(region.rects.size()==2 && region.rects[0]==RECT(0,0,10,10)
+									  && region.rects[1]==RECT(-5,2,5,5));
 
 		// Overlap left & top & bottom edges
 		region = oregion;
-		region.addRect(RECT_Make(-1, -1, 2, 12));
-		assert(region.rects.size()==4 && region.rects[0]==RECT_Make(0,0,10,10)
-									  && region.rects[1]==RECT_Make(-1,-1,2,1)
-									  && region.rects[2]==RECT_Make(-1,10,2,1)
-									  && region.rects[3]==RECT_Make(-1,0,1,10));
+		region.addRect(RECT(-1, -1, 2, 12));
+		assert(region.rects.size()==4 && region.rects[0]==RECT(0,0,10,10)
+									  && region.rects[1]==RECT(-1,-1,2,1)
+									  && region.rects[2]==RECT(-1,10,2,1)
+									  && region.rects[3]==RECT(-1,0,1,10));
 
 		// Overlap right & top & bottom edges
 		/*region = oregion;
@@ -53,41 +53,41 @@ public:
 
 		// Overlap right edge only
 		region = oregion;
-		region.addRect(RECT_Make(5, 2, 10, 5));
-		assert(region.rects.size()==2 && region.rects[0]==RECT_Make(0,0,10,10)
-									  && region.rects[1]==RECT_Make(10,2,5,5));
+		region.addRect(RECT(5, 2, 10, 5));
+		assert(region.rects.size()==2 && region.rects[0]==RECT(0,0,10,10)
+									  && region.rects[1]==RECT(10,2,5,5));
 
 		// Add to top edge
 		region = oregion;
-		region.addRect(RECT_Make(2, -5, 5, 10));
-		assert(region.rects.size()==2 && region.rects[0]==RECT_Make(0,0,10,10)
-									  && region.rects[1]==RECT_Make(2,-5,5,5));
+		region.addRect(RECT(2, -5, 5, 10));
+		assert(region.rects.size()==2 && region.rects[0]==RECT(0,0,10,10)
+									  && region.rects[1]==RECT(2,-5,5,5));
 
 		// Add to bottom edge
 		region = oregion;
-		region.addRect(RECT_Make(2, 5, 5, 10));
-		assert(region.rects.size()==2 && region.rects[0]==RECT_Make(0,0,10,10)
-									  && region.rects[1]==RECT_Make(2,10,5,5));
+		region.addRect(RECT(2, 5, 5, 10));
+		assert(region.rects.size()==2 && region.rects[0]==RECT(0,0,10,10)
+									  && region.rects[1]==RECT(2,10,5,5));
 		
 		// Overlap top-left corner
 		region = oregion;
-		region.addRect(RECT_Make(5, 5, 10, 10));
-		assert(region.rects.size()==3 && region.rects[0]==RECT_Make(0,0,10,10)
-									  && region.rects[1]==RECT_Make(5,10,10,5)
-									  && region.rects[2]==RECT_Make(10,5,5,5));
+		region.addRect(RECT(5, 5, 10, 10));
+		assert(region.rects.size()==3 && region.rects[0]==RECT(0,0,10,10)
+									  && region.rects[1]==RECT(5,10,10,5)
+									  && region.rects[2]==RECT(10,5,5,5));
 		// Overlap top-right
 		region = oregion;
-		region.addRect(RECT_Make(-5, 5, 10, 10));
-		assert(region.rects.size()==3 && region.rects[0]==RECT_Make(0,0,10,10)
-									  && region.rects[1]==RECT_Make(-5,10,10,5)
-									  && region.rects[2]==RECT_Make(-5,5,5,5));
+		region.addRect(RECT(-5, 5, 10, 10));
+		assert(region.rects.size()==3 && region.rects[0]==RECT(0,0,10,10)
+									  && region.rects[1]==RECT(-5,10,10,5)
+									  && region.rects[2]==RECT(-5,5,5,5));
 
 		// Overlap bottom-left corner
 		region = oregion;
-		region.addRect(RECT_Make(5, 5, 10, 10));
-		assert(region.rects.size()==3 && region.rects[0]==RECT_Make(0,0,10,10)
-									  && region.rects[1]==RECT_Make(5,10,10,5)
-									  && region.rects[2]==RECT_Make(10,5,5,5));
+		region.addRect(RECT(5, 5, 10, 10));
+		assert(region.rects.size()==3 && region.rects[0]==RECT(0,0,10,10)
+									  && region.rects[1]==RECT(5,10,10,5)
+									  && region.rects[2]==RECT(10,5,5,5));
 	}
 };
 
@@ -159,12 +159,12 @@ void REGION::addRect(RECT arect) {
 			if (rr.intersects(nr)) {
 			
 				// Get the rects to all four sides of rr that intersect nr
-				RECT rAbove = RECT_Make(nr.left(), nr.top(), nr.size.width, rr.top()-nr.top());
-				RECT rBelow = RECT_Make(nr.left(), rr.bottom(), nr.size.width, nr.bottom()-rr.bottom());
+				RECT rAbove = RECT(nr.left(), nr.top(), nr.size.width, rr.top()-nr.top());
+				RECT rBelow = RECT(nr.left(), rr.bottom(), nr.size.width, nr.bottom()-rr.bottom());
 				float t = fmaxf(rr.top(), nr.top());
 				float b = fminf(rr.bottom(), nr.bottom());
-				RECT rLeft = RECT_Make(nr.left(), t, rr.left()-nr.left(), b-t);
-				RECT rRight = RECT_Make(rr.right(), t, nr.right()-rr.right(), b-t);
+				RECT rLeft = RECT(nr.left(), t, rr.left()-nr.left(), b-t);
+				RECT rRight = RECT(rr.right(), t, nr.right()-rr.right(), b-t);
 				
 				// Add the ones that aren't degenerate to the list
 				if (!rAbove.isEmpty()) {

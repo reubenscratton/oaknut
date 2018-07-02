@@ -37,11 +37,11 @@ void SearchBox::setPadding(EDGEINSETS padding) {
 void SearchBox::layout() {
     EditText::layout();
     RECT rect = getOwnRect();
-    RECT_inset(rect, app.dp(12), app.dp(6));
+    rect.inset(app.dp(12), app.dp(6));
     _roundRectOp->setRect(rect);
     
     SIZE searchIconSize = SIZE_Make(app.dp(16),app.dp(16));
-    _searchIconOp->setRect( RECT_Make(rect.origin.x+(rect.size.width-searchIconSize.width)/2,rect.origin.y+(rect.size.height-searchIconSize.height)/2, searchIconSize.width, searchIconSize.height));
+    _searchIconOp->setRect(RECT(rect.origin.x+(rect.size.width-searchIconSize.width)/2,rect.origin.y+(rect.size.height-searchIconSize.height)/2, searchIconSize.width, searchIconSize.height));
 }
 
 bool SearchBox::setFocused(bool focused) {
