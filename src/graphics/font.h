@@ -16,16 +16,18 @@ public:
     float _descent;
     float _leading;
 
-    // Gets a font at a particular size. If asset path is zero-length then the system font is used. If size
-    // is zero then 12 is the default.
-    FontBase(const string& name, float size);
     ~FontBase();
 
 protected:
+    // Gets a font at a particular size. If asset path is zero-length then
+    // system font is used. If size is zero then 12 is the default.
+    FontBase(const string& name, float size);
     virtual Glyph* createGlyph(char32_t ch, Atlas* atlas) = 0;
     
 public:
     Glyph* getGlyph(char32_t ch);
+    
+    static Font* get(const string& name, float size);
 };
 
 

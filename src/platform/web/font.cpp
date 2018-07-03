@@ -12,17 +12,9 @@ extern string base64_encode(const char* input, size_t len);
 
 static map<string,string> s_customFonts;
 
-static void setGlyphMetrics(Font* font, Glyph* glyph, int glyphWidth) {
-    glyph->bitmapWidth = ceilf(glyphWidth);
-    glyph->bitmapHeight = ceilf(font->_size);
-    glyph->advance.width = glyph->bitmapWidth+1; // todo!!!
-}
 
-
-Font::Font(const string& fontAssetPath, float size) : FontBase(fontAssetPath, size), _canvas(val::null()), _ctxt(val::null()) {
-    _canvas = val::global("document").call<val>("createElement", val("canvas"));
-    _canvas.set("width", _size);
-    _canvas.set("height", _size);
+Font::Font(const string& fontAssetPath, float size) : FontBase(fontAssetPath, size),
+    _fontHelper(val::null()) {
     string fontFamily = "sans-serif";
     if (fontAssetPath.length()) {
         auto it = s_customFonts.find(fontAssetPath);
@@ -49,50 +41,38 @@ Font::Font(const string& fontAssetPath, float size) : FontBase(fontAssetPath, si
             s_customFonts.insert(std::make_pair(fontAssetPath, fontFamily));
         }
     }
-    _ctxt = _canvas.call<val>("getContext", val("2d"));
-    char ach[32];
-    sprintf(ach, "%dpx %s", (int)_size, fontFamily.data());
-    _ctxt.set("font", val(string(ach)));
-    _ctxt.set("textBaseline", val(string("top")));
+    
+    _fontHelper = val::global("FontHelper").new_(val(_name), val(_size), val(fontFamily));
 }
     
 Glyph* Font::createGlyph(char32_t ch, Atlas* atlas) {
-    string str;
-    stringAppendCodepoint(str, ch);
-    val::global("GlobalObjectTracker").set(7, _ctxt);
+    
+    // Convert the character code to a Javascript string
+    val str = val::global("String").call<val>("fromCharCode", val((int)ch));
+    
+    // Measure the glyph in Javascript
+    val metrics = _fontHelper.call<val>("measure", str);
+    
+    // Create a glyph object
     Glyph* glyph = new Glyph(this, ch, 0);
-    EM_ASM_({
-        var ctxt = GlobalObjectTracker[7];
-        var jstr = UTF8ToString($2);
-        var textMetrics = ctxt.measureText(jstr);
-        Runtime.dynCall('viii', $3, [$0,$1,textMetrics.width]);
-    }, this, glyph, str.data(), setGlyphMetrics);
+    glyph->bitmapWidth = metrics["w"].as<int>();
+    glyph->bitmapHeight = metrics["h"].as<int>();
+    glyph->advance.width = glyph->bitmapWidth+1; // todo: fix this terrible hack
     
+    // Reserve a space in the atlas
     glyph->atlasNode = atlas->reserve(glyph->bitmapWidth, glyph->bitmapHeight, 1);
-    POINT pt = glyph->atlasNode->rect.origin;
+    
+    // Copy the pixels from the helper into the atlas
     Bitmap* bitmap = (Bitmap*)glyph->atlasNode->page->_bitmap._obj;
-    
-    EM_ASM_({
-        var ctxt = GlobalObjectTracker[7];
-        ctxt.clearRect(0,0,$1, $2);
-        ctxt.fillText(UTF8ToString($0), 0,0);
-    }, str.data(), glyph->bitmapWidth, glyph->bitmapHeight);
-    
     val targetBuff = val(typed_memory_view((size_t)bitmap->_pixelData.cb, (unsigned char*)bitmap->_pixelData.data));
-    val::global("GlobalObjectTracker").set(8, targetBuff);
-    EM_ASM_({
-        var ctxt = GlobalObjectTracker[7];
-        var targetBuff = GlobalObjectTracker[8];
-        var imgdata = ctxt.getImageData(0, 0, $2, $3);
-        var o = 0;
-        for (y=0 ; y<$3 ; y++) {
-            for (x=0 ; x<$2 ; x++) {
-                targetBuff[(y+$1)* $4 + $0+x] = imgdata.data[o+3]; // i.e. only copy alpha channel bytes
-                o+=4;
-            }
-        }
-    }, glyph->atlasNode->rect.origin.x, glyph->atlasNode->rect.origin.y, glyph->bitmapWidth, glyph->bitmapHeight, bitmap->_pixelData.stride);
-    
+    _fontHelper.call<void>("copyPixels",
+                           val(glyph->bitmapWidth),
+                           val(glyph->bitmapHeight),
+                           val(glyph->atlasNode->rect.origin.x),
+                           val(glyph->atlasNode->rect.origin.y),
+                           targetBuff,
+                           val(bitmap->_pixelData.stride));
+
     return glyph;
 }
 

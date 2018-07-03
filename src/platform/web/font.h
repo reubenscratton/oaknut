@@ -7,8 +7,7 @@
 
 class Font : public FontBase {
 public:
-    val _canvas;
-    val _ctxt;
+    val _fontHelper;
     
     Font(const string& fontAssetPath, float size);
     

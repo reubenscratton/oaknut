@@ -7,6 +7,9 @@
 
 #include <oaknut.h>
 
+static ObjPtr<Atlas> atlas;
+static bool s_inited;
+static map<string, Font*> s_loadedFonts;
 
 
 FontBase::FontBase(const string& name, float size) {
@@ -15,13 +18,24 @@ FontBase::FontBase(const string& name, float size) {
 }
 
 FontBase::~FontBase() {
+    // TODO: remove from s_loadedFonts
 }
 
 
 
-static ObjPtr<Atlas> atlas;
 
-static bool s_inited;
+Font* FontBase::get(const string& name, float size) {
+    char ach[260];
+    sprintf(ach, "%f-%s", size, name.data());
+    string fkey(ach);
+    auto it = s_loadedFonts.find(fkey);
+    if (it != s_loadedFonts.end()) {
+        return it->second;
+    }
+    Font* font = new Font(name, size);
+    s_loadedFonts[fkey] = font;
+    return font;
+}
 
 
 Glyph* FontBase::getGlyph(char32_t ch) {

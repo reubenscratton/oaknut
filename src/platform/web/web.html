@@ -230,6 +230,82 @@ canvas2D = document.createElement('canvas').getContext("2d");
           //localStorage.setItem('beebState', 'test');
       }
 
+/** Text measuring **/
+function FontHelper(name, size, fontFamily) {
+    this.name = name;
+    this.size = size;
+    
+    this.canvas = document.createElement("canvas");
+    this.canvas.width = size * 2;
+    this.canvas.height = size * 2;
+    this.ctxt = this.canvas.getContext("2d");
+    this.ctxt.font = size + "px " + fontFamily;
+    this.ctxt.textBaseline = "top";
+
+    // Clever ascent/descent calc is from https://stackoverflow.com/a/25355178/440602
+    this.text = document.createElement("span");
+    this.text.style.fontFamily = fontFamily;
+    this.text.style.fontSize = size + "px";
+    this.block = document.createElement("div");
+    this.block.style.display = "inline-block";
+    this.block.style.width = "1px";
+    this.block.style.height = "0px";
+    this.div = document.createElement("div");
+    this.div.appendChild(this.text);
+    this.div.appendChild(this.block);
+    this.div.style.height = "0px";
+    this.div.style.overflow = "hidden";
+}
+
+function objOff(obj) {
+    var currleft = 0;
+    var currtop = 0;
+    if( obj.offsetParent )
+    { do { currleft += obj.offsetLeft; currtop += obj.offsetTop; }
+        while( obj = obj.offsetParent ); }
+    else { currleft += obj.offsetLeft; currtop += obj.offsetTop; }
+    return [currleft,currtop];
+}
+
+
+FontHelper.prototype.measure = function(str) {
+    this.text.innerHTML = str;
+    document.body.appendChild(this.div);
+    this.block.style.verticalAlign = "baseline";
+    var bp = objOff(this.block);
+    var tp = objOff(this.text);
+    var tascent = bp[1] - tp[1];
+    this.block.style.verticalAlign = "bottom";
+    bp = objOff(this.block);
+    tp = objOff(this.text);
+    var height = bp[1] - tp[1];
+    var tdescent = height - tascent;
+    document.body.removeChild(this.div);
+    
+    var width = this.ctxt.measureText(str).width;
+    this.ctxt.clearRect(0, 0, width, height);
+    this.ctxt.fillText(str, 0,0);
+
+    return {
+        w: width,
+        h: height,
+        a: tascent,
+        d: tdescent
+    };
+}
+
+FontHelper.prototype.copyPixels = function(width, height, oX, oY, targetBuff, stride) {
+    var imgdata = this.ctxt.getImageData(0, 0, width, height);
+    var o = 0;
+    for (y=0 ; y<height ; y++) {
+        for (x=0 ; x<width ; x++) {
+            targetBuff[(y+oY)* stride + oX+x] = imgdata.data[o+3]; // i.e. only copy alpha channel bytes
+            o+=4;
+        }
+    }
+}
+
+
 
     </script>
     {{{ SCRIPT }}}

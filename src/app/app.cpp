@@ -52,21 +52,12 @@ void App::loadStyleAsset(const string& assetPath) {
 }
 
 
-static map<string, Font*> s_loadedFonts;
 
 
 Font* App::getStyleFont(const string &key) {
     string fontName = getStyleString(key + ".font-name", "");
     float fontSize = getStyleFloat(key + ".font-size");
-    char ach[260];
-    sprintf(ach, "%f-%s", fontSize, fontName.data());
-    string fkey(ach);
-    auto it = s_loadedFonts.find(fkey);
-    if (it != s_loadedFonts.end()) {
-        return it->second;
-    }
-    Font* font = new Font(fontName, fontSize);
-    s_loadedFonts[fkey] = font;
+    Font* font = Font::get(fontName, fontSize);
     return font;
 }
 

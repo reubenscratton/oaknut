@@ -42,7 +42,7 @@ DECLARE_DYNCREATE(Label);
 Label::Label() : View() {
     string defaultFontName = app.getStyleString("font-name", "");
     float defaultFontSize = app.getStyleFloat("font-size");
-    _textRenderer.setDefaultFont(new Font(defaultFontName, defaultFontSize));
+    _textRenderer.setDefaultFont(Font::get(defaultFontName, defaultFontSize));
     _textRenderer.setDefaultColour(0xFF000000);
     _textRenderer.setGravity(_gravity);
 }
@@ -52,11 +52,11 @@ Label::~Label() {
 
 bool Label::applyStyleValue(const string& name, StyleValue* value) {
     if (name=="font-name") {
-        setFont(new Font(value->str, _textRenderer.getDefaultFont()->_size));
+        setFont(Font::get(value->str, _textRenderer.getDefaultFont()->_size));
         return true;
     }
     if (name=="font-size") {
-        setFont(new Font(_textRenderer.getDefaultFont()->_name, value->getAsFloat()));
+        setFont(Font::get(_textRenderer.getDefaultFont()->_name, value->getAsFloat()));
         return true;
     }
     if (name=="forecolour") {
@@ -217,7 +217,7 @@ void Label::setStyle(string styleName) {
     string fontName = app.getStyleString(styleName + ".font-name");
     float fontSize = app.getStyleFloat(styleName + ".font-size");
     if (fontName.size() && fontSize) {
-        setFont(new Font(fontName, fontSize));
+        setFont(Font::get(fontName, fontSize));
     }
     COLOUR textColour = app.getStyleColour(styleName + ".forecolour");
     if (textColour) {
