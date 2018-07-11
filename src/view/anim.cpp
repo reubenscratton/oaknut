@@ -75,7 +75,7 @@ void Animation::unpause() {
 }
 
 
-bool Animation::tick(long now) {
+bool Animation::tick(TIMESTAMP now) {
 	float elapsed = now - (_timeStarted + _delay);
 	if (elapsed<0) { // not started yet
 		return true;

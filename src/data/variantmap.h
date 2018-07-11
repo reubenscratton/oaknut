@@ -53,6 +53,7 @@ public:
     virtual bool readSelfFromStream(Stream* stream);
     virtual bool writeSelfToStream(Stream* stream) const;
 
+    friend class Variant;
 protected:
     map<string, Variant> _map;
     

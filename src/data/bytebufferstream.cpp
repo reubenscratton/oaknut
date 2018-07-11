@@ -12,6 +12,8 @@ ByteBufferStream::ByteBufferStream() {
 }
 ByteBufferStream::ByteBufferStream(int cb) : _data(cb) {
 }
+ByteBufferStream::ByteBufferStream(ByteBuffer* data) : _data(data->data, data->cb, false) {
+}
 
 
 bool ByteBufferStream::hasMoreToRead() {

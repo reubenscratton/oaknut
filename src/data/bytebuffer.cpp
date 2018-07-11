@@ -11,29 +11,38 @@
 ByteBuffer::ByteBuffer() {
     data = nullptr;
     cb = 0;
+    _owns = true;
 }
 ByteBuffer::ByteBuffer(size_t cb) {
     this->cb = cb;
     data = (uint8_t*)malloc(cb);
+    _owns = true;
 }
-ByteBuffer::ByteBuffer(uint8_t* data, size_t cb) {
+ByteBuffer::ByteBuffer(uint8_t* data, size_t cb, bool copy, bool owns) {
     this->cb = cb;
-    this->data = (uint8_t*)malloc(cb);
-    memcpy(this->data, data, cb);
+    if (copy) {
+        this->data = (uint8_t*)malloc(cb);
+        memcpy(this->data, data, cb);
+    } else {
+        this->data =  data;
+    }
+    _owns = owns;
 }
 ByteBuffer::ByteBuffer(const ByteBuffer& other) {
     cb = other.cb;
     data = (uint8_t*)malloc(cb);
     memcpy(data, other.data, cb);
+    _owns = true;
 }
 ByteBuffer::ByteBuffer(const string& str) {
     cb = str.length();
     data = (uint8_t*)malloc(cb);
     memcpy(data, str.data(), cb);
+    _owns = true;
 }
 
 ByteBuffer::~ByteBuffer() {
-    if (data) {
+    if (_owns && data) {
         free(data);
     }
 }

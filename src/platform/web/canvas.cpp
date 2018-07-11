@@ -7,7 +7,7 @@
 #if PLATFORM_WEB
 
 #include <oaknut.h>
-
+#include "canvas.h"
 
 
 /**
@@ -72,145 +72,137 @@ public:
     vector<PathElement*> _pathElements;
 };
 
-class WebCanvas : public Canvas, public Bitmap {
-public:
-    val _canvas;
-    val _ctxt;
-    float _strokeWidth;
-    COLOUR _strokeColour;
-    COLOUR _fillColour;
-    bool _hasChanged;
-    AffineTransform _transform;
 
-    
-    WebCanvas() : _canvas(val::null()), _ctxt(val::null()) {
-        _format = BITMAPFORMAT_RGBA32;
-        _canvas = val::global("document").call<val>("createElement", val("canvas"));
-    }
+WebCanvas::WebCanvas() : _canvas(val::null()), _ctxt(val::null()) {
+    _canvas = val::global("document").call<val>("createElement", val("canvas"));
+    _bitmap = new Bitmap(this);
+}
 
-    Bitmap* getBitmap() {
-        return this; // for web at least, the canvas *is* a kind of bitmap...
-    }
+Bitmap* WebCanvas::getBitmap() {
+    return _bitmap;
+}
 
-    void resize(int width, int height) {
-        _width = width;
-        _height = height;
-        _canvas.set("width", width);
-        _canvas.set("height", height);
-        _ctxt = _canvas.call<val>("getContext", val("2d"));
-        _hasChanged = true;
-    }
-    void clear(COLOUR colour) {
-        _hasChanged = true;
+void WebCanvas::resize(int width, int height) {
+    _bitmap->_width = width;
+    _bitmap->_height = height;
+    _canvas.set("width", width);
+    _canvas.set("height", height);
+    _ctxt = _canvas.call<val>("getContext", val("2d"));
+    _hasChanged = true;
+}
+void WebCanvas::clear(COLOUR colour) {
+    _hasChanged = true;
 
-    }
-    void setStrokeWidth(float strokeWidth) {
-        _strokeWidth = strokeWidth;
-    }
-    void setStrokeColour(COLOUR colour) {
-        _strokeColour = colour;
-    }
-    void setFillColour(COLOUR colour) {
-        _fillColour = colour;
-    }
-    string cssColourStr(COLOUR colour) {
-        char ach[16];
-        // CSS ordering of 32-bit hex string is RGBA
-        colour = ((colour&0xFF000000)>>24) // i.e. move A to least significant byte
-               | ((colour&0xFF0000)<<8)
-               | ((colour&0xFF00)<<8)
-               | ((colour&0xFF)<<8);
-        sprintf(ach, "#%08X", colour);
-        return string(ach);
-    }
-    void setAffineTransform(AffineTransform* t) {
-        _transform = t ? (*t) : AffineTransform();
-        _hasChanged = true;
-    }
-    void drawRect(RECT rect) {
-        _ctxt.call<void>("fillRect", val(rect.left()), val(rect.top()), val(rect.size.width), val(rect.size.height));
-        if (_strokeWidth > 0) {
-            _ctxt.set("lineWidth", val(_strokeWidth));
-            _ctxt.set("strokeStyle", val(cssColourStr(_strokeColour)));
-            _ctxt.call<void>("strokeRect", val(rect.left()), val(rect.top()), val(rect.size.width), val(rect.size.height));
-        }
-        _hasChanged = true;
-    }
-    void drawOval(RECT rect) {
-        _ctxt.call<void>("save");
-        _ctxt.call<void>("beginPath");
-        _ctxt.call<void>("ellipse", val(rect.midX()), val(rect.midY()), val(rect.size.width/2), val(rect.size.height/2), val(0), val(0),val(2*M_PI));
+}
+void WebCanvas::setStrokeWidth(float strokeWidth) {
+    _strokeWidth = strokeWidth;
+}
+void WebCanvas::setStrokeColour(COLOUR colour) {
+    _strokeColour = colour;
+}
+void WebCanvas::setFillColour(COLOUR colour) {
+    _fillColour = colour;
+}
+string cssColourStr(COLOUR colour) {
+    char ach[16];
+    // CSS ordering of 32-bit hex string is RGBA
+    colour = ((colour&0xFF000000)>>24) // i.e. move A to least significant byte
+           | ((colour&0xFF0000)<<8)
+           | ((colour&0xFF00)<<8)
+           | ((colour&0xFF)<<8);
+    sprintf(ach, "#%08X", colour);
+    return string(ach);
+}
+void WebCanvas::setAffineTransform(AffineTransform* t) {
+    _transform = t ? (*t) : AffineTransform();
+    _hasChanged = true;
+}
+void WebCanvas::drawRect(RECT rect) {
+    _ctxt.call<void>("fillRect", val(rect.left()), val(rect.top()), val(rect.size.width), val(rect.size.height));
+    if (_strokeWidth > 0) {
         _ctxt.set("lineWidth", val(_strokeWidth));
         _ctxt.set("strokeStyle", val(cssColourStr(_strokeColour)));
-        _ctxt.call<void>("stroke");
-        _ctxt.call<void>("restore");
-        _hasChanged = true;
+        _ctxt.call<void>("strokeRect", val(rect.left()), val(rect.top()), val(rect.size.width), val(rect.size.height));
     }
-    void drawPath(Path* apath) {
-        WebPath* path = (WebPath*)apath;
-        _ctxt.call<void>("save");
-        _ctxt.call<void>("beginPath");
-        _ctxt.set("lineCap", val("round"));
-        _ctxt.set("lineJoin", val("round"));
-        _ctxt.set("lineWidth", val(_strokeWidth));
-        _ctxt.set("strokeStyle", val(cssColourStr(_strokeColour)));
-        for (auto it : path->_pathElements) {
-            switch (it->type) {
-                case TypeMoveTo: {
-                    PathElementMoveTo* moveTo = (PathElementMoveTo*)it;
-                    POINT pt =  _transform.applyToPoint(moveTo->pt);
-                    _ctxt.call<void>("moveTo", val(pt.x), val(pt.y));
-                }
-                    break;
-                case TypeLineTo: {
-                    PathElementLineTo* lineTo = (PathElementLineTo*)it;
-                    POINT pt =  _transform.applyToPoint(lineTo->pt);
-                    _ctxt.call<void>("lineTo", val(pt.x), val(pt.y));
-                }                    break;
-                case TypeCurveTo: {
-                    PathElementCurveTo* curveTo = (PathElementCurveTo*)it;
-                    POINT ctrl1 =  _transform.applyToPoint(curveTo->ctrl1);
-                    POINT ctrl2 =  _transform.applyToPoint(curveTo->ctrl2);
-                    POINT pt =  _transform.applyToPoint(curveTo->pt);
-                    _ctxt.call<void>("bezierCurveTo", val(ctrl1.x), val(ctrl1.y), val(ctrl2.x), val(ctrl2.y), val(pt.x), val(pt.y));
-
-                }
-                    break;
+    _hasChanged = true;
+}
+void WebCanvas::drawOval(RECT rect) {
+    _ctxt.call<void>("save");
+    _ctxt.call<void>("beginPath");
+    _ctxt.call<void>("ellipse", val(rect.midX()), val(rect.midY()), val(rect.size.width/2), val(rect.size.height/2), val(0), val(0),val(2*M_PI));
+    _ctxt.set("lineWidth", val(_strokeWidth));
+    _ctxt.set("strokeStyle", val(cssColourStr(_strokeColour)));
+    _ctxt.call<void>("stroke");
+    _ctxt.call<void>("restore");
+    _hasChanged = true;
+}
+void WebCanvas::drawPath(Path* apath) {
+    WebPath* path = (WebPath*)apath;
+    _ctxt.call<void>("save");
+    _ctxt.call<void>("beginPath");
+    _ctxt.set("lineCap", val("round"));
+    _ctxt.set("lineJoin", val("round"));
+    _ctxt.set("lineWidth", val(_strokeWidth));
+    _ctxt.set("strokeStyle", val(cssColourStr(_strokeColour)));
+    for (auto it : path->_pathElements) {
+        switch (it->type) {
+            case TypeMoveTo: {
+                PathElementMoveTo* moveTo = (PathElementMoveTo*)it;
+                POINT pt =  _transform.applyToPoint(moveTo->pt);
+                _ctxt.call<void>("moveTo", val(pt.x), val(pt.y));
             }
-        }
-        _ctxt.call<void>("stroke");
-        _ctxt.call<void>("restore");
-        _hasChanged = true;
-    }
+                break;
+            case TypeLineTo: {
+                PathElementLineTo* lineTo = (PathElementLineTo*)it;
+                POINT pt =  _transform.applyToPoint(lineTo->pt);
+                _ctxt.call<void>("lineTo", val(pt.x), val(pt.y));
+            }                    break;
+            case TypeCurveTo: {
+                PathElementCurveTo* curveTo = (PathElementCurveTo*)it;
+                POINT ctrl1 =  _transform.applyToPoint(curveTo->ctrl1);
+                POINT ctrl2 =  _transform.applyToPoint(curveTo->ctrl2);
+                POINT pt =  _transform.applyToPoint(curveTo->pt);
+                _ctxt.call<void>("bezierCurveTo", val(ctrl1.x), val(ctrl1.y), val(ctrl2.x), val(ctrl2.y), val(pt.x), val(pt.y));
 
-    virtual void drawBitmap(Bitmap* bitmap, const RECT& rectSrc, const RECT& rectDst) {
-        _ctxt.call<void>("drawImage", bitmap->_img,
-                         val(rectSrc.origin.x), val(rectSrc.origin.y), val(rectSrc.size.width), val(rectSrc.size.height),
-                         val(rectDst.origin.x), val(rectDst.origin.y), val(rectDst.size.width), val(rectDst.size.height));
-    }
-
-    Path* createPath() {
-        return new WebPath();
-    }
-
-    // Bitmap API
-    virtual void lock(PIXELDATA* pixelData, bool forWriting) {
-        assert(0); // Canvas should never be locked, you draw to them with the canvas API!
-    }
-    virtual void unlock(PIXELDATA* pixelData, bool pixelsChanged) {
-        assert(0);
-    }
-    virtual void bind() {
-        Bitmap::bind();
-        if (_hasChanged) {
-            val gl = val::global("gl");
-            gl.call<void>("texImage2D", GL_TEXTURE_2D, 0, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, _canvas);
-            _hasChanged = false;
+            }
+                break;
         }
     }
+    _ctxt.call<void>("stroke");
+    _ctxt.call<void>("restore");
+    _hasChanged = true;
+}
 
+void WebCanvas::drawBitmap(Bitmap* bitmap, const RECT& rectSrc, const RECT& rectDst) {
+    
+    // Get the source JS image. If there is no JS source (i.e. bitmap only exists
+    // in the C++ heap) then a temporary JS Canvas must be created for it
+    val sourceImage = bitmap->_img;
+    if (sourceImage.isNull()) {
+        if (bitmap->_canvas) {
+            sourceImage = bitmap->_canvas->_canvas;
+        } else {
+            val canvas = val::global("document").call<val>("createElement", val("canvas"));
+            canvas.set("width", val(bitmap->_width));
+            canvas.set("height", val(bitmap->_height));
+            val ctxt = canvas.call<val>("getContext", val("2d"));
+            val buff = val(typed_memory_view((size_t)bitmap->_pixelData.cb, (unsigned char*)bitmap->_pixelData.data));
+            val imgdata = ctxt.call<val>("createImageData", val(bitmap->_width), val(bitmap->_height));
+            val imgdatabuff = imgdata["data"];
+            imgdatabuff.call<void>("set", buff);
+            ctxt.call<void>("putImageData", imgdata, val(0), val(0));
+            sourceImage = canvas;
+        }
+    }
+    
+    _ctxt.call<void>("drawImage", sourceImage,
+         val(rectSrc.origin.x), val(rectSrc.origin.y), val(rectSrc.size.width), val(rectSrc.size.height),
+         val(rectDst.origin.x), val(rectDst.origin.y), val(rectDst.size.width), val(rectDst.size.height));
+}
 
-};
+Path* WebCanvas::createPath() {
+    return new WebPath();
+}
 
 Canvas* Canvas::create() {
     return new WebCanvas();

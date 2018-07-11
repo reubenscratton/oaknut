@@ -155,69 +155,16 @@ View* App::layoutInflate(const string& assetPath) {
 
 
 
-/**
- Settings is implemented by a single LocalStore containing a single VariantMap
- */
-
-static LocalStore* s_localstore;
-static VariantMap s_userdefaults;
 
 
-static void ensureLoaded() {
-    if (!s_localstore) {
-        s_localstore = LocalStore::create("_userdefaults", "unused");
-    }
-    if (s_localstore->moveFirst()) {
-        s_localstore->readAndAdvance(s_userdefaults);
-    }
-    s_userdefaults.set("unused", 0); // set a primary key value although it's not used
 
-}
-
-
-int App::getIntSetting(const char *key, const int defaultValue) {
-    ensureLoaded();
-    if (s_userdefaults.hasValue(key)) {
-        return (int32_t)s_userdefaults.get(key);
-    }
-    return defaultValue;
-}
-
-
-void App::setIntSetting(const char* key, const int value) {
-    ensureLoaded();
-    s_userdefaults.set(key, value);
-}
-
-string App::getStringSetting(const char* key, const char* defaultValue) {
-    ensureLoaded();
-    if (s_userdefaults.hasValue(key)) {
-        return (string)s_userdefaults.get(key);
-    }
-    return defaultValue;
-}
-
-void App::setStringSetting(const char* key, const char* value) {
-    ensureLoaded();
-    s_userdefaults.set(key, value);
-}
-
-void App::saveSettings() {
-    //s_localstore->save();
-    /*FileStream stream(getUserDefaultsPath());
-     if (stream.openForWrite()) {
-     s_userdefaults->writeSelfToStream(&stream);
-     stream.close();
-     }*/
-}
-
-string App::friendlyTimeString(long timestamp) {
-    long now = currentMillis();
-    long age = now - timestamp;
-    long seconds = age / 1000;
-    long minutes = seconds / 60;
+string App::friendlyTimeString(TIMESTAMP timestamp) {
+    TIMESTAMP now = currentMillis();
+    int age = (int)(now - timestamp);
+    int seconds = age / 1000;
+    int minutes = seconds / 60;
     seconds = seconds % 60;
-    long hours = minutes / 60;
+    int hours = minutes / 60;
     minutes = minutes % 60;
     
     if (minutes<1) {

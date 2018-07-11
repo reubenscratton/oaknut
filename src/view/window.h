@@ -46,17 +46,17 @@ public:
     class MotionTracker {
     public:
         MotionTracker(int source);
-        void dispatchInputEvent(int event, long time, POINT pt, Window* window);
+        void dispatchInputEvent(int event, TIMESTAMP time, POINT pt, Window* window);
 
         int source;
         ObjPtr<class View>  touchedView;
-        long timeOfDownEvent;
+        TIMESTAMP timeOfDownEvent;
         POINT ptDown;
         int numClicks;
         bool isDragging;
         float dragDirection;
         POINT pastPts[NUM_PAST];
-        long pastTime[NUM_PAST];
+        TIMESTAMP pastTime[NUM_PAST];
         int pastIndex, pastCount;
         ObjPtr<Timer> multiclickTimer;
         ObjPtr<Timer> _longpressTimer;
@@ -84,7 +84,7 @@ public:
 	virtual void resizeSurface(int width, int height, float scale);
 	virtual void draw();
 	virtual void requestRedraw();
-	virtual void dispatchInputEvent(int event, int source, long time, int x, int y);
+	virtual void dispatchInputEvent(int event, int source, TIMESTAMP time, int x, int y);
 	virtual POINT offsetToView(View* view);
     
     virtual bool setFocusedView(View* view);

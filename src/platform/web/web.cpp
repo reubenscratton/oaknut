@@ -10,11 +10,10 @@
 #include "bitmap.h"
 
 
+static val getTimestamp = val::global("getTimestamp");
 
-long App::currentMillis() {
-    static val jsfn_getTimestamp = val::global("getTimestamp");
-    return jsfn_getTimestamp().as<int>();
-    //return (clock() * 1000) / CLOCKS_PER_SEC;
+TIMESTAMP App::currentMillis() {
+    return getTimestamp().as<TIMESTAMP>();
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -84,7 +83,7 @@ static void appMain() {
     app.main();
 }
 
-EMSCRIPTEN_BINDINGS(libbeeb) {
+EMSCRIPTEN_BINDINGS(oaknut) {
     emscripten::function("oak_setWindowSize", &oak_setWindowSize);
     emscripten::function("oak_userEvent", &oak_userEvent);
     emscripten::function("oak_main", &appMain);
@@ -122,11 +121,6 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-/*static void onDataXLoad(OnDataLoadCompleteDelegate* delegate, void* val) {
-    app.log("onDataLoad! %X", val);
-}*/
-
-
 ByteBuffer* App::loadAsset(const char* assetPath) {
     
     string str = "/assets/";
@@ -145,28 +139,9 @@ ByteBuffer* App::loadAsset(const char* assetPath) {
     size_t read = fread(data->data, 1, data->cb, (FILE*)asset);
     assert(read == data->cb);
     fclose(asset);
-    return data;
-    
+    return data;    
 }
 
-/*
-void oakLoadAppFile(const char* path, OnDataLoadCompleteDelegate delegate) {
-    EM_ASM_({
-        var onDataXLoad=$0;
-        var delegate=$1;
-        var val = localStorage.getItem(Pointer_stringify($2));
-        //alert('The item is ' + val);
-        Runtime.dynCall('vii', onDataXLoad, [delegate, val]);
-    }, onDataXLoad, &delegate, path);
-}
-
-void oakSaveAppFile(const char* path, ByteBuffer* data) {
-    EM_ASM_({
-        var subarray = HEAP8.subarray($1, $1+$2);
-        subarray = bytesToHex(subarray);
-        localStorage.setItem(Pointer_stringify($0), subarray);
-    }, path, data, cb);    
-}*/
 
 
 void App::keyboardShow(bool show) {

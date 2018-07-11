@@ -20,8 +20,8 @@ public:
 	Window* _window;
     list<ObjPtr<Animation>>::iterator _windowAnimationsListIterator;
     OnAnimationFinishedDelegate _onFinished;
-    long _timeStarted;
-    long _elapsedAtPause;
+    TIMESTAMP _timeStarted;
+    TIMESTAMP _elapsedAtPause;
     int _duration;
     int _delay;
     int _flags;
@@ -38,7 +38,7 @@ public:
     virtual void stop();
     virtual void pause();
     virtual void unpause();
-	virtual bool tick(long now);
+	virtual bool tick(TIMESTAMP now);
     virtual void apply(float val) = 0;
     
     static Animation* start(View* view, int duration, std::function<void(float)> callback, InterpolateFunc interpolater = linear);

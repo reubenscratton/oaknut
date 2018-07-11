@@ -34,25 +34,23 @@ public:
     static LocalStore* create(const string& name, const string& primaryKeyName);
     
     // Open & close methods.
-    virtual void open()=0;
+    virtual void open(std::function<void()> callback)=0;
     virtual void close()=0;
     virtual void flush()=0;
     
-    // Navigation
-    virtual int getCount()=0;
-    virtual bool moveFirst()=0;
-    virtual bool find(const Variant& primaryKeyVal)=0;
-
-    // Deserialise the current object (also advances record pointer)
-    virtual bool readAndAdvance(VariantMap& map)=0;
+    // Querying
+    virtual void getCount(std::function<void(int)> success)=0;
+    virtual void getAll(std::function<void(VariantMap*)> success)=0;
+    virtual void getOne(const Variant& primaryKeyVal, std::function<void(VariantMap*)> success)=0;
 
     // Update
-    virtual void remove(const Variant& primaryKeyVal)=0;
-    virtual void put(ISerializeToVariantMap* object)=0; // Insert a new record or replace an existing one
+    virtual void remove(const Variant& primaryKeyVal, std::function<void(void)> callback)=0;
+    virtual void put(ISerializeToVariantMap* object, std::function<void(void)> callback)=0; // Insert a new record or replace an existing one
     
 protected:
     LocalStore(const string& name, const string& primaryKeyName);
     
+    string _name;
     string _primaryKeyName;
     
 };

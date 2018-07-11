@@ -7,6 +7,7 @@
 #if PLATFORM_WEB
 
 #include "bitmap.h"
+#include "canvas.h"
 
 
 static int bytesPerPixelForFormat(int format) {
@@ -48,6 +49,13 @@ static int gltypeForFormat(int format) {
 Bitmap::Bitmap() : _img(val::null()), _buff(val::null()) {
 }
 
+Bitmap::Bitmap(WebCanvas* canvas) : _canvas(canvas),
+    _img(val::null()), _buff(val::null()) {
+        _format = BITMAPFORMAT_RGBA32;
+
+}
+
+
 // Writeable bitmap constructor, creates a 2D pixel array accessible to both javascript and C++
 Bitmap::Bitmap(int width, int height, int format) : BitmapBase(width, height, format), _img(val::null()), _buff(val::null()) {
     _pixelData.stride = width*bytesPerPixelForFormat(format);
@@ -62,6 +70,7 @@ Bitmap::Bitmap(val img, bool isPng)  : _img(img), _isPng(isPng), _buff(val::null
     _height = img["height"].as<int>();
     _format = BITMAPFORMAT_RGBA32;
 }
+
 Bitmap::~Bitmap() {
     if (_pixelData.data) {
         free(_pixelData.data);
@@ -69,7 +78,9 @@ Bitmap::~Bitmap() {
 }
 
 void Bitmap::lock(PIXELDATA* pixelData, bool forWriting) {
-    // If we have an Image then we have to create a Canvas, draw the Image to it, and extract the ImageData.
+    // If bitmap wraps an HTMLImageElement (i.e. image has been downloaded) then
+    // we have to convert it to a standard bitmap by creating an HTMLImageCanvas
+    // and drawing the HTMLImageElement to it, then extracting the ImageData.
     if (!_img.isNull()) {
         val canvas = val::global("document").call<val>("createElement", val("canvas"));
         canvas.set("width", val(_width));
@@ -86,7 +97,18 @@ void Bitmap::lock(PIXELDATA* pixelData, bool forWriting) {
         _buff.call<void>("set", imgdatabuff);
         _img = val::null();
     }
-    
+
+    // If bitmap belongs to a Canvas (i.e. is really the HTMLCanvasElement's ImageData)
+    if (_canvas) {
+        val imgdata = _canvas->_ctxt.call<val>("getImageData", val(0), val(0), val(_width), val(_height));
+        val imgdatabuff = imgdata["data"];
+        _pixelData.cb = imgdatabuff["length"].as<int>();
+        _pixelData.stride = _pixelData.cb / _height;
+        _pixelData.data = malloc(_pixelData.cb);
+        _buff = val(typed_memory_view((size_t)_pixelData.cb, (unsigned char*)_pixelData.data));
+        _buff.call<void>("set", imgdatabuff);
+    }
+
     if (!_pixelData.data) {
         app.warn("lock() called on bitmap with no data or image");
         return;
@@ -98,6 +120,14 @@ void Bitmap::lock(PIXELDATA* pixelData, bool forWriting) {
 }
 
 void Bitmap::unlock(PIXELDATA* pixelData, bool pixelsChanged) {
+    if (_canvas) {
+        if (pixelsChanged) {
+            app.warn("TODO: implement canvas bitmap writeback");
+            assert(0); // code needed here
+        }
+        free(_pixelData.data);
+        _pixelData.data = NULL;
+    }
     // NB: Nothing happens here. Once an image has been lock()d into heap memory
     // there's no real point copying back to Javascript-only memory and then copying all
     // over again on the next lock() call. Better (I think) to just keep the
@@ -114,6 +144,11 @@ void Bitmap::bind() {
         gl.call<void>("texImage2D", GL_TEXTURE_2D, 0, format, format, type, _img);
     } else if (!_buff.isNull()) {
         gl.call<void>("texImage2D", GL_TEXTURE_2D, 0, format, _width, _height, 0, format, type, _buff);
+    } else if (_canvas) {
+        if (_canvas->_hasChanged) {
+            gl.call<void>("texImage2D", GL_TEXTURE_2D, 0, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, _canvas->_canvas);
+            _canvas->_hasChanged = false;
+        }
     } else {
         app.log("bind() called on data-less bitmap");
     }
@@ -161,14 +196,24 @@ string base64_encode(const char* input, size_t len) {
 
 // ISerializable
 Bitmap::Bitmap(const VariantMap& map) : BitmapBase(map), _img(val::null()), _buff(val::null())  {
-    app.log("TODO! finish Bitmap serialization");
+    _pixelData.stride = _width*bytesPerPixelForFormat(_format);
+    _pixelData.cb = _pixelData.stride*_height;
+    _pixelData.data = malloc(_pixelData.cb);
+    _buff = val(typed_memory_view((size_t)_pixelData.cb, (unsigned char*)_pixelData.data));
+    const Variant& vbb = map["bb"];
+    if (vbb.type == Variant::BYTEBUFFER) {
+        ByteBuffer* bb = vbb.data;
+        PIXELDATA pixelData;
+        memcpy(_pixelData.data, bb->data, _pixelData.cb);
+    }
 }
 void Bitmap::writeSelfToVariantMap(VariantMap& map) {
     BitmapBase::writeSelfToVariantMap(map);
-    
     PIXELDATA pixelData;
     lock(&pixelData, false);
-    app.log("TODO! finish Bitmap serialization");
+    ObjPtr<ByteBuffer> bb = new ByteBuffer((uint8_t*)pixelData.data, pixelData.cb, false, false);
+    map.set("bb", Variant(bb));
+    unlock(&pixelData, false);
 }
 
 // Platform-specific
@@ -191,17 +236,15 @@ void BitmapBase::createFromData(const void* data, int cb, std::function<void(Bit
     Bitmap* bitmap = new Bitmap();
     bitmap->_tmp = callback;
     bitmap->_img = val::global("Image").new_();
-    val got = val::global("GlobalObjectTracker");
-    got.set(4, bitmap->_img);
+    int gotIndex = val::global("gotSet")(bitmap->_img).as<int>();
     EM_ASM_({
         var bitmap=$0;
-        var OnImageLoadedFromData=$2;
-        var img = GlobalObjectTracker[4];
+        var img = gotGet($3);
         img.onload = function() {
-            Runtime.dynCall('vi', OnImageLoadedFromData, [bitmap]);
+            Runtime.dynCall('vi', $2, [bitmap]);
         };
         img.src = Pointer_stringify($1);
-    }, bitmap, sstr.data(), onImageLoadedFromData);
+    }, bitmap, sstr.data(), onImageLoadedFromData, gotIndex);
 }
 
 #endif

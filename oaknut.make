@@ -16,6 +16,8 @@ endif
 # If no CONFIG specified, default to debug (and set DEBUG variable on)
 ifndef CONFIG
 CONFIG=debug
+endif
+ifneq (,$(findstring debug,$(CONFIG)))
 DEBUG:=1
 endif
 

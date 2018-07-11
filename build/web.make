@@ -7,6 +7,10 @@ HTML_FILE := $(OAKNUT_DIR)/src/platform/web/web.html
 OUTPUT_DIR := $(BUILD_DIR)/webroot
 OBJS:=$(OBJS:.o=.bc)
 
+OPTS+=$(if $(DEBUG),-O0 --profiling -s DEMANGLE_SUPPORT=1,-O3)
+ifeq ($(CONFIG),debug_asmjs)
+    OPTS+= -s WASM=0
+endif
 
 $(OBJ_DIR)%.bc : %
 $(OBJ_DIR)%.bc : % $(OBJ_DIR)%.dep
@@ -18,7 +22,6 @@ $(OBJ_DIR)%.bc : % $(OBJ_DIR)%.dep
 		$(CFLAGS) -DPLATFORM_WEB=1 -DEMSCRIPTEN $(OPTS) \
 		-I$(OAKNUT_DIR)/src \
 		-isystem $(EMSCRIPTEN_ROOT)/system/include \
-		$(if $(DEBUG),-O0 --profiling  -s DEMANGLE_SUPPORT=1,-O3) \
 		-s USE_PTHREADS=1 -s TOTAL_MEMORY=33554432 \
 		$< -o $@
 	@mv -f $(@:.bc=.Td) $(@:.bc=.dep) && touch $@

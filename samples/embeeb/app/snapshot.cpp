@@ -27,10 +27,6 @@ void Snapshot::writeSelfToVariantMap(VariantMap& v) {
     v["controllerId"] = _controllerId;
 }
 
-/*
-- (NSData*)data {
-	return [NSData dataWithContentsOfFile:[NSString stringWithFormat:@"%@/%@", s_dir, self.filename]];
-}*/
 
 void Snapshot::updateWithData(ByteBuffer* data, Bitmap* thumbnail, string controllerId) {
 	_timestamp = app.currentMillis();
@@ -38,14 +34,7 @@ void Snapshot::updateWithData(ByteBuffer* data, Bitmap* thumbnail, string contro
 	_controllerId = controllerId;
     _data = data;
 	
-	// Ensure the snapshots dir actually exists
-	/*[[NSFileManager defaultManager] createDirectoryAtPath:s_dir
-							  withIntermediateDirectories:YES
-											   attributes:nil
-													error:nil];
-	// Store the beeb data
-	[data writeToFile:[NSString stringWithFormat:@"%@/%@", s_dir, self.filename] atomically:YES];
-
+	/*
 	// Update the index file
 	[s_snapshots removeObject:self];
 	[s_snapshots insertObject:self atIndex:0];

@@ -45,12 +45,11 @@ void WebCamera::startPreview(CameraPreviewDelegate delegate) {
     _delegate = delegate;
     val gl = val::global("gl");
     _texture = gl.call<val>("createTexture");
-    val got = val::global("GlobalObjectTracker");
-    got.set(2, _texture);
+    int gotIndex = val::global("gotSet")(_texture);
     EM_ASM_({
         var webcam=$0;
         var onUpdate=$1;
-        var texture = GlobalObjectTracker[2];
+        var texture = gotGet($2);
 
         var video = document.createElement('video');
         video.autoplay = true;
@@ -89,7 +88,7 @@ void WebCamera::startPreview(CameraPreviewDelegate delegate) {
             log("Failed to open webcam: " + e);
         });
 
-    }, this, OnUpdate);
+    }, this, OnUpdate, gotIndex);
 }
 void WebCamera::stopPreview() {
     

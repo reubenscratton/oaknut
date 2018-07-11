@@ -82,6 +82,11 @@ public:
     virtual bool readSelfFromStream(class Stream* stream);
     virtual bool writeSelfToStream(Stream* stream) const;
     
+    // Javascript helpers
+#ifdef PLATFORM_WEB
+    val toJavascriptVal() const;
+#endif
+    
 private:
     inline void assign(const Variant& src);
     void setType(VariantType newType);

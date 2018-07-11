@@ -49,7 +49,7 @@ void ViewController::setView(View* view) {
 }
 
 
-View* ViewController::dispatchTouchEvent(int eventType, int finger, long time, POINT pt) {
+View* ViewController::dispatchTouchEvent(int eventType, int finger, TIMESTAMP time, POINT pt) {
 	return _view->dispatchInputEvent(eventType, finger, time, pt);
 }
 

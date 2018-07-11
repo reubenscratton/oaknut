@@ -8,8 +8,15 @@
 
 #import <oaknut.h>
 
+int App::getIntSetting(const char *key, const int defaultValue) {
+    id val = [[NSUserDefaults standardUserDefaults] objectForKey:[NSString stringWithCString:key encoding:NSUTF8StringEncoding]];
+    return val ? [val integerValue] : defaultValue;
+}
+void App::setIntSetting(const char* key, const int value) {
+    [[NSUserDefaults standardUserDefaults] setObject:@(value) forKey:[NSString stringWithCString:key encoding:NSUTF8StringEncoding]];
+}
 
-long App::currentMillis() {
+TIMESTAMP App::currentMillis() {
     //return CACurrentMediaTime()*1000;
     using namespace std::chrono;
     milliseconds ms = duration_cast< milliseconds >(system_clock::now().time_since_epoch());

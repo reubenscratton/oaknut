@@ -10,7 +10,7 @@ class Snapshot : public Object, public ISerializeToVariantMap {
 public:
     ObjPtr<DiskInfo> _diskInfo;
     string _label;
-    uint64_t _timestamp;
+    TIMESTAMP _timestamp;
     ObjPtr<Bitmap> _thumbnail;
     ObjPtr<ByteBuffer> _data;
     string _controllerId;

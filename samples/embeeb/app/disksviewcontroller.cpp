@@ -85,6 +85,5 @@ void DisksViewController::onWillResume() {
 void DisksViewController::onDidPause() {
 	app.setIntSetting("disksSeg", _segctrl->_selectedIndex);
 	app.setIntSetting("disksY", _listView->getContentOffset().y);
-	app.saveSettings();
 }
 

@@ -369,7 +369,7 @@ public:
     virtual int indexOfSubviewContainingPoint(POINT pt);
 protected:
     /**  \cond INTERNAL */
-    virtual View* dispatchInputEvent(int eventType, int finger, long time, POINT pt);
+    virtual View* dispatchInputEvent(int eventType, int finger, TIMESTAMP time, POINT pt);
     virtual bool onTouchEvent(int eventType, int finger, POINT pt);
 	
     POINT _ptDrag;

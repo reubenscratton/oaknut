@@ -66,7 +66,7 @@ Window::MotionTracker::MotionTracker(int source) {
     pastIndex = pastCount = 0;
 }
 
-void Window::MotionTracker::dispatchInputEvent(int event, long time, POINT pt, Window* window) {
+void Window::MotionTracker::dispatchInputEvent(int event, TIMESTAMP time, POINT pt, Window* window) {
     if (touchedView && !touchedView->_window) {
         touchedView = NULL; // avoid sending events to detached views
     }
@@ -164,7 +164,7 @@ void Window::MotionTracker::dispatchInputEvent(int event, long time, POINT pt, W
                 if (index < 0) index += NUM_PAST;
                 while (numPoints-- > 1) {
                     POINT ptFrom = pastPts[index];
-                    long timeFrom = pastTime[index];
+                    TIMESTAMP timeFrom = pastTime[index];
                     index = (index + 1) % NUM_PAST;
                     if (time - timeFrom >= 333) { // ignore historical points that are too old
                         continue;
@@ -192,7 +192,7 @@ void Window::MotionTracker::dispatchInputEvent(int event, long time, POINT pt, W
 
 }
 
-void Window::dispatchInputEvent(int event, int source, long time, int x, int y) {
+void Window::dispatchInputEvent(int event, int source, TIMESTAMP time, int x, int y) {
 	//app.log("Window::dispatchTouch %d %d %d %d", event, source, x, y);
     POINT pt = POINT_Make(x, y);
 
@@ -263,7 +263,7 @@ void Window::draw() {
 	incFrames();
 
     // Tick animations
-    long now = app.currentMillis();
+    TIMESTAMP now = app.currentMillis();
     auto it = _animations.begin();
     _animationsModified = false;
     while (it != _animations.end()) {

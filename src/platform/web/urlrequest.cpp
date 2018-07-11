@@ -49,15 +49,13 @@ public:
         
             // Create an Image
             _val = val::global("Image").new_();
-            val got = val::global("GlobalObjectTracker");
-            got.set(1, _val);
-            
+            int gotIndex = val::global("gotSet")(_val).as<int>();
             EM_ASM_ ({
                 var req=$0;
                 var url=Pointer_stringify($1);
                 var onImageLoad=$2;
                 var onError=$3;
-                var img = GlobalObjectTracker[1];
+                var img = gotGet($4);
                 img.onload = function() {
                     Runtime.dynCall('vi', onImageLoad, [req]);
                 };
@@ -66,21 +64,19 @@ public:
                 };
                 img.crossOrigin = 'Anonymous';
                 img.src = url;
-            }, this, _req->_url.data(), OnImageLoad, OnError);
+            }, this, _req->_url.data(), OnImageLoad, OnError, gotIndex);
         } else {
     
             // Create an XMLHttpRequest
             _val = val::global("XMLHttpRequest").new_();
-            val got = val::global("GlobalObjectTracker");
-            got.set(1, _val);
-
+            int gotIndex = val::global("gotSet")(_val).as<int>();
             EM_ASM_ ({
                 var req=$0;
                 var url=Pointer_stringify($1);
                 var onprogress=$2;
                 var onload=$3;
                 var onerror=$4;
-                var xhr = GlobalObjectTracker[1];
+                var xhr = gotGet($5);
                 xhr.open("GET", url, true);
                 xhr.responseType='arraybuffer';
                 
@@ -142,7 +138,7 @@ public:
                 
                 // send
                 xhr.send(null);
-            }, this, _req->_url.data(), OnProgress, OnDone, OnError);
+            }, this, _req->_url.data(), OnProgress, OnDone, OnError, gotIndex);
         }
     }
         

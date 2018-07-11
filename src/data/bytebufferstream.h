@@ -11,6 +11,7 @@ public:
     
     ByteBufferStream();
     ByteBufferStream(int cb);
+    ByteBufferStream(ByteBuffer* data);
     
     virtual bool hasMoreToRead();
     virtual bool writeBytes(size_t cb, const void* bytes);

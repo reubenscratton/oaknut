@@ -20,7 +20,7 @@ public:
     float _min;
     float _max;
     float _curr;
-    long _startTime;
+    TIMESTAMP _startTime;
     int _duration;
     float _coeff;
     float _velocity;

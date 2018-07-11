@@ -29,7 +29,7 @@ public:
     class ByteBuffer* loadAsset(const char* assetPath);
 
     /** Gets the current system time, in milliseconds */
-    long currentMillis(); // millis
+    TIMESTAMP currentMillis(); // millis
 
 
     /** @name Logging
@@ -124,13 +124,10 @@ public:
     /** Sets a named string setting. NB: call saveSettings() when finished updating settings. */
     void setStringSetting(const char* key, const char* value);
     
-    /** Commits any changes to settings to permanent storage */
-    void saveSettings();
-
     /**@}*/
 
     
-    string friendlyTimeString(long timestamp);
+    string friendlyTimeString(TIMESTAMP timestamp);
     
 protected:
     StyleMap _styles;

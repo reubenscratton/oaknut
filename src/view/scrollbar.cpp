@@ -204,7 +204,7 @@ void ScrollInfo::flingCancel() {
 }
 
 float ScrollInfo::flingUpdate() {
-    int timePassed = (int)(app.currentMillis() - _fling->_startTime);
+    TIMESTAMP timePassed = (app.currentMillis() - _fling->_startTime);
     float retval;
     if (timePassed < _fling->_duration) {
         _fling->update(timePassed / 1000.0f);

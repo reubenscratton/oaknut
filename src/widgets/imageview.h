@@ -12,7 +12,7 @@ public:
     ObjPtr<TextureRenderOp> _renderOp;
     ObjPtr<AtlasNode> _atlasNode;
 	bool _errorDisplay;
-	long _startLoadTime;
+	TIMESTAMP _startLoadTime;
 	bool _useFadeEffect;
     bool _useSharedTexture;
     SIZE _sharedTextureSize;

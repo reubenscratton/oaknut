@@ -181,24 +181,41 @@ bool Variant::writeSelfToStream(Stream* stream) const {
 }
 
 
-/*operator int32_t() const { assert(type==INT32); return i32; };
-operator uint32_t() const { assert(type==UINT32); return u32; };
-int getInt(const string& key) const {
-    auto val = _map.find(key);
-    if (val != _map.end()) {
-        switch (val->second.type) {
-            case Variant::INT8: return val->second.i8;
-            case Variant::INT16: return val->second.i16;
-            case Variant::INT32: return val->second.i32;
-            case Variant::INT64: app.warn("Possible data loss truncating int64 to int");
-            return (int)val->second.i64;
-            case Variant::UINT8: return val->second.u8;
-            case Variant::UINT16: return val->second.u16;
-            case Variant::UINT32: return val->second.u32;
-            case Variant::UINT64: app.warn("Possible data loss truncating uint64 to int");
-            return (int)val->second.u64;
-            default: break;
+#ifdef PLATFORM_WEB
+val Variant::toJavascriptVal() const {
+    switch (type) {
+        case EMPTY: return val::undefined();
+        case INT8: return val(i8);
+        case INT16: return val(i16);
+        case INT32: return val(i32);
+        case INT64: {
+            if (i64 & 0x7FC0000000000000LL) app.warn("i64 too big for JS Number");
+            return val((double)i64);
+        }
+        case UINT8: return val(u8);
+        case UINT16: return val(u16);
+        case UINT32: return val(u32);
+        case UINT64: {
+            if (u64 & 0xFFC0000000000000ULL) app.warn("u64 too big for JS Number");
+            return val((double)u64);
+        }
+        case FLOAT32: return val(f);
+        case FLOAT64: return val(d);
+        case STRING: return str ? val(str->data()) : val::null();
+        case BYTEBUFFER: {
+            
+        }
+        case MAP: {
+            if (!map) {
+                return val::null();
+            }
+            val obj = val::global("Object").new_();
+            for (auto it : map->_map) {
+                obj.set(it.first, it.second.toJavascriptVal());
+            }
+            return obj;
         }
     }
-    return 0;
-}*/
+}
+#endif
+

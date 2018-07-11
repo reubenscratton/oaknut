@@ -275,11 +275,10 @@ void App::log(char const* fmt, ...) {
 }
 
 
-long App::currentMillis() {
+TIMESTAMP App::currentMillis() {
     timespec t;
     clock_gettime(CLOCK_REALTIME, &t);
-    long l = t.tv_sec*1000 + (t.tv_nsec / 1000000);
-    //emmaLog("time=%ld\n", l);
+    TIMESTAMP l = t.tv_sec*1000 + (t.tv_nsec / 1000000);
     return l;
 }
 

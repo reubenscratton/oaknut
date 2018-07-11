@@ -6,16 +6,20 @@
 //
 
 /**
- A simple wrapper for a contiguous array of bytes, analogous to NSData on iOS or byte[] in Java.
+ * @ingroup data_group
+ * @class ByteBuffer
+ * @brief Simple wrapper for a refcounted contiguous array of bytes, analogous
+ *        to NSData on iOS or byte[] in Java.
  */
 class ByteBuffer : public Object, public ISerializable {
 public:
     uint8_t* data;
     size_t cb;
+    bool _owns;
     
     ByteBuffer();
     ByteBuffer(size_t cb);
-    ByteBuffer(uint8_t* data, size_t cb);
+    ByteBuffer(uint8_t* data, size_t cb, bool copy=true, bool owns=true);
     ByteBuffer(const ByteBuffer& data);
     ByteBuffer(const string& str);
     ~ByteBuffer();

@@ -7,7 +7,7 @@
 class SnapshotsAdapter : public SimpleListAdapter {
 public:
     SnapshotsAdapter(LocalStore* snapshotStore) : SimpleListAdapter("layout/snapshot_listitem.res") {
-        _snapshotStore = snapshotStore;
+        _store = snapshotStore;
         _itemViewBindFunc = [=](View* view, LISTINDEX index, Object* item) {
             Snapshot* snapshot = (Snapshot*)item;
             ImageView* imageView = (ImageView*)view->findViewById("image");
@@ -22,18 +22,27 @@ public:
     
     void reload() {
         _items.clear();
-        _snapshotStore->moveFirst();
-        VariantMap map;
-        while (_snapshotStore->readAndAdvance(map)) {
-            Snapshot* snapshot = new Snapshot(map);
-            _items.push_back(snapshot);
-        }
-        if (_adapterView) {
-            _adapterView->reload();
-        }
+        _store->getAll([=] (VariantMap* value) {
+            if (value) {
+                Snapshot* snapshot = new Snapshot(*value);
+                _items.push_back(snapshot);
+            } else {
+                if (_adapterView) {
+                    _adapterView->reload();
+                }
+            }
+        });
     }
 
-    LocalStore* _snapshotStore;
+    void deleteItem(LISTINDEX index) {
+        int realIndex = listIndexToRealIndex(index);
+        Snapshot* snapshot = (Snapshot*)_items[realIndex]._obj;
+        _store->remove(Variant(snapshot->_timestamp), [=]() {
+            SimpleListAdapter::deleteItem(index);
+        });
+    }
+
+    LocalStore* _store;
 };
 
 
@@ -43,12 +52,12 @@ SnapshotsViewController::SnapshotsViewController(Beeb* beeb, BeebView* beebView,
     _beeb = beeb;
     _beebView = beebView;
     _diskInfo = diskInfo;
-    
+
     // Root view
     View* view = new View();
     view->setBackgroundColour(0xfff8f8f8);
     setView(view);
-    
+
     // Navbar
     _navigationItem->setTitle("Snapshots");
     _navigationItem->addLeftButton(NavigationItem::createIconButton("images/back.png", [&] (View*) { onBackButtonClicked(); }));
@@ -64,7 +73,7 @@ SnapshotsViewController::SnapshotsViewController(Beeb* beeb, BeebView* beebView,
         //            position:CSToastPositionBottom];
 
     }));
-    
+
     // Listview
     _listView = new ListView();
     _listView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::FillParent());
@@ -80,7 +89,7 @@ SnapshotsViewController::SnapshotsViewController(Beeb* beeb, BeebView* beebView,
         _listView->startEditing(this);
     };
     view->addSubview(_listView);
-    
+
     /*Button* createButton = new Button();
     createButton->setMeasureSpecs(MEASURESPEC_FillParent, MEASURESPEC_Abs(app.dp(72)));
     createButton->setBackgroundColour(0xFF3083FB);
@@ -98,11 +107,12 @@ SnapshotsViewController::SnapshotsViewController(Beeb* beeb, BeebView* beebView,
      */
 
     _snapshotStore = LocalStore::create("snapshots", "timestamp");
-    _snapshotStore->open();
+    _snapshotStore->open([=]() {
+        SnapshotsAdapter* adapter = new SnapshotsAdapter(_snapshotStore);
+        _listView->setAdapter(adapter);
+    });
 
 
-    SnapshotsAdapter* adapter = new SnapshotsAdapter(_snapshotStore);
-    _listView->setAdapter(adapter);
 }
 
 uint32_t SnapshotsViewController::saveSnapshot(Snapshot* snapshot) {
@@ -119,12 +129,12 @@ uint32_t SnapshotsViewController::saveSnapshot(Snapshot* snapshot) {
     uint32_t cb = (uint32_t)(_beeb->serialize(true, data->data) - data->data);
     snapshot->_diskInfo = _diskInfo;
     snapshot->updateWithData(data, canvas->getBitmap(), _controllerId);
-    
-    _snapshotStore->put(snapshot);
-    _snapshotStore->flush();
-    
-    SnapshotsAdapter* adapter = (SnapshotsAdapter*)(_listView->_adapter);
-    adapter->reload();
+
+    _snapshotStore->put(snapshot, [=]() {
+        _snapshotStore->flush();
+        SnapshotsAdapter* adapter = (SnapshotsAdapter*)(_listView->_adapter);
+        adapter->reload();
+    });
     //updateEmptyUx();
     return (uint32_t)cb;
 }

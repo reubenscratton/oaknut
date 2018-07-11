@@ -68,6 +68,13 @@ using namespace std;
 #define __xincstr(x) #x
 #define __incstr(x) __xincstr(x)
 
+// Timestamp type is double in JS and uint64_t everywhere else
+#ifdef PLATFORM_WEB
+typedef double TIMESTAMP;
+#else
+typedef uint64_t TIMESTAMP;
+#endif
+
 // Include platform headers
 #include __incstr(platform/PLATFORM/platform.h)
 

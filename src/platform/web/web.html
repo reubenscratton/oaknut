@@ -5,8 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="viewport" content="width=device-width,height=device-height,user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
-    <title>Oaknut Demo</title>
-
+    <title>Oaknut App</title>
     <style>
 
 html, body {
@@ -72,16 +71,8 @@ html, body {
 
 
 function log(text) {
-//	console.log(text);
-    //var messgeToPost = {'ButtonId':'clickMeButton'};
     if (window.webkit) window.webkit.messageHandlers.buttonClicked.postMessage(text);
     else console.log(text);
-/*var xhttp = new XMLHttpRequest();
-	//xhttp.open("POST", "print", true);
-    //xhttp.setRequestHeader("Content-type", "text/plain");
-    xhttp.open("GET", "print", "false");
-    xhttp.setRequestHeader("xprint", text);
-	xhttp.send(text);*/
 }
 
 
@@ -89,7 +80,7 @@ function onresize() {
     var sc = document.getElementById('screenContainer');
     var s = document.getElementById('screen');
     var scale = window.devicePixelRatio || 1;
-	if (scale == 3) scale=2; // 6+ has too many pixels
+	//if (scale == 3) scale=2; // 6+ has too many pixels
     s.width = sc.clientWidth * scale;
     s.height = sc.clientHeight * scale;
     Module.oak_setWindowSize(s.width, s.height, scale);
@@ -162,42 +153,48 @@ window.ontouchend = window.ontouchcancel = function(e) {
 	}
 };
 
-// Hex<->String conversion
-function hexToBytes(hex) {
-	if (hex == null) return [];
-    for (var bytes = [], c = 0; c < hex.length; c += 2)
-    bytes.push(parseInt(hex.substr(c, 2), 16));
-    return bytes;
-}
-function bytesToHex(bytes) {
-    for (var hex = [], i = 0; i < bytes.length; i++) {
-        hex.push((bytes[i] >>> 4).toString(16));
-        hex.push((bytes[i] & 0xF).toString(16));
-    }
-    return hex.join("");
-}
 
 function updateFps(fps) {
 	var fpsDiv = document.getElementById('fps');
 	fpsDiv.innerHTML = '' + fps + ' fps';
 }
 
+function debugBreak() {
+    log("debugBreak!");
+}
 /*************************************
  * Module object and app entry point *
  *************************************/
 
-// see http://stackoverflow.com/questions/6875625/does-javascript-provide-a-high-resolution-timer
-if (window.performance.now) {
-    getTimestamp = function() { return window.performance.now(); };
-} else {
-    if (window.performance.webkitNow) {
-        getTimestamp = function() { return window.performance.webkitNow(); };
-    } else {
-        getTimestamp = function() { return new Date().getTime(); };
-    }
+function getTimestamp() {
+    return new Date().getTime();
+};
+
+// Global Object Table (GOT) is used to pass Javascript objects to and from C++
+var g_got = new Object();
+var g_gotIndex = 0
+function gotSet(obj) {
+    var i = g_gotIndex;
+    g_gotIndex++;
+    //log("gotSet " + i + " : " + obj)
+    g_got[i] = obj;
+    return i;
+}
+function gotGet(index) {
+    var obj = g_got[index];
+    //log("gotGet " + index + " : " + obj)
+    delete g_got[index];
+    return obj;
 }
 
-GlobalObjectTracker = new Object();
+// Local storage
+function lsGetInt(key, defaultValue) {
+    var val = localStorage.getItem(key);
+    if (!val) return defaultValue;
+    return Number(val);
+}
+
+
 canvas2D = document.createElement('canvas').getContext("2d");
 
 
@@ -227,8 +224,8 @@ canvas2D = document.createElement('canvas').getContext("2d");
           alert(s);
       };
       window.onunload = function() {
-          //localStorage.setItem('beebState', 'test');
       }
+
 
 /** Text measuring **/
 function FontHelper(name, size, fontFamily) {
