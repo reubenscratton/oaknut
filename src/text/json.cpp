@@ -9,7 +9,7 @@
 
 // TODO: Leverage built-in JSON for web builds.
 
-string parseJsonString(Utf8Iterator& it, int flags) {
+string parseJsonString(StringProcessor& it, int flags) {
 	string str;
 	bool allowLite = (flags & FLAG_ALLOW_JSONLITE);
 	char32_t ch;
@@ -21,19 +21,19 @@ string parseJsonString(Utf8Iterator& it, int flags) {
 		}
 	}
 		for (;;) {
-			const char* charStart = it._p;
-			char32_t ch = it.next();
+			auto charStart = it.current();
+			char32_t ch = it.peek();
+            if (allowLite) {
+                if (ch == ',' || ch==':' || ch=='}') { // in jsonlite mode these are delimiters
+                    break;
+                }
+            }
+            it.next();
 			if (ch==0) {
 				break;
 			}
 			if (!allowLite && ch=='\"') {
 				break;
-			}
-			if (allowLite) {
-				if (ch == ',' || ch==':' || ch=='}') { // in jsonlite mode these are delimiters
-					it._p--;
-					break;
-				}
 			}
 			// Escapes
 			if (ch=='\\') {
@@ -48,8 +48,7 @@ string parseJsonString(Utf8Iterator& it, int flags) {
 					continue;
 				}
 			}
-			// Generic UTF8 character
-			str.append(charStart, it._p-charStart);
+			str.append(string(charStart, it.current()));
 		}
 	
 	return str;
@@ -86,7 +85,7 @@ JsonValue& JsonValue::operator=(const JsonValue& other) {
 
 // I cannot get strtol or stoi to work on Emscripten... they return garbage. Hence
 // rolling my own...
-void parseNumber(Utf8Iterator& it, JsonValue* val) {
+void parseNumber(StringProcessor& it, JsonValue* val) {
 	val->_type = jsonInt;
 	val->_intVal = 0;
 	bool neg=(it.peek()=='-');
@@ -147,7 +146,7 @@ void parseNumber(Utf8Iterator& it, JsonValue* val) {
 	}
 }
 
-JsonValue JsonValue::parse(Utf8Iterator& it, int flags) {
+JsonValue JsonValue::parse(StringProcessor& it, int flags) {
 	JsonValue val;
 	it.skipWhitespace();
 	char32_t ch = it.peek();
@@ -174,7 +173,7 @@ JsonValue JsonValue::parse(Utf8Iterator& it, int flags) {
 
 JsonObject::JsonObject() {
 }
-JsonObject::JsonObject(Utf8Iterator &it, int flags) {
+JsonObject::JsonObject(StringProcessor &it, int flags) {
 	it.skipWhitespace();
 	while (it.peek() != '}') {
 		it.skipWhitespace();
@@ -252,7 +251,7 @@ float JsonObject::getFloat(const char* name) {
 
 JsonArray::JsonArray() {
 }
-JsonArray::JsonArray(Utf8Iterator& it, int flags) {
+JsonArray::JsonArray(StringProcessor& it, int flags) {
 	it.skipWhitespace();
 	while (it.peek() != ']') {
 		JsonValue element = JsonValue::parse(it, flags);

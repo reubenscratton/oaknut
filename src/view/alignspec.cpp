@@ -41,12 +41,12 @@ ALIGNSPEC ALIGNSPEC::Below(View* view, float margin) {
 ALIGNSPEC::ALIGNSPEC(StyleValue* value, View* view) {
     assert(value->type == StyleValue::Type::String);
     string str = value->str;
-    string type = stringExtractUpTo(str, "(", true);
+    string type = str.extractUpTo("(", true);
     if (type.length() == 0) {
         type = str;
         str = "";
     } else {
-        str = stringExtractUpTo(str, ")", true);
+        str = str.extractUpTo(")", true);
     }
     if (type=="center") *this=Center();
     else if (type=="centre") *this=Center();
@@ -62,7 +62,7 @@ ALIGNSPEC::ALIGNSPEC(StyleValue* value, View* view) {
     
     if (str.length() > 0) {
         if (anchor == NO_ANCHOR) {
-            string anchorId = stringExtractUpTo(str, ",", true);
+            string anchorId = str.extractUpTo(",", true);
             if (anchorId.length()==0) {
                 anchorId=str;
                 str="";

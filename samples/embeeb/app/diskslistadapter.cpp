@@ -57,7 +57,7 @@ string DisksListItem::getImageUrl() {
 //	IURLRequestDelegate
 void DisksListAdapter::onUrlRequestLoad(URLData* data) {
     _items.clear();
-	Utf8Iterator it(data->_value.data);
+	StringProcessor it(data->_value.data->toString(false));
 	JsonValue val = JsonValue::parse(it, 0);
 	if (val._type != jsonArray) {
 		app.log("Oops!");

@@ -147,7 +147,7 @@ void oakFaceDetectorClose(void* osobj);
 #include "app/urlrequest.h"
 #include "app/viewcontroller.h"
 #include "app/navigationcontroller.h"
-#include "text/utf8.h"
+#include "text/stringprocessor.h"
 #include "text/json.h"
 #include "util/cache.h"
 #include "util/circularbuffer.h"

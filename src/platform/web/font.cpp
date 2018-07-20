@@ -23,7 +23,7 @@ Font::Font(const string& fontAssetPath, float size) : FontBase(fontAssetPath, si
         } else {
             ByteBuffer* fontData = app.loadAsset(fontAssetPath.data());
             fontFamily = fontAssetPath;
-            while (stringExtractUpTo(fontFamily, "/", true).length() > 0) {}
+            while (fontFamily.extractUpTo("/", true).length() > 0) {}
             stringEndsWith(fontFamily, ".ttf", true);
             stringEndsWith(fontFamily, ".otf", true);
             //app.log("Custom font %s loaded from %s", fontFamily.data(), fontAssetPath.data());

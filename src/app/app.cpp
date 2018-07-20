@@ -10,11 +10,10 @@
 App app;
 
 App::App() {
-    string DEFAULT_STYLES=
+    StringProcessor parser(
 #include "styles.res"
-    ;
-    Utf8Iterator it(DEFAULT_STYLES);
-    _styles.parse(it);
+    );
+    _styles.parse(parser);
 }
 
 #ifndef ANDROID
@@ -47,7 +46,7 @@ void App::loadStyleAsset(const string& assetPath) {
     if (!data) {
         return;
     }
-    Utf8Iterator it(data);
+    StringProcessor it(data->toString(false));
     _styles.parse(it);
 }
 
@@ -144,7 +143,7 @@ View* App::layoutInflate(const string& assetPath) {
     if (!data) {
         return NULL;
     }
-    Utf8Iterator it(data);
+    StringProcessor it(data->toString(false));
     StyleMap layoutRoot;
     bool parsed = layoutRoot.parse(it);
     assert(parsed);

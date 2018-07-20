@@ -38,7 +38,7 @@ public:
 	~JsonValue();
 	JsonValue& operator=(const JsonValue& other);
 	
-	static JsonValue parse(Utf8Iterator& it, int flags);
+	static JsonValue parse(StringProcessor& it, int flags);
 	
 };
 
@@ -47,7 +47,7 @@ public:
 class JsonArray : public Object {
 public:
 	JsonArray();
-	JsonArray(Utf8Iterator& it, int flags);
+	JsonArray(StringProcessor& it, int flags);
 	template <class T>
 	T* getObject(int index);
 	void addValue(const JsonValue& val);
@@ -59,7 +59,7 @@ public:
 class JsonObject : public Object {
 public:
 	JsonObject();
-	JsonObject(Utf8Iterator& it, int flags);
+	JsonObject(StringProcessor& it, int flags);
 	JsonObject(const JsonObject* json);
 	void putValue(const char* name, const JsonValue& val);
 	string getString(const char* name);

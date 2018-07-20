@@ -38,6 +38,11 @@ public:
     string(const string& str) : _p(NULL), _cb(0), _cc(0)  {
         assign(str._p, str._cb);
     }
+    string(string&& other) : _p(other._p), _cb(other._cb), _cc(other._cc)  {
+        other._p = NULL;
+        other._cb = 0;
+        other._cc = 0;
+    }
     ~string() {
         if (_p) {
             free(_p);
@@ -107,25 +112,49 @@ public:
                                     const char32_t*,               // pointer
                                     char32_t                       // reference
                                     >{
-        const string& _str;
-        int32_t _byteOffset;
+        const string* _str;
+        int32_t _byteOffset, _byteOffsetNext;
     public:
-        explicit iterator(const string& str, int32_t byteOffset) : _str(str), _byteOffset(byteOffset) {}
-        iterator& operator++() {_str.readUtf8(_byteOffset); return *this;}
+        explicit iterator(const string& str, int32_t byteOffset) : _str(&str), _byteOffset(byteOffset), _byteOffsetNext(-1) {}
+        iterator(const iterator& it) : _str(it._str), _byteOffset(it._byteOffset), _byteOffsetNext(it._byteOffsetNext) {}
+        iterator& operator=(const iterator& it) {
+            _str=it._str;
+            _byteOffset = it._byteOffset;
+            _byteOffsetNext = it._byteOffsetNext;
+            return *this;
+        }
+        iterator& operator++() {
+            if (_byteOffsetNext != -1) {
+                _byteOffset = _byteOffsetNext;
+            } else {
+                _str->readUtf8(_byteOffset);
+            }
+            _byteOffsetNext = -1;
+            return *this;            
+        }
         iterator operator++(int) {iterator retval = *this; ++(*this); return retval;}
         bool operator==(iterator other) const {return &_str == &other._str && _byteOffset==other._byteOffset;}
         bool operator!=(iterator other) const {return !(*this == other);}
-        reference operator*() const {
-            auto byteOffset = _byteOffset;
-            return _str.readUtf8(byteOffset);
+        reference operator*() {
+            _byteOffsetNext = _byteOffset;
+            return _str->readUtf8(_byteOffsetNext);
         }
+        bool eof() const {return _byteOffset<0;}
+        char* data() const { return _str->_p + _byteOffset; }
     };
-    iterator begin() const {return iterator(*this, 0);}
+    
+    string(const iterator& start, const iterator& end) : string(start.data(), end.data()-start.data()) {
+    }
+
+    iterator begin() const {return iterator(*this, _p?0:-1);}
     iterator end() const {return iterator(*this, -1);}
+
+    string extractUpTo(const string& sep, bool remove);
 
     size_t hash() const;
     
     friend class Stream;
+    friend class ByteBuffer;
     
 protected:
     char* _p;

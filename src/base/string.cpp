@@ -84,7 +84,7 @@ int32_t string::charIndexToByteIndex(int32_t charIndex) const {
     return int32_t(p - _p);
 }
 char32_t string::readUtf8(int32_t& byteOffset) const {
-    assert(byteOffset < _cb);
+    assert(byteOffset >=0 && byteOffset < _cb);
     char* p = _p+byteOffset;
     char32_t codePoint = 0;
     char firstByte = *p;
@@ -120,6 +120,9 @@ char32_t string::readUtf8(int32_t& byteOffset) const {
         codePoint = firstByte;
         byteOffset++;
     }
+    if (byteOffset >= _cb) {
+        byteOffset = -1;
+    }
     return codePoint;
 }
 
@@ -134,7 +137,7 @@ int32_t string::find(const char* s) const {
 int32_t string::find(char32_t ch) const {
     int32_t byteIndex = 0;
     int32_t charIndex = 0;
-    while (byteIndex < _cb) {
+    while (byteIndex >= 0) {
         if (ch == readUtf8(byteIndex)) {
             return charIndex;
         }
@@ -387,6 +390,16 @@ string string::format(const char* fmt, ...) {
     string str(buff, size);
     free(buff);
     return str;
+}
+
+string string::extractUpTo(const string& sep, bool remove) {
+    auto i = find(sep);
+    if (i < 0) {
+        return "";
+    }
+    string result = substr(0,i);
+    erase(0,i+(remove?sep.length():0));
+    return result;
 }
 
 

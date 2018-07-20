@@ -72,7 +72,7 @@ void TextRenderer::measure(SIZE maxSize) {
     TEXTLINE* currentLine = &_lines.back();
 
     // Iterate over all characters in the text
-    Utf8Iterator it(_text);
+    StringProcessor it(_text);
     int i=0;
     int whitespaceStartIndex = -1;
     while (char32_t ch = it.next()) {

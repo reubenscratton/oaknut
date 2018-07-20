@@ -111,7 +111,7 @@ StyleValue* StyleMap::getValue(const string& keypath) {
 }
 
 
-bool StyleMap::parse(Utf8Iterator& it) {
+bool StyleMap::parse(StringProcessor& it) {
     it.skipWhitespace();
     if ('{' != it.next()) {
         app.log("Error: expected '{'");
@@ -180,18 +180,19 @@ bool StyleMap::parse(Utf8Iterator& it) {
                 }
             } else {
                 if (str.hadPrefix("\"")) {
-                    Utf8Iterator j(str);
                     string unesc_str = "";
-                    while (char32_t ch = j.next()) {
+                    for (auto it=str.begin() ; it !=str.end() ; it++) {
+                        char32_t ch = *it;
                         if (ch=='\"') {
                             break;
                         }
                         if (ch=='\\') {
-                            char32_t peekch = j.peek();
-                            switch (peekch) {
-                                case 'n': ch='\n'; j.next(); break;
-                                case 'r': ch='\r'; j.next(); break;
-                                case 't': ch='\t'; j.next(); break;
+                            it++;
+                            ch = *it;
+                            switch (ch) {
+                                case 'n': ch='\n'; break;
+                                case 'r': ch='\r'; break;
+                                case 't': ch='\t'; break;
                                 case 'u': assert(0); // todo! implement unicode escapes
                             }
                         }

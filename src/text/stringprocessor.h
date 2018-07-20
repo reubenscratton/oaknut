@@ -6,16 +6,15 @@
 //
 
 
-class Utf8Iterator {
+class StringProcessor {
 public:
-    const char* _p;
-    long _cb;
  
-    Utf8Iterator(const string& str);
-    Utf8Iterator(const class ByteBuffer* data);
+    StringProcessor(const string& str);
+    StringProcessor(string&& str);
     bool eof();
 	char32_t next();
 	char32_t peek();
+    string::iterator current() const { return _it; }
 
 	void skipWhitespace();
     string nextToken();
@@ -25,11 +24,13 @@ public:
 
 private:
  	char32_t next(bool advance);
+    
+    string _str;
+    string::iterator _it;
 
 };
 
 
-string stringExtractUpTo(string& str, const string& sep, bool remove);
 string stringFromInt(int i);
 string stringFromDouble(double d);
 string stringFromFloat(float f);

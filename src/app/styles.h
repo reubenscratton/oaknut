@@ -50,7 +50,7 @@ public:
     vector<pair<string,StyleValueUber*>> _valuesList;
     StyleMap* _parent;
     StyleValue* getValue(const string& keypath);
-    bool parse(class Utf8Iterator& it);
+    bool parse(class StringProcessor& it);
     
 };
 

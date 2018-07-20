@@ -89,3 +89,20 @@ void ByteBuffer::saveToFile(const string& path) {
     fwrite(data, cb, 1, file);
     fclose(file);
 }
+
+string ByteBuffer::toString(bool copy) {
+    if (copy) {
+        return string((char*)data, cb);
+    }
+    if (_owns) {
+        _owns = false;
+        string str;
+        str._p = (char*)data;
+        str._cb = cb;
+        return str;
+    }
+    app.warn("Having to copy data buffer cos can't pass ownership! This is inefficient.");
+    return string((char*)data, cb);
+
+}
+
