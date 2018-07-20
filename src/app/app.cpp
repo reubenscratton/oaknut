@@ -171,7 +171,7 @@ string App::friendlyTimeString(TIMESTAMP timestamp) {
         return "Just now";
     }
     if (hours <1) {
-        return stringFormat("%d min", minutes);
+        return string::format("%d min", minutes);
     }
     char buff[256];
     time_t time = timestamp / 1000;

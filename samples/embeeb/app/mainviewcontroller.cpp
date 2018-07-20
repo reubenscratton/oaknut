@@ -97,6 +97,7 @@ MainViewController::MainViewController() {
 void MainViewController::onDidResume() {
 	ViewController::onDidResume();
 	_navigationController->_navBar->setBlurEnabled(false);
+    _controllerView->setFocused(true);
 	//if (_beebView->_paused) {
 		_beebView->_paused = false;
 		//_beebView->tick();

@@ -107,7 +107,11 @@ static VideoStaticDataInit s_staticDataInit;
 
 uintBPP_t makeColor(uint8_t r, uint8_t g, uint8_t b) {
 #ifdef USE_32BPP
+# ifdef PLATFORM_WEB
+    return 0xFF000000 | (b<<16) | (g<<8) | r;
+# else
     return 0xFF000000 | (r<<16) | (g<<8) | b;
+# endif
 #else
     return ((r>>3)<<11) | ((g>>2)<<6)| (b>>3);
 #endif

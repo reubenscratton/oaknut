@@ -88,10 +88,10 @@ string urlEncode(string str) {
 	string rv;
 	while (str.length() > 0) {
 		size_t span = strcspn(str.data(), " :/?#[]@!$&'()*+,;=");
-		rv.append(str, 0, span);
+		rv = str.substr(0, span);
 		str.erase(0, span);
 		if (str.length() > 0) {
-			char ch = str.at(0);
+			char ch = str.charAt(0);
 			str.erase(0,1);
 			char fmt[8];
 			sprintf(fmt, "%%%02X", ch);

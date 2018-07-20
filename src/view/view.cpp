@@ -929,6 +929,10 @@ bool View::onTouchEvent(int eventType, int eventSource, POINT pt) {
 IKeyboardInputHandler* View::getKeyboardInputHandler() {
     return NULL;
 }
+ITextInputReceiver* View::getTextInputReceiver() {
+    return NULL;
+}
+
 bool View::setFocused(bool focused) {
     if (focused) {
         if (_window) {
@@ -1071,7 +1075,7 @@ void View::debugDumpTree(int depth) {
     
 
     string line;
-    for (int i=0 ; i<depth ; i++) line.push_back('-');
+    for (int i=0 ; i<depth ; i++) line.append("-");
     line.append(debugDescription());
     app.log(line.data());
 

@@ -127,7 +127,7 @@ public:
  */
 #define DECLARE_DYNCREATE(X) static ClassRegistrar<X> s_classReg##X(#X)
 
-extern map<string, Object* (*)()>* s_classRegister;
+extern std::map<string, Object* (*)()>* s_classRegister;
 
 template<typename T>
 class ClassRegistrar {
@@ -135,7 +135,7 @@ private: static Object* createT() {return new T(); }
 public:
     ClassRegistrar(const string& className) {
         if (!s_classRegister) {
-            s_classRegister = new map<string, Object*(*)()>();
+            s_classRegister = new std::map<string, Object*(*)()>();
         }
         s_classRegister->insert(std::make_pair(className, &createT));
     }

@@ -37,7 +37,7 @@ bool ByteBufferStream::writeBytes(size_t cb, const void* bytes) {
 }
 
 bool ByteBufferStream::readBytes(size_t cb, void* bytes) {
-    size_t cbRead = min(cb, _data.cb - offsetRead);
+    size_t cbRead = MIN(cb, _data.cb - offsetRead);
     memcpy(bytes, _data.data+offsetRead, cbRead);
     offsetRead += cbRead;
     return cbRead==cb;

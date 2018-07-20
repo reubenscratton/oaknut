@@ -9,7 +9,7 @@
 
 static ObjPtr<Atlas> atlas;
 static bool s_inited;
-static map<string, Font*> s_loadedFonts;
+static map<string, ObjPtr<Font>> s_loadedFonts;
 
 
 FontBase::FontBase(const string& name, float size) {

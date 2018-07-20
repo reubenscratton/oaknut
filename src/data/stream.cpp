@@ -26,20 +26,24 @@ bool Stream::writeUint32(uint32_t val) {
 }
 
 bool Stream::readString(string* str) {
-    size_t cb = 0;
-    if (!readBytes(sizeof(cb), (uint8_t*)&cb)) {
+    str->_cb = 0;
+    if (!readBytes(sizeof(str->_cb), (uint8_t*)&str->_cb)) {
         return false;
     }
-    str->resize(cb);
-    return readBytes(cb, (uint8_t*)(str->data()));
+    str->_p = (char*)malloc(str->_cb + 1);
+    str->_p[str->_cb] = '\0';
+    bool ok = readBytes(str->_cb, str->_p);
+    if (ok) {
+        str->countChars();
+    }
+    return ok;
 }
 
 bool Stream::writeString(const string& str) {
-    size_t cb = str.length();
-    if (!writeBytes(sizeof(cb), (uint8_t*)&cb)) {
+    if (!writeBytes(sizeof(str._cb), (uint8_t*)&str._cb)) {
         return false;
     }
-    return writeBytes(str.length(), (uint8_t*)str.data());
+    return writeBytes(str._cb, (uint8_t*)str._p);
 }
 
 

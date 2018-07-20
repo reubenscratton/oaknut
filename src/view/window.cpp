@@ -159,7 +159,7 @@ void Window::MotionTracker::dispatchInputEvent(int event, TIMESTAMP time, POINT 
 
                 // Work out the drag velocity by getting the distance travelled from the oldest historical point
                 // and extrapolating an average distance per second.
-                int numPoints = min(pastCount, NUM_PAST);
+                int numPoints = MIN(pastCount, NUM_PAST);
                 int index = pastIndex - numPoints;
                 if (index < 0) index += NUM_PAST;
                 while (numPoints-- > 1) {
@@ -384,7 +384,8 @@ bool Window::setFocusedView(View* view) {
     if (view) {
         view->setState({STATE_FOCUSED, STATE_FOCUSED});
         _keyboardHandler = view->getKeyboardInputHandler();
-        if (_keyboardHandler != NULL) {
+        _textInputReceiver = view->getTextInputReceiver();
+        if (_textInputReceiver != NULL) {
             app.keyboardShow(true);
         }
     } else {

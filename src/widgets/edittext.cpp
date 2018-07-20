@@ -12,6 +12,9 @@ DECLARE_DYNCREATE(EditText);
 IKeyboardInputHandler* EditText::getKeyboardInputHandler() {
     return this;
 }
+ITextInputReceiver* EditText::getTextInputReceiver() {
+    return this;
+}
 
 EditText::EditText() : Label() {
     _gravity.vert = GRAVITY_CENTER;
@@ -33,34 +36,22 @@ void EditText::detachFromWindow() {
         setFocused(false);
     }
     Label::detachFromWindow();
-    if (_blinkCursorTimer) {
-        _blinkCursorTimer->stop();
-    }
+    updateCursor();
 }
 
 bool EditText::setFocused(bool focused) {
     bool r = Label::setFocused(focused);
-    if (r && focused) {
-        _blinkCursorTimer = Timer::start(std::bind(&EditText::blinkCursor, this), 500, true);
-        blinkCursor();
-    }
+    updateCursor();
     return r;
 }
 
-void EditText::blinkCursor() {
-    if (!_cursorRenderOp) {
-        updateCursor();
-    }
-    if (_cursorRenderOp->_batch) {
-        removeRenderOp(_cursorRenderOp);
-    } else {
-        addRenderOp(_cursorRenderOp);
-    }
-    invalidateRect(_cursorRenderOp->_rect); // todo: shouldn't this be unnecessary? i.e. implicit to add/removeOp
-}
 
 void EditText::updateCursor() {
-    if (!isFocused()) {
+    if (_blinkCursorTimer) {
+        _blinkCursorTimer->stop();
+        _blinkCursorTimer = NULL;
+    }
+    if (!_window || !isFocused()) {
         if (_cursorRenderOp) {
             removeRenderOp(_cursorRenderOp);
             _cursorRenderOp = NULL;
@@ -69,13 +60,25 @@ void EditText::updateCursor() {
     }
     if (!_cursorRenderOp) {
         _cursorRenderOp = new ColorRectFillRenderOp(this);
-        _cursorRenderOp->setColour(0xff333333);
+        _cursorRenderOp->setColour(0xff333333); // todo: style
+        _cursorOn = true;
     }
     POINT cursorOrigin;
     float ascent, descent;
     _textRenderer.getGlyphOrigin(_insertionPoint, &cursorOrigin, &ascent, &descent);
-    _cursorRenderOp->setRect(RECT(cursorOrigin.x,cursorOrigin.y-ascent,4,ascent-descent));
+    _cursorRenderOp->setRect(RECT(cursorOrigin.x,cursorOrigin.y-ascent,4 /*todo: style*/,ascent-descent));
     _cursorValid = true;
+    if (_cursorOn && !_cursorRenderOp->_batch) {
+        addRenderOp(_cursorRenderOp);
+    } else if (!_cursorOn && _cursorRenderOp->_batch) {
+        removeRenderOp(_cursorRenderOp);
+    }
+    invalidateRect(_cursorRenderOp->_rect); // todo: shouldn't this be unnecessary? i.e. implicit to add/removeOp
+    _blinkCursorTimer = Timer::start([=]() {
+        _cursorOn = !_cursorOn;
+        _blinkCursorTimer = NULL;
+        updateCursor();
+    }, 500, false); // todo: style
 }
 
 void EditText::setPadding(EDGEINSETS padding) {
@@ -85,10 +88,15 @@ void EditText::setPadding(EDGEINSETS padding) {
     Label::setPadding(padding);
 }
 
+void EditText::updateContentSize(float parentWidth, float parentHeight) {
+    Label::updateContentSize(parentWidth, parentHeight);
+    _cursorOn = true;
+    updateCursor();
+}
 void EditText::setText(string text) {
     Label::setText(text);
-    _selectionStart = min(_selectionStart, (int)text.length());
-    _insertionPoint = min(_insertionPoint, (int)text.length());
+    _selectionStart = MIN(_selectionStart, (int)text.length());
+    _insertionPoint = MIN(_insertionPoint, (int)text.length());
     updateClearButton();
     if (isFocused()) {
         app.keyboardNotifyTextChanged();
@@ -106,8 +114,8 @@ void EditText::updateClearButton() {
             if (!_clearButtonOp) {
                 _clearButtonOp = new TextureRenderOp(this, "images/edittext_clear.png", 0xff999999);
                 RECT rect = getOwnRectPadded();
-                _clearButtonOp->_rect.origin.x = rect.origin.x+rect.size.width-_clearButtonOp->_rect.size.width;
-                _clearButtonOp->_rect.origin.y = rect.origin.y+(rect.size.height-_clearButtonOp->_rect.size.height) / 2;
+                _clearButtonOp->_rect.origin.x = rect.origin.x+rect.size.width-app.dp(22);
+                _clearButtonOp->_rect.origin.y = rect.origin.y+(rect.size.height-app.dp(22)) / 2;
                 addRenderOp(_clearButtonOp);
             }
         }
@@ -125,10 +133,13 @@ void EditText::layout() {
     }
 }
 
+/*
+ ITextInputReceiver
+ */
 void EditText::insertText(string insertionText, int replaceStart, int replaceEnd) {
     string text = getText();
     if (replaceEnd-replaceStart > 0) {
-        text.erase(text.begin()+replaceStart, text.begin()+replaceEnd);
+        text.erase(replaceStart, replaceEnd);
     }
     text.insert(replaceStart, insertionText);
     setText(text);
@@ -137,14 +148,14 @@ void EditText::insertText(string insertionText, int replaceStart, int replaceEnd
 void EditText::deleteBackward() {
     string text = getText();
     if (_selectionStart != _insertionPoint) {
-        int s = min(_selectionStart, _insertionPoint);
-        int e = max(_selectionStart, _insertionPoint);
-        text.erase(text.begin() + s, text.begin() + e);
+        int s = MIN(_selectionStart, _insertionPoint);
+        int e = MAX(_selectionStart, _insertionPoint);
+        text.erase(s, e);
         setText(text);
-        _insertionPoint = _selectionStart = min(s, (int)text.length());
+        _insertionPoint = _selectionStart = MIN(s, (int)text.length());
     }
     else if (_insertionPoint > 0) {
-        text.erase(text.begin() + _insertionPoint - 1);
+        text.erase(_insertionPoint - 1);
         _insertionPoint--;
         setText(text);
     }
@@ -175,7 +186,44 @@ string EditText::textInRange(int start, int end) {
     if (start<0) start=0;
     if (end>=text.length()) end = (int)text.length();
     if (end<0) end=0;
-    //int len = end-start;
-    // TODO: make utf8 safe
-    return string(text.begin()+start, text.begin() + end);
+    return text.substr(start, end);
+}
+
+/*
+IKeyboardInputHandler
+*/
+void EditText::keyInputEvent(KeyboardInputEventType keyboardInputEventType, KeyboardInputSpecialKeyCode specialKeyCode, int osKeyCode, char32_t charCode)  {
+    if (keyboardInputEventType == KeyboardInputEventType::KeyUp) {
+        return;
+    }
+    switch (specialKeyCode) {
+        case SpecialKeyNone:
+            break;
+        case SpecialKeyDelete:
+            deleteBackward();
+            return;
+        case SpecialKeyCursorLeft:
+            if (_insertionPoint > 0) {
+                _insertionPoint--;
+                _selectionStart = _insertionPoint; // todo: not if shift held
+                _cursorOn = true;
+                updateCursor();
+            }
+            return;
+        case SpecialKeyCursorRight:
+            if (_insertionPoint < getTextLength()) {
+                _insertionPoint++;
+                _selectionStart = _insertionPoint; // todo: not if shift held
+                _cursorOn = true;
+                updateCursor();
+            }
+            return;
+        default:
+            return;
+    }
+    string str;
+    str.append(charCode);
+    insertText(str, _selectionStart, _insertionPoint);
+    _selectionStart++;
+    _insertionPoint = _selectionStart;
 }

@@ -42,7 +42,7 @@ ALIGNSPEC::ALIGNSPEC(StyleValue* value, View* view) {
     assert(value->type == StyleValue::Type::String);
     string str = value->str;
     string type = stringExtractUpTo(str, "(", true);
-    if (type.size() == 0) {
+    if (type.length() == 0) {
         type = str;
         str = "";
     } else {
@@ -60,18 +60,18 @@ ALIGNSPEC::ALIGNSPEC(StyleValue* value, View* view) {
     else if (type=="below") *this=ALIGNSPEC(NO_ANCHOR, 1.0f,  0.0f, 0);
     else assert(false); // unknown alignspec
     
-    if (str.size() > 0) {
+    if (str.length() > 0) {
         if (anchor == NO_ANCHOR) {
             string anchorId = stringExtractUpTo(str, ",", true);
-            if (anchorId.size()==0) {
+            if (anchorId.length()==0) {
                 anchorId=str;
                 str="";
             }
             anchor = view->getParent()->findViewById(anchorId);
             assert(anchor); // NB: anchor must be previously declared. TODO: remove this restriction
         }
-        stringTrim(str);
-        if (str.size() > 0) {
+        str.trim();
+        if (str.length() > 0) {
             margin = stringParseDimension(str);
         }
     }

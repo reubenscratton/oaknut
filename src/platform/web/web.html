@@ -198,25 +198,37 @@ function lsGetInt(key, defaultValue) {
 canvas2D = document.createElement('canvas').getContext("2d");
 
 
-	var Module = {
-        preRun: [],
-        postRun: [
-			function () {
-				Module.oak_main();
-			},
-			onresize],
-        print: function(text) {log(text);},
-        printErr: function(text) {log(text);},
-        canvas: (function() {
-          var canvas = document.getElementById('screen');
-          return canvas;
-        })(),
-        totalDependencies: 0,
-        monitorRunDependencies: function(left) {
-          this.totalDependencies = Math.max(this.totalDependencies, left);
-        }
-      };
+var Module = {
+    preRun: [],
+    postRun: [
+        function () {
+            Module.oak_main();
+        },
+        onresize],
+    print: function(text) {log(text);},
+    printErr: function(text) {log(text);},
+    canvas: (function() {
+      var canvas = document.getElementById('screen');
+      return canvas;
+    })(),
+    totalDependencies: 0,
+    monitorRunDependencies: function(left) {
+      this.totalDependencies = Math.max(this.totalDependencies, left);
+    }
+};
 
+function keyEvent(e, down) {
+    var keyCode = (e.key.length>1) ? e.keyCode :  e.key.charCodeAt(0);
+    Module.oak_keyEvent(down, 0, keyCode);
+}
+document.addEventListener('keydown', (e) => {
+    //log("keydown! " + e);
+    keyEvent(e, true);
+});
+document.addEventListener('keyup', (e) => {
+    //log("keyup! " + e);
+    keyEvent(e, false);
+});
 
       window.onerror = function(message, source, lineno, colno, error) {
           var s="Exception: "  + message + " error:" + error + " line:" + lineno + " col:" + colno;

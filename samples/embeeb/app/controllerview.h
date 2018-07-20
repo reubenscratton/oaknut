@@ -10,7 +10,7 @@
 #include "controller.h"
 
 
-class ControllerView : public View { // <UIKeyInput>
+class ControllerView : public View, public IKeyboardInputHandler {
 public:
 
 	DiskControls* _diskControls;
@@ -30,8 +30,10 @@ public:
 	virtual void activateControllerByName(const string& controllerName);
 	virtual ControllerKey* hitTest(POINT pt);
 	virtual void setTouchedKey(int finger, ControllerKey* currentKey);
+    virtual IKeyboardInputHandler* getKeyboardInputHandler();
 	
-
+    // IKeyboardInputHandler
+    virtual void keyInputEvent(KeyboardInputEventType keyboardInputEventType, KeyboardInputSpecialKeyCode specialKeyCode, int osKeyCode, char32_t charCode);
 };
 
 

@@ -7,29 +7,16 @@
 
 #include <oaknut.h>
 
-int stringIndexOfChar(const string& str, char32_t ch) {
-    return (int) str.find((char)ch); // todo: make unicode aware
-}
-bool stringContainsChar(const string& str, char32_t ch) {
-    return str.find((char)ch) != string::npos; // todo: unicode
-}
 
-
-string stringSubstring(const string& str, int start, int end) {
-    return str.substr(start, end); // todo: unicode
-}
-string stringSubstring(const string& str, int start) {
-    return str.substr(start, str.length()); // todo: unicode
-}
 
 float stringParseDimension(string str) {
     bool isDP = false;
     bool isSP = false;
-    if (stringEndsWith(str, "dp", true)) {
+    if (str.hadSuffix("dp")) {
         isDP = true;
-    } else if (stringEndsWith(str, "sp", true)) {
+    } else if (str.hadSuffix("sp")) {
         isSP = true;
-    } else if (stringEndsWith(str, "px", true)) {
+    } else if (str.hadSuffix("px")) {
     }
     float val = stringParseDouble(str);
     if (isDP) {
@@ -38,68 +25,14 @@ float stringParseDimension(string str) {
     return val;
 }
 
-void stringTrim(string& str) {
-    while(str.length() > 0) {
-        char ch=*str.begin();
-        if (ch==' ' || ch=='\t' || ch=='\r' || ch=='\n') {
-            str.erase(str.begin(),str.begin()+1);
-        } else {
-            break;
-        }
-    }
-    while(str.length() > 0) {
-        char ch=*str.rbegin();
-        if (ch==' ' || ch=='\t' || ch=='\r' || ch=='\n') {
-            str.erase(str.length()-1);
-        } else {
-            break;
-        }
-    }
-}
 string stringExtractUpTo(string& str, const string& sep, bool remove) {
-    size_t i = str.find(sep);
-    if (i > str.length()) {
+    auto i = str.find(sep);
+    if (i < 0) {
         return "";
     }
     string result = str.substr(0,i);
-    str.erase(str.begin(),str.begin()+i+(remove?sep.length():0));
+    str.erase(0,i+(remove?sep.length():0));
     return result;
-}
-bool stringStartsWith(string& str, const string& prefix, bool eat) {
-    if (prefix.length()>str.length()) {
-        return false;
-    }
-    auto s = str.begin();
-    auto p = prefix.begin();
-    size_t l = prefix.length();
-    while (l-- > 0) {
-        if (*s++ != *p++) {
-            return false;
-        }
-    }
-    if (eat) {
-        str.erase(0, prefix.length());
-    }
-    return true;
-}
-
-bool stringEndsWith(string& str, const string& suffix, bool remove) {
-    if (suffix.length()>str.length()) {
-        return false;
-    }
-    auto s = str.rbegin();
-    auto p = suffix.rbegin();
-    size_t l = suffix.length();
-    while (l-- > 0) {
-        if (*s++ != *p++) {
-            return false;
-        }
-    }
-    if (remove) {
-        str.erase(str.end()-suffix.length(), str.end());
-    }
-    return true;
-
 }
 
 
@@ -180,7 +113,7 @@ char32_t Utf8Iterator::next(bool advance) {
         return 0;
     }
     char32_t codePoint = 0;
-	string::difference_type offset = 1;
+	int offset = 1;
 
     char firstByte = *_p;
  
@@ -256,7 +189,7 @@ string Utf8Iterator::nextToken() {
         else if (isPunctuatorChar(ch)) {
             next();
             string str = "";
-            str.push_back(ch);
+            str.append(ch);
             return str;
         } else {
             app.warn("Invalid char '%c'", ch);
@@ -276,7 +209,7 @@ string Utf8Iterator::nextIdentifier() {
         next();
         end = _p;
     }
-    return string(start, end);
+    return string(start, int32_t(end-start));
 }
 
 string Utf8Iterator::nextNumber() {
@@ -298,7 +231,7 @@ string Utf8Iterator::nextNumber() {
         }
         break;
     }
-    return string(start, end);
+    return string(start, int32_t(end-start));
 }
 
 string Utf8Iterator::nextToEndOfLine() {
@@ -312,56 +245,8 @@ string Utf8Iterator::nextToEndOfLine() {
         next();
         end = _p;
     }
-    return string(start, end);
+    return string(start, int32_t(end-start));
 
 }
 
 
-void stringAppendCodepoint(string& str, char32_t ch) {
-    if (ch <= 0x7F) {
-        str.append((char*)&ch, 1);
-    }
-    else if (ch <= 0x7FF) {
-        char ach[2];
-        ach[0] = 0xC0 | (ch>>6);
-        ach[1] = 0x80 | (ch&0x3f);
-        str.append((char*)ach, 2);
-    }
-    else if (ch <= 0xFFFF) {
-        char ach[3];
-        ach[0] = 0xE0 | (ch>>12);
-        ach[1] = 0x80 | ((ch>>6)&0x3f);
-        ach[2] = 0x80 | (ch&0x3f);
-        str.append((char*)ach, 3);
-    }
-    else if (ch <= 0x10FFFF) {
-        char ach[4];
-        ach[0] = 0xF0 | (ch>>18);
-        ach[1] = 0x80 | ((ch>>12)&0x3f);
-        ach[2] = 0x80 | ((ch>>6)&0x3f);
-        ach[3] = 0x80 | (ch&0x3f);
-        str.append((char*)ach, 4);
-    }
-    else assert(0);
-}
-
-string stringFormat(const string& fmt, ...) {
-    int size = ((int)fmt.size()) * 2 + 50;   // Use a rubric appropriate for your code
-    std::string str;
-    va_list ap;
-    while (1) {     // Maximum two passes on a POSIX system...
-        str.resize(size);
-        va_start(ap, fmt);
-        int n = vsnprintf((char *)str.data(), size, fmt.c_str(), ap);
-        va_end(ap);
-        if (n > -1 && n < size) {  // Everything worked
-            str.resize(n);
-            return str;
-        }
-        if (n > -1)  // Needed size returned
-            size = n + 1;   // For null char
-        else
-            size *= 2;      // Guess at a larger size (OS specific)
-    }
-    return str;
-}

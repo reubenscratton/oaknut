@@ -6,7 +6,7 @@
 //
 #if PLATFORM_IOS
 
-#import "app_native/AppDelegate.h"
+#import "AppDelegate.h"
 
 //#define NSLOG NSLog
 #define NSLOG(x,...)
@@ -77,8 +77,8 @@ void App::keyboardNotifyTextChanged() {
 - (UITextRange*)markedTextRange {
     NSLOG(@"markedTextRange");
     /*SimpleTextRange* range = [SimpleTextRange new];
-    range->_start = [SimpleTextPos pos:app._window->_keyboardHandler->getSelectionStart()];
-    range->_end = [SimpleTextPos pos:app._window->_keyboardHandler->getInsertionPoint()];
+    range->_start = [SimpleTextPos pos:app._window->_textInputReceiver->getSelectionStart()];
+    range->_end = [SimpleTextPos pos:app._window->_textInputReceiver->getInsertionPoint()];
     NSLOG(@"markedTextRange -> %d:%d", range->_start.pos, range->_end.pos);
     return range;*/
     return nil;
@@ -102,23 +102,23 @@ void App::keyboardNotifyTextChanged() {
 
 - (BOOL)hasText {
     NSLOG(@"hasText");
-    return app._window->_keyboardHandler->getTextLength() > 0;
+    return app._window->_textInputReceiver->getTextLength() > 0;
 }
 - (void)insertText:(NSString *)text {
     NSLOG(@"insertText %@", text);
     [_textInputDelegate textWillChange:self];
     const char* cstr = [text cStringUsingEncoding:NSUTF8StringEncoding];
-    int selStart = app._window->_keyboardHandler->getSelectionStart();
-    int selEnd = app._window->_keyboardHandler->getInsertionPoint();
-    app._window->_keyboardHandler->insertText(cstr, selStart, selEnd);
+    int selStart = app._window->_textInputReceiver->getSelectionStart();
+    int selEnd = app._window->_textInputReceiver->getInsertionPoint();
+    app._window->_textInputReceiver->insertText(cstr, selStart, selEnd);
     selStart += text.length;
-    app._window->_keyboardHandler->setSelectedRange(selStart, selStart);
+    app._window->_textInputReceiver->setSelectedRange(selStart, selStart);
     [_textInputDelegate textDidChange:self];
 }
 - (void)deleteBackward {
     NSLOG(@"deleteBackward");
     [_textInputDelegate textWillChange:self];
-    app._window->_keyboardHandler->deleteBackward();
+    app._window->_textInputReceiver->deleteBackward();
     [_textInputDelegate textDidChange:self];
 }
 
@@ -133,8 +133,8 @@ void App::keyboardNotifyTextChanged() {
 }
 
 - (UITextPosition*)endOfDocument {
-    NSLOG(@"endOfDocument -> %d", app._window->_keyboardHandler->getTextLength());
-    return [SimpleTextPos pos:app._window->_keyboardHandler->getTextLength()];
+    NSLOG(@"endOfDocument -> %d", app._window->_textInputReceiver->getTextLength());
+    return [SimpleTextPos pos:app._window->_textInputReceiver->getTextLength()];
 }
 
 - (id<UITextInputTokenizer>)tokenizer {
@@ -147,8 +147,8 @@ void App::keyboardNotifyTextChanged() {
 
 - (UITextRange*)selectedTextRange {
     SimpleTextRange* range = [SimpleTextRange new];
-    range->_start = [SimpleTextPos pos:app._window->_keyboardHandler->getSelectionStart()];
-    range->_end = [SimpleTextPos pos:app._window->_keyboardHandler->getInsertionPoint()];
+    range->_start = [SimpleTextPos pos:app._window->_textInputReceiver->getSelectionStart()];
+    range->_end = [SimpleTextPos pos:app._window->_textInputReceiver->getInsertionPoint()];
     NSLOG(@"selectedTextRange -> %d:%d", range->_start.pos, range->_end.pos);
     return range;
 }
@@ -156,7 +156,7 @@ void App::keyboardNotifyTextChanged() {
     int start = (int)((SimpleTextPos*)selectedTextRange.start).pos;
     int end = (int)((SimpleTextPos*)selectedTextRange.end).pos;
     NSLOG(@"setSelectedTextRange start=%d end=%d", start, end);
-    app._window->_keyboardHandler->setSelectedRange(start, end);
+    app._window->_textInputReceiver->setSelectedRange(start, end);
 }
 
 - (UITextWritingDirection)baseWritingDirectionForPosition:(nonnull UITextPosition *)position inDirection:(UITextStorageDirection)direction {
@@ -226,7 +226,7 @@ void App::keyboardNotifyTextChanged() {
             break;
     }
     NSInteger end = p + offset;
-    if (end > app._window->_keyboardHandler->getTextLength() || end < 0)
+    if (end > app._window->_textInputReceiver->getTextLength() || end < 0)
         return nil;
     return [SimpleTextPos pos:end];
 }
@@ -235,7 +235,7 @@ void App::keyboardNotifyTextChanged() {
     NSInteger p = ((SimpleTextPos*)position).pos;
     NSLOG(@"positionFromPosition %d offset=%d", (int)p, (int)offset);
     NSInteger end = p + offset;
-    if (end > app._window->_keyboardHandler->getTextLength() || end < 0)
+    if (end > app._window->_textInputReceiver->getTextLength() || end < 0)
         return nil;
     return [SimpleTextPos pos:end];
 }
@@ -247,8 +247,8 @@ void App::keyboardNotifyTextChanged() {
 
 - (void)replaceRange:(nonnull UITextRange *)range withText:(nonnull NSString *)text {
     SimpleTextRange* r = (SimpleTextRange*)range;
-    int selStart = app._window->_keyboardHandler->getSelectionStart();
-    int insertionPoint = app._window->_keyboardHandler->getInsertionPoint();
+    int selStart = app._window->_textInputReceiver->getSelectionStart();
+    int insertionPoint = app._window->_textInputReceiver->getInsertionPoint();
     int selShift = 0;
     if (insertionPoint <= r->_end.pos) {
         selShift = (int)text.length - (int)(r->_end.pos-r->_start.pos);
@@ -256,9 +256,9 @@ void App::keyboardNotifyTextChanged() {
     NSLOG(@"replaceRange %d:%d %@", (int)r->_start.pos, (int)r->_end.pos, text);
     const char* cstr = [text cStringUsingEncoding:NSUTF8StringEncoding];
     [_textInputDelegate textWillChange:self];
-    app._window->_keyboardHandler->insertText(cstr, (int)r->_start.pos, (int)r->_end.pos);
+    app._window->_textInputReceiver->insertText(cstr, (int)r->_start.pos, (int)r->_end.pos);
     if (selShift != 0) {
-        app._window->_keyboardHandler->setSelectedRange(selStart+selShift, insertionPoint+selShift);
+        app._window->_textInputReceiver->setSelectedRange(selStart+selShift, insertionPoint+selShift);
     }
     [_textInputDelegate textDidChange:self];
 }
@@ -279,7 +279,7 @@ void App::keyboardNotifyTextChanged() {
 - (nullable NSString *)textInRange:(nonnull UITextRange *)range {
     SimpleTextPos* posStart = (SimpleTextPos*)range.start;
     SimpleTextPos* posEnd = (SimpleTextPos*)range.end;
-    string text = app._window->_keyboardHandler->textInRange((int)posStart.pos, (int)posEnd.pos);
+    string text = app._window->_textInputReceiver->textInRange((int)posStart.pos, (int)posEnd.pos);
     NSLOG(@"textInRange %d:%d -> %s", posStart.pos, posEnd.pos, text.data());
     return [NSString stringWithUTF8String:text.data()];
 }

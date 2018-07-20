@@ -25,9 +25,9 @@ static GLuint loadShader(GLenum shaderType, const char* pSource) {
 #if TARGET_OS_OSX || PLATFORM_LINUX
         // Surely to god there's a better way than this...!
         int x;
-        while ((x = (int)source.find("highp")) >= 0) source.erase(source.begin()+x, source.begin()+x+5);
-        while ((x = (int)source.find("lowp")) >= 0) source.erase(source.begin()+x, source.begin()+x+4);
-        while ((x = (int)source.find("mediump")) >= 0) source.erase(source.begin()+x, source.begin()+x+7);
+        while ((x = (int)source.find("highp")) >= 0) source.erase(x, x+5);
+        while ((x = (int)source.find("lowp")) >= 0) source.erase(x, x+4);
+        while ((x = (int)source.find("mediump")) >= 0) source.erase(x, x+7);
 #endif
         
 		pSource = source.data();

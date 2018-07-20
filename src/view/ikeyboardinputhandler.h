@@ -7,10 +7,10 @@
 
 
 /**
- * \interface IKeyboardInputHandler
- * \brief Interface that must be implemented by Views which provide text entry via a system soft keyboard.
+ * @class ITextInputReceiver
+ * @brief Interface that must be implemented by Views which receive text input
  */
-class IKeyboardInputHandler {
+class ITextInputReceiver {
 public:
     virtual void insertText(string text, int replaceStart, int replaceEnd) = 0;
     virtual void deleteBackward() = 0;
@@ -21,4 +21,31 @@ public:
     virtual string textInRange(int start, int end) = 0;
 };
 
+/**
+ * @class IKeyboardInputHandler
+ * @brief Interface to be implemented by Views which want physical keyboard keyDown & keyUp events
+ */
+enum KeyboardInputEventType {
+    KeyDown,
+    KeyUp
+};
+enum KeyboardInputSpecialKeyCode {
+    SpecialKeyNone,
+    SpecialKeyShift,
+    SpecialKeyControl,
+    SpecialKeyCommand,
+    SpecialKeyFunction,
+    SpecialKeyEscape,
+    SpecialKeyAlt,
+    SpecialKeyDelete,
+    SpecialKeyCapsLock,
+    SpecialKeyCursorLeft,
+    SpecialKeyCursorRight,
+    SpecialKeyCursorUp,
+    SpecialKeyCursorDown,
+};
+class IKeyboardInputHandler {
+public:
+    virtual void keyInputEvent(KeyboardInputEventType keyboardInputEventType, KeyboardInputSpecialKeyCode specialKeyCode, int osKeyCode, char32_t charCode) = 0;
+};
 

@@ -91,5 +91,33 @@ void ControllerView::activateControllerByName(const string& controllerName) {
 	*/
 }
 
-	
+IKeyboardInputHandler* ControllerView::getKeyboardInputHandler() {
+    return this;
+}
+
+
+int beebKeyFor(int keyCode, char32_t charCode) {
+#ifdef PLATFORM_WEB
+    if (keyCode==0 && charCode == 16) {
+        return ScanCode_Shift;
+    }
+#endif
+    if (charCode != 0) {
+        return BeebKey_scancodeForChar(charCode);
+    }
+#ifdef PLATFORM_APPLE
+     return BeebKey_scancodeForMacVKeycode(keyCode);
+#else
+     return BeebKey_scancodeForUsbHIDKeycode(keyCode);
+ #endif
+}
+
+// IKeyboardInputHandler
+void ControllerView::keyInputEvent(KeyboardInputEventType keyboardInputEventType, KeyboardInputSpecialKeyCode specialKeyCode, int osKeyCode, char32_t charCode) {
+    int bk = beebKeyFor(osKeyCode ,charCode);
+    if (bk) {
+        _beeb->postKeyboardEvent(bk, keyboardInputEventType==KeyDown);
+    }
+}
+
 

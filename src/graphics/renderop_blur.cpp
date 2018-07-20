@@ -219,7 +219,7 @@ void GLProgramBlur::load() {
     }
 	
     // From these weights we calculate the offsets to read interpolated values from
-	uint32_t numberOfOptimizedOffsets = min(_blurRadius / 2 + (_blurRadius % 2), MAX_OPTIMIZED_OFFSETS);
+	uint32_t numberOfOptimizedOffsets = MIN(_blurRadius / 2 + (_blurRadius % 2), MAX_OPTIMIZED_OFFSETS);
 	GLfloat optimizedGaussianOffsets[numberOfOptimizedOffsets];
     for (uint32_t i = 0; i < numberOfOptimizedOffsets; i++) {
         GLfloat firstWeight = standardGaussianWeights[i*2 + 1];

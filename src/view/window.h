@@ -77,6 +77,7 @@ public:
 	bool _redrawNeeded;
     View* _focusedView;
     class IKeyboardInputHandler* _keyboardHandler;
+    class ITextInputReceiver* _textInputReceiver;
 	
 	Window();
 	virtual void setRootViewController(ViewController* viewController);

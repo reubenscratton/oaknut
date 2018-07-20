@@ -34,7 +34,7 @@ Controller::Controller(const Controller& src) {
 JsonObject* Controller::toJson() {
 	JsonObject* json = new JsonObject();
 	json->putValue("name", _name);
-	if (_trigger.size()) {
+	if (_trigger.length()) {
 		json->putValue("trigger", _trigger);
 	}
 	JsonArray* keys = new JsonArray();

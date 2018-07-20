@@ -8,6 +8,9 @@
 #include <oaknut.h>
 #include <fstream>
 
+using std::ios_base;
+using std::fstream;
+
 #ifdef PLATFORM_WEB
 
 
@@ -226,7 +229,7 @@ public:
     
     FileLocalStore(const string& name, const string& primaryKeyName) : LocalStore(name, primaryKeyName) {
         _mainFileName = app.getDirectoryForFileType(App::FileType::General);
-        if (_mainFileName.at(_mainFileName.length()-1)!='/') {
+        if (_mainFileName.charAt(_mainFileName.length()-1)!='/') {
             _mainFileName.append("/");
         }
         _mainFileName.append(name);

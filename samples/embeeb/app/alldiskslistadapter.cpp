@@ -32,7 +32,7 @@ void AllDisksListAdapter::onUrlRequestLoad(URLData* data) {
     DisksListAdapter::onUrlRequestLoad(data);
     for (auto git : _items) {
         DisksListItem* gameItem = (DisksListItem*)(Object*)git;
-        char32_t ch = gameItem->_game->_title.at(0);
+        char32_t ch = gameItem->_game->_title.charAt(0);
         if (ch>='a' && ch<='z') ch='A'+(ch-'a');
         if (!(ch>='A' && ch<='Z')) ch='#';
         
@@ -49,7 +49,7 @@ void AllDisksListAdapter::onUrlRequestLoad(URLData* data) {
 
 string AllDisksListAdapter::getSectionTitle(int section) {
     string str;
-    stringAppendCodepoint(str, _sections.at(section)->first);
+    str.append(_sections.at(section)->first);
     return str;
 }
 

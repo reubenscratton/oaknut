@@ -51,7 +51,7 @@ ItemPool::Alloc* ItemPool::alloc(int n, ItemPool::Alloc* existingAlloc) {
         }
     }
     if (!a) {
-        resize(_itemCount + max(n, _itemsPerPage));
+        resize(_itemCount + MAX(n, _itemsPerPage));
         a = alloc(n, NULL);
     }
 

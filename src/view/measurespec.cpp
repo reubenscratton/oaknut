@@ -31,7 +31,7 @@ MEASURESPEC::MEASURESPEC(StyleValue* value) {
     if (value->str == "wrap_content") { *this = WrapContent(); return; }
     if (value->str == "fill_parent") { *this = FillParent(); return; }
     if (value->str == "match_parent") { *this = FillParent(); return; }
-    if (stringStartsWith(value->str, "aspect(", true)) {
+    if (value->str.hadPrefix("aspect(")) {
         *this = UseAspect(stringParseDouble(value->str));
         return;
     }

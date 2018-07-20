@@ -241,6 +241,7 @@ void BeebKey_init() {
     s_charsToScancodes['9'] = ScanCode_9;
     s_charsToScancodes['!'] = ScanCode_ExclamationMark;
     s_charsToScancodes['@'] = ScanCode_At;
+    s_charsToScancodes['#'] = ScanCode_3|0x100;
     s_charsToScancodes[L'£'] = ScanCode_Pound;
     s_charsToScancodes['&'] = ScanCode_Ampersand;
     s_charsToScancodes['\''] = ScanCode_Apostrophe;
@@ -288,7 +289,133 @@ BeebKey* BeebKey_keyByName(char const* name) {
 }
 
 
-
+static int s_macVKeycodesToScancodes[] = {
+    ScanCode_A, //    kVK_ANSI_A  = 0x00,
+    ScanCode_S, //    kVK_ANSI_S  = 0x01,
+    ScanCode_D, //    kVK_ANSI_D  = 0x02,
+    ScanCode_F, //    kVK_ANSI_F  = 0x03,
+    ScanCode_H, //    kVK_ANSI_H  = 0x04,
+    ScanCode_G, //    kVK_ANSI_G  = 0x05,
+    ScanCode_Z, //    kVK_ANSI_Z  = 0x06,
+    ScanCode_X, //    kVK_ANSI_X  = 0x07,
+    ScanCode_C, //    kVK_ANSI_C  = 0x08,
+    ScanCode_V, //    kVK_ANSI_V  = 0x09,
+    0, //                     ??  = 0x0A,
+    ScanCode_B, //    kVK_ANSI_B  = 0x0B,
+    ScanCode_Q, //    kVK_ANSI_Q  = 0x0C,
+    ScanCode_W, //    kVK_ANSI_W  = 0x0D,
+    ScanCode_E, //    kVK_ANSI_E  = 0x0E,
+    ScanCode_R, //    kVK_ANSI_R  = 0x0F,
+    ScanCode_Y, //    kVK_ANSI_Y  = 0x10,
+    ScanCode_T, //    kVK_ANSI_T  = 0x11,
+    ScanCode_1, //    kVK_ANSI_1  = 0x12,
+    ScanCode_2, //    kVK_ANSI_2  = 0x13,
+    ScanCode_3, //    kVK_ANSI_3  = 0x14,
+    ScanCode_4, //    kVK_ANSI_4  = 0x15,
+    ScanCode_6, //    kVK_ANSI_6  = 0x16,
+    ScanCode_5, //    kVK_ANSI_5  = 0x17,
+    ScanCode_Equals,//kVK_ANSI_Equal = 0x18,
+    ScanCode_9, //    kVK_ANSI_9  = 0x19,
+    ScanCode_7, //    kVK_ANSI_7  = 0x1A,
+    ScanCode_Minus, //kVK_ANSI_Minus = 0x1B,
+    ScanCode_8, //    kVK_ANSI_8  = 0x1C,
+    ScanCode_0, //    kVK_ANSI_0  = 0x1D,
+    ScanCode_BracketRight, //    kVK_ANSI_RightBracket = 0x1E,
+    ScanCode_O, //    kVK_ANSI_O  = 0x1F,
+    ScanCode_U, //    kVK_ANSI_U  = 0x20,
+    ScanCode_BracketLeft, //    kVK_ANSI_LeftBracket = 0x21,
+    ScanCode_I, //    kVK_ANSI_I  = 0x22,
+    ScanCode_P, //    kVK_ANSI_P  = 0x23,
+    ScanCode_Return, // kVK_Return = 0x24,
+    ScanCode_L, //    kVK_ANSI_L  = 0x25,
+    ScanCode_J, //    kVK_ANSI_J  = 0x26,
+    0, //    kVK_ANSI_Quote                = 0x27,
+    ScanCode_K, //    kVK_ANSI_K  = 0x28,
+    ScanCode_Semicolon, // kVK_ANSI_Semicolon = 0x29,
+    ScanCode_Backslash, // kVK_ANSI_Backslash = 0x2A,
+    ScanCode_Comma, //   kVK_ANSI_Comma = 0x2B,
+    ScanCode_Slash, //   kVK_ANSI_Slash = 0x2C,
+    ScanCode_N,     //   kVK_ANSI_N     = 0x2D,
+    ScanCode_M,     //   kVK_ANSI_M     = 0x2E,
+    ScanCode_Period,//   kVK_ANSI_Period = 0x2F,
+    ScanCode_Tab,   //   kVK_Tab        = 0x30,
+    ScanCode_Space, //   kVK_Space      = 0x31,
+    0, //    kVK_ANSI_Grave                = 0x32,
+    ScanCode_Delete, // kVK_Delete      = 0x33,
+    0, //                             ? = 0x34
+    0, //    kVK_Escape                 = 0x35,
+    0, //                             ? = 0x36
+    0, //    kVK_Command                = 0x37,
+    ScanCode_Shift, //  kVK_Shift       = 0x38,
+    ScanCode_Caps,  // kVK_CapsLock     = 0x39,
+    0, //    kVK_Option                 = 0x3A,
+    ScanCode_Ctrl, // kVK_Control       = 0x3B,
+    ScanCode_Shift, // kVK_RightShift   = 0x3C,
+    0, // kVK_RightOption               = 0x3D,
+    ScanCode_Ctrl, // kVK_RightControl  = 0x3E,
+    0, // kVK_Function                  = 0x3F,
+    0, //kVK_F17                       = 0x40,
+    0, //    kVK_ANSI_KeypadDecimal        = 0x41,
+    0, //                             ? = 0x42
+    0, //    kVK_ANSI_KeypadMultiply    = 0x43,
+    ScanCode_Plus, //    kVK_ANSI_KeypadPlus = 0x45,
+    0, //    kVK_ANSI_KeypadClear          = 0x47,
+    0, // kVK_VolumeUp                  = 0x48,
+    0, // kVK_VolumeDown                = 0x49,
+    0, // kVK_Mute                      = 0x4A,
+    0, //    kVK_ANSI_KeypadDivide         = 0x4B,
+    ScanCode_Return, //    kVK_ANSI_KeypadEnter          = 0x4C,
+    0, //                             ? = 0x4D
+    ScanCode_Minus, //    kVK_ANSI_KeypadMinus = 0x4E,
+    0, // kVK_F18                       = 0x4F,
+    0, // kVK_F19                       = 0x50,
+    ScanCode_Equals, //    kVK_ANSI_KeypadEquals  = 0x51,
+    ScanCode_0, //    kVK_ANSI_Keypad0              = 0x52,
+    ScanCode_1, //    kVK_ANSI_Keypad1              = 0x53,
+    ScanCode_2, //    kVK_ANSI_Keypad2              = 0x54,
+    ScanCode_3, //    kVK_ANSI_Keypad3              = 0x55,
+    ScanCode_4, //    kVK_ANSI_Keypad4              = 0x56,
+    ScanCode_5, //    kVK_ANSI_Keypad5              = 0x57,
+    ScanCode_6, //    kVK_ANSI_Keypad6              = 0x58,
+    ScanCode_7, //    kVK_ANSI_Keypad7              = 0x59,
+    0,          //    kVK_F20                       = 0x5A,
+    ScanCode_8, //    kVK_ANSI_Keypad8              = 0x5B,
+    ScanCode_9, //    kVK_ANSI_Keypad9              = 0x5C
+    0,          //                                  = 0x5D
+    0,          //                                  = 0x5E
+    0,          //                                  = 0x5F
+    ScanCode_F5, //    kVK_F5                        = 0x60,
+    ScanCode_F6, //    kVK_F6                        = 0x61,
+    ScanCode_F7, //    kVK_F7                        = 0x62,
+    ScanCode_F3, //    kVK_F3                        = 0x63,
+    ScanCode_F8, //    kVK_F8                        = 0x64,
+    ScanCode_F9, //    kVK_F9                        = 0x65,
+    0,          //                                  = 0x66
+    0, //    kVK_F11                       = 0x67,
+    0,          //                                  = 0x68
+    0, //    kVK_F13                       = 0x69,
+    0, //    kVK_F16                       = 0x6A,
+    0, //    kVK_F14                       = 0x6B,
+    0, //                                  = 0x6C
+    0, //    kVK_F10                       = 0x6D,
+    0, //                                  = 0x6E
+    0, //    kVK_F12                       = 0x6F,
+    0, //                                  = 0x70
+    0, //    kVK_F15                       = 0x71,
+    0, //    kVK_Help                      = 0x72,
+    0, //    kVK_Home                      = 0x73,
+    0, //    kVK_PageUp                    = 0x74,
+    0, //    kVK_ForwardDelete             = 0x75,
+    ScanCode_F4, // kVK_F4                  = 0x76,
+    0, //    kVK_End                       = 0x77,
+    ScanCode_F2, //    kVK_F2              = 0x78,
+    0, //    kVK_PageDown                  = 0x79,
+    ScanCode_F1, //    kVK_F1              = 0x7A,
+    ScanCode_Left, //    kVK_LeftArrow     = 0x7B,
+    ScanCode_Right, //    kVK_RightArrow    = 0x7C,
+    ScanCode_Down, //    kVK_DownArrow      = 0x7D,
+    ScanCode_Up, //    kVK_UpArrow                   = 0x7E
+};
 
 //
 // See http://www.usb.org/developers/hidpage/Hut1_12v2.pdf for USB/HID keycodes
@@ -423,6 +550,14 @@ int BeebKey_scancodeForChar(unsigned short chr) {
     return 0;
 }
 
+int BeebKey_scancodeForMacVKeycode(int keycode) {
+    if (keycode < sizeof(s_macVKeycodesToScancodes)/sizeof(s_macVKeycodesToScancodes[0])) {
+        return s_macVKeycodesToScancodes[keycode];
+    }
+    return 0;
+}
+
+    
 int BeebKey_scancodeForUsbHIDKeycode(int hidKeycode) {
 	if (hidKeycode==0xe1 || hidKeycode==0xe5) return ScanCode_Shift;
 	if (hidKeycode <= 0x6a) {

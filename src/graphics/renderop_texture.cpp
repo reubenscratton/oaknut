@@ -149,7 +149,9 @@ TextureRenderOp::TextureRenderOp(View* view, const char* assetPath, int tintColo
     ByteBuffer* data = app.loadAsset(assetPath);
     Bitmap::createFromData(data->data, (int)data->cb, [&](Bitmap* bitmap) {
         _bitmapProvider = new SimpleBitmapProvider(bitmap);
-        _rect = RECT(0,0,bitmap->_width,bitmap->_height);
+        //_rect = RECT(0,0,bitmap->_width,bitmap->_height);
+        _rect.size.width = bitmap->_width;
+        _rect.size.height = bitmap->_height;
     });
     _rectTex = RECT(0,0,1,1);
     setBlendMode(BLENDMODE_NORMAL);

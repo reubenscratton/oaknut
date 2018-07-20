@@ -32,6 +32,7 @@ void BeebKey_init();
 int BeebKey_scancodeForChar(unsigned short chr);
 BeebKey* BeebKey_keyByName(char const* name);
 int BeebKey_scancodeForUsbHIDKeycode(int hidKeycode);
+int BeebKey_scancodeForMacVKeycode(int keycode);
 
 extern BeebKey beebKeyNone;
 extern BeebKey beebKeyF0;

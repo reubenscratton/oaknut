@@ -38,7 +38,7 @@
 #include <typeinfo>
 #include <map>
 #include <unordered_map>
-#include <string>
+//#include <string>
 #include <cstring>
 #include <vector>
 #include <list>
@@ -49,8 +49,15 @@
 #include <assert.h>
 #include <chrono>
 
-using namespace std;
-
+using std::map;
+using std::unordered_map;
+using std::list;
+using std::vector;
+using std::pair;
+using std::make_pair;
+using std::set;
+using std::stack;
+using std::function;
 
 // Platform headers
 #ifdef PLATFORM_WEB
@@ -79,6 +86,7 @@ typedef uint64_t TIMESTAMP;
 #include __incstr(platform/PLATFORM/platform.h)
 
 // Oaknut types (The order here matters!)
+#include "base/string.h"
 #include "base/object.h"
 #include "base/timer.h"
 #include "base/task.h"

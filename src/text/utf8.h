@@ -28,16 +28,8 @@ private:
 
 };
 
-string stringFormat(const string& fmt, ...);
-void stringAppendCodepoint(string& str, char32_t ch);
-void stringTrim(string& str);
-bool stringStartsWith(string& str, const string& prefix, bool remove);
-bool stringEndsWith(string& str, const string& suffix, bool remove);
+
 string stringExtractUpTo(string& str, const string& sep, bool remove);
-bool stringContainsChar(const string& str, char32_t ch);
-int stringIndexOfChar(const string& str, char32_t ch);
-string stringSubstring(const string& str, int start, int end);
-string stringSubstring(const string& str, int start);
 string stringFromInt(int i);
 string stringFromDouble(double d);
 string stringFromFloat(float f);

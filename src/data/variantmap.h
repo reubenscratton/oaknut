@@ -45,7 +45,7 @@ public:
         return get(key);
     }
     Variant& operator[](const string& key) {
-        return (*((_map.insert(make_pair(key,Variant()))).first)).second;
+        return (*((_map.insert(std::make_pair(key,Variant()))).first)).second;
     }
 
     

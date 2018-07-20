@@ -20,7 +20,7 @@ static void dispatchResult(URLRequest* req, URLData* urldata) {
 
 void URLRequest::nativeStart() {
     retain(); // ensure request is alive until it completes, can't count on anything else to keep us alive
-    NSString* urlstr = [NSString stringWithCString:_url.c_str() encoding:[NSString defaultCStringEncoding]];
+    NSString* urlstr = [NSString stringWithCString:_url.data() encoding:[NSString defaultCStringEncoding]];
     NSURLRequest* req = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:urlstr] cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:15];
     NSURLSessionDataTask* dataTask = [[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
         if (data.length==0 || error.code == -999) { // cancelled via stop_(), just abort. 'this' might well be deleted.

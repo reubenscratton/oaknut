@@ -7,10 +7,7 @@
 
 #include <oaknut.h>
 
-static list<Object*> s_autodeletePool;
-#if DEBUG
-void* DBGOBJ = 0;
-#endif
+static std::list<Object*> s_autodeletePool;
 
 void Object::flushAutodeletePool() {
     if (s_autodeletePool.size() > 0) {
@@ -22,16 +19,13 @@ void Object::flushAutodeletePool() {
 }
 
 Object::Object() : _refs(0) {
-	//app.log("new %s", getClassName(this).data());
 }
 Object::~Object() {
 }
 void Object::retain() {
-    //assert(_refs<1000);
 	_refs++;
 }
 void Object::release() {
-    //assert(_refs<1000);
 	if (--_refs == 0) {
         s_autodeletePool.push_back(this);
 		//delete this;

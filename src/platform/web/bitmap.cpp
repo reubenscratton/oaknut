@@ -36,7 +36,7 @@ static int gltypeForFormat(int format) {
     switch (format) {
         case BITMAPFORMAT_RGBA32: return GL_UNSIGNED_BYTE;
         case BITMAPFORMAT_BGRA32: return GL_UNSIGNED_BYTE;
-        case BITMAPFORMAT_RGB565: return GL_UNSIGNED_SHORT;
+        case BITMAPFORMAT_RGB565: return GL_UNSIGNED_SHORT_5_6_5;
         case BITMAPFORMAT_A8: return GL_UNSIGNED_BYTE;
         default: assert(0);
     }

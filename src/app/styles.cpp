@@ -78,10 +78,10 @@ StyleValue* StyleValueUber::select() {
 }
 
 StyleValue* StyleMap::getValue(const string& keypath) {
-    int dotIndex = stringIndexOfChar(keypath, L'.');
+    auto dotIndex = keypath.find(L'.');
     if (dotIndex>0) {
-        string key = stringSubstring(keypath, 0, dotIndex);
-        string subkey = stringSubstring(keypath, dotIndex+1);
+        string key = keypath.substr(0, dotIndex);
+        string subkey = keypath.substr(dotIndex+1, -1);
         StyleValueUber* uberval = _values[key];
         if (uberval) {
             StyleValue* val = uberval->select();
@@ -137,10 +137,10 @@ bool StyleMap::parse(Utf8Iterator& it) {
         
         // Split out the qualifier suffix, if there is one
         string fieldNameQualifier = "";
-        int qualifierStartsAt = stringIndexOfChar(fieldName, '@');
+        int qualifierStartsAt = fieldName.find('@');
         if (qualifierStartsAt > 0) {
-            fieldNameQualifier = stringSubstring(fieldName, qualifierStartsAt+1);
-            fieldName = stringSubstring(fieldName, 0, qualifierStartsAt);
+            fieldNameQualifier = fieldName.substr(qualifierStartsAt+1, -1);
+            fieldName = fieldName.substr(0, qualifierStartsAt);
         }
         
         it.skipWhitespace();
@@ -166,8 +166,8 @@ bool StyleMap::parse(Utf8Iterator& it) {
             }
             char ch = *str.begin();
             if (ch>='0' && ch<='9') {
-                bool isFloat = stringContainsChar(str, '.');
-                if (stringEndsWith(str, "dp", true)) {
+                bool isFloat = str.contains('.');
+                if (str.hadSuffix("dp")) {
                     value->unit = StyleValue::Unit::DP;
                     isFloat = true;
                 }
@@ -179,7 +179,7 @@ bool StyleMap::parse(Utf8Iterator& it) {
                     value->i = stringParseInt(str);
                 }
             } else {
-                if (stringStartsWith(str, "\"", true)) {
+                if (str.hadPrefix("\"")) {
                     Utf8Iterator j(str);
                     string unesc_str = "";
                     while (char32_t ch = j.next()) {
@@ -195,12 +195,12 @@ bool StyleMap::parse(Utf8Iterator& it) {
                                 case 'u': assert(0); // todo! implement unicode escapes
                             }
                         }
-                        stringAppendCodepoint(unesc_str, ch);
+                        unesc_str.append(ch);
                     }
                     str = unesc_str;
                 }
                 
-                if (stringStartsWith(str, "$", true)) {
+                if (str.hadPrefix("$")) {
                     value->setType(StyleValue::Type::Reference);
                 } else {
                     value->setType(StyleValue::Type::String);

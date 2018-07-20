@@ -216,7 +216,7 @@ void TextRenderer::measure(SIZE maxSize) {
         line.bounds.origin = POINT_Make(0, y);
         line.bounds.size.height = lineHeight;
         line.baseline = baseline;
-        _measuredSize.width = max(_measuredSize.width, line.bounds.size.width);
+        _measuredSize.width = MAX(_measuredSize.width, line.bounds.size.width);
         _measuredSize.height += lineHeight;
         y += lineHeight;
     }
@@ -344,8 +344,8 @@ void TextRenderer::getGlyphOrigin(int glyphIndex, POINT* origin, float* ascent, 
         *ascent = line->baseline;
         *descent = -(line->bounds.size.height - line->baseline);
         if (glyphIndex < line->glyphinfos.size()) {
-            GLYPHINFO& glyphInfo = line->glyphinfos[glyphIndex];
-            *origin = glyphInfo.rect.origin;
+            const GLYPHINFO& glyphInfo = line->glyphinfos[glyphIndex];
+            *origin = POINT_Make(glyphInfo.rect.left(), glyphInfo.rect.bottom());
             return;
         } else {
             if (line->glyphinfos.size() > 0) {

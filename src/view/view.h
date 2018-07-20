@@ -379,8 +379,9 @@ protected:
     
 public:
 
-    // Keyboard input
+    // Keyboard and text handling
     virtual IKeyboardInputHandler* getKeyboardInputHandler();
+    virtual ITextInputReceiver* getTextInputReceiver();
     virtual bool setFocused(bool focused);
     virtual bool isFocused();
 

@@ -75,6 +75,12 @@ static void oak_userEvent(int eventType, int eventSourceId, int x, int y) {
     app._window->dispatchInputEvent(eventType, (INPUT_SOURCE_TYPE_MOUSE<<8) | eventSourceId, app.currentMillis(), x, y);
 }
 
+static void oak_keyEvent(int keyDown, int keyCode, int charCode) {
+    if (app._window->_keyboardHandler) {
+        app._window->_keyboardHandler->keyInputEvent(keyDown? 0:1, 0, keyCode, charCode);
+    }
+}
+
 void oakMessageLoop() {
     //    app._window->draw();
 }
@@ -86,6 +92,7 @@ static void appMain() {
 EMSCRIPTEN_BINDINGS(oaknut) {
     emscripten::function("oak_setWindowSize", &oak_setWindowSize);
     emscripten::function("oak_userEvent", &oak_userEvent);
+    emscripten::function("oak_keyEvent", &oak_keyEvent);
     emscripten::function("oak_main", &appMain);
 }
 

@@ -103,7 +103,7 @@ void SegmentedControl::updateContentSize(float parentWidth, float parentHeight) 
 		segment.rect.size.width = app.dp(8) + labelSize.width + app.dp(8);
 		segment.rect.size.height = app.dp(4) + labelSize.height + app.dp(4);
 		_contentSize.width += segment.rect.size.width;
-		_contentSize.height = max(_contentSize.height, segment.rect.size.height);
+		_contentSize.height = MAX(_contentSize.height, segment.rect.size.height);
 	}
 	// Adjust cos rects overlap by a line width
 	_contentSize.width -= (_segments.size()-1) * _lineWidth;

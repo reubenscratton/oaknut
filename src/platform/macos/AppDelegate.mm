@@ -24,6 +24,7 @@ static bool s_mouseIsDown;
 
 @implementation GLView
 
+
 - (void)handleTouches:(NSEvent*)event eventType:(int)eventType remove:(BOOL)remove {
     CGPoint pt = event.locationInWindow;
     pt.y = self.frame.size.height - pt.y;
@@ -83,11 +84,8 @@ static bool s_mouseIsDown;
     
     [self setPixelFormat:pf];
     [self setOpenGLContext:context];
-    [self setWantsBestResolutionOpenGLSurface:YES];
-    
-
+    [self setWantsBestResolutionOpenGLSurface:YES];    
 }
-
 
 
 - (void) prepareOpenGL {

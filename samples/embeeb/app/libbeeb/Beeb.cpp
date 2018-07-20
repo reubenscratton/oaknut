@@ -142,7 +142,7 @@ void Beeb::tick() {
                 // Press / unpress the key
                 sysvia.keys[col][row] = down;
                 sysvia.updateKeys();
-                //bbcLogI("Key event %d,%d = %d", col, row, down);
+                //app.log("Key event %d,%d = %d", col, row, down);
                 
                 // If code-coverage is pending (waiting for a key down) then turn it on.
                 if (down) {

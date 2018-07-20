@@ -59,6 +59,7 @@ bool SearchBox::setFocused(bool focused) {
             float x2 = paddedBounds.origin.x;
             iconRect.origin.x = x1 + (x2-x1)*val;
             _searchIconOp->setRect(iconRect);
+            setNeedsFullRedraw();
         });
     }
     return r;

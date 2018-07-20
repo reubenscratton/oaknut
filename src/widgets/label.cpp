@@ -127,7 +127,7 @@ string vformat(const char *fmt, va_list ap)  {
 
         if (needed <= (int)size && needed >= 0) {
             // It fit fine so we're done.
-            return std::string (buf, (size_t) needed);
+            return string(buf, (size_t) needed);
         }
 
         // vsnprintf reported that it wanted to write more characters
@@ -216,7 +216,7 @@ void Label::setStyle(string styleName) {
     // TODO: this method should just fetch the named map from Styles:: and call View::applyStyleValues()
     string fontName = app.getStyleString(styleName + ".font-name");
     float fontSize = app.getStyleFloat(styleName + ".font-size");
-    if (fontName.size() && fontSize) {
+    if (fontName.length() && fontSize) {
         setFont(Font::get(fontName, fontSize));
     }
     COLOUR textColour = app.getStyleColour(styleName + ".forecolour");

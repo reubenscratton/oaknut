@@ -116,7 +116,7 @@ bool Variant::operator<(const Variant& rhs) const {
         case FLOAT64: return d < rhs.d;
         case STRING: return *str < *(rhs.str);
         case BYTEBUFFER: {
-            size_t cb = min(data->cb, rhs.data->cb);
+            size_t cb = MIN(data->cb, rhs.data->cb);
             int cv = memcmp(data->data, rhs.data->data, cb);
             if (cv != 0) return cv<0;
             return data->cb < rhs.data->cb;
