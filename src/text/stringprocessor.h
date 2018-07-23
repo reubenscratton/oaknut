@@ -36,5 +36,5 @@ string stringFromDouble(double d);
 string stringFromFloat(float f);
 double stringParseDouble(const string& str);
 int stringParseInt(const string& str);
-float stringParseDimension(string str);
+
 

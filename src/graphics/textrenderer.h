@@ -43,6 +43,7 @@ protected:
     } GLYPHINFO;
     
     typedef struct {
+        Font* font; // font at start of line only
         RECT bounds; // in client coords
         float baseline; // offset from bounds.top to baseline
         vector<GLYPHINFO> glyphinfos;

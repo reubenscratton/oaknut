@@ -63,6 +63,11 @@ void EditText::updateCursor() {
         _cursorRenderOp->setColour(0xff333333); // todo: style
         _cursorOn = true;
     }
+    // If the content size is invalid then we can't update the cursor immediately. This will get
+    // called again when updateContentSize() completes.
+    if (!_contentSizeValid) {
+        return;
+    }
     POINT cursorOrigin;
     float ascent, descent;
     _textRenderer.getGlyphOrigin(_insertionPoint, &cursorOrigin, &ascent, &descent);
@@ -222,6 +227,7 @@ void EditText::keyInputEvent(KeyboardInputEventType keyboardInputEventType, Keyb
             return;
     }
     string str;
+    if (charCode=='\r') charCode = '\n';
     str.append(charCode);
     insertText(str, _selectionStart, _insertionPoint);
     _selectionStart++;

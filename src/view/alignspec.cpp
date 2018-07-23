@@ -72,7 +72,7 @@ ALIGNSPEC::ALIGNSPEC(StyleValue* value, View* view) {
         }
         str.trim();
         if (str.length() > 0) {
-            margin = stringParseDimension(str);
+            margin = StyleValue::parseDimension(str);
         }
     }
 }

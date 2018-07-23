@@ -33,6 +33,9 @@ public:
     float getAsFloat();
 
     void setType(Type newType);
+    
+    
+    static float parseDimension(string str);
 };
 
 class StyleValueUber : public Object {

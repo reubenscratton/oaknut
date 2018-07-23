@@ -49,6 +49,11 @@
 #include <assert.h>
 #include <chrono>
 
+#ifndef MIN
+#define MIN(a,b) (((a)<(b)) ? (a) : (b))
+#define MAX(a,b) (((a)>(b)) ? (a) : (b))
+#endif
+
 using std::map;
 using std::unordered_map;
 using std::list;

@@ -447,6 +447,7 @@ void Window::prepareToDraw() {
 
     _renderCounter++;
     _currentSurface = NULL;
+    _currentTexture = NULL;
     _currentProg = 0;
 }
 

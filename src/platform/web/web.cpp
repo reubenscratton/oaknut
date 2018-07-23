@@ -77,7 +77,7 @@ static void oak_userEvent(int eventType, int eventSourceId, int x, int y) {
 
 static void oak_keyEvent(int keyDown, int keyCode, int charCode) {
     if (app._window->_keyboardHandler) {
-        app._window->_keyboardHandler->keyInputEvent(keyDown? 0:1, 0, keyCode, charCode);
+        app._window->_keyboardHandler->keyInputEvent(keyDown? KeyDown:KeyUp, SpecialKeyNone, keyCode, charCode);
     }
 }
 

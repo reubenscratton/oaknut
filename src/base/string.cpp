@@ -145,6 +145,12 @@ int32_t string::find(char32_t ch) const {
     }
     return -1;
 }
+bool string::contains(const string& str) const {
+    return find(str) >=0;
+}
+bool string::contains(const char* s) const {
+    return find(s) >=0;
+}
 bool string::contains(char32_t ch) const {
     return find(ch) >=0;
 }
@@ -402,6 +408,11 @@ string string::extractUpTo(const string& sep, bool remove) {
     return result;
 }
 
+typedef uint8_t uint8;
+typedef uint32_t uint32;
+typedef uint64_t uint64;
+typedef std::pair<uint64, uint64> uint128;
+
 
 static uint64 UNALIGNED_LOAD64(const char *p) {
     uint64 result;
@@ -449,11 +460,6 @@ static uint32 UNALIGNED_LOAD32(const char *p) {
 #define LIKELY(x) (x)
 #endif
 #endif
-
-typedef uint8_t uint8;
-typedef uint32_t uint32;
-typedef uint64_t uint64;
-typedef std::pair<uint64, uint64> uint128;
 
 inline uint64 Uint128Low64(const uint128& x) { return x.first; }
 inline uint64 Uint128High64(const uint128& x) { return x.second; }

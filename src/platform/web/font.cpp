@@ -24,8 +24,8 @@ Font::Font(const string& fontAssetPath, float size) : FontBase(fontAssetPath, si
             ByteBuffer* fontData = app.loadAsset(fontAssetPath.data());
             fontFamily = fontAssetPath;
             while (fontFamily.extractUpTo("/", true).length() > 0) {}
-            stringEndsWith(fontFamily, ".ttf", true);
-            stringEndsWith(fontFamily, ".otf", true);
+            fontFamily.hadSuffix(".ttf");
+            fontFamily.hadSuffix(".otf");
             //app.log("Custom font %s loaded from %s", fontFamily.data(), fontAssetPath.data());
             string fontDataStr = "@font-face { font-family:\"";
             fontDataStr += fontFamily;
@@ -42,7 +42,7 @@ Font::Font(const string& fontAssetPath, float size) : FontBase(fontAssetPath, si
         }
     }
     
-    _fontHelper = val::global("FontHelper").new_(val(_name), val(_size), val(fontFamily));
+    _fontHelper = val::global("FontHelper").new_(val(_name.data()), val(_size), val(fontFamily.data()));
 }
     
 Glyph* Font::createGlyph(char32_t ch, Atlas* atlas) {

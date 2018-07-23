@@ -294,5 +294,22 @@ float StyleValue::getAsFloat() {
     return f;
 }
 
+float StyleValue::parseDimension(string str) {
+    bool isDP = false;
+    bool isSP = false;
+    if (str.hadSuffix("dp")) {
+        isDP = true;
+    } else if (str.hadSuffix("sp")) { // todo: support properly, needs platform integration
+        isSP = true;
+    } else if (str.hadSuffix("px")) {
+    }
+    float val = stringParseDouble(str);
+    if (isDP || isSP) {
+        val = app.dp(val);
+    }
+    return val;
+}
+
+
 
 

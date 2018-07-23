@@ -78,6 +78,8 @@ public:
     int32_t find(const string& str) const;
     int32_t find(const char* s) const;
     int32_t find(char32_t ch) const;
+    bool contains(const string& str) const;
+    bool contains(const char* s) const;
     bool contains(char32_t ch) const;
     
     static string format(const char* fmt, ...);
@@ -146,7 +148,7 @@ public:
     string(const iterator& start, const iterator& end) : string(start.data(), end.data()-start.data()) {
     }
 
-    iterator begin() const {return iterator(*this, _p?0:-1);}
+    iterator begin() const {return iterator(*this, _p?(_cb?0:-1):-1);}
     iterator end() const {return iterator(*this, -1);}
 
     string extractUpTo(const string& sep, bool remove);

@@ -1,6 +1,11 @@
 R"({
 font-size: 17dp
 
+window: {
+    default-width:200dp
+    default-height:200dp
+}
+
 colours: {
     table_bkgnd: 0xffefeff4
     table_border: 0xffc8c7cc

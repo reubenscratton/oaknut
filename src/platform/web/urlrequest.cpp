@@ -28,7 +28,7 @@ public:
     }
     static void OnImageLoad(NativeRequest* req) {
         app.log("OnImageLoad %s", req->_req->_url.data());
-        bool isPng = string::npos!=req->_req->_url.find(".png", 0);
+        bool isPng = req->_req->_url.contains(".png");
         ObjPtr<Bitmap> bitmap = new Bitmap(req->_val, isPng);
         req->_val = val::null();
         req->_req->dispatchOnLoad(new URLData(bitmap));

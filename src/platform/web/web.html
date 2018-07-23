@@ -218,8 +218,7 @@ var Module = {
 };
 
 function keyEvent(e, down) {
-    var keyCode = (e.key.length>1) ? e.keyCode :  e.key.charCodeAt(0);
-    Module.oak_keyEvent(down, 0, keyCode);
+    Module.oak_keyEvent(down, e.keyCode, (e.key.length>=1) ? e.key.charCodeAt(0) : 0);
 }
 document.addEventListener('keydown', (e) => {
     //log("keydown! " + e);
