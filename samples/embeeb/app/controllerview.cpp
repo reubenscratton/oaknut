@@ -54,13 +54,13 @@ void ControllerView::setTouchedKey(int finger, ControllerKey* currentKey) {
 }
 
 
-bool ControllerView::onTouchEvent(int eventType, int source, POINT pt) {
+bool ControllerView::onInputEvent(INPUTEVENT *event) {
 
-	if (eventType==INPUT_EVENT_DOWN || (eventType==INPUT_EVENT_MOVE && SOURCE_TYPE(source)==INPUT_SOURCE_TYPE_FINGER)) {
-		setTouchedKey(SOURCE_ID(source), hitTest(pt));
+	if (event->type==INPUT_EVENT_DOWN || event->type==INPUT_EVENT_MOVE) {
+		setTouchedKey(event->deviceIndex, hitTest(event->pt));
 	}
-	if (eventType==INPUT_EVENT_UP) {
-		setTouchedKey(SOURCE_ID(source), NULL);
+	if (event->type==INPUT_EVENT_UP) {
+		setTouchedKey(event->deviceIndex, NULL);
 	}
 
 	return true;

@@ -227,14 +227,19 @@ void View::setRectSize(const SIZE& size) {
     d.height = size.height - _rect.size.height;
     if (d.width || d.height) {
         _rect.size = size;
-        if (_currentBackgroundOp) {
-            _currentBackgroundOp->setRect(getOwnRect());
-        }
+        updateBackgroundRect();
         setNeedsFullRedraw();
     }
 }
 
-
+void View::updateBackgroundRect() {
+    if (_currentBackgroundOp) {
+        RECT rect = getOwnRect();
+        rect.origin.x += _contentOffset.x;
+        rect.origin.y += _contentOffset.y;
+        _currentBackgroundOp->setRect(rect);
+    }
+}
 
 void View::setMeasureSpecs(MEASURESPEC widthMeasureSpec, MEASURESPEC heightMeasureSpec) {
 	_widthMeasureSpec = widthMeasureSpec;
@@ -803,6 +808,7 @@ void View::setContentOffset(POINT contentOffset) {
 	if (!contentOffset.equals(_contentOffset)) {
 		_contentOffset = contentOffset;
         updateScrollbarVisibility();
+        updateBackgroundRect();
 	}
     if (_window) {
         _window->requestRedraw();
@@ -884,31 +890,31 @@ View* View::hitTest(POINT pt, POINT* ptRel) {
 //
 // dispatches an input event to a view.
 //
-View* View::dispatchInputEvent(int eventType, int eventSource, TIMESTAMP time, POINT pt) {
+View* View::dispatchInputEvent(INPUTEVENT* event) {
 	if (_state & STATE_DISABLED) {
         return NULL;
     }
-
+    
 	// Find the most distant leaf view containing the point
-	POINT ptRel;
-	View* view = hitTest(pt, &ptRel);
+	//POINT ptRel;
+	View* view = hitTest(event->pt, &event->pt);
 	
 	// Offer the event to the leaf view and if it doesn't handle it pass
 	// it up the view tree until a view handles it.
 	while (view) {
-		if (view->onTouchEvent(eventType, eventSource, ptRel)) {
+		if (view->onInputEvent(event)) {
 			return view;
 		}
-		ptRel.x += view->_rect.origin.x;
-		ptRel.y += view->_rect.origin.y;
+		event->pt.x += view->_rect.origin.x;
+		event->pt.y += view->_rect.origin.y;
 		view = view->_parent;
 	}
 
-	return onTouchEvent(eventType, eventSource, pt) ? this : NULL;
+	return onInputEvent(event) ? this : NULL;
 }
 
 
-bool View::onTouchEvent(int eventType, int eventSource, POINT pt) {
+bool View::onInputEvent(INPUTEVENT* event) {
 
 	// todo: state changes
 
@@ -916,14 +922,13 @@ bool View::onTouchEvent(int eventType, int eventSource, POINT pt) {
     //    return false;
     //}
     
-
-    _scrollVert.handleTouchEvent(this, true, eventType, eventSource, pt);
-    _scrollHorz.handleTouchEvent(this, false, eventType, eventSource, pt);
+    bool scrolled = _scrollVert.handleEvent(this, true, event);
+    scrolled |= _scrollHorz.handleEvent(this, false, event);
     
-	if (onTouchEventDelegate) {
-        return onTouchEventDelegate(this, eventType, eventSource, pt);
+	if (onInputEventDelegate) {
+        return onInputEventDelegate(this, event);
 	}
-	return false;
+	return scrolled;
 }
 
 IKeyboardInputHandler* View::getKeyboardInputHandler() {

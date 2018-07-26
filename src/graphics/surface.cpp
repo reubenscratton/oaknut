@@ -232,7 +232,7 @@ void Surface::renderPhase1(View* view, Window* window, POINT origin) {
         view->_contentSizeValid = true;
     }
     
-    bool changesMvp = view->_matrix || view->_contentOffset.y != 0.0f;
+    bool changesMvp = view->_matrix || !view->_contentOffset.isZero();
     if (changesMvp) {
         _mvpNum++;
     }
@@ -303,16 +303,16 @@ void Surface::renderPhase2(Surface* prevsurf, View* view, Window* window) {
     
 
     Matrix4 savedMatrix;
-    bool changesMvp = view->_matrix || view->_contentOffset.y != 0.0f;
+    bool changesMvp = view->_matrix || !view->_contentOffset.isZero();
     if (changesMvp) {
         savedMatrix = surface->_mvp;
     }
     if (view->_matrix) {
         surface->_mvp *= *view->_matrix;
     }
-    if (view->_contentOffset.y != 0.0f) {
+    if (!view->_contentOffset.isZero()) {
         Matrix4 tm;
-        tm.translate(0, -view->_contentOffset.y, 0);
+        tm.translate(-view->_contentOffset.x, -view->_contentOffset.y, 0);
         surface->_mvp *= tm;
     }
     

@@ -19,7 +19,7 @@ public:
     COLOUR _pressedFillColour;
 
     // Overrides
-    virtual bool onTouchEvent(int eventType, int finger, POINT pt);
+    virtual bool onInputEvent(INPUTEVENT* event);
     virtual bool applyStyleValue(const string& name, StyleValue* value);
     virtual void applyStyleValues(const StyleValueList& values);
 
@@ -34,7 +34,7 @@ public:
 	
 	void setImageUrl(const string& url);
     void setImageBitmap(Bitmap* bitmap);
-	bool onTouchEvent(int eventType, int finger, POINT pt);
+    virtual bool onInputEvent(INPUTEVENT* event);
 
 protected:
     void lazyCreateImageView();

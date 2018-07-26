@@ -50,6 +50,7 @@ protected:
         bool ellipsis;
     } TEXTLINE;
 
+    friend class Label;
     
 protected:
     string _text;
@@ -67,6 +68,6 @@ protected:
     int _maxLines; // 0=as many as needed, >=1 = text will ellipsize
     RECT _layoutRect;
     
-    TEXTLINE* getLineForGlyphIndex(int glyphIndex);
+    TEXTLINE* getLineForGlyphIndex(int& glyphIndex);
 
 };

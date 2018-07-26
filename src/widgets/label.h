@@ -9,6 +9,7 @@ class Label : public View {
 public:
     TextRenderer _textRenderer;
     COLOUR _defaultColour;
+    float _prevParentWidth;
     
     Label();
 	~Label();
@@ -16,7 +17,9 @@ public:
     // Overrides
     virtual bool applyStyleValue(const string& name, StyleValue* value);
     virtual void updateRenderOps();
+    virtual void measure(float parentWidth, float parentHeight);
     virtual void updateContentSize(float parentWidth, float parentHeight);
+    virtual void setContentOffset(POINT contentOffset);
     virtual void layout();
     virtual void onEffectiveTintColourChanged();
     virtual void setGravity(GRAVITY gravity);

@@ -167,8 +167,22 @@ void Label::onEffectiveTintColourChanged() {
     setNeedsFullRedraw();
 }
 
+void Label::measure(float parentWidth, float parentHeight) {
+    
+    // If the width changed and the label isn't absolutely sized, force a re-evaluation of content size
+    if (parentWidth != _prevParentWidth && _widthMeasureSpec.refType!=MEASURESPEC::RefTypeAbs) {
+        _textRenderer._measuredSizeValid = false;
+        _contentSizeValid = false;
+        _prevParentWidth = parentWidth;
+    }
+    View::measure(parentWidth, parentHeight);
+}
 
+void Label::setContentOffset(POINT contentOffset) {
+    View::setContentOffset(contentOffset);
+    _textRenderer.updateRenderOps(this);
 
+}
 void Label::updateContentSize(float parentWidth, float parentHeight) {
 
     _contentSize.width = 0;

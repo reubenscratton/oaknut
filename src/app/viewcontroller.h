@@ -90,7 +90,7 @@ public:
     /**
      * Helper for dispatching touch events from the host OS.
      */
-	virtual View* dispatchTouchEvent(int eventType, int finger, TIMESTAMP time, POINT pt);
+	//virtual View* dispatchTouchEvent(int eventType, int finger, TIMESTAMP time, POINT pt);
 	
 
 protected:

@@ -81,7 +81,7 @@ public:
 	virtual void updateContentSize(float parentWidth, float parentHeight);
     virtual void layout();
     virtual void setContentOffset(POINT contentOffset);
-	virtual bool onTouchEvent(int eventType, int finger, POINT pt);
+	virtual bool onInputEvent(INPUTEVENT* event);
     virtual void removeSubview(View* subview);
 	
 	

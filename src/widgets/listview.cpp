@@ -135,10 +135,11 @@ void ListView::onItemTap(View* itemView, LISTINDEX index) {
 	}
 }
 
-bool ListView::onTouchEvent(int eventType, int finger, POINT pt) {
-    View::onTouchEvent(eventType, finger, pt);
-	if (eventType == INPUT_EVENT_DOWN) {
+bool ListView::onInputEvent(INPUTEVENT* event) {
+    View::onInputEvent(event);
+	if (event->type == INPUT_EVENT_DOWN) {
 		
+        POINT pt = event->pt;
         pt.x += _contentOffset.x;
         pt.y += _contentOffset.y;
         
@@ -152,21 +153,21 @@ bool ListView::onTouchEvent(int eventType, int finger, POINT pt) {
 		return true;
 		
 	}
-	if (eventType == INPUT_EVENT_DRAG) {
+	if (event->type == INPUT_EVENT_DRAG) {
 		setSelectedIndex(LISTINDEX_NONE);
 		return true;
 	}
-	if (eventType == INPUT_EVENT_UP) {
+	if (event->type == INPUT_EVENT_UP) {
 		return true;
 	}
-	if (eventType == INPUT_EVENT_TAP) {
+	if (event->type == INPUT_EVENT_TAP) {
 		if (_selectedIndex != LISTINDEX_NONE) {
 			onItemTap(indexToView(_selectedIndex), _selectedIndex);
 			setSelectedIndex(LISTINDEX_NONE);
 		}
 		return true;
 	}
-    if (eventType == INPUT_EVENT_LONG_PRESS) {
+    if (event->type == INPUT_EVENT_LONG_PRESS) {
         if (_selectedIndex != LISTINDEX_NONE) {
             _onItemLongPressDelegate(indexToView(_selectedIndex), _selectedIndex);
             //setSelectedIndex(LISTINDEX_NONE);
@@ -216,8 +217,8 @@ void ListView::ItemView::updateDeleteButton(bool animate) {
         } else {
             _deleteButton->setBitmap(_listView->_bmpDelete);
         }
-        _deleteButton->onTouchEventDelegate = [&] (View* view, int eventType, int eventSource, POINT pt)  -> bool {
-            if (eventType == INPUT_EVENT_TAP) {
+        _deleteButton->onInputEventDelegate = [&] (View* view, INPUTEVENT* event)  -> bool {
+            if (event->type == INPUT_EVENT_TAP) {
                 _listView->showDeleteConfirmButton(this);
             }
             return true;
@@ -244,8 +245,8 @@ void ListView::ItemView::showDeleteConfirmButton(bool show) {
             _deleteConfirmButton->setGravity({GRAVITY_CENTER, GRAVITY_CENTER});
             _deleteConfirmButton->setMeasureSpecs(MEASURESPEC::Abs(CONFIRM_BUTTON_WIDTH), MEASURESPEC::FillParent());
             _deleteConfirmButton->setAlignSpecs(ALIGNSPEC(NULL,1,0,0), ALIGNSPEC::Top());
-            _deleteConfirmButton->onTouchEventDelegate = [&] (View* view, int eventType, int eventSource, POINT pt)  -> bool {
-                if (eventType == INPUT_EVENT_TAP) {
+            _deleteConfirmButton->onInputEventDelegate = [&] (View* view, INPUTEVENT* event)  -> bool {
+                if (event->type == INPUT_EVENT_TAP) {
                     _listView->deleteRow(_listIndex);
                 }
                 return true;

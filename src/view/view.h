@@ -299,7 +299,8 @@ protected:
     class ScrollbarsView* _scrollbarsView;
     void addScrollbarOp(RenderOp* renderOp);
     void removeScrollbarOp(RenderOp* renderOp);
-
+    void updateBackgroundRect();
+    
     /** Links to the adjacent views in the render order. All views attached to the window
         form a doubly-linked list used in rendering. */
     ObjPtr<View> _previousView;
@@ -363,14 +364,14 @@ protected:
 public:
     /** Convenience function returning true if the view is both visible and enabled */
     virtual bool isTouchable();
-    std::function<bool(View*,int,int,POINT)> onTouchEventDelegate;
+    std::function<bool(View*,INPUTEVENT*)> onInputEventDelegate;
     virtual View* hitTest(POINT pt, POINT* ptRel);
     virtual View* subviewContainingPoint(POINT pt);
     virtual int indexOfSubviewContainingPoint(POINT pt);
 protected:
     /**  \cond INTERNAL */
-    virtual View* dispatchInputEvent(int eventType, int finger, TIMESTAMP time, POINT pt);
-    virtual bool onTouchEvent(int eventType, int finger, POINT pt);
+    virtual View* dispatchInputEvent(INPUTEVENT* event);
+    virtual bool onInputEvent(INPUTEVENT* event);
 	
     POINT _ptDrag;
     /**  \endcond */

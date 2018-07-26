@@ -72,7 +72,7 @@ static void oak_userEvent(int eventType, int eventSourceId, int x, int y) {
     //app.log("userEv type=%d src=%d x=%d,y=%d", eventType, eventSourceId, x, y);
     x *= app._window->_scale;
     y *= app._window->_scale;
-    app._window->dispatchInputEvent(eventType, (INPUT_SOURCE_TYPE_MOUSE<<8) | eventSourceId, app.currentMillis(), x, y);
+    app._window->dispatchInputEvent(eventType, (INPUT_SOURCE_TYPE_MOUSE<<8) | eventSourceId, app.currentMillis(), x, y, NULL);
 }
 
 static void oak_keyEvent(int keyDown, int keyCode, int charCode) {

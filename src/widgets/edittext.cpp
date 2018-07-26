@@ -20,15 +20,16 @@ EditText::EditText() : Label() {
     _gravity.vert = GRAVITY_CENTER;
 }
 
-bool EditText::onTouchEvent(int eventType, int eventSource, POINT pt) {
-    if (eventType == INPUT_EVENT_TAP) {
-        if (_clearButtonOp && _clearButtonOp->_rect.contains(pt)) {
+bool EditText::onInputEvent(INPUTEVENT* event) {
+    if (event->type == INPUT_EVENT_TAP) {
+        if (_clearButtonOp && _clearButtonOp->_rect.contains(event->pt)) {
             setText("");
             return true;
         }
         setFocused(true);
     }
-    return true;//View::onTouchEvent(eventType, eventSource, pt);
+    Label::onInputEvent(event);
+    return true;
 }
 
 void EditText::detachFromWindow() {
@@ -162,6 +163,7 @@ void EditText::deleteBackward() {
     else if (_insertionPoint > 0) {
         text.erase(_insertionPoint - 1);
         _insertionPoint--;
+        _selectionStart--;
         setText(text);
     }
 }

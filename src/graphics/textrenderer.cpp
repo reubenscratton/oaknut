@@ -336,13 +336,17 @@ void TextRenderer::updateRenderOps(View* view) {
     _renderOpsValid = true;
 }
 
-TextRenderer::TEXTLINE* TextRenderer::getLineForGlyphIndex(int glyphIndex) {
+TextRenderer::TEXTLINE* TextRenderer::getLineForGlyphIndex(int& glyphIndex) {
+    
     for (auto it = _lines.begin() ; it != _lines.end() ; it++) {
         TEXTLINE& line = *it;
         if (glyphIndex < line.glyphinfos.size()) {
             return &line;
         }
         glyphIndex -= line.glyphinfos.size();
+    }
+    if (_lines.size()) {
+        glyphIndex += _lines.rbegin()->glyphinfos.size();
     }
     return NULL;
 }

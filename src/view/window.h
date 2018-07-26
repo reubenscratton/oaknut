@@ -8,6 +8,7 @@
 #define INPUT_SOURCE_TYPE_KEY 0
 #define INPUT_SOURCE_TYPE_MOUSE 1
 #define INPUT_SOURCE_TYPE_FINGER 2
+#define INPUT_SOURCE_TYPE_SCROLLER 3
 
 #define MAKE_SOURCE(type, id) ((type<<8)|id)
 #define SOURCE_TYPE(source) (source>>8)
@@ -30,11 +31,27 @@
 #define MULTI_CLICK_THRESHOLD 400 // ms
 #define LONG_PRESS_THRESHOLD 800 // ms
 
+typedef struct INPUTEVENT {
+    int type;
+    enum {
+        Mouse,
+        Touch,
+        ScrollWheel //
+    } deviceType;
+    int deviceIndex; 
+    TIMESTAMP time;
+    POINT pt;
+    POINT delta; // specific to ScrollWheel
+    POINT velocity; // specific to flings
+} INPUTEVENT;
+
+
 
 /** @class Window
  *  @brief A window is the top level container for app UI. There is usually only one Window instance, accessible through `app.window`.
  *  @ingroup views
- */class Window : public Object {
+ */
+class Window : public Object {
 public:
 	
 	ObjPtr<class ViewController> _rootViewController;
@@ -46,7 +63,7 @@ public:
     class MotionTracker {
     public:
         MotionTracker(int source);
-        void dispatchInputEvent(int event, TIMESTAMP time, POINT pt, Window* window);
+        void dispatchInputEvent(INPUTEVENT* event, Window* window);
 
         int source;
         ObjPtr<class View>  touchedView;
@@ -85,7 +102,7 @@ public:
 	virtual void resizeSurface(int width, int height, float scale);
 	virtual void draw();
 	virtual void requestRedraw();
-	virtual void dispatchInputEvent(int event, int source, TIMESTAMP time, int x, int y);
+	virtual void dispatchInputEvent(INPUTEVENT* event);
 	virtual POINT offsetToView(View* view);
     
     virtual bool setFocusedView(View* view);

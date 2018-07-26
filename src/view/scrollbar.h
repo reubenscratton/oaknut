@@ -42,7 +42,7 @@ public:
 
     void updateVisibility(View* view, bool isVertical);
     bool canScroll(View* view, bool isVertical);
-    void handleTouchEvent(View* view, bool isVertical, int eventType, int eventSource, POINT& pt);
+    bool handleEvent(View* view, bool isVertical, INPUTEVENT* event);
 
     float flingUpdate();
     void flingCancel();

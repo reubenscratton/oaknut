@@ -38,6 +38,6 @@ public:
 	virtual void measure(float parentWidth, float parentHeight);
 	virtual void layout();
     virtual void updateRenderOps();
-	virtual bool onTouchEvent(int eventType, int eventSource, POINT pt);
+	virtual bool onInputEvent(INPUTEVENT* event);
     virtual void onEffectiveTintColourChanged();
 };

@@ -252,17 +252,20 @@ JAVA_FN(void, MainActivity, onContentRectChangedNative)(JNIEnv* env, jobject obj
 
 
 JAVA_FN(void, MainActivity, onTouchEventNative)(JNIEnv* env, jobject obj, jint finger, jint action, jlong time, jfloat x, jfloat y) {
-    int32_t em_action=0;
+    INPUTEVENT event;
+    event.source = INPUTEVENT::Mouse;
+    event.index = finger;
     switch (action) {
-        case AMOTION_EVENT_ACTION_DOWN: em_action=INPUT_EVENT_DOWN; break;
-        case AMOTION_EVENT_ACTION_MOVE: em_action=INPUT_EVENT_MOVE; break;
-        case AMOTION_EVENT_ACTION_UP: em_action=INPUT_EVENT_UP; break;
-        case AMOTION_EVENT_ACTION_CANCEL: em_action=INPUT_EVENT_CANCEL; break;
+        case AMOTION_EVENT_ACTION_DOWN: event.type=INPUT_EVENT_DOWN; break;
+        case AMOTION_EVENT_ACTION_MOVE: event.type=INPUT_EVENT_MOVE; break;
+        case AMOTION_EVENT_ACTION_UP: event.type=INPUT_EVENT_UP; break;
+        case AMOTION_EVENT_ACTION_CANCEL: event.type=INPUT_EVENT_CANCEL; break;
     }
     //LOGI("ev %d %f,%f scale=%f", em_action, x, y, app._window->_scale);
-    x *= app._window->_scale;
-    y *= app._window->_scale;
-    app._window->dispatchInputEvent(em_action, MAKE_SOURCE(INPUT_SOURCE_TYPE_FINGER,finger), time, x ,y);
+    event.pt.x = x * app._window->_scale;
+    event.pt.y = y * app._window->_scale;
+    event.time = time;
+    app._window->dispatchInputEvent(&event);
 }
 
 

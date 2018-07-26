@@ -22,38 +22,68 @@ static bool _calledMain = false;
 static bool _renderNeeded;
 static bool s_mouseIsDown;
 
+
+
 @implementation GLView
 
-
-- (void)handleTouches:(NSEvent*)event eventType:(int)eventType remove:(BOOL)remove {
+- (void)dispatchInputEvent:(NSEvent*)event type:(int)type isScrollwheel:(BOOL)isScrollWheel {
+    INPUTEVENT inputEvent;
+    inputEvent.type = type;
+    inputEvent.deviceIndex = 0;
     CGPoint pt = event.locationInWindow;
     pt.y = self.frame.size.height - pt.y;
-    app._window->dispatchInputEvent(eventType, MAKE_SOURCE(INPUT_SOURCE_TYPE_MOUSE, 0), event.timestamp*1000, pt.x*app._window->_scale, pt.y*app._window->_scale);
+    inputEvent.pt.x = pt.x*app._window->_scale;
+    inputEvent.pt.y = pt.y*app._window->_scale;
+    inputEvent.time = event.timestamp*1000;
+    if (isScrollWheel) {
+        inputEvent.deviceType = INPUTEVENT::ScrollWheel;
+        inputEvent.delta = POINT_Make(event.scrollingDeltaX*app._window->_scale, event.scrollingDeltaY*app._window->_scale);
+    } else {
+        inputEvent.deviceType = INPUTEVENT::Mouse;
+    }
+    app._window->dispatchInputEvent(&inputEvent);
     [self setNeedsDisplay:YES];
 }
 - (void)mouseDown:(NSEvent *)event {
     s_mouseIsDown = true;
-    [self handleTouches:event eventType:INPUT_EVENT_DOWN remove:NO];
+    [self dispatchInputEvent:event type:INPUT_EVENT_DOWN isScrollwheel:NO];
 }
 - (void)mouseUp:(NSEvent *)event {
     s_mouseIsDown = false;
-    [self handleTouches:event eventType:INPUT_EVENT_UP remove:YES];
+    [self dispatchInputEvent:event type:INPUT_EVENT_UP isScrollwheel:NO];
 }
 - (void)mouseMoved:(NSEvent *)event {
-    [self handleTouches:event eventType:INPUT_EVENT_MOVE remove:NO];
+    [self dispatchInputEvent:event type:INPUT_EVENT_MOVE isScrollwheel:NO];
+}
+- (void)scrollWheel:(NSEvent *)event {
+    int type;
+    // NB: OS X generates momentum scroll events which clashes with Oaknut's 'fling' implementation.
+    // Easiest thing is to filter them out and only handle events from while the user is touching the touchpad.
+    if (event.phase == NSEventPhaseBegan) {
+        type = INPUT_EVENT_DOWN;
+    } else if (event.phase == NSEventPhaseEnded) {
+        type = INPUT_EVENT_UP;
+    } else if (event.phase == NSEventPhaseChanged) {
+        type = INPUT_EVENT_MOVE;
+    } else {
+        return;
+    }
+    [self dispatchInputEvent:event type:type isScrollwheel:YES];
 }
 
+// TODO: Do we ever want mouseover events? I imagine we do so rework this...
 //- (void)touchesBeganWithEvent:(NSEvent*)event {
 //}
 - (void)touchesMovedWithEvent:(NSEvent*)event {
     if (s_mouseIsDown) {
-        [self handleTouches:event eventType:INPUT_EVENT_MOVE remove:NO];
+        [self dispatchInputEvent:event type:INPUT_EVENT_MOVE isScrollwheel:NO];
     }
 }
 //- (void)touchesEndedWithEvent:(NSEvent*)event {
 //}
 - (void)touchesCancelledWithEvent:(NSEvent*)event {
-    [self handleTouches:event eventType:INPUT_EVENT_CANCEL remove:YES];
+    [self dispatchInputEvent:event type:INPUT_EVENT_CANCEL isScrollwheel:NO];
+
 }
 
 

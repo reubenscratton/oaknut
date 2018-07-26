@@ -64,13 +64,14 @@ Window::MotionTracker::MotionTracker(int source) {
     touchedView = NULL;
     timeOfDownEvent = 0;
     pastIndex = pastCount = 0;
+    numClicks = 0;
 }
 
-void Window::MotionTracker::dispatchInputEvent(int event, TIMESTAMP time, POINT pt, Window* window) {
+void Window::MotionTracker::dispatchInputEvent(INPUTEVENT* event, Window* window) {
     if (touchedView && !touchedView->_window) {
         touchedView = NULL; // avoid sending events to detached views
     }
-    if (event == INPUT_EVENT_DOWN) {
+    if (event->type == INPUT_EVENT_DOWN) {
         isDragging = false;
         if (multiclickTimer) {
             multiclickTimer->stop();
@@ -78,46 +79,56 @@ void Window::MotionTracker::dispatchInputEvent(int event, TIMESTAMP time, POINT 
             numClicks++;
         }
         pastIndex = pastCount = 0;
-        ptDown = pt;
-        timeOfDownEvent = time;
-        touchedView = window->_rootViewController->getView()->dispatchInputEvent(INPUT_EVENT_DOWN, source, time, pt);
-        if (touchedView) {
+        ptDown = event->pt;
+        timeOfDownEvent = event->time;
+        touchedView = window->_rootViewController->getView()->dispatchInputEvent(event);
+        if (touchedView && event->deviceType!=INPUTEVENT::ScrollWheel) {
             _didSendLongpressEvent = false;
             _longpressTimer = Timer::start([=] {
                 if (touchedView && touchedView->_window) {
-                    touchedView->dispatchInputEvent(INPUT_EVENT_LONG_PRESS, source, time, pt);
+                    INPUTEVENT lpEv = *event;
+                    lpEv.type = INPUT_EVENT_LONG_PRESS;
+                    touchedView->dispatchInputEvent(&lpEv);
                     _didSendLongpressEvent = true;
                 }
                 _longpressTimer = NULL;
             }, LONG_PRESS_THRESHOLD, false);
         }
-    }
-    if (event == INPUT_EVENT_DOWN || event == INPUT_EVENT_MOVE) {
-        if (event == INPUT_EVENT_MOVE) { // filter out spurious move events (seen on iOS 10)
-            int prevIndex = pastIndex - 1;
-            if (prevIndex < 0) prevIndex += NUM_PAST;
-            if (pastPts[prevIndex].equals(pt)) {
-                pastTime[prevIndex] = time;
-                return;
-            }
-        }
-        pastTime[pastIndex] = time;
-        pastPts[pastIndex] = pt;
+        pastTime[pastIndex] = event->time;
+        pastPts[pastIndex] = (event->deviceType==INPUTEVENT::ScrollWheel) ? event->delta : event->pt;
         pastIndex = (pastIndex + 1) % NUM_PAST;
         pastCount++;
     }
 
-    if (event == INPUT_EVENT_MOVE) {
-        if (timeOfDownEvent && !isDragging) {
-            float dx = pt.x - ptDown.x;
-            float dy = pt.y - ptDown.y;
+    if (event->type == INPUT_EVENT_MOVE) {
+        
+        // Filter out spurious move events (seen on iOS 10)
+        if (event->deviceType != INPUTEVENT::ScrollWheel) {
+            int prevIndex = pastIndex - 1;
+            if (prevIndex < 0) prevIndex += NUM_PAST;
+            if (pastPts[prevIndex].equals(event->pt)) {
+                pastTime[prevIndex] = event->time;
+                return;
+            }
+        }
+        pastTime[pastIndex] = event->time;
+        pastPts[pastIndex] = (event->deviceType==INPUTEVENT::ScrollWheel) ? event->delta : event->pt;
+        pastIndex = (pastIndex + 1) % NUM_PAST;
+        pastCount++;
+        if (timeOfDownEvent && !isDragging && event->deviceType!=INPUTEVENT::ScrollWheel) {
+            float dx = event->pt.x - ptDown.x;
+            float dy = event->pt.y - ptDown.y;
             float dist = sqrtf(dx * dx + dy * dy);
             if (app.idp(dist) >= TOUCH_SLOP) {
                 isDragging = true;
-                View *interceptView = window->_rootViewController->getView()->dispatchInputEvent(INPUT_EVENT_DRAG, source, time, pt);
+                INPUTEVENT dragEvent = *event;
+                dragEvent.type = INPUT_EVENT_DRAG;
+                View *interceptView = window->_rootViewController->getView()->dispatchInputEvent(&dragEvent);
                 if (interceptView) {
                     if (touchedView) {
-                        touchedView->dispatchInputEvent(INPUT_EVENT_CANCEL, source, time, pt);
+                        INPUTEVENT cancelEvent = *event;
+                        cancelEvent.type = INPUT_EVENT_CANCEL;
+                        touchedView->dispatchInputEvent(&cancelEvent);
                     }
                     touchedView = interceptView;
                 }
@@ -128,94 +139,103 @@ void Window::MotionTracker::dispatchInputEvent(int event, TIMESTAMP time, POINT 
             }
         }
         if (touchedView) {
-            touchedView->dispatchInputEvent(INPUT_EVENT_MOVE, source, time, pt);
+            touchedView->dispatchInputEvent(event);
         }
-    } else if (event == INPUT_EVENT_UP) {
+    } else if (event->type == INPUT_EVENT_UP) {
         if (_longpressTimer) {
             _longpressTimer->stop();
             _longpressTimer = NULL;
         }
         if (touchedView) {
-            touchedView->dispatchInputEvent(INPUT_EVENT_UP, source, time, pt);
+            touchedView->dispatchInputEvent(event);
         }
-        if (!_didSendLongpressEvent) {
-            if (!isDragging) {
-                // TAP!
-                if (touchedView) {
-                    touchedView->dispatchInputEvent(INPUT_EVENT_TAP, source, time, pt);
-                    app.log("tap %d", numClicks);
-                }
-                multiclickTimer = Timer::start([=] {
-                    if (touchedView && touchedView->_window) {
-                        touchedView->dispatchInputEvent(INPUT_EVENT_TAP_CONFIRMED, source, time, pt);
+            if (!_didSendLongpressEvent) {
+                if (!isDragging && (event->deviceType!=INPUTEVENT::ScrollWheel)) {
+                    // TAP!
+                    if (touchedView) {
+                        INPUTEVENT tapEvent = *event;
+                        tapEvent.type = INPUT_EVENT_TAP;
+                        touchedView->dispatchInputEvent(&tapEvent);
+                        app.log("tap %d", numClicks);
                     }
-                    multiclickTimer = NULL;
-                    app.log("tap confirmed at %d", numClicks);
-                    numClicks = 0;
-                    touchedView = NULL;
-                }, MULTI_CLICK_THRESHOLD, false);
-            } else {
-                // FLING!
+                    multiclickTimer = Timer::start([=] {
+                        if (touchedView && touchedView->_window) {
+                            INPUTEVENT tapEvent = *event;
+                            tapEvent.type = INPUT_EVENT_TAP_CONFIRMED;
+                            touchedView->dispatchInputEvent(&tapEvent);
+                        }
+                        multiclickTimer = NULL;
+                        app.log("tap confirmed at %d", numClicks);
+                        numClicks = 0;
+                        touchedView = NULL;
+                    }, MULTI_CLICK_THRESHOLD, false);
+                } else {
+                    // FLING!
 
-                // Work out the drag velocity by getting the distance travelled from the oldest historical point
-                // and extrapolating an average distance per second.
-                int numPoints = MIN(pastCount, NUM_PAST);
-                int index = pastIndex - numPoints;
-                if (index < 0) index += NUM_PAST;
-                while (numPoints-- > 1) {
-                    POINT ptFrom = pastPts[index];
-                    TIMESTAMP timeFrom = pastTime[index];
-                    index = (index + 1) % NUM_PAST;
-                    if (time - timeFrom >= 333) { // ignore historical points that are too old
-                        continue;
+                    // Work out the drag velocity by getting the distance travelled from the oldest historical point
+                    // and extrapolating an average distance per second.
+                    int numPoints = MIN(pastCount, NUM_PAST);
+                    float dx=0.f,dy=0.f;
+                    int dTime = 1;
+                        for (int i=1 ; i<=numPoints ; i++) {
+                            int index = pastIndex - i;
+                            if (index < 0) index += NUM_PAST;
+                            POINT ptFrom = pastPts[index];
+                            TIMESTAMP timeFrom = pastTime[index];
+                            if (event->time - timeFrom >= 333) { // ignore historical points that are too old
+                                continue;
+                            }
+                            dTime = (int) (event->time - timeFrom);
+                            if (dTime <= 0) continue;
+                            if (event->deviceType == INPUTEVENT::ScrollWheel) {
+                                dx += ptFrom.x;
+                                dy += ptFrom.y;
+                            } else {
+                                dx = event->pt.x - ptFrom.x;
+                                dy = event->pt.y - ptFrom.y;
+                            }
                     }
-                    int dTime = (int) (time - timeFrom);
-                    if (dTime <= 0) continue;
-                    float dx = pt.x - ptFrom.x;
-                    float dy = pt.y - ptFrom.y;
                     float thisVeloX = dx * 1000.0f / dTime;
                     float thisVeloY = dy * 1000.0f / dTime;
                     POINT velocity = {0, 0};
                     velocity.x = (velocity.x == 0) ? thisVeloX : ((velocity.x + thisVeloX) / 2);
                     velocity.y = (velocity.y == 0) ? thisVeloY : ((velocity.y + thisVeloY) / 2);
                     if (touchedView) {
-                        touchedView->dispatchInputEvent(INPUT_EVENT_FLING, source, time, velocity);
+                        INPUTEVENT flingEvent = *event;
+                        flingEvent.type = INPUT_EVENT_FLING;
+                        flingEvent.velocity = velocity;
+                        touchedView->dispatchInputEvent(&flingEvent);
                     }
-                    break;
                 }
-            }
         }
         //touchedView = NULL;
         timeOfDownEvent = 0;
 
     }
-
 }
 
-void Window::dispatchInputEvent(int event, int source, TIMESTAMP time, int x, int y) {
-	//app.log("Window::dispatchTouch %d %d %d %d", event, source, x, y);
-    POINT pt = POINT_Make(x, y);
+void Window::dispatchInputEvent(INPUTEVENT* event) {
 
-    if (SOURCE_TYPE(source)==INPUT_SOURCE_TYPE_MOUSE || SOURCE_TYPE(source)==INPUT_SOURCE_TYPE_FINGER) {
+    //if (event->deviceType == INPUTEVENT::Mouse || event->deviceType == INPUTEVENT::Touch) {
 
         // Start or lookup motion tracker
         MotionTracker *tracker = NULL;
         for (auto it=_motionTrackers.begin() ; it!=_motionTrackers.end() ; it++) {
-            if ((*it)->source == source) {
+            if ((*it)->source == event->deviceIndex) {
                 tracker = *it;
                 break;
             }
         }
         if (!tracker) {
-            tracker = new MotionTracker(source);
+            tracker = new MotionTracker(event->deviceIndex);
             //glInsertEventMarkerEXT(0, "com.apple.GPUTools.event.debug-frame");
             _motionTrackers.push_back(tracker);
         }
 
         // Let the tracker process the new input event
-        tracker->dispatchInputEvent(event, time, pt, this);
+        tracker->dispatchInputEvent(event,  this);
 
-    }
+    //}
 }
 
 static int numFrames;

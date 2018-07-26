@@ -65,7 +65,6 @@ bool TextRenderOp::canMergeWith(const RenderOp* op) {
 
 void TextRenderOp::render(Window* window, Surface* surface) {
     RenderOp::render(window, surface);
-    //app.log("render text %d", _textRenderParams.atlasPage->_texture->_textureId);
     window->bindTexture(_textRenderParams.atlasPage->_bitmap);
 }
 

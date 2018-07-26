@@ -24,16 +24,18 @@ public:
 	ControllerView();
 	
 	// Overrides
-	virtual bool onTouchEvent(int eventType, int finger, POINT pt);
-	virtual void layout();
-	virtual void setController(Controller* controller);
+	bool onInputEvent(INPUTEVENT* event) override;
+	void layout() override;
+    IKeyboardInputHandler* getKeyboardInputHandler() override;
+
+    // API
+    virtual void setController(Controller* controller);
 	virtual void activateControllerByName(const string& controllerName);
 	virtual ControllerKey* hitTest(POINT pt);
-	virtual void setTouchedKey(int finger, ControllerKey* currentKey);
-    virtual IKeyboardInputHandler* getKeyboardInputHandler();
+	void setTouchedKey(int finger, ControllerKey* currentKey);
 	
     // IKeyboardInputHandler
-    virtual void keyInputEvent(KeyboardInputEventType keyboardInputEventType, KeyboardInputSpecialKeyCode specialKeyCode, int osKeyCode, char32_t charCode);
+    void keyInputEvent(KeyboardInputEventType keyboardInputEventType, KeyboardInputSpecialKeyCode specialKeyCode, int osKeyCode, char32_t charCode) override;
 };
 
 
