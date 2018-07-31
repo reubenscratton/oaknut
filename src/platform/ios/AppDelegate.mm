@@ -120,9 +120,14 @@ extern dispatch_queue_t oakQueue;
 		}
 
         //dispatch_async(oakQueue, ^{
-        pt.x *= app._window->_scale;
-        pt.y *= app._window->_scale;
-            app._window->dispatchInputEvent(eventType, MAKE_SOURCE(INPUT_SOURCE_TYPE_FINGER, touchSlot), touch.timestamp*1000, pt.x, pt.y);
+            INPUTEVENT inputEvent;
+            inputEvent.deviceType = INPUTEVENT::Mouse;
+            inputEvent.deviceIndex = 0;
+            inputEvent.type = eventType;
+            inputEvent.pt.x = pt.x*app._window->_scale;
+            inputEvent.pt.y = pt.y*app._window->_scale;
+            inputEvent.time = touch.timestamp*1000;
+            app._window->dispatchInputEvent(&inputEvent);
             [self setNeedsDisplay];
         //});
 	}

@@ -5,14 +5,7 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-class Span : public Object {
-public:
-    int _start;
-    int _end;
-    
-    ObjPtr<Font> _font;
-    COLOUR _forecolour;
-};
+
 
 class TextRenderer : public Object {
     
@@ -23,8 +16,10 @@ public:
     void layout(RECT rect);
     const SIZE measuredSize() { return _measuredSize; }
     void updateRenderOps(View* view);
-    void setText(const string& text);
     const string& getText() { return _text; }
+    void setText(const string& text);
+    const AttributedString& getAttributedText() { return _text; }
+    void setAttributedText(const AttributedString& text);
     void setDefaultColour(COLOUR colour);
     COLOUR getDefaultColour() { return _defaultColour; }
     void setDefaultFontName(const string& fontName);
@@ -35,7 +30,6 @@ public:
     void setMaxLines(int maxLines);
     void getGlyphOrigin(int glyphIndex, POINT* origin, float* ascent, float* descent);
     
-protected:
     typedef struct {
         Glyph* glyph; // Glyphs are owned by their font, no need for ownership here
         RECT rect;    // client coords
@@ -46,17 +40,20 @@ protected:
         Font* font; // font at start of line only
         RECT bounds; // in client coords
         float baseline; // offset from bounds.top to baseline
+        int32_t startingIndex; // index into _text of first char
         vector<GLYPHINFO> glyphinfos;
         bool ellipsis;
     } TEXTLINE;
 
+    int32_t characterIndexFromPoint(const POINT& pt) const;
+    const TEXTLINE* getLineForGlyphIndex(int glyphIndex, int dLine) const;
+    int32_t characterIndexFromX(const TEXTLINE* line, const float x) const;
+
     friend class Label;
     
 protected:
-    string _text;
-    vector<ObjPtr<Span>> _spans;
+    AttributedString _text;
     ObjPtr<Font> _defaultFont;
-
     COLOUR _defaultColour;
     GRAVITY _gravity;
     bool _measuredSizeValid;

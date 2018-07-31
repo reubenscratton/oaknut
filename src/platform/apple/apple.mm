@@ -10,7 +10,7 @@
 
 int App::getIntSetting(const char *key, const int defaultValue) {
     id val = [[NSUserDefaults standardUserDefaults] objectForKey:[NSString stringWithCString:key encoding:NSUTF8StringEncoding]];
-    return val ? [val integerValue] : defaultValue;
+    return val ? [val int32Value] : defaultValue;
 }
 void App::setIntSetting(const char* key, const int value) {
     [[NSUserDefaults standardUserDefaults] setObject:@(value) forKey:[NSString stringWithCString:key encoding:NSUTF8StringEncoding]];

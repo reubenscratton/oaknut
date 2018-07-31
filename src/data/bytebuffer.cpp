@@ -91,6 +91,7 @@ void ByteBuffer::saveToFile(const string& path) {
 }
 
 string ByteBuffer::toString(bool copy) {
+    int32_t cb = (int32_t)this->cb;
     if (copy) {
         return string((char*)data, cb);
     }

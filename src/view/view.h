@@ -231,13 +231,16 @@ public:
     virtual void setScrollInsets(EDGEINSETS scrollInsets);
     virtual bool canScrollHorizontally();
     virtual bool canScrollVertically();
-
+    virtual bool getClipsContent() const;
+    virtual void setClipsContent(bool clipsContent);
+    virtual void scrollBy(POINT scrollAmount);
 
 protected:
     /**  \cond INTERNAL */
     SIZE _contentSize;
     POINT _contentOffset;
     bool _contentSizeValid;
+    bool _clipsContent;
     GRAVITY _gravity;
     EDGEINSETS _scrollInsets;
     ScrollInfo _scrollVert;
@@ -403,6 +406,7 @@ public:
 
 class ScrollbarsView : public View {
 public:
-    
+    void measure(float parentWidth, float parentHeight) override;
+    void layout() override;
 };
 

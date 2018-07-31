@@ -16,6 +16,10 @@ void TextRenderer::setText(const string& text) {
     _text = text;
     _measuredSizeValid = false;
 }
+void TextRenderer::setAttributedText(const AttributedString& text) {
+    _text = text;
+    _measuredSizeValid = false;
+}
 
 void TextRenderer::setDefaultColour(COLOUR colour) {
     _defaultColour = colour;
@@ -63,8 +67,8 @@ void TextRenderer::measure(SIZE maxSize) {
     // Prepare to walk the ordered spans collection
     stack<Font*> fontStack;
     stack<COLOUR> forecolourStack;
-    auto spanStartIterator = _spans.begin();
-    auto spanEndIterator = _spans.begin();
+    auto spanStartIterator = _text._attributes.begin();
+    auto spanEndIterator = _text._attributes.begin();
     
     // Defaults
     Font* currentFont = _defaultFont;
@@ -87,39 +91,36 @@ void TextRenderer::measure(SIZE maxSize) {
         }
         
         
-        // Apply any spans that start at this point
-        while (spanStartIterator!=_spans.end() && i>=((*spanStartIterator))->_start) {
-            Span* startingSpan = (*spanStartIterator);
-            if (startingSpan->_font) {
-                fontStack.push(currentFont);
-                currentFont = startingSpan->_font;
+        // Unapply spans that end at this point
+        while (spanEndIterator!=_text._attributes.end() && i>=spanEndIterator->end) {
+            auto endingSpan = (*spanEndIterator);
+            if (endingSpan.attribute._type == Attribute::Type::Font) {
+                currentFont = fontStack.top();
+                fontStack.pop();
             }
-            if (startingSpan->_forecolour) {
-                if (startingSpan->_forecolour != textRenderParams.forecolour) {
-                    forecolourStack.push(textRenderParams.forecolour);
-                    textRenderParams.forecolour = startingSpan->_forecolour;
-                    paramsChanged = true;
-                }
+            if (endingSpan.attribute._type == Attribute::Type::Forecolour) {
+                textRenderParams.forecolour = forecolourStack.top();
+                forecolourStack.pop();
+                paramsChanged = true;
+            }
+            spanEndIterator++;
+        }
+
+        // Apply any spans that start at this point
+        while (spanStartIterator!=_text._attributes.end() && i>=spanStartIterator->start) {
+            auto startingSpan = (*spanStartIterator);
+            if (startingSpan.attribute._type == Attribute::Type::Font) {
+                fontStack.push(currentFont);
+                currentFont = startingSpan.attribute._font;
+            }
+            if (startingSpan.attribute._type == Attribute::Type::Forecolour) {
+                forecolourStack.push(textRenderParams.forecolour);
+                textRenderParams.forecolour = startingSpan.attribute._colour;
+                paramsChanged = true;
             }
             spanStartIterator++;
         }
         
-        // Unapply spans that end at this point
-        while (spanEndIterator!=_spans.end() && i>=((*spanEndIterator))->_end) {
-            Span* endingSpan = (*spanEndIterator);
-            if (endingSpan->_font) {
-                currentFont = fontStack.top();
-                fontStack.pop();
-            }
-            if (endingSpan->_forecolour) {
-                if (textRenderParams.forecolour != forecolourStack.top()) {
-                    textRenderParams.forecolour = forecolourStack.top();
-                    forecolourStack.pop();
-                    paramsChanged = true;
-                }
-            }
-            spanEndIterator++;
-        }
         
         
         // Hard line-break
@@ -139,7 +140,7 @@ void TextRenderer::measure(SIZE maxSize) {
             ch = ' ';
         }
         if (isWhitespace(prevCh) && !isWhitespace(ch)) {
-            breakOpportunity = currentLine->glyphinfos.size(); // track first non-whitespace char after run of whitespace chars
+            breakOpportunity = (int32_t)currentLine->glyphinfos.size(); // track first non-whitespace char after run of whitespace chars
         }
         
         // Fetch the next glyph
@@ -171,21 +172,22 @@ void TextRenderer::measure(SIZE maxSize) {
         // Soft line break
         if (exceedsBounds && !isWhitespace(ch)) {
             filledHorizontally = true;
+            if (breakOpportunity < 0) { // if there were no spaces on this line, force a break at the preceding char
+                breakOpportunity = (int32_t)currentLine->glyphinfos.size()-1;
+            }
             vector<GLYPHINFO> extract;
             float xx = 0;
-            if (breakOpportunity >= 0) {
-                while (breakOpportunity < currentLine->glyphinfos.size()) {
-                    auto gi = currentLine->glyphinfos.begin() + breakOpportunity;
-                    xx += gi->glyph->advance.width;
-                    extract.push_back(*gi);
-                    currentLine->glyphinfos.erase(gi);
-                }
-                currentLine->bounds.size.width -= xx;
-                currentLine = _lines.emplace(_lines.end(), TEXTLINE());
-                currentLine->font = currentFont;
-                currentLine->bounds.size.width = xx;
-                currentLine->glyphinfos = extract;
+            while (breakOpportunity < currentLine->glyphinfos.size()) {
+                auto gi = currentLine->glyphinfos.begin() + breakOpportunity;
+                xx += gi->glyph->advance.width;
+                extract.push_back(*gi);
+                currentLine->glyphinfos.erase(gi);
             }
+            currentLine->bounds.size.width -= xx;
+            currentLine = _lines.emplace(_lines.end(), TEXTLINE());
+            currentLine->font = currentFont;
+            currentLine->bounds.size.width = xx;
+            currentLine->glyphinfos = extract;
             breakOpportunity = -1;
         }
         
@@ -212,6 +214,7 @@ void TextRenderer::measure(SIZE maxSize) {
     // Iterate lines, calculate each line height and do naive typesetting
     int numLines = (int)_lines.size();
     float y = 0;
+    int32_t startingIndex = 0;
     for (int i=0 ; i<numLines ; i++) {
         TEXTLINE& line = _lines.at(i);
         float lineHeight = line.font->_height;
@@ -229,6 +232,8 @@ void TextRenderer::measure(SIZE maxSize) {
         line.bounds.size.height = lineHeight;
         line.bounds.origin = POINT_Make(0, y);
         line.baseline = baseline;
+        line.startingIndex = startingIndex;
+        startingIndex += line.glyphinfos.size();
         _measuredSize.width = MAX(_measuredSize.width, line.bounds.size.width);
         _measuredSize.height += lineHeight;
         y += lineHeight;
@@ -334,6 +339,57 @@ void TextRenderer::updateRenderOps(View* view) {
     }
 
     _renderOpsValid = true;
+}
+
+int32_t TextRenderer::characterIndexFromPoint(const POINT& pt) const {
+    assert(_measuredSizeValid);
+    const TEXTLINE* line = NULL;
+    for (auto& it: _lines) {
+        if (pt.y>=it.bounds.origin.y && pt.y<it.bounds.bottom()) {
+            line = &it;
+            break;
+        }
+    }
+    if (!line) {
+        if (_lines.size() == 0) {
+            return 0;
+        }
+        if (pt.y < _lines.begin()->bounds.origin.y) {
+            line = &_lines.at(0);
+        } else {
+            line = &_lines.at(_lines.size()-1);
+        }
+    }
+    return line->startingIndex + characterIndexFromX(line, pt.x);
+}
+
+int32_t TextRenderer::characterIndexFromX(const TEXTLINE* line, const float x) const {
+    float minErr = MAXFLOAT;
+    int charIndex=0, bestIndex=0;
+    for (auto it : line->glyphinfos) {
+        float dx = fabs(x - it.rect.origin.x);
+        if (dx < minErr) {
+            bestIndex = charIndex;
+            minErr = dx;
+        }
+        charIndex++;
+    }
+    return bestIndex;
+}
+
+const TextRenderer::TEXTLINE* TextRenderer::getLineForGlyphIndex(int glyphIndex, int dLine) const {
+    for (int i=0 ; i<_lines.size() ; i++) {
+        const TEXTLINE& line = _lines.at(i);
+        if (glyphIndex < line.glyphinfos.size()) {
+            i += dLine;
+            if (i<0 || i>=_lines.size()) {
+                return NULL;
+            }
+            return &_lines.at(i);
+        }
+        glyphIndex -= line.glyphinfos.size();
+    }
+    return NULL;
 }
 
 TextRenderer::TEXTLINE* TextRenderer::getLineForGlyphIndex(int& glyphIndex) {

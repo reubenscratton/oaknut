@@ -170,12 +170,9 @@ bool ScrollInfo::handleEvent(View* view, bool isVertical, INPUTEVENT* event) {
                 POINT newContentOffset = view->_contentOffset;
                 newContentOffset.y = _offsetStart - _dragTotal;
                 // Overscroll handling
-                _overscroll = false;
                 if (newContentOffset.y < 0) {
-                    _overscroll = true;
                     newContentOffset.y /= fmax(1.0f, log10(_dragTotal));
                 } else if (newContentOffset.y > maxScroll) {
-                    _overscroll = true;
                     float overshoot = newContentOffset.y - maxScroll;
                     newContentOffset.y = maxScroll + overshoot / fmax(1.0f, log10(overshoot));
                 }
@@ -184,17 +181,26 @@ bool ScrollInfo::handleEvent(View* view, bool isVertical, INPUTEVENT* event) {
             }
         }
     }
+    
+    offset = isVertical ? view->_contentOffset.y : view->_contentOffset.x;
+    bool overscroll = false;
+    if (offset < 0) {
+        overscroll = true;
+    } else if (offset > maxScroll) {
+        overscroll = true;
+    }
+
 
     if (event->type == INPUT_EVENT_UP) {
-        if (_overscroll) {
+        if (overscroll) {
             flingCancel();
             offset = isVertical ? view->_contentOffset.y : view->_contentOffset.x;
-            _fling = new Bounce(offset, (offset<0)?0:contentSize-viewSize);
+            _fling = new Bounce(offset, (offset<=0)?0:contentSize-viewSize);
             view->setNeedsFullRedraw();
         }
     }
 
-    if (event->type == INPUT_EVENT_FLING && !_overscroll) {
+    if (event->type == INPUT_EVENT_FLING && !overscroll) {
         bool canScroll = isVertical ? view->canScrollVertically() : view->canScrollHorizontally();
         if (canScroll) {
             flingCancel();

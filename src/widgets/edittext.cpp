@@ -21,6 +21,12 @@ EditText::EditText() : Label() {
 }
 
 bool EditText::onInputEvent(INPUTEVENT* event) {
+    if (event->type == INPUT_EVENT_DOWN && event->deviceType!=INPUTEVENT::ScrollWheel) {
+        POINT pt = event->pt;
+        pt.x += _contentOffset.x;
+        pt.y += _contentOffset.y;
+        setInsertionPoint(_textRenderer.characterIndexFromPoint(pt));
+    }
     if (event->type == INPUT_EVENT_TAP) {
         if (_clearButtonOp && _clearButtonOp->_rect.contains(event->pt)) {
             setText("");
@@ -79,6 +85,7 @@ void EditText::updateCursor() {
     } else if (!_cursorOn && _cursorRenderOp->_batch) {
         removeRenderOp(_cursorRenderOp);
     }
+    
     invalidateRect(_cursorRenderOp->_rect); // todo: shouldn't this be unnecessary? i.e. implicit to add/removeOp
     _blinkCursorTimer = Timer::start([=]() {
         _cursorOn = !_cursorOn;
@@ -99,8 +106,17 @@ void EditText::updateContentSize(float parentWidth, float parentHeight) {
     _cursorOn = true;
     updateCursor();
 }
-void EditText::setText(string text) {
+void EditText::setText(const string& text) {
     Label::setText(text);
+    _selectionStart = MIN(_selectionStart, (int)text.length());
+    _insertionPoint = MIN(_insertionPoint, (int)text.length());
+    updateClearButton();
+    if (isFocused()) {
+        app.keyboardNotifyTextChanged();
+    }
+}
+void EditText::setAttributedText(const AttributedString& text) {
+    Label::setAttributedText(text);
     _selectionStart = MIN(_selectionStart, (int)text.length());
     _insertionPoint = MIN(_insertionPoint, (int)text.length());
     updateClearButton();
@@ -196,6 +212,34 @@ string EditText::textInRange(int start, int end) {
     return text.substr(start, end);
 }
 
+void EditText::setInsertionPoint(int32_t newInsertionPoint) {
+    _insertionPoint = newInsertionPoint;
+    _selectionStart = newInsertionPoint; // todo: not if shift held
+    _cursorOn = true;
+    updateCursor();
+    
+    // Ensure the cursor is fully visible (i.e. autoscroll it into view)
+    auto line = _textRenderer.getLineForGlyphIndex(_insertionPoint, 0);
+    float dy = line->bounds.top() - _contentOffset.y;
+    if (dy < 0) {
+        scrollBy({0,dy});
+    } else {
+        dy = line->bounds.bottom() - (_rect.size.height+_contentOffset.y);
+        if (dy > 0) {
+            scrollBy({0,dy});
+        }
+    }
+    
+}
+
+void EditText::moveToLine(int dLine) {
+    auto line = _textRenderer.getLineForGlyphIndex(_insertionPoint, dLine);
+    if (line) {
+        int32_t xOff = _textRenderer.characterIndexFromX(line, _cursorRenderOp->_rect.origin.x);
+        setInsertionPoint(line->startingIndex + xOff);
+    }
+}
+
 /*
 IKeyboardInputHandler
 */
@@ -211,19 +255,19 @@ void EditText::keyInputEvent(KeyboardInputEventType keyboardInputEventType, Keyb
             return;
         case SpecialKeyCursorLeft:
             if (_insertionPoint > 0) {
-                _insertionPoint--;
-                _selectionStart = _insertionPoint; // todo: not if shift held
-                _cursorOn = true;
-                updateCursor();
+                setInsertionPoint(_insertionPoint-1);
             }
             return;
         case SpecialKeyCursorRight:
             if (_insertionPoint < getTextLength()) {
-                _insertionPoint++;
-                _selectionStart = _insertionPoint; // todo: not if shift held
-                _cursorOn = true;
-                updateCursor();
+                setInsertionPoint(_insertionPoint+1);
             }
+            return;
+        case SpecialKeyCursorUp:
+            moveToLine(-1);
+            return;
+        case SpecialKeyCursorDown:
+            moveToLine(1);
             return;
         default:
             return;

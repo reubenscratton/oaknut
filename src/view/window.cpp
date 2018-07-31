@@ -6,7 +6,6 @@
 //
 
 #include <oaknut.h>
-//#include <thread>
 
 
 Window::Window() : _rootViewController(NULL), _scale(1) {
@@ -177,23 +176,23 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT* event, Window* window
                     int numPoints = MIN(pastCount, NUM_PAST);
                     float dx=0.f,dy=0.f;
                     int dTime = 1;
-                        for (int i=1 ; i<=numPoints ; i++) {
-                            int index = pastIndex - i;
-                            if (index < 0) index += NUM_PAST;
-                            POINT ptFrom = pastPts[index];
-                            TIMESTAMP timeFrom = pastTime[index];
-                            if (event->time - timeFrom >= 333) { // ignore historical points that are too old
-                                continue;
-                            }
-                            dTime = (int) (event->time - timeFrom);
-                            if (dTime <= 0) continue;
-                            if (event->deviceType == INPUTEVENT::ScrollWheel) {
-                                dx += ptFrom.x;
-                                dy += ptFrom.y;
-                            } else {
-                                dx = event->pt.x - ptFrom.x;
-                                dy = event->pt.y - ptFrom.y;
-                            }
+                    for (int i=1 ; i<=numPoints ; i++) {
+                        int index = pastIndex - i;
+                        if (index < 0) index += NUM_PAST;
+                        POINT ptFrom = pastPts[index];
+                        TIMESTAMP timeFrom = pastTime[index];
+                        if (event->time - timeFrom >= 333) { // ignore historical points that are too old
+                            continue;
+                        }
+                        dTime = (int) (event->time - timeFrom);
+                        if (dTime <= 0) continue;
+                        if (event->deviceType == INPUTEVENT::ScrollWheel) {
+                            dx += ptFrom.x;
+                            dy += ptFrom.y;
+                        } else {
+                            dx = event->pt.x - ptFrom.x;
+                            dy = event->pt.y - ptFrom.y;
+                        }
                     }
                     float thisVeloX = dx * 1000.0f / dTime;
                     float thisVeloY = dy * 1000.0f / dTime;
@@ -432,17 +431,27 @@ void Window::setBlendMode(int blendMode) {
         _blendMode = blendMode;
     }
 }
-void Window::glEnableScissorTest(bool enabled) {
-    if (enabled && !_enabledFlags.scissorTest) {
-        _enabledFlags.scissorTest = 1;
+
+void Window::pushClip(RECT clip) {
+    bool firstClip = _clips.size()==0;
+    if (!firstClip) {
+        clip.intersectWith(_clips.top());
+    } else {
         check_gl(glEnable, GL_SCISSOR_TEST);
     }
-    else if (!enabled && _enabledFlags.scissorTest) {
-        _enabledFlags.scissorTest = 0;
+    _clips.push(clip);
+    glScissor(clip.left(), clip.top(), clip.size.width, clip.size.height);
+}
+void Window::popClip() {
+    assert(_clips.size()>0);
+    RECT clip = _clips.top();
+    _clips.pop();
+    glScissor(clip.left(), clip.top(), clip.size.width, clip.size.height);
+    if (_clips.size() == 0) {
         check_gl(glDisable, GL_SCISSOR_TEST);
     }
-}
 
+}
 
 void Window::prepareToDraw() {
     // GL context init
@@ -457,7 +466,7 @@ void Window::prepareToDraw() {
         check_gl(glActiveTexture, GL_TEXTURE0);
         _blendMode = BLENDMODE_NONE;
         check_gl(glDisable, GL_BLEND);
-        _enabledFlags.scissorTest = 0;
+        //_enabledFlags.scissorTest = 0;
         check_gl(glDisable, GL_SCISSOR_TEST);
 
         // As long as we only have one quadbuffer we only need to bind the once

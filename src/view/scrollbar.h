@@ -52,7 +52,6 @@ public:
 protected:
     float _dragStart, _dragLast, _dragTotal;
     float _offsetStart;
-    bool _overscroll;
     float _alpha;
     ObjPtr<class Animation> _fadeAnim;
     ObjPtr<Timer> _fadeTimer;

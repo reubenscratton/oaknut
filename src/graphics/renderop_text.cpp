@@ -28,7 +28,7 @@ public:
 
 static GLProgramTextGlyph glprogTextGlyph;
 
-TextRenderOp::TextRenderOp(View* view, TEXTRENDERPARAMS* textRenderParams) : RenderOpMultiRect(view) {
+TextRenderOp::TextRenderOp(View* view, const TEXTRENDERPARAMS* textRenderParams) : RenderOpMultiRect(view) {
     _alpha = 1.0f;
     _textRenderParams = *textRenderParams;
     _prog = &glprogTextGlyph;
@@ -60,7 +60,7 @@ void TextRenderOp::reset() {
 bool TextRenderOp::canMergeWith(const RenderOp* op) {
     if (!RenderOp::canMergeWith(op)) return false;
     const TextRenderOp* textOp = (const TextRenderOp*)op;
-    return _textRenderParams.equals(textOp->_textRenderParams);
+    return _textRenderParams == textOp->_textRenderParams;
 }
 
 void TextRenderOp::render(Window* window, Surface* surface) {

@@ -38,6 +38,8 @@ typedef struct _POINT {
     bool operator!=(const struct _POINT& pt);
     const struct _POINT& operator+=(const struct _POINT& d);
     bool isZero() const { return x==0.0f && y==0.0f; }
+    const struct _POINT operator+(const struct _POINT& rhs) const { return {x+rhs.x, y+rhs.y}; }
+    const struct _POINT operator-(const struct _POINT& rhs) const { return {x-rhs.x, y-rhs.y}; }
 } POINT;
 POINT POINT_Make(float x, float y);
 

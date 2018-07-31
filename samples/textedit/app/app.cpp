@@ -14,15 +14,18 @@ public:
     EditText* _editText;
 
     MainViewController() {
-
-        _editText = new EditText();
-        _editText->setBackgroundColour(0xFFFFFFFF);
-        _editText->setPadding(EDGEINSETS(16,16,16,16));
-        _editText->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::FillParent());
-        _editText->setAlignSpecs(ALIGNSPEC::Left(), ALIGNSPEC::Top());
+        View* view = app.layoutInflate("layout/main.res");
+        _editText = (EditText*)view->findViewById("editText");
         _editText->setGravity({GRAVITY_CENTER, GRAVITY_TOP});
-        _editText->setText("A long piece of text that should allow me to test multiline behaviours without having to type stuff in over and over and over. With a bit of luck this second sentence should push the whole EditText to overflow its bounds and thereby let me exercise the scroll behaviour");
-        setView(_editText);
+        AttributedString str("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz. A long piece of text that should allow me to test multiline behaviours without having to type stuff in over and over and over. With a bit of luck this second sentence should push the whole EditText to overflow its bounds and thereby let me exercise the scroll behaviour");
+        str.setAttribute(Attribute::forecolour(0xFFFF0000), 0, 1);
+        str.setAttribute(Attribute::forecolour(0xFF7f0000), 1, 2);
+        str.setAttribute(Attribute::forecolour(0xFF00FF00), 2, 3);
+        str.setAttribute(Attribute::forecolour(0xFF007F00), 3, 4);
+        str.setAttribute(Attribute::forecolour(0xFF0000FF), 4, 5);
+        str.setAttribute(Attribute::forecolour(0xFF00007F), 5, 6);
+        _editText->setAttributedText(str);
+        setView(view);
 
     }
 

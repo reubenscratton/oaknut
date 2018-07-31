@@ -512,7 +512,7 @@ static uint32 Mur(uint32 a, uint32 h) {
 
 
 
-uint32 CityHash32(const char *s, size_t len) {
+uint32 CityHash32(const char *s, uint32 len) {
     if (len <= 24) {
         if (len <= 12) {
             if (len <= 4) {
@@ -665,7 +665,7 @@ static pair<uint64, uint64> WeakHashLen32WithSeeds(
                                   b);
 }
 
-uint64 CityHash64(const char *s, size_t len) {
+uint64 CityHash64(const char *s, uint32 len) {
     if (len <= 32) {
         if (len <= 16) {
             if (len >= 8) {

@@ -104,6 +104,10 @@ void Label::setText(const string& text) {
     _textRenderer.setText(text);
     invalidateContentSize();
 }
+void Label::setAttributedText(const AttributedString& text) {
+    _textRenderer.setAttributedText(text);
+    invalidateContentSize();
+}
 
 string vformat(const char *fmt, va_list ap)  {
     // Allocate a buffer on the stack that's big enough for us almost
@@ -127,7 +131,7 @@ string vformat(const char *fmt, va_list ap)  {
 
         if (needed <= (int)size && needed >= 0) {
             // It fit fine so we're done.
-            return string(buf, (size_t) needed);
+            return string(buf, needed);
         }
 
         // vsnprintf reported that it wanted to write more characters
@@ -138,13 +142,13 @@ string vformat(const char *fmt, va_list ap)  {
         buf = &dynamicbuf[0];
     }
 }
-void Label::setText(const char* format, ...) {
+/*void Label::setText(const char* format, ...) {
     va_list ap;
     va_start (ap, format);
     string str = vformat (format, ap);
     va_end (ap);
     setText(str);
-}
+}*/
 
 void Label::setFont(Font* font) {
     _textRenderer.setDefaultFont(font);
@@ -198,7 +202,7 @@ void Label::updateContentSize(float parentWidth, float parentHeight) {
     //if (_textRenderer.hasSoftLineBreaks) {
     //    _contentSize.width = parentWidth;
     //}
-
+    
     // Flag that renderOps will need updating after layout
     _textRendererMustRelayout = true;
     _updateRenderOpsNeeded = true;
@@ -215,6 +219,10 @@ void Label::updateRenderOps() {
 
 void Label::layout() {
 	View::layout();
+    
+    // Automatically set clipsContent based on whether text overflows bounds
+    _clipsContent = (_contentSize.height >= _rect.size.height)
+                 || (_contentSize.width >= _rect.size.width);
 
     _textRenderer.layout(getOwnRectPadded());
     _textRendererMustRelayout = false;

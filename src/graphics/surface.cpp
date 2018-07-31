@@ -316,6 +316,13 @@ void Surface::renderPhase2(Surface* prevsurf, View* view, Window* window) {
         surface->_mvp *= tm;
     }
     
+    if (view->_clipsContent) {
+        RECT clip = view->getOwnRect();
+        clip.origin = view->_surfaceOrigin;
+        clip.origin.y = surface->_size.height - clip.bottom(); /* surface -> viewport coords */
+        window->pushClip(clip);
+    }
+    
     // Walk the ops for the current view
     for (auto it=view->_renderList.begin() ; it!=view->_renderList.end() ; it++) {
         RenderOp* op = *it;
@@ -339,6 +346,9 @@ void Surface::renderPhase2(Surface* prevsurf, View* view, Window* window) {
     }
     
     // Pop draw state
+    if (view->_clipsContent) {
+        window->popClip();
+    }
     if (changesMvp) {
         surface->_mvp = savedMatrix;
     }

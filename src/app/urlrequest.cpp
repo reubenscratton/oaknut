@@ -87,7 +87,7 @@ void URLRequest::stop() {
 string urlEncode(string str) {
 	string rv;
 	while (str.length() > 0) {
-		size_t span = strcspn(str.data(), " :/?#[]@!$&'()*+,;=");
+		int span = (int)strcspn(str.data(), " :/?#[]@!$&'()*+,;=");
 		rv = str.substr(0, span);
 		str.erase(0, span);
 		if (str.length() > 0) {

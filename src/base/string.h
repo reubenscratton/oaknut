@@ -145,7 +145,7 @@ public:
         char* data() const { return _str->_p + _byteOffset; }
     };
     
-    string(const iterator& start, const iterator& end) : string(start.data(), end.data()-start.data()) {
+    string(const iterator& start, const iterator& end) : string(start.data(), int32_t(end.data()-start.data())) {
     }
 
     iterator begin() const {return iterator(*this, _p?(_cb?0:-1):-1);}

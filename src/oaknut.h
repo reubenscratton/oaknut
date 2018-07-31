@@ -35,6 +35,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef __cplusplus
 #include <typeinfo>
 #include <map>
 #include <unordered_map>
@@ -86,6 +87,8 @@ typedef double TIMESTAMP;
 #else
 typedef uint64_t TIMESTAMP;
 #endif
+
+
 
 // Include platform headers
 #include __incstr(platform/PLATFORM/platform.h)
@@ -144,6 +147,7 @@ void oakFaceDetectorClose(void* osobj);
 #include "graphics/surface.h"
 #include "graphics/renderop_blur.h"
 #include "view/window.h"
+#include "text/attributedstring.h"
 #include "graphics/textrenderer.h"
 #include "graphics/canvas.h"
 #include "app/styles.h"
@@ -179,5 +183,6 @@ void oakFaceDetectorClose(void* osobj);
 #include __incstr(platform/PLATFORM/bitmap.h)
 #include __incstr(platform/PLATFORM/font.h)
 
+#endif
 
 #endif 

@@ -9,9 +9,11 @@ typedef struct _TEXTRENDERPARAMS {
     AtlasPage* atlasPage;
     int forecolour;
     inline bool operator<(const struct _TEXTRENDERPARAMS& y) const {
-        return atlasPage < y.atlasPage && forecolour<y.forecolour;
+        if (atlasPage < y.atlasPage) return true;
+        if (atlasPage > y.atlasPage) return false;
+        return forecolour<y.forecolour;
     }
-    inline bool equals(const struct _TEXTRENDERPARAMS& o) const {
+    inline bool operator==(const struct _TEXTRENDERPARAMS& o) const {
         return atlasPage==o.atlasPage && forecolour==o.forecolour;
     }
 
@@ -24,7 +26,7 @@ public:
     vector<RECT> _rectsTex;
     TEXTRENDERPARAMS _textRenderParams;
     
-    TextRenderOp(View* view, TEXTRENDERPARAMS* textRenderParams);
+    TextRenderOp(View* view, const TEXTRENDERPARAMS* textRenderParams);
     
     void addGlyph(Glyph* glyph, const RECT& rect);
     void reset();

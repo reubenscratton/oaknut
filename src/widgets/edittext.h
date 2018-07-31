@@ -9,31 +9,34 @@
 class EditText : public Label, IKeyboardInputHandler, ITextInputReceiver {
 public:
 
+    // API
     EditText();
+    virtual void setInsertionPoint(int32_t newInsertionPoint);
     
     // Overrides
-    virtual void setPadding(EDGEINSETS padding);
-    virtual IKeyboardInputHandler* getKeyboardInputHandler();
-    virtual ITextInputReceiver* getTextInputReceiver();
-    virtual bool onInputEvent(INPUTEVENT* event);
-    virtual bool setFocused(bool focused);
-    virtual void updateRenderOps();
-    virtual void layout();
-    virtual void detachFromWindow();
-    virtual void setText(string text);
-    virtual void updateContentSize(float parentWidth, float parentHeight);
+    void setPadding(EDGEINSETS padding) override;
+    IKeyboardInputHandler* getKeyboardInputHandler() override;
+    ITextInputReceiver* getTextInputReceiver() override;
+    bool onInputEvent(INPUTEVENT* event) override;
+    bool setFocused(bool focused) override;
+    void updateRenderOps() override;
+    void layout() override;
+    void detachFromWindow() override;
+    void setText(const string& text) override;
+    void setAttributedText(const AttributedString& text) override;
+    void updateContentSize(float parentWidth, float parentHeight) override;
     
     // IKeyboardInputHandler
-    virtual void keyInputEvent(KeyboardInputEventType keyboardInputEventType, KeyboardInputSpecialKeyCode specialKeyCode, int osKeyCode, char32_t charCode);
+    void keyInputEvent(KeyboardInputEventType keyboardInputEventType, KeyboardInputSpecialKeyCode specialKeyCode, int osKeyCode, char32_t charCode) override;
 
     // ITextInputReceiver
-    virtual void insertText(string text, int replaceStart, int replaceEnd);
-    virtual void deleteBackward();
-    virtual int getTextLength();
-    virtual int getSelectionStart();
-    virtual int getInsertionPoint();
-    virtual string textInRange(int start, int end);
-    virtual void setSelectedRange(int start, int end);
+    void insertText(string text, int replaceStart, int replaceEnd) override;
+    void deleteBackward() override;
+    int getTextLength() override;
+    int getSelectionStart() override;
+    int getInsertionPoint() override;
+    string textInRange(int start, int end) override;
+    void setSelectedRange(int start, int end) override;
 
 protected:
     int _selectionStart;
@@ -47,5 +50,6 @@ protected:
     
     void updateCursor();
     void updateClearButton();
+    void moveToLine(int dLine);
 };
 

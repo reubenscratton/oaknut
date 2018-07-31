@@ -108,16 +108,15 @@ public:
     virtual bool setFocusedView(View* view);
 	void attachRootVC();
 
+    void pushClip(RECT clip);
+    void popClip();
+    
 	// Render state
 	int _doneGlInit;
 	bool _rootVcAttached;
 	QuadBuffer* _quadBuffer;
-	struct {
-		//GLint blend:1;
-		GLint scissorTest:1;
-	} _enabledFlags;
+    stack<RECT> _clips;
 	void setBlendMode(int blendMode);
-	void glEnableScissorTest(bool enabled);
 	void bindTexture(Bitmap* texture);
 	GLuint _currentProg;
 	Surface* _currentSurface;

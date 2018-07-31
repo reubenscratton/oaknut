@@ -70,9 +70,15 @@ static void oak_setWindowSize(int width, int height, int scale) {
 
 static void oak_userEvent(int eventType, int eventSourceId, int x, int y) {
     //app.log("userEv type=%d src=%d x=%d,y=%d", eventType, eventSourceId, x, y);
-    x *= app._window->_scale;
-    y *= app._window->_scale;
-    app._window->dispatchInputEvent(eventType, (INPUT_SOURCE_TYPE_MOUSE<<8) | eventSourceId, app.currentMillis(), x, y, NULL);
+    
+    INPUTEVENT inputEvent;
+    inputEvent.deviceType = INPUTEVENT::Mouse;
+    inputEvent.deviceIndex = eventSourceId;
+    inputEvent.type = eventType;
+    inputEvent.pt.x = x * app._window->_scale;
+    inputEvent.pt.y = y * app._window->_scale;
+    inputEvent.time = app.currentMillis();
+    app._window->dispatchInputEvent(&inputEvent);
 }
 
 static void oak_keyEvent(int keyDown, int keyCode, int charCode) {

@@ -273,6 +273,17 @@ void View::updateContentSize(float parentWidth, float parentHeight) {
 	// no-op
 }
 
+bool View::getClipsContent() const {
+    return _clipsContent;
+}
+void View::setClipsContent(bool clipsContent) {
+    if (clipsContent != _clipsContent) {
+        _clipsContent = clipsContent;
+        setNeedsFullRedraw();
+    }
+}
+
+
 void View::setGravity(GRAVITY gravity) {
 	_gravity = gravity;
 	setNeedsLayout();
@@ -744,8 +755,8 @@ void View::addScrollbarOp(RenderOp* renderOp) {
     bool layoutValid = _window->_viewLayoutValid; // we preserve this flag to avoid scrollbars triggering layout
     if (!_scrollbarsView) {
         ScrollbarsView* scrollbarsView = new ScrollbarsView();
-        scrollbarsView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::FillParent());
-        scrollbarsView->setAlignSpecs(ALIGNSPEC::Top(), ALIGNSPEC::Left());
+        //scrollbarsView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::FillParent());
+        //scrollbarsView->setAlignSpecs(ALIGNSPEC::Top(), ALIGNSPEC::Left());
         addSubview(scrollbarsView);
         scrollbarsView->_rect = getOwnRect();
         _scrollbarsView = scrollbarsView;
@@ -813,6 +824,16 @@ void View::setContentOffset(POINT contentOffset) {
     if (_window) {
         _window->requestRedraw();
     }
+}
+
+void View::scrollBy(POINT scrollAmount) {
+    POINT origContentOffset = _contentOffset;
+    Animation::start(this, 350, [=](float a) { // todo: style
+        POINT d = {a*scrollAmount.x, a*scrollAmount.y};
+        POINT newOffset = origContentOffset + d;
+        setContentOffset(newOffset);
+    }, linear);
+
 }
 
 
@@ -913,6 +934,11 @@ View* View::dispatchInputEvent(INPUTEVENT* event) {
 	return onInputEvent(event) ? this : NULL;
 }
 
+void ScrollbarsView::measure(float parentWidth, float parentHeight) {
+    _rect = {0,0,parentWidth, parentHeight};
+}
+void ScrollbarsView::layout() {
+}
 
 bool View::onInputEvent(INPUTEVENT* event) {
 

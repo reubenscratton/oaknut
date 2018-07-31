@@ -83,6 +83,8 @@ void RenderBatch::render(Window* window, Surface* surface, RenderOp* firstOp) {
             if (nextOpInBatch->_mvpNum != firstOp->_mvpNum) {
                 break;
             }
+            
+            // TODO: We must disallow batching outside the current clip rect
 
             // This batch op can be rendered now!
             numQuadsThisChunk += currentOp->numQuads();
@@ -125,11 +127,10 @@ void RenderBatch::render(Window* window, Surface* surface, RenderOp* firstOp) {
         if (invalidRectIt == surface->_invalidRegion.rects.end()) {
             return;
         }
-        window->glEnableScissorTest(true);
     nextInvalidRect:
         rect = *invalidRectIt;
-        glScissor(rect.left(), surface->_size.height - rect.bottom(), /* surface -> viewport coords */
-                  rect.size.width, rect.size.height);
+        rect.origin.y = surface->_size.height - rect.bottom(); /* surface -> viewport coords */
+        window->pushClip(rect);
     }
 
     //   app.log("Drawing %d quads at once", numQuadsThisChunk);
@@ -137,10 +138,10 @@ void RenderBatch::render(Window* window, Surface* surface, RenderOp* firstOp) {
 
     // Iterate next rect of invalid region, if there is any
     if (surface->_supportsPartialRedraw) {
+        window->popClip();
         if (++invalidRectIt != surface->_invalidRegion.rects.end()) {
             goto nextInvalidRect;
         }
-        window->glEnableScissorTest(false);
     }
 
 }
