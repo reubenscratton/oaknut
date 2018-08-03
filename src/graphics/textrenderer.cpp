@@ -7,7 +7,6 @@
 
 #include <oaknut.h>
 
-#define GLYPH_LINEBREAK ((Glyph*)13)
 
 TextRenderer::TextRenderer() {
 }
@@ -56,6 +55,11 @@ void TextRenderer::measure(SIZE maxSize) {
     _measuredSize.height = 0;
     _renderParams.clear();
     
+    
+    // TODO! This function should be split into a character generation part and a measure part
+    // The character generation only needs to run after text or attributes changes, it doesn't
+    // need to run on each and every measure.
+    
     // Initial text render params
     TEXTRENDERPARAMS textRenderParams;
     textRenderParams.atlasPage = NULL;
@@ -73,26 +77,30 @@ void TextRenderer::measure(SIZE maxSize) {
     // Defaults
     Font* currentFont = _defaultFont;
     
-    // Start with an empty line
+    // Start with an empty line and no characters
+    _characters.clear(); // todo: reserve some empirical number of chars
     _lines.clear();
-    auto currentLine = _lines.emplace(_lines.end(), TEXTLINE());
+    auto currentLine = _lines.emplace(_lines.end(), TEXTLINE {0});
     currentLine->font = currentFont;
 
-    // Iterate over all characters in the text
+    // Iterate over all codepoints in the text and process it into the list of displayable characters
     StringProcessor it(_text);
-    int i=0;
-    char32_t ch='\0', prevCh;
+    int32_t codepointIndex=0;
+    char32_t codepoint='\0', prevCh;
     int breakOpportunity = -1;
     while (true) {
-        prevCh = ch;
-        ch = it.next();
-        if (!ch) {
+        prevCh = codepoint;
+        codepoint = it.next();
+        if (!codepoint) {
             break;
         }
         
+        // TODO: accumulate (via 'continue') consecutive codepoints into a single character here
+        // Since these are early days we TEMPORARILY treat one codepoint == one character
+        
         
         // Unapply spans that end at this point
-        while (spanEndIterator!=_text._attributes.end() && i>=spanEndIterator->end) {
+        while (spanEndIterator!=_text._attributes.end() && codepointIndex>=spanEndIterator->end) {
             auto endingSpan = (*spanEndIterator);
             if (endingSpan.attribute._type == Attribute::Type::Font) {
                 currentFont = fontStack.top();
@@ -107,7 +115,7 @@ void TextRenderer::measure(SIZE maxSize) {
         }
 
         // Apply any spans that start at this point
-        while (spanStartIterator!=_text._attributes.end() && i>=spanStartIterator->start) {
+        while (spanStartIterator!=_text._attributes.end() && codepointIndex>=spanStartIterator->start) {
             auto startingSpan = (*spanStartIterator);
             if (startingSpan.attribute._type == Attribute::Type::Font) {
                 fontStack.push(currentFont);
@@ -121,119 +129,127 @@ void TextRenderer::measure(SIZE maxSize) {
             spanStartIterator++;
         }
         
-        
-        
-        // Hard line-break
-        if (ch == '\n') {
-            currentLine = _lines.emplace(_lines.end(), TEXTLINE());
-            currentLine->font = currentFont;
-            breakOpportunity = -1;
-            continue;
-        }
-        
-        // Whitespace.
-        if (ch=='\r') {
-            continue;
-        }
-        else if (ch=='\t') {
-            app.log("todo: tabstops!");
-            ch = ' ';
-        }
-        if (isWhitespace(prevCh) && !isWhitespace(ch)) {
-            breakOpportunity = (int32_t)currentLine->glyphinfos.size(); // track first non-whitespace char after run of whitespace chars
-        }
-        
-        // Fetch the next glyph
-        Glyph* glyph = currentFont->getGlyph(ch);
-        if (!glyph) {
-            glyph = currentFont->getGlyph('?');
-            assert(glyph);
-        }
+        // Ignore the sequence of \r\n... we don't need to do anything cos the linebreak was a
+        // already done when the \r was encountered on the previous iteration
+        if (!(codepoint == '\n' && prevCh == '\r')) {
 
-        // Track atlas page changes
-        if (glyph->atlasNode->page != textRenderParams.atlasPage) {
-            textRenderParams.atlasPage = glyph->atlasNode->page;
-            paramsChanged = true;
-        }
-        
-        // Ensure our renderParams set includes current params
-        if (paramsChanged) {
-            auto p = _renderParams.insert(textRenderParams);
-            auto p2 = p.first;
-            currentParams = const_cast<TEXTRENDERPARAMS*>(&*p2);
-            paramsChanged = false;
-        }
-
-        // Will adding this glyph to the current line cause the line to exceed bounds?
-        auto glyphAdvance = glyph->advance.width;
-        auto newBoundsWidth = currentLine->bounds.size.width + glyphAdvance;
-        bool exceedsBounds = newBoundsWidth>=maxSize.width && currentLine->glyphinfos.size() > 0;
-        
-        // Soft line break
-        if (exceedsBounds && !isWhitespace(ch)) {
-            filledHorizontally = true;
-            if (breakOpportunity < 0) { // if there were no spaces on this line, force a break at the preceding char
-                breakOpportunity = (int32_t)currentLine->glyphinfos.size()-1;
+            Glyph* glyph;
+            float glyphAdvance, glyphHeight;
+            
+            // Hard line-break
+            bool isHardLineBreak = (codepoint == '\n' || codepoint == '\r');
+            if (isHardLineBreak) {
+                glyph = NULL;
+                glyphAdvance = glyphHeight = 0;
             }
-            vector<GLYPHINFO> extract;
-            float xx = 0;
-            while (breakOpportunity < currentLine->glyphinfos.size()) {
-                auto gi = currentLine->glyphinfos.begin() + breakOpportunity;
-                xx += gi->glyph->advance.width;
-                extract.push_back(*gi);
-                currentLine->glyphinfos.erase(gi);
-            }
-            currentLine->bounds.size.width -= xx;
-            currentLine = _lines.emplace(_lines.end(), TEXTLINE());
-            currentLine->font = currentFont;
-            currentLine->bounds.size.width = xx;
-            currentLine->glyphinfos = extract;
-            breakOpportunity = -1;
-        }
+            
+            // Normal character handling
+            else {
         
-        // Add the glyph to the current line
-        currentLine->glyphinfos.emplace_back(GLYPHINFO {glyph, {0,0,static_cast<float>(glyph->advance.width),static_cast<float>(glyph->bitmapHeight)}, currentParams});
-        currentLine->bounds.size.width += glyphAdvance;
+                // Tab-handling. For now just convert to spaces.
+                if (codepoint=='\t') {
+                    app.log("todo: tabstops!");
+                    codepoint = ' ';
+                }
+                
+                // If at the start of a word, track this latest opportunity for a soft line-break if one is needed later
+                if (isWhitespace(prevCh) && !isWhitespace(codepoint)) {
+                    breakOpportunity = currentLine->numCharacters; // track first non-whitespace char after run of whitespace chars
+                }
+                
+                // Fetch the glyph for this character
+                glyph = currentFont->getGlyph(codepoint);
+                if (!glyph) {
+                    glyph = currentFont->getGlyph('?'); // todo: should ask the font for it's default character...
+                    assert(glyph);
+                }
+                glyphAdvance = static_cast<float>(glyph->advance.width);
+                glyphHeight = static_cast<float>(glyph->bitmapHeight);
 
-        // If we've reached maxLines, ellipsize the text and break out of all 3 loops.
-        /*if (_maxLines != 0) {
-            if (paragraph->lines.size() == maxLines) {
-             line->glyphCount-=2; // this is an approximation. TODO: make this perfect.
-             line->ellipsis = true;
-             i = (int)_paragraphs.size();
-             runIndex = (int)paragraph->runs.size();
-             k = (int)run->glyphs.size();
-             continue;
-             }
-        }*/
-        
-        i++;
+                // Track atlas page changes
+                if (glyph->atlasNode->page != textRenderParams.atlasPage) {
+                    textRenderParams.atlasPage = glyph->atlasNode->page;
+                    paramsChanged = true;
+                }
+                
+                // Ensure our renderParams set includes current params
+                if (paramsChanged) {
+                    auto p = _renderParams.insert(textRenderParams);
+                    auto p2 = p.first;
+                    currentParams = const_cast<TEXTRENDERPARAMS*>(&*p2);
+                    paramsChanged = false;
+                }
+            }
+            
+
+            // Will adding this glyph to the current line cause the line to exceed bounds?
+            //auto glyphAdvance = glyph->advance.width;
+            auto newBoundsWidth = currentLine->bounds.size.width + glyphAdvance;
+            bool exceedsBounds = newBoundsWidth>=maxSize.width && currentLine->numCharacters > 0
+                    && maxSize.height>0;
+            
+            // If we've exceeded bounds we'll have to apply a soft linebreak...
+            if (exceedsBounds && !isWhitespace(codepoint)) { // NB: trailing spaces are allowed to overflow bounds!
+                filledHorizontally = true;
+                if (breakOpportunity < 0) { // if there were no spaces on this line, force a break at the preceding char
+                    breakOpportunity = (int32_t)currentLine->numCharacters-1;
+                }
+                float xx = 0;
+                int32_t charsOnNextLine = currentLine->numCharacters - breakOpportunity;
+                for (int32_t bi=0; bi < charsOnNextLine; bi++) {
+                    auto& character = _characters[currentLine->startCharacterIndex + breakOpportunity + bi];
+                    xx += character.glyph->advance.width;
+                }
+                currentLine->numCharacters -= charsOnNextLine;
+                currentLine->bounds.size.width -= xx;
+                currentLine = _lines.emplace(_lines.end(), TEXTLINE {currentLine->startCharacterIndex + breakOpportunity});
+                currentLine->font = currentFont;
+                currentLine->bounds.size.width = xx;
+                currentLine->numCharacters = charsOnNextLine;
+                breakOpportunity = -1;
+            }
+            
+            // Add the character to our vector
+            _characters.emplace_back(DISPLAYED_CHAR {codepointIndex, {0,0,glyphAdvance,glyphHeight}, currentParams, 0, glyph});
+
+            // Add the glyph to the current line
+            currentLine->bounds.size.width += glyphAdvance;
+            currentLine->numCharacters++;
+            
+            // If char was a hard break, start a new line
+            if (isHardLineBreak) {
+                currentLine = _lines.emplace(_lines.end(), TEXTLINE {codepointIndex+1});
+                currentLine->font = currentFont;
+                breakOpportunity = -1;
+            }
+        }
+        codepointIndex++;
     }
     
     
     // Iterate lines, calculate each line height and do naive typesetting
     int numLines = (int)_lines.size();
     float y = 0;
-    int32_t startingIndex = 0;
     for (int i=0 ; i<numLines ; i++) {
         TEXTLINE& line = _lines.at(i);
         float lineHeight = line.font->_height;
         float baseline = line.font->_ascent;
-        for (auto jt = line.glyphinfos.begin() ; jt!=line.glyphinfos.end() ; jt++) {
-            GLYPHINFO& glyphInfo = *jt;
-            Font* font = glyphInfo.glyph->_font;
+        for (auto charIndex = line.startCharacterIndex ; charIndex<line.startCharacterIndex+line.numCharacters ; charIndex++) {
+            auto& character = _characters[charIndex];
+            if (!character.glyph) {
+                continue;
+            }
+            Font* font = character.glyph->_font;
             lineHeight = fmaxf(lineHeight, font->_height);
             baseline = fmaxf(baseline, font->_ascent);
-            if (glyphInfo.glyph->bitmapHeight > lineHeight) { // i.e. outsized glyph exceeds normal font lineheight
-                lineHeight = glyphInfo.glyph->bitmapHeight + (font->_height-(font->_ascent-font->_descent));
+            if (character.glyph->bitmapHeight > lineHeight) { // i.e. outsized glyph exceeds normal font lineheight
+                lineHeight = character.glyph->bitmapHeight + (font->_height-(font->_ascent-font->_descent));
                 baseline = lineHeight + font->_descent;
             }
         }
         line.bounds.size.height = lineHeight;
         line.bounds.origin = POINT_Make(0, y);
         line.baseline = baseline;
-        line.startingIndex = startingIndex;
-        startingIndex += line.glyphinfos.size();
         _measuredSize.width = MAX(_measuredSize.width, line.bounds.size.width);
         _measuredSize.height += lineHeight;
         y += lineHeight;
@@ -280,13 +296,18 @@ void TextRenderer::layout(RECT rect) {
 
         float x=line.bounds.origin.x;
         float y=line.bounds.origin.y;
-        for (auto j=line.glyphinfos.begin() ; j!=line.glyphinfos.end() ; j++) {
-            Glyph* glyph = j->glyph;
-            j->rect = RECT(x + glyph->bitmapLeft,
-                            y + line.baseline - (glyph->bitmapHeight+ glyph->bitmapTop),
-                            glyph->atlasNode->rect.size.width,
-                            glyph->atlasNode->rect.size.height);
-            x += glyph->advance.width;
+        for (int32_t charIndex=line.startCharacterIndex ; charIndex<line.startCharacterIndex+line.numCharacters ; charIndex++) {
+            auto& character = _characters[charIndex];
+            Glyph* glyph = character.glyph;
+            if (!glyph) {
+                character.rect = RECT(x, y + line.baseline, 0, 0);
+            } else {
+                character.rect = RECT(x + glyph->bitmapLeft,
+                                y + line.baseline - (glyph->bitmapHeight+ glyph->bitmapTop),
+                                glyph->atlasNode->rect.size.width,
+                                glyph->atlasNode->rect.size.height);
+                x += glyph->advance.width;
+            }
         }
         
         rect.origin.y += line.bounds.size.height;
@@ -315,9 +336,13 @@ void TextRenderer::updateRenderOps(View* view) {
     for (int i=0 ; i<_lines.size() ; i++) {
         TEXTLINE& line = _lines.at(i);
         if (visibleRect.intersects(line.bounds)) {
-            for (auto j=line.glyphinfos.begin() ; j!=line.glyphinfos.end() ; j++) {
-                if (currentParams != j->renderParams) {
-                    currentParams = j->renderParams;
+            for (auto charIndex=line.startCharacterIndex ; charIndex<line.startCharacterIndex+line.numCharacters ; charIndex++) {
+                auto& character = _characters[charIndex];
+                if (!character.glyph) {
+                    continue;
+                }
+                if (currentParams != character.renderParams) {
+                    currentParams = character.renderParams;
                     if (!currentParams->renderOp) {
                         currentParams->renderOp = new TextRenderOp(view, currentParams);
                     }
@@ -326,8 +351,8 @@ void TextRenderer::updateRenderOps(View* view) {
                         _textOps.push_back(currentParams->renderOp);
                     }
                 }
-                if (j->glyph->charCode != ' ') {
-                    currentParams->renderOp->addGlyph(j->glyph, j->rect);
+                if (character.glyph->charCode != ' ') {
+                    currentParams->renderOp->addGlyph(character.glyph, character.rect);
                 }
             }
         }
@@ -339,6 +364,30 @@ void TextRenderer::updateRenderOps(View* view) {
     }
 
     _renderOpsValid = true;
+}
+
+int32_t TextRenderer::moveCharacterIndex(int32_t charIndex, int dx, int dy) const {
+    if (dy == 0) {
+        charIndex += dx;
+        if (charIndex <0) charIndex = 0;
+        if (charIndex > _characters.size()) charIndex = (int32_t)_characters.size(); // yes, one past last char
+    } else {
+        POINT pt;
+        getCharacterOrigin(charIndex, &pt, NULL, NULL);
+        auto line = getLineForCharacterIndex(charIndex, dy);
+        float minDiffX = FLT_MAX;
+        int nearestCharIndex = 0;
+        for (int i=0 ; i<line->numCharacters ; i++) {
+            auto& character = _characters[line->startCharacterIndex+i];
+            float diffX = fabs(character.rect.origin.x - pt.x);
+            if (diffX < minDiffX) {
+                minDiffX = diffX;
+                nearestCharIndex = i;
+            }
+        }
+        charIndex = line->startCharacterIndex + nearestCharIndex;
+    }
+    return charIndex;
 }
 
 int32_t TextRenderer::characterIndexFromPoint(const POINT& pt) const {
@@ -360,98 +409,53 @@ int32_t TextRenderer::characterIndexFromPoint(const POINT& pt) const {
             line = &_lines.at(_lines.size()-1);
         }
     }
-    return line->startingIndex + characterIndexFromX(line, pt.x);
-}
-
-int32_t TextRenderer::characterIndexFromX(const TEXTLINE* line, const float x) const {
-    float minErr = MAXFLOAT;
-    int charIndex=0, bestIndex=0;
-    for (auto it : line->glyphinfos) {
-        float dx = fabs(x - it.rect.origin.x);
+    
+    float minErr = FLT_MAX;
+    int32_t nearestCharIndex=0;
+    for (int32_t charIndex=0 ; charIndex < line->numCharacters ; charIndex++) {
+        auto character = _characters[line->startCharacterIndex + charIndex];
+        float dx = fabs(pt.x - character.rect.origin.x);
         if (dx < minErr) {
-            bestIndex = charIndex;
+            nearestCharIndex = charIndex;
             minErr = dx;
         }
         charIndex++;
     }
-    return bestIndex;
+    return line->startCharacterIndex + nearestCharIndex;
 }
 
-const TextRenderer::TEXTLINE* TextRenderer::getLineForGlyphIndex(int glyphIndex, int dLine) const {
+
+const TextRenderer::TEXTLINE* TextRenderer::getLineForCharacterIndex(int32_t charIndex, int dLine) const {
     for (int i=0 ; i<_lines.size() ; i++) {
         const TEXTLINE& line = _lines.at(i);
-        if (glyphIndex < line.glyphinfos.size()) {
+        int32_t numCharacters = line.numCharacters;
+        if (charIndex >= line.startCharacterIndex && charIndex < line.startCharacterIndex+numCharacters) {
             i += dLine;
-            if (i<0 || i>=_lines.size()) {
-                return NULL;
-            }
+            if (i<0) i=0;
+            if (i>=_lines.size()) i=(int)_lines.size()-1;
             return &_lines.at(i);
         }
-        glyphIndex -= line.glyphinfos.size();
     }
-    return NULL;
+    assert(_lines.size());// there should always be at least one line
+    return &_lines.at(_lines.size()-1);
 }
 
-TextRenderer::TEXTLINE* TextRenderer::getLineForGlyphIndex(int& glyphIndex) {
-    
-    for (auto it = _lines.begin() ; it != _lines.end() ; it++) {
-        TEXTLINE& line = *it;
-        if (glyphIndex < line.glyphinfos.size()) {
-            return &line;
-        }
-        glyphIndex -= line.glyphinfos.size();
-    }
-    if (_lines.size()) {
-        glyphIndex += _lines.rbegin()->glyphinfos.size();
-    }
-    return NULL;
-}
-
-void TextRenderer::getGlyphOrigin(int glyphIndex, POINT* origin, float* ascent, float* descent) {
+void TextRenderer::getCharacterOrigin(int32_t charIndex, POINT* origin, float* ascent, float* descent) const {
     assert(_measuredSizeValid);
-    TEXTLINE* line = getLineForGlyphIndex(glyphIndex);
-    if (!line && _lines.size() > 0) {
-        line = &(*_lines.rbegin());
-    }
-    if (line) {
+    const TEXTLINE* line = getLineForCharacterIndex(charIndex, 0);
+
+    if (ascent) {
         *ascent = line->baseline;
         *descent = -(line->bounds.size.height - line->baseline);
-        if (glyphIndex < line->glyphinfos.size()) {
-            const GLYPHINFO& glyphInfo = line->glyphinfos[glyphIndex];
-            *origin = POINT_Make(glyphInfo.rect.left(), glyphInfo.rect.bottom());
-            return;
-        } else {
-            if (line->glyphinfos.size() > 0) {
-                auto glyphInfo = line->glyphinfos.rbegin();
-                *origin = POINT_Make(glyphInfo->rect.left() + glyphInfo->glyph->advance.width, glyphInfo->rect.bottom());
-            } else {
-                *origin = POINT_Make(line->bounds.origin.x, line->bounds.origin.y + line->baseline);
-            }
-            return;
-        }
     }
-    // TextRenderer is completely empty so return where first glyph would go
-    float lineHeight = _defaultFont->_height;
-    *ascent = _defaultFont->_ascent;
-    *descent = _defaultFont->_descent;
-//    float space = lineHeight - (*ascent - *descent);
-    origin->x = _layoutRect.left();
-    origin->y = _layoutRect.top() + lineHeight + *descent;
-    if (_gravity.vert == GRAVITY_CENTER) {
-        origin->y += (_layoutRect.size.height - lineHeight) / 2;
-    } else if (_gravity.vert == GRAVITY_BOTTOM) {
-        origin->y += (_layoutRect.size.height - lineHeight);
+    
+    if (charIndex < line->startCharacterIndex + line->numCharacters) {
+        const DISPLAYED_CHAR& glyphInfo = _characters[charIndex];
+        *origin = POINT_Make(glyphInfo.rect.left(), glyphInfo.rect.bottom());
+    } else {
+        *origin = POINT_Make(line->bounds.right(), line->bounds.origin.y + line->baseline);
     }
 }
-    /*
-     // Ellipsis?
-     if (line->ellipsis) {
-     //Glyph* dotGlyph = currentRun->font->getGlyph('.');
-     //float dx = dotGlyph->advance.width;
-     for (int k=0 ; k<3 ; k++) {
-     //context->drawModel(&dotGlyph->quad);
-     //context->translate(dx,0,0);
-     }
-     }*/
+
     
 

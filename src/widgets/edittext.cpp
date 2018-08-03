@@ -77,7 +77,7 @@ void EditText::updateCursor() {
     }
     POINT cursorOrigin;
     float ascent, descent;
-    _textRenderer.getGlyphOrigin(_insertionPoint, &cursorOrigin, &ascent, &descent);
+    _textRenderer.getCharacterOrigin(_insertionPoint, &cursorOrigin, &ascent, &descent);
     _cursorRenderOp->setRect(RECT(cursorOrigin.x,cursorOrigin.y-ascent,4 /*todo: style*/,ascent-descent));
     _cursorValid = true;
     if (_cursorOn && !_cursorRenderOp->_batch) {
@@ -219,7 +219,7 @@ void EditText::setInsertionPoint(int32_t newInsertionPoint) {
     updateCursor();
     
     // Ensure the cursor is fully visible (i.e. autoscroll it into view)
-    auto line = _textRenderer.getLineForGlyphIndex(_insertionPoint, 0);
+    auto line = _textRenderer.getLineForCharacterIndex(_insertionPoint, 0);
     float dy = line->bounds.top() - _contentOffset.y;
     if (dy < 0) {
         scrollBy({0,dy});
@@ -232,12 +232,8 @@ void EditText::setInsertionPoint(int32_t newInsertionPoint) {
     
 }
 
-void EditText::moveToLine(int dLine) {
-    auto line = _textRenderer.getLineForGlyphIndex(_insertionPoint, dLine);
-    if (line) {
-        int32_t xOff = _textRenderer.characterIndexFromX(line, _cursorRenderOp->_rect.origin.x);
-        setInsertionPoint(line->startingIndex + xOff);
-    }
+void EditText::moveCursor(int dx, int dy) {
+    setInsertionPoint(_textRenderer.moveCharacterIndex(_insertionPoint, dx, dy));
 }
 
 /*
@@ -254,20 +250,16 @@ void EditText::keyInputEvent(KeyboardInputEventType keyboardInputEventType, Keyb
             deleteBackward();
             return;
         case SpecialKeyCursorLeft:
-            if (_insertionPoint > 0) {
-                setInsertionPoint(_insertionPoint-1);
-            }
+            moveCursor(-1, 0);
             return;
         case SpecialKeyCursorRight:
-            if (_insertionPoint < getTextLength()) {
-                setInsertionPoint(_insertionPoint+1);
-            }
+            moveCursor(1, 0);
             return;
         case SpecialKeyCursorUp:
-            moveToLine(-1);
+            moveCursor(0, -1);
             return;
         case SpecialKeyCursorDown:
-            moveToLine(1);
+            moveCursor(0, 1);
             return;
         default:
             return;
@@ -277,5 +269,5 @@ void EditText::keyInputEvent(KeyboardInputEventType keyboardInputEventType, Keyb
     str.append(charCode);
     insertText(str, _selectionStart, _insertionPoint);
     _selectionStart++;
-    _insertionPoint = _selectionStart;
+    setInsertionPoint(_selectionStart);
 }

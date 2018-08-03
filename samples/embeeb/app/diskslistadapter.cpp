@@ -17,7 +17,7 @@ DisksListAdapter::DisksListAdapter(string srcfile,const string& itemLayoutId)
 		DisksListItem* disksListItem = (DisksListItem*)item;
         Label* numberLabel = (Label*)view->findViewById("number");
         if (numberLabel) {
-            numberLabel->setText("%d.", LISTINDEX_ITEM(index)+1);
+            numberLabel->setText(string::format("%d.", LISTINDEX_ITEM(index)+1));
         }
         ImageView* imageView = (ImageView*)view->findViewById("image");
         imageView->setImageUrl(disksListItem->getImageUrl());

@@ -64,12 +64,12 @@ public:
 private:
     struct AttributeUse {
         Attribute attribute;
-        int start;
-        int end;
+        int32_t start;
+        int32_t end;
         bool operator<(const AttributeUse& rhs) const {
             return start<rhs.start;
         }
-        AttributeUse(const Attribute& aattribute, int start, int end)  : attribute(aattribute) {
+        AttributeUse(const Attribute& aattribute, int32_t start, int32_t end)  : attribute(aattribute) {
             this->start = start;
             this->end = end;
         }

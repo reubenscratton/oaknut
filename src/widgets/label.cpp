@@ -221,8 +221,8 @@ void Label::layout() {
 	View::layout();
     
     // Automatically set clipsContent based on whether text overflows bounds
-    _clipsContent = (_contentSize.height >= _rect.size.height)
-                 || (_contentSize.width >= _rect.size.width);
+    _clipsContent = (_contentSize.height > _rect.size.height)
+                 || (_contentSize.width > _rect.size.width);
 
     _textRenderer.layout(getOwnRectPadded());
     _textRendererMustRelayout = false;

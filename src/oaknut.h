@@ -27,6 +27,7 @@
 #ifdef __cplusplus
 #include <cmath>
 #include <cstdarg>
+#include <cfloat>
 #else
 #include <math.h>
 #include <stdarg.h>

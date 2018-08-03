@@ -397,11 +397,11 @@ bool Window::setFocusedView(View* view) {
         return false;
     }
     if (_focusedView) {
-        _focusedView->setState({STATE_FOCUSED, 0});
+        _focusedView->setState(STATE_FOCUSED, 0);
     }
     _focusedView = view;
     if (view) {
-        view->setState({STATE_FOCUSED, STATE_FOCUSED});
+        view->setState(STATE_FOCUSED, STATE_FOCUSED);
         _keyboardHandler = view->getKeyboardInputHandler();
         _textInputReceiver = view->getTextInputReceiver();
         if (_textInputReceiver != NULL) {

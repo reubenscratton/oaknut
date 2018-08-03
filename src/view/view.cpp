@@ -22,6 +22,9 @@ View::View() : _alpha(1.0f),
 
 View::~View() {
 //	app.log("~View()");
+    if (_statemapStyleValues) {
+        delete _statemapStyleValues;
+    }
 }
 
 void View::applyStyleValues(const StyleValueList& values) {
@@ -68,11 +71,13 @@ bool View::applyStyleValue(const string& name, StyleValue* value) {
         _alignspecVert = ALIGNSPEC(value, this);
         return true;
     } else if (name == "background") {
-        while (value->type == StyleValue::Reference) {
-            value = app.getStyleValue(value->str);
-        }
-        assert(value->type == StyleValue::Type::Int);
-        setBackgroundColour(value->i);
+        applyStatemappableStyleValue(name, value, [=](StyleValue* value) {
+            while (value->type == StyleValue::Reference) {
+                value = app.getStyleValue(value->str);
+            }
+            assert(value->type == StyleValue::Type::Int);
+            setBackgroundColour(value->i);
+        });
         return true;
     } else if (name == "padding") {
         float pad = value->getAsFloat();
@@ -95,6 +100,52 @@ bool View::applyStyleValue(const string& name, StyleValue* value) {
 
 bool View::applyStyleValueFromChild(const string& name, StyleValue* value, View* subview) {
     return false;
+}
+
+void View::applyStatemappableStyleValue(const string& name, StyleValue* value, std::function<void(StyleValue*)> applyFunc) {
+    if (_statemapStyleValues) {
+        _statemapStyleValues->erase(name);
+    }
+    if (value->type != StyleValue::StyleMap) {
+        applyFunc(value);
+        return;
+    }
+    if (!_statemapStyleValues) {
+        _statemapStyleValues = new map<string, pair<StyleMap*, std::function<void(StyleValue*)>>>();
+    }
+    auto newval = make_pair(name, make_pair(value->styleMap, applyFunc));
+    _statemapStyleValues->insert(newval);
+    selectStatemapStyleValue(value->styleMap, applyFunc);
+}
+
+void View::selectStatemapStyleValue(StyleMap* styleMap, std::function<void(StyleValue*)> applyFunc) {
+    // Walk the map and find the values which apply. Longest (i.e. most state bits) matching value wins.
+    list<StyleValue*> matchingValues;
+    StyleValue* bestMatchValue = NULL;
+    for (auto& it : styleMap->_values) {
+        
+        // Convert the map entry to a stateset
+        STATESET stateset = {0,0};
+        if (it.first == "enabled") stateset.setBits(STATE_DISABLED, 0);
+        else if (it.first == "disabled") stateset.setBits(STATE_DISABLED, STATE_DISABLED);
+        else if (it.first == "pressed") stateset.setBits(STATE_PRESSED, STATE_PRESSED);
+        else if (it.first == "selected") stateset.setBits(STATE_SELECTED, STATE_SELECTED);
+        else if (it.first == "checked") stateset.setBits(STATE_CHECKED, STATE_CHECKED);
+        else if (it.first == "focused") stateset.setBits(STATE_FOCUSED, STATE_FOCUSED);
+        
+        // If the stateset matches
+        if ((_state & stateset.mask) == stateset.state) {
+            bestMatchValue = it.second->select();
+        }
+    }
+    
+    if (bestMatchValue) {
+        applyFunc(bestMatchValue);
+    } else {
+        StyleValue nullVal;
+        nullVal.i = 0;
+        applyFunc(&nullVal);
+    }
 }
 
 void View::setNeedsFullRedraw() {
@@ -725,18 +776,18 @@ bool View::isPressed() {
     return (_state & STATE_PRESSED)!=0;
 }
 void View::setPressed(bool isPressed) {
-    setState({STATE_PRESSED, (STATE)(isPressed?STATE_PRESSED:0)});
+    setState(STATE_PRESSED, (STATE)(isPressed?STATE_PRESSED:0));
 }
 bool View::isEnabled() {
     return (_state & STATE_DISABLED)==0;
 }
 void View::setEnabled(bool isEnabled) {
-    setState({STATE_DISABLED, (STATE)(isEnabled?0:STATE_DISABLED)});
+    setState(STATE_DISABLED, (STATE)(isEnabled?0:STATE_DISABLED));
 }
 
-void View::setState(STATESET stateset) {
-    uint16_t oldstate = _state & stateset.mask;
-    uint16_t newstate = (_state & ~stateset.mask) | stateset.state;
+void View::setState(STATE mask, STATE value) {
+    uint16_t oldstate = _state & mask;
+    uint16_t newstate = (_state & ~mask) | value;
     if (oldstate != newstate) {
         _state = newstate;
         onStateChanged({(STATE)(oldstate^newstate), newstate});
@@ -744,11 +795,12 @@ void View::setState(STATESET stateset) {
     }
 }
 void View::onStateChanged(STATESET changedStates) {
-    updateBackgroundOp();
-}
-
-bool View::isTouchable() {
-	return _visibility==Visible && !(_state&STATE_DISABLED);
+    if (_statemapStyleValues) {
+        for (auto& it : *_statemapStyleValues) {
+            selectStatemapStyleValue(it.second.first, it.second.second);
+        }
+    }
+    //updateBackgroundOp();
 }
 
 void View::addScrollbarOp(RenderOp* renderOp) {
@@ -942,11 +994,16 @@ void ScrollbarsView::layout() {
 
 bool View::onInputEvent(INPUTEVENT* event) {
 
-	// todo: state changes
-
-    //if (!touchable) {
-    //    return false;
-    //}
+    bool retVal = false;
+    if (onInputEventDelegate && isEnabled()) {
+        retVal = true;
+        if (event->type == INPUT_EVENT_DOWN) {
+            setPressed(true);
+        }
+        if (event->type == INPUT_EVENT_CANCEL || event->type==INPUT_EVENT_UP) {
+            setPressed(false);
+        }
+    }
     
     bool scrolled = _scrollVert.handleEvent(this, true, event);
     scrolled |= _scrollHorz.handleEvent(this, false, event);
@@ -954,7 +1011,7 @@ bool View::onInputEvent(INPUTEVENT* event) {
 	if (onInputEventDelegate) {
         return onInputEventDelegate(this, event);
 	}
-	return scrolled;
+	return retVal || scrolled;
 }
 
 IKeyboardInputHandler* View::getKeyboardInputHandler() {

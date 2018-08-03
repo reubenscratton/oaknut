@@ -20,9 +20,13 @@ enum Visibility {
 #define STATE_CHECKED  8
 #define STATE_PRESSED 16
 typedef uint16_t STATE;
-typedef struct {
+typedef struct _STATESET {
     STATE mask;
     STATE state;
+    void setBits(STATE mask, STATE state) {
+        this->mask |= mask;
+        this->state |= (this->state & ~state) | state;
+    }
 } STATESET;
 
 
@@ -325,7 +329,7 @@ public:
     
     /** Set one or more state bits at once. The STATESET parameter has a 'mask' member which determines
         the state bits that get updated. */
-    virtual void setState(STATESET stateset);
+    virtual void setState(STATE mask, STATE value);
     
     virtual bool isPressed();
     virtual void setPressed(bool isPressed);
@@ -357,6 +361,9 @@ protected:
     
     /**  \cond INTERNAL */
     virtual bool applyStyleValueFromChild(const string& name, StyleValue* value, View* subview);
+    virtual void applyStatemappableStyleValue(const string& name, StyleValue* value, std::function<void(StyleValue*)> applyFunc);
+    virtual void selectStatemapStyleValue(StyleMap* styleMap, std::function<void(StyleValue*)> applyFunc);
+    map<string, pair<StyleMap*,std::function<void(StyleValue*)>>>* _statemapStyleValues;
     /**  \endcond */
     /**@}*/
 
@@ -365,8 +372,6 @@ protected:
      * @{
      */
 public:
-    /** Convenience function returning true if the view is both visible and enabled */
-    virtual bool isTouchable();
     std::function<bool(View*,INPUTEVENT*)> onInputEventDelegate;
     virtual View* hitTest(POINT pt, POINT* ptRel);
     virtual View* subviewContainingPoint(POINT pt);

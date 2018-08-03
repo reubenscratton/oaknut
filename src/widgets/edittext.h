@@ -39,8 +39,8 @@ public:
     void setSelectedRange(int start, int end) override;
 
 protected:
-    int _selectionStart;
-    int _insertionPoint;
+    int32_t _selectionStart;    // Text index, not character index
+    int32_t _insertionPoint;    // Text index, not character index
     bool _cursorOn;
     bool _cursorValid;
     bool _showClearButtonWhenNotEmpty;
@@ -50,6 +50,6 @@ protected:
     
     void updateCursor();
     void updateClearButton();
-    void moveToLine(int dLine);
+    void moveCursor(int dx, int dy);
 };
 

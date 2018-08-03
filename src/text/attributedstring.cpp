@@ -18,6 +18,6 @@ AttributedString::AttributedString(const AttributedString& str) {
     _attributes = str._attributes;
 }
 
-void AttributedString::setAttribute(const Attribute& attribute, int start, int end) {
+void AttributedString::setAttribute(const Attribute& attribute, int32_t start, int32_t end) {
     _attributes.emplace(attribute, start, end);
 }

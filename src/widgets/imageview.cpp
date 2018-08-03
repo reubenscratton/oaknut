@@ -14,6 +14,17 @@ ImageView::ImageView() {
     addRenderOp(_renderOp);
 }
 
+bool ImageView::applyStyleValue(const string& name, StyleValue* value) {
+    if (name=="image") {
+        ByteBuffer* data = app.loadAsset(value->str.data());
+        Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
+            setBitmap(bitmap);
+        });
+        return true;
+    }
+    return View::applyStyleValue(name, value);
+}
+
 void ImageView::setImageUrl(const string& url) {
 	
 	// Cancel any extant HTTP request. Note that the request will only really get cancelled

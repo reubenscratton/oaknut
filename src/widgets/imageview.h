@@ -25,16 +25,17 @@ public:
     void setImageNode(AtlasNode* node);
 	
 	// Overrides
-	virtual void attachToWindow(Window* window);
-	virtual void detachFromWindow();
-	virtual void onEffectiveTintColourChanged();
-	virtual void layout();
+	void attachToWindow(Window* window) override;
+	void detachFromWindow() override;
+	void onEffectiveTintColourChanged() override;
+	void layout() override;
+    bool applyStyleValue(const string& name, StyleValue* value) override;
 
 	// Internal helpers
 	void loadImage();
 	
 	// IURLRequestDelegate
-	virtual void onUrlRequestLoad(URLData* data);
+	void onUrlRequestLoad(URLData* data) override;
 
 };
 
