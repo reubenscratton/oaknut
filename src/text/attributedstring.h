@@ -9,17 +9,17 @@
 class Attribute {
 public:
     typedef enum {
-        Forecolour,
-        BackgroundColour,
+        Forecolor,
+        BackgroundColor,
         Font
     } Type;
     Type _type;
     union {
-        COLOUR _colour;
+        COLOR _color;
         ObjPtr<class Font> _font;
     };
     
-    Attribute(Type type, COLOUR colour) : _type(type), _colour(colour) {}
+    Attribute(Type type, COLOR color) : _type(type), _color(color) {}
     ~Attribute() { if (_type == Font) { _font.~ObjPtr(); } }
     Attribute(const Attribute& attr) : _type(attr._type) {
         assign(attr);
@@ -40,12 +40,12 @@ public:
     void assign(const Attribute& src) {
         setType(src._type);
         switch (src._type) {
-            case Forecolour: _colour = src._colour; break;
-            case BackgroundColour: _colour = src._colour; break;
+            case Forecolor: _color = src._color; break;
+            case BackgroundColor: _color = src._color; break;
             case Font: _font = src._font; break;
         }
     }
-    static Attribute forecolour(COLOUR colour) { return Attribute(Forecolour, colour); }
+    static Attribute forecolor(COLOR color) { return Attribute(Forecolor, color); }
     
 };
 

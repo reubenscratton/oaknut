@@ -15,8 +15,8 @@ void App::main() {
     loadStyleAsset("styles.res");
     
 	NavigationController* rootVC = new NavigationController();
-    rootVC->_navBar->setBackgroundColour(app.getStyleColour("navbar.background"));
-	rootVC->_navBar->setTintColour(app.getStyleColour("navbar.tint"));
+    rootVC->_navBar->setBackgroundColor(app.getStyleColor("navbar.background"));
+	rootVC->_navBar->setTintColor(app.getStyleColor("navbar.tint"));
 
     /*
     vector<pair<const string&,const Variant&>> foo; // 24 bytes

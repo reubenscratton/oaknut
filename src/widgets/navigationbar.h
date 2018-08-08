@@ -10,12 +10,12 @@ public:
 
 	//ObjPtr<NavigationItem> _navigationItem;
 	bool _blurEnabled;
-    COLOUR _backgroundColour;
+    COLOR _backgroundColor;
     
 	NavigationBar();
 	
 	virtual void setBackground(RenderOp* renderOp);
-    virtual void setBackgroundColour(COLOUR backgroundColour);
+    virtual void setBackgroundColor(COLOR backgroundColor);
     virtual void addNavigationItem(NavigationItem* navigationItem);
     virtual void removeNavigationItem(NavigationItem* navigationItem);
     virtual void setBlurEnabled(bool blurEnabled);

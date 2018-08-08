@@ -14,8 +14,8 @@ static jmethodID jmidCanvasConstructor;
 static jmethodID jmidResize;
 static jmethodID jmidGetBitmap;
 static jmethodID jmidClear;
-static jmethodID jmidSetFillColour;
-static jmethodID jmidSetStrokeColour;
+static jmethodID jmidSetFillColor;
+static jmethodID jmidSetStrokeColor;
 static jmethodID jmidSetStrokeWidth;
 static jmethodID jmidSetTransform;
 static jmethodID jmidClearTransform;
@@ -73,15 +73,15 @@ public:
         jobject jbitmap = getJNIEnv()->CallObjectMethod(_canvas, jmidGetBitmap);
         _bitmap = new Bitmap(jbitmap);
     }
-    void clear(COLOUR colour) {
-        getJNIEnv()->CallVoidMethod(_canvas, jmidClear, (jint)colour);
+    void clear(COLOR color) {
+        getJNIEnv()->CallVoidMethod(_canvas, jmidClear, (jint)color);
         _bitmap->_needsUpload = true;
     }
-    void setFillColour(COLOUR fillColour) {
-        getJNIEnv()->CallVoidMethod(_canvas, jmidSetFillColour, (jint)fillColour);
+    void setFillColor(COLOR fillColor) {
+        getJNIEnv()->CallVoidMethod(_canvas, jmidSetFillColor, (jint)fillColor);
     }
-    void setStrokeColour(COLOUR strokeColour) {
-        getJNIEnv()->CallVoidMethod(_canvas, jmidSetStrokeColour, (jint)strokeColour);
+    void setStrokeColor(COLOR strokeColor) {
+        getJNIEnv()->CallVoidMethod(_canvas, jmidSetStrokeColor, (jint)strokeColor);
     }
     void setStrokeWidth(float strokeWidth) {
         getJNIEnv()->CallVoidMethod(_canvas, jmidSetStrokeWidth, (jfloat)strokeWidth);
@@ -144,8 +144,8 @@ Canvas* Canvas::create() {
     jmidResize = env->GetMethodID(jclassCanvas, "resize", "(II)V");
     jmidGetBitmap = env->GetMethodID(jclassCanvas, "getBitmap", "()Landroid/graphics/Bitmap;");
     jmidClear = env->GetMethodID(jclassCanvas, "clear", "(I)V");
-    jmidSetFillColour = env->GetMethodID(jclassCanvas, "setFillColour", "(I)V");
-    jmidSetStrokeColour = env->GetMethodID(jclassCanvas, "setStrokeColour", "(I)V");
+    jmidSetFillColor = env->GetMethodID(jclassCanvas, "setFillColor", "(I)V");
+    jmidSetStrokeColor = env->GetMethodID(jclassCanvas, "setStrokeColor", "(I)V");
     jmidSetStrokeWidth = env->GetMethodID(jclassCanvas, "setStrokeWidth", "(F)V");
     jmidSetTransform = env->GetMethodID(jclassCanvas, "setTransform", "(FFFFFF)V");
     jmidClearTransform = env->GetMethodID(jclassCanvas, "clearTransform", "()V");

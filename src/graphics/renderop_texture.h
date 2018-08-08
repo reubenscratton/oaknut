@@ -5,64 +5,47 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+/**
+ BitmapProvider is a companion class to RenderOp that provides async image loading.
+ */
 class BitmapProvider : public Object {
 public:
-    class Callback {
-    public:
-        virtual void onBitmapChanged() =0;
-    };
-
-    virtual Bitmap* getBitmap() const =0;
-    virtual void addCallback(Callback* callback) =0;
-    virtual void removeCallback(Callback* callback) =0;
-};
-
-class SimpleBitmapProvider : public BitmapProvider {
-public:
-    SimpleBitmapProvider(Bitmap* bitmap);
-    virtual Bitmap* getBitmap() const;
-    virtual void addCallback(Callback* callback);
-    virtual void removeCallback(Callback* callback);
-
+    void dispatch(Bitmap* bitmap);
+    void dispatch(AtlasNode* node);
+    
+    friend class TextureRenderOp;
 private:
-    ObjPtr<Bitmap> _bitmap;
+    list<class TextureRenderOp*> _ops;
+    Bitmap* _bitmap;
+    AtlasNode* _node;
 };
 
-class AsyncBitmapProvider : public BitmapProvider {
+class TextureRenderOp : public RenderOp {
 public:
-
-    AsyncBitmapProvider(const char* assetPath);
-
-    virtual Bitmap* getBitmap() const;
-    virtual void addCallback(Callback* callback);
-    virtual void removeCallback(Callback* callback);
-
-protected:
-    list<Callback*> _callbacks;
     ObjPtr<Bitmap> _bitmap;
-};
-
-class TextureRenderOp : public RenderOp, public BitmapProvider::Callback {
-public:
     ObjPtr<BitmapProvider> _bitmapProvider;
     RECT _rectTex;
     
     TextureRenderOp(View* view);
-    TextureRenderOp(View* view, const RECT& rect, Bitmap* texture, const RECT* rectTex, COLOUR tintColour);
-    TextureRenderOp(View* view, const char* assetPath, int tintColour);
-    virtual bool canMergeWith(const RenderOp* op);
-    virtual void render(Window* window, Surface* surface);
-    virtual void asQuads(QUAD* quad);
+    TextureRenderOp(View* view, const RECT& rect, Bitmap* texture, const RECT* rectTex, COLOR tintColor);
+    TextureRenderOp(View* view, const char* assetPath, int tintColor);
     
-    virtual void setAlpha(float alpha);
-    virtual void setColour(COLOUR colour);
-    virtual void setTexRect(const RECT& texRect);
+    // API
     virtual void setBitmap(Bitmap* bitmap);
-    virtual void setBitmapProvider(BitmapProvider* bitmapProvider);
+    virtual void setBitmap(AtlasNode* node);
+    virtual void setBitmap(BitmapProvider* bitmapProvider);
+    virtual void setTexRect(const RECT& texRect);
+    
 
-    // BitmapProvider::Callback
-    virtual void onBitmapChanged();
-
+    // Overrides
+    bool canMergeWith(const RenderOp* op) override;
+    void render(Window* window, Surface* surface) override;
+    void asQuads(QUAD* quad) override;
+    void validateShader() override;
+    void setAlpha(float alpha) override;
+    void setColor(COLOR color) override;
+    
+    
 };
 
 

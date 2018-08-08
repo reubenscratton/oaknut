@@ -11,10 +11,10 @@
 
 //extern NSString* kResetCurrentSnapshot;
 
-static COLOUR colourForPressedKey;
-static COLOUR colourForKeyBackground;
-static COLOUR colourForFunctionKeyBackground;
-static COLOUR colourForLEDKeyBackground;
+static COLOR colourForPressedKey;
+static COLOR colourForKeyBackground;
+static COLOR colourForFunctionKeyBackground;
+static COLOR colourForLEDKeyBackground;
 
 
 BeebKeyboardKey::BeebKeyboardKey(Controller* controller, BeebKey* beebKey)
@@ -31,8 +31,7 @@ void BeebKeyboardKey::setBeebKey(BeebKey* beebKey) {
 }
 
 void BeebKeyboardKey::invalidate() {
-    ColorRectFillRenderOp* bkgndOp = (ColorRectFillRenderOp*)_bkgndOp._obj;
-    bkgndOp->setColour((_isTouched||_highlighted)? colourForPressedKey : _keyColour);
+    _bkgndOp->setFillColor((_isTouched||_highlighted)? colourForPressedKey : _keyColour);
     ControllerKey::invalidate();
 }
 
@@ -51,7 +50,7 @@ void BeebKeyboardKey::attachToView(ControllerView *view) {
 
     _label = new TextRenderer();
     _label->setText(name);
-    _label->setDefaultColour(0xFFFFFFFF);
+    _label->setDefaultColor(0xFFFFFFFF);
     _label->setDefaultFont(app.getStyleFont((name.length()>1) ? "keyboard.labels-small" : "keyboard.labels-normal"));
     _label->setGravity({GRAVITY_CENTER, GRAVITY_CENTER});
     _label->measure();
@@ -59,7 +58,7 @@ void BeebKeyboardKey::attachToView(ControllerView *view) {
     if (_beebKey->shiftLabel) {
         _labelTop = new TextRenderer();
         _labelTop->setText(_beebKey->shiftLabel);
-        _labelTop->setDefaultColour(0xFFFFFFFF);
+        _labelTop->setDefaultColor(0xFFFFFFFF);
         _labelTop->setDefaultFont(app.getStyleFont("keyboard.labels-tiny"));
         _labelTop->setGravity({GRAVITY_CENTER, GRAVITY_TOP});
         _labelTop->measure();
@@ -134,10 +133,10 @@ void BeebKeyboardController::KeyRow::layout(const RECT& bounds) {
 
 BeebKeyboardController::BeebKeyboardController() {
 
-    colourForKeyBackground = app.getStyleColour("keyboard.backgroundKeyNormal");
-    colourForPressedKey = app.getStyleColour("keyboard.backgroundKeyPressed");
-    colourForFunctionKeyBackground = app.getStyleColour("keyboard.backgroundKeyFunction");
-    colourForLEDKeyBackground = app.getStyleColour("keyboard.backgroundKeyLED");
+    colourForKeyBackground = app.getStyleColor("keyboard.backgroundKeyNormal");
+    colourForPressedKey = app.getStyleColor("keyboard.backgroundKeyPressed");
+    colourForFunctionKeyBackground = app.getStyleColor("keyboard.backgroundKeyFunction");
+    colourForLEDKeyBackground = app.getStyleColor("keyboard.backgroundKeyLED");
 
 	KeyRow* row = new KeyRow(); _rows.push_back(row);
 	row->_keys.push_back(new BeebKeyboardKey(this, &beebKeyTab));

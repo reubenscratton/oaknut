@@ -117,7 +117,7 @@ public:
         const string* _str;
         int32_t _byteOffset, _byteOffsetNext;
     public:
-        explicit iterator(const string& str, int32_t byteOffset) : _str(&str), _byteOffset(byteOffset), _byteOffsetNext(-1) {}
+        explicit iterator(const string* str, int32_t byteOffset) : _str(str), _byteOffset(byteOffset), _byteOffsetNext(-1) {}
         iterator(const iterator& it) : _str(it._str), _byteOffset(it._byteOffset), _byteOffsetNext(it._byteOffsetNext) {}
         iterator& operator=(const iterator& it) {
             _str=it._str;
@@ -134,26 +134,25 @@ public:
             _byteOffsetNext = -1;
             return *this;            
         }
-        iterator operator++(int) {iterator retval = *this; ++(*this); return retval;}
-        bool operator==(iterator other) const {return &_str == &other._str && _byteOffset==other._byteOffset;}
-        bool operator!=(iterator other) const {return !(*this == other);}
-        reference operator*() {
-            _byteOffsetNext = _byteOffset;
-            return _str->readUtf8(_byteOffsetNext);
-        }
-        bool eof() const {return _byteOffset<0;}
-        char* data() const { return _str->_p + _byteOffset; }
+        reference operator*();
+        iterator operator++(int);
+        bool operator==(iterator other) const;
+        bool operator!=(iterator other) const;
+        bool eof() const;
+        char* data() const;
     };
     
     string(const iterator& start, const iterator& end) : string(start.data(), int32_t(end.data()-start.data())) {
     }
 
-    iterator begin() const {return iterator(*this, _p?(_cb?0:-1):-1);}
-    iterator end() const {return iterator(*this, -1);}
+    iterator begin() const {return iterator(this, _p?(_cb?0:-1):-1);}
+    iterator end() const {return iterator(this, -1);}
 
     string extractUpTo(const string& sep, bool remove);
+    string tokenise(const string& sep);
 
     size_t hash() const;
+    string lowercase() const;
     
     friend class Stream;
     friend class ByteBuffer;

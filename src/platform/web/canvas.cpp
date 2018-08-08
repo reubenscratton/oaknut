@@ -90,27 +90,27 @@ void WebCanvas::resize(int width, int height) {
     _ctxt = _canvas.call<val>("getContext", val("2d"));
     _hasChanged = true;
 }
-void WebCanvas::clear(COLOUR colour) {
+void WebCanvas::clear(COLOR color) {
     _hasChanged = true;
 
 }
 void WebCanvas::setStrokeWidth(float strokeWidth) {
     _strokeWidth = strokeWidth;
 }
-void WebCanvas::setStrokeColour(COLOUR colour) {
-    _strokeColour = colour;
+void WebCanvas::setStrokeColor(COLOR color) {
+    _strokeColor = color;
 }
-void WebCanvas::setFillColour(COLOUR colour) {
-    _fillColour = colour;
+void WebCanvas::setFillColor(COLOR color) {
+    _fillColor = color;
 }
-string cssColourStr(COLOUR colour) {
+string cssColorStr(COLOR color) {
     char ach[16];
     // CSS ordering of 32-bit hex string is RGBA
-    colour = ((colour&0xFF000000)>>24) // i.e. move A to least significant byte
-           | ((colour&0xFF0000)<<8)
-           | ((colour&0xFF00)<<8)
-           | ((colour&0xFF)<<8);
-    sprintf(ach, "#%08X", colour);
+    color = ((color&0xFF000000)>>24) // i.e. move A to least significant byte
+           | ((color&0xFF0000)<<8)
+           | ((color&0xFF00)<<8)
+           | ((color&0xFF)<<8);
+    sprintf(ach, "#%08X", color);
     return string(ach);
 }
 void WebCanvas::setAffineTransform(AffineTransform* t) {
@@ -121,7 +121,7 @@ void WebCanvas::drawRect(RECT rect) {
     _ctxt.call<void>("fillRect", val(rect.left()), val(rect.top()), val(rect.size.width), val(rect.size.height));
     if (_strokeWidth > 0) {
         _ctxt.set("lineWidth", val(_strokeWidth));
-        _ctxt.set("strokeStyle", val(cssColourStr(_strokeColour)));
+        _ctxt.set("strokeStyle", val(cssColorStr(_strokeColor)));
         _ctxt.call<void>("strokeRect", val(rect.left()), val(rect.top()), val(rect.size.width), val(rect.size.height));
     }
     _hasChanged = true;
@@ -131,7 +131,7 @@ void WebCanvas::drawOval(RECT rect) {
     _ctxt.call<void>("beginPath");
     _ctxt.call<void>("ellipse", val(rect.midX()), val(rect.midY()), val(rect.size.width/2), val(rect.size.height/2), val(0), val(0),val(2*M_PI));
     _ctxt.set("lineWidth", val(_strokeWidth));
-    _ctxt.set("strokeStyle", val(cssColourStr(_strokeColour)));
+    _ctxt.set("strokeStyle", val(cssColorStr(_strokeColor)));
     _ctxt.call<void>("stroke");
     _ctxt.call<void>("restore");
     _hasChanged = true;
@@ -143,7 +143,7 @@ void WebCanvas::drawPath(Path* apath) {
     _ctxt.set("lineCap", val("round"));
     _ctxt.set("lineJoin", val("round"));
     _ctxt.set("lineWidth", val(_strokeWidth));
-    _ctxt.set("strokeStyle", val(cssColourStr(_strokeColour)));
+    _ctxt.set("strokeStyle", val(cssColorStr(_strokeColor)));
     for (auto it : path->_pathElements) {
         switch (it->type) {
             case TypeMoveTo: {

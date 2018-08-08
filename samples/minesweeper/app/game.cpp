@@ -31,7 +31,7 @@ void Game::restart() {
     }
 
     // Fill board with mines at random locations
-    srand((uint32_t)app.currentMillis());
+    srand(app.currentMillis());
     int mines = _rows * _cols / 7;
     _unknown = _rows * _cols - mines;
     for (int i = 0; i < mines; ++i) {

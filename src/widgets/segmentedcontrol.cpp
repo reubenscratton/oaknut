@@ -15,15 +15,15 @@ SegmentedControl::SegmentedControl() {
 	_font = app.getStyleFont("segmentedcontrol");
     _lineWidth = app.getStyleFloat("segmentedcontrol.stroke-width");
 	_selectedIndex = _pressedIndex = -1;
-	_selectedTextColour = 0xff000000;
+	_selectedTextColor = 0xff000000;
 }
 
-void SegmentedControl::onEffectiveTintColourChanged() {
-    View::onEffectiveTintColourChanged();
+void SegmentedControl::onEffectiveTintColorChanged() {
+    View::onEffectiveTintColorChanged();
     for (auto i : _segments) {
-        i.rectOp->setStrokeColour(_effectiveTintColour);
-        COLOUR actualTextColour = _textColour ? _textColour : _effectiveTintColour;
-        i.label->setDefaultColour(actualTextColour);
+        i.rectOp->setStrokeColor(_effectiveTintColor);
+        COLOR actualTextColor = _textColor ? _textColor : _effectiveTintColor;
+        i.label->setDefaultColor(actualTextColor);
     }
 }
 
@@ -33,34 +33,37 @@ void SegmentedControl::addSegment(const string& label) {
 	segment.label->setDefaultFont(_font);
 	segment.label->setText(label);
     segment.label->setGravity({GRAVITY_CENTER,GRAVITY_CENTER});
-    COLOUR actualColour = _textColour ? _textColour : _effectiveTintColour;
-    segment.label->setDefaultColour(actualColour);
-    float r[2] = {0,0};
+    COLOR actualColor = _textColor ? _textColor : _effectiveTintColor;
+    segment.label->setDefaultColor(actualColor);
+    float r = app.dp(4); // todo: style!
+    segment.rectOp = new RectRenderOp(this);
+    segment.rectOp->setFillColor(0);
+    segment.rectOp->setStrokeWidth(_lineWidth);
+    segment.rectOp->setStrokeColor(_effectiveTintColor);
     if (_segments.size() == 0) {
-        r[0] = app.dp(4);
+        segment.rectOp->setCornerRadius(4);
     } else {
-        r[1] = app.dp(4);
+        segment.rectOp->setCornerRadii({r,r,0,0});
     }
-    segment.rectOp = new RoundRectRenderOp(this, 0, _lineWidth, _effectiveTintColour, r);
     addRenderOp(segment.rectOp);
 	_segments.push_back(segment);
 
 	invalidateContentSize();
 }
 
-void SegmentedControl::setTextColour(COLOUR colour) {
-    _textColour = colour;
-    COLOUR actualTextColour = _textColour ? _textColour : _effectiveTintColour;
+void SegmentedControl::setTextColor(COLOR color) {
+    _textColor = color;
+    COLOR actualTextColor = _textColor ? _textColor : _effectiveTintColor;
     for (int i=0 ; i<_segments.size() ; i++) {
         Segment& segment = _segments.at(i);
-        segment.label->setDefaultColour(actualTextColour);
+        segment.label->setDefaultColor(actualTextColor);
     }
 }
-void SegmentedControl::setSelectedTextColour(COLOUR colour) {
-	_selectedTextColour = colour;
+void SegmentedControl::setSelectedTextColor(COLOR color) {
+	_selectedTextColor = color;
     if (_selectedIndex >= 0) {
         Segment& selectedSegment = _segments.at(_selectedIndex);
-        selectedSegment.label->setDefaultColour(colour);
+        selectedSegment.label->setDefaultColor(color);
     }
 }
 
@@ -69,9 +72,9 @@ void SegmentedControl::setSelectedSegment(int segmentIndex) {
         if (_selectedIndex >= 0) {
             Segment& selectedSegment = _segments.at(_selectedIndex);
             if (selectedSegment.label) {
-                COLOUR actualTextColour = _textColour ? _textColour : _effectiveTintColour;
-                selectedSegment.label->setDefaultColour(actualTextColour);
-                selectedSegment.rectOp->setColour(0);
+                COLOR actualTextColor = _textColor ? _textColor : _effectiveTintColor;
+                selectedSegment.label->setDefaultColor(actualTextColor);
+                selectedSegment.rectOp->setColor(0);
             }
             // todo: rect fill color
         }
@@ -80,8 +83,8 @@ void SegmentedControl::setSelectedSegment(int segmentIndex) {
         if (_selectedIndex >= 0) {
             Segment& selectedSegment = _segments.at(_selectedIndex);
             if (selectedSegment.label) {
-                selectedSegment.label->setDefaultColour(_selectedTextColour);
-                selectedSegment.rectOp->setColour(_effectiveTintColour);
+                selectedSegment.label->setDefaultColor(_selectedTextColor);
+                selectedSegment.rectOp->setColor(_effectiveTintColor);
             }
         }
 	}
@@ -142,13 +145,13 @@ void SegmentedControl::updateRenderOps() {
 void SegmentedControl::setPressedIndex(int pressedIndex) {
     if (_pressedIndex >= 0) {
         Segment& segment = _segments.at(_pressedIndex);
-        segment.rectOp->setColour((_pressedIndex==_selectedIndex) ? _effectiveTintColour : 0);
+        segment.rectOp->setColor((_pressedIndex==_selectedIndex) ? _effectiveTintColor : 0);
         invalidateRect(segment.rect);
     }
     _pressedIndex = pressedIndex;
     if (pressedIndex >=0) {
         Segment& segment = _segments.at(pressedIndex);
-        segment.rectOp->setColour(0xc0000000 | (_effectiveTintColour&0xffffff));
+        segment.rectOp->setColor(0xc0000000 | (_effectiveTintColor&0xffffff));
         invalidateRect(segment.rect);
     }
 }

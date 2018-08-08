@@ -2,7 +2,7 @@
 View: {
 	width: match_parent
 	height: match_parent
-	background: 0xFFFFFFFF
+	background: white
 	View: {
 		id: topBar
 		width: 250dp
@@ -38,7 +38,8 @@ View: {
 		width: wrap_content
 		height: wrap_content
 		alignX: center
-		alignY: below(topBar)
+		alignY: below, topBar
 	}
+
 	}
 }

@@ -15,16 +15,13 @@
 DisksViewController::DisksViewController(std::function<void(Game*)> delegate) {
 	_delegate = delegate;
 	
-	// Root view
-	View* view = new View();
-	view->setBackgroundColour(0xfff8f8f8);
+    View* view = app.layoutInflate("layout/disks.res");
 	setView(view);
 	
 	
 	// Navbar
 	_segctrl = new SegmentedControl();
-	//_segctrl->setTintColour(colourForNavTint);
-	_segctrl->setSelectedTextColour(app.getStyleColour("navbar.background")); // as if text is transparent
+	_segctrl->setSelectedTextColor(app.getStyleColor("navbar.background")); // as if text is transparent
 	_segctrl->addSegment("Best");
 	_segctrl->addSegment("All");
     _segctrl->setSegmentSelectedDelegate([=](int index) {
@@ -38,8 +35,7 @@ DisksViewController::DisksViewController(std::function<void(Game*)> delegate) {
 	_disksListAdapterBest = new BestDisksListAdapter("http://www.ibeeb.co.uk/best.json");
 	_disksListAdapterAll = new AllDisksListAdapter("http://www.ibeeb.co.uk/all.json");
 	
-	_listView = new ListView();
-    _listView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::FillParent());
+    _listView = (ListView*)view->findViewById("listView");
     float statusBarHeight = app.getStyleFloat("statusbar.height");
     _minTopScrollInset = app.getStyleFloat("navbar.height") + statusBarHeight;
     _listView->_onItemTapDelegate = [=](View* itemView, LISTINDEX index) {
@@ -49,12 +45,9 @@ DisksViewController::DisksViewController(std::function<void(Game*)> delegate) {
     };
     _listView->_onItemLongPressDelegate = [=](View* itemView, LISTINDEX index) {
     };
-	view->addSubview(_listView);
     
-    _searchBox = new SearchBox();
-    _searchBox->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::Abs(app.dp(40))); // todo: wrap_content
-    _searchBox->setAlignSpecs(ALIGNSPEC::Left(), ALIGNSPEC(NULL, 0.0f, 0.0f, _minTopScrollInset));
-    view->addSubview(_searchBox);
+    _searchBox = (SearchBox*)view->findViewById("searchBox");
+    _searchBox->getParent()->setAlignSpecs(ALIGNSPEC::Left(), ALIGNSPEC(NULL, 0.0f, 0.0f, _minTopScrollInset));
     _searchBox->setSearchTextChangedDelegate([=](SearchBox* searchBox, const string& text) {
         _disksListAdapterAll->setFilter(text);
     });

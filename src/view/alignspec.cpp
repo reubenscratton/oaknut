@@ -39,15 +39,8 @@ ALIGNSPEC ALIGNSPEC::Below(View* view, float margin) {
 
 
 ALIGNSPEC::ALIGNSPEC(StyleValue* value, View* view) {
-    assert(value->type == StyleValue::Type::String);
-    string str = value->str;
-    string type = str.extractUpTo("(", true);
-    if (type.length() == 0) {
-        type = str;
-        str = "";
-    } else {
-        str = str.extractUpTo(")", true);
-    }
+    auto a = value->arrayVal();
+    string type = a[0]->stringVal();
     if (type=="center") *this=Center();
     else if (type=="centre") *this=Center();
     else if (type=="left") *this=Left();
@@ -60,20 +53,17 @@ ALIGNSPEC::ALIGNSPEC(StyleValue* value, View* view) {
     else if (type=="below") *this=ALIGNSPEC(NO_ANCHOR, 1.0f,  0.0f, 0);
     else assert(false); // unknown alignspec
     
-    if (str.length() > 0) {
-        if (anchor == NO_ANCHOR) {
-            string anchorId = str.extractUpTo(",", true);
-            if (anchorId.length()==0) {
-                anchorId=str;
-                str="";
-            }
-            anchor = view->getParent()->findViewById(anchorId);
-            assert(anchor); // NB: anchor must be previously declared. TODO: remove this restriction
-        }
-        str.trim();
-        if (str.length() > 0) {
-            margin = StyleValue::parseDimension(str);
-        }
+    int marginIndex = 1;
+    if (anchor == NO_ANCHOR) {
+        assert(a.size()>=2);
+        string anchorId = a[1]->stringVal();
+        anchor = view->getParent()->findViewById(anchorId);
+        assert(anchor); // NB: anchor must be previously declared. TODO: remove this restriction
+        marginIndex = 2;
+    }
+
+    if (a.size()>marginIndex) {
+        margin = a[marginIndex]->floatVal();
     }
 }
 

@@ -20,10 +20,10 @@ void TextRenderer::setAttributedText(const AttributedString& text) {
     _measuredSizeValid = false;
 }
 
-void TextRenderer::setDefaultColour(COLOUR colour) {
-    _defaultColour = colour;
+void TextRenderer::setDefaultColor(COLOR color) {
+    _defaultColor = color;
     //_renderOpsValid = false;
-    _measuredSizeValid = false; // lazy. colour doesn't affect size!
+    _measuredSizeValid = false; // lazy. color doesn't affect size!
 }
 
 void TextRenderer::setDefaultFont(Font* font) {
@@ -63,14 +63,14 @@ void TextRenderer::measure(SIZE maxSize) {
     // Initial text render params
     TEXTRENDERPARAMS textRenderParams;
     textRenderParams.atlasPage = NULL;
-    textRenderParams.forecolour = _defaultColour;
+    textRenderParams.forecolor = _defaultColor;
     textRenderParams.renderOp = NULL;
     TEXTRENDERPARAMS* currentParams = &textRenderParams;
     bool paramsChanged = false;
     
     // Prepare to walk the ordered spans collection
     stack<Font*> fontStack;
-    stack<COLOUR> forecolourStack;
+    stack<COLOR> forecolorStack;
     auto spanStartIterator = _text._attributes.begin();
     auto spanEndIterator = _text._attributes.begin();
     
@@ -106,9 +106,9 @@ void TextRenderer::measure(SIZE maxSize) {
                 currentFont = fontStack.top();
                 fontStack.pop();
             }
-            if (endingSpan.attribute._type == Attribute::Type::Forecolour) {
-                textRenderParams.forecolour = forecolourStack.top();
-                forecolourStack.pop();
+            if (endingSpan.attribute._type == Attribute::Type::Forecolor) {
+                textRenderParams.forecolor = forecolorStack.top();
+                forecolorStack.pop();
                 paramsChanged = true;
             }
             spanEndIterator++;
@@ -121,9 +121,9 @@ void TextRenderer::measure(SIZE maxSize) {
                 fontStack.push(currentFont);
                 currentFont = startingSpan.attribute._font;
             }
-            if (startingSpan.attribute._type == Attribute::Type::Forecolour) {
-                forecolourStack.push(textRenderParams.forecolour);
-                textRenderParams.forecolour = startingSpan.attribute._colour;
+            if (startingSpan.attribute._type == Attribute::Type::Forecolor) {
+                forecolorStack.push(textRenderParams.forecolor);
+                textRenderParams.forecolor = startingSpan.attribute._color;
                 paramsChanged = true;
             }
             spanStartIterator++;

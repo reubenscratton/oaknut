@@ -266,18 +266,17 @@ protected:
      * batch similar ops together to reduce drawing overhead.
      */
 public:
-    virtual void setBackground(RenderOp* drawableOp);
-    virtual void setBackground(RenderOp* drawableOp, STATESET stateset);
-    virtual void setBackgroundColour(COLOUR colour);
+    virtual void setBackground(RenderOp* renderOp);
+    virtual void setBackgroundColor(COLOR color);
     virtual void addRenderOp(RenderOp* renderOp);
     virtual void addRenderOp(RenderOp* renderOp, bool atFront);
     virtual void removeRenderOp(RenderOp* renderOp);
     virtual void setNeedsFullRedraw();
     virtual void invalidateRect(const RECT& rect);
-    COLOUR getTintColour();
+    COLOR getTintColor();
     
-    /** Sets tint colour */
-    virtual void setTintColour(COLOUR tintColour);
+    /** Sets tint color */
+    virtual void setTintColor(COLOR tintColor);
     
     /** Get the current alpha. Defaults to 1.0. Note that the actual alpha value used in rendering
      inherits (i.e. is effectively multiplied by) all ancestor alpha values. */
@@ -288,17 +287,15 @@ public:
 
 protected:
     /**  \cond INTERNAL */
-    virtual void updateBackgroundOp();
     virtual void updateRenderOps();
     virtual void updateEffectiveTint();
-    virtual void onEffectiveTintColourChanged();
-    COLOUR _tintColour;
-    COLOUR _effectiveTintColour;
+    virtual void onEffectiveTintColorChanged();
+    COLOR _tintColor;
+    COLOR _effectiveTintColor;
     float _alpha; // View's own alpha
     float _effectiveAlpha;
     virtual void updateEffectiveAlpha();
-    ObjPtr<RenderOp> _currentBackgroundOp;
-    vector<pair<ObjPtr<RenderOp>,STATESET>> _backgroundOps;
+    ObjPtr<RenderOp> _backgroundOp;
     bool _needsFullRedraw;
     bool _updateRenderOpsNeeded;
     bool _opaque;
@@ -352,7 +349,7 @@ protected:
      */
 public:
     /** Applies a set of styles to the view */
-    virtual void applyStyleValues(const StyleValueList& values);
+    virtual void applyStyleValues(const map<string, StyleValue*>& values);
 
 protected:
     /** Applies a single style value for the given attribute name. Custom views
@@ -361,9 +358,10 @@ protected:
     
     /**  \cond INTERNAL */
     virtual bool applyStyleValueFromChild(const string& name, StyleValue* value, View* subview);
-    virtual void applyStatemappableStyleValue(const string& name, StyleValue* value, std::function<void(StyleValue*)> applyFunc);
-    virtual void selectStatemapStyleValue(StyleMap* styleMap, std::function<void(StyleValue*)> applyFunc);
-    map<string, pair<StyleMap*,std::function<void(StyleValue*)>>>* _statemapStyleValues;
+    virtual bool handleStatemapDeclaration(const string& name, StyleValue* value);
+    virtual void applyStatemapStyleValue(const string& name, StyleMap* statemap);
+    map<string, StyleMap*>* _statemapStyleValues;
+    RenderOp* processDrawable(StyleValue* value);
     /**  \endcond */
     /**@}*/
 
@@ -373,6 +371,7 @@ protected:
      */
 public:
     std::function<bool(View*,INPUTEVENT*)> onInputEventDelegate;
+    std::function<void(View*)> onClickDelegate;
     virtual View* hitTest(POINT pt, POINT* ptRel);
     virtual View* subviewContainingPoint(POINT pt);
     virtual int indexOfSubviewContainingPoint(POINT pt);

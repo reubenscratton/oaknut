@@ -10,31 +10,33 @@
 DECLARE_DYNCREATE(GameView);
 
 GameView::GameView() {
-    _imgUnknown = new AsyncBitmapProvider("images/unknown.png");
-    _imgMine = new AsyncBitmapProvider("images/mine.png");
-    _imgBoom = new AsyncBitmapProvider("images/boom.png");
-    _imgFlag = new AsyncBitmapProvider("images/flag.png");
-    _imgNumbers[0] = new AsyncBitmapProvider("images/0.png");
-    _imgNumbers[1] = new AsyncBitmapProvider("images/1.png");
-    _imgNumbers[2] = new AsyncBitmapProvider("images/2.png");
-    _imgNumbers[3] = new AsyncBitmapProvider("images/3.png");
-    _imgNumbers[4] = new AsyncBitmapProvider("images/4.png");
-    _imgNumbers[5] = new AsyncBitmapProvider("images/5.png");
-    _imgNumbers[6] = new AsyncBitmapProvider("images/6.png");
-    _imgNumbers[7] = new AsyncBitmapProvider("images/7.png");
-    _imgNumbers[8] = new AsyncBitmapProvider("images/8.png");
-
+    
+    AtlasPage* atlas = new AtlasPage(512, 512, BITMAPFORMAT_RGBA32);
+    _imgUnknown = atlas->importAsset("images/unknown.png");
+    _imgMine = atlas->importAsset("images/mine.png");
+    _imgBoom = atlas->importAsset("images/boom.png");
+    _imgFlag = atlas->importAsset("images/flag.png");
+    _imgNumbers[0] = atlas->importAsset("images/0.png");
+    _imgNumbers[1] = atlas->importAsset("images/1.png");
+    _imgNumbers[2] = atlas->importAsset("images/2.png");
+    _imgNumbers[3] = atlas->importAsset("images/3.png");
+    _imgNumbers[4] = atlas->importAsset("images/4.png");
+    _imgNumbers[5] = atlas->importAsset("images/5.png");
+    _imgNumbers[6] = atlas->importAsset("images/6.png");
+    _imgNumbers[7] = atlas->importAsset("images/7.png");
+    _imgNumbers[8] = atlas->importAsset("images/8.png");
     _cellSize = app.dp(25);
 }
 
 void GameView::setGame(Game* game) {
     _game = game;
-
-    for (int y=0 ; y<game->_rows ; y++) {
-        for (int x=0 ; x<game->_cols ; x++) {
-            Cell &cell = game->cellAt(x, y);
+    
+    for (int y=0 ; y<_game->_rows ; y++) {
+        for (int x=0 ; x<_game->_cols ; x++) {
+            Cell &cell = _game->cellAt(x, y);
             cell._renderOp = new TextureRenderOp(this);
-            cell._renderOp->setRect(RECT_Make(x*_cellSize,y*_cellSize,_cellSize,_cellSize));
+            cell._renderOp->setRect(RECT(x*_cellSize,y*_cellSize,_cellSize,_cellSize));
+            updateCell(cell);
             addRenderOp(cell._renderOp);
         }
     }
@@ -49,44 +51,45 @@ void GameView::updateContentSize(float parentWidth, float parentHeight) {
 
 void GameView::updateCell(Cell& cell) {
     if (cell._state == Unknown) {
-        cell._renderOp->setBitmapProvider(_imgUnknown);
+        cell._renderOp->setBitmap(_imgUnknown);
     } else if (cell._state == Flag) {
-        cell._renderOp->setBitmapProvider(_imgFlag);
+        cell._renderOp->setBitmap(_imgFlag);
     } else if (cell._state == Mine) {
-        cell._renderOp->setBitmapProvider(_imgMine);
+        cell._renderOp->setBitmap(_imgMine);
     } else if (cell._state == Boom) {
-        cell._renderOp->setBitmapProvider(_imgBoom);
+        cell._renderOp->setBitmap(_imgBoom);
     } else {
-        cell._renderOp->setBitmapProvider(_imgNumbers[cell._minesAround]);
+        cell._renderOp->setBitmap(_imgNumbers[cell._minesAround]);
     }
     cell._renderOp->rebatchIfNecessary();
     invalidateRect(cell._renderOp->_rect);
 }
 
 
-bool GameView::onTouchEvent(int eventType, int finger, POINT pt) {
+bool GameView::onInputEvent(INPUTEVENT* event) {
     if (_game->_state != InProgress) {
         return false;
     }
-    if (eventType == INPUT_EVENT_DOWN
-        || eventType == INPUT_EVENT_DRAG
-        || eventType == INPUT_EVENT_UP
-        || eventType == INPUT_EVENT_CANCEL) {
+    if (event->type == INPUT_EVENT_DOWN
+        || event->type == INPUT_EVENT_DRAG
+        || event->type == INPUT_EVENT_UP
+        || event->type == INPUT_EVENT_CANCEL) {
         if (_timer) {
             _timer->stop();
             _timer = NULL;
         }
     }
-    if (eventType == INPUT_EVENT_DOWN) {
+    if (event->type == INPUT_EVENT_DOWN) {
+        const POINT pt = event->pt;
         _wasLongPress = false;
         _timer = Timer::start([=] () {
             _wasLongPress = true;
             processCellTouch(pt, true);
         }, 800, false);
     } else
-    if (eventType == INPUT_EVENT_TAP) {
+    if (event->type == INPUT_EVENT_TAP) {
         if (!_wasLongPress) {
-            processCellTouch(pt, false);
+            processCellTouch(event->pt, false);
         }
     }
     return true;

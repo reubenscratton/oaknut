@@ -19,22 +19,14 @@ public:
     ImageView* _imageViewFace;
     Label* _labelNumRemaining;
 
-    ObjPtr<BitmapProvider> _bmpFaceNormal;
-    ObjPtr<BitmapProvider> _bmpFaceWon;
-    ObjPtr<BitmapProvider> _bmpFaceLost;
-
     MainViewController() {
-
-        _bmpFaceNormal = new AsyncBitmapProvider("images/face_normal.png");
-        _bmpFaceWon = new AsyncBitmapProvider("images/face_won.png");
-        _bmpFaceLost = new AsyncBitmapProvider("images/face_lost.png");
 
         View* view = app.layoutInflate("layout/main.res");
         _gameView = (GameView*)view->findViewById("game");
         _labelNumFlags = (Label*)view->findViewById("flags");
         _imageViewFace = (ImageView*)view->findViewById("face");
-        _imageViewFace->onTouchEventDelegate = [=](View* view, int eventType, int eventSource, POINT pt) -> bool {
-            if (eventType == INPUT_EVENT_TAP) {
+        _imageViewFace->onInputEventDelegate = [=](View* view, INPUTEVENT* event) -> bool {
+            if (event->type == INPUT_EVENT_TAP) {
                 if (_game->_state != InProgress) {
                     _game->restart();
                 }
@@ -47,27 +39,29 @@ public:
         _game = new Game(this, 10, 10);
         _gameView->setGame(_game);
         _game->restart();
+        
+        
     }
 
     // Game callbacks
     virtual void onGameStateChanged() {
         switch (_game->_state) {
             case InProgress:
-                _imageViewFace->setBitmapProvider(_bmpFaceNormal);
+                _imageViewFace->setImageAsset("images/face_normal.png");
                 break;
             case Won:
-                _imageViewFace->setBitmapProvider(_bmpFaceWon);
+                _imageViewFace->setImageAsset("images/face_won.png");
                 break;
             case Lost:
-                _imageViewFace->setBitmapProvider(_bmpFaceLost);
+                _imageViewFace->setImageAsset("images/face_lost.png");
                 break;
         }
     }
     virtual void onGameNumFlagsChanged() {
-        _labelNumFlags->setText("Mines: %d", _game->_flags);
+        _labelNumFlags->setText(string::format("Mines: %d", _game->_flags));
     }
     virtual void onGameNumRemainingChanged() {
-        _labelNumRemaining->setText("Closed: %d", _game->_unknown);
+        _labelNumRemaining->setText(string::format("Closed: %d", _game->_unknown));
     }
     virtual void onCellStateChanged(Cell& cell) {
         _gameView->updateCell(cell);

@@ -34,7 +34,7 @@ public:
 protected:
 	ControllerView* _view;		// Weak cos pointing against ownership dir
 public:
-    ObjPtr<RenderOp> _bkgndOp;
+    ObjPtr<RectRenderOp> _bkgndOp;
 
 	/**
 	 Rect is normalized to a parent size of 320x216, i.e. a standard
@@ -64,7 +64,7 @@ public:
 	virtual void invalidate();
 //protected:
 	RECT _drawRect;
-    COLOUR _keyColour;
+    COLOR _keyColour;
 
 };
 

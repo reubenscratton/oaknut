@@ -23,8 +23,8 @@ public:
     void updateCell(Cell& cell);
 
     // Overrides
-    virtual void updateContentSize(float parentWidth, float parentHeight);
-    virtual bool onTouchEvent(int eventType, int finger, POINT pt);
+    void updateContentSize(float parentWidth, float parentHeight) override;
+    bool onInputEvent(INPUTEVENT* event) override;
 
 protected:
     void processCellTouch(const POINT& pt, bool longPress);

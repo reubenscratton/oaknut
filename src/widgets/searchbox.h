@@ -24,7 +24,6 @@ protected:
     float spaceForSearchIcon();
     
     SEARCHTEXTCHANGED _searchTextChangedDelegate;
-    RoundRectRenderOp* _roundRectOp;
     TextureRenderOp* _searchIconOp;
 
 };

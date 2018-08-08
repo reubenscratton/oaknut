@@ -50,9 +50,6 @@ void App::loadStyleAsset(const string& assetPath) {
     _styles.parse(it);
 }
 
-
-
-
 Font* App::getStyleFont(const string &key) {
     string fontName = getStyleString(key + ".font-name", "");
     float fontSize = getStyleFloat(key + ".font-size");
@@ -62,9 +59,6 @@ Font* App::getStyleFont(const string &key) {
 
 StyleValue* App::getStyleValue(const string& keypath) {
     StyleValue* value = _styles.getValue(keypath);
-    while (value && value->type == StyleValue::Type::Reference) {
-        value = getStyleValue(value->str);
-    }
     return value;
 }
 
@@ -78,10 +72,7 @@ string App::getStyleString(const string& keypath, const char* defaultString) {
         app.warn("Missing string style info '%s'", keypath.data());
         return "";
     }
-    if (value->type==StyleValue::Type::String) return value->str;
-    else if (value->type==StyleValue::Type::Int) return stringFromInt(value->i);
-    else if (value->type==StyleValue::Type::Double) return stringFromDouble(value->d);
-    return "";
+    return value->stringVal();
 }
 
 float App::getStyleFloat(const string& keypath) {
@@ -90,16 +81,28 @@ float App::getStyleFloat(const string& keypath) {
         app.warn("Missing float style info '%s'", keypath.data());
         return 0;
     }
-    return value->getAsFloat();
+    return value->floatVal();
 }
-COLOUR App::getStyleColour(const string& key) {
+COLOR App::getStyleColor(const string& key) {
     StyleValue* value = getStyleValue(key);
     if (!value) {
-        app.warn("Missing colour style info '%s'", key.data());
+        app.warn("Missing color style info '%s'", key.data());
         return 0;
     }
-    if (value->type==StyleValue::Type::Int) return value->i;
-    return 0;
+    return value->colorVal();
+}
+
+static void importAttributes(map<string, StyleValue*>& attribs, map<string, StyleValue*> attribsToImport) {
+    for (auto i : attribsToImport) {
+        if (i.first == "style") {
+            importAttributes(attribs, i.second->compoundVal()->_values);
+        }
+    }
+    for (auto i : attribsToImport) {
+        if (i.first != "style") {
+            attribs[i.first] = i.second;
+        }
+    }
 }
 
 static View* inflateFromResource(pair<string, StyleValue*> r, View* parent) {
@@ -109,24 +112,36 @@ static View* inflateFromResource(pair<string, StyleValue*> r, View* parent) {
         parent->addSubview(view);
     }
     
-    // Extract the attributes from the uber
+    map<string, StyleValue*> attribs;
+
+    // Bring in default style attributes for this view type
+    StyleValue* styleAttrib = NULL;
+    styleAttrib = app.getStyleValue(viewClassName);
+    if (styleAttrib) {
+        importAttributes(attribs, styleAttrib->compoundVal()->_values);
+    }
+    
+    // Process the custom attributes and subviews
     StyleValue* props = r.second;
-    assert(props->type == StyleValue::Type::StyleMap);
-    vector<pair<string, StyleValue*>> attribs;
+    assert(props->type == StyleValue::Type::Compound);
     vector<pair<string, StyleValue*>> subviews;
-    for (auto i : props->styleMap->_valuesList)  {
-        StyleValue* val = i.second->select();
+    map<string, StyleValue*> customAttribs;
+    for (auto i : props->compoundVal()->_valuesList)  {
+        StyleValue* val = i.second;
         if (val) {
             auto a = make_pair(i.first, val);
-            if (val->type == StyleValue::Type::StyleMap && i.first != "style") {
+            auto firstNameChar = i.first.charAt(0);
+            if (val->type == StyleValue::Type::Compound && (firstNameChar >='A' && firstNameChar<='Z')) {
                 subviews.push_back(a);
             } else {
-                attribs.push_back(a);
+                customAttribs[i.first] = val;
             }
         }
     }
+    importAttributes(attribs, customAttribs);
+
     
-    // Apply the attributes to the inflated view
+    // Apply the attributes to the inflated view.
     view->applyStyleValues(attribs);
     
     // Inflate the subviews
@@ -149,7 +164,7 @@ View* App::layoutInflate(const string& assetPath) {
     assert(parsed);
     assert(layoutRoot._values.size()==1);
     auto i = layoutRoot._values.begin();
-    return inflateFromResource(make_pair(i->first, i->second->select()), NULL);
+    return inflateFromResource(make_pair(i->first, i->second), NULL);
 }
 
 

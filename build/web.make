@@ -10,6 +10,8 @@ OBJS:=$(OBJS:.o=.bc)
 OPTS+=$(if $(DEBUG),-O0 --profiling -s DEMANGLE_SUPPORT=1,-O3)
 ifeq ($(CONFIG),debug_asmjs)
     OPTS+= -s WASM=0
+else
+		OPTS+= -s BINARYEN_TRAP_MODE=clamp
 endif
 
 $(OBJ_DIR)%.bc : %
@@ -36,4 +38,3 @@ $(EXECUTABLE): $(OBJS) $(HTML_FILE)
 
 
 web: $(EXECUTABLE)
-

@@ -11,7 +11,7 @@
 typedef struct _VERTEX {
     GLfloat x,y;
     GLfloat s,t; // tried these as int16 but text went wonky
-    uint32_t colour;
+    uint32_t color;
     GLfloat unused[3]; // seems v wasteful. Worth it?
 } VERTEX;
 
@@ -19,7 +19,7 @@ VERTEX VERTEX_Make(GLfloat x,
                    GLfloat y,
                    GLfloat s,
                    GLfloat t,
-                   uint32_t colour);
+                   uint32_t color);
 
 typedef struct _QUAD {
     VERTEX tl;
@@ -124,7 +124,7 @@ typedef struct _EDGEINSETS {
 	}
 } EDGEINSETS;
 
-QUAD QUADFromRECT(const RECT& rect, uint32_t colour);
+QUAD QUADFromRECT(const RECT& rect, uint32_t color);
 QUAD clipQuad(const QUAD& quad, const RECT& clip);
 
 #define EDGEINSETS_Zero EDGEINSETS(0,0,0,0)

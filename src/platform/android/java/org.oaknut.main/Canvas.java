@@ -20,8 +20,8 @@ public class Canvas {
     Bitmap bitmap;
     Rect rect;
     RectF rectF;
-    int fillColour;
-    int strokeColour;
+    int fillColor;
+    int strokeColor;
     float strokeWidth;
     Rect rectSrc;
     Rect rectDst;
@@ -49,18 +49,18 @@ public class Canvas {
         rect.set(0,0,width,height);
     }
 
-    public void clear(int clearColour) {
-        paint.setColor(clearColour);
+    public void clear(int clearColor) {
+        paint.setColor(clearColor);
         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC));
         canvas.drawRect(rect, paint);
         paint.setXfermode(null);
     }
 
-    public void setFillColour(int fillColour) {
-        this.fillColour = fillColour;
+    public void setFillColor(int fillColor) {
+        this.fillColor = fillColor;
     }
-    public void setStrokeColour(int strokeColour) {
-        this.strokeColour = strokeColour;
+    public void setStrokeColor(int strokeColor) {
+        this.strokeColor = strokeColor;
     }
     public void setStrokeWidth(float strokeWidth) {
         this.strokeWidth = strokeWidth;
@@ -83,13 +83,13 @@ public class Canvas {
         canvas.setMatrix(null);
     }
     public void drawRect(float x, float y, float width, float height) {
-        if (fillColour != 0) {
-            paint.setColor(fillColour);
+        if (fillColor != 0) {
+            paint.setColor(fillColor);
             paint.setStyle(Paint.Style.FILL);
             canvas.drawRect(x,y,x+width,y+height, paint);
         }
-        if (strokeColour != 0) {
-            paint.setColor(strokeColour);
+        if (strokeColor != 0) {
+            paint.setColor(strokeColor);
             paint.setStyle(Paint.Style.STROKE);
             canvas.drawRect(x,y,x+width,y+height, paint);
         }
@@ -99,13 +99,13 @@ public class Canvas {
             rectF = new RectF();
         }
         rectF.set(x,y,x+width,y+height);
-        if (fillColour != 0) {
-            paint.setColor(fillColour);
+        if (fillColor != 0) {
+            paint.setColor(fillColor);
             paint.setStyle(Paint.Style.FILL);
             canvas.drawOval(rectF, paint);
         }
-        if (strokeColour != 0) {
-            paint.setColor(strokeColour);
+        if (strokeColor != 0) {
+            paint.setColor(strokeColor);
             paint.setStyle(Paint.Style.STROKE);
             canvas.drawOval(rectF, paint);
         }
@@ -116,13 +116,13 @@ public class Canvas {
             path.transform(matrix, path2);
             path = path2;
         }
-        if (fillColour!=0) {
-            paint.setColor(fillColour);
+        if (fillColor!=0) {
+            paint.setColor(fillColor);
             paint.setStyle(Paint.Style.FILL);
             canvas.drawPath(path, paint);
         }
-        if (strokeColour!=0) {
-            paint.setColor(strokeColour);
+        if (strokeColor!=0) {
+            paint.setColor(strokeColor);
             paint.setStyle(Paint.Style.STROKE);
             canvas.drawPath(path, paint);
         }

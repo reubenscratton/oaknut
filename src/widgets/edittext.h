@@ -45,7 +45,7 @@ protected:
     bool _cursorValid;
     bool _showClearButtonWhenNotEmpty;
     ObjPtr<Timer> _blinkCursorTimer;
-    ObjPtr<RenderOp> _cursorRenderOp;
+    ObjPtr<RectRenderOp> _cursorRenderOp;
     ObjPtr<TextureRenderOp> _clearButtonOp;
     
     void updateCursor();

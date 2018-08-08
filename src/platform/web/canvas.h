@@ -13,8 +13,8 @@ public:
     val _ctxt;
     ObjPtr<Bitmap> _bitmap;
     float _strokeWidth;
-    COLOUR _strokeColour;
-    COLOUR _fillColour;
+    COLOR _strokeColor;
+    COLOR _fillColor;
     bool _hasChanged;
     AffineTransform _transform;
 
@@ -24,10 +24,10 @@ public:
     Bitmap* getBitmap();
 
     void resize(int width, int height);
-    void clear(COLOUR colour);
+    void clear(COLOR color);
     void setStrokeWidth(float strokeWidth);
-    void setStrokeColour(COLOUR colour);
-    void setFillColour(COLOUR colour);
+    void setStrokeColor(COLOR color);
+    void setFillColor(COLOR color);
     void setAffineTransform(AffineTransform* t);
     void drawRect(RECT rect);
     void drawOval(RECT rect);

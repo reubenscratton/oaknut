@@ -86,6 +86,9 @@ BlurRenderOp::~BlurRenderOp() {
     check_gl(glDeleteFramebuffers, 2, _fb);
 }
 
+void BlurRenderOp::validateShader() {
+    
+}
 
 void BlurRenderOp::setRect(const RECT &rect) {
     SIZE prevSize = _rect.size;
@@ -197,6 +200,7 @@ GLProgramBlur::GLProgramBlur(int blurRadius, int sigma) : _blurRadius(blurRadius
     _blurRadius = calculatedSampleRadius;
     _sigma = sigma;
 }
+
 
 
 void GLProgramBlur::load() {
@@ -317,12 +321,12 @@ void GLProgramBlur::setTexOffset(POINT texOffset) {
 void GLProgramPostBlur::load() {
     loadShaders(TEXTURE_VERTEX_SHADER,
                 "varying vec2 v_texcoord;\n"
-                "varying lowp vec4 v_colour;\n"
+                "varying lowp vec4 v_color;\n"
                 "uniform sampler2D texture;\n"
                 "const lowp vec3 luminanceWeighting = vec3(0.2125, 0.7154, 0.0721);\n"
                 "void main() {\n"
                 // Desaturate
-                "   lowp vec4 c = mix(texture2D(texture, v_texcoord), v_colour, 0.9);\n"
+                "   lowp vec4 c = mix(texture2D(texture, v_texcoord), v_color, 0.9);\n"
                 "   lowp float lum = dot(c.rgb, luminanceWeighting);\n"
                 "   lowp float lumRatio = ((0.5 - lum) * 0.1);\n"
                 "   gl_FragColor = vec4(mix(vec3(lum), c.rgb, 0.8) + lumRatio, 1.0);\n"

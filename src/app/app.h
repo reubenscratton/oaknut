@@ -82,8 +82,8 @@ public:
     /** Get a named style value and coerce to a float */
     float getStyleFloat(const string& key);
 
-    /** Get a named style value and coerce to a COLOUR */
-    COLOUR getStyleColour(const string& key);
+    /** Get a named style value and coerce to a COLOR */
+    COLOR getStyleColor(const string& key);
 
     /** Get the Font for a named font style */
     class Font* getStyleFont(const string& key);

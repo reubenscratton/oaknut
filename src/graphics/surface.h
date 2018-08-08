@@ -30,6 +30,7 @@ public:
     GLint _pixelType;
     GLint _pixelFormat;
     POINT _savedOrigin;
+    list<RenderOp*> _opsNeedingValidation;
     list<ObjPtr<RenderBatch>> _listBatches;
     bool _supportsPartialRedraw;
     ObjPtr<PrivateSurfaceRenderOp> _op;
@@ -50,6 +51,10 @@ public:
 
     void addRenderOp(RenderOp* op);
     void removeRenderOp(RenderOp* op);
+    
+    void validateRenderOps();
+    void batchRenderOp(RenderOp* op);
+    void unbatchRenderOp(RenderOp* op);
     
 private:
     void renderPhase1(View* view, Window* window, POINT origin);

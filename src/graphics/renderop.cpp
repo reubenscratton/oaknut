@@ -89,7 +89,7 @@ void RenderOp::rectToSurfaceQuad(RECT rect, QUAD* quad) {
     if (!_view->_ownsPrivateSurface) {
         rect.origin += _view->_surfaceOrigin;
     }
-    *quad = QUADFromRECT(rect, _colour);
+    *quad = QUADFromRECT(rect, _color);
 }
 
 void RenderOp::asQuads(QUAD* quad) {
@@ -123,24 +123,39 @@ void RenderOp::invalidateBatchGeometry() {
     _batch->invalidateGeometry(this);
 }
 
+void RenderOp::invalidate() {
+    if (_shaderValid) {
+        _shaderValid = false;
+        if (_view->_surface) {
+            if (_batch) {
+                _view->_surface->unbatchRenderOp(this);
+            }
+            _view->_surface->_opsNeedingValidation.push_back(this);
+        }
+    }
+}
 void RenderOp::setBlendMode(int blendMode) {
     if (_blendMode != blendMode) {
         _blendMode = blendMode;
-        rebatchIfNecessary();
+        invalidate();
     }
 }
 
 void RenderOp::setAlpha(float alpha) {
     if (alpha != _alpha) {
         _alpha = alpha;
-        rebatchIfNecessary();
+        invalidate();
     }
 }
-void RenderOp::setColour(COLOUR colour) {
-    if (colour != _colour) {
-        _colour = colour;
-        rebatchIfNecessary();
+void RenderOp::setColor(COLOR color) {
+    if (color != _color) {
+        _color = color;
+        invalidate();  // hmmm... color is an attribute now, can we remove this?
     }
+}
+void RenderOp::setInset(EDGEINSETS inset) {
+    _inset = inset;
+    // no need to do anything here, the view code applies the inset when it sets the rect
 }
 
 void RenderOp::rebatchIfNecessary() {
@@ -157,13 +172,3 @@ void RenderOp::rebatchIfNecessary() {
     }
 }
 
-RenderOpMultiRect::RenderOpMultiRect(View* view) : RenderOp(view) {
-}
-int RenderOpMultiRect::numQuads() {
-    return (int)_rects.size();
-}
-void RenderOpMultiRect::asQuads(QUAD *quad) {
-    for (auto it = _rects.begin() ; it!=_rects.end() ; it++) {
-        rectToSurfaceQuad(*it, quad++);
-    }
-}

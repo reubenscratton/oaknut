@@ -7,12 +7,13 @@
 
 #define VERTEXATTRIB_POSITION 0
 #define VERTEXATTRIB_TEXCOORD 1
-#define VERTEXATTRIB_COLOUR 2
+#define VERTEXATTRIB_COLOR 2
 
 #define VERTEXATTRIBS_CONFIG_NORMAL     1 // float x,y; uint16 s,t; uint32 color = 16 bytes
 #define VERTEXATTRIBS_CONFIG_ROUNDRECT  2 // float x,y; uint16 dist_xy; uint32 fillColor; uint32 strokeColor; strokeWidth; radii
 
-typedef uint32_t COLOUR;
+typedef uint32_t COLOR;
+
 
 // Gravity
 #define GRAVITY_LEFT 0
@@ -100,7 +101,7 @@ public:
     }
 };
 
-class UniformColour : public CachedUniform2<int> {
+class UniformColor : public CachedUniform2<int> {
 public:
     void load() {
         float c[4];
@@ -179,28 +180,6 @@ public:
 protected:
 	virtual void loadShaders(const char* vertexShader, const char* fragShader);
 };
-
-typedef struct {
-    GLint pos;
-    enum {
-        Int1,
-        Float1,
-        Float4
-    } type;
-    union {
-        int int1;
-        float float1;
-        float float4[4];
-    } value;
-} UNIFORM;
-
-class ProgramUsage : public Object {
-public:
-    GLProgram* _program;
-    vector<UNIFORM> _uniforms;
-    
-};
-
 
 
 

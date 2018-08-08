@@ -139,8 +139,41 @@ int Surface::renderOrder(View* view1, View* view2) {
 
 void Surface::addRenderOp(RenderOp* op) {
     op->_mustRedraw = true;
+    _opsNeedingValidation.push_back(op);
+}
+
+void Surface::validateRenderOps() {
+    if (!_opsNeedingValidation.size()) {
+        return;
+    }
     
-    // Find the compatible batch
+    // First validate any ops that need it
+    for (auto& op : _opsNeedingValidation) {
+        op->validateShader();
+        op->_shaderValid = true;
+    }
+    
+    // Then embatch them
+    for (auto& op : _opsNeedingValidation) {
+        batchRenderOp(op);
+    }
+ 
+    _opsNeedingValidation.clear();
+}
+
+void Surface::removeRenderOp(RenderOp* op) {
+    auto it = std::find(_opsNeedingValidation.begin(), _opsNeedingValidation.end(), op);
+    if (it != _opsNeedingValidation.end()) {
+        _opsNeedingValidation.erase(it);
+    }
+    if (op->_batch) {
+        unbatchRenderOp(op);
+    }
+}
+
+void Surface::batchRenderOp(RenderOp* op) {
+
+    // Find a compatible batch
     RenderBatch* batch = NULL;
     for (auto it=_listBatches.begin() ; it!=_listBatches.end() ; it++) {
         RenderOp* existingBatchedOp = *((*it)->_ops.begin());
@@ -170,8 +203,7 @@ void Surface::addRenderOp(RenderOp* op) {
     }
     op->_batchIterator = batch->_ops.insert(batch->_ops.end(), op);
 }
-
-void Surface::removeRenderOp(RenderOp* op) {
+void Surface::unbatchRenderOp(RenderOp* op) {
     RenderBatch* batch = op->_batch;
     op->_batch = NULL;
     assert(batch);
@@ -191,9 +223,10 @@ void Surface::renderPhase1(View* view, Window* window, POINT origin) {
         return;
     }
     Surface* surface = this;
-    
+
     // If view has a private surface, ensure surface has same size as view
-    if (view->_surface != surface) {
+    bool usesPrivateSurface = (view->_surface != surface);
+    if (usesPrivateSurface) {
         bool sizeChanged = false;
         if (view->_surface->_size.width != view->_rect.size.width || view->_surface->_size.height != view->_rect.size.height) {
             view->_surface->setSize(view->_rect.size);
@@ -252,6 +285,10 @@ void Surface::renderPhase1(View* view, Window* window, POINT origin) {
         surface->renderPhase1(subview, window, origin);
     }
  
+    if (usesPrivateSurface) {
+        surface->validateRenderOps();
+    }
+
     if (changesMvp) {
         _mvpNum--;
     }
@@ -274,7 +311,7 @@ void PrivateSurfaceRenderOp::rectToSurfaceQuad(RECT rect, QUAD* quad) {
 }
 void PrivateSurfaceRenderOp::render(Window* window, Surface* surface) {
     RenderOp::render(window, surface);
-   // _prog->setTintColour(_tintColour);
+   // _prog->setTintColor(_tintColor);
     
     // Bind to the private surface texture
     window->_currentTexture = NULL;
@@ -382,6 +419,8 @@ void Surface::render(View* view, Window* window) {
     
     /** PHASE 1: ENSURE ALL RENDER LISTS ARE VALID **/
     renderPhase1(view, window, POINT_Make(0,0));
+    
+    validateRenderOps();
     
     /** PHASE 2: THE ACTUAL OPENGL DRAW COMMANDS **/
     renderPhase2(NULL, view, window);

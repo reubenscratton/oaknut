@@ -41,7 +41,7 @@ View* SimpleListAdapter::createHeaderView(int section) {
     label->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::WrapContent());
     label->setPadding(EDGEINSETS(app.dp(16),app.dp(4),app.dp(16),app.dp(4)));
     label->setText(getSectionTitle(section));
-    label->setBackgroundColour(0xFFeeeeee);
+    label->setBackgroundColor(0xFFeeeeee);
     return label;
 }
 int SimpleListAdapter::listIndexToRealIndex(LISTINDEX index) {

@@ -7,32 +7,38 @@
 
 typedef struct _TEXTRENDERPARAMS {
     AtlasPage* atlasPage;
-    int forecolour;
+    int forecolor;
     inline bool operator<(const struct _TEXTRENDERPARAMS& y) const {
         if (atlasPage < y.atlasPage) return true;
         if (atlasPage > y.atlasPage) return false;
-        return forecolour<y.forecolour;
+        return forecolor<y.forecolor;
     }
     inline bool operator==(const struct _TEXTRENDERPARAMS& o) const {
-        return atlasPage==o.atlasPage && forecolour==o.forecolour;
+        return atlasPage==o.atlasPage && forecolor==o.forecolor;
     }
 
     ObjPtr<class TextRenderOp> renderOp;
 } TEXTRENDERPARAMS;
 
 
-class TextRenderOp : public RenderOpMultiRect {
+class TextRenderOp : public RenderOp {
 public:
+    vector<RECT> _rects;
     vector<RECT> _rectsTex;
     TEXTRENDERPARAMS _textRenderParams;
     
     TextRenderOp(View* view, const TEXTRENDERPARAMS* textRenderParams);
-    
+
+
     void addGlyph(Glyph* glyph, const RECT& rect);
     void reset();
-    virtual bool canMergeWith(const RenderOp* op);
-    virtual void render(Window* window, Surface* surface);
-    virtual void asQuads(QUAD* quad);
+    
+    // Overrides
+    bool canMergeWith(const RenderOp* op) override;
+    void render(Window* window, Surface* surface) override;
+    int numQuads() override;
+    void asQuads(QUAD* quad) override;
+    void validateShader() override;
 };
 
 

@@ -56,7 +56,7 @@ protected:
     ObjPtr<class Animation> _fadeAnim;
     ObjPtr<Timer> _fadeTimer;
     Fling* _fling;
-    RoundRectRenderOp* _renderOp;
+    RectRenderOp* _renderOp;
     
     void startFadeAnim(float targetAlpha);
     void updateRect(View* view);

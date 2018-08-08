@@ -66,8 +66,8 @@ void EditText::updateCursor() {
         return;
     }
     if (!_cursorRenderOp) {
-        _cursorRenderOp = new ColorRectFillRenderOp(this);
-        _cursorRenderOp->setColour(0xff333333); // todo: style
+        _cursorRenderOp = new RectRenderOp(this);
+        _cursorRenderOp->setColor(0xff333333); // todo: style
         _cursorOn = true;
     }
     // If the content size is invalid then we can't update the cursor immediately. This will get

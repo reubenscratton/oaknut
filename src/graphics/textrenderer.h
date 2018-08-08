@@ -31,8 +31,8 @@ public:
     void setText(const string& text);
     const AttributedString& getAttributedText() { return _text; }
     void setAttributedText(const AttributedString& text);
-    void setDefaultColour(COLOUR colour);
-    COLOUR getDefaultColour() const { return _defaultColour; }
+    void setDefaultColor(COLOR color);
+    COLOR getDefaultColor() const { return _defaultColor; }
     void setDefaultFontName(const string& fontName);
     void setDefaultFontSize(float fontSize);
     void setDefaultFont(Font* font);
@@ -78,7 +78,7 @@ public:
 protected:
     AttributedString _text;
     ObjPtr<Font> _defaultFont;
-    COLOUR _defaultColour;
+    COLOR _defaultColor;
     GRAVITY _gravity;
     bool _measuredSizeValid;
     SIZE _measuredSize;

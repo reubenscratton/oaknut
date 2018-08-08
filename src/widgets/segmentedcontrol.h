@@ -13,12 +13,12 @@ public:
 	Font* _font;
     typedef struct {
         RECT rect;
-        ObjPtr<RoundRectRenderOp> rectOp;
+        ObjPtr<RectRenderOp> rectOp;
         ObjPtr<TextRenderer> label;
     } Segment;
 	vector<Segment> _segments;
-    COLOUR _textColour;
-	COLOUR _selectedTextColour;
+    COLOR _textColor;
+	COLOR _selectedTextColor;
 	float _lineWidth;
 	int _pressedIndex;
 	int _selectedIndex;
@@ -26,8 +26,8 @@ public:
 	
 	SegmentedControl();
 	virtual void addSegment(const string& label);
-    virtual void setTextColour(COLOUR colour);
-	virtual void setSelectedTextColour(COLOUR colour);
+    virtual void setTextColor(COLOR color);
+	virtual void setSelectedTextColor(COLOR color);
 	virtual void setSegmentSelectedDelegate(SegmentSelectedDelegate delegate);
 	virtual void onSegmentTap(int segmentIndex);
 	virtual void setSelectedSegment(int segmentIndex);
@@ -39,5 +39,5 @@ public:
 	virtual void layout();
     virtual void updateRenderOps();
 	virtual bool onInputEvent(INPUTEVENT* event);
-    virtual void onEffectiveTintColourChanged();
+    virtual void onEffectiveTintColorChanged();
 };

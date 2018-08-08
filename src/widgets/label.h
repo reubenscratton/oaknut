@@ -8,7 +8,7 @@
 class Label : public View {
 public:
     TextRenderer _textRenderer;
-    COLOUR _defaultColour;
+    COLOR _defaultColor;
     float _prevParentWidth;
     
     Label();
@@ -21,7 +21,7 @@ public:
     virtual void updateContentSize(float parentWidth, float parentHeight);
     virtual void setContentOffset(POINT contentOffset);
     virtual void layout();
-    virtual void onEffectiveTintColourChanged();
+    virtual void onEffectiveTintColorChanged();
     virtual void setGravity(GRAVITY gravity);
     
     // API
@@ -29,7 +29,7 @@ public:
 	virtual void setText(const string& text);
     virtual const AttributedString& getAttributedText() { return _textRenderer.getAttributedText(); }
     virtual void setAttributedText(const AttributedString& text);
-    virtual void setTextColour(COLOUR colour);
+    virtual void setTextColor(COLOR color);
 	virtual void setFont(Font* font);
     virtual void setMaxLines(int maxLines);
     virtual void setStyle(string styleName);

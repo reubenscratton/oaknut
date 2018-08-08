@@ -13,7 +13,6 @@
             pressed: 0xFFEEEEFF
             selected: 0xFFEEEEEE
         }
-        acceptsUserInput: true
     }
 
     ButtonGroup: {

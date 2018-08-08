@@ -13,7 +13,7 @@ NavigationBar::NavigationBar() {
     float statusBarHeight = app.getStyleFloat("statusbar.height");
     setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::Abs(app.getStyleFloat("navbar.height")+statusBarHeight));
 	_padding = EDGEINSETS(0,statusBarHeight,0,0);
-	setBackgroundColour(0xffffffff);
+	setBackgroundColor(0xffffffff);
 }
 
 void NavigationBar::addNavigationItem(NavigationItem* navigationItem) {
@@ -32,20 +32,20 @@ void NavigationBar::removeNavigationItem(NavigationItem* navigationItem) {
 }
 
 void NavigationBar::setBackground(RenderOp* renderOp) {
-	assert(false); // Navbars don't have arbitrary backgrounds, it can only be a colour
+	assert(false); // Navbars don't have arbitrary backgrounds, it can only be a color
 }
-void NavigationBar::setBackgroundColour(COLOUR colour) {
-    _backgroundColour = colour;
-    RenderOp* op = _blurEnabled ? (RenderOp*)new BlurRenderOp(this) :
-                                  new ColorRectFillRenderOp(this, getOwnRect(), colour);
-    op->setColour(_backgroundColour);
+void NavigationBar::setBackgroundColor(COLOR color) {
+    _backgroundColor = color;
+    RenderOp* op = _blurEnabled ? (RenderOp*)new BlurRenderOp(this) : new RectRenderOp(this);
+    op->setRect(getOwnRect());
+    op->setColor(color);
     View::setBackground(op);
 }
 
 void NavigationBar::setBlurEnabled(bool blurEnabled) {
     if (blurEnabled != _blurEnabled) {
         _blurEnabled = blurEnabled;
-        setBackgroundColour(_backgroundColour);
+        setBackgroundColor(_backgroundColor);
     }
 }
 

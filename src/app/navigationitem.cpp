@@ -29,7 +29,7 @@ void NavigationItem::setTitle(const string& title) {
 	
     // Todo: use an "apply style" method here
 	titleLabel->setFont(app.getStyleFont("navbar.title"));
-	titleLabel->setTextColour(app.getStyleColour("navbar.title.forecolour"));
+	titleLabel->setTextColor(app.getStyleColor("navbar.title.forecolor"));
 	titleLabel->setText(title);
 
 }
@@ -43,22 +43,23 @@ void NavigationItem::setTitleView(View* titleView) {
 	_titleView = titleView;
 }
 
-ToolbarButton* NavigationItem::createIconButton(const string& src, OnClickDelegate onClickDelegate) {
-	ToolbarButton* button = new ToolbarButton();
+ImageView* NavigationItem::createIconButton(const string& src, std::function<void(View*)> onClickDelegate) {
+	ImageView* button = new ImageView();
     button->setMeasureSpecs(MEASURESPEC::UseAspect(1), MEASURESPEC::FillParent());
+    button->setPadding(EDGEINSETS(app.dp(8),app.dp(8),app.dp(8),app.dp(8))); // todo: style
     ByteBuffer* data = app.loadAsset(src.data());
     Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
-        button->setImageBitmap(bitmap);
+        button->setBitmap(bitmap);
     });
-	button->_onClickDelegate = onClickDelegate;
+	button->onClickDelegate = onClickDelegate;
 	return button;
 }
 
-void NavigationItem::addLeftButton(ToolbarButton* button) {
+void NavigationItem::addLeftButton(ImageView* button) {
     _leftButtonsFrame->addSubview(button);
 }
 
-void NavigationItem::addRightButton(ToolbarButton* button) {
+void NavigationItem::addRightButton(ImageView* button) {
     _rightButtonsFrame->addSubview(button);
 }
 

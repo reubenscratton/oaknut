@@ -19,9 +19,9 @@ public:
 
     virtual void resize(int width, int height)=0;
     virtual Bitmap* getBitmap()=0;
-    virtual void clear(COLOUR colour)=0;
-    virtual void setFillColour(COLOUR colour)=0;
-    virtual void setStrokeColour(COLOUR colour)=0;
+    virtual void clear(COLOR color)=0;
+    virtual void setFillColor(COLOR color)=0;
+    virtual void setStrokeColor(COLOR color)=0;
     virtual void setStrokeWidth(float strokeWidth)=0;
     virtual void setAffineTransform(AffineTransform* t)=0;
     virtual void drawRect(RECT rect)=0;

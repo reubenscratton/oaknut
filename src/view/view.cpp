@@ -27,12 +27,9 @@ View::~View() {
     }
 }
 
-void View::applyStyleValues(const StyleValueList& values) {
+void View::applyStyleValues(const map<string, StyleValue*>& values) {
     for (auto i : values) {
         StyleValue* val = i.second;
-        while (val->type == StyleValue::Reference) {
-            val = app.getStyleValue(val->str);
-        }
         if (!applyStyleValue(i.first, val)) {
             if (_parent && !_parent->applyStyleValueFromChild(i.first, i.second, this)) {
                 app.warn("Ignored unknown attribute '%s'", i.first.data());
@@ -45,18 +42,7 @@ void View::applyStyleValues(const StyleValueList& values) {
 
 bool View::applyStyleValue(const string& name, StyleValue* value) {
     if (name == "id") {
-        _id = value->str;
-        return true;
-    } else if (name == "style") {
-        StyleValueList styles;
-        while (value->type == StyleValue::Reference) {
-            value = app.getStyleValue(value->str);
-        }
-        assert(value->type == StyleValue::StyleMap);
-        for (auto i : value->styleMap->_valuesList) {
-            styles.push_back(make_pair(i.first, i.second->select()));
-        }
-        applyStyleValues(styles);
+        _id = value->stringVal();
         return true;
     } else if (name == "height") {
         _heightMeasureSpec = MEASURESPEC(value);
@@ -71,28 +57,35 @@ bool View::applyStyleValue(const string& name, StyleValue* value) {
         _alignspecVert = ALIGNSPEC(value, this);
         return true;
     } else if (name == "background") {
-        applyStatemappableStyleValue(name, value, [=](StyleValue* value) {
-            while (value->type == StyleValue::Reference) {
-                value = app.getStyleValue(value->str);
-            }
-            assert(value->type == StyleValue::Type::Int);
-            setBackgroundColour(value->i);
-        });
+        if (handleStatemapDeclaration(name, value)) {
+            return true;
+        }
+        setBackground(processDrawable(value));
         return true;
     } else if (name == "padding") {
-        float pad = value->getAsFloat();
-        setPadding(EDGEINSETS(pad,pad,pad,pad));
+        auto a = value->arrayVal();
+        if (a.size() == 1) {
+            float pad = a[0]->floatVal();
+            setPadding(EDGEINSETS(pad,pad,pad,pad));
+        } else if (a.size() == 4) {
+            setPadding(EDGEINSETS(a[0]->floatVal(),
+                                  a[1]->floatVal(),
+                                  a[2]->floatVal(),
+                                 a[3]->floatVal()));
+        } else {
+            app.warn("Invalid padding attribute");
+        }
         return true;
     } else if (name == "paddingHorz") {
-        float pad = value->getAsFloat();
+        float pad = value->floatVal();
         setPadding(EDGEINSETS(pad,_padding.top,pad,_padding.bottom));
         return true;
     } else if (name == "paddingVert") {
-        float pad = value->getAsFloat();
+        float pad = value->floatVal();
         setPadding(EDGEINSETS(_padding.left,pad,_padding.right,pad));
         return true;
     } else if (name == "tint") {
-        setTintColour(value->i);
+        setTintColor(value->colorVal());
         return true;
     }
     return false;
@@ -102,27 +95,122 @@ bool View::applyStyleValueFromChild(const string& name, StyleValue* value, View*
     return false;
 }
 
-void View::applyStatemappableStyleValue(const string& name, StyleValue* value, std::function<void(StyleValue*)> applyFunc) {
+void processFill(RectRenderOp* op, StyleValue* value) {
+    if (value->type == StyleValue::Type::Compound) {
+        assert(0); // todo: support compound values
+        return;
+    }
+    op->setFillColor(value->colorVal());
+}
+
+RenderOp* View::processDrawable(StyleValue* value) {
+    if (value->isEmpty()) {
+        return NULL;
+    }
+
+    /*if (value->type == StyleValue::Type::String) {
+        // todo: handle image
+        assert(0);
+    }*/
+
+    RectRenderOp* op = new RectRenderOp(this);
+    op->setFillColor(value->colorVal());
+    
+    
+    if (value->type == StyleValue::Type::Compound) {
+        auto compoundVal = value->compoundVal();
+        for (auto& it : compoundVal->_values) {
+            StyleValue* subval = it.second;
+ 
+            if (it.first == "fill") {
+                processFill(op, subval);
+            } else if (it.first == "stroke") {
+                op->setStrokeColor(subval->colorVal());
+            } else if (it.first == "stroke-width") {
+                op->setStrokeWidth(subval->floatVal());
+            } else if (it.first == "corner-radius" || it.first == "corner-radii") {
+                auto radii = subval->arrayVal();
+                Vector4 r;
+                if (radii.size()==1) {
+                    r.x = r.y = r.z = r.w = radii[0]->floatVal();
+                    op->setCornerRadii(r);
+                } else if (radii.size()==4) {
+                    r.x = radii[0]->floatVal();
+                    r.y = radii[1]->floatVal();
+                    r.z = radii[2]->floatVal();
+                    r.w = radii[3]->floatVal();
+                    op->setCornerRadii(r);
+                } else {
+                    app.warn("Invalid corner-radii, must be 1 or 4 values");
+                }
+            } else if (it.first == "inset") {
+                auto a = subval->arrayVal();
+                EDGEINSETS inset;
+                if (a.size()==1) {
+                    inset.left = inset.top = inset.right = inset.bottom = a[0]->floatVal();
+                    op->setInset(inset);
+                } else if (a.size()==4) {
+                    inset.left = a[0]->floatVal();
+                    inset.top = a[1]->floatVal();
+                    inset.right = a[2]->floatVal();
+                    inset.bottom = a[3]->floatVal();
+                    op->setInset(inset);
+                } else {
+                    app.warn("Invalid inset, must be 1 or 4 values");
+                }
+            } else {
+                app.warn("Unknown drawable attribute: %s", it.first.data());
+            }
+        }
+    }
+    return op;
+}
+/*
+
+
+applyStatemappableStyleValue(name, value, [=](StyleValue* value) {
+});*/
+
+bool View::handleStatemapDeclaration(const string& name, StyleValue* value) {
+    if (value->type != StyleValue::Compound) {
+        return false;
+    }
+    
+    // Inspect map keys to see if its a statemap or not
+    auto compoundVal = value->compoundVal();
+    int c = 0;
+    for (auto& k : compoundVal->_values) {
+        if (k.first == "enabled") c++;
+        else if (k.first == "disabled") c++;
+        else if (k.first == "pressed") c++;
+        else if (k.first == "selected") c++;
+        else if (k.first == "checked") c++;
+        else if (k.first == "focused") c++;
+    }
+    if (!c) {
+        return false;
+    }
+    
+    // Its a statemap.
     if (_statemapStyleValues) {
         _statemapStyleValues->erase(name);
     }
-    if (value->type != StyleValue::StyleMap) {
-        applyFunc(value);
-        return;
-    }
     if (!_statemapStyleValues) {
-        _statemapStyleValues = new map<string, pair<StyleMap*, std::function<void(StyleValue*)>>>();
+        _statemapStyleValues = new map<string, StyleMap*>();
     }
-    auto newval = make_pair(name, make_pair(value->styleMap, applyFunc));
+    auto newval = make_pair(name, compoundVal);
     _statemapStyleValues->insert(newval);
-    selectStatemapStyleValue(value->styleMap, applyFunc);
+    
+    // Choose initial value immediately
+    applyStatemapStyleValue(name, compoundVal);
+    return true;
 }
 
-void View::selectStatemapStyleValue(StyleMap* styleMap, std::function<void(StyleValue*)> applyFunc) {
+void View::applyStatemapStyleValue(const string& name, StyleMap* statemap) {
     // Walk the map and find the values which apply. Longest (i.e. most state bits) matching value wins.
     list<StyleValue*> matchingValues;
     StyleValue* bestMatchValue = NULL;
-    for (auto& it : styleMap->_values) {
+    for (auto& it : statemap->_values) {
         
         // Convert the map entry to a stateset
         STATESET stateset = {0,0};
@@ -135,16 +223,15 @@ void View::selectStatemapStyleValue(StyleMap* styleMap, std::function<void(Style
         
         // If the stateset matches
         if ((_state & stateset.mask) == stateset.state) {
-            bestMatchValue = it.second->select();
+            bestMatchValue = it.second;
         }
     }
     
     if (bestMatchValue) {
-        applyFunc(bestMatchValue);
+        applyStyleValue(name, bestMatchValue);
     } else {
         StyleValue nullVal;
-        nullVal.i = 0;
-        applyFunc(&nullVal);
+        applyStyleValue(name, &nullVal);
     }
 }
 
@@ -284,11 +371,12 @@ void View::setRectSize(const SIZE& size) {
 }
 
 void View::updateBackgroundRect() {
-    if (_currentBackgroundOp) {
+    if (_backgroundOp) {
         RECT rect = getOwnRect();
         rect.origin.x += _contentOffset.x;
         rect.origin.y += _contentOffset.y;
-        _currentBackgroundOp->setRect(rect);
+        _backgroundOp->_inset.applyToRect(rect);
+        _backgroundOp->setRect(rect);
     }
 }
 
@@ -474,9 +562,10 @@ void View::layout() {
     pt.y = getAlignspecVal(_alignspecVert, true);
     setRectOrigin(pt);
 
-    if (_currentBackgroundOp) {
-        _currentBackgroundOp->setRect(RECT(0, 0, _rect.size.width, _rect.size.height));
-    }
+    /*if (_backgroundOp) {
+        _backgroundOp->setRect(RECT(0, 0, _rect.size.width, _rect.size.height));
+    }*/
+    updateBackgroundRect();
 
     for (int i=0 ; i<_subviews.size() ; i++) {
         View* view = _subviews.at(i);
@@ -725,50 +814,23 @@ void View::removeSubviewsNotInVisibleArea() {
 }
 
 
-void View::setBackground(RenderOp* drawableOp) {
-    setBackground(drawableOp, {0,0});
+void View::setBackground(RenderOp* op) {
+    if (_backgroundOp != op) {
+        if (_backgroundOp != NULL) {
+            removeRenderOp(_backgroundOp);
+        }
+        _backgroundOp = op;
+        if (_backgroundOp) {
+            updateBackgroundRect();
+            addRenderOp(_backgroundOp, true);
+        }
+    }
 }
 
-void View::setBackground(RenderOp* drawableOp, STATESET stateset) {
-    RenderOp* replacedOp = NULL;
-    for (auto i = _backgroundOps.begin() ; i!=_backgroundOps.end() ; i++) {
-        if (i->second.mask == stateset.mask && i->second.state == stateset.state) {
-            replacedOp = i->first;
-            i->first = drawableOp;
-            break;
-        }
-    }
-    if (!replacedOp) {
-        _backgroundOps.push_back(make_pair(drawableOp, stateset));
-    }
-    updateBackgroundOp();
-}
-void View::updateBackgroundOp() {
-    RenderOp* selectedOp = NULL;
-    int bestpop = -1;
-    for (auto i : _backgroundOps) {
-        if ((_state & i.second.mask) == i.second.state) {
-            int thispop = __builtin_popcount(i.second.mask);
-            if (thispop > bestpop) {
-                bestpop = thispop;
-                selectedOp = i.first;
-            }
-        }
-    }
-    if (selectedOp != _currentBackgroundOp) {
-        if (_currentBackgroundOp != NULL) {
-            removeRenderOp(_currentBackgroundOp);
-        }
-        _currentBackgroundOp = selectedOp;
-        if (_currentBackgroundOp) {
-            _currentBackgroundOp->setRect(getOwnRect());
-            addRenderOp(_currentBackgroundOp, true);
-        }
-    }
-
-}
-void View::setBackgroundColour(COLOUR colour) {
-    setBackground(new ColorRectFillRenderOp(this, getOwnRect(), colour));
+void View::setBackgroundColor(COLOR color) {
+    auto op = new RectRenderOp(this);
+    op->setColor(color);
+    setBackground(op);
 }
 
 
@@ -797,10 +859,9 @@ void View::setState(STATE mask, STATE value) {
 void View::onStateChanged(STATESET changedStates) {
     if (_statemapStyleValues) {
         for (auto& it : *_statemapStyleValues) {
-            selectStatemapStyleValue(it.second.first, it.second.second);
+            applyStatemapStyleValue(it.first, it.second);
         }
     }
-    //updateBackgroundOp();
 }
 
 void View::addScrollbarOp(RenderOp* renderOp) {
@@ -840,10 +901,13 @@ void View::addRenderOp(RenderOp* renderOp, bool atFront) {
     }
 }
 void View::removeRenderOp(RenderOp* renderOp) {
-     if (_surface) {
-         _surface->removeRenderOp(renderOp);
-     }
-     _renderList.erase(renderOp->_viewListIterator);
+    if (renderOp->_viewListIterator != _renderList.end()) {
+         if (_surface) {
+             _surface->removeRenderOp(renderOp);
+         }
+         _renderList.erase(renderOp->_viewListIterator);
+        renderOp->_viewListIterator = _renderList.end();
+    }
 }
 
 
@@ -995,7 +1059,7 @@ void ScrollbarsView::layout() {
 bool View::onInputEvent(INPUTEVENT* event) {
 
     bool retVal = false;
-    if (onInputEventDelegate && isEnabled()) {
+    if ((onInputEventDelegate || onClickDelegate) && isEnabled()) {
         retVal = true;
         if (event->type == INPUT_EVENT_DOWN) {
             setPressed(true);
@@ -1008,6 +1072,12 @@ bool View::onInputEvent(INPUTEVENT* event) {
     bool scrolled = _scrollVert.handleEvent(this, true, event);
     scrolled |= _scrollHorz.handleEvent(this, false, event);
     
+    if (onClickDelegate) {
+        retVal = true;
+        if (event->type == INPUT_EVENT_TAP) {
+            onClickDelegate(this);
+        }
+    }
 	if (onInputEventDelegate) {
         return onInputEventDelegate(this, event);
 	}
@@ -1066,13 +1136,13 @@ void View::setAlpha(float alpha) {
     }
 }
 
-COLOUR View::getTintColour() {
-    return _tintColour;
+COLOR View::getTintColor() {
+    return _tintColor;
 }
 
-void View::setTintColour(COLOUR tintColour) {
-    if (tintColour != _tintColour) {
-        _tintColour = tintColour;
+void View::setTintColor(COLOR tintColor) {
+    if (tintColor != _tintColor) {
+        _tintColor = tintColor;
         updateEffectiveTint();
     }
 }
@@ -1089,19 +1159,19 @@ void View::updateEffectiveAlpha() {
 }
 
 void View::updateEffectiveTint() {
-    COLOUR parentVal = _parent ? _parent->_effectiveTintColour : 0;
-    COLOUR newTint = _tintColour ? _tintColour : parentVal;
-    if (newTint != _effectiveTintColour) {
-        _effectiveTintColour = newTint;
-        onEffectiveTintColourChanged();
+    COLOR parentVal = _parent ? _parent->_effectiveTintColor : 0;
+    COLOR newTint = _tintColor ? _tintColor : parentVal;
+    if (newTint != _effectiveTintColor) {
+        _effectiveTintColor = newTint;
+        onEffectiveTintColorChanged();
     }
     for (auto it = _subviews.begin() ; it!=_subviews.end() ; it++) {
         (*it)->updateEffectiveTint();
     }
 }
 
-void View::onEffectiveTintColourChanged() {
-    // no-op. ImageView and Label etc might like to change colour though
+void View::onEffectiveTintColorChanged() {
+    // no-op. ImageView and Label etc might like to change color though
 }
 
 

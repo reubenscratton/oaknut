@@ -61,24 +61,24 @@ static GLuint loadShader(GLenum shaderType, const char* pSource) {
 const char* STANDARD_VERTEX_SHADER =
     "attribute highp vec2 vPosition;\n"     // the 'highp' qualifier is VERY IMPORTANT! See above
     "uniform highp mat4 mvp;\n"
-    "attribute lowp vec4 colour;\n"
-    "varying lowp vec4 v_colour;\n"
+    "attribute lowp vec4 color;\n"
+    "varying lowp vec4 v_color;\n"
 		"void main() {\n"
 		"  gl_Position = mvp * vec4(vPosition,0,1);\n"
-        "  v_colour=colour;\n"
+        "  v_color=color;\n"
 		"}\n";
 
 const char* TEXTURE_VERTEX_SHADER =
         "attribute highp vec2 vPosition;\n"
         "uniform highp mat4 mvp;\n"
-        "attribute lowp vec4 colour;\n"
-        "varying lowp vec4 v_colour;\n"
+        "attribute lowp vec4 color;\n"
+        "varying lowp vec4 v_color;\n"
         "attribute vec2 texcoord;\n"
         "varying vec2 v_texcoord;\n"
 		"void main() {\n"
 		"  gl_Position = mvp * vec4(vPosition,0,1);\n"
 		"  v_texcoord = texcoord;\n"
-        "  v_colour=colour;\n"
+        "  v_color=color;\n"
 		"}\n";
 
 void GLProgram::loadShaders(const char *szVertexShader, const char *szFragShader) {
@@ -89,7 +89,7 @@ void GLProgram::loadShaders(const char *szVertexShader, const char *szFragShader
     _vertexConfig = VERTEXATTRIBS_CONFIG_NORMAL;
     check_gl(glBindAttribLocation, _program, VERTEXATTRIB_POSITION, "vPosition");
     check_gl(glBindAttribLocation, _program, VERTEXATTRIB_TEXCOORD, "texcoord");
-    check_gl(glBindAttribLocation, _program, VERTEXATTRIB_COLOUR, "colour");
+    check_gl(glBindAttribLocation, _program, VERTEXATTRIB_COLOR, "color");
 
     check_gl(glAttachShader, _program, vertexShader);
     check_gl(glAttachShader, _program, pixelShader);

@@ -15,12 +15,12 @@ LinearLayout::LinearLayout() : View(), _orientation(Horizontal) {
 
 bool LinearLayout::applyStyleValue(const string& name, StyleValue* value) {
     if (name=="orientation") {
-        if (value->type != StyleValue::Type::String) return false;
-        if (value->str == "horizontal") {
+        auto str = value->stringVal();
+        if (str == "horizontal") {
             _orientation = Horizontal;
             return true;
         }
-        if (value->str == "vertical") {
+        if (str == "vertical") {
             _orientation = Vertical;
             return true;
         }
@@ -30,7 +30,7 @@ bool LinearLayout::applyStyleValue(const string& name, StyleValue* value) {
 
 bool LinearLayout::applyStyleValueFromChild(const string& name, StyleValue* value, View* subview) {
     if (name == "weight") {
-        setWeight(subview, value->getAsFloat());
+        setWeight(subview, value->floatVal());
         return true;
     }
     return false;

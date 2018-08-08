@@ -23,8 +23,8 @@ public:
 	ControllerView* _controllerView;
 	BeebKeyboardController* keyboardController;
 	DiskInfo* _currentDiskInfo;
-    ToolbarButton* _controllersButton;
-    ToolbarButton* _nextControllerButton;
+    ImageView* _controllersButton;
+    ImageView* _nextControllerButton;
     ObjPtr<class Snapshot> _currentSnapshot;
 //@property (nonatomic) NSValue* pendingControllerToActivate;
 

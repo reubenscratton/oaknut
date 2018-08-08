@@ -13,6 +13,7 @@ class RenderOp : public Object {
 public:
     class View* _view;
     RECT _rect;
+    EDGEINSETS _inset;
     GLProgram* _prog;
     list<ObjPtr<RenderOp>>::iterator _viewListIterator; // view.renderList linked list entry
     int _mvpNum;
@@ -22,11 +23,11 @@ public:
     int _renderCounter;
     bool _batchGeometryValid;
     bool _mustRedraw;
-protected:
+//protected:
     int _blendMode;
     float _alpha;
-    COLOUR _colour;
-
+    COLOR _color;
+    
 public:
     RenderOp(View* view);
     ~RenderOp();
@@ -39,23 +40,19 @@ public:
     virtual void rectToSurfaceQuad(RECT rect, QUAD* quad);
     void invalidateBatchGeometry();
     RECT surfaceRect();
-    
+
+    // The op is 'valid' once it has chosen a shader that can satisfy its render params. If the
+    // render params change then the shader needs to be validated and possibly generated on demand
+    bool _shaderValid;
+    void invalidate();
+    virtual void validateShader()=0;
+    void rebatchIfNecessary();
+
     // Property setters that trigger rebatch
     void setBlendMode(int blendMode);
     virtual void setAlpha(float alpha);
-    virtual void setColour(COLOUR colour);
-    void rebatchIfNecessary();
+    virtual void setColor(COLOR color);
+    virtual void setInset(EDGEINSETS inset);
 };
 
-class RenderOpMultiRect : public RenderOp {
-public:
-    vector<RECT> _rects; // TODO: this is specific to text really, makes no sense for others now we have batches
-    
-    RenderOpMultiRect(View* view);
-    virtual int numQuads();
-    virtual void asQuads(QUAD* quad);
-    //virtual bool intersects(RenderOp* op);
-    
-
-};
 

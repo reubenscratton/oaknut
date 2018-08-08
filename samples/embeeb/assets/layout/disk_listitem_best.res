@@ -18,7 +18,7 @@ View: {
         id: image
         width: 40dp
         height: 52dp
-        alignX: toRightOf(number, 8dp)
+        alignX: toRightOf, number, 8dp
         alignY: center
         background: 0xff333333
         paddingHorz: 1dp
@@ -29,7 +29,7 @@ View: {
         style: $listview.item-title
         width: fill_parent
         height: wrap_content
-        alignX: toRightOf(image, 8dp)
+        alignX: toRightOf, image, 8dp
         alignY: top
     }
     Label: {
@@ -37,7 +37,7 @@ View: {
         style: $listview.item-subtitle
         width: fill_parent
         height: wrap_content
-        alignX: toRightOf(image, 8dp)
+        alignX: toRightOf, image, 8dp
         alignY: bottom
     }
 }

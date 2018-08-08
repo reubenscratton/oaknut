@@ -9,18 +9,6 @@
 
 
 
-string stringFromInt(int i) {
-    return string::format("%d", i);
-}
-string stringFromDouble(double d) {
-    return string::format("%lf", d);
-}
-string stringFromFloat(float f) {
-    return string::format("%f", f);
-}
-double stringParseDouble(const string& str) {
-    return atof(str.data());
-}
 int stringParseInt(const string& str) {
     int val = 0;
     int base = 10;

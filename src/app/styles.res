@@ -6,7 +6,7 @@ window: {
     default-height:200dp
 }
 
-colours: {
+colors: {
     table_bkgnd: 0xffefeff4
     table_border: 0xffc8c7cc
     table_chevron:  0xffc7c7cc
@@ -15,14 +15,44 @@ colours: {
 }
 
 listview: {
-    selected-bkgnd-colour: 0xffd9d9d9
-    divider-colour: 0xffcccccc
+    selected-bkgnd-color: 0xffd9d9d9
+    divider-color: 0xffcccccc
     item-title: {
-        forecolour: 0xff333333
+        forecolor: 0xff333333
     }
     item-subtitle: {
-        forecolour: 0xff777777
+        forecolor: 0xff777777
     }
+}
+
+Button: {
+    background: {
+        enabled: {
+            fill: lightGray
+            corner-radii: 4dp
+        }
+        pressed: {
+            fill: gray
+            corner-radii: 4dp
+        }
+    }
+    gravityX: center
+    gravityY: center
+}
+
+SearchBox: {
+    background: {
+        inset: 6dp
+        fill: white
+        stroke: darkGray
+        stroke-width: 1px
+        corner-radii: 8dp
+    }
+    maxLines: 1
+    gravityX: left
+    gravityY: center
+    padding: 16dp, 2dp, 16dp, 2dp
+    forecolor: #000
 }
 
 statusbar: {
@@ -36,9 +66,9 @@ navbar: {
     background: 0xfff6f6f9
     title: {
         font-size: 17dp
-        forecolour: 0xff000000
+        forecolor: 0xff000000
     }
-    bottom-divider-colour: 0xffa7a7aa
+    bottom-divider-color: 0xffa7a7aa
 }
 
 segmentedcontrol: {

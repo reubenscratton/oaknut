@@ -375,6 +375,42 @@ bool string::hadSuffix(const string& suffix) {
     return false;
 }
 
+
+string::iterator string::iterator::operator++(int) {
+    string::iterator retval = *this; ++(*this); return retval;
+}
+bool string::iterator::operator==(iterator other) const {
+    return _str == other._str && _byteOffset==other._byteOffset;
+}
+bool string::iterator::operator!=(iterator other) const {
+    return !(*this == other);
+}
+string::iterator::reference string::iterator::operator*() {
+    if (_byteOffset<0) return 0;
+    _byteOffsetNext = _byteOffset;
+    return _str->readUtf8(_byteOffsetNext);
+}
+bool string::iterator::eof() const {return _byteOffset<0;}
+char* string::iterator::data() const { return _str->_p + _byteOffset; }
+
+
+string string::lowercase() const {
+    string newstr;
+    for (auto c: *this) {
+        char32_t cl;
+        if (c>=0x0041 && c<=0x5a) cl=c+0x20;
+        else if (c>=0xC0 && c<=0xDE) cl=c+0x20;
+        else if (c==0x0178) cl=0x00FF;
+        else if (!(c&1) && (c>=0x0100 && c<=0x0136)) cl = c+1;
+        else if ((c&1) && (c>=0x0139 && c<=0x0147)) cl = c+1;
+        else if (!(c&1) && (c>=0x014A && c<=0x0176)) cl = c+1;
+        // TODO: finish this https://www.ibm.com/support/knowledgecenter/en/ssw_ibm_i_72/nls/rbagslowtoupmaptable.htm
+        else cl = c;
+        newstr.append(cl);
+    }
+    return newstr;
+}
+
 string string::format(const char* fmt, ...) {
     int size = ((int)strlen(fmt)) * 2 + 50;   // Use a rubric appropriate for your code
     int n = 0;
@@ -406,6 +442,14 @@ string string::extractUpTo(const string& sep, bool remove) {
     string result = substr(0,i);
     erase(0,i+(remove?sep.length():0));
     return result;
+}
+string string::tokenise(const string& sep) {
+    string token = extractUpTo(sep, true);
+    if (0 == token.length()) {
+        token = *this;
+        *this = "";
+    }
+    return token;
 }
 
 typedef uint8_t uint8;

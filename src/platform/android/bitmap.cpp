@@ -89,7 +89,6 @@ void BitmapBase::createFromData(const void* data, int cb, std::function<void(Bit
     env->DeleteLocalRef(jbuff);
     Bitmap* bitmap = new Bitmap(jbitmap);
     bitmap->retain();
-    //dispatch_async(dispatch_get_main_queue(), ^() ;
     callback(bitmap);
     bitmap->release();
 }

@@ -12,7 +12,7 @@ DECLARE_DYNCREATE(ListView);
 
 ListView::ListView() {
     _dividerHeight = 1;//dp(1);
-    _dividerColour = app.getStyleColour("listview.selected-bkgnd-colour");
+    _dividerColor = app.getStyleColor("listview.selected-bkgnd-color");
 	_selectedIndex = LISTINDEX_NONE;
     _deleteConfirmIndex = LISTINDEX_NONE;
 }
@@ -123,7 +123,7 @@ void ListView::setSelectedIndex(LISTINDEX index) {
 		if (itemView) {
             // TODO: Am not wild about poking at item view backgrounds like this, perhaps
             // we need an ItemView type which has a "background overlay" renderop.
-            itemView->setBackgroundColour(app.getStyleColour("listview.selected-bkgnd-colour"));
+            itemView->setBackgroundColor(app.getStyleColor("listview.selected-bkgnd-color"));
 		}
 	}
 }
@@ -239,8 +239,8 @@ void ListView::ItemView::showDeleteConfirmButton(bool show) {
     if (show) {
         if (!_deleteConfirmButton) {
             _deleteConfirmButton = new Label();
-            _deleteConfirmButton->setBackgroundColour(0xFFf1453d);
-            _deleteConfirmButton->setTextColour(0xFFFFFFFF);
+            _deleteConfirmButton->setBackgroundColor(0xFFf1453d);
+            _deleteConfirmButton->setTextColor(0xFFFFFFFF);
             _deleteConfirmButton->setText("Delete");
             _deleteConfirmButton->setGravity({GRAVITY_CENTER, GRAVITY_CENTER});
             _deleteConfirmButton->setMeasureSpecs(MEASURESPEC::Abs(CONFIRM_BUTTON_WIDTH), MEASURESPEC::FillParent());
@@ -300,8 +300,8 @@ pair<LISTINDEX,View*> ListView::createItemView(LISTINDEX index, bool atFront, fl
     itemView->setRectOrigin(rect.origin);
     pair<LISTINDEX,ItemView*> result(index,itemView);
     _itemViews.insert(atFront ? _itemViews.begin() : _itemViews.end(), result);
-    ColorRectFillRenderOp* dividerOp = new ColorRectFillRenderOp(itemView);
-    dividerOp->setColour(_dividerColour);
+    RectRenderOp* dividerOp = new RectRenderOp(itemView);
+    dividerOp->setFillColor(_dividerColor);
     RECT dividerRect = itemView->getOwnRect();
     dividerRect.origin.y = dividerRect.bottom() - _dividerHeight;
     dividerRect.size.height = _dividerHeight;

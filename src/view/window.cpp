@@ -87,6 +87,7 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT* event, Window* window
                 if (touchedView && touchedView->_window) {
                     INPUTEVENT lpEv = *event;
                     lpEv.type = INPUT_EVENT_LONG_PRESS;
+                    lpEv.pt += touchedView->_surfaceOrigin;
                     touchedView->dispatchInputEvent(&lpEv);
                     _didSendLongpressEvent = true;
                 }
@@ -154,6 +155,7 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT* event, Window* window
                     if (touchedView) {
                         INPUTEVENT tapEvent = *event;
                         tapEvent.type = INPUT_EVENT_TAP;
+                        tapEvent.pt += touchedView->_surfaceOrigin;
                         touchedView->dispatchInputEvent(&tapEvent);
                         app.log("tap %d", numClicks);
                     }
@@ -492,11 +494,11 @@ void Window::setVertexConfig(int vertexConfig) {
     check_gl(glVertexAttribPointer, VERTEXATTRIB_POSITION, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), 0);
     check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), (void*)8);
 //    check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_UNSIGNED_SHORT, GL_TRUE, sizeof(VERTEX), (void*)8);
-    check_gl(glVertexAttribPointer, VERTEXATTRIB_COLOUR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(VERTEX), (void*)16);
+    check_gl(glVertexAttribPointer, VERTEXATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(VERTEX), (void*)16);
 
     check_gl(glEnableVertexAttribArray, VERTEXATTRIB_POSITION);
     check_gl(glEnableVertexAttribArray, VERTEXATTRIB_TEXCOORD);
-    check_gl(glEnableVertexAttribArray, VERTEXATTRIB_COLOUR);
+    check_gl(glEnableVertexAttribArray, VERTEXATTRIB_COLOR);
 
 }
 

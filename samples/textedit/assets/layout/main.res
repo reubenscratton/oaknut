@@ -2,6 +2,7 @@
 LinearLayout: {
 	width: match_parent
 	height: match_parent
+    background: lightGray
     orientation: vertical
 	View: {
 		id: topBar
@@ -37,9 +38,15 @@ LinearLayout: {
 		width: match_parent
 		height: 0dp
         weight: 1
-        background: 0xFFFFFFFF
+        background: {
+            inset: 8dp
+            fill: white
+            stroke: red
+            stroke-width: 1
+            corner-radii: 8dp
+        }
         padding: 16dp
-		alignY: below(topBar)
+		alignY: below,topBar
 	}
 	}
 }

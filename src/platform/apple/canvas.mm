@@ -62,22 +62,22 @@ public:
         _size.height = height;
         _bitmap = new Bitmap(width, height, BITMAPFORMAT_RGBA32);
     }
-    void clear(COLOUR colour) {
+    void clear(COLOR color) {
         CGContextSetBlendMode(_bitmap->_context, kCGBlendModeCopy);
         CGContextRef context = _bitmap->_context;
-        CGContextSetFillColorWithColor(context, rgba(colour));
+        CGContextSetFillColorWithColor(context, rgba(color));
         CGContextFillRect(context, CGRectMake(0,0,_size.width,_size.height));
         CGContextSetFillColorWithColor(context, _fillColor);
         CGContextSetLineCap(context, kCGLineCapRound);
         _bitmap->_needsUpload = true;
         CGContextSetBlendMode(_bitmap->_context, kCGBlendModeNormal);
     }
-    void setFillColour(COLOUR colour) {
-        _fillColor = rgba(colour);
+    void setFillColor(COLOR color) {
+        _fillColor = rgba(color);
         CGContextSetFillColorWithColor(_bitmap->_context, _fillColor);
     }
-    void setStrokeColour(COLOUR colour) {
-       _strokeColor = rgba(colour);
+    void setStrokeColor(COLOR color) {
+       _strokeColor = rgba(color);
         CGContextSetStrokeColorWithColor(_bitmap->_context, _strokeColor);
     }
     void setStrokeWidth(float strokeWidth) {

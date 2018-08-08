@@ -16,9 +16,9 @@ public:
             "varying vec2 v_texcoord;\n"
             "uniform sampler2D texture;\n"
             "uniform mediump float alpha;\n"
-            "varying lowp vec4 v_colour;\n"
+            "varying lowp vec4 v_color;\n"
             "void main() {\n"
-            "   gl_FragColor.rgb = v_colour.rgb;\n"
+            "   gl_FragColor.rgb = v_color.rgb;\n"
             "   gl_FragColor.a = texture2D(texture, v_texcoord).a * alpha;\n"
             "}\n"
         );
@@ -28,13 +28,15 @@ public:
 
 static GLProgramTextGlyph glprogTextGlyph;
 
-TextRenderOp::TextRenderOp(View* view, const TEXTRENDERPARAMS* textRenderParams) : RenderOpMultiRect(view) {
+TextRenderOp::TextRenderOp(View* view, const TEXTRENDERPARAMS* textRenderParams) : RenderOp(view) {
     _alpha = 1.0f;
     _textRenderParams = *textRenderParams;
-    _prog = &glprogTextGlyph;
     this->_blendMode = BLENDMODE_NORMAL;
 }
 
+void TextRenderOp::validateShader() {
+    _prog = &glprogTextGlyph;
+}
 
 void TextRenderOp::addGlyph(Glyph* glyph, const RECT& rect) {
     RECT rectTex = glyph->atlasNode->rect;
@@ -63,13 +65,17 @@ bool TextRenderOp::canMergeWith(const RenderOp* op) {
     return _textRenderParams == textOp->_textRenderParams;
 }
 
+int TextRenderOp::numQuads() {
+    return (int)_rects.size();
+}
+
 void TextRenderOp::render(Window* window, Surface* surface) {
     RenderOp::render(window, surface);
     window->bindTexture(_textRenderParams.atlasPage->_bitmap);
 }
 
 void TextRenderOp::asQuads(QUAD *quad) {
-    _colour = _textRenderParams.forecolour;
+    _color = _textRenderParams.forecolor; // todo: why is this here??
     for (int i=0 ; i<_rects.size() ; i++) {
         rectToSurfaceQuad(_rects.at(i), quad);
         RECT& rectTex = _rectsTex.at(i);

@@ -20,14 +20,14 @@ public:
 	
 	ImageView();
 	void setImageUrl(const string& url);
-	void setBitmapProvider(BitmapProvider *bitmapProvider);
+    void setImageAsset(const string& assetPath);
     void setBitmap(Bitmap* bitmap);
     void setImageNode(AtlasNode* node);
 	
 	// Overrides
 	void attachToWindow(Window* window) override;
 	void detachFromWindow() override;
-	void onEffectiveTintColourChanged() override;
+	void onEffectiveTintColorChanged() override;
 	void layout() override;
     bool applyStyleValue(const string& name, StyleValue* value) override;
 

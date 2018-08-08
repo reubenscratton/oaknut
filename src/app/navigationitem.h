@@ -17,11 +17,11 @@ public:
     ObjPtr<LinearLayout> _rightButtonsFrame;
 	
     NavigationItem();
-	static class ToolbarButton* createIconButton(const string& src, std::function<void(View*)> onClickDelegate);
+	static class ImageView* createIconButton(const string& src, std::function<void(View*)> onClickDelegate);
 	void setTitle(const string& title);
 	void setTitleView(View* titleView);
-	void addLeftButton(ToolbarButton* button);
-	void addRightButton(ToolbarButton* button);
+	void addLeftButton(ImageView* button);
+	void addRightButton(ImageView* button);
 	void applyTransition(class NavigationBar* navBar, float val, bool incoming, bool isPop);
 };
 

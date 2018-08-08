@@ -52,7 +52,7 @@ public:
     vector<pair<LISTINDEX,ItemView*>> _itemViews;
     vector<pair<int,View*>> _headerViews;
 	float _dividerHeight;
-    COLOUR _dividerColour;
+    COLOR _dividerColor;
     LISTINDEX _selectedIndex;
     std::function<void(View*, LISTINDEX index)> _onItemTapDelegate;
     std::function<void(View*, LISTINDEX index)> _onItemLongPressDelegate;

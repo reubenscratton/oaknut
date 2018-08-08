@@ -55,7 +55,7 @@ SnapshotsViewController::SnapshotsViewController(Beeb* beeb, BeebView* beebView,
 
     // Root view
     View* view = new View();
-    view->setBackgroundColour(0xfff8f8f8);
+    view->setBackgroundColor(0xfff8f8f8);
     setView(view);
 
     // Navbar

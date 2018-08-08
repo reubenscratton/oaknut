@@ -16,7 +16,8 @@ ImageView::ImageView() {
 
 bool ImageView::applyStyleValue(const string& name, StyleValue* value) {
     if (name=="image") {
-        ByteBuffer* data = app.loadAsset(value->str.data());
+        // TODO: leverage drawable code
+        ByteBuffer* data = app.loadAsset(value->stringVal().data());
         Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
             setBitmap(bitmap);
         });
@@ -35,7 +36,7 @@ void ImageView::setImageUrl(const string& url) {
 	
 	// Update URL and reset image
 	_url = url;
-	_renderOp->setBitmapProvider(NULL);
+	_renderOp->setBitmap((Bitmap*)NULL);
 	_errorDisplay = false;
 	
 	// If we're visible then try to display the new image
@@ -44,13 +45,19 @@ void ImageView::setImageUrl(const string& url) {
 	}
 }
 
-void ImageView::setBitmapProvider(BitmapProvider *bitmapProvider) {
-    if (bitmapProvider != _renderOp->_bitmapProvider) {
-        _renderOp->setBitmapProvider(bitmapProvider);
-        _rectTex = RECT(0, 0, 1, 1);
-        invalidateContentSize();
-    }
+void ImageView::setImageAsset(const string& assetPath) {
+    _errorDisplay = false;
+    ByteBuffer* data = app.loadAsset(assetPath.data());
+    assert(data);
+    _url = assetPath;
+    Bitmap::createFromData(data->data, (int) data->cb, [=](Bitmap *bitmap) {
+        if (_url.compare(assetPath) == 0) {
+            setBitmap(bitmap);
+        }
+    });
 }
+
+
 void ImageView::setBitmap(Bitmap *bitmap) {
     _renderOp->setBitmap(bitmap);
     _rectTex = RECT(0,0,1,1);
@@ -98,8 +105,8 @@ void ImageView::layout() {
 
 
 
-void ImageView::onEffectiveTintColourChanged() {
-    _renderOp->setColour(_effectiveTintColour);
+void ImageView::onEffectiveTintColorChanged() {
+    _renderOp->setColor(_effectiveTintColor);
 }
 
 void ImageView::onUrlRequestLoad(URLData* data) {

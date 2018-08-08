@@ -33,8 +33,9 @@ public:
     ItemPool::Alloc* _alloc;
     
     // Overrides
-    virtual void setRect(const RECT& rect);
-    virtual void asQuads(QUAD *quad);
-    virtual void render(Window* window, Surface* surface);
-    
+    void setRect(const RECT& rect) override;
+    void asQuads(QUAD *quad) override;
+    void render(Window* window, Surface* surface) override;
+    void validateShader() override;
+
 };

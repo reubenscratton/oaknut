@@ -19,7 +19,7 @@ View: {
         style: $listview.item-title
         width: fill_parent
         height: wrap_content
-        alignX: toRightOf(image, 8dp)
+        alignX: toRightOf, image, 8dp
         alignY: top
     }
     Label: {
@@ -27,7 +27,7 @@ View: {
         style: $listview.item-subtitle
         width: fill_parent
         height: wrap_content
-        alignX: toRightOf(image, 8dp)
+        alignX: toRightOf, image, 8dp
         alignY: bottom
     }
 }

@@ -43,7 +43,7 @@ Label::Label() : View() {
     string defaultFontName = app.getStyleString("font-name", "");
     float defaultFontSize = app.getStyleFloat("font-size");
     _textRenderer.setDefaultFont(Font::get(defaultFontName, defaultFontSize));
-    _textRenderer.setDefaultColour(0xFF000000);
+    _textRenderer.setDefaultColor(0xFF000000);
     _textRenderer.setGravity(_gravity);
 }
 Label::~Label() {	
@@ -52,31 +52,32 @@ Label::~Label() {
 
 bool Label::applyStyleValue(const string& name, StyleValue* value) {
     if (name=="font-name") {
-        setFont(Font::get(value->str, _textRenderer.getDefaultFont()->_size));
+        setFont(Font::get(value->stringVal(), _textRenderer.getDefaultFont()->_size));
         return true;
     }
     if (name=="font-size") {
-        setFont(Font::get(_textRenderer.getDefaultFont()->_name, value->getAsFloat()));
+        setFont(Font::get(_textRenderer.getDefaultFont()->_name, value->floatVal()));
         return true;
     }
-    if (name=="forecolour") {
-        setTextColour(value->i);
+    if (name=="forecolor") {
+        setTextColor(value->colorVal());
         return true;
     }
     if (name=="text") {
-        setText(value->str);
+        setText(value->stringVal());
         return true;
     }
     if (name=="maxLines") {
-        setMaxLines(value->i);
+        setMaxLines(value->intVal());
         return true;
     }
     if (name=="gravityX") {
-        if (value->str == "left") {
+        string str = value->stringVal();
+        if (str == "left") {
             _gravity.horz = GRAVITY_LEFT;
-        } else if (value->str == "right") {
+        } else if (str == "right") {
             _gravity.horz = GRAVITY_RIGHT;
-        } else if (value->str == "center" || value->str == "centre") {
+        } else if (str == "center" || str == "centre") {
             _gravity.horz = GRAVITY_CENTER;
         } else {
             assert(0);
@@ -85,11 +86,12 @@ bool Label::applyStyleValue(const string& name, StyleValue* value) {
         return true;
     }
     if (name=="gravityY") {
-        if (value->str == "top") {
+        string str = value->stringVal();
+        if (str == "top") {
             _gravity.vert = GRAVITY_TOP;
-        } else if (value->str == "bottom") {
+        } else if (str == "bottom") {
             _gravity.vert = GRAVITY_BOTTOM;
-        } else if (value->str == "center" || value->str == "centre") {
+        } else if (str == "center" || str == "centre") {
             _gravity.vert = GRAVITY_CENTER;
         } else {
             assert(0);
@@ -161,13 +163,13 @@ void Label::setMaxLines(int maxLines) {
 }
 
 
-void Label::setTextColour(COLOUR colour) {
-    _defaultColour = colour;
-    onEffectiveTintColourChanged();
+void Label::setTextColor(COLOR color) {
+    _defaultColor = color;
+    onEffectiveTintColorChanged();
 }
 
-void Label::onEffectiveTintColourChanged() {
-    _textRenderer.setDefaultColour(_effectiveTintColour ? _effectiveTintColour : _defaultColour);
+void Label::onEffectiveTintColorChanged() {
+    _textRenderer.setDefaultColor(_effectiveTintColor ? _effectiveTintColor : _defaultColor);
     setNeedsFullRedraw();
 }
 
@@ -241,9 +243,9 @@ void Label::setStyle(string styleName) {
     if (fontName.length() && fontSize) {
         setFont(Font::get(fontName, fontSize));
     }
-    COLOUR textColour = app.getStyleColour(styleName + ".forecolour");
-    if (textColour) {
-        setTextColour(textColour);
+    COLOR textColor = app.getStyleColor(styleName + ".forecolor");
+    if (textColor) {
+        setTextColor(textColor);
     }
 }
 

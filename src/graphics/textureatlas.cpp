@@ -14,7 +14,9 @@ AtlasNode::AtlasNode(AtlasPage* page) {
     filled = false;
 }
 
-void AtlasPage::importAsset(const string& assetPath, std::function<void(AtlasNode*)> callback) {
+
+BitmapProvider* AtlasPage::importAsset(const string& assetPath) {
+    BitmapProvider* bitmapProvider = new BitmapProvider();
     ObjPtr<ByteBuffer> data = app.loadAsset(assetPath.data());
     assert(data);
     Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
@@ -37,8 +39,9 @@ void AtlasPage::importAsset(const string& assetPath, std::function<void(AtlasNod
         }
         bitmap->unlock(&pixelDataSrc, false);
         _bitmap->unlock(&pixelDataDest, true);
-        callback(node);
+        bitmapProvider->dispatch(node);
     });
+    return bitmapProvider;
 }
 
 

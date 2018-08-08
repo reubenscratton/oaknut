@@ -12,24 +12,24 @@ VERTEX VERTEX_Make(GLfloat x,
                    GLfloat y,
                    GLfloat s,
                    GLfloat t,
-                   uint32_t colour) {
+                   uint32_t color) {
     VERTEX v;
     v.x = x;
     v.y = y;
     v.s = s;
     v.t = t;
-    uint8_t r = colour&255;
-    uint8_t b = (colour&0xff0000)>>16;
-    v.colour = (colour & 0xFF00FF00) | b | (r<<16); // swap red & blue. Might be iOS specific, not sure
+    uint8_t r = color&255;
+    uint8_t b = (color&0xff0000)>>16;
+    v.color = (color & 0xFF00FF00) | b | (r<<16); // swap red & blue. Might be iOS specific, not sure
     return v;
 }
 
-QUAD QUADFromRECT(const RECT& rect, uint32_t colour) {
+QUAD QUADFromRECT(const RECT& rect, uint32_t color) {
     QUAD q;
-    q.tl = VERTEX_Make(rect.left(), rect.top(), 0, 0, colour);
-    q.tr = VERTEX_Make(rect.right(), rect.top(), 1, 0, colour);
-    q.bl = VERTEX_Make(rect.left(), rect.bottom(), 0, 1, colour);
-    q.br = VERTEX_Make(rect.right(), rect.bottom(), 1, 1, colour);
+    q.tl = VERTEX_Make(rect.left(), rect.top(), 0, 0, color);
+    q.tr = VERTEX_Make(rect.right(), rect.top(), 1, 0, color);
+    q.bl = VERTEX_Make(rect.left(), rect.bottom(), 0, 1, color);
+    q.br = VERTEX_Make(rect.right(), rect.bottom(), 1, 1, color);
     return q;
 }
 
