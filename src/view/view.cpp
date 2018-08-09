@@ -645,7 +645,7 @@ void View::attachToWindow(Window *window) {
     }
 	_window = window;
     if (_parent) {
-        _surfaceOrigin = POINT_Make(_parent->_surfaceOrigin.x + _rect.origin.x, _parent->_surfaceOrigin.y + _rect.origin.y);
+        _surfaceOrigin = {_parent->_surfaceOrigin.x + _rect.origin.x, _parent->_surfaceOrigin.y + _rect.origin.y};
     } else {
         _surfaceOrigin = _rect.origin;
     }
@@ -1230,7 +1230,7 @@ void View::animateTranslate(POINT translation, float duration) {
         setTranslate(translation);
     } else {
         Animation::start(this, duration, [=](float val) {
-            setTranslate(POINT_Make(translation.x*val, translation.y*val));
+            setTranslate({translation.x*val, translation.y*val});
         });
     }
 }

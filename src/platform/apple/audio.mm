@@ -1,5 +1,5 @@
 //
-//  Copyright © 2017 Sandcastle Software Ltd. All rights reserved.
+//  Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 #if PLATFORM_APPLE && OAKNUT_WANT_AUDIOINPUT
 

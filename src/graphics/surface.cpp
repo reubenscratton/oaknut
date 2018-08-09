@@ -1,5 +1,5 @@
 //
-// Copyright © 2017 Sandcastle Software Ltd. All rights reserved.
+// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
@@ -245,7 +245,7 @@ void Surface::renderPhase1(View* view, Window* window, POINT origin) {
         }
 
         // Reset origin
-        origin = POINT_Make(0,0);
+        origin = {0,0};
         surface = view->_surface;
 
     } else {
@@ -418,7 +418,7 @@ void Surface::render(View* view, Window* window) {
     _mvpNum = 0;
     
     /** PHASE 1: ENSURE ALL RENDER LISTS ARE VALID **/
-    renderPhase1(view, window, POINT_Make(0,0));
+    renderPhase1(view, window, {0,0});
     
     validateRenderOps();
     

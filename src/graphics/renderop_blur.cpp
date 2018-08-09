@@ -1,5 +1,5 @@
 //
-// Copyright © 2017 Sandcastle Software Ltd. All rights reserved.
+// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
@@ -158,10 +158,12 @@ void BlurRenderOp::render(Window* window, Surface* surface) {
     }
     if (!_vertexesValid) {
         QUAD* quad = (QUAD*)_alloc->addr();
-        quad->bl = VERTEX_Make(0, 0, 0, 0, 0);
-        quad->br = VERTEX_Make(_downsampledSize.width, 0, 1, 0, 0);
-        quad->tl = VERTEX_Make(0,  _downsampledSize.height, 0, 1, 0);
-        quad->tr = VERTEX_Make(_downsampledSize.width, _downsampledSize.height, 1, 1, 0);
+        float dw = _downsampledSize.width;
+        float dh = _downsampledSize.height;
+        quad->bl = {0, 0, 0, 0, 0};
+        quad->br = {dw, 0, 1, 0, 0};
+        quad->tl = {0,  dh, 0, 1, 0};
+        quad->tr = {dw, dh, 1, 1, 0};
         check_gl(glBufferSubData, GL_ARRAY_BUFFER, _alloc->offset*sizeof(QUAD), _alloc->count*sizeof(QUAD), _alloc->addr());
         _vertexesValid = true;
     }
@@ -170,14 +172,14 @@ void BlurRenderOp::render(Window* window, Surface* surface) {
     check_gl(glBindFramebuffer, GL_FRAMEBUFFER, _fb[0]);
     s_progBlur.use(window);
     s_progBlur.setMvp(_mvp);
-    s_progBlur.setTexOffset(POINT_Make(0, 1.f/_downsampledSize.height));
+    s_progBlur.setTexOffset({0, 1.f/_downsampledSize.height});
     glViewport(0, 0, _downsampledSize.width, _downsampledSize.height);
     check_gl(glDrawElements, GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, (void*)((_alloc->offset)*6*sizeof(GLshort)));
 
     // 1D blur vertically
     check_gl(glBindTexture, GL_TEXTURE_2D, _textureIds[1]);
     check_gl(glBindFramebuffer, GL_FRAMEBUFFER, _fb[1]);
-    s_progBlur.setTexOffset(POINT_Make(1.f/_downsampledSize.width, 0));
+    s_progBlur.setTexOffset({1.f/_downsampledSize.width, 0});
     check_gl(glDrawElements, GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, (void*)((_alloc->offset)*6*sizeof(GLshort)));
 
     // Switch back to rendering to the backbuffer

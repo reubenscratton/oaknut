@@ -23,11 +23,11 @@ typedef struct MEASURESPEC {
     MEASURESPEC(RefType refType, class View* refView, float refSizeMultiplier, float delta);
     MEASURESPEC(class StyleValue* value);
     
-    static MEASURESPEC None();//         MEASURESPEC_Make(REFTYPE_NONE, NULL, 0, 0)
-    static MEASURESPEC Abs(float x);//       MEASURESPEC_Make(REFTYPE_ABS, NULL, 0, x)
-    static MEASURESPEC WrapContent();//  MEASURESPEC_Make(REFTYPE_CONTENT, NULL, 1, 0)
-    static MEASURESPEC UseAspect(float x); // MEASURESPEC_Make(REFTYPE_ASPECT, NULL,  x, 0)
-    static MEASURESPEC FillParent();  // MEASURESPEC_Make(REFTYPE_VIEW, NULL, 1, 0)
+    static MEASURESPEC None();
+    static MEASURESPEC Abs(float x);
+    static MEASURESPEC WrapContent();
+    static MEASURESPEC UseAspect(float x);
+    static MEASURESPEC FillParent();
 
 } MEASURESPEC;
 

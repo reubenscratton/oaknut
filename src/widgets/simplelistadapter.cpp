@@ -1,5 +1,5 @@
 //
-// Copyright © 2017 Sandcastle Software Ltd. All rights reserved.
+// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
@@ -98,7 +98,7 @@ void SimpleListAdapter::setFilter(const string& filterText) {
         }
     }
     _itemsFiltered.insert(_itemsFiltered.end(), secondaryMatches.begin(), secondaryMatches.end());
-    _adapterView->setContentOffset(POINT_Make(0,0));
+     _adapterView->setContentOffset({0,0});
     _adapterView->reload();*/
 }
 

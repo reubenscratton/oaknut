@@ -1,5 +1,5 @@
 //
-// Copyright © 2017 Sandcastle Software Ltd. All rights reserved.
+// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
@@ -286,7 +286,7 @@ void ListView::deleteRow(LISTINDEX index) {
     float dy = _adapter->getItemHeight(index);
     for (auto it : _itemViews) {
         if (it.first > index) {
-            it.second->animateTranslate(POINT_Make(0,-dy), 300);
+            it.second->animateTranslate({0,-dy}, 300);
         }
     }
     
@@ -441,11 +441,11 @@ void ListView::updateVisibleItems() {
                 addSubview(headerView);
                 headerView->measure(_rect.size.width, it->headerHeight);
                 headerView->layout();
-                headerView->setRectOrigin(POINT_Make(0, headerTop));
+                headerView->setRectOrigin({0, headerTop});
                 pair<int,View*> result(section,headerView);
                 headerViewIt = _headerViews.insert(headerViewIt, result);
             } else {
-                headerViewIt->second->setRectOrigin(POINT_Make(0,headerTop));
+                headerViewIt->second->setRectOrigin({0,headerTop});
             }
             headerViewIt++;
         }

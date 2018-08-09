@@ -1,5 +1,5 @@
 //
-// Copyright © 2017 Sandcastle Software Ltd. All rights reserved.
+// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
@@ -137,7 +137,7 @@ void TextRenderOp::asQuads(QUAD *quad) {
  origin.y = floorf(_origin.y);
 
 void TextRenderOp::setOrigin(const POINT origin) {
-    POINT delta = POINT_Make(origin.x-_origin.x, origin.y-_origin.y);
+    POINT delta = {origin.x-_origin.x, origin.y-_origin.y};
     if (delta.x!=0.f || delta.y!=0.f) {
         _rect.origin.x += delta.x;
         _rect.origin.y += delta.y;

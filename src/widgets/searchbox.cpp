@@ -1,6 +1,6 @@
 
 //
-// Copyright © 2017 Sandcastle Software Ltd. All rights reserved.
+// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
@@ -34,7 +34,7 @@ void SearchBox::layout() {
     RECT rect = getOwnRect();
     rect.inset(app.dp(12), app.dp(6));
     
-    SIZE searchIconSize = SIZE_Make(app.dp(16),app.dp(16));
+    SIZE searchIconSize = {app.dp(16),app.dp(16)};
     _searchIconOp->setRect(RECT(rect.origin.x+(rect.size.width-searchIconSize.width)/2,rect.origin.y+(rect.size.height-searchIconSize.height)/2, searchIconSize.width, searchIconSize.height));
 }
 
@@ -43,7 +43,7 @@ bool SearchBox::setFocused(bool focused) {
     if (focused && r) {
         Animation::start(this, 250,  [=](float val) {
             RECT iconRect;
-            iconRect.size = SIZE_Make(app.dp(16), app.dp(16));
+            iconRect.size = {app.dp(16), app.dp(16)};
             RECT paddedBounds = getOwnRectPadded();
             float spaceForSearchIcon = this->spaceForSearchIcon();
             paddedBounds.origin.x -= spaceForSearchIcon;

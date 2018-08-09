@@ -1,5 +1,5 @@
 //
-// Copyright © 2017 Sandcastle Software Ltd. All rights reserved.
+// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
@@ -34,22 +34,22 @@ public:
 
 		// Overlap right & top & bottom edges
 		/*region = oregion;
-		region.addRect(RECT_Make(5, -1, 10, 12));
-		assert(region.rects.size()==3 && region.rects[0]==RECT_Make(0,0,10,10)
-									  && region.rects[1]==RECT_Make(5,-1,10,1)
-									  && region.rects[2]==RECT_Make(5,10,10,1));
+         region.addRect({5, -1, 10, 12});
+         assert(region.rects.size()==3 && region.rects[0]=={0,0,10,10}
+         && region.rects[1]=={5,-1,10,1}
+         && region.rects[2]=={5,10,10,1});
 
 		// Overlap left, right, top edges
 		region = oregion;
-		region.addRect(RECT_Make(-1, -1, 12, 2));
-		assert(region.rects.size()==2 && region.rects[0]==RECT_Make(0,1,10,9)
-									  && region.rects[1]==RECT_Make(-1,-1,12,2));
+         region.addRect({-1, -1, 12, 2});
+         assert(region.rects.size()==2 && region.rects[0]=={0,1,10,9}
+         && region.rects[1]=={-1,-1,12,2});
 
 		// Overlap left, right, bottom edges
 		region = oregion;
-		region.addRect(RECT_Make(-1, 9, 12, 2));
-		assert(region.rects.size()==2 && region.rects[0]==RECT_Make(0,0,10,9)
-									  && region.rects[1]==RECT_Make(-1,9,12,2));*/
+		region.addRect({-1, 9, 12, 2));
+         assert(region.rects.size()==2 && region.rects[0]=={0,0,10,9}
+         && region.rects[1]=={-1,9,12,2});*/
 
 		// Overlap right edge only
 		region = oregion;

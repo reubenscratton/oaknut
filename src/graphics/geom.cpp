@@ -1,5 +1,5 @@
 //
-// Copyright © 2017 Sandcastle Software Ltd. All rights reserved.
+// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
@@ -8,36 +8,19 @@
 #include <oaknut.h>
 
 
-VERTEX VERTEX_Make(GLfloat x,
-                   GLfloat y,
-                   GLfloat s,
-                   GLfloat t,
-                   uint32_t color) {
-    VERTEX v;
-    v.x = x;
-    v.y = y;
-    v.s = s;
-    v.t = t;
-    uint8_t r = color&255;
-    uint8_t b = (color&0xff0000)>>16;
-    v.color = (color & 0xFF00FF00) | b | (r<<16); // swap red & blue. Might be iOS specific, not sure
-    return v;
-}
 
 QUAD QUADFromRECT(const RECT& rect, uint32_t color) {
     QUAD q;
-    q.tl = VERTEX_Make(rect.left(), rect.top(), 0, 0, color);
-    q.tr = VERTEX_Make(rect.right(), rect.top(), 1, 0, color);
-    q.bl = VERTEX_Make(rect.left(), rect.bottom(), 0, 1, color);
-    q.br = VERTEX_Make(rect.right(), rect.bottom(), 1, 1, color);
+    float l = rect.left(), r=rect.right();
+    float t = rect.top(), b=rect.bottom();
+    uint8_t red = color&255;
+    uint8_t blue = (color&0xff0000)>>16;
+    color = (color & 0xFF00FF00) | blue | (red<<16); // swap red & blue. Might be iOS specific, not sure
+    q.tl = {l, t, 0, 0, color};
+    q.tr = {r, t, 1, 0, color};
+    q.bl = {l, b, 0, 1, color};
+    q.br = {r, b, 1, 1, color};
     return q;
-}
-
-POINT POINT_Make(float x, float y) {
-	POINT p;
-	p.x = x;
-	p.y = y;
-	return p;
 }
 
 bool POINT::equals(POINT& pt) {
@@ -55,15 +38,6 @@ const struct _POINT& POINT::operator+=(const struct _POINT& d) {
     return *this;
 }
 
-
-SIZE SIZE_Make(float width, float height) {
-	SIZE size = {width, height};
-	return size;
-}
-SIZEI SIZEI_Make(int width, int height) {
-    SIZEI size = {width, height};
-    return size;
-}
 
 float RECT::midX() {
 	return origin.x + size.width/2;
@@ -188,14 +162,14 @@ POINT RECT::topLeft() const {
 	return origin;
 }
 POINT RECT::topRight() const {
-	return POINT_Make(origin.x+size.width, origin.y);
+    return {origin.x+size.width, origin.y};
 }
 POINT RECT::bottomLeft() const {
-	return POINT_Make(origin.x, origin.y+size.height);
+    return {origin.x, origin.y+size.height};
 ;
 }
 POINT RECT::bottomRight() const {
-	return POINT_Make(origin.x+size.width, origin.y+size.height);
+    return {origin.x+size.width, origin.y+size.height};
 }
 
 bool RECT::contains(const RECT& r) const {

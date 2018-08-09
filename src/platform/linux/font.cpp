@@ -51,7 +51,7 @@ Glyph* Font::createGlyph(char32_t ch, Atlas* atlas) {
     
     // Reserve a space in the glyph atlas
     Glyph* glyph = new Glyph(this, ch, glyphIndex);
-    glyph->advance = SIZE_Make(cairo_text_extents.x_advance, cairo_text_extents.y_advance);
+    glyph->advance = {cairo_text_extents.x_advance, cairo_text_extents.y_advance};
     glyph->bitmapWidth = ceilf(cairo_text_extents.width);
     glyph->bitmapHeight = ceilf(cairo_text_extents.height);
     glyph->atlasNode = atlas->reserve(glyph->bitmapWidth, glyph->bitmapHeight, 1);

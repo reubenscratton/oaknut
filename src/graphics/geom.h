@@ -1,5 +1,5 @@
 //
-// Copyright © 2017 Sandcastle Software Ltd. All rights reserved.
+// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
@@ -15,11 +15,6 @@ typedef struct _VERTEX {
     GLfloat unused[3]; // seems v wasteful. Worth it?
 } VERTEX;
 
-VERTEX VERTEX_Make(GLfloat x,
-                   GLfloat y,
-                   GLfloat s,
-                   GLfloat t,
-                   uint32_t color);
 
 typedef struct _QUAD {
     VERTEX tl;
@@ -41,19 +36,16 @@ typedef struct _POINT {
     const struct _POINT operator+(const struct _POINT& rhs) const { return {x+rhs.x, y+rhs.y}; }
     const struct _POINT operator-(const struct _POINT& rhs) const { return {x-rhs.x, y-rhs.y}; }
 } POINT;
-POINT POINT_Make(float x, float y);
 
 typedef struct _SIZE {
 	float width;
 	float height;
 } SIZE;
-SIZE SIZE_Make(float width, float height);
 
 typedef struct _SIZEI {
     int width;
     int height;
 } SIZEI;
-SIZEI SIZEI_Make(int width, int height);
 
 typedef struct RECT {
 	POINT origin;

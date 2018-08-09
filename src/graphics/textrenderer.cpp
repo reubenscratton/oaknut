@@ -1,5 +1,5 @@
 //
-// Copyright © 2017 Sandcastle Software Ltd. All rights reserved.
+// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
@@ -60,7 +60,7 @@ void TextRenderer::setGravity(GRAVITY gravity) {
 }
 
 void TextRenderer::measure() {
-    measure(SIZE_Make(0,0));
+    measure({0,0});
 }
 
 #define isWhitespace(c) (c==' ')
@@ -272,7 +272,7 @@ void TextRenderer::measure(SIZE maxSize) {
             }
         }
         line.bounds.size.height = lineHeight;
-        line.bounds.origin = POINT_Make(0, y);
+        line.bounds.origin = {0, y};
         line.baseline = baseline;
         _measuredSize.width = MAX(_measuredSize.width, line.bounds.size.width);
         _measuredSize.height += lineHeight;
@@ -475,9 +475,9 @@ void TextRenderer::getCharacterOrigin(int32_t charIndex, POINT* origin, float* a
     
     if (charIndex < line->startCharacterIndex + line->numCharacters) {
         const DISPLAYED_CHAR& glyphInfo = _characters[charIndex];
-        *origin = POINT_Make(glyphInfo.rect.left(), glyphInfo.rect.bottom());
+        *origin = {glyphInfo.rect.left(), glyphInfo.rect.bottom()};
     } else {
-        *origin = POINT_Make(line->bounds.right(), line->bounds.origin.y + line->baseline);
+        *origin = {line->bounds.right(), line->bounds.origin.y + line->baseline};
     }
 }
 

@@ -1,5 +1,5 @@
 //
-// Copyright © 2017 Sandcastle Software Ltd. All rights reserved.
+// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
@@ -37,7 +37,9 @@ static bool s_mouseIsDown;
     inputEvent.time = event.timestamp*1000;
     if (isScrollWheel) {
         inputEvent.deviceType = INPUTEVENT::ScrollWheel;
-        inputEvent.delta = POINT_Make(event.scrollingDeltaX*app._window->_scale, event.scrollingDeltaY*app._window->_scale);
+        inputEvent.delta = {
+            (float)(event.scrollingDeltaX*app._window->_scale),
+            (float)(event.scrollingDeltaY*app._window->_scale)};
     } else {
         inputEvent.deviceType = INPUTEVENT::Mouse;
     }

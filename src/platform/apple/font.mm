@@ -76,7 +76,7 @@ Glyph* Font::createGlyph(char32_t ch, Atlas* atlas) {
     // Get glyph advances
     CGSize advances;
     CTFontGetAdvancesForGlyphs(_ctfont, kCTFontOrientationDefault, &cgglyph, &advances, 1);
-    glyph->advance = SIZE_Make(advances.width, advances.height);
+    glyph->advance = {(float)advances.width, (float)advances.height};
     glyph->advance.width = ceilf(glyph->advance.width);
     
     // Get the glyph bounding rect. This is idealised in that it has fractional coordinates

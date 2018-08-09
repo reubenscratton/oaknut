@@ -1,5 +1,5 @@
 //
-// Copyright © 2017 Sandcastle Software Ltd. All rights reserved.
+// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
@@ -75,9 +75,9 @@ void NavigationItem::applyTransition(NavigationBar* navBar, float val, bool inco
 		float tx = incoming ? (1-val) : -val;
 		float titleDistance = _titleView->getWidth()/2 + navBar->getWidth()/2;
 		if (isPop) {
-			_titleView->setTranslate(POINT_Make(-tx * titleDistance,0));
+            _titleView->setTranslate({-tx * titleDistance,0});
         } else {
-            _titleView->setTranslate(POINT_Make(tx * titleDistance,0));
+            _titleView->setTranslate({tx * titleDistance,0});
         }
 	}
     _rightButtonsFrame->setAlpha(alpha);

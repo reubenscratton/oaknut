@@ -1,5 +1,5 @@
 //
-// Copyright © 2017 Sandcastle Software Ltd. All rights reserved.
+// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
@@ -131,7 +131,7 @@ void Label::updateContentSize(float parentWidth, float parentHeight) {
     parentWidth -= (_padding.left + _padding.right);
     parentHeight -= (_padding.top + _padding.bottom);
     
-    _textRenderer.measure(SIZE_Make(parentWidth, parentHeight));
+    _textRenderer.measure({parentWidth, parentHeight});
     
     _contentSize = _textRenderer.measuredSize();
     // If we had to use a soft linebreak then we know we filled the available width

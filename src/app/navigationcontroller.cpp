@@ -1,5 +1,5 @@
 //
-// Copyright © 2017 Sandcastle Software Ltd. All rights reserved.
+// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
@@ -93,7 +93,7 @@ void NavigationController::applyNavTransitionToViewController(ViewController* vc
 	else  {
 		tx = incoming ? (val-1) : val/2;
 	}
-	vc->getView()->setTranslate(POINT_Make(tx * _view->getWidth(), 0));
+    vc->getView()->setTranslate({tx * _view->getWidth(), 0});
 	vc->_navigationItem->applyTransition(_navBar, val, incoming, _animationState == Pop);
 }
 
