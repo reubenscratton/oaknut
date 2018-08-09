@@ -25,7 +25,7 @@ DisksViewController::DisksViewController(std::function<void(Game*)> delegate) {
 	_segctrl->addSegment("Best");
 	_segctrl->addSegment("All");
     _segctrl->setSegmentSelectedDelegate([=](int index) {
-        _searchBox->setVisibility((index==1) ? Visible : Gone);
+        _searchBox->getParent()->setVisibility((index==1) ? Visible : Gone);
         _listView->setAdapter(index?_disksListAdapterAll:_disksListAdapterBest);
         _listView->setScrollInsets(EDGEINSETS(0, _minTopScrollInset + ((index==0)?0:app.dp(40)), 0, 0));
     });
@@ -76,7 +76,7 @@ void DisksViewController::onWillResume() {
     //_listView->setContentOffset(pt);
 }
 void DisksViewController::onDidPause() {
-	app.setIntSetting("disksSeg", _segctrl->_selectedIndex);
+	app.setIntSetting("disksSeg", _segctrl->getSelectedIndex());
 	app.setIntSetting("disksY", _listView->getContentOffset().y);
 }
 

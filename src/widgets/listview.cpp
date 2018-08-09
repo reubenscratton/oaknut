@@ -11,10 +11,21 @@
 DECLARE_DYNCREATE(ListView);
 
 ListView::ListView() {
-    _dividerHeight = 1;//dp(1);
-    _dividerColor = app.getStyleColor("listview.selected-bkgnd-color");
+    applyStyle("ListView");
 	_selectedIndex = LISTINDEX_NONE;
     _deleteConfirmIndex = LISTINDEX_NONE;
+}
+
+bool ListView::applyStyleValue(const string &name, StyleValue *value) {
+    if (name=="divider-height") {
+        _dividerHeight = value->floatVal();
+        return true;
+    }
+    if (name=="divider-color") {
+        _dividerColor = value->colorVal();
+        return true;
+    }
+    return View::applyStyleValue(name, value);
 }
 
 void ListView::setAdapter(IListAdapter* adapter) {

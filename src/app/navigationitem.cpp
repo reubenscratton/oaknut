@@ -44,9 +44,7 @@ void NavigationItem::setTitleView(View* titleView) {
 }
 
 ImageView* NavigationItem::createIconButton(const string& src, std::function<void(View*)> onClickDelegate) {
-	ImageView* button = new ImageView();
-    button->setMeasureSpecs(MEASURESPEC::UseAspect(1), MEASURESPEC::FillParent());
-    button->setPadding(EDGEINSETS(app.dp(8),app.dp(8),app.dp(8),app.dp(8))); // todo: style
+	ToolbarButton* button = new ToolbarButton();
     ByteBuffer* data = app.loadAsset(src.data());
     Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
         button->setBitmap(bitmap);

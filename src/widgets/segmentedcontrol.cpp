@@ -12,10 +12,44 @@ DECLARE_DYNCREATE(SegmentedControl);
 
 
 SegmentedControl::SegmentedControl() {
-	_font = app.getStyleFont("segmentedcontrol");
-    _lineWidth = app.getStyleFloat("segmentedcontrol.stroke-width");
+    applyStyle("SegmentedControl");
 	_selectedIndex = _pressedIndex = -1;
-	_selectedTextColor = 0xff000000;
+}
+
+bool SegmentedControl::applyStyleValue(const string &name, StyleValue *value) {
+    if (name == "stroke-width") {
+        _lineWidth = value->floatVal();
+        return true;
+    }
+    if (name=="font-name") {
+        setFontName(value->stringVal());
+        return true;
+    }
+    if (name=="font-size") {
+        setFontSize(value->floatVal());
+        return true;
+    }
+    if (name=="corner-radius") {
+        _cornerRadius = value->floatVal();
+        updateBorders();
+        return true;
+    }
+    return View::applyStyleValue(name, value);
+}
+
+void SegmentedControl::setFontName(const string& fontName) {
+    if (_fontName != fontName) {
+        _fontName = fontName;
+        _fontValid = false;
+        invalidateContentSize();
+    }
+}
+void SegmentedControl::setFontSize(float fontSize) {
+    if (_fontSize != fontSize) {
+        _fontSize = fontSize;
+        _fontValid = false;
+        invalidateContentSize();
+    }
 }
 
 void SegmentedControl::onEffectiveTintColorChanged() {
@@ -23,32 +57,44 @@ void SegmentedControl::onEffectiveTintColorChanged() {
     for (auto i : _segments) {
         i.rectOp->setStrokeColor(_effectiveTintColor);
         COLOR actualTextColor = _textColor ? _textColor : _effectiveTintColor;
-        i.label->setDefaultColor(actualTextColor);
+        i.label->setColor(actualTextColor);
     }
 }
 
 void SegmentedControl::addSegment(const string& label) {
     Segment segment;
     segment.label = new TextRenderer();
-	segment.label->setDefaultFont(_font);
 	segment.label->setText(label);
     segment.label->setGravity({GRAVITY_CENTER,GRAVITY_CENTER});
     COLOR actualColor = _textColor ? _textColor : _effectiveTintColor;
-    segment.label->setDefaultColor(actualColor);
-    float r = app.dp(4); // todo: style!
+    segment.label->setColor(actualColor);
+    float r = _cornerRadius;
     segment.rectOp = new RectRenderOp(this);
     segment.rectOp->setFillColor(0);
-    segment.rectOp->setStrokeWidth(_lineWidth);
-    segment.rectOp->setStrokeColor(_effectiveTintColor);
-    if (_segments.size() == 0) {
-        segment.rectOp->setCornerRadius(4);
-    } else {
-        segment.rectOp->setCornerRadii({r,r,0,0});
-    }
     addRenderOp(segment.rectOp);
 	_segments.push_back(segment);
-
+    updateBorders();
+    _fontValid = false;
 	invalidateContentSize();
+}
+
+void SegmentedControl::updateBorders() {
+    for (int i=0 ; i<_segments.size() ; i++) {
+        auto& op = _segments[i].rectOp;
+        bool first = i==0;
+        bool last = (i==_segments.size()-1);
+        op->setStrokeWidth(_lineWidth);
+        op->setStrokeColor(_effectiveTintColor);
+        if (first && last) {
+            op->setCornerRadius(_cornerRadius);
+        } else if (first && !last) {
+            op->setCornerRadii({_cornerRadius,0,_cornerRadius,0}); // left
+        } else if (last && !first) {
+            op->setCornerRadii({0,_cornerRadius,0,_cornerRadius}); // right
+        } else {
+            op->setCornerRadii({0,0,0,0}); // middle
+        }
+    }
 }
 
 void SegmentedControl::setTextColor(COLOR color) {
@@ -56,14 +102,14 @@ void SegmentedControl::setTextColor(COLOR color) {
     COLOR actualTextColor = _textColor ? _textColor : _effectiveTintColor;
     for (int i=0 ; i<_segments.size() ; i++) {
         Segment& segment = _segments.at(i);
-        segment.label->setDefaultColor(actualTextColor);
+        segment.label->setColor(actualTextColor);
     }
 }
 void SegmentedControl::setSelectedTextColor(COLOR color) {
 	_selectedTextColor = color;
     if (_selectedIndex >= 0) {
         Segment& selectedSegment = _segments.at(_selectedIndex);
-        selectedSegment.label->setDefaultColor(color);
+        selectedSegment.label->setColor(color);
     }
 }
 
@@ -73,7 +119,7 @@ void SegmentedControl::setSelectedSegment(int segmentIndex) {
             Segment& selectedSegment = _segments.at(_selectedIndex);
             if (selectedSegment.label) {
                 COLOR actualTextColor = _textColor ? _textColor : _effectiveTintColor;
-                selectedSegment.label->setDefaultColor(actualTextColor);
+                selectedSegment.label->setColor(actualTextColor);
                 selectedSegment.rectOp->setColor(0);
             }
             // todo: rect fill color
@@ -83,7 +129,7 @@ void SegmentedControl::setSelectedSegment(int segmentIndex) {
         if (_selectedIndex >= 0) {
             Segment& selectedSegment = _segments.at(_selectedIndex);
             if (selectedSegment.label) {
-                selectedSegment.label->setDefaultColor(_selectedTextColor);
+                selectedSegment.label->setColor(_selectedTextColor);
                 selectedSegment.rectOp->setColor(_effectiveTintColor);
             }
         }
@@ -96,6 +142,15 @@ void SegmentedControl::setSegmentSelectedDelegate(SegmentSelectedDelegate delega
 }
 
 void SegmentedControl::updateContentSize(float parentWidth, float parentHeight) {
+    
+    if (!_fontValid) {
+        _font = Font::get(_fontName, _fontSize);
+        for (auto& segment : _segments) {
+            segment.label->setFont(_font);
+        }
+        _fontValid = true;
+    }
+    
 	_contentSize.width = 0;
 	_contentSize.height = 0;
 	// Calculate segment rects. NB: These are pixel-aligned so roundrects look as good as poss.

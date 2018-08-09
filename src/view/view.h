@@ -349,6 +349,7 @@ protected:
      */
 public:
     /** Applies a set of styles to the view */
+    virtual void applyStyle(const string& style);
     virtual void applyStyleValues(const map<string, StyleValue*>& values);
 
 protected:

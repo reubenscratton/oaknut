@@ -11,6 +11,7 @@
 DECLARE_DYNCREATE(SearchBox);
 
 SearchBox::SearchBox() {
+    applyStyle("SearchBox");
     _searchIconOp = new TextureRenderOp(this, "images/search.png", 0xff555555);
     addRenderOp(_searchIconOp);
     _showClearButtonWhenNotEmpty = true;    

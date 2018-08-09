@@ -39,10 +39,10 @@ LinearLayout: {
 		height: 0dp
         weight: 1
         background: {
-            inset: 8dp
+            inset: 4dp
             fill: white
-            stroke: red
-            stroke-width: 1
+            stroke: darkGray
+            stroke-width: 1px
             corner-radii: 8dp
         }
         padding: 16dp

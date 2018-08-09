@@ -40,11 +40,10 @@ DECLARE_DYNCREATE(Label);
 
 
 Label::Label() : View() {
-    string defaultFontName = app.getStyleString("font-name", "");
-    float defaultFontSize = app.getStyleFloat("font-size");
-    _textRenderer.setDefaultFont(Font::get(defaultFontName, defaultFontSize));
-    _textRenderer.setDefaultColor(0xFF000000);
-    _textRenderer.setGravity(_gravity);
+    applyStyle("Label");
+    
+    // Ensure overridden property setters are actually called.
+    setGravity(_gravity);
 }
 Label::~Label() {	
 }
@@ -52,11 +51,11 @@ Label::~Label() {
 
 bool Label::applyStyleValue(const string& name, StyleValue* value) {
     if (name=="font-name") {
-        setFont(Font::get(value->stringVal(), _textRenderer.getDefaultFont()->_size));
+        _textRenderer.setFontName(value->stringVal());
         return true;
     }
     if (name=="font-size") {
-        setFont(Font::get(_textRenderer.getDefaultFont()->_name, value->floatVal()));
+        _textRenderer.setFontSize(value->floatVal());
         return true;
     }
     if (name=="forecolor") {
@@ -71,34 +70,6 @@ bool Label::applyStyleValue(const string& name, StyleValue* value) {
         setMaxLines(value->intVal());
         return true;
     }
-    if (name=="gravityX") {
-        string str = value->stringVal();
-        if (str == "left") {
-            _gravity.horz = GRAVITY_LEFT;
-        } else if (str == "right") {
-            _gravity.horz = GRAVITY_RIGHT;
-        } else if (str == "center" || str == "centre") {
-            _gravity.horz = GRAVITY_CENTER;
-        } else {
-            assert(0);
-        }
-        _textRenderer.setGravity(_gravity);
-        return true;
-    }
-    if (name=="gravityY") {
-        string str = value->stringVal();
-        if (str == "top") {
-            _gravity.vert = GRAVITY_TOP;
-        } else if (str == "bottom") {
-            _gravity.vert = GRAVITY_BOTTOM;
-        } else if (str == "center" || str == "centre") {
-            _gravity.vert = GRAVITY_CENTER;
-        } else {
-            assert(0);
-        }
-        _textRenderer.setGravity(_gravity);
-        return true;
-    }
     return View::applyStyleValue(name, value);
 }
 
@@ -111,49 +82,12 @@ void Label::setAttributedText(const AttributedString& text) {
     invalidateContentSize();
 }
 
-string vformat(const char *fmt, va_list ap)  {
-    // Allocate a buffer on the stack that's big enough for us almost
-    // all the time.  Be prepared to allocate dynamically if it doesn't fit.
-    size_t size = 1024;
-    char stackbuf[1024];
-    std::vector<char> dynamicbuf;
-    char *buf = &stackbuf[0];
-    va_list ap_copy;
-
-    while (1) {
-        // Try to vsnprintf into our buffer.
-        va_copy(ap_copy, ap);
-        int needed = vsnprintf (buf, size, fmt, ap);
-        va_end(ap_copy);
-
-        // NB. C99 (which modern Linux and OS X follow) says vsnprintf
-        // failure returns the length it would have needed.  But older
-        // glibc and current Windows return -1 for failure, i.e., not
-        // telling us how much was needed.
-
-        if (needed <= (int)size && needed >= 0) {
-            // It fit fine so we're done.
-            return string(buf, needed);
-        }
-
-        // vsnprintf reported that it wanted to write more characters
-        // than we allotted.  So try again using a dynamic buffer.  This
-        // doesn't happen very often if we chose our initial size well.
-        size = (needed > 0) ? (needed+1) : (size*2);
-        dynamicbuf.resize (size);
-        buf = &dynamicbuf[0];
-    }
-}
-/*void Label::setText(const char* format, ...) {
-    va_list ap;
-    va_start (ap, format);
-    string str = vformat (format, ap);
-    va_end (ap);
-    setText(str);
-}*/
-
 void Label::setFont(Font* font) {
-    _textRenderer.setDefaultFont(font);
+    _textRenderer.setFont(font);
+    invalidateContentSize();
+}
+void Label::setFontName(const string& fontName) {
+    _textRenderer.setFontName(fontName);
     invalidateContentSize();
 }
 
@@ -169,7 +103,7 @@ void Label::setTextColor(COLOR color) {
 }
 
 void Label::onEffectiveTintColorChanged() {
-    _textRenderer.setDefaultColor(_effectiveTintColor ? _effectiveTintColor : _defaultColor);
+    _textRenderer.setColor(_effectiveTintColor ? _effectiveTintColor : _defaultColor);
     setNeedsFullRedraw();
 }
 
@@ -236,18 +170,6 @@ void Label::setGravity(GRAVITY gravity) {
     _textRenderer.setGravity(gravity);
 }
 
-void Label::setStyle(string styleName) {
-    // TODO: this method should just fetch the named map from Styles:: and call View::applyStyleValues()
-    string fontName = app.getStyleString(styleName + ".font-name");
-    float fontSize = app.getStyleFloat(styleName + ".font-size");
-    if (fontName.length() && fontSize) {
-        setFont(Font::get(fontName, fontSize));
-    }
-    COLOR textColor = app.getStyleColor(styleName + ".forecolor");
-    if (textColor) {
-        setTextColor(textColor);
-    }
-}
 
 #ifdef DEBUG
 

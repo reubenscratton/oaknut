@@ -25,6 +25,16 @@ listview: {
     }
 }
 
+ListView: {
+    divider-height: 1px
+    divider-color: $listview.selected-bkgnd-color
+}
+
+Label: {
+    font-size: $font-size
+    forecolor: black
+}
+
 Button: {
     background: {
         enabled: {
@@ -37,6 +47,17 @@ Button: {
         }
     }
     gravityX: center
+    gravityY: center
+}
+
+ToolbarButton: {
+    width: aspect(1)
+    height: match_parent
+    padding: 8dp
+    alpha: 0.5
+}
+
+EditText: {
     gravityY: center
 }
 
@@ -55,6 +76,12 @@ SearchBox: {
     forecolor: #000
 }
 
+SegmentedControl: {
+    font-size: $font-size
+    stroke-width: 1dp
+    corner-radius: 4dp
+}
+
 statusbar: {
     height: 0dp
     height@android: 20dp
@@ -71,9 +98,6 @@ navbar: {
     bottom-divider-color: 0xffa7a7aa
 }
 
-segmentedcontrol: {
-    stroke-width: 1dp
-}
 
 }
 )"

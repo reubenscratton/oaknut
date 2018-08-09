@@ -27,7 +27,6 @@ MEASURESPEC::MEASURESPEC(StyleValue* value) {
         *this = Abs(value->floatVal());
         return;
     }
-    assert(value->type == StyleValue::Type::String);
     string str = value->stringVal();
     if (str == "wrap_content") { *this = WrapContent(); return; }
     if (str == "fill_parent") { *this = FillParent(); return; }

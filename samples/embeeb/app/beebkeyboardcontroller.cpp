@@ -50,16 +50,16 @@ void BeebKeyboardKey::attachToView(ControllerView *view) {
 
     _label = new TextRenderer();
     _label->setText(name);
-    _label->setDefaultColor(0xFFFFFFFF);
-    _label->setDefaultFont(app.getStyleFont((name.length()>1) ? "keyboard.labels-small" : "keyboard.labels-normal"));
+    _label->setColor(0xFFFFFFFF);
+    _label->setFont(app.getStyleFont((name.length()>1) ? "keyboard.labels-small" : "keyboard.labels-normal"));
     _label->setGravity({GRAVITY_CENTER, GRAVITY_CENTER});
     _label->measure();
 
     if (_beebKey->shiftLabel) {
         _labelTop = new TextRenderer();
         _labelTop->setText(_beebKey->shiftLabel);
-        _labelTop->setDefaultColor(0xFFFFFFFF);
-        _labelTop->setDefaultFont(app.getStyleFont("keyboard.labels-tiny"));
+        _labelTop->setColor(0xFFFFFFFF);
+        _labelTop->setFont(app.getStyleFont("keyboard.labels-tiny"));
         _labelTop->setGravity({GRAVITY_CENTER, GRAVITY_TOP});
         _labelTop->measure();
 	}

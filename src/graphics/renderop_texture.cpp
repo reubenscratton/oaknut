@@ -99,18 +99,12 @@ static GLProgramTextureTintAlpha glprogTextureTintAlpha;
 
 TextureRenderOp::TextureRenderOp(View* view) : RenderOp(view) {
     _alpha = 1.0f;
-    _prog = &glprogTexture;
     _rectTex = RECT(0,0,1,1);
 }
 TextureRenderOp::TextureRenderOp(View* view, const RECT& rect, Bitmap* bitmap, const RECT* rectTex, COLOR tintColor) : RenderOp(view) {
     _bitmap = bitmap;
     _alpha = 1.0f;
     _color = tintColor;
-    if (_color) {
-        _prog = &glprogTextureTint;
-    } else {
-        _prog = &glprogTexture;
-    }
     _rect = rect;
     if (rectTex) {
         _rectTex = *rectTex;
@@ -123,7 +117,6 @@ TextureRenderOp::TextureRenderOp(View* view, const RECT& rect, Bitmap* bitmap, c
  * Constructor for tinted .png icons
  */
 TextureRenderOp::TextureRenderOp(View* view, const char* assetPath, int tintColor) : TextureRenderOp(view) {
-    _prog = &glprogTextureTintAlpha;
     _alpha = 1.0f;
     _color = tintColor;
     ByteBuffer* data = app.loadAsset(assetPath);
@@ -135,11 +128,18 @@ TextureRenderOp::TextureRenderOp(View* view, const char* assetPath, int tintColo
 }
 
 void TextureRenderOp::validateShader() {
-    _prog = (_alpha<1.0f) ? &glprogTextureTintAlpha : &glprogTextureTint;
-    if (_color) {
-        _prog = &glprogTextureTint;
+    if (_alpha<1.0f) {
+        if (_color) {
+            _prog = &glprogTextureTintAlpha;
+        } else {
+            _prog = &glprogTextureAlpha;
+        }
     } else {
-        _prog = &glprogTexture;
+        if (_color) {
+            _prog = &glprogTextureTint;
+        } else {
+            _prog = &glprogTexture;
+        }
     }
 }
 void TextureRenderOp::setAlpha(float alpha) {

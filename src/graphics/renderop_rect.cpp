@@ -109,8 +109,8 @@ public:
             "uniform lowp vec4 strokeColor;\n"
             
             "void main() {\n"
-            "    vec2 b = u.xy - vec2(radius); \n"
-            "    float dist = length(max(abs(v_texcoord)-b, 0.0)) - radius; \n"
+            "   vec2 b = u.xy - vec2(radius); \n"
+            "    float dist = length(max(abs(v_texcoord)-b, 0.0)) - radius  - 0.5;\n"
             "    vec4 col = strokeColor;\n"
             "    col.a = mix(0.0, strokeColor.a, clamp(-dist, 0.0, 1.0));\n"   // outer edge blend
             "    col = mix(col, v_color, clamp(-(dist + u.w), 0.0, 1.0));\n"
@@ -127,7 +127,7 @@ public:
 
 };
 
-class GLProgramRoundRectTwo : public GLProgramRoundRect {
+class GLProgramRoundRectSymmetric : public GLProgramRoundRect {
 public:
     GLint _posRadii;
     
@@ -135,10 +135,6 @@ public:
         GLProgramRoundRect::findVariables();
         _posRadii = check_gl(glGetUniformLocation, _program, "radii");
     }
-    
-    //void setRadii(float radii[2]) {
-    //    check_gl(glUniform2fv, _posRadii, 1, radii);
-    //}
     
     void load() override {
         loadShaders(
@@ -175,7 +171,7 @@ public:
         GLProgramRoundRect::configureForRenderOp(op);
         float r[2];
         r[0] = op->_radii[0];
-        r[1] = op->_radii[1];
+        r[1] = op->_radii[3];
         check_gl(glUniform2fv, _posRadii, 1, r);
     }
 
@@ -184,7 +180,7 @@ public:
 static GLProgramRect glprogSolidFill;
 static GLProgramRectAlpha glprogSolidFillAlpha;
 static GLProgramRoundRectOne glprogRoundRect1;
-static GLProgramRoundRectTwo glprogRoundRect2;
+static GLProgramRoundRectSymmetric glprogRoundRectSymmetric;
 
 
 RectRenderOp::RectRenderOp(View* view) : RenderOp(view) {
@@ -242,13 +238,20 @@ void RectRenderOp::validateShader() {
     if (_strokeWidth>0 && _strokeColor!=0) {
         
     }
-    if (_radii[0] != 0.0f) {
-        _prog = &glprogRoundRect1;
-        _blendMode = BLENDMODE_NORMAL;
-        if (_radii[1] != 0.0f) {
-            this->_prog = &glprogRoundRect2;
+    bool singleRadius = (_radii[0]==_radii[1] && _radii[2]==_radii[3] && _radii[0]==_radii[3]);
+    if (singleRadius) {
+        if (_radii[0] != 0.0f) {
+            _prog = &glprogRoundRect1;
+        }
+    } else {
+        if ((_radii[0]==_radii[2]) && (_radii[1]==_radii[3])) {
+            _prog = &glprogRoundRectSymmetric;
+        }
+        else {
+            assert(0); // unsupported combination
         }
     }
+    _blendMode = BLENDMODE_NORMAL;
 }
 
 
@@ -258,7 +261,7 @@ bool RectRenderOp::canMergeWith(const RenderOp* op) {
     if (!RenderOp::canMergeWith(op)) {
         return false;
     }
-    if (_prog == &glprogRoundRect1 || _prog == &glprogRoundRect2) {
+    if (_prog == &glprogRoundRect1 || _prog == &glprogRoundRectSymmetric) {
         return _rect.size.width == ((const RectRenderOp*)op)->_rect.size.width
         && _rect.size.height == ((const RectRenderOp*)op)->_rect.size.height
         && _strokeColor==((const RectRenderOp*)op)->_strokeColor
@@ -273,7 +276,7 @@ bool RectRenderOp::canMergeWith(const RenderOp* op) {
 
 void RectRenderOp::asQuads(QUAD *quad) {
     rectToSurfaceQuad(_rect, quad);
-    if (_prog == &glprogRoundRect1 || _prog == &glprogRoundRect2) {
+    if (_prog == &glprogRoundRect1 || _prog == &glprogRoundRectSymmetric) {
         // Put the quad size into the texture coords so the frag shader
         // can trivially know distance to quad center
         quad->tl.s = quad->bl.s = -_rect.size.width/2;

@@ -92,19 +92,6 @@ COLOR App::getStyleColor(const string& key) {
     return value->colorVal();
 }
 
-static void importAttributes(map<string, StyleValue*>& attribs, map<string, StyleValue*> attribsToImport) {
-    for (auto i : attribsToImport) {
-        if (i.first == "style") {
-            importAttributes(attribs, i.second->compoundVal()->_values);
-        }
-    }
-    for (auto i : attribsToImport) {
-        if (i.first != "style") {
-            attribs[i.first] = i.second;
-        }
-    }
-}
-
 static View* inflateFromResource(pair<string, StyleValue*> r, View* parent) {
     string viewClassName = r.first;
     View* view = (View*)Object::createByName(viewClassName);
@@ -112,14 +99,8 @@ static View* inflateFromResource(pair<string, StyleValue*> r, View* parent) {
         parent->addSubview(view);
     }
     
-    map<string, StyleValue*> attribs;
-
     // Bring in default style attributes for this view type
-    StyleValue* styleAttrib = NULL;
-    styleAttrib = app.getStyleValue(viewClassName);
-    if (styleAttrib) {
-        importAttributes(attribs, styleAttrib->compoundVal()->_values);
-    }
+    map<string, StyleValue*> attribs;
     
     // Process the custom attributes and subviews
     StyleValue* props = r.second;
@@ -134,11 +115,10 @@ static View* inflateFromResource(pair<string, StyleValue*> r, View* parent) {
             if (val->type == StyleValue::Type::Compound && (firstNameChar >='A' && firstNameChar<='Z')) {
                 subviews.push_back(a);
             } else {
-                customAttribs[i.first] = val;
+                attribs[i.first] = val;
             }
         }
     }
-    importAttributes(attribs, customAttribs);
 
     
     // Apply the attributes to the inflated view.

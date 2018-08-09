@@ -13,5 +13,13 @@ public:
 
 };
 
+class ToolbarButton : public ImageView {
+public:
+    
+    ToolbarButton();
+    
+    bool onInputEvent(INPUTEVENT* event) override;
+    
+};
 
 

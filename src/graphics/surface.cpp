@@ -298,6 +298,7 @@ void Surface::renderPhase1(View* view, Window* window, POINT origin) {
 
 PrivateSurfaceRenderOp::PrivateSurfaceRenderOp(View* view, const RECT& rect)  : TextureRenderOp(view, rect, NULL, NULL, 0) {
     _dirty = true;
+    validateShader();
 }
 PrivateSurfaceRenderOp::~PrivateSurfaceRenderOp() {
     if (_alloc) {
@@ -311,7 +312,6 @@ void PrivateSurfaceRenderOp::rectToSurfaceQuad(RECT rect, QUAD* quad) {
 }
 void PrivateSurfaceRenderOp::render(Window* window, Surface* surface) {
     RenderOp::render(window, surface);
-   // _prog->setTintColor(_tintColor);
     
     // Bind to the private surface texture
     window->_currentTexture = NULL;

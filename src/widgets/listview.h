@@ -77,12 +77,13 @@ public:
     virtual void deleteRow(LISTINDEX index);
     
 	// Overrides
-	virtual void measure(float parentWidth, float parentHeight);
-	virtual void updateContentSize(float parentWidth, float parentHeight);
-    virtual void layout();
-    virtual void setContentOffset(POINT contentOffset);
-	virtual bool onInputEvent(INPUTEVENT* event);
-    virtual void removeSubview(View* subview);
+    bool applyStyleValue(const string &name, StyleValue *value) override;
+	void measure(float parentWidth, float parentHeight) override;
+	void updateContentSize(float parentWidth, float parentHeight) override;
+    void layout() override;
+    void setContentOffset(POINT contentOffset) override;
+	bool onInputEvent(INPUTEVENT* event) override;
+    void removeSubview(View* subview) override;
 	
 	
 protected:

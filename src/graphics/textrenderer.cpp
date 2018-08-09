@@ -20,16 +20,34 @@ void TextRenderer::setAttributedText(const AttributedString& text) {
     _measuredSizeValid = false;
 }
 
-void TextRenderer::setDefaultColor(COLOR color) {
-    _defaultColor = color;
-    //_renderOpsValid = false;
+void TextRenderer::setColor(COLOR color) {
+    _color = color;
     _measuredSizeValid = false; // lazy. color doesn't affect size!
 }
 
-void TextRenderer::setDefaultFont(Font* font) {
-    _defaultFont = font;
+void TextRenderer::setFont(Font* font) {
+    _font = font;
+    _fontName = _font->_name;
+    _fontSize = _font->_size;
     _measuredSizeValid = false;
+    _fontValid = true;
 }
+
+void TextRenderer::setFontName(const string &fontName) {
+    if (_fontName != fontName) {
+        _fontName = fontName;
+        _measuredSizeValid = false;
+        _fontValid = false;
+    }
+}
+void TextRenderer::setFontSize(float fontSize) {
+    if (_fontSize != fontSize) {
+        _fontSize = fontSize;
+        _measuredSizeValid = false;
+        _fontValid = false;
+    }
+}
+
 
 void TextRenderer::setMaxLines(int maxLines) {
     _maxLines = maxLines;
@@ -50,6 +68,12 @@ void TextRenderer::measure() {
 void TextRenderer::measure(SIZE maxSize) {
     assert(!_measuredSizeValid); // measure() has been called pointlessly
     
+    // Get font if not got it yet
+    if (!_fontValid) {
+        _font = Font::get(_fontName, _fontSize);
+        _fontValid = true;
+    }
+    
     bool filledHorizontally = false;
     _measuredSize.width = 0;
     _measuredSize.height = 0;
@@ -63,7 +87,7 @@ void TextRenderer::measure(SIZE maxSize) {
     // Initial text render params
     TEXTRENDERPARAMS textRenderParams;
     textRenderParams.atlasPage = NULL;
-    textRenderParams.forecolor = _defaultColor;
+    textRenderParams.forecolor = _color;
     textRenderParams.renderOp = NULL;
     TEXTRENDERPARAMS* currentParams = &textRenderParams;
     bool paramsChanged = false;
@@ -75,7 +99,7 @@ void TextRenderer::measure(SIZE maxSize) {
     auto spanEndIterator = _text._attributes.begin();
     
     // Defaults
-    Font* currentFont = _defaultFont;
+    Font* currentFont = _font;
     
     // Start with an empty line and no characters
     _characters.clear(); // todo: reserve some empirical number of chars

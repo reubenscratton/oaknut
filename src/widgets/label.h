@@ -15,14 +15,14 @@ public:
 	~Label();
     
     // Overrides
-    virtual bool applyStyleValue(const string& name, StyleValue* value);
-    virtual void updateRenderOps();
-    virtual void measure(float parentWidth, float parentHeight);
-    virtual void updateContentSize(float parentWidth, float parentHeight);
-    virtual void setContentOffset(POINT contentOffset);
-    virtual void layout();
-    virtual void onEffectiveTintColorChanged();
-    virtual void setGravity(GRAVITY gravity);
+    bool applyStyleValue(const string& name, StyleValue* value) override;
+    void updateRenderOps() override;
+    void measure(float parentWidth, float parentHeight) override;
+    void updateContentSize(float parentWidth, float parentHeight) override;
+    void setContentOffset(POINT contentOffset) override;
+    void layout() override;
+    void onEffectiveTintColorChanged() override;
+    void setGravity(GRAVITY gravity) override;
     
     // API
     virtual const string& getText() { return _textRenderer.getText(); }
@@ -31,8 +31,8 @@ public:
     virtual void setAttributedText(const AttributedString& text);
     virtual void setTextColor(COLOR color);
 	virtual void setFont(Font* font);
+    virtual void setFontName(const string& fontName);
     virtual void setMaxLines(int maxLines);
-    virtual void setStyle(string styleName);
     
 #ifdef DEBUG
     virtual string debugViewType();

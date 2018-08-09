@@ -31,12 +31,12 @@ public:
     void setText(const string& text);
     const AttributedString& getAttributedText() { return _text; }
     void setAttributedText(const AttributedString& text);
-    void setDefaultColor(COLOR color);
-    COLOR getDefaultColor() const { return _defaultColor; }
-    void setDefaultFontName(const string& fontName);
-    void setDefaultFontSize(float fontSize);
-    void setDefaultFont(Font* font);
-    const Font* getDefaultFont() const { return _defaultFont; }
+    void setColor(COLOR color);
+    COLOR getColor() const { return _color; }
+    void setFontName(const string& fontName);
+    void setFontSize(float fontSize);
+    void setFont(Font* font);
+    const Font* getFont() const { return _font; }
     void setGravity(GRAVITY gravity);
     void setMaxLines(int maxLines);
     void getCharacterOrigin(int32_t characterIndex, POINT* origin, float* ascent, float* descent) const;
@@ -77,8 +77,11 @@ public:
     
 protected:
     AttributedString _text;
-    ObjPtr<Font> _defaultFont;
-    COLOR _defaultColor;
+    string _fontName;
+    float _fontSize;
+    bool _fontValid;
+    ObjPtr<Font> _font;
+    COLOR _color;
     GRAVITY _gravity;
     bool _measuredSizeValid;
     SIZE _measuredSize;

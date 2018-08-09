@@ -17,7 +17,7 @@ ITextInputReceiver* EditText::getTextInputReceiver() {
 }
 
 EditText::EditText() : Label() {
-    _gravity.vert = GRAVITY_CENTER;
+    applyStyle("EditText");
 }
 
 bool EditText::onInputEvent(INPUTEVENT* event) {

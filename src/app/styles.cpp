@@ -55,6 +55,9 @@ string StyleValue::stringVal() const {
     if (val->type==Type::String) return val->str;
     else if (val->type==Type::Int) return string::format("%d", val->i);
     else if (val->type==Type::Float) return string::format("%f", val->f);
+    else if (val->type==Type::Array) {
+        // todo: might be useful to concat the element stringVals...
+    }
     app.warn("stringVal() called on non-stringable StyleValue");
     return "";
 }
@@ -65,9 +68,6 @@ const vector<const StyleValue*> StyleValue::arrayVal() const {
         return array;
     }
     return {this};
-    /*vector<const StyleValue*> adhoc;
-    adhoc.push_back(this);
-    return adhoc;*/
 }
 
 StyleMap* StyleValue::compoundVal() const {
@@ -308,7 +308,22 @@ void StyleValue::setQualifiedValue(const string& qual, const StyleValue* value) 
     }
 }
 
-
+Vector4 StyleValue::cornerRadiiVal() const {
+    auto radii = arrayVal();
+    Vector4 r;
+    if (radii.size()==1) {
+        r.x = r.y = r.z = r.w = radii[0]->floatVal();
+    } else if (radii.size()==4) {
+        r.x = radii[0]->floatVal();
+        r.y = radii[1]->floatVal();
+        r.z = radii[2]->floatVal();
+        r.w = radii[3]->floatVal();
+    } else {
+        app.warn("Invalid corner-radii, must be 1 or 4 values");
+        r = {0,0,0,0};
+    }
+    return r;
+}
 
 
 const StyleValue* StyleValue::select() const {

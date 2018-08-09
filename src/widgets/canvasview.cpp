@@ -8,6 +8,7 @@
 #include <oaknut.h>
 
 CanvasView::CanvasView() {
+    applyStyle("CanvasView");
     _canvas = Canvas::create();
     _textureRenderOp = new TextureRenderOp(this);
     _textureRenderOp->setBlendMode(BLENDMODE_PREMULTIPLIED);

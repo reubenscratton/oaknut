@@ -43,6 +43,7 @@ public:
     float floatVal() const;
     string stringVal() const;
     COLOR colorVal() const;
+    Vector4 cornerRadiiVal() const;
     const vector<const StyleValue*> arrayVal() const;
     class StyleMap* compoundVal() const;
     

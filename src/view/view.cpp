@@ -27,8 +27,29 @@ View::~View() {
     }
 }
 
+void View::applyStyle(const string& style) {
+    auto value = app.getStyleValue(style);
+    if (value) {
+        auto compound = value->compoundVal();
+        applyStyleValues(compound->_values);
+    }
+}
+
 void View::applyStyleValues(const map<string, StyleValue*>& values) {
+    
+    // Ensure the 'style' attribute, if present, gets processed first, because the others may override it
     for (auto i : values) {
+        if (i.first == "style") {
+            auto styleVal = i.second->compoundVal()->_values;
+            applyStyleValues(styleVal);
+            break;
+        }
+    }
+
+    for (auto i : values) {
+        if (i.first == "style") {
+            continue;
+        }
         StyleValue* val = i.second;
         if (!applyStyleValue(i.first, val)) {
             if (_parent && !_parent->applyStyleValueFromChild(i.first, i.second, this)) {
@@ -62,7 +83,38 @@ bool View::applyStyleValue(const string& name, StyleValue* value) {
         }
         setBackground(processDrawable(value));
         return true;
-    } else if (name == "padding") {
+    }
+    if (name=="gravityX") {
+        uint8_t horz = 0;
+        string str = value->stringVal();
+        if (str == "left") {
+            horz = GRAVITY_LEFT;
+        } else if (str == "right") {
+            horz = GRAVITY_RIGHT;
+        } else if (str == "center" || str == "centre") {
+            horz = GRAVITY_CENTER;
+        } else {
+            assert(0);
+        }
+        setGravity({horz, _gravity.vert});
+        return true;
+    }
+    if (name=="gravityY") {
+        uint8_t vert = 0;
+        string str = value->stringVal();
+        if (str == "top") {
+            vert = GRAVITY_TOP;
+        } else if (str == "bottom") {
+            vert = GRAVITY_BOTTOM;
+        } else if (str == "center" || str == "centre") {
+            vert = GRAVITY_CENTER;
+        } else {
+            assert(0);
+        }
+        setGravity({_gravity.horz, vert});
+        return true;
+    }
+    if (name == "padding") {
         auto a = value->arrayVal();
         if (a.size() == 1) {
             float pad = a[0]->floatVal();
@@ -129,20 +181,7 @@ RenderOp* View::processDrawable(StyleValue* value) {
             } else if (it.first == "stroke-width") {
                 op->setStrokeWidth(subval->floatVal());
             } else if (it.first == "corner-radius" || it.first == "corner-radii") {
-                auto radii = subval->arrayVal();
-                Vector4 r;
-                if (radii.size()==1) {
-                    r.x = r.y = r.z = r.w = radii[0]->floatVal();
-                    op->setCornerRadii(r);
-                } else if (radii.size()==4) {
-                    r.x = radii[0]->floatVal();
-                    r.y = radii[1]->floatVal();
-                    r.z = radii[2]->floatVal();
-                    r.w = radii[3]->floatVal();
-                    op->setCornerRadii(r);
-                } else {
-                    app.warn("Invalid corner-radii, must be 1 or 4 values");
-                }
+                op->setCornerRadii(subval->cornerRadiiVal());
             } else if (it.first == "inset") {
                 auto a = subval->arrayVal();
                 EDGEINSETS inset;
