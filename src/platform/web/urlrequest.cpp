@@ -10,42 +10,44 @@
 #include "bitmap.h"
 
 
-class NativeRequest : public Object {
+class URLRequestWeb : public URLRequest {
 public:
-    URLRequest* _req;
     val _val;
 
-    NativeRequest(URLRequest* req) : _val(val::null()) {
-        _req = req;
+    URLRequestWeb(const string& url, const string& method, const string& body, int flags) : URLRequest(url, method, body, flags), _val(val::null()) {
     }
     
-    static void OnProgress(NativeRequest* req, int done, int total, int timestamp) {
+    static void OnProgress(URLRequestWeb* req, int done, int total, int timestamp) {
         //printf("progress %d/%d\n", done, total);
     }
-    static void OnError(NativeRequest* req) {
-        printf("error loading url: %s\n", req->_req->_url.data());
-        req->_req->dispatchOnLoad(NULL);
+    static void OnError(URLRequestWeb* req) {
+        printf("error loading url: %s\n", req->_url.data());
+        //todo req->dispatchResult(NULL);
     }
-    static void OnImageLoad(NativeRequest* req) {
-        app.log("OnImageLoad %s", req->_req->_url.data());
-        bool isPng = req->_req->_url.contains(".png");
+    static void OnImageLoad(URLRequestWeb* req) {
+        bool isPng = req->_url.contains(".png");
+        
+        // This is a rather special case. Instead of calling dispatchResult() we use
+        // a special web-only Bitmap constructor and call the handler manually.
         ObjPtr<Bitmap> bitmap = new Bitmap(req->_val, isPng);
         req->_val = val::null();
-        req->_req->dispatchOnLoad(new URLData(bitmap));
+        if (req->_handlerBitmap) {
+            req->_handlerBitmap(200, bitmap);
+        }
+        req->release();
     }
-    static void OnDone(NativeRequest* req, uint8_t* data, int data_size, int timestamp) {
+    static void OnNonImageLoad(URLRequestWeb* req, int httpStatus, uint8_t* data, int data_size, int timestamp) {
         //printf("done data_size:%d\n", data_size);
         ObjPtr<ByteBuffer> emdata = new ByteBuffer();
         emdata->data = (uint8_t*)malloc(data_size);
         memcpy(emdata->data, data, data_size);
         emdata->cb = data_size;
-        req->_req->dispatchOnLoad(new URLData(emdata));
+        req->dispatchResult(httpStatus, {}, emdata);
     }
 
-    void start() {
-        _req->retain();
+    virtual void run() {
     
-        if (_req->_flags & URL_FLAG_BITMAP) {
+        if (_flags & URL_FLAG_BITMAP) {
         
             // Create an Image
             _val = val::global("Image").new_();
@@ -64,7 +66,7 @@ public:
                 };
                 img.crossOrigin = 'Anonymous';
                 img.src = url;
-            }, this, _req->_url.data(), OnImageLoad, OnError, gotIndex);
+            }, this, _url.data(), OnImageLoad, OnError, gotIndex);
         } else {
     
             // Create an XMLHttpRequest
@@ -118,8 +120,8 @@ public:
                             var byteArray=new Uint8Array(xhr.response);
                             var buffer=_malloc(byteArray.length);
                             HEAPU8.set(byteArray, buffer);
-                            Runtime.dynCall('viiii', onload, [req, buffer, byteArray.length, date]);
-                            _free(buffer);
+                            Runtime.dynCall('viiiii', onload, [req, xhr.status, buffer, byteArray.length, date]);
+                            //_free(buffer);
                             break;
                             
                         default:
@@ -138,14 +140,15 @@ public:
                 
                 // send
                 xhr.send(null);
-            }, this, _req->_url.data(), OnProgress, OnDone, OnError, gotIndex);
+            }, this, _url.data(), OnProgress, OnNonImageLoad, OnError, gotIndex);
         }
     }
         
         
-    void stop() {
+    virtual void cancel() {
+        _cancelled = true;
         if (!_val.isNull()) {
-            if (_req->_flags & URL_FLAG_BITMAP) {
+            if (_flags & URL_FLAG_BITMAP) {
                 _val.set("onload", val::null());
                 _val.set("onerror", val::null());
                 //_val.set("src", val("data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"));
@@ -154,23 +157,14 @@ public:
             }
             _val = val::null();
         }
-        _req->release();
     }
         
     
 };
 
-void URLRequest::nativeStart() {
-    NativeRequest* nativeReq = new NativeRequest(this);
-    nativeReq->retain();
-    _osobj = nativeReq;
-    nativeReq->start();
-}
 
-void URLRequest::nativeStop() {
-    NativeRequest* nativeReq = (NativeRequest*)_osobj;
-    nativeReq->stop();
-    nativeReq->release();
+URLRequest* URLRequest::create(const string& url, const string& method, const string& body, int flags) {
+    return new URLRequestWeb(url, method, body, flags);
 }
 
 #endif

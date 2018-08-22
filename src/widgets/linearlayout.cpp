@@ -13,7 +13,7 @@ DECLARE_DYNCREATE(LinearLayout);
 LinearLayout::LinearLayout() : View(), _orientation(Horizontal) {
 }
 
-bool LinearLayout::applyStyleValue(const string& name, StyleValue* value) {
+bool LinearLayout::applyStyleValue(const string& name, const StyleValue* value) {
     if (name=="orientation") {
         auto str = value->stringVal();
         if (str == "horizontal") {
@@ -28,7 +28,7 @@ bool LinearLayout::applyStyleValue(const string& name, StyleValue* value) {
     return View::applyStyleValue(name, value);
 }
 
-bool LinearLayout::applyStyleValueFromChild(const string& name, StyleValue* value, View* subview) {
+bool LinearLayout::applyStyleValueFromChild(const string& name, const StyleValue* value, View* subview) {
     if (name == "weight") {
         setWeight(subview, value->floatVal());
         return true;

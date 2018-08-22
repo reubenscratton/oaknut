@@ -63,7 +63,7 @@ public:
     class MotionTracker {
     public:
         MotionTracker(int source);
-        void dispatchInputEvent(INPUTEVENT* event, Window* window);
+        void dispatchInputEvent(INPUTEVENT& event, Window* window);
 
         int source;
         ObjPtr<class View>  touchedView;
@@ -102,7 +102,7 @@ public:
 	virtual void resizeSurface(int width, int height, float scale);
 	virtual void draw();
 	virtual void requestRedraw();
-	virtual void dispatchInputEvent(INPUTEVENT* event);
+	virtual void dispatchInputEvent(INPUTEVENT event);
 	virtual POINT offsetToView(View* view);
     
     virtual bool setFocusedView(View* view);

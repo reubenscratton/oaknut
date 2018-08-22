@@ -20,16 +20,15 @@ public:
 	string getImageUrl();
 };
 
-class DisksListAdapter : public SimpleListAdapter, IURLRequestDelegate {
+class DisksListAdapter : public SimpleListAdapter {
 public:
 	DisksListAdapter(string srcfile, 
 					 const string& itemLayoutId);
     ~DisksListAdapter();
 	
-	//	IURLRequestDelegate
-	virtual void onUrlRequestLoad(URLData* data);
-    
 protected:
     string srcfile;
+    
+    virtual void handleJson(const Variant& json);
 };
 

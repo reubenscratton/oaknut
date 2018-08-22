@@ -24,7 +24,7 @@ public:
     virtual void setPressedIndex(int pressedIndex);
     
 	// Overrides
-    bool applyStyleValue(const string &name, StyleValue *value) override;
+    bool applyStyleValue(const string &name, const StyleValue *value) override;
 	void updateContentSize(float parentWidth, float parentHeight) override;
 	void measure(float parentWidth, float parentHeight) override;
 	void layout() override;

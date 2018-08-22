@@ -7,81 +7,9 @@
 
 #include <oaknut.h>
 
-/*
- 
- We definitely need a 'Fetch' style API.
- 
- fetch("https://foo.com", OBJ(
-    "method", "POST",
-    "headers",  OBJ(
-        "Accept", "text/xml",
-        "Authorization", this->orgToken,
-        "Content-Type", "text/json"
-    ),
-    [=] (Response) {
-        ...
-    }
- );
-
- 
- */
- 
-
-URLData::URLData(ByteBuffer* data) : _value(data), _type(URLDataTypeData) {}
-URLData::URLData(JsonValue* json) : _value(json), _type(URLDataTypeJson) {}
-URLData::URLData(Bitmap* bitmap) : _value(bitmap), _type(URLDataTypeBitmap) {}
-URLData::~URLData() {
-    if (_type == URLDataTypeBitmap) {
-        _value.bitmap->release();
-    } else if (_type == URLDataTypeData) {
-        _value.data->release();
-    }
-}
-URLData::value::value(ByteBuffer* data) {this->data=data; data->retain();}
-URLData::value::value(JsonValue* json) {this->json=json; }
-URLData::value::value(Bitmap* bitmap) {this->bitmap=bitmap; bitmap->retain();}
 
 
 static MruCache<string> s_urldataCache(4*1024*1024);
-static list<ObjPtr<URLRequest>> s_workQueue;
-static ObjPtr<URLRequest> s_currentReq;
-static map<string, ObjPtr<URLRequest>> s_reqs;
-
-
-void URLRequest::flushWorkQueue() {
-	if (s_workQueue.size() == 0) {
-		return;
-	}
-	if (s_currentReq != NULL) {
-		return;
-	}
-	s_currentReq = s_workQueue.front();
-	s_workQueue.pop_front();
-	s_currentReq->start();
-}
-
-void URLRequest::start() {
-	assert(!_osobj);
-	_status = RUNNING;
-	retain(); // ensure urlrequest is alive for duration of network request
-    //app.log("starting %s", _url.data());
-    nativeStart();
-	assert(_osobj);
-}
-
-void URLRequest::stop() {
-	if (_osobj) {
-		nativeStop();
-		_osobj = NULL;
-		_status = IDLE;
-		if (this == s_currentReq) {
-			s_currentReq = NULL;
-		}
-		flushWorkQueue();
-		release();
-	}
-}
-
 
 
 string urlEncode(string str) {
@@ -101,19 +29,117 @@ string urlEncode(string str) {
 	return rv;
 }
 
-URLRequest::URLRequest(const string& url, IURLRequestDelegate* delegate, int flags) : _url(url)
-{
-	_status = IDLE;
-	_method = "GET";
-	_delegates.push_back(delegate);
+URLRequest::URLRequest(const string& url, const string& method, const string& body, int flags) : _url(url) {
+	_method = method;
+    _body = body;
     _flags = flags;
 }
-URLRequest::~URLRequest() {
-	//app.log("~URLRequest %lX", (int64_t)this);
-	assert(_delegates.size()==0);
+
+URLRequest* URLRequest::createAndStart(const string& url, const string& method, const string& body, int flags) {
+    auto req = create(url, method, body, flags);
+    req->retain(); // keep request alive until run() completes async
+    Task::nextTick([=]() {
+        req->run();
+    });
+    return req;
+}
+URLRequest* URLRequest::get(const string& url, int flags/*=0*/) {
+    return createAndStart(url, "GET", "", flags);
+}
+URLRequest* URLRequest::post(const string& url, const string& body) {
+    return createAndStart(url, "POST", body, 0);
+}
+URLRequest* URLRequest::patch(const string& url, const string& body) {
+    return createAndStart(url, "PATCH", body, 0);
 }
 
-void URLRequest::request(const string& url, IURLRequestDelegate* delegate, int flags) {
+URLRequest::~URLRequest() {
+}
+
+void URLRequest::setHeader(const string &headerName, const string &headerValue) {
+    _headers[headerName] = headerValue;
+}
+
+void URLRequest::handleData(std::function<void (int httpStatus, ByteBuffer *)> handler) {
+    _handlerData = handler;
+}
+
+void URLRequest::handleJson(std::function<void (int httpStatus, const Variant &)> handler) {
+    _handlerJson = handler;
+}
+
+void URLRequest::handleBitmap(std::function<void (int httpStatus, Bitmap *)> handler) {
+    _handlerBitmap = handler;
+}
+
+void URLRequest::dispatchResult(int httpStatus, const map<string, string>& responseHeaders, ByteBuffer* data) {
+    const auto& contentType = responseHeaders.find("content-type");
+    if (_handlerBitmap) {
+        if (httpStatus >= 400) {
+            if (!_cancelled) {
+                _handlerBitmap(httpStatus, NULL);
+            }
+        } else {
+            if (contentType != responseHeaders.end()) {
+                if (contentType->second == "image/jpeg" || contentType->second == "image/png") {
+                    retain();
+                    data->retain();
+                    Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
+                        if (!_cancelled) {
+                            _handlerBitmap(httpStatus, bitmap);
+                        }
+                        data->release();
+                        release();
+                    });
+                } else {
+                    app.warn("Unexpected bitmap type %s", contentType->second.data());
+                }
+            }
+        }
+    }
+    if (_handlerJson) {
+        if (httpStatus >= 400) {
+            if (!_cancelled) {
+                _handlerJson(httpStatus, Variant());
+            }
+        } else {
+            retain();
+            data->retain();
+            string str = data->toString(true);
+            StringProcessor it(str);
+            Variant json = Variant::parse(it, 0);
+            Task::nextTick([=]() {
+                if (!_cancelled) {
+                    _handlerJson(httpStatus, json);
+                }
+                data->release();
+                release();
+            });
+        }
+    }
+    
+    if (_handlerData) {
+        if (httpStatus >= 400) {
+            if (!_cancelled) {
+                _handlerData(httpStatus, NULL);
+            }
+        } else if (data) {
+            retain();
+            data->retain();
+            Task::nextTick([=]() {
+                if (!_cancelled) {
+                    _handlerData(httpStatus, data);
+                }
+                data->release();
+                release();
+            });
+        }
+    }
+    release();
+}
+
+
+/*void URLRequest::request(const string& url, IURLRequestDelegate* delegate, int flags) {
 
     URLData* cachedData = NULL;
     if (s_urldataCache.get(url, (Object**)&cachedData)) {
@@ -191,7 +217,7 @@ void URLRequest::dispatchOnLoad(URLData* data) {
 	// Was active, now idle
 	stop();
 	
-}
+}*/
 
 
 

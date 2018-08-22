@@ -12,16 +12,6 @@
 Controller::Controller() {
 }
 
-Controller::Controller(JsonObject* json) {
-	_name = json->getString("name");
-	JsonArray* jsonKeys = json->getArray("keys");
-	for (int i=0 ; i<jsonKeys->_elements.size() ; i++) {
-		JsonObject* jsonKey = jsonKeys->getObject<JsonObject>(i);
-		ControllerKey::keyFromJson(jsonKey, this);
-	}
-	_trigger = json->getString("trigger");
-}
-
 Controller::Controller(const Controller& src) {
 	_name = src._name;
 	for (int i=0 ;i<src._keys.size() ; i++) {
@@ -31,19 +21,28 @@ Controller::Controller(const Controller& src) {
 	_trigger = src._trigger;
 }
 
-JsonObject* Controller::toJson() {
-	JsonObject* json = new JsonObject();
-	json->putValue("name", _name);
+
+void Controller::fromVariant(const Variant& v) {
+    _name = v.stringVal("name");
+    auto keys = v.arrayVal("keys");
+    for (auto& key : keys) {
+        ControllerKey::keyFromJson(key, this);
+    }
+    _trigger = v.stringVal("trigger");
+}
+
+void Controller::toVariant(Variant& v) {
+	v.set("name", _name);
 	if (_trigger.length()) {
-		json->putValue("trigger", _trigger);
+		v.set("trigger", _trigger);
 	}
-	JsonArray* keys = new JsonArray();
-	for (int i=0 ;i<_keys.size() ; i++) {
-		ControllerKey* key = _keys.at(i);
-		keys->addValue(key->toJson());
+    vector<Variant> vkeys;
+    for (auto& key : _keys) {
+        Variant vkey;
+        key->toVariant(vkey);
+		vkeys.push_back(vkey);
 	}
-	json->putValue("keys", keys);
-	return json;
+	v.set("keys", vkeys);
 }
 
 void Controller::addKey(ControllerKey* key) {

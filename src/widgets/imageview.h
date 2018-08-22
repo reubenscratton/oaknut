@@ -5,13 +5,16 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-class ImageView : public View, IURLRequestDelegate {
+class ImageView : public View {
 public:
 
 	string _url;
+    string _assetPath;
+    ObjPtr<URLRequest> _request;
     ObjPtr<TextureRenderOp> _renderOp;
     ObjPtr<AtlasNode> _atlasNode;
-	bool _errorDisplay;
+	//bool _errorDisplay;
+    bool _loaded;
 	TIMESTAMP _startLoadTime;
 	bool _useFadeEffect;
     bool _useSharedTexture;
@@ -29,14 +32,11 @@ public:
 	void detachFromWindow() override;
 	void onEffectiveTintColorChanged() override;
 	void layout() override;
-    bool applyStyleValue(const string& name, StyleValue* value) override;
+    bool applyStyleValue(const string& name, const StyleValue* value) override;
 
 	// Internal helpers
 	void loadImage();
-	
-	// IURLRequestDelegate
-	void onUrlRequestLoad(URLData* data) override;
-
+    void cancelLoad();
 };
 
 

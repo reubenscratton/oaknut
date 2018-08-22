@@ -27,12 +27,49 @@ float Measurement::val() const {
     if (_unit==SP) return app.dp(_val);
     return _val;
 }
+
+StyleValue::StyleValue() : type(Empty) {
+}
+StyleValue::StyleValue(const StyleValue& rval) : type(Empty) {
+    copyFrom(&rval);
+}
+StyleValue::StyleValue(StyleValue&& rval) noexcept : type(rval.type), str(NULL) {
+    switch (rval.type) {
+        case Empty: break;
+        case Int: i = rval.i; rval.i=0; break;
+        case Float: f = rval.f; rval.f=0; break;
+        case String: str = rval.str; rval.str = NULL; break;
+        case Measure: measurement = rval.measurement; break;
+        case Reference: str = rval.str; rval.str = NULL; break;
+        case Array: array = rval.array; rval.array=NULL; break;
+        case Compound: compound = rval.compound; rval.compound=NULL; break;
+        case QualifiedCompound: compound = rval.compound; rval.compound=NULL; break;
+    }
+    rval.type = Empty;
+}
+StyleValue::~StyleValue() {
+    if (type == Compound) {
+        delete compound;
+    } else if (type == Array) {
+        delete array;
+    } else if (type == String) {
+        str.~string();
+    }
+}
+
 bool StyleValue::isEmpty() const {
     return type==Type::Empty;
 }
 bool StyleValue::isNumeric() const {
     return type == Type::Int || type == Type::Float || type == Type::Measure;
 }
+bool StyleValue::isString() const {
+    return type==Type::String;
+}
+bool StyleValue::isArray() const {
+    return type == Type::Array;
+}
+
 int StyleValue::intVal() const {
     auto val = select();
     if (val->type==Type::Int) return val->i;
@@ -40,6 +77,16 @@ int StyleValue::intVal() const {
     else if (val->type==Type::Measure) return (int)val->measurement.val();
     app.warn("intVal() called on non-numeric StyleValue");
     return 0.f;
+}
+int StyleValue::intVal(const string& name) const {
+    auto val = select();
+    assert(val->type == Compound);
+    auto val2 = val->compound->find(name);
+    if (val2 == val->compound->end()) {
+        app.warn("Value missing for field '%'", name.data());
+        return 0;
+    }
+    return val2->second.intVal();
 }
 float StyleValue::floatVal() const {
     auto val = select();
@@ -61,20 +108,35 @@ string StyleValue::stringVal() const {
     app.warn("stringVal() called on non-stringable StyleValue");
     return "";
 }
-
-const vector<const StyleValue*> StyleValue::arrayVal() const {
-    auto val = select();
-    if (val->type==Type::Array) {
-        return array;
-    }
-    return {this};
+string StyleValue::stringVal(const string& name) const {
+    return get(name)->stringVal();
 }
 
-StyleMap* StyleValue::compoundVal() const {
+static vector<StyleValue> s_emptyArray;
+
+const vector<StyleValue>& StyleValue::arrayVal() const {
     auto val = select();
-    if (val->type==Type::Compound) return val->compound;
+    if (val->type==Array) {
+        return *array;
+    }
+    app.warn("arrayVal() called on non-array StyleValue");
+    return s_emptyArray;
+}
+const vector<StyleValue>& StyleValue::arrayVal(const string& name) const {
+    auto val = get(name);
+    if (val) {
+        return val->arrayVal();
+    }
+    return s_emptyArray;
+}
+
+static map<string, StyleValue> s_emptyMap;
+
+const map<string, StyleValue>& StyleValue::compoundVal() const {
+    auto val = select();
+    if (val->type==Type::Compound) return *(val->compound);
     app.warn("compoundVal() called on non-compound StyleValue");
-    return NULL;
+    return s_emptyMap;
 }
 
 
@@ -282,73 +344,82 @@ COLOR StyleValue::colorVal()  const {
     return 0;
 }
 
-void StyleValue::setQualifiedValue(const string& qual, const StyleValue* value) {
-    
-    // Setting default value
-    if (qual.length() <= 0) {
-        if (type==Compound && value->type==Compound) {
-            for (auto jt : value->compound->_values) {
-                compound->_values[jt.first] = jt.second;
-            }
-        } else {
-            assign(value);
-        }
-    }
-
-    //
-    else {
-        auto existingValue = _qualifiedValues.find(qual);
-
-        // Assigning a map where one already exists must not *replace*, we must merge the new map into the old
-        if (existingValue!=_qualifiedValues.end() && value->type == Type::Compound) {
-            assert(0); // when does this happen?
-        } else {
-            _qualifiedValues.insert(make_pair(qual, value));
-        }
-    }
-}
 
 Vector4 StyleValue::cornerRadiiVal() const {
-    auto radii = arrayVal();
     Vector4 r;
-    if (radii.size()==1) {
-        r.x = r.y = r.z = r.w = radii[0]->floatVal();
-    } else if (radii.size()==4) {
-        r.x = radii[0]->floatVal();
-        r.y = radii[1]->floatVal();
-        r.z = radii[2]->floatVal();
-        r.w = radii[3]->floatVal();
+    auto val = select();
+    if (val->isNumeric()) {
+        r.x = r.y = r.z = r.w = val->floatVal();
     } else {
-        app.warn("Invalid corner-radii, must be 1 or 4 values");
-        r = {0,0,0,0};
+        assert(val->isArray());
+        auto& radii = val->arrayVal();
+        if (radii.size()==1) {
+            r.x = r.y = r.z = r.w = radii[0].floatVal();
+        } else if (radii.size()==4) {
+            r.x = radii[0].floatVal();
+            r.y = radii[1].floatVal();
+            r.z = radii[2].floatVal();
+            r.w = radii[3].floatVal();
+        } else {
+            app.warn("Invalid corner-radii, must be 1 or 4 values");
+            r = {0,0,0,0};
+        }
     }
     return r;
 }
 
+EDGEINSETS StyleValue::edgeInsetsVal() const {
+    EDGEINSETS insets;
+    auto val = select();
+    if (val->isNumeric()) {
+        insets.left = insets.top = insets.right = insets.bottom = val->floatVal();
+    } else {
+        assert(val->isArray());
+        auto& a = val->arrayVal();
+        if (a.size()==1) {
+            insets.left = insets.top = insets.right = insets.bottom = a[0].floatVal();
+        } else if (a.size()==4) {
+            insets.left = a[0].floatVal();
+            insets.top = a[1].floatVal();
+            insets.right = a[2].floatVal();
+            insets.bottom = a[3].floatVal();
+        } else {
+            insets = {0,0,0,0};
+            app.warn("Invalid inset, must be 1 or 4 values");
+        }
+    }
+    return insets;
+}
 
 const StyleValue* StyleValue::select() const {
     const StyleValue* val = this;
-    for (auto it : _qualifiedValues) {
-        const string& qual = it.first;
-        bool applies = false;
-        if (qual == "iOS") {
-#if TARGET_OS_IOS
-            applies = true;
-#endif
-        } else if (qual == "OSX") {
-#if TARGET_OS_OSX
-            applies = true;
-#endif
-        } else if (qual == "android") {
-#ifdef ANDROID
-            applies = true;
-#endif
-        } else {
-            app.warn("Unsupported qualifier '%s'", qual.data());
-        }
-        if (applies) {
-            // TODO: apply precedence that favours higher specificity
-            val = it.second;
+    if (type == QualifiedCompound) {
+        val = NULL;
+        for (auto it = compound->begin() ; it != compound->end() ; it++) {
+            const string& qual = it->first;
+            bool applies = false;
+            if (qual == "") {
+                applies = true;
+            }
+            else if (qual == "iOS") {
+    #if TARGET_OS_IOS
+                applies = true;
+    #endif
+            } else if (qual == "OSX") {
+    #if TARGET_OS_OSX
+                applies = true;
+    #endif
+            } else if (qual == "android") {
+    #ifdef ANDROID
+                applies = true;
+    #endif
+            } else {
+                app.warn("Unsupported qualifier '%s'", qual.data());
+            }
+            if (applies) {
+                // TODO: apply precedence that favours higher specificity
+                val = &it->second;
+            }
         }
     }
     
@@ -360,206 +431,256 @@ const StyleValue* StyleValue::select() const {
     return val;
 }
 
-StyleValue* StyleMap::getValue(const string& keypath) {
-    auto dotIndex = keypath.find(L'.');
-    if (dotIndex>0) {
-        string key = keypath.substr(0, dotIndex);
-        string subkey = keypath.substr(dotIndex+1, -1);
-        StyleValue* val = _values[key];
-        if (val) {
-            StyleMap* compound = val->compoundVal();
-            if (!compound) {
-                app.log("Error: compound val expected for '%s'", key.data());
-                return NULL;
-            }
-            return compound->getValue(subkey);
+const StyleValue* StyleValue::get(const string& keypath) const {
+    auto val = this;
+    string subkey, key = keypath;
+    do {
+        val = val->select();
+        if (!val) {
+            return NULL;
         }
-    } else {
-        // Keypath has no dots so is just a value name
-        StyleValue* val = _values[keypath];
-        if (val) {
-            return val;
+        auto dotIndex = key.find(L'.');
+        if (dotIndex>0) {
+            subkey = key.substr(dotIndex+1, -1);
+            key = key.substr(0, dotIndex);
+        } else {
+            subkey = "";
         }
-        if (_parent) {
-            return _parent->getValue(keypath);
+        assert(val->type == Compound);
+        auto it = val->compound->find(key);
+        if (it == val->compound->end()) {
+            //app.warn("Value missing for field '%s'", keypath.data());
+            return NULL;
         }
-    }
-    return NULL;
+        val = &it->second;
+        key = subkey;
+    } while (key.length() > 0);
+    return val->select();
 }
 
+extern Variant parseNumber(StringProcessor& it);
 
-bool StyleMap::parse(StringProcessor& it) {
+
+bool StyleValue::parse(StringProcessor& it, bool inArrayVal/*=false*/) {
     it.skipWhitespace();
-    if ('{' != it.next()) {
-        app.log("Error: expected '{'");
-        return false;
-    }
-    while (!it.eof()) {
-        it.skipWhitespace();
-        if (it.peek()=='}') {
-            it.next();
-            break;
-        }
-        string fieldName = it.nextToken();
-        if (fieldName.length() == 0) {
-            app.log("Error: expected a field name");
-            return false;
-        }
-        
-        // Comment line
-        if (fieldName == "#") {
-            it.nextToEndOfLine();
-            continue;
-        }
-        
-        // Split out the qualifier suffix, if there is one
-        string fieldNameQualifier = "";
-        int qualifierStartsAt = fieldName.find('@');
-        if (qualifierStartsAt > 0) {
-            fieldNameQualifier = fieldName.substr(qualifierStartsAt+1, -1);
-            fieldName = fieldName.substr(0, qualifierStartsAt);
-        }
-        
-        it.skipWhitespace();
-        if (it.next() != ':') {
-            app.log("Error: expected \':\' after identifier \'%s\'", fieldName.data());
-            return false;
-        }
-        it.skipWhitespace();
-        
-        StyleValue* value = new StyleValue();
-        if (it.peek() == '{') {
-            value->setType(StyleValue::Type::Compound);
-            value->compound = new StyleMap();
-            if (!value->compound->parse(it)) {
-                return false;
+
+    // Parse a compound value
+    if (it.peek() == '{') {
+        it.next();
+        setType(StyleValue::Type::Compound);
+        while (!it.eof()) {
+            it.skipWhitespace();
+            if (it.peek()=='}') {
+                it.next();
+                break;
             }
-            value->compound->_parent = this;
-        } else {
-            string str = it.nextToEndOfLine();
-            if (str.length() == 0) {
-                delete value;
-                app.log("Error: expected a value");
+            string fieldName = it.nextToken();
+            if (fieldName.length() == 0) {
+                app.log("Error: expected a field name");
                 return false;
             }
             
-            if (str.contains(',')) {
-                value->setType(StyleValue::Type::Array);
-                while (str.length() > 0) {
-                    auto substr = str.tokenise(",");
-                    substr.trim();
-                    auto elem = new StyleValue();
-                    parseSingleValue(elem, substr);
-                    value->array.push_back(elem);
+            // Comment line
+            if (fieldName == "#") {
+                it.nextToEndOfLine();
+                continue;
+            }
+            
+            // Split out the qualifier suffix, if there is one
+            string fieldNameQualifier = "";
+            int qualifierStartsAt = fieldName.find('@');
+            if (qualifierStartsAt > 0) {
+                fieldNameQualifier = fieldName.substr(qualifierStartsAt+1, -1);
+                fieldName = fieldName.substr(0, qualifierStartsAt);
+            }
+            
+            it.skipWhitespace();
+            if (it.next() != ':') {
+                app.log("Error: expected \':\' after identifier \'%s\'", fieldName.data());
+                return false;
+            }
+            it.skipWhitespace();
+            
+            // Parse the value
+            StyleValue value;
+            if (!value.parse(it)) {
+                return false;
+            }
+            
+            // If there's no qualifier then set the default value
+            auto existingField = compound->find(fieldName);
+            if (fieldNameQualifier.length() <= 0) {
+                if (existingField == compound->end()) {
+                    compound->insert(std::pair<string, StyleValue>(fieldName, std::move(value)));
+                } else {
+                    if (existingField->second.type == QualifiedCompound) {
+                        existingField->second.compound->insert(make_pair("", std::move(value)));
+                    } else {
+                        if (existingField->second.type == Compound && value.type == Compound) {
+                            for (auto i=value.compound->begin() ; i!=value.compound->end() ; i++) {
+                                existingField->second.compound->operator[](i->first) = std::move(i->second);
+                            }
+                        } else {
+                            existingField->second.copyFrom(&value);
+                        }
+                    }
                 }
-                
-            } else {
-                parseSingleValue(value, str);
             }
             
+            // Qualified value
+            else {
+                // If this is the first value (and it has a qualifier) then create the
+                // qualified compound and add the first element to it.
+                if (existingField == compound->end()) {
+                    StyleValue qualCom;
+                    qualCom.setType(QualifiedCompound);
+                    qualCom.compound->insert(make_pair(fieldNameQualifier, std::move(value)));
+                    compound->insert(make_pair(fieldName, std::move(qualCom)));
+                } else {
+                    // This is true if we've parsed the default value only, now we have to
+                    // promote existingField to being a qualified compound
+                    if (existingField->second.type != QualifiedCompound) {
+                        StyleValue defaultValue(std::move(existingField->second));
+                        existingField->second.setType(QualifiedCompound);
+                        existingField->second.compound->insert(make_pair("", std::move(defaultValue)));
+                        existingField->second.compound->insert(make_pair(fieldNameQualifier, std::move(value)));
+                    }
+                    else {
+                        existingField->second.compound->insert(make_pair(fieldNameQualifier, std::move(value)));
+                    }
+                }
+            }
         }
-
-
-        StyleValue* mapval = _values[fieldName];
-        if (!mapval) {
-            mapval = new StyleValue();
-            _values[fieldName] = mapval;
-        }
-        mapval->setQualifiedValue(fieldNameQualifier, value);
-        StyleValue* listval = new StyleValue();
-        listval->setQualifiedValue(fieldNameQualifier, value);
-        _valuesList.push_back(make_pair(fieldName, listval));
-        
     }
+    
+    // Array (explitly declared with square brackets)
+    else if (it.peek() == '[') {
+        it.next();
+        setType(Array);
+        while (!it.eof()) {
+            it.skipWhitespace();
+            if (it.peek()==']') {
+                it.next();
+                break;
+            }
+            
+            // Parse the next element
+            StyleValue elem;
+            if (!elem.parse(it, true)) {
+                return false;
+            }
+            array->push_back(std::move(elem));
+            
+            // Next non-whitespace char must be a comma or the closing square bracket
+            it.skipWhitespace();
+            if (it.peek()==',') {
+                it.next();
+            } else {
+                if (it.peek()!=']') {
+                    app.warn("expected ']'");
+                    return false;
+                }
+            }
+        }
+    }
+    
+    // Non-compound
+    else {
+        char ch = it.peek();
+        if (ch>='0' && ch<='9') {
+            Variant v = parseNumber(it);
+            if (it.nextWas("dp")) {
+                setType(Measure);
+                measurement = Measurement(v.floatVal(), Measurement::DP);
+            }
+            else if (it.nextWas("sp")) {
+                setType(Measure);
+                measurement = Measurement(v.floatVal(), Measurement::SP);
+            }
+            else if (it.nextWas("px")) {
+                setType(Measure);
+                measurement = Measurement(v.floatVal(), Measurement::PX);
+            } else {
+                if (v.type == Variant::FLOAT32) {
+                    setType(Float);
+                    f = v.floatVal();
+                } else {
+                    setType(Int);
+                    i = v.floatVal();
+                }
+            }
+            
+            // String value
+        } else {
+            setType(it.nextWas("$") ? Reference : String);
+            bool quotedString = it.nextWas("\"");
+            while (!it.eof()) {
+                ch = it.peek();
+                if (!quotedString) {
+                    if (ch=='\r' || ch=='\n' || ch==',') {
+                        break;
+                    }
+                    it.next();
+                } else {
+                    it.next();
+                    if (ch=='\"') {
+                        break;
+                    }
+                    if (ch=='\\') {
+                        char32_t escapeChar = it.next();
+                        switch (escapeChar) {
+                            case '\\': ch='\\'; break;
+                            case '\"': ch='\"'; break;
+                            case '\'': ch='\''; break;
+                            case 'n': ch='\n'; break;
+                            case 'r': ch='\r'; break;
+                            case 't': ch='\t'; break;
+                            case 'u': assert(0); // todo! implement unicode escapes
+                            default: app.warn("invalid escape '\\%c'", escapeChar); break;
+                        }
+                    }
+                }
+                str.append(ch);
+            }
+        }
+    }
+
+    // Implicit array (detected when there's a comma after the value)
+    it.skipWhitespace();
+    if (!inArrayVal && it.peek() == ',') {
+        StyleValue firstElem(std::move(*this));
+        setType(Array);
+        array->push_back(std::move(firstElem));
+        while (it.peek() == ',') {
+            it.next();
+            StyleValue elem;
+            if (!elem.parse(it, true)) {
+                return false;
+            }
+            array->push_back(std::move(elem));
+        }
+    }
+
+    
+
     return true;
 }
 
-void StyleMap::parseSingleValue(StyleValue* value, string& str) {
-    char ch = *str.begin();
-    if (ch>='0' && ch<='9') {
-        if (str.hadSuffix("dp")) {
-            value->setType(StyleValue::Type::Measure);
-            value->measurement = Measurement(atof(str.data()), Measurement::DP);
-        }
-        else if (str.hadSuffix("sp")) {
-            value->setType(StyleValue::Type::Measure);
-            value->measurement = Measurement(atof(str.data()), Measurement::SP);
-        }
-        else if (str.hadSuffix("px")) {
-            value->setType(StyleValue::Type::Measure);
-            value->measurement = Measurement(atof(str.data()), Measurement::PX);
-        } else {
-            bool isFloat = str.contains('.');
-            if (isFloat) {
-                value->setType(StyleValue::Type::Float);
-                value->f = atof(str.data());
-            } else {
-                value->setType(StyleValue::Type::Int);
-                value->i = stringParseInt(str);
-            }
-        }
-    } else {
-        if (str.hadPrefix("\"")) {
-            string unesc_str = "";
-            for (auto it=str.begin() ; it !=str.end() ; it++) {
-                char32_t ch = *it;
-                if (ch=='\"') {
-                    break;
-                }
-                if (ch=='\\') {
-                    it++;
-                    ch = *it;
-                    switch (ch) {
-                        case 'n': ch='\n'; break;
-                        case 'r': ch='\r'; break;
-                        case 't': ch='\t'; break;
-                        case 'u': assert(0); // todo! implement unicode escapes
-                    }
-                }
-                unesc_str.append(ch);
-            }
-            str = unesc_str;
-        }
-        
-        if (str.hadPrefix("$")) {
-            value->setType(StyleValue::Type::Reference);
-        } else {
-            value->setType(StyleValue::Type::String);
-        }
-        value->str = str;
-    }
 
-}
 
-StyleValue::StyleValue() : type(Empty) {
-}
-StyleValue::StyleValue(const StyleValue& rval) : type(rval.type) {
-	switch (rval.type) {
-    case Empty: break;
-    case Int: i = rval.i; break;
-    case Float: f = rval.f; break;
-	case String: str = rval.str; break;
-    case Measure: measurement = rval.measurement; break;
-    case Reference: str = rval.str; break;
-    case Array: array = rval.array; break;
-	case Compound: compound = rval.compound; break;
-	}
-}
-StyleValue::~StyleValue() {
-    if (type == Compound) {
-        compound.~ObjPtr();
-    } else if (type == String) {
-        str.~string();
-    }
-}
 void StyleValue::setType(Type newType) {
     if (type == newType) return;
     
     // Handle non-trivial type changes
     if (type == Compound && newType != Compound) {
-        compound.~ObjPtr();
+        delete compound;
     } else if (type != Compound && newType == Compound) {
-        new (&compound) ObjPtr<class StyleMap>();
+        compound = new map<string,StyleValue>();
+    }
+    if (type == QualifiedCompound && newType != QualifiedCompound) {
+        delete compound;
+    } else if (type != QualifiedCompound && newType == QualifiedCompound) {
+        compound = new map<string,StyleValue>();
     }
     bool wasString = (type==String || type==Reference);
     bool isString = (newType==String || newType==Reference);
@@ -571,9 +692,9 @@ void StyleValue::setType(Type newType) {
     bool wasArray = (type==Array);
     bool isArray = (newType==Array);
     if (wasArray && !isArray) {
-        array.~vector();
+        delete array;
     } else if (!wasArray && isArray) {
-        new (&array) vector<StyleValue*>();
+        array = new vector<StyleValue>();
     }
 
     type = newType;
@@ -582,12 +703,12 @@ void StyleValue::setType(Type newType) {
 
 StyleValue& StyleValue::operator=(const StyleValue& other) {
 	if (this != &other)  {
-        assign(&other);
+        copyFrom(&other);
     }
     return *this;
 }
 
-void StyleValue::assign(const StyleValue* other) {
+void StyleValue::copyFrom(const StyleValue* other) {
     setType(other->type);
     switch (other->type) {
         case Empty: break;
@@ -596,7 +717,8 @@ void StyleValue::assign(const StyleValue* other) {
         case String: str = other->str; break;
         case Measure: measurement = other->measurement; break;
         case Reference: str = other->str; break;
-        case Array: array = other->array; break;
-        case Compound: compound = other->compound; break;
+        case Array: array->insert(array->end(), other->array->begin(), other->array->end()); break;
+        case Compound:
+        case QualifiedCompound: compound->insert(other->compound->begin(), other->compound->end()); break;
     }
 }

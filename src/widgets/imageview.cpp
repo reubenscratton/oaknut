@@ -15,7 +15,7 @@ ImageView::ImageView() {
     addRenderOp(_renderOp);
 }
 
-bool ImageView::applyStyleValue(const string& name, StyleValue* value) {
+bool ImageView::applyStyleValue(const string& name, const StyleValue* value) {
     if (name=="image") {
         // TODO: leverage drawable code
         ByteBuffer* data = app.loadAsset(value->stringVal().data());
@@ -28,34 +28,26 @@ bool ImageView::applyStyleValue(const string& name, StyleValue* value) {
 }
 
 void ImageView::setImageUrl(const string& url) {
-	
-	// Cancel any extant HTTP request. Note that the request will only really get cancelled
-	// if this is the only UIImageView that wants the current _imageURL.
-	if (_url.length()) {
-		URLRequest::unrequest(_url, this);
-	}
-	
-	// Update URL and reset image
+    cancelLoad();
 	_url = url;
+    _assetPath = "";
 	_renderOp->setBitmap((Bitmap*)NULL);
-	_errorDisplay = false;
-	
-	// If we're visible then try to display the new image
-	if (url.length() && _window) {
-		loadImage();
-	}
+    loadImage();
 }
 
 void ImageView::setImageAsset(const string& assetPath) {
-    _errorDisplay = false;
-    ByteBuffer* data = app.loadAsset(assetPath.data());
-    assert(data);
-    _url = assetPath;
-    Bitmap::createFromData(data->data, (int) data->cb, [=](Bitmap *bitmap) {
-        if (_url.compare(assetPath) == 0) {
-            setBitmap(bitmap);
-        }
-    });
+    cancelLoad();
+    _assetPath = assetPath;
+    loadImage();
+}
+
+void ImageView::cancelLoad() {
+    // Cancel any extant HTTP request.
+    if (_request) {
+        _request->cancel();
+        _request = NULL;
+    }
+    _loaded = false;
 }
 
 
@@ -63,11 +55,13 @@ void ImageView::setBitmap(Bitmap *bitmap) {
     _renderOp->setBitmap(bitmap);
     _rectTex = RECT(0,0,1,1);
     invalidateContentSize();
+    _loaded = true;
 }
 
 void ImageView::setImageNode(AtlasNode* node) {
     _atlasNode = node;
     _renderOp->setBitmap(node->page->_bitmap);
+    _loaded = true;
     _rectTex = node->rect;
     _rectTex.origin.x /= node->page->_bitmap->_width;
     _rectTex.origin.y /= node->page->_bitmap->_height;
@@ -79,22 +73,38 @@ void ImageView::setImageNode(AtlasNode* node) {
 
 void ImageView::attachToWindow(Window* window) {
 	View::attachToWindow(window);
-    
-	if (_url.length() && _window) {
-		loadImage();
-	}
+    loadImage();
 }
 
 void ImageView::detachFromWindow() {
 	View::detachFromWindow();
-	if (_url.length()) {
-		URLRequest::unrequest(_url, this);
-	}
+    cancelLoad();
 }
 
 void ImageView::loadImage() {
+    if (_loaded || !_window) {
+        return;
+    }
+    if (!(_url.length() || _assetPath.length())) {
+        return;
+    }
+
 	_startLoadTime = app.currentMillis();
-	URLRequest::request(_url, this, URL_FLAG_BITMAP);
+    if (_assetPath.length() > 0) {
+        auto hashVal = _assetPath.hash();
+        ByteBuffer* data = app.loadAsset(_assetPath.data());
+        assert(data);
+        Bitmap::createFromData(data->data, (int) data->cb, [=](Bitmap *bitmap) {
+            if (hashVal == _assetPath.hash()) {
+                setBitmap(bitmap);
+            }
+        });
+    } else if (_url.length() > 0) {
+        _request = URLRequest::get(_url, URL_FLAG_BITMAP);
+        _request->handleBitmap([=](int httpStatus, Bitmap* bitmap) {
+            setBitmap(bitmap);
+        });
+    }
 }
 
 void ImageView::layout() {
@@ -110,14 +120,5 @@ void ImageView::onEffectiveTintColorChanged() {
     _renderOp->setColor(_effectiveTintColor);
 }
 
-void ImageView::onUrlRequestLoad(URLData* data) {
-    if (data) {
-        if (data->_type != URLDataTypeBitmap) {
-            app.warn("Unexpected urldata type");
-            return;
-        }
-        setBitmap(data->_value.bitmap);
-    }
-}
 
 

@@ -22,7 +22,7 @@ MEASURESPEC MEASURESPEC::WrapContent() { return MEASURESPEC(RefTypeContent, NULL
 MEASURESPEC MEASURESPEC::UseAspect(float x) { return MEASURESPEC(RefTypeAspect, NULL,  x, 0); }
 MEASURESPEC MEASURESPEC::FillParent() { return MEASURESPEC(RefTypeView, NULL, 1, 0); }
 
-MEASURESPEC::MEASURESPEC(StyleValue* value) {
+MEASURESPEC::MEASURESPEC(const StyleValue* value) {
     if (value->isNumeric()) {
         *this = Abs(value->floatVal());
         return;

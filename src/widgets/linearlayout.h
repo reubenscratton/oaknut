@@ -8,24 +8,27 @@
 
 class LinearLayout : public View {
 public:
-    enum {
-		Horizontal,
-		Vertical
-	} _orientation;
-	vector<float> _weights;
-	float _weightsTotal;
 
     LinearLayout();
-    //bool processAttribute(PCSTRING attrName, PCSTRING attrValue);
-	
+    
+    // API
+    enum {
+        Horizontal,
+        Vertical
+    } _orientation;
+    
 	// Overrides
-    virtual void measure(float parentWidth, float parentHeight);
-	//virtual void updateContentSize(float parentWidth, float parentHeight);
-    virtual void layout();
-	virtual void addSubview(View* subview);
-	virtual void removeSubview(View* subview);
-	virtual void setWeight(View* subview, float weight);
-    virtual bool applyStyleValue(const string& name, StyleValue* value);
-    virtual bool applyStyleValueFromChild(const string& name, StyleValue* value, View* subview);
+    void measure(float parentWidth, float parentHeight) override;
+	void layout() override;
+	void addSubview(View* subview) override;
+	void removeSubview(View* subview) override;
+    bool applyStyleValue(const string& name, const StyleValue* value) override;
+    bool applyStyleValueFromChild(const string& name, const StyleValue* value, View* subview) override;
+
+protected:
+    void setWeight(View* subview, float weight);
+
+    vector<float> _weights;
+    float _weightsTotal;
 
 };

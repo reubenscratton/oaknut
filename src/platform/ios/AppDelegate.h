@@ -13,6 +13,7 @@
 @end
 
 @interface OaknutView : UIView {
+@public
     CAEAGLLayer* glLayer;
     EAGLContext* glContext;
     CADisplayLink* displayLink;

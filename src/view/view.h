@@ -350,19 +350,19 @@ protected:
 public:
     /** Applies a set of styles to the view */
     virtual void applyStyle(const string& style);
-    virtual void applyStyleValues(const map<string, StyleValue*>& values);
+    virtual void applyStyleValues(const StyleValue& value);
 
 protected:
     /** Applies a single style value for the given attribute name. Custom views
         should override this method to add support for custom attributes. */
-    virtual bool applyStyleValue(const string& name, StyleValue* value);
+    virtual bool applyStyleValue(const string& name, const StyleValue* value);
     
     /**  \cond INTERNAL */
-    virtual bool applyStyleValueFromChild(const string& name, StyleValue* value, View* subview);
-    virtual bool handleStatemapDeclaration(const string& name, StyleValue* value);
-    virtual void applyStatemapStyleValue(const string& name, StyleMap* statemap);
-    map<string, StyleMap*>* _statemapStyleValues;
-    RenderOp* processDrawable(StyleValue* value);
+    virtual bool applyStyleValueFromChild(const string& name, const StyleValue* value, View* subview);
+    virtual bool handleStatemapDeclaration(const string& name, const StyleValue* value);
+    virtual void applyStatemapStyleValue(const string& name, const StyleValue* value);
+    map<string, const StyleValue*>* _statemapStyleValues;
+    RenderOp* processDrawable(const StyleValue* value);
     /**  \endcond */
     /**@}*/
 

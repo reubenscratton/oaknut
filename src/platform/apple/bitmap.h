@@ -23,19 +23,24 @@ public:
     CVImageBufferRef _cvImageBuffer;
     CVOpenGLESTextureRef _cvTexture;
     CVOpenGLESTextureCacheRef _cvTextureCache;
+    CFDataRef _cfData;
     
+    Bitmap();
     Bitmap(int width, int height, int format);
     Bitmap(int width, int height, int format, void* pixels, int stride);
     Bitmap(CVPixelBufferRef cvImageBuffer, bool fromCamera);
     ~Bitmap();
     
     // Overrides
-    virtual void lock(PIXELDATA* pixelData, bool forWriting);
-    virtual void unlock(PIXELDATA* pixelData, bool pixelDataChanged);
-    virtual void bind();
-
-    Bitmap(const VariantMap& map);
-    virtual void writeSelfToVariantMap(VariantMap& map);
+    void lock(PIXELDATA* pixelData, bool forWriting) override;
+    void unlock(PIXELDATA* pixelData, bool pixelDataChanged) override;
+    void bind() override;
+    
+    void fromVariant(const Variant& v) override;
+    void toVariant(Variant& v) override;
+    
+private:
+    void createBitmapContext();
 
 };
 

@@ -87,7 +87,7 @@ BlurRenderOp::~BlurRenderOp() {
 }
 
 void BlurRenderOp::validateShader() {
-    
+    _shaderValid = true;
 }
 
 void BlurRenderOp::setRect(const RECT &rect) {

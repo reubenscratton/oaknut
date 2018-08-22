@@ -35,6 +35,7 @@ TextRenderOp::TextRenderOp(View* view, const TEXTRENDERPARAMS* textRenderParams)
 }
 
 void TextRenderOp::validateShader() {
+    _shaderValid = true;
     _prog = &glprogTextGlyph;
 }
 

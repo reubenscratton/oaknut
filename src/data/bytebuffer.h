@@ -15,14 +15,14 @@ class ByteBuffer : public Object, public ISerializable {
 public:
     uint8_t* data;
     size_t cb;
-    bool _owns;
     
     ByteBuffer();
     ByteBuffer(size_t cb);
-    ByteBuffer(uint8_t* data, size_t cb, bool copy=true, bool owns=true);
+    ByteBuffer(uint8_t* data, size_t cb, bool copy=true);
     ByteBuffer(const ByteBuffer& data);
     ByteBuffer(const string& str);
     ~ByteBuffer();
+    void set(const void* rawData, size_t len);
     
     static ByteBuffer* createFromFile(const string& path);
     void saveToFile(const string& path);

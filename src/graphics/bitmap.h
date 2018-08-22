@@ -63,7 +63,7 @@ typedef struct {
 #endif
 
 
-class BitmapBase : public Object, public ISerializeToVariantMap {
+class BitmapBase : public Object, public ISerializeToVariant {
 public:
     int32_t _width;
     int32_t _height;
@@ -99,9 +99,9 @@ public:
     int sizeInBytes();
     Bitmap* convertToFormat(int newFormat);
     
-    // ISerializeToVariantMap
-    BitmapBase(const VariantMap& map);
-    virtual void writeSelfToVariantMap(VariantMap& map);
+    // ISerializeToVariant
+    void fromVariant(const Variant& v) override;
+    void toVariant(Variant& v) override;
     
 
     // Platform-specific instantiation

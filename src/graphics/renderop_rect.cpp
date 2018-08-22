@@ -228,6 +228,7 @@ void RectRenderOp::setCornerRadii(const Vector4& radii) {
 }
 
 void RectRenderOp::validateShader() {
+    _shaderValid = true;
     if (_alpha<1.0f) {
         _prog = &glprogSolidFillAlpha;
         _blendMode = BLENDMODE_NORMAL;

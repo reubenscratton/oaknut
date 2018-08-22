@@ -26,10 +26,11 @@ Object* AllDisksListAdapter::getItem(LISTINDEX index) {
     return _sections.at(LISTINDEX_SECTION(index))->second.at(LISTINDEX_ITEM(index));
 }
 
-void AllDisksListAdapter::onUrlRequestLoad(URLData* data) {
+
+void AllDisksListAdapter::handleJson(const Variant& json) {
     _sections.clear();
     _sectionMap.clear();
-    DisksListAdapter::onUrlRequestLoad(data);
+    DisksListAdapter::handleJson(json);
     for (auto git : _items) {
         DisksListItem* gameItem = (DisksListItem*)(Object*)git;
         char32_t ch = gameItem->_game->_title.charAt(0);

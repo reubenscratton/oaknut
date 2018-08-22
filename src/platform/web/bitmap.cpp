@@ -46,13 +46,11 @@ static int gltypeForFormat(int format) {
 
 
 
-Bitmap::Bitmap() : _img(val::null()), _buff(val::null()) {
+Bitmap::Bitmap() : BitmapBase(), _img(val::null()), _buff(val::null()) {
 }
 
-Bitmap::Bitmap(WebCanvas* canvas) : _canvas(canvas),
-    _img(val::null()), _buff(val::null()) {
-        _format = BITMAPFORMAT_RGBA32;
-
+Bitmap::Bitmap(WebCanvas* canvas) : BitmapBase(), _img(val::null()), _buff(val::null()), _canvas(canvas) {
+    _format = BITMAPFORMAT_RGBA32;
 }
 
 
@@ -194,25 +192,24 @@ string base64_encode(const char* input, size_t len) {
     return  string(pp);
 }
 
-// ISerializable
-Bitmap::Bitmap(const VariantMap& map) : BitmapBase(map), _img(val::null()), _buff(val::null())  {
+// ISerializableToVariant
+void Bitmap::fromVariant(const Variant& v) {
+    BitmapBase::fromVariant(v);
     _pixelData.stride = _width*bytesPerPixelForFormat(_format);
     _pixelData.cb = _pixelData.stride*_height;
     _pixelData.data = malloc(_pixelData.cb);
     _buff = val(typed_memory_view((size_t)_pixelData.cb, (unsigned char*)_pixelData.data));
-    const Variant& vbb = map["bb"];
-    if (vbb.type == Variant::BYTEBUFFER) {
-        ByteBuffer* bb = vbb.data;
-        PIXELDATA pixelData;
+    ByteBuffer* bb = v.byteBufferVal("bb");
+    if (bb) {
         memcpy(_pixelData.data, bb->data, _pixelData.cb);
     }
 }
-void Bitmap::writeSelfToVariantMap(VariantMap& map) {
-    BitmapBase::writeSelfToVariantMap(map);
+void Bitmap::toVariant(Variant& v) {
+    BitmapBase::toVariant(v);
     PIXELDATA pixelData;
     lock(&pixelData, false);
-    ObjPtr<ByteBuffer> bb = new ByteBuffer((uint8_t*)pixelData.data, pixelData.cb, false, false);
-    map.set("bb", Variant(bb));
+    ByteBuffer* bb = new ByteBuffer((uint8_t*)pixelData.data, pixelData.cb, false);
+    v.set("bb", Variant(bb));
     unlock(&pixelData, false);
 }
 

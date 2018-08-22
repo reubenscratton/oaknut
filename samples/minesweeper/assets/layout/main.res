@@ -1,29 +1,31 @@
 {
-View: {
+    class: View
 	width: match_parent
 	height: match_parent
 	background: white
-	View: {
+	subviews: [{
+        class: View
 		id: topBar
 		width: 250dp
 		height: 70dp
 		alignX: center
-		Label: {
+		subviews: [{
+            class: Label
 			id: flags
 			width: wrap_content
 			height: wrap_content
 			alignX: left
 			alignY: center
 			text:0
-		}
-		ImageView: {
+        },{
+            class: ImageView
 			id: face
 			alignX: center
 			alignY: center
 			width: 50dp
 			height: 50dp
-		}
-		Label: {
+		},{
+            class: Label
 			id: remaining
 			width: wrap_content
 			height: wrap_content
@@ -31,15 +33,13 @@ View: {
 			alignY: center
 			text:0
 			gravityX:right
-		}
-	}
-	GameView: {
+		}]
+    },{
+        class: GameView
 		id: game
 		width: wrap_content
 		height: wrap_content
 		alignX: center
-		alignY: below, topBar
-	}
-
-	}
+		alignY: below,topBar
+	}]
 }

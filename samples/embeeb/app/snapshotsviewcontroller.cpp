@@ -22,9 +22,10 @@ public:
     
     void reload() {
         _items.clear();
-        _store->getAll([=] (VariantMap* value) {
+        _store->getAll([=] (Variant* value) {
             if (value) {
-                Snapshot* snapshot = new Snapshot(*value);
+                Snapshot* snapshot = new Snapshot();
+                snapshot->fromVariant(*value);
                 _items.push_back(snapshot);
             } else {
                 if (_adapterView) {

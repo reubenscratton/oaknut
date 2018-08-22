@@ -127,7 +127,7 @@ extern dispatch_queue_t oakQueue;
             inputEvent.pt.x = pt.x*app._window->_scale;
             inputEvent.pt.y = pt.y*app._window->_scale;
             inputEvent.time = touch.timestamp*1000;
-            app._window->dispatchInputEvent(&inputEvent);
+            app._window->dispatchInputEvent(inputEvent);
             [self setNeedsDisplay];
         //});
 	}
@@ -152,14 +152,6 @@ extern dispatch_queue_t oakQueue;
 
 
 
-- (void)setNeedsDisplay2 {
-    if (!_renderNeeded) {
-        _renderNeeded = YES;
-    //dispatch_async(dispatch_get_main_queue(), ^{
-        [self setNeedsDisplay];
-    //});
-    }
-}
 
 /*
 - (void)encodeWithCoder:(nonnull NSCoder *)aCoder {
@@ -226,7 +218,12 @@ extern dispatch_queue_t oakQueue;
 static OaknutView* s_oaknutView;
 
 void App::requestRedraw() {
-    [s_oaknutView setNeedsDisplay2];
+    if (!s_oaknutView->_renderNeeded) {
+        s_oaknutView->_renderNeeded = YES;
+        //dispatch_async(dispatch_get_main_queue(), ^{
+        [s_oaknutView setNeedsDisplay];
+        //});
+    }
 }
 
 

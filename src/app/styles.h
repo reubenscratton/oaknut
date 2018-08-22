@@ -26,58 +26,60 @@ public:
         Int,
         Float,
         String,
+        Array, // value is an array of two or more values
+        Compound, // value is a set of key-value pairs
+        // Additional style-specific types
         Measure,
         Reference, // value is the name of another StyleValue, defined elsewhere
-        Array, // value is an array of two or more values
-        Compound // value is a set of key-value pairs
+        QualifiedCompound // value is compound where they keys are qualifiers. Zero-length key maps to default value.
     } type;
 
     StyleValue();
     StyleValue(const StyleValue&);
+    StyleValue(StyleValue&&) noexcept;
     ~StyleValue();
     StyleValue& operator=(const StyleValue& other);
-    
-    // Accessors. Use these instead of accessing the private data to benefit from some implicit conversions.
+
     bool isEmpty() const;
+    bool isNumeric() const;
+    bool isString() const;
+    bool isArray() const;
+
+    // Accessors. Use these instead of accessing the private data to benefit from some implicit conversions.
     int intVal() const;
     float floatVal() const;
     string stringVal() const;
     COLOR colorVal() const;
+    const vector<StyleValue>& arrayVal() const;
+    const map<string, StyleValue>& compoundVal() const;
     Vector4 cornerRadiiVal() const;
-    const vector<const StyleValue*> arrayVal() const;
-    class StyleMap* compoundVal() const;
-    
-    bool isNumeric() const;
+    EDGEINSETS edgeInsetsVal() const;
+
+    // Compound accessors
+    const StyleValue* get(const string& keypath) const;
+    int intVal(const string& name) const;
+    string stringVal(const string& name) const;
+    const vector<StyleValue>& arrayVal(const string& name) const;
+
+    bool parse(class StringProcessor& it, bool inArrayVal=false);
 
 private:
     void setType(Type newType);
-    void assign(const StyleValue* other);
+    void copyFrom(const StyleValue* other);
     union {
         int i;
         float f;
-        string str;
+        string str; // includes refs
         Measurement measurement;
-        vector<const StyleValue*> array;
-        ObjPtr<StyleMap> compound;
+        vector<StyleValue>* array;
+        map<string, StyleValue>* compound;
     };
 
-    void setQualifiedValue(const string& qual, const StyleValue* value);
-    map<string, const StyleValue*> _qualifiedValues;
     const StyleValue* select() const;
 
-    friend class StyleMap;
 };
 
 
-class StyleMap : public Object {
-public:
-    map<string, StyleValue*> _values;
-    vector<pair<string,StyleValue*>> _valuesList;
-    StyleMap* _parent;
-    StyleValue* getValue(const string& keypath);
-    bool parse(class StringProcessor& it);
-    void parseSingleValue(StyleValue* value, string& str);
-};
 
 
 

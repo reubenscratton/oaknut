@@ -8,34 +8,6 @@
 #include <oaknut.h>
 
 
-
-int stringParseInt(const string& str) {
-    int val = 0;
-    int base = 10;
-    StringProcessor it(str);
-    if (it.peek()=='0') {
-        it.next();
-        if (it.peek()=='x') {
-            it.next();
-            base = 16;
-        }
-    }
-    while (!it.eof()) {
-        char32_t ch = it.peek();
-        if ((ch>='0' && ch<='9') || (base==16 && ((ch>='a'&&ch<='f')||(ch>='A'&&ch<='F')))) {
-            int digit = (ch-'0');
-            if (ch>='a' && ch<='f') digit = (ch+10-'a');
-            else if (ch>='A' && ch<='F') digit = (ch+10-'A');
-            val = val*base + digit;
-            it.next();
-        } else {
-            break;
-        }
-    }
-    return val;
-}
-
-
 StringProcessor::StringProcessor(const string& str) : _str(str), _it(_str.begin()) {
 }
 StringProcessor::StringProcessor(string&& str) : _str(std::forward<string>(str)), _it(_str.begin()) {
@@ -155,6 +127,17 @@ string StringProcessor::nextToEndOfLine() {
     }
     return string(start, end);
 
+}
+
+bool StringProcessor::nextWas(const string& s) {
+    auto it = _it;
+    for (auto ch : s) {
+        if (ch != next()) {
+            _it = it;
+            return false;
+        }
+    }
+    return true;
 }
 
 

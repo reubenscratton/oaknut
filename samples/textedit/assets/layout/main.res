@@ -1,39 +1,42 @@
 {
-LinearLayout: {
+    class: LinearLayout
 	width: match_parent
 	height: match_parent
     background: lightGray
     orientation: vertical
-	View: {
+	subviews: [{
+        class: View
 		id: topBar
 		width: match_parent
 		height: 44dp
         background: 0xFFDDDDDD
         padding: 4dp
-        LinearLayout: {
+        subviews: [{
+            class: LinearLayout
             width: wrap_content
             height: wrap_content
             alignX: left
             alignY: center
             orientation: horizontal
-            ImageView: {
+            subviews: [{
+                class: ImageView
                 id: alignLeft
                 style: $barButton
                 image: images/align_left.png
-            }
-            ImageView: {
+            },{
+                class: ImageView
                 id: alignCenter
                 style: $barButton
                 image: images/align_center.png
-            }
-            ImageView: {
+            },{
+            class: ImageView
                 id: alignRight
                 style: $barButton
                 image: images/align_right.png
-            }
-        }
-	}
-	EditText: {
+            }]
+        }]
+    },{
+        class:EditText
 		id: editText
 		width: match_parent
 		height: 0dp
@@ -47,6 +50,6 @@ LinearLayout: {
         }
         padding: 16dp
 		alignY: below,topBar
-	}
-	}
+	}]
+}
 }

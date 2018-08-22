@@ -19,14 +19,6 @@ BitmapBase::BitmapBase(int awidth, int aheight, int format) : BitmapBase() {
     _format = format;
 }
 
-BitmapBase::BitmapBase(const VariantMap& map) : BitmapBase() {
-    _width = map.get("w");
-    _height = map.get("h");
-    _format = map.get("f");
-    _needsUpload = true;
-}
-
-
 BitmapBase::~BitmapBase() {
 	//app.log("~Bitmap %d x %d", _width, _height);
     if (_textureId) {
@@ -34,11 +26,20 @@ BitmapBase::~BitmapBase() {
     }
 }
 
-// ISerializable
-void BitmapBase::writeSelfToVariantMap(VariantMap& map) {
-    map.set("w", _width);
-    map.set("h", _height);
-    map.set("f", _format);
+// ISerializableToVariant
+void BitmapBase::fromVariant(const Variant& v) {
+    _width = v.intVal("w");
+    _height = v.intVal("h");
+    _format = v.intVal("f");
+    _needsUpload = true;
+}
+
+
+
+void BitmapBase::toVariant(Variant& v) {
+    v.set("w", _width);
+    v.set("h", _height);
+    v.set("f", _format);
 }
 
 

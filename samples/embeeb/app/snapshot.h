@@ -6,7 +6,7 @@
 #include "diskinfo.h"
 
 
-class Snapshot : public Object, public ISerializeToVariantMap {
+class Snapshot : public Object, public ISerializeToVariant {
 public:
     ObjPtr<DiskInfo> _diskInfo;
     string _label;
@@ -18,8 +18,8 @@ public:
     Snapshot();
     void updateWithData(ByteBuffer* data, Bitmap* thumbnail, string controllerId);
 
-    // ISerializeToVariantMap
-    Snapshot(const VariantMap& v);
-    virtual void writeSelfToVariantMap(VariantMap& v);
+    // ISerializeToVariant
+    void fromVariant(const Variant& v) override;
+    void toVariant(Variant& v) override;
 };
 

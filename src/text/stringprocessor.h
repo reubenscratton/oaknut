@@ -21,6 +21,7 @@ public:
     string nextNumber();
     string nextIdentifier();
     string nextToEndOfLine();
+    bool nextWas(const string& s);
 
 private:
  	char32_t next(bool advance);
@@ -30,7 +31,5 @@ private:
 
 };
 
-
-int stringParseInt(const string& str);
 
 

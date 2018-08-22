@@ -12,8 +12,11 @@ public:
     
     PrivateSurfaceRenderOp(View* view, const RECT& rect);
     ~PrivateSurfaceRenderOp();
-    virtual void rectToSurfaceQuad(RECT rect, QUAD* quad);
-    virtual void render(class Window* window, Surface* surface);
+    
+    // Overrides
+    void rectToSurfaceQuad(RECT rect, QUAD* quad) override;
+    void render(class Window* window, Surface* surface) override;
+    void validateShader() override;
 };
 
 /*

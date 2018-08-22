@@ -26,7 +26,7 @@ typedef struct ALIGNSPEC {
     
     ALIGNSPEC();
     ALIGNSPEC(View* anchor, float multiplierAnchor, float multiplierOwn, float margin);
-    ALIGNSPEC(StyleValue* value, View* view);
+    ALIGNSPEC(const StyleValue* value, View* view);
     
     static ALIGNSPEC None();
     static ALIGNSPEC Left();

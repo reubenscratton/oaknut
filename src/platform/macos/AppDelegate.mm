@@ -43,7 +43,7 @@ static bool s_mouseIsDown;
     } else {
         inputEvent.deviceType = INPUTEVENT::Mouse;
     }
-    app._window->dispatchInputEvent(&inputEvent);
+    app._window->dispatchInputEvent(inputEvent);
     [self setNeedsDisplay:YES];
 }
 - (void)mouseDown:(NSEvent *)event {

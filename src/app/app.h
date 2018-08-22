@@ -74,7 +74,7 @@ public:
     void loadStyleAsset(const string& assetPath);
 
     /** Get a named style value */
-    StyleValue* getStyleValue(const string& keypath);
+    const StyleValue* getStyleValue(const string& keypath);
     
     /** Get a named style value and coerce to a string */
     string getStyleString(const string& key, const char* defaultString = NULL);
@@ -130,7 +130,7 @@ public:
     string friendlyTimeString(TIMESTAMP timestamp);
     
 protected:
-    StyleMap _styles;
+    StyleValue _styles;
 
 
 };

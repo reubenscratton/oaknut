@@ -5,72 +5,57 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+class Bitmap;
 
-typedef enum {
-    URLDataTypeData,
-    URLDataTypeJson,
-    URLDataTypeBitmap
-} URLDataType;
-
-class URLData : public Object {
-public:
-    URLDataType _type;
-    union value {
-        ByteBuffer* data;
-        class JsonValue* json;
-        class Bitmap* bitmap;
-        value(ByteBuffer* data);
-        value(JsonValue* json);
-        value(Bitmap* bitmap);
-    } _value;
-    URLData(ByteBuffer* data);
-    URLData(JsonValue* json);
-    URLData(Bitmap* bitmap);
-    ~URLData();
-};
-
-class IURLRequestDelegate {
-public:
-	virtual void onUrlRequestLoad(URLData* data) = 0;
-};
-
+// TODO: remove this flag and let this decision hinge on whether Bitmap handler set or not
 #define URL_FLAG_BITMAP 1   // use this when requesting images. Exists so web can use Image rather than XHR
 
 /**
  * @ingroup app_group
  * @brief General purpose async networking support.
+ 
+ Example:
+ 
+ URLRequest::get("http://www.foo.com/bar")
+    .handleJson([=](Variant* json) {
+        // handle the json here
+    });
+ 
+ When you create a URLRequest it will begin, at the earliest, in the next event loop.
+ 
  */
 class URLRequest : public Object {
 public:
-    static void request(const string& url, IURLRequestDelegate* delegate, int flags);
-    static void unrequest(const string& url, IURLRequestDelegate* delegate);
+    static URLRequest* get(const string& url, int flags=0);
+    static URLRequest* post(const string& url, const string& body);
+    static URLRequest* patch(const string& url, const string& body);
+    static URLRequest* createAndStart(const string& url, const string& method, const string& body, int flags);
     
-    string _url;
-    int _flags;
-    void dispatchOnLoad(URLData* data);
+    void setHeader(const string& headerName, const string& headerValue);
+
+    void handleData(std::function<void(int httpStatus, ByteBuffer*)> handler);
+    void handleJson(std::function<void(int httpStatus, const Variant&)> handler);
+    void handleBitmap(std::function<void(int httpStatus, Bitmap*)> handler);
+    
+    virtual void run() =0;
+    virtual void cancel() =0;
+    
 protected:
-	enum Status {
-		IDLE,
-		QUEUED,
-		RUNNING
-	} _status;
-	vector<IURLRequestDelegate*> _delegates;
-	string _method;
-	void* _osobj;
-
-
-	URLRequest(const string& url, IURLRequestDelegate* firstDelegate, int flags);
-	~URLRequest();
-	void start();
-	void stop();
-	void removeDelegate(IURLRequestDelegate* delegate);
-	
-    static void flushWorkQueue();
+    URLRequest(const string& url, const string& method, const string& body, int flags);
+    ~URLRequest();
+    string _url;
+    string _method;
+    map<string,string> _headers;
+    string _body;
+    int _flags;
+    bool _cancelled;
+    std::function<void(int httpStatus, ByteBuffer*)> _handlerData;
+    std::function<void(int httpStatus, const Variant&)> _handlerJson;
+    std::function<void(int httpStatus, Bitmap*)> _handlerBitmap;
     
-    
-    // Native API
-    void nativeStart();
-    void nativeStop();
+    static URLRequest* create(const string& url, const string& method, const string& body, int flags);
+
+    void dispatchResult(int httpStatus, const map<string, string>& responseHeaders, ByteBuffer* data);
 };
 
 

@@ -13,8 +13,10 @@
 
 
 
-ControllerKey* ControllerKey::keyFromJson(JsonObject* json, Controller* controller) {
-	return new ControllerKeySingle(controller, json);
+ControllerKey* ControllerKey::keyFromJson(const Variant& v, Controller* controller) {
+	auto key = new ControllerKeySingle(controller);
+    key->fromVariant(v);
+    return key;
 }
 
 ControllerKey::ControllerKey(Controller* controller) {
@@ -24,8 +26,8 @@ ControllerKey::ControllerKey(Controller* controller) {
     controller->addKey(this);
 }
 
-ControllerKey::ControllerKey(Controller* controller, JsonObject* json) : ControllerKey(controller) {
-	_rect = RECTfromString(json->getString("rect"));
+void ControllerKey::fromVariant(const Variant& v) {
+	_rect = RECTfromString(v.stringVal("rect"));
 }
 
 ControllerKey::ControllerKey(const ControllerKey& src) {
@@ -34,10 +36,8 @@ ControllerKey::ControllerKey(const ControllerKey& src) {
 }
 
 
-JsonObject* ControllerKey::toJson() {
-	JsonObject* json = new JsonObject();
-	json->putValue("rect", _rect.toString());
-	return json;
+void ControllerKey::toVariant(Variant &v) {
+	v["rect"] = _rect.toString();
 }
 
 
@@ -98,19 +98,22 @@ void ControllerKey::handleTouchEnd() {
 
 
 
-ControllerKeySingle::ControllerKeySingle(Controller* controller, JsonObject* json) : ControllerKey(controller, json) {
-	_action = json->getString("a");
-	_beebKey = BeebKey_keyByName(json->getString("b").data());
-	_beebKeyName = _beebKey->name;
-	_nameOfControllerToActivate = json->getString("c");
+ControllerKeySingle::ControllerKeySingle(Controller* controller) : ControllerKey(controller) {
 }
 
-JsonObject* ControllerKeySingle::toJson() {
-	JsonObject* json = ControllerKey::toJson();
-	json->putValue("a", _action);
-	json->putValue("b", _beebKeyName);
-	json->putValue("c", _nameOfControllerToActivate);
-	return json;
+void ControllerKeySingle::fromVariant(const Variant& v) {
+    ControllerKey::fromVariant(v);
+	_action = v.stringVal("a");
+	_beebKey = BeebKey_keyByName(v.stringVal("b").data());
+	_beebKeyName = _beebKey->name;
+	_nameOfControllerToActivate = v.stringVal("c");
+}
+
+void ControllerKeySingle::toVariant(Variant& v) {
+	ControllerKey::toVariant(v);
+	v["a"] = _action;
+	v["b"] = _beebKeyName;
+	v["c"] = _nameOfControllerToActivate;
 }
 
 /*

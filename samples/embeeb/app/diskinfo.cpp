@@ -14,29 +14,23 @@
 //extern NSString* s_docsDir;
 
 
-Game::Game(JsonObject* json) {
-	_json = json;
-	_title = json->getString("t");
-	_publishers = json->getStringArray("p");
-	_diskInfos = json->getObjectArray<DiskInfo>("m");
-	for (int i=0 ; i<_diskInfos.size() ; i++) {
-		DiskInfo* disk = _diskInfos.at(i);
+void Game::fromVariant(const Variant& v) {
+	_title = v.stringVal("t");
+    _publishers = v.arrayVal("p");
+    auto diskInfos = v.arrayVal("m");
+    for (auto& vdi : diskInfos) {
+        DiskInfo* disk = new DiskInfo();
+        disk->fromVariant(vdi);
         if (!disk->_title.length()) {
             disk->_title = _title;
         }
-		disk->_game = this;
-	}
+        disk->_game = this;
+        _diskInfos.push_back(disk);
+    }
 }
 
-Game::Game(const VariantMap& map) {
-    _title = (string)map.get("t");
-    assert(0); // time to uncomment the lines below
-    //_publishers = map->getStringArray("p");
-    //_diskInfos = json->getObjectArray<DiskInfo>("m");
-    //[self.diskInfos makeObjectsPerformSelector:@selector(setGame:) withObject:self];
-}
-void Game::writeSelfToVariantMap(VariantMap& map) {
-    map.set("t", _title);
+void Game::toVariant(Variant& v) {
+    v.set("t", _title);
     assert(0); // time to uncomment the lines below
     //map->setStringArray("p", _publishers);
     //map->setObjectArray<DiskInfo>("m", _diskInfos);
@@ -87,43 +81,31 @@ DiskInfo* Game::defaultDiskInfo() {
 
 DiskInfo::DiskInfo() {
 }
-DiskInfo::DiskInfo(JsonObject* json) {
-	_title = json->getString("t");
-	_publisher = json->getString("p");
-	_mediaFilename = json->getString("u");
-	_mediaFileHash = json->getString("h");
-	_imageFilename = json->getString("i");
-	_platform = json->getString("pl");
-	_format = json->getString("f");
-	_qualifiers = json->getString("q");
-	_version = json->getFloat("v");
+
+void DiskInfo::fromVariant(const Variant& v) {
+	_title = v.stringVal("t");
+	_publisher = v.stringVal("p");
+	_mediaFilename = v.stringVal("u");
+	_mediaFileHash = v.stringVal("h");
+	_imageFilename = v.stringVal("i");
+	_platform = v.stringVal("pl");
+	_format = v.stringVal("f");
+	_qualifiers = v.stringVal("q");
+	_version = v.floatVal("v");
+    _localFilePath = v.stringVal("lfp");
 }
 
-
-DiskInfo::DiskInfo(const VariantMap& map) {
-    _title = (string)map.get("t");
-    _publisher = (string)map.get("p");
-    _mediaFilename = (string)map.get("u");
-    _mediaFileHash = (string)map.get("h");
-    _imageFilename = (string)map.get("i");
-    _platform = (string)map.get("pl");
-    _format = (string)map.get("f");
-    _qualifiers = (string)map.get("q");
-    _version = map.get("v");
-    _localFilePath = (string)map.get("lfp");
-}
-
-void DiskInfo::writeSelfToVariantMap(VariantMap& map) {
-    map.set("t", _title);
-    map.set("p", _publisher);
-    map.set("u", _mediaFilename);
-    map.set("h", _mediaFileHash);
-    map.set("i", _imageFilename);
-    map.set("pl", _platform);
-    map.set("f", _format);
-    map.set("q", _qualifiers);
-	map.set("v", _version);
-    map.set("lfp", _localFilePath);
+void DiskInfo::toVariant(Variant& v) {
+    v.set("t", _title);
+    v.set("p", _publisher);
+    v.set("u", _mediaFilename);
+    v.set("h", _mediaFileHash);
+    v.set("i", _imageFilename);
+    v.set("pl", _platform);
+    v.set("f", _format);
+    v.set("q", _qualifiers);
+	v.set("v", _version);
+    v.set("lfp", _localFilePath);
 }
 
 string DiskInfo::fileToUrl(string filename) {

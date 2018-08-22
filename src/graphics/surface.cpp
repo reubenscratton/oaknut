@@ -148,17 +148,25 @@ void Surface::validateRenderOps() {
     }
     
     // First validate any ops that need it
-    for (auto& op : _opsNeedingValidation) {
+    list<RenderOp*> opsValid;
+    auto i = _opsNeedingValidation.begin();
+    while (i != _opsNeedingValidation.end()) {
+        RenderOp* op = (*i);
         op->validateShader();
-        op->_shaderValid = true;
+        if (op->_shaderValid) {
+            opsValid.push_back(op);
+            i = _opsNeedingValidation.erase(i);
+        }
+        else {
+            ++i;
+        }
     }
     
     // Then embatch them
-    for (auto& op : _opsNeedingValidation) {
+    for (auto& op : opsValid) {
+        assert(op->_shaderValid && !op->_batch);
         batchRenderOp(op);
     }
- 
-    _opsNeedingValidation.clear();
 }
 
 void Surface::removeRenderOp(RenderOp* op) {
@@ -306,6 +314,10 @@ PrivateSurfaceRenderOp::~PrivateSurfaceRenderOp() {
         _alloc = NULL;
     }
 }
+void PrivateSurfaceRenderOp::validateShader() {
+    TextureRenderOp::validateShader();
+    _shaderValid = true;
+}
 void PrivateSurfaceRenderOp::rectToSurfaceQuad(RECT rect, QUAD* quad) {
     rect.origin += _view->_surfaceOrigin;
     *quad = QUADFromRECT(rect, 0);
@@ -363,6 +375,9 @@ void Surface::renderPhase2(Surface* prevsurf, View* view, Window* window) {
     // Walk the ops for the current view
     for (auto it=view->_renderList.begin() ; it!=view->_renderList.end() ; it++) {
         RenderOp* op = *it;
+        if (!op->_shaderValid) {
+            continue;
+        }
         
         // If private surface then we only draw those ops that need it
         if (surface->_supportsPartialRedraw && !op->_mustRedraw) {

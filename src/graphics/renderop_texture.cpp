@@ -141,6 +141,10 @@ void TextureRenderOp::validateShader() {
             _prog = &glprogTexture;
         }
     }
+    if (!_bitmap) {
+        return;
+    }
+    _shaderValid = true;
 }
 void TextureRenderOp::setAlpha(float alpha) {
     if (alpha != _alpha) {

@@ -57,14 +57,13 @@ Font* App::getStyleFont(const string &key) {
     return font;
 }
 
-StyleValue* App::getStyleValue(const string& keypath) {
-    StyleValue* value = _styles.getValue(keypath);
-    return value;
+const StyleValue* App::getStyleValue(const string& keypath) {
+    return _styles.get(keypath);
 }
 
 
 string App::getStyleString(const string& keypath, const char* defaultString) {
-    StyleValue* value = getStyleValue(keypath);
+    auto value = getStyleValue(keypath);
     if (!value) {
         if (defaultString) {
             return string(defaultString);
@@ -76,7 +75,7 @@ string App::getStyleString(const string& keypath, const char* defaultString) {
 }
 
 float App::getStyleFloat(const string& keypath) {
-    StyleValue* value = getStyleValue(keypath);
+    auto value = getStyleValue(keypath);
     if (!value) {
         app.warn("Missing float style info '%s'", keypath.data());
         return 0;
@@ -84,7 +83,7 @@ float App::getStyleFloat(const string& keypath) {
     return value->floatVal();
 }
 COLOR App::getStyleColor(const string& key) {
-    StyleValue* value = getStyleValue(key);
+    auto value = getStyleValue(key);
     if (!value) {
         app.warn("Missing color style info '%s'", key.data());
         return 0;
@@ -92,41 +91,35 @@ COLOR App::getStyleColor(const string& key) {
     return value->colorVal();
 }
 
-static View* inflateFromResource(pair<string, StyleValue*> r, View* parent) {
-    string viewClassName = r.first;
-    View* view = (View*)Object::createByName(viewClassName);
+static View* inflateFromResource(const StyleValue& value, View* parent) {
+    string className = value.stringVal("class");
+    if (className.length() == 0) {
+        className = "View";
+    }
+    View* view = (View*)Object::createByName(className);
     if (parent) {
         parent->addSubview(view);
     }
     
     // Bring in default style attributes for this view type
-    map<string, StyleValue*> attribs;
+    /*map<string, StyleValue*> attribs;
     
     // Process the custom attributes and subviews
-    StyleValue* props = r.second;
-    assert(props->type == StyleValue::Type::Compound);
-    vector<pair<string, StyleValue*>> subviews;
+    //assert(props->type == StyleValue::Type::Compound);
     map<string, StyleValue*> customAttribs;
-    for (auto i : props->compoundVal()->_valuesList)  {
-        StyleValue* val = i.second;
-        if (val) {
-            auto a = make_pair(i.first, val);
-            auto firstNameChar = i.first.charAt(0);
-            if (val->type == StyleValue::Type::Compound && (firstNameChar >='A' && firstNameChar<='Z')) {
-                subviews.push_back(a);
-            } else {
-                attribs[i.first] = val;
-            }
-        }
-    }
+    for (auto i : value->compoundVal()->_values)  {
+        if (i.first == "subviews") continue;
+        attribs[i.first] = val;
+    }*/
 
     
     // Apply the attributes to the inflated view.
-    view->applyStyleValues(attribs);
+    view->applyStyleValues(value);
     
     // Inflate the subviews
-    for (auto j : subviews) {
-        inflateFromResource(j, view);
+    auto& subviews = value.arrayVal("subviews");
+    for (auto& subview : subviews) {
+        inflateFromResource(subview, view);
     }
     
     return view;
@@ -139,17 +132,12 @@ View* App::layoutInflate(const string& assetPath) {
         return NULL;
     }
     StringProcessor it(data->toString(false));
-    StyleMap layoutRoot;
+    StyleValue layoutRoot;
     bool parsed = layoutRoot.parse(it);
     assert(parsed);
-    assert(layoutRoot._values.size()==1);
-    auto i = layoutRoot._values.begin();
-    return inflateFromResource(make_pair(i->first, i->second), NULL);
+    assert(layoutRoot.type == StyleValue::Type::Compound);
+    return inflateFromResource(layoutRoot, NULL);
 }
-
-
-
-
 
 
 string App::friendlyTimeString(TIMESTAMP timestamp) {

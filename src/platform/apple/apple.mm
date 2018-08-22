@@ -62,6 +62,11 @@ void Task::ensureSharedGLContext() {
 #endif
 }
 
+void Task::nextTick(TASKFUNC func) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        func();
+    });
+}
 
 class AppleTask : public Task {
 public:
@@ -118,12 +123,6 @@ TaskQueue* TaskQueue::create(const string& name) {
     return new AppleTaskQueue(name);
 }
 
-void TaskQueue::postToMainThread(function<void(void)> func) {
-    dispatch_async(dispatch_get_main_queue(), ^() {
-        func();
-    });
-}
-
 
 
 
@@ -152,6 +151,16 @@ ByteBuffer* App::loadAsset(const char* assetPath) {
     fclose(asset);
     return data;
     
+}
+
+
+string string::uuid() {
+    CFUUIDRef udid = CFUUIDCreate(NULL);
+    CFStringRef uuidstr = CFUUIDCreateString(NULL, udid);
+    string str(CFStringGetCStringPtr(uuidstr,kCFStringEncodingUTF8));
+    CFRelease(uuidstr);
+    CFRelease(udid);
+    return str;
 }
 
 #endif

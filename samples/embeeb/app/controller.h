@@ -11,7 +11,7 @@
 #include "app.h"
 #include "controllerkey.h"
 
-class Controller : public Object, public IControllerKeyDelegate {
+class Controller : public Object, public ISerializeToVariant, public IControllerKeyDelegate {
 public:
 
 	string _name;
@@ -20,15 +20,16 @@ public:
 
 	Controller();
 	Controller(const Controller& src);
-	Controller(JsonObject* json);
 	
-	virtual JsonObject* toJson();
 	virtual void addKey(ControllerKey* key);
 	virtual void removeKey(ControllerKey* key);
 
+    void fromVariant(const Variant& v) override;
+    void toVariant(Variant& v) override;
+
 	// IControllerKeyDelegate
-	void handleTouchBeganInKey(ControllerKey* key, ControllerView* controllerView);
-	void handleTouchEndInKey(ControllerKey* key, ControllerView* controllerView);
+	void handleTouchBeganInKey(ControllerKey* key, ControllerView* controllerView) override;
+	void handleTouchEndInKey(ControllerKey* key, ControllerView* controllerView) override;
 
 };
 

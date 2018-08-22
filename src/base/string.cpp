@@ -429,7 +429,7 @@ string string::format(const char* fmt, ...) {
         else
             size *= 2;      // Guess at a larger size (OS specific)
     }
-    string str(buff, size);
+    string str(buff, n);
     free(buff);
     return str;
 }
@@ -451,6 +451,55 @@ string string::tokenise(const string& sep) {
     }
     return token;
 }
+
+string string::hex(const void* p, int cb) {
+    string str;
+    str._cb = str._cc = cb * 2;
+    str._p = (char*)malloc(str._cb + 1);
+    const char* bytes = (const char*)p;
+    char* o = (char*)str.data();
+    for (size_t i=0 ; i<cb ; i++) {
+        sprintf(o, "%02X", bytes[i]);
+        o+=2;
+    }
+    str._p[str._cb] = 0;
+    return str;
+}
+
+string string::toBase64() const {
+    string result;
+    int i;
+    result._cb = result._cc = ((_cb + 2) / 3 * 4) + 1;
+    result._p  = (char*)malloc(result._cb+1);
+    char* p = result._p;
+    char* input = _p;
+    
+    static const char basis_64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    for (i = 0; i < _cb - 2; i += 3) {
+        *p++ = basis_64[(input[i] >> 2) & 0x3F];
+        *p++ = basis_64[((input[i] & 0x3) << 4) | ((int) (input[i + 1] & 0xF0) >> 4)];
+        *p++ = basis_64[((input[i + 1] & 0xF) << 2) | ((int) (input[i + 2] & 0xC0) >> 6)];
+        *p++ = basis_64[input[i + 2] & 0x3F];
+    }
+    if (i < _cb) {
+        *p++ = basis_64[(input[i] >> 2) & 0x3F];
+        if (i == (_cb - 1)) {
+            *p++ = basis_64[((input[i] & 0x3) << 4)];
+            *p++ = '=';
+        }
+        else {
+            *p++ = basis_64[((input[i] & 0x3) << 4) | ((int) (input[i + 1] & 0xF0) >> 4)];
+            *p++ = basis_64[((input[i + 1] & 0xF) << 2)];
+        }
+        *p++ = '=';
+    }
+    *p++ = '\0';
+    return result;
+}
+
+
+
 
 typedef uint8_t uint8;
 typedef uint32_t uint32;

@@ -14,6 +14,9 @@ else
 		OPTS+= -s BINARYEN_TRAP_MODE=clamp
 endif
 
+#PThreads is broken on WASM cos there's no Atomics support (it exists but is disabled cos of Spectre)
+#OPTS+= -s USE_PTHREADS=1
+
 $(OBJ_DIR)%.bc : %
 $(OBJ_DIR)%.bc : % $(OBJ_DIR)%.dep
 	@echo web: Compiling $(notdir $<)

@@ -11,7 +11,8 @@
  * @brief An alternative to std::string
  *
  * This is not quite a drop-in replacement. It is the same old byte buffer under the hood
- * but this one treats the bytes as a UTF-8 encoded string.
+ * but this one treats the bytes as a UTF-8 encoded string and indexing is done by
+ * character offset rather than byte offset.
  *
  * Why? Because UTF-8 is by far the most popular way to encode text and I don't like
  * the memory wasted by wide characters. In my experience the vast majority of strings
@@ -38,7 +39,7 @@ public:
     string(const string& str) : _p(NULL), _cb(0), _cc(0)  {
         assign(str._p, str._cb);
     }
-    string(string&& other) : _p(other._p), _cb(other._cb), _cc(other._cc)  {
+    string(string&& other) noexcept : _p(other._p), _cb(other._cb), _cc(other._cc)  {
         other._p = NULL;
         other._cb = 0;
         other._cc = 0;
@@ -83,6 +84,7 @@ public:
     bool contains(char32_t ch) const;
     
     static string format(const char* fmt, ...);
+    string toBase64() const;
     
     // Modification
     string& operator=(const string& str);
@@ -156,6 +158,9 @@ public:
     
     friend class Stream;
     friend class ByteBuffer;
+    
+    static string uuid();
+    static string hex(const void* p, int32_t cb);
     
 protected:
     char* _p;

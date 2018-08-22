@@ -95,15 +95,19 @@ public:
     std::function<void(void)> _func;
 };
 
-void mainThreadThunk(Foo* foo) {
+static void mainThreadThunk(Foo* foo) {
     foo->_func();
     delete foo;
 }
 
-void TaskQueue::postToMainThread(TASKFUNC func) {
-    void* pv = new Foo(func);
-    emscripten_async_waitable_run_in_main_runtime_thread_(EM_FUNC_SIG_VI, (void*)mainThreadThunk, pv);
+void Task::nextTick(TASKFUNC func) {
+    void* foo = new Foo(func);
+    EM_ASM({
+        window.setTimeout(function() { Runtime.dynCall('vi', $0, [$1]); }, 0);
+    }, mainThreadThunk, foo);
 }
+
+
 
 #endif
 

@@ -14,6 +14,7 @@ public:
 
     static Task* create(TASKFUNC func);
     static void ensureSharedGLContext(); // use this if you need to use GL from a background thread (i.e. image processing)
+    static void nextTick(TASKFUNC func);
 
 protected:
     Task(TASKFUNC func);
@@ -27,7 +28,6 @@ class TaskQueue : public Object {
 public:
 
     static TaskQueue* create(const string& name);
-    static void postToMainThread(TASKFUNC task);
 
     virtual void enqueueTask(Task* task)=0;
     virtual bool cancelTask(Task* task)=0;

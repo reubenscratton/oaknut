@@ -13,17 +13,18 @@
 #include "controller.h"
 
 
-class DiskControls : public Object  { // <NSCoding>
+class DiskControls : public Object, public ISerializeToVariant  {
 public:
 
 	bool _usesKeyboard;
 	vector<ObjPtr<Controller>> _controllers;
 
 	DiskControls();
-	DiskControls(JsonObject* json);
 	DiskControls(const DiskControls& src);
 	
-	virtual JsonObject* toJson();
+    void fromVariant(const Variant& v) override;
+	void toVariant(Variant& v) override;
+    
 	virtual Controller* controllerById(const string& controllerId);
 	virtual Controller* initialController();
 

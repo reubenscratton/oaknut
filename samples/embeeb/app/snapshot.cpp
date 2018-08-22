@@ -8,19 +8,19 @@
 Snapshot::Snapshot() {
 }
 
-// ISerializeToVariantMap
-Snapshot::Snapshot(const VariantMap& v) {
-    _diskInfo = v.get<DiskInfo>("diskInfo");
-    _data = (ByteBuffer*)v["data"];
-    _timestamp = v["timestamp"];
-    _thumbnail = v.get<Bitmap>("thumbnail");
-    _label = (string)v["label"];
-    _controllerId = (string)v["controllerId"];
+// ISerializeToVariant
+void Snapshot::fromVariant(const Variant& v) {
+    _diskInfo = v.getObject<DiskInfo>("diskInfo");
+    _data = v.byteBufferVal("data");
+    _timestamp = v.doubleVal("timestamp");
+    _thumbnail = v.getObject<Bitmap>("thumbnail");
+    _label = v.stringVal("label");
+    _controllerId = v.stringVal("controllerId");
 
 }
-void Snapshot::writeSelfToVariantMap(VariantMap& v) {
+void Snapshot::toVariant(Variant& v) {
     v["diskInfo"] = _diskInfo._obj;
-    v["data"] = _data;
+    v["data"] = _data._obj;
     v["timestamp"] = _timestamp;
     v["thumbnail"] = _thumbnail._obj;
     v["label"] = _label;

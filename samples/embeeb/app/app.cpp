@@ -25,7 +25,7 @@ void App::main() {
     uint32_t s1 = sizeof(foo3);
     
     
-    VariantMap vm1({
+    Variant vm1({
         {"name1", 10},
         {"name2", 20},
         {"stringVal","flibbertiflooberts"},
@@ -37,7 +37,7 @@ void App::main() {
     ByteBufferStream bb;
     vm1.writeSelfToStream(&bb);
     
-    VariantMap vm2;
+    Variant vm2;
     vm2.readSelfFromStream(&bb);
     */
     

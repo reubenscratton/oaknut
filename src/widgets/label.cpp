@@ -49,7 +49,7 @@ Label::~Label() {
 }
 
 
-bool Label::applyStyleValue(const string& name, StyleValue* value) {
+bool Label::applyStyleValue(const string& name, const StyleValue* value) {
     if (name=="font-name") {
         _textRenderer.setFontName(value->stringVal());
         return true;

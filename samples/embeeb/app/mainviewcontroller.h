@@ -13,7 +13,7 @@
 #include "diskinfo.h"
 
 class MainViewController : public ViewController,
-						   public IBeebKeyboardCallbacks, public IURLRequestDelegate {
+						   public IBeebKeyboardCallbacks {
 public:
 
 	MainViewController();
@@ -35,9 +35,6 @@ public:
                                
     virtual void LEDsChanged();
 		
-
-	virtual void onUrlRequestLoad(URLData* data);
-
 };
 
 #endif

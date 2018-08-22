@@ -35,14 +35,10 @@ NSMutableDictionary* s_jsonObj;
 */
 
 
-class DiskControlsManager : public IURLRequestDelegate {
+class DiskControlsManager {
 public:
 
 	DiskControlsManager();
-	
-	// IURLRequestDelegate
-	virtual void onUrlRequestLoad(URLData* data);
-
 };
 
 DiskControlsManager::DiskControlsManager() {
@@ -62,12 +58,10 @@ DiskControlsManager::DiskControlsManager() {
 	}*/
 }
 
-/**
- IURLRequestDelegate
- */
-void DiskControlsManager::onUrlRequestLoad(URLData* data) {
+
+//void DiskControlsManager::onUrlRequestLoad(URLData* data) {
 	//[self notifyDiskControlsLoaded:(DiskControls*)object diskId:(NSString*)request.context];
-}
+//}
 /*+ (void)notifyDiskControlsLoaded:(DiskControls*)diskControls diskId:(NSString*)diskId {
 	[[NSNotificationCenter defaultCenter] postNotificationName:kNotificationDiskControlsChanged object:diskId userInfo:@{@"diskControls":diskControls}];
 }*/
@@ -83,14 +77,18 @@ static DiskControlsManager s_manager;
 
 DiskControls::DiskControls() {
 }
-DiskControls::DiskControls(JsonObject* json) {
-	_controllers = json->getObjectArray<Controller>("layouts");
-}
 
-JsonObject* DiskControls::toJson() {
-	JsonObject* json = new JsonObject();
-	json->putObjectArray("layouts", _controllers);
-	return json;
+void DiskControls::fromVariant(const Variant& v) {
+	_controllers = v.arrayVal<Controller>("layouts");
+}
+void DiskControls::toVariant(Variant& v) {
+    Variant array;
+    for (auto& e : _controllers) {
+        Variant ev;
+        e->toVariant(ev);
+        array.appendVal(ev);
+    }
+    v["layouts"] = array;
 }
 
 Controller* DiskControls::initialController() {

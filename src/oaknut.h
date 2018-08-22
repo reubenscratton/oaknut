@@ -104,8 +104,8 @@ typedef uint64_t TIMESTAMP;
 #include "data/serializable.h"
 #include "data/bytebuffer.h"
 #include "data/bytebufferstream.h"
+#include "text/stringprocessor.h"
 #include "data/variant.h"
-#include "data/variantmap.h"
 #include "data/localstorage.h"
 #include "graphics/bitmap.h"
 
@@ -156,8 +156,6 @@ void oakFaceDetectorClose(void* osobj);
 #include "app/urlrequest.h"
 #include "app/viewcontroller.h"
 #include "app/navigationcontroller.h"
-#include "text/stringprocessor.h"
-#include "text/json.h"
 #include "util/cache.h"
 #include "util/circularbuffer.h"
 #include "media/audiooutput.h"

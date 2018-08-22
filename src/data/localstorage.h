@@ -16,7 +16,7 @@
  collection of one or more byte ranges within the global heap buffer, there is no corresponding
  Javascript object and so the serialization that underpins IndexedDB cannot be
  directly used. So what we do instead (on web) is construct ad-hoc Javascript objects
- that encapsulate the VariantMaps at the point they are read and written to IndexedDB.
+ that encapsulate the Variants at the point they are read and written to IndexedDB.
  For this to work the Variant type must be convertible to and from
  a native Javascript type.
 
@@ -25,7 +25,7 @@
 
 
 /**
- Persistant storage of same-structure VariantMaps. Expected use is to have one LocalStore
+ Persistant storage of same-structure Variants. Expected use is to have one LocalStore
  per persisted type, similar to IndexedDB. For simplicity's sake a primary key is mandatory.
  */
 class LocalStore : public Object {
@@ -40,12 +40,12 @@ public:
     
     // Querying
     virtual void getCount(std::function<void(int)> success)=0;
-    virtual void getAll(std::function<void(VariantMap*)> success)=0;
-    virtual void getOne(const Variant& primaryKeyVal, std::function<void(VariantMap*)> success)=0;
+    virtual void getAll(std::function<void(Variant*)> success)=0;
+    virtual void getOne(const Variant& primaryKeyVal, std::function<void(Variant*)> success)=0;
 
     // Update
     virtual void remove(const Variant& primaryKeyVal, std::function<void(void)> callback)=0;
-    virtual void put(ISerializeToVariantMap* object, std::function<void(void)> callback)=0; // Insert a new record or replace an existing one
+    virtual void put(ISerializeToVariant* object, std::function<void(void)> callback)=0; // Insert a new record or replace an existing one
     
 protected:
     LocalStore(const string& name, const string& primaryKeyName);

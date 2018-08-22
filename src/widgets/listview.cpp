@@ -16,7 +16,7 @@ ListView::ListView() {
     _deleteConfirmIndex = LISTINDEX_NONE;
 }
 
-bool ListView::applyStyleValue(const string &name, StyleValue *value) {
+bool ListView::applyStyleValue(const string &name, const StyleValue *value) {
     if (name=="divider-height") {
         _dividerHeight = value->floatVal();
         return true;

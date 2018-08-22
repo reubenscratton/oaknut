@@ -12,15 +12,15 @@ public:
     AllDisksListAdapter(string srcfile);
 
     // Overrides
-    virtual int getSectionCount();
-    virtual int getItemCount(int section);
-    virtual string getSectionTitle(int section);
-    
+    int getSectionCount() override;
+    int getItemCount(int section) override;
+    string getSectionTitle(int section) override;
+    Object* getItem(LISTINDEX index) override;
+    void handleJson(const Variant& json) override;
+
     map<char32_t, vector<DisksListItem*>> _sectionMap;
     vector<map<char32_t, vector<DisksListItem*>>::iterator> _sections;
 
-    virtual void onUrlRequestLoad(URLData* data);
-    virtual Object* getItem(LISTINDEX index);
 };
 
 

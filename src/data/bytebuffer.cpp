@@ -11,14 +11,12 @@
 ByteBuffer::ByteBuffer() {
     data = nullptr;
     cb = 0;
-    _owns = true;
 }
 ByteBuffer::ByteBuffer(size_t cb) {
     this->cb = cb;
     data = (uint8_t*)malloc(cb);
-    _owns = true;
 }
-ByteBuffer::ByteBuffer(uint8_t* data, size_t cb, bool copy, bool owns) {
+ByteBuffer::ByteBuffer(uint8_t* data, size_t cb, bool copy) {
     this->cb = cb;
     if (copy) {
         this->data = (uint8_t*)malloc(cb);
@@ -26,25 +24,31 @@ ByteBuffer::ByteBuffer(uint8_t* data, size_t cb, bool copy, bool owns) {
     } else {
         this->data =  data;
     }
-    _owns = owns;
 }
 ByteBuffer::ByteBuffer(const ByteBuffer& other) {
     cb = other.cb;
     data = (uint8_t*)malloc(cb);
     memcpy(data, other.data, cb);
-    _owns = true;
 }
 ByteBuffer::ByteBuffer(const string& str) {
     cb = str.length();
     data = (uint8_t*)malloc(cb);
     memcpy(data, str.data(), cb);
-    _owns = true;
 }
 
 ByteBuffer::~ByteBuffer() {
-    if (_owns && data) {
+    if (data) {
         free(data);
     }
+}
+
+void ByteBuffer::set(const void* rawData, size_t len) {
+    if (data) {
+        free(data);
+    }
+    cb = len;
+    data = (uint8_t*)malloc(cb);
+    memcpy(data, rawData, cb);
 }
 
 // ISerializable
@@ -95,15 +99,13 @@ string ByteBuffer::toString(bool copy) {
     if (copy) {
         return string((char*)data, cb);
     }
-    if (_owns) {
-        _owns = false;
-        string str;
-        str._p = (char*)data;
-        str._cb = cb;
-        return str;
-    }
-    app.warn("Having to copy data buffer cos can't pass ownership! This is inefficient.");
-    return string((char*)data, cb);
+    // Move the data to ownership of the string without making a copy
+    string str;
+    str._p = (char*)data;
+    str._cb = cb;
+    data = NULL;
+    this->cb = 0;
+    return str;
 
 }
 

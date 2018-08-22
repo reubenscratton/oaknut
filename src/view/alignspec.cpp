@@ -38,32 +38,40 @@ ALIGNSPEC ALIGNSPEC::Below(View* view, float margin) {
 }
 
 
-ALIGNSPEC::ALIGNSPEC(StyleValue* value, View* view) {
-    auto a = value->arrayVal();
-    string type = a[0]->stringVal();
+ALIGNSPEC::ALIGNSPEC(const StyleValue* value, View* view) {
+    anchor = NULL;
+    margin = 0;
+    string type;
+    if (value->isArray()) {
+        auto& a = value->arrayVal();
+        type = a[0].stringVal();
+        if (a.size()>=2) {
+            if (a[1].isNumeric()) {
+                margin = a[1].floatVal();
+            } else if (a[1].isString()) {
+                string anchorId = a[1].stringVal();
+                anchor = view->getParent()->findViewById(anchorId);
+                assert(anchor); // NB: anchor must be previously declared. TODO: remove this restriction
+            }
+            if (a.size()>=3) {
+                assert(a[2].isNumeric());
+                margin = a[2].floatVal();
+            }
+        }
+    } else {
+        type = value->stringVal();
+    }
     if (type=="center") *this=Center();
     else if (type=="centre") *this=Center();
     else if (type=="left") *this=Left();
     else if (type=="right") *this=Right();
     else if (type=="top") *this=Top();
     else if (type=="bottom") *this=Bottom();
-    else if (type=="toLeftOf") *this=ALIGNSPEC(NO_ANCHOR, 1.0f,  -1.0f, 0);
-    else if (type=="toRightOf") *this=ALIGNSPEC(NO_ANCHOR, 1.0f,  0.0f, 0);
-    else if (type=="above") *this=ALIGNSPEC(NO_ANCHOR, 1.0f,  -1.0f, 0);
-    else if (type=="below") *this=ALIGNSPEC(NO_ANCHOR, 1.0f,  0.0f, 0);
+    else if (type=="toLeftOf") {multiplierAnchor=1.0f; multiplierSelf=-1.0f;}
+    else if (type=="toRightOf") {multiplierAnchor=1.0f; multiplierSelf=0.0f;}
+    else if (type=="above") {multiplierAnchor=1.0f; multiplierSelf=-1.0f;}
+    else if (type=="below") {multiplierAnchor=1.0f; multiplierSelf=0.0f;}
     else assert(false); // unknown alignspec
     
-    int marginIndex = 1;
-    if (anchor == NO_ANCHOR) {
-        assert(a.size()>=2);
-        string anchorId = a[1]->stringVal();
-        anchor = view->getParent()->findViewById(anchorId);
-        assert(anchor); // NB: anchor must be previously declared. TODO: remove this restriction
-        marginIndex = 2;
-    }
-
-    if (a.size()>marginIndex) {
-        margin = a[marginIndex]->floatVal();
-    }
 }
 

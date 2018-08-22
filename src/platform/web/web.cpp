@@ -78,7 +78,7 @@ static void oak_userEvent(int eventType, int eventSourceId, int x, int y) {
     inputEvent.pt.x = x * app._window->_scale;
     inputEvent.pt.y = y * app._window->_scale;
     inputEvent.time = app.currentMillis();
-    app._window->dispatchInputEvent(&inputEvent);
+    app._window->dispatchInputEvent(inputEvent);
 }
 
 static void oak_keyEvent(int keyDown, int keyCode, int charCode) {

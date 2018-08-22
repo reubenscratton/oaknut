@@ -9,7 +9,7 @@
 
 
 
-class DiskInfo : public Object, public ISerializeToVariantMap
+class DiskInfo : public Object, public ISerializeToVariant
 {
 public:
 	ObjPtr<class Game> _game;
@@ -25,13 +25,12 @@ public:
 	string _localFilePath;
 	
     DiskInfo();
-	DiskInfo(JsonObject* json);
 	string diskUrl();
 	string imageUrl();
 
-    // ISerializable
-    DiskInfo(const VariantMap& map);
-    virtual void writeSelfToVariantMap(VariantMap& map);
+    // ISerializableToVariant
+    void fromVariant(const Variant& v) override;
+    void toVariant(Variant& v) override;
 
 
 protected:
@@ -42,18 +41,15 @@ protected:
 
 
 
-class Game : public Object, public ISerializeToVariantMap {
+class Game : public Object, public ISerializeToVariant {
 public:
-	ObjPtr<JsonObject> _json;
 	string _title;
-	vector<string> _publishers;
+	vector<Variant> _publishers;
 	vector<ObjPtr<DiskInfo>> _diskInfos;
 	
-	Game(JsonObject* json);
-
-    // ISerializable
-    Game(const VariantMap& map);
-    virtual void writeSelfToVariantMap(VariantMap& map);
+    // ISerializeToVariant
+    void fromVariant(const Variant& v) override;
+    void toVariant(Variant& v) override;
 
 	//- (id)initAsLocalDisk:(NSString*)localFilePath fileHash:(NSString*)fileHash diskInfo:(DiskInfo*)diskInfo;
 	DiskInfo* defaultDiskInfo();

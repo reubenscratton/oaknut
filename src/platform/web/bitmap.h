@@ -31,14 +31,13 @@ public:
     Bitmap(val img, bool isPng);
     ~Bitmap();
 
-    virtual void lock(PIXELDATA* pixelData, bool forWriting);
-    virtual void unlock(PIXELDATA* pixelData, bool pixelsChanged);
-
-    virtual void bind();
+    void lock(PIXELDATA* pixelData, bool forWriting) override;
+    void unlock(PIXELDATA* pixelData, bool pixelsChanged) override;
+    void bind() override;
     
-    // ISerializeToVariantMap
-    Bitmap(const VariantMap& map);
-    virtual void writeSelfToVariantMap(VariantMap& map);
+    // ISerializeToVariant
+    void fromVariant(const Variant& v) override;
+    void toVariant(Variant& v) override;
 
 };
 

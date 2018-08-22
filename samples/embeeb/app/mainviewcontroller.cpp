@@ -73,7 +73,14 @@ MainViewController::MainViewController() {
         ObjPtr<DisksViewController> vc = new DisksViewController([&](Game* game) {
             _currentSnapshot = NULL;
             _currentDiskInfo = game->defaultDiskInfo();
-            URLRequest::request(_currentDiskInfo->diskUrl(), this, 0);
+            URLRequest::get(_currentDiskInfo->diskUrl())->handleData([&](int httpStatus, ByteBuffer* data) {
+                // Hold shift key down for 2 seconds across the reset
+                _beeb->postKeyboardEvent(ScanCode_Shift, true);
+                Timer::start([=]() {
+                    _beeb->postKeyboardEvent(ScanCode_Shift, false);
+                }, 2000, false);
+                _beeb->loadDisc((uint8_t*)data->data, (int)data->cb, 1);
+            });
         });
         _navigationController->pushViewController(vc);
     }));
@@ -299,12 +306,4 @@ void TriggerCallback(const void* param1, void* param2) {
 
 */
 
-void MainViewController::onUrlRequestLoad(URLData* data) {
-    // Hold shift key down for 2 seconds across the reset
-	_beeb->postKeyboardEvent(ScanCode_Shift, true);
-    Timer::start([=]() {
-        _beeb->postKeyboardEvent(ScanCode_Shift, false);
-    }, 2000, false);
-	_beeb->loadDisc((uint8_t*)data->_value.data->data, (int)data->_value.data->cb, 1);
-}
 

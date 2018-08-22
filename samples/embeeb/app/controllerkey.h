@@ -24,10 +24,10 @@ public:
 
 
 
-class ControllerKey : public Object { // <NSCopying>
+class ControllerKey : public Object, ISerializeToVariant {
 public:
 
-	static ControllerKey* keyFromJson(JsonObject* json, Controller* controller);
+	static ControllerKey* keyFromJson(const Variant& v, Controller* controller);
 
 	Controller* _controller; 	// Weak cos pointing against ownership dir
 	IControllerKeyDelegate* _delegate;
@@ -46,13 +46,14 @@ public:
 	bool _isTouched;
 
 	ControllerKey(Controller* controller);
-	ControllerKey(Controller* controller, JsonObject* json);
 	ControllerKey(const ControllerKey& src);
 	
     virtual void attachToView(ControllerView* view);
     virtual void detachFromView(ControllerView* view);
 
-	virtual JsonObject* toJson();
+    // ISerializeToVariant
+    void fromVariant(const Variant& v) override;
+	void toVariant(Variant& v) override;
 
 	// Touch
 	virtual void handleTouchBegan();
@@ -76,13 +77,17 @@ public:
 	string _beebKeyName;
 	string _nameOfControllerToActivate;
 	
-	ControllerKeySingle(Controller* controller, JsonObject* json);
-	JsonObject* toJson();
-	void setBeebKey(BeebKey* beebKey);
+	ControllerKeySingle(Controller* controller);
+    
+    // ISerializeToVariant
+    void fromVariant(const Variant& v) override;
+    void toVariant(Variant& v) override;
+
+    void setBeebKey(BeebKey* beebKey);
 	
-	virtual void handleTouchBegan();
-	virtual void handleTouchMove();
-	virtual void handleTouchEnd();
+	void handleTouchBegan() override;
+	void handleTouchMove() override;
+	void handleTouchEnd() override;
 
 };
 

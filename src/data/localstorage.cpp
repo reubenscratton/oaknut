@@ -65,11 +65,11 @@ public:
         
     }
     
-    static void getAllCallbackFromJs(WebLocalStore* store, uint8_t* byteArray, int cb, std::function<void(VariantMap*)>* callback) {
+    static void getAllCallbackFromJs(WebLocalStore* store, uint8_t* byteArray, int cb, std::function<void(Variant*)>* callback) {
         if (cb >= 0) {
-            ByteBuffer bb(byteArray, cb, false, true);
+            ByteBuffer bb(byteArray, cb, false);
             ByteBufferStream bbs(&bb);
-            VariantMap value;
+            Variant value;
             value.readSelfFromStream(&bbs);
             (*callback)(&value);
         } else {
@@ -77,7 +77,7 @@ public:
             delete callback;
         }
     }
-    virtual void getAll(std::function<void(VariantMap*)> callback) {
+    virtual void getAll(std::function<void(Variant*)> callback) {
         int gotIndex = val::global("gotSet")(_db).as<int>();
         EM_ASM_ARGS({
             var name = Pointer_stringify($1);
@@ -100,10 +100,10 @@ public:
                     Runtime.dynCall('viiii', $2, [$0, dataPtr, -1, $3]);
                 }
             };
-        }, this, _name.data(), getAllCallbackFromJs, new std::function<void(VariantMap*)>(callback), gotIndex);
+        }, this, _name.data(), getAllCallbackFromJs, new std::function<void(Variant*)>(callback), gotIndex);
 
     }
-    virtual void getOne(const Variant& primaryKeyVal, std::function<void(VariantMap*)> success) {
+    virtual void getOne(const Variant& primaryKeyVal, std::function<void(Variant*)> success) {
         
     }
     
@@ -140,12 +140,12 @@ public:
         (*callback)();
         delete callback;
     }
-    virtual void put(ISerializeToVariantMap* object, std::function<void(void)> callback) {
+    virtual void put(ISerializeToVariant* object, std::function<void(void)> callback) {
         // Serialise object to a map
-        VariantMap map;
-        object->writeSelfToVariantMap(map);
-        Variant key = map.get(_primaryKeyName);
-        assert(key.type != Variant::EMPTY); // key is mandatory! (that might change)
+        Variant v;
+        object->toVariant(v);
+        const Variant* key = v.get(_primaryKeyName);
+        assert(key && key->type != Variant::EMPTY); // key is mandatory! (that might change)
 
         /*val jsobj = val::global("Object").new_();
         for (auto it: map._map) {
@@ -158,11 +158,11 @@ public:
 
         // Serialise the map to a byte buffer
         ByteBufferStream bbs;
-        map.writeSelfToStream(&bbs);
+        v.writeSelfToStream(&bbs);
 
         // Create a JS object holding the serialized data in a byte array
         val jsobj = val::global("Object").new_();
-        jsobj.set(_primaryKeyName, key.toJavascriptVal());
+        jsobj.set(_primaryKeyName, key->toJavascriptVal());
         val raw(typed_memory_view(bbs._data.cb, bbs._data.data));
         val buff = val::global("Uint8Array").new_(bbs._data.cb);
         buff.call<void>("set", raw);
@@ -280,33 +280,33 @@ public:
     virtual void getCount(std::function<void(int)> success) {
         success((int)_index.size());
     }
-    virtual void getAll(std::function<void(VariantMap*)> callback) {
+    virtual void getAll(std::function<void(Variant*)> callback) {
         auto it = _index.begin();
         while (it != _index.end()) {
-            ObjPtr<VariantMap> item = readItem(it->second);
-            callback(item);
+            Variant item = readItem(it->second);
+            callback(&item);
             it++;
         }
         callback(NULL);
     }
-    virtual void getOne(const Variant& primaryKeyVal, std::function<void(VariantMap*)> callback) {
+    virtual void getOne(const Variant& primaryKeyVal, std::function<void(Variant*)> callback) {
         auto it = _index.find(primaryKeyVal);
         if (it != _index.end()) {
-            ObjPtr<VariantMap> item = readItem(it->second);
-            callback(item);
+            Variant item = readItem(it->second);
+            callback(&item);
         }
         callback(NULL);
     }
 
-    VariantMap* readItem(const INDEX_ENTRY& indexEntry) {
+    Variant readItem(const INDEX_ENTRY& indexEntry) {
         ByteBufferStream bbs(indexEntry.size);
         openFile();
         _file.seekp(indexEntry.offset);
         _file.read((char*)bbs._data.data, indexEntry.size);
         assert(_file.gcount() == indexEntry.size);
-        VariantMap* map = new VariantMap();
-        map->readSelfFromStream(&bbs);
-        return map;
+        Variant v;
+        v.readSelfFromStream(&bbs);
+        return v;
     }
 
 
@@ -321,22 +321,22 @@ public:
         }
         callback();
     }
-    virtual void put(ISerializeToVariantMap* object, std::function<void(void)> callback) {
-        VariantMap map;
-        object->writeSelfToVariantMap(map);
+    virtual void put(ISerializeToVariant* object, std::function<void(void)> callback) {
+        Variant v;
+        object->toVariant(v);
         
-        Variant key = map.get(_primaryKeyName);
-        assert(key.type != Variant::EMPTY); // key is mandatory! (that might change)
+        auto key = v.get(_primaryKeyName);
+        assert(key->type != Variant::EMPTY); // key is mandatory! (that might change)
         _indexDirty = true;
         openFile();
 
         // Serialize the map to a byte array
         ByteBufferStream bbs;
-        map.writeSelfToStream(&bbs);
+        v.writeSelfToStream(&bbs);
         int cb = (int)bbs.offsetWrite;
         
         // If there's an existing object with this key...
-        auto it = _index.find(key);
+        auto it = _index.find(*key);
         if (it != _index.end()) {
             
             // If the new object is same size or smaller then we can overwrite the existing record
@@ -360,7 +360,7 @@ public:
         INDEX_ENTRY entry;
         entry.offset = (FILEOFFSET)_file.tellp();
         entry.size = cb;
-        auto result = _index.insert(make_pair(key, entry));
+        auto result = _index.insert(make_pair(*key, entry));
         //_it = result.first;
         _file.write((char*)bbs._data.data, cb);
         //assert(written == cb);

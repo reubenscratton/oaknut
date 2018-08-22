@@ -11,7 +11,10 @@
 DisksListAdapter::DisksListAdapter(string srcfile,const string& itemLayoutId) 
 	: SimpleListAdapter(itemLayoutId) {
     this->srcfile = srcfile;
-	URLRequest::request(srcfile, this, 0);
+        
+    URLRequest::get(srcfile)->handleJson([&](int httpStatus, const Variant& json) {
+        handleJson(json);
+    });
 
 	_itemViewBindFunc = [=](View* view, LISTINDEX index, Object* item) {
 		DisksListItem* disksListItem = (DisksListItem*)item;
@@ -28,7 +31,6 @@ DisksListAdapter::DisksListAdapter(string srcfile,const string& itemLayoutId)
 	};
 }
 DisksListAdapter::~DisksListAdapter() {
-    URLRequest::unrequest(srcfile, this);
 }
 DisksListItem::DisksListItem(Game* game) : _game(game) {
 }
@@ -54,17 +56,16 @@ string DisksListItem::getImageUrl() {
 
 
 
-//	IURLRequestDelegate
-void DisksListAdapter::onUrlRequestLoad(URLData* data) {
+//
+void DisksListAdapter::handleJson(const Variant& json) {
     _items.clear();
-	StringProcessor it(data->_value.data->toString(false));
-	JsonValue val = JsonValue::parse(it, 0);
-	if (val._type != jsonArray) {
+    if (json.type != Variant::ARRAY) {
 		app.log("Oops!");
 	} else {
-		JsonArray* json = val._arrayVal;
-		for (int i=0 ; i<json->_elements.size() ; i++) {
-			Game* game = json->getObject<Game>(i);
+		auto& vals = json.arrayVal();
+        for (auto& val : vals) {
+			Game* game = new Game();
+            game->fromVariant(val);
             _items.push_back(new DisksListItem(game));
 		}
 	}

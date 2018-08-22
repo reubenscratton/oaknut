@@ -30,30 +30,29 @@ View::~View() {
 void View::applyStyle(const string& style) {
     auto value = app.getStyleValue(style);
     if (value) {
-        auto compound = value->compoundVal();
-        applyStyleValues(compound->_values);
+        applyStyleValues(*value);
     }
 }
 
-void View::applyStyleValues(const map<string, StyleValue*>& values) {
+void View::applyStyleValues(const StyleValue& value) {
     
+    auto& compound = value.compoundVal();
     // Ensure the 'style' attribute, if present, gets processed first, because the others may override it
-    for (auto i : values) {
-        if (i.first == "style") {
-            auto styleVal = i.second->compoundVal()->_values;
-            applyStyleValues(styleVal);
+    for (auto& field : compound) {
+        if (field.first == "style") {
+            applyStyleValues(field.second);
             break;
         }
     }
 
-    for (auto i : values) {
-        if (i.first == "style") {
+    for (auto& field : compound) {
+        if (field.first == "style" || field.first == "class") {
             continue;
         }
-        StyleValue* val = i.second;
-        if (!applyStyleValue(i.first, val)) {
-            if (_parent && !_parent->applyStyleValueFromChild(i.first, i.second, this)) {
-                app.warn("Ignored unknown attribute '%s'", i.first.data());
+        const StyleValue& val = field.second;
+        if (!applyStyleValue(field.first, &val)) {
+            if (_parent && !_parent->applyStyleValueFromChild(field.first, &val, this)) {
+                app.warn("Ignored unknown attribute '%s'", field.first.data());
             }
         }
     }
@@ -61,7 +60,7 @@ void View::applyStyleValues(const map<string, StyleValue*>& values) {
 
 
 
-bool View::applyStyleValue(const string& name, StyleValue* value) {
+bool View::applyStyleValue(const string& name, const StyleValue* value) {
     if (name == "id") {
         _id = value->stringVal();
         return true;
@@ -115,18 +114,8 @@ bool View::applyStyleValue(const string& name, StyleValue* value) {
         return true;
     }
     if (name == "padding") {
-        auto a = value->arrayVal();
-        if (a.size() == 1) {
-            float pad = a[0]->floatVal();
-            setPadding(EDGEINSETS(pad,pad,pad,pad));
-        } else if (a.size() == 4) {
-            setPadding(EDGEINSETS(a[0]->floatVal(),
-                                  a[1]->floatVal(),
-                                  a[2]->floatVal(),
-                                 a[3]->floatVal()));
-        } else {
-            app.warn("Invalid padding attribute");
-        }
+        EDGEINSETS padding = value->edgeInsetsVal();
+        setPadding(padding);
         return true;
     } else if (name == "paddingHorz") {
         float pad = value->floatVal();
@@ -143,19 +132,19 @@ bool View::applyStyleValue(const string& name, StyleValue* value) {
     return false;
 }
 
-bool View::applyStyleValueFromChild(const string& name, StyleValue* value, View* subview) {
+bool View::applyStyleValueFromChild(const string& name, const StyleValue* value, View* subview) {
     return false;
 }
 
-void processFill(RectRenderOp* op, StyleValue* value) {
-    if (value->type == StyleValue::Type::Compound) {
+void processFill(RectRenderOp* op, const StyleValue& value) {
+    if (value.type == StyleValue::Type::Compound) {
         assert(0); // todo: support compound values
         return;
     }
-    op->setFillColor(value->colorVal());
+    op->setFillColor(value.colorVal());
 }
 
-RenderOp* View::processDrawable(StyleValue* value) {
+RenderOp* View::processDrawable(const StyleValue* value) {
     if (value->isEmpty()) {
         return NULL;
     }
@@ -166,59 +155,44 @@ RenderOp* View::processDrawable(StyleValue* value) {
     }*/
 
     RectRenderOp* op = new RectRenderOp(this);
-    op->setFillColor(value->colorVal());
     
     
     if (value->type == StyleValue::Type::Compound) {
-        auto compoundVal = value->compoundVal();
-        for (auto& it : compoundVal->_values) {
-            StyleValue* subval = it.second;
+        auto& compoundVal = value->compoundVal();
+        for (auto& it : compoundVal) {
+            auto& subval = it.second;
  
             if (it.first == "fill") {
                 processFill(op, subval);
             } else if (it.first == "stroke") {
-                op->setStrokeColor(subval->colorVal());
+                op->setStrokeColor(subval.colorVal());
             } else if (it.first == "stroke-width") {
-                op->setStrokeWidth(subval->floatVal());
+                op->setStrokeWidth(subval.floatVal());
             } else if (it.first == "corner-radius" || it.first == "corner-radii") {
-                op->setCornerRadii(subval->cornerRadiiVal());
+                op->setCornerRadii(subval.cornerRadiiVal());
             } else if (it.first == "inset") {
-                auto a = subval->arrayVal();
-                EDGEINSETS inset;
-                if (a.size()==1) {
-                    inset.left = inset.top = inset.right = inset.bottom = a[0]->floatVal();
-                    op->setInset(inset);
-                } else if (a.size()==4) {
-                    inset.left = a[0]->floatVal();
-                    inset.top = a[1]->floatVal();
-                    inset.right = a[2]->floatVal();
-                    inset.bottom = a[3]->floatVal();
-                    op->setInset(inset);
-                } else {
-                    app.warn("Invalid inset, must be 1 or 4 values");
-                }
+                EDGEINSETS insets = subval.edgeInsetsVal();
+                op->setInset(insets);
             } else {
                 app.warn("Unknown drawable attribute: %s", it.first.data());
             }
         }
+    } else {
+        op->setFillColor(value->colorVal());
     }
     return op;
 }
-/*
 
 
-applyStatemappableStyleValue(name, value, [=](StyleValue* value) {
-});*/
-
-bool View::handleStatemapDeclaration(const string& name, StyleValue* value) {
+bool View::handleStatemapDeclaration(const string& name, const StyleValue* value) {
     if (value->type != StyleValue::Compound) {
         return false;
     }
     
     // Inspect map keys to see if its a statemap or not
-    auto compoundVal = value->compoundVal();
+    auto& compoundVal = value->compoundVal();
     int c = 0;
-    for (auto& k : compoundVal->_values) {
+    for (auto& k : compoundVal) {
         if (k.first == "enabled") c++;
         else if (k.first == "disabled") c++;
         else if (k.first == "pressed") c++;
@@ -235,21 +209,21 @@ bool View::handleStatemapDeclaration(const string& name, StyleValue* value) {
         _statemapStyleValues->erase(name);
     }
     if (!_statemapStyleValues) {
-        _statemapStyleValues = new map<string, StyleMap*>();
+        _statemapStyleValues = new map<string, const StyleValue*>();
     }
-    auto newval = make_pair(name, compoundVal);
+    auto newval = make_pair(name, value);
     _statemapStyleValues->insert(newval);
     
     // Choose initial value immediately
-    applyStatemapStyleValue(name, compoundVal);
+    applyStatemapStyleValue(name, value);
     return true;
 }
 
-void View::applyStatemapStyleValue(const string& name, StyleMap* statemap) {
+void View::applyStatemapStyleValue(const string& name, const StyleValue* statemap) {
     // Walk the map and find the values which apply. Longest (i.e. most state bits) matching value wins.
     list<StyleValue*> matchingValues;
-    StyleValue* bestMatchValue = NULL;
-    for (auto& it : statemap->_values) {
+    const StyleValue* bestMatchValue = NULL;
+    for (auto& it : statemap->compoundVal()) {
         
         // Convert the map entry to a stateset
         STATESET stateset = {0,0};
@@ -262,7 +236,7 @@ void View::applyStatemapStyleValue(const string& name, StyleMap* statemap) {
         
         // If the stateset matches
         if ((_state & stateset.mask) == stateset.state) {
-            bestMatchValue = it.second;
+            bestMatchValue = &it.second;
         }
     }
     

@@ -15,7 +15,7 @@ public:
 	~Label();
     
     // Overrides
-    bool applyStyleValue(const string& name, StyleValue* value) override;
+    bool applyStyleValue(const string& name, const StyleValue* value) override;
     void updateRenderOps() override;
     void measure(float parentWidth, float parentHeight) override;
     void updateContentSize(float parentWidth, float parentHeight) override;
@@ -35,7 +35,7 @@ public:
     virtual void setMaxLines(int maxLines);
     
 #ifdef DEBUG
-    virtual string debugViewType();
+    string debugViewType() override;
 #endif
     
 protected:

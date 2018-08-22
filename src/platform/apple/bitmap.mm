@@ -58,6 +58,8 @@ static int bytesPerPixelForFormat(int format) {
     return 0;
 }
 
+Bitmap::Bitmap() {
+}
 Bitmap::Bitmap(int width, int height, int format) : Bitmap(width, height, format, NULL, 0) {
 }
 
@@ -159,6 +161,10 @@ Bitmap::~Bitmap() {
     if (_context) {
         CGContextRelease(_context);
         _context = NULL;
+    }
+    if (_cfData) {
+        CFRelease(_cfData);
+        _cfData = NULL;
     }
 }
 
@@ -277,36 +283,38 @@ void Bitmap::bind() {
 
 Bitmap* bitmapFromData(const void* data, int cb) {
     CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, data, cb, NULL);
-    CGImageRef fullImage = CGImageCreateWithPNGDataProvider(dataProvider, NULL, NO, kCGRenderingIntentDefault);
-    if (!fullImage) {
-        fullImage = CGImageCreateWithJPEGDataProvider(dataProvider, NULL, NO, kCGRenderingIntentDefault);
+    CGImageRef cgImage = CGImageCreateWithPNGDataProvider(dataProvider, NULL, NO, kCGRenderingIntentDefault);
+    if (!cgImage) {
+        cgImage = CGImageCreateWithJPEGDataProvider(dataProvider, NULL, NO, kCGRenderingIntentDefault);
     }
-    if (!fullImage) {
+    if (!cgImage) {
         return NULL;
     }
-    
-    // Parse CGImage info
-    int width = (int)CGImageGetWidth(fullImage);
-    int height = (int)CGImageGetHeight(fullImage);
-    CGBitmapInfo info = CGImageGetBitmapInfo(fullImage); // may be RGBA, BGRA, or ARGB
-    CGColorSpaceRef colorspace = CGImageGetColorSpace(fullImage);
+    CGColorSpaceRef colorspace = CGImageGetColorSpace(cgImage);
     CGColorSpaceModel colormodel = CGColorSpaceGetModel(colorspace);
-    size_t bpp = CGImageGetBitsPerPixel(fullImage);
+    size_t bpp = CGImageGetBitsPerPixel(cgImage);
     if (bpp < 8 || bpp > 32 || (colormodel != kCGColorSpaceModelMonochrome && colormodel != kCGColorSpaceModelRGB)) {
         assert(0 && "unsupported CGImage type");
         return NULL;
     }
+
+    // Parse CGImage info
+    int width = (int)CGImageGetWidth(cgImage);
+    int height = (int)CGImageGetHeight(cgImage);
+    CGBitmapInfo info = CGImageGetBitmapInfo(cgImage); // may be RGBA, BGRA, or ARGB
     
     // Get a pointer to the uncompressed image data.
     // This allows access to the original (possibly unpremultiplied) data, but any manipulation
     // (such as scaling) has to be done manually. Contrast this with drawing the image
     // into a CGBitmapContext, which allows scaling, but always forces premultiplication.
-    CGDataProviderRef pro = CGImageGetDataProvider(fullImage);
-    CFDataRef data2 = CGDataProviderCopyData(pro);
-    assert(data2);
-    GLubyte* pixels = (GLubyte *)CFDataGetBytePtr(data2);
+    CGDataProviderRef pro = CGImageGetDataProvider(cgImage);
+    CFDataRef dataRef = CGDataProviderCopyData(pro);
+    assert(dataRef);
+    GLubyte* pixels = (GLubyte *)CFDataGetBytePtr(dataRef);
     assert(pixels);
-    size_t cbUncompressed = CFDataGetLength(data2);
+    size_t cbUncompressed = CFDataGetLength(dataRef);
+    CGImageRelease(cgImage);
+
     
     // Conversions from unsupported pixel formats
     int format = BITMAPFORMAT_UNKNOWN;
@@ -361,13 +369,14 @@ Bitmap* bitmapFromData(const void* data, int cb) {
 
     // Create the native bitmap
     Bitmap* bitmap = new Bitmap(width, height, format, pixels, (int)cbUncompressed/height);
-    CGImageRelease(fullImage);
+    bitmap->_cfData = dataRef;
     return bitmap;
 }
 
-Bitmap::Bitmap(const VariantMap& map) : BitmapBase(map) {
-    int32_t stride = map.get("s");
-    ByteBuffer* bb = map.get("bb");
+void Bitmap::fromVariant(const Variant& v) {
+    BitmapBase::fromVariant(v);
+    int32_t stride = v.intVal("s");
+    ByteBuffer* bb = v.byteBufferVal("bb");
     CGColorSpaceRef colorspace = (_format==BITMAPFORMAT_A8) ? CGColorSpaceCreateDeviceGray() : CGColorSpaceCreateDeviceRGB();
     _context = CGBitmapContextCreateWithData(bb->data, _width, _height, 8, stride, colorspace, bitmapInfoForFormat(_format), nil, nil);
     // Flip Y. CoreGraphics bitmaps have origin at lower left but Oaknut coords are top left.
@@ -375,20 +384,21 @@ Bitmap::Bitmap(const VariantMap& map) : BitmapBase(map) {
     CGContextTranslateCTM(_context, 0, -_height);
     assert(_context);
 }
-void Bitmap::writeSelfToVariantMap(VariantMap& map) {
-    BitmapBase::writeSelfToVariantMap(map);
+void Bitmap::toVariant(Variant& v) {
+    BitmapBase::toVariant(v);
     int stride = (int)CGBitmapContextGetBytesPerRow(_context);
-    map.set("s", stride);
+    v.set("s", stride);
     void* data = CGBitmapContextGetData(_context);
     unsigned long cb = stride * CGBitmapContextGetHeight(_context);
-    ObjPtr<ByteBuffer> bb = new ByteBuffer((uint8_t*)data, cb);
-    map.set("bb", bb);
+    v["bb"] = new ByteBuffer((uint8_t*)data, cb);
 }
 
 void BitmapBase::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
     Bitmap* bitmap = bitmapFromData(data, cb);
+    bitmap->retain();
     dispatch_async(dispatch_get_main_queue(), ^() {
         callback(bitmap);
+        bitmap->release();
     });
 }
 

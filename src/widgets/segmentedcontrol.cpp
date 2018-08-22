@@ -16,7 +16,7 @@ SegmentedControl::SegmentedControl() {
 	_selectedIndex = _pressedIndex = -1;
 }
 
-bool SegmentedControl::applyStyleValue(const string &name, StyleValue *value) {
+bool SegmentedControl::applyStyleValue(const string &name, const StyleValue *value) {
     if (name == "stroke-width") {
         _lineWidth = value->floatVal();
         return true;

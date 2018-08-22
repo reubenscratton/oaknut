@@ -25,7 +25,7 @@ FontBase::~FontBase() {
 
 
 Font* FontBase::get(const string& name, float size) {
-    string fkey = string::format("%f-%s", size, name.data());
+    string fkey = string::format(name.length() ? "%f-%s" : "%f", size, name.data());
     auto it = s_loadedFonts.find(fkey);
     if (it != s_loadedFonts.end()) {
         return it->second;
