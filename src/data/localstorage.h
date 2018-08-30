@@ -40,11 +40,11 @@ public:
     
     // Querying
     virtual void getCount(std::function<void(int)> success)=0;
-    virtual void getAll(std::function<void(Variant*)> success)=0;
-    virtual void getOne(const Variant& primaryKeyVal, std::function<void(Variant*)> success)=0;
+    virtual void getAll(std::function<void(variant*)> success)=0;
+    virtual void getOne(const variant& primaryKeyVal, std::function<void(variant*)> success)=0;
 
     // Update
-    virtual void remove(const Variant& primaryKeyVal, std::function<void(void)> callback)=0;
+    virtual void remove(const variant& primaryKeyVal, std::function<void(void)> callback)=0;
     virtual void put(ISerializeToVariant* object, std::function<void(void)> callback)=0; // Insert a new record or replace an existing one
     
 protected:

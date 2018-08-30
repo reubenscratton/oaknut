@@ -373,24 +373,27 @@ Bitmap* bitmapFromData(const void* data, int cb) {
     return bitmap;
 }
 
-void Bitmap::fromVariant(const Variant& v) {
+void Bitmap::fromVariant(const variant& v) {
     BitmapBase::fromVariant(v);
     int32_t stride = v.intVal("s");
-    ByteBuffer* bb = v.byteBufferVal("bb");
+    auto bb = v.bytearrayVal("bb");
     CGColorSpaceRef colorspace = (_format==BITMAPFORMAT_A8) ? CGColorSpaceCreateDeviceGray() : CGColorSpaceCreateDeviceRGB();
-    _context = CGBitmapContextCreateWithData(bb->data, _width, _height, 8, stride, colorspace, bitmapInfoForFormat(_format), nil, nil);
+    _context = CGBitmapContextCreateWithData(NULL, _width, _height, 8, stride, colorspace, bitmapInfoForFormat(_format), nil, nil);
+    void* pixels = CGBitmapContextGetData(_context);
+    memcpy(pixels, bb.data(), bb.size());
+
     // Flip Y. CoreGraphics bitmaps have origin at lower left but Oaknut coords are top left.
     CGContextScaleCTM(_context, 1, -1);
     CGContextTranslateCTM(_context, 0, -_height);
     assert(_context);
 }
-void Bitmap::toVariant(Variant& v) {
+void Bitmap::toVariant(variant& v) {
     BitmapBase::toVariant(v);
     int stride = (int)CGBitmapContextGetBytesPerRow(_context);
     v.set("s", stride);
-    void* data = CGBitmapContextGetData(_context);
-    unsigned long cb = stride * CGBitmapContextGetHeight(_context);
-    v["bb"] = new ByteBuffer((uint8_t*)data, cb);
+    uint8_t* data = (uint8_t*)CGBitmapContextGetData(_context);
+    uint32_t cb = stride * (uint32_t)CGBitmapContextGetHeight(_context);
+    v["bb"] = bytearray(data, cb);
 }
 
 void BitmapBase::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {

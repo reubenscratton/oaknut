@@ -5,6 +5,71 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+
+/**
+ * @ingroup base_group
+ * @class bytearray
+ * @brief An alternative to std::vector<uint8_t>
+ *
+ * A simple array of bytes as distinct from a string.
+ */
+
+class bytearray {
+public:
+    bytearray() : _p(NULL), _cb(0) {
+    }
+    bytearray(int32_t cb) : _cb(cb) {
+        _p = ((uint8_t*)malloc(cb));
+    }
+    bytearray(const uint8_t* p, int32_t cb) : bytearray() {
+        assign(p, cb);
+    }
+    bytearray(const bytearray& src) : _p(NULL), _cb(0) {
+        assign(src._p, src._cb);
+    }
+    bytearray(bytearray&& other) noexcept : _p(other._p), _cb(other._cb) {
+        other._p = NULL;
+        other._cb = 0;
+    }
+    ~bytearray() {
+        if (_p) {
+            free(_p);
+        }
+    }
+    
+    uint8_t* data() const noexcept {
+        return _p;
+    }
+    int32_t size() const noexcept {
+        return _cb;
+    }
+    int32_t length() const noexcept {
+        return _cb;
+    }
+
+    // Modification
+    void assign(const uint8_t* p, int32_t cb);
+    void assignNoCopy(uint8_t* p, int32_t cb);
+    bytearray& operator=(const bytearray& str);
+    void append(const bytearray& str);
+    void append(const uint8_t* p, int32_t cb);
+    void append(uint8_t byte);
+    bytearray& operator+=(const bytearray& str) { append(str); return *this; }
+    friend bytearray operator+(const bytearray& lhs, const bytearray& rhs);
+    void insert(int32_t offset, const bytearray& str);
+    void insert(int32_t offset, const uint8_t* p, int32_t cb);
+    void erase(int32_t offset);
+    void erase(int32_t offsetStart, int32_t cb);
+    void resize(int32_t newSize);
+
+    class string toString(bool copy);
+    
+protected:
+    uint8_t* _p;
+    int32_t _cb;
+};
+
+
 /**
  * @ingroup base_group
  * @class string
@@ -26,6 +91,8 @@
  * Future: Support UTF-32 as well via pointer-tagging. Let the encoding be a settable
  * property of the string which just defaults to UTF-8.
  */
+
+
 class string {
 public:
     string() : _p(NULL), _cb(0), _cc(0) {
@@ -77,6 +144,7 @@ public:
     
     // Search
     int32_t find(const string& str) const;
+    int32_t find(const string& str, int32_t start) const;
     int32_t find(const char* s) const;
     int32_t find(char32_t ch) const;
     bool contains(const string& str) const;
@@ -84,9 +152,9 @@ public:
     bool contains(char32_t ch) const;
     
     static string format(const char* fmt, ...);
-    string toBase64() const;
-    
+
     // Modification
+    void assign(const char* p, int32_t cb);
     string& operator=(const string& str);
     string& operator=(const char* s);
     void append(const string& str);
@@ -155,19 +223,22 @@ public:
 
     size_t hash() const;
     string lowercase() const;
+    vector<string> split(const string& delimiter);
     
     friend class Stream;
     friend class ByteBuffer;
+    friend class bytearray;
+    
     
     static string uuid();
     static string hex(const void* p, int32_t cb);
+    bytearray unhex();
     
 protected:
     char* _p;
     int32_t _cb; // byte count (not including terminating null char)
     int32_t _cc; // character count (not including terminating null char)
     
-    void assign(const char* p, int32_t cb);
     int32_t charIndexToByteIndex(int32_t charIndex) const;
     char32_t readUtf8(int32_t& byteOffset) const;
     void normaliseCharRange(int32_t& charIndexStart, int32_t& charIndexEnd) const;

@@ -22,7 +22,7 @@ public:
     
     void reload() {
         _items.clear();
-        _store->getAll([=] (Variant* value) {
+        _store->getAll([=] (variant* value) {
             if (value) {
                 Snapshot* snapshot = new Snapshot();
                 snapshot->fromVariant(*value);
@@ -38,7 +38,7 @@ public:
     void deleteItem(LISTINDEX index) {
         int realIndex = listIndexToRealIndex(index);
         Snapshot* snapshot = (Snapshot*)_items[realIndex]._obj;
-        _store->remove(Variant(snapshot->_timestamp), [=]() {
+        _store->remove(variant(snapshot->_timestamp), [=]() {
             SimpleListAdapter::deleteItem(index);
         });
     }

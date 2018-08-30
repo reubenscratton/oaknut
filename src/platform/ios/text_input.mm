@@ -280,6 +280,7 @@ void App::keyboardNotifyTextChanged() {
     SimpleTextPos* posStart = (SimpleTextPos*)range.start;
     SimpleTextPos* posEnd = (SimpleTextPos*)range.end;
     string text = app._window->_textInputReceiver->textInRange((int)posStart.pos, (int)posEnd.pos);
+    if (text.data() == NULL) text = "";
     NSLOG(@"textInRange %d:%d -> %s", posStart.pos, posEnd.pos, text.data());
     return [NSString stringWithUTF8String:text.data()];
 }

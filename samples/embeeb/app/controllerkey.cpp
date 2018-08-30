@@ -13,7 +13,7 @@
 
 
 
-ControllerKey* ControllerKey::keyFromJson(const Variant& v, Controller* controller) {
+ControllerKey* ControllerKey::keyFromJson(const variant& v, Controller* controller) {
 	auto key = new ControllerKeySingle(controller);
     key->fromVariant(v);
     return key;
@@ -26,7 +26,7 @@ ControllerKey::ControllerKey(Controller* controller) {
     controller->addKey(this);
 }
 
-void ControllerKey::fromVariant(const Variant& v) {
+void ControllerKey::fromVariant(const variant& v) {
 	_rect = RECTfromString(v.stringVal("rect"));
 }
 
@@ -36,7 +36,7 @@ ControllerKey::ControllerKey(const ControllerKey& src) {
 }
 
 
-void ControllerKey::toVariant(Variant &v) {
+void ControllerKey::toVariant(variant &v) {
 	v["rect"] = _rect.toString();
 }
 
@@ -101,7 +101,7 @@ void ControllerKey::handleTouchEnd() {
 ControllerKeySingle::ControllerKeySingle(Controller* controller) : ControllerKey(controller) {
 }
 
-void ControllerKeySingle::fromVariant(const Variant& v) {
+void ControllerKeySingle::fromVariant(const variant& v) {
     ControllerKey::fromVariant(v);
 	_action = v.stringVal("a");
 	_beebKey = BeebKey_keyByName(v.stringVal("b").data());
@@ -109,7 +109,7 @@ void ControllerKeySingle::fromVariant(const Variant& v) {
 	_nameOfControllerToActivate = v.stringVal("c");
 }
 
-void ControllerKeySingle::toVariant(Variant& v) {
+void ControllerKeySingle::toVariant(variant& v) {
 	ControllerKey::toVariant(v);
 	v["a"] = _action;
 	v["b"] = _beebKeyName;

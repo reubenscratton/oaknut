@@ -30,19 +30,26 @@ public:
         // This is a rather special case. Instead of calling dispatchResult() we use
         // a special web-only Bitmap constructor and call the handler manually.
         ObjPtr<Bitmap> bitmap = new Bitmap(req->_val, isPng);
+        req->_httpStatus = 200;
         req->_val = val::null();
         if (req->_handlerBitmap) {
-            req->_handlerBitmap(200, bitmap);
+            req->_handlerBitmap(req, bitmap);
         }
         req->release();
     }
-    static void OnNonImageLoad(URLRequestWeb* req, int httpStatus, uint8_t* data, int data_size, int timestamp) {
-        //printf("done data_size:%d\n", data_size);
-        ObjPtr<ByteBuffer> emdata = new ByteBuffer();
-        emdata->data = (uint8_t*)malloc(data_size);
-        memcpy(emdata->data, data, data_size);
-        emdata->cb = data_size;
-        req->dispatchResult(httpStatus, {}, emdata);
+    static void OnNonImageLoad(URLRequestWeb* req, int httpStatus, uint8_t* data, int data_size, int timestamp, const char* szHeaders) {
+        vector<string> headers = string(szHeaders).split("\r\n");
+        map<string,string> headerMap;
+        for (auto& header: headers) {
+            int32_t colonPos = header.find(':');
+            if (colonPos>0) {
+                string name = header.substr(0, colonPos);
+                string value = header.substr(colonPos+1, -1);
+                headerMap[name] = value;
+            }
+        }
+        req->_responseData.assignNoCopy(data, data_size);
+        req->dispatchResult(httpStatus, headerMap);
     }
 
     virtual void run() {
@@ -106,22 +113,18 @@ public:
                         case 300:
                         case 301:
                         case 302:
-                            // Bloody CORS screws this
-                            /*
-                             var content_length=xhr.getResponseHeader('Content-Length');
-                             if(content_length===null)content_length=-1; // needed for HEAD requests
-                             var content_range =xhr.getResponseHeader('Content-Range'); var cr=-1;
-                             if(content_range!=null) {
-                             var i=content_range.indexOf('/');
-                             if(i>=0)cr=parseInt(content_range.substr(i+1));
-                             }*/
+                            var headers=xhr.getAllResponseHeaders();
+                            var cb=lengthBytesUTF8(headers) + 1;
+                            var headersBuff=_malloc(cb);
+                            stringToUTF8(headers, headersBuff, cb);
+
                             var date=xhr.getResponseHeader('Last-Modified');
                             date=((date!=null) ? new Date(date).getTime()/1000 : 0);
                             var byteArray=new Uint8Array(xhr.response);
                             var buffer=_malloc(byteArray.length);
                             HEAPU8.set(byteArray, buffer);
-                            Runtime.dynCall('viiiii', onload, [req, xhr.status, buffer, byteArray.length, date]);
-                            //_free(buffer);
+                            Runtime.dynCall('viiiiii', onload, [req, xhr.status, buffer, byteArray.length, date,headersBuff]);
+                            Module._free(headersBuff);
                             break;
                             
                         default:

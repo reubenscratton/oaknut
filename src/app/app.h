@@ -58,13 +58,10 @@ public:
     
     void keyboardNotifyTextChanged();
 
-    typedef enum {
-        General,
-        UserDocument,
-        Cache
-    } FileType;
-    string getDirectoryForFileType(FileType fileType);
-    
+    string getPathForGeneralFiles();
+    string getPathForUserDocuments();
+    string getPathForCacheFiles();
+
     
     /** @name Styles
      * @{
@@ -87,6 +84,11 @@ public:
 
     /** Get the Font for a named font style */
     class Font* getStyleFont(const string& key);
+    
+    /** Return the insets that should be applied to the window rect to
+        avoid occluding overlays such as the status bar */
+    EDGEINSETS getWindowSafeAreaInsets();
+
     
     /**@}*/
     

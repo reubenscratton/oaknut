@@ -25,6 +25,12 @@ NavigationController::NavigationController() {
 }
 
 void NavigationController::pushViewController(ViewController* vc) {
+    
+    // Give the new chld VC appropriate safe area insets
+    EDGEINSETS safeAreaInsets = app.getWindowSafeAreaInsets();
+    safeAreaInsets.top += app.getStyleFloat("navbar.height");
+    vc->setSafeAreaInsets(safeAreaInsets);
+
     if (!_currentViewController) {
 		vc->_navigationController = this;
 		_navBar->addNavigationItem(vc->_navigationItem);

@@ -49,10 +49,6 @@ void ViewController::setView(View* view) {
 }
 
 
-/*View* ViewController::dispatchTouchEvent(int eventType, int finger, TIMESTAMP time, POINT pt) {
-	return _view->dispatchInputEvent(eventType, finger, time, pt);
-}*/
-
 
 void ViewController::onWillResume() {
 }
@@ -68,3 +64,9 @@ void ViewController::onBackButtonClicked() {
 		_navigationController->popViewController();
 	}
 }
+
+
+void ViewController::setSafeAreaInsets(const EDGEINSETS& safeAreaInsets) {
+    _view->setPadding(safeAreaInsets);
+}
+

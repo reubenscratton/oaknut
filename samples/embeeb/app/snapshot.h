@@ -12,14 +12,14 @@ public:
     string _label;
     TIMESTAMP _timestamp;
     ObjPtr<Bitmap> _thumbnail;
-    ObjPtr<ByteBuffer> _data;
+    bytearray _data;
     string _controllerId;
 
     Snapshot();
     void updateWithData(ByteBuffer* data, Bitmap* thumbnail, string controllerId);
 
     // ISerializeToVariant
-    void fromVariant(const Variant& v) override;
-    void toVariant(Variant& v) override;
+    void fromVariant(const variant& v) override;
+    void toVariant(variant& v) override;
 };
 

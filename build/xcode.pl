@@ -10,7 +10,7 @@
 #   1. Set the executable to be /usr/bin/perl and untick the 'Debug executable' box.
 #   2. Add this single launch argument:
 #
-#         $(EMSCRIPTEN_ROOT)/emrun.py $(SRCROOT)/.build/web/debug/webroot/xx.html
+#      $(EMSCRIPTEN_ROOT)/emrun.py $(SRCROOT)/.build/$(TARGET_NAME)/$(CONFIGURATION)/webroot/xx.html
 #
 # Now you should be able to run your app in your web browser directly from Xcode.
 #
@@ -167,7 +167,7 @@ sub gen_target {
 
 	# Extract the bundle identifier from the Info.plist. This is contrary to normal XCode usage where the .plist
 	# references the PRODUCT_BUNDLE_IDENTIFIER setting in the project file.
-	open my $input, '<', "platform/macos/Info.plist" or die "can't open info.plist: $!";
+	open my $input, '<', $info_plist_path or die "can't open info.plist: $!";
 	my @lines = <$input>;
 	my $info = join('\n',@lines);
 	close $input;
@@ -199,7 +199,7 @@ sub gen_target {
 		dependencies = (
 		);
 		name = $target_name;
-		productName = AppName;
+		productName = $projectname;
 		productReference = $product_ref;
 		productType = "com.apple.product-type.application";
 	};
@@ -215,12 +215,12 @@ sub gen_target {
 	$bc_native_debug_ref = {
 		isa = XCBuildConfiguration;
 		buildSettings = $build_settings;
-		name = Debug;
+		name = debug;
 	};
 	$bc_native_release_ref = {
 		isa = XCBuildConfiguration;
 		buildSettings = $build_settings;
-		name = Release;
+		name = release;
 	};
 	$phase_sources_ref = {
 		isa = PBXSourcesBuildPhase;
@@ -323,17 +323,65 @@ my ($ios_target_ref, $ios_target_decls)=gen_target("iOS",
 				);
 				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				LD_RUNPATH_SEARCH_PATHS = "\$(inherited) \@executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = org.oaknut.samples.minesweeper;
 				PRODUCT_NAME = $projectname;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				));
 
+sub gen_web_target {
+	my ($target_name)=@_;
+	my $web_target_ref=genref();
+	my $web_bcl_ref=genref();
+	my $web_bc_debug_ref=genref();
+	my $web_bc_release_ref=genref();
 
-my $web_target_ref=genref();
-my $web_bcl_ref=genref();
-my $web_bc_debug_ref=genref();
-my $web_bc_release_ref=genref();
+	my $web_target_decls=qq(
+		$web_target_ref /* $target_name */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "\$(ACTION) PLATFORM=\$(TARGET_NAME) CONFIG=\$(CONFIGURATION)";
+			buildConfigurationList = $web_bcl_ref /* Build configuration list for PBXLegacyTarget "$target_name" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = "";
+			dependencies = (
+			);
+			name = $target_name;
+			passBuildSettingsInEnvironment = 1;
+			productName = $projectname;
+		};
+		$web_bcl_ref /* Build configuration list for PBXLegacyTarget "$target_name" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				$web_bc_debug_ref /* debug */,
+				$web_bc_release_ref /* release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = release;
+		};
+		$web_bc_debug_ref /* debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EMSCRIPTEN_ROOT = "$ENV{'EMSCRIPTEN_ROOT'}";
+				OAKNUT_DIR = $ENV{'OAKNUT_DIR'};
+			};
+			name = debug;
+		};
+		$web_bc_release_ref /* release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EMSCRIPTEN_ROOT = "$ENV{'EMSCRIPTEN_ROOT'}";
+				OAKNUT_DIR = $ENV{'OAKNUT_DIR'};
+			};
+			name = release;
+		};
+	);
+
+	return ($web_target_ref, $web_target_decls);
+}
+
+my ($web_asmjs_target_ref, $web_asmjs_target_decls)=gen_web_target("web_asmjs");
+my ($web_wasm_target_ref, $web_wasm_target_decls)=gen_web_target("web_wasm");
 
 
 
@@ -376,7 +424,8 @@ objects = {
 		targets = (
 			$macos_target_ref,
 			$ios_target_ref,
-			$web_target_ref,
+			$web_asmjs_target_ref,
+			$web_wasm_target_ref,
 		);
 	};
 	$bcl_ref = {
@@ -401,7 +450,7 @@ objects = {
 				"DEBUG=1",
 			);
 		};
-		name = Debug;
+		name = debug;
 	};
 	$bc_release_ref = {
 		isa = XCBuildConfiguration;
@@ -411,7 +460,7 @@ objects = {
 			ENABLE_NS_ASSERTIONS = NO;
 			GCC_PREPROCESSOR_DEFINITIONS = "PLATFORM_APPLE=1";
 		};
-		name = Release;
+		name = release;
 	};
 	$main_group_ref = {
 		isa = PBXGroup;
@@ -447,45 +496,9 @@ objects = {
 
 	$ios_target_decls
 
-		$web_target_ref /* web */ = {
-			isa = PBXLegacyTarget;
-			buildArgumentsString = "\$(ACTION) PLATFORM=web";
-			buildConfigurationList = $web_bcl_ref /* Build configuration list for PBXLegacyTarget "web" */;
-			buildPhases = (
-			);
-			buildToolPath = /usr/bin/make;
-			buildWorkingDirectory = "";
-			dependencies = (
-			);
-			name = web;
-			passBuildSettingsInEnvironment = 1;
-			productName = Minesweeper;
-		};
-		$web_bcl_ref /* Build configuration list for PBXLegacyTarget "web" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				$web_bc_debug_ref /* Debug */,
-				$web_bc_release_ref /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		$web_bc_debug_ref /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				EMSCRIPTEN_ROOT = "$ENV{'EMSCRIPTEN_ROOT'}";
-				OAKNUT_DIR = $ENV{'OAKNUT_DIR'};
-			};
-			name = Debug;
-		};
-		$web_bc_release_ref /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				EMSCRIPTEN_ROOT = "$ENV{'EMSCRIPTEN_ROOT'}";
-				OAKNUT_DIR = $ENV{'OAKNUT_DIR'};
-			};
-			name = Release;
-		};
+	$web_asmjs_target_decls
+	$web_wasm_target_decls
+
 
 	};
     rootObject = $proj_ref;

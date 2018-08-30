@@ -7,6 +7,7 @@
 
 #include <oaknut.h>
 
+void test_string();
 
 class MainViewController : public ViewController {
 public:
@@ -15,7 +16,7 @@ public:
 };
 
 
-class SerializableObj : public Object, public ISerializeToVariantMap {
+class SerializableObj : public Object, public ISerializeToVariant {
 public:
     int _int;
     string _str;
@@ -27,12 +28,12 @@ public:
         _float = f;
     }
     
-    SerializableObj(const VariantMap& v) {
-        _int = v["i"];
-        _str = (string)v["s"];
-        _float = v["f"];
+    void fromVariant(const variant& v) override {
+        _int = v.intVal("i");
+        _str = v.stringVal("s");
+        _float = v.floatVal("f");
     }
-    virtual void writeSelfToVariantMap(VariantMap& v) {
+    void toVariant(variant& v) override {
         v["i"] = _int;
         v["s"] = _str;
         v["f"] = _float;
@@ -47,7 +48,10 @@ void App::main() {
     MainViewController* mainVC = new MainViewController();
     _window->setRootViewController(mainVC);
     
-    LocalStore* localStore = LocalStore::create("test", "i");
+    test_string();
+    
+    
+    /*LocalStore* localStore = LocalStore::create("test", "i");
     localStore->open();
     localStore->put(new SerializableObj(1, "foo", 3.14f));
     localStore->put(new SerializableObj(2, "bar", 2.7818f));
@@ -65,7 +69,7 @@ void App::main() {
     assert(map["i"] == 2);
     assert(map["s"] == "bar");
     assert(map["f"] == 2.7818f);
-    localStore->close();
+    localStore->close();*/
 
     log("Tests passed!");
     exit(0);

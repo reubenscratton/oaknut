@@ -100,8 +100,8 @@ public:
     Bitmap* convertToFormat(int newFormat);
     
     // ISerializeToVariant
-    void fromVariant(const Variant& v) override;
-    void toVariant(Variant& v) override;
+    void fromVariant(const variant& v) override;
+    void toVariant(variant& v) override;
     
 
     // Platform-specific instantiation

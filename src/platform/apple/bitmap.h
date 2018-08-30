@@ -36,8 +36,8 @@ public:
     void unlock(PIXELDATA* pixelData, bool pixelDataChanged) override;
     void bind() override;
     
-    void fromVariant(const Variant& v) override;
-    void toVariant(Variant& v) override;
+    void fromVariant(const variant& v) override;
+    void toVariant(variant& v) override;
     
 private:
     void createBitmapContext();

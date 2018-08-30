@@ -19,7 +19,6 @@ typedef float GLfloat;
 #include <android/native_window_jni.h>
 
 #include <jni.h>
-#include <string>
 #include <sys/time.h>
 #include <time.h>
 
@@ -37,8 +36,7 @@ typedef float GLfloat;
 #  define LOGV(...)  ((void)0)
 #endif
 
-using namespace std;
+//using namespace std;
 
 extern JavaVM* g_jvm;
 JNIEnv* getJNIEnv();
-

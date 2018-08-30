@@ -458,8 +458,6 @@ const StyleValue* StyleValue::get(const string& keypath) const {
     return val->select();
 }
 
-extern Variant parseNumber(StringProcessor& it);
-
 
 bool StyleValue::parse(StringProcessor& it, bool inArrayVal/*=false*/) {
     it.skipWhitespace();
@@ -588,7 +586,7 @@ bool StyleValue::parse(StringProcessor& it, bool inArrayVal/*=false*/) {
     else {
         char ch = it.peek();
         if (ch>='0' && ch<='9') {
-            Variant v = parseNumber(it);
+            variant v = variant::parseNumber(it);
             if (it.nextWas("dp")) {
                 setType(Measure);
                 measurement = Measurement(v.floatVal(), Measurement::DP);
@@ -601,7 +599,7 @@ bool StyleValue::parse(StringProcessor& it, bool inArrayVal/*=false*/) {
                 setType(Measure);
                 measurement = Measurement(v.floatVal(), Measurement::PX);
             } else {
-                if (v.type == Variant::FLOAT32) {
+                if (v.type == variant::FLOAT32) {
                     setType(Float);
                     f = v.floatVal();
                 } else {

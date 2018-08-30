@@ -29,6 +29,6 @@ public:
 protected:
     string srcfile;
     
-    virtual void handleJson(const Variant& json);
+    virtual void handleJson(const variant& json);
 };
 

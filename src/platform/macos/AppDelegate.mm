@@ -95,6 +95,8 @@ static bool s_mouseIsDown;
     self.acceptsTouchEvents = YES;
     
     s_oaknutView = self;
+    
+    [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawNever];
 
     NSOpenGLPixelFormatAttribute attrs[] = {
         NSOpenGLPFADoubleBuffer,
@@ -166,26 +168,27 @@ static bool s_mouseIsDown;
     if (!_calledMain) {
         _calledMain = true;
     }
-    _renderNeeded = NO;
     app._window->draw();
     CGLFlushDrawable([context CGLContextObj]);
     CGLUnlockContext([context CGLContextObj]);
 }
 
-- (void)setNeedsDisplay2 {
-    if (!_renderNeeded) {
-        _renderNeeded = YES;
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self setNeedsDisplay:YES];
-        });
-    }
-}
 
 @end
 
+EDGEINSETS App::getWindowSafeAreaInsets() {
+    return {0,0,0,0};
+}
 
 void App::requestRedraw() {
-    [s_oaknutView setNeedsDisplay2];
+    if (!_renderNeeded) {
+        _renderNeeded = YES;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            _renderNeeded = NO;
+            [s_oaknutView setNeedsDisplay:YES];
+        });
+    }
+
 }
 
 @interface AppDelegate ()

@@ -15,6 +15,18 @@ int App::getIntSetting(const char *key, const int defaultValue) {
 void App::setIntSetting(const char* key, const int value) {
     [[NSUserDefaults standardUserDefaults] setObject:@(value) forKey:[NSString stringWithCString:key encoding:NSUTF8StringEncoding]];
 }
+string App::getStringSetting(const char *key, const char* defaultValue) {
+    id val = [[NSUserDefaults standardUserDefaults] objectForKey:[NSString stringWithCString:key encoding:NSUTF8StringEncoding]];
+    if (!val) {
+        return defaultValue;
+    }
+    NSString* nsstring = val;
+    return string([nsstring cStringUsingEncoding:NSUTF8StringEncoding]);
+}
+void App::setStringSetting(const char* key, const char* value) {
+    NSString* val = [NSString stringWithCString:value encoding:NSUTF8StringEncoding];
+    [[NSUserDefaults standardUserDefaults] setObject:val forKey:[NSString stringWithCString:key encoding:NSUTF8StringEncoding]];
+}
 
 TIMESTAMP App::currentMillis() {
     //return CACurrentMediaTime()*1000;
@@ -23,14 +35,8 @@ TIMESTAMP App::currentMillis() {
     return ms.count();
 }
 
-string App::getDirectoryForFileType(FileType fileType) {
-    NSSearchPathDirectory spd;
-    switch (fileType) {
-        case UserDocument: spd=NSDocumentDirectory; break;
-        case General: spd=NSApplicationSupportDirectory; break;
-        case Cache: spd=NSCachesDirectory;
-        default: return ".";
-    }
+
+static string getPath(NSSearchPathDirectory spd) {
     // TODO: Create a 'appname' subdirectory for app support and cache options rather than blart all over the root dir
     NSURL* url = [[[NSFileManager defaultManager] URLsForDirectory:spd inDomains:NSUserDomainMask] lastObject];\
     string str = url.fileSystemRepresentation;
@@ -38,6 +44,15 @@ string App::getDirectoryForFileType(FileType fileType) {
     return str;
 }
 
+string App::getPathForGeneralFiles() {
+    return getPath(NSApplicationSupportDirectory);
+}
+string App::getPathForUserDocuments() {
+    return getPath(NSDocumentDirectory);
+}
+string App::getPathForCacheFiles() {
+    return getPath(NSCachesDirectory);
+}
 
 
 #if TARGET_OS_IOS

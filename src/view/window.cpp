@@ -45,6 +45,7 @@ void Window::resizeSurface(int width, int height, float scale) {
     if (_surface->_size.width==width && _surface->_size.height==height) {
         return;
     }
+    _safeAreaInsets = app.getWindowSafeAreaInsets();
 	//app.log("Window::resize %d %d %d", width, height, scale);
     _surfaceRect = RECT(0,0,width,height);
 	_scale = scale;

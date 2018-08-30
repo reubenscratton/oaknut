@@ -87,14 +87,11 @@ public:
      */
     virtual void detachFromWindow();
     
-    /**
-     * Helper for dispatching touch events from the host OS.
-     */
-	//virtual View* dispatchTouchEvent(int eventType, int finger, TIMESTAMP time, POINT pt);
+    
+    virtual void setSafeAreaInsets(const EDGEINSETS& safeAreaInsets);
 	
 
 protected:
     ObjPtr<View> _view;
-
 };
 

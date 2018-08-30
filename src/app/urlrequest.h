@@ -33,12 +33,17 @@ public:
     
     void setHeader(const string& headerName, const string& headerValue);
 
-    void handleData(std::function<void(int httpStatus, ByteBuffer*)> handler);
-    void handleJson(std::function<void(int httpStatus, const Variant&)> handler);
-    void handleBitmap(std::function<void(int httpStatus, Bitmap*)> handler);
+    void handleData(std::function<void(URLRequest* req)> handler);
+    void handleJson(std::function<void(URLRequest* req, const variant&)> handler);
+    void handleBitmap(std::function<void(URLRequest* req, Bitmap*)> handler);
     
     virtual void run() =0;
     virtual void cancel() =0;
+    
+    bool error();
+    
+    int getHttpStatus() const { return _httpStatus; }
+    const bytearray& getResponseData() const { return _responseData; }
     
 protected:
     URLRequest(const string& url, const string& method, const string& body, int flags);
@@ -47,15 +52,17 @@ protected:
     string _method;
     map<string,string> _headers;
     string _body;
+    int _httpStatus;
+    bytearray _responseData;
     int _flags;
     bool _cancelled;
-    std::function<void(int httpStatus, ByteBuffer*)> _handlerData;
-    std::function<void(int httpStatus, const Variant&)> _handlerJson;
-    std::function<void(int httpStatus, Bitmap*)> _handlerBitmap;
+    std::function<void(URLRequest* req)> _handlerData;
+    std::function<void(URLRequest* req, const variant&)> _handlerJson;
+    std::function<void(URLRequest* req, Bitmap*)> _handlerBitmap;
     
     static URLRequest* create(const string& url, const string& method, const string& body, int flags);
 
-    void dispatchResult(int httpStatus, const map<string, string>& responseHeaders, ByteBuffer* data);
+    virtual void dispatchResult(int httpStatus, const map<string, string>& responseHeaders);
 };
 
 

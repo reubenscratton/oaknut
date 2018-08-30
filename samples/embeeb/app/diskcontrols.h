@@ -22,8 +22,8 @@ public:
 	DiskControls();
 	DiskControls(const DiskControls& src);
 	
-    void fromVariant(const Variant& v) override;
-	void toVariant(Variant& v) override;
+    void fromVariant(const variant& v) override;
+	void toVariant(variant& v) override;
     
 	virtual Controller* controllerById(const string& controllerId);
 	virtual Controller* initialController();

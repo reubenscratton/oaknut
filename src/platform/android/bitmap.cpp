@@ -11,42 +11,74 @@
 
 static jclass jclassBitmap;
 static jmethodID jmidCreateBitmap;
+static jmethodID jmidCopyPixelsFromBuffer;
+static jmethodID jmidCopyPixelsToBuffer;
+static jmethodID jmidGetRowBytes;
 static jclass jclassBitmapFactory;
 static jmethodID jmidDecodeByteArray;
 static jobject configAlpha8;
 static jobject configARGB8888;
 static jobject configRGB565;
+static jclass jclassByteBuffer;
+static jmethodID jmidAllocateDirect;
 
+static JNIEnv* getBitmapEnv() {
+  JNIEnv* env = getJNIEnv();
+  if (!jclassBitmap) {
+      jclassBitmap = env->FindClass("android/graphics/Bitmap");
+      jclassBitmap = (jclass) env->NewGlobalRef(jclassBitmap);
+      jmidCreateBitmap = env->GetStaticMethodID(jclassBitmap, "createBitmap",
+                                                   "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
+      jclass jclassBitmapConfig = env->FindClass("android/graphics/Bitmap$Config");
+      jfieldID fidAlpha8 = env->GetStaticFieldID(jclassBitmapConfig , "ALPHA_8", "Landroid/graphics/Bitmap$Config;");
+      jfieldID fidARGB8888 = env->GetStaticFieldID(jclassBitmapConfig , "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
+      jfieldID fidRGB565 = env->GetStaticFieldID(jclassBitmapConfig , "RGB_565", "Landroid/graphics/Bitmap$Config;");
+      configAlpha8 = env->NewGlobalRef(env->GetStaticObjectField(jclassBitmapConfig, fidAlpha8));
+      configARGB8888 = env->NewGlobalRef(env->GetStaticObjectField(jclassBitmapConfig, fidARGB8888));
+      configRGB565 = env->NewGlobalRef(env->GetStaticObjectField(jclassBitmapConfig, fidRGB565));
+      jmidCopyPixelsFromBuffer = env->GetMethodID(jclassBitmap, "copyPixelsFromBuffer",
+                                                   "(Ljava/nio/Buffer;)V");
+      jmidCopyPixelsToBuffer = env->GetMethodID(jclassBitmap, "copyPixelsFromBuffer",
+                                                   "(Ljava/nio/Buffer;)V");
+      jmidGetRowBytes = env->GetMethodID(jclassBitmap, "getRowBytes", "()I");
+      jclassByteBuffer = env->FindClass("java/nio/ByteBuffer");
+      jclassByteBuffer = (jclass) env->NewGlobalRef(jclassByteBuffer);
+      jmidAllocateDirect = env->GetStaticMethodID(jclassByteBuffer, "allocateDirect",
+                    "(I)Ljava/nio/ByteBuffer;");
+
+  }
+  return env;
+}
+static jobject createAndroidBitmap(int width, int height, int format, bytearray* pixels) {
+  auto env = getBitmapEnv();
+  jobject jformat;
+  if (format == BITMAPFORMAT_RGBA32) jformat = configARGB8888;
+  else if (format == BITMAPFORMAT_RGB565) jformat = configRGB565;
+  else if (format == BITMAPFORMAT_A8) jformat = configAlpha8;
+  else assert(0);
+  jobject androidBitmap = env->CallStaticObjectMethod(jclassBitmap, jmidCreateBitmap, width, height, jformat);
+  assert(androidBitmap);
+  if (pixels) {
+    jobject byteBuffer = env->CallStaticObjectMethod(jclassByteBuffer, jmidAllocateDirect, pixels->size());
+    void* byteBufferBytes = env->GetDirectBufferAddress(byteBuffer);
+    memcpy(byteBufferBytes, pixels->data(), pixels->size());
+    env->CallVoidMethod(androidBitmap, jmidCopyPixelsFromBuffer, byteBuffer);
+  }
+
+  return env->NewGlobalRef(androidBitmap);
+}
+
+Bitmap::Bitmap() : BitmapBase(), _androidBitmap(NULL) {
+}
 
 Bitmap::Bitmap(int width, int height, int format) : BitmapBase(width,height,format) {
     _texTarget = GL_TEXTURE_2D;
-    JNIEnv* env = getJNIEnv();
-    if (!jclassBitmap) {
-        jclassBitmap = env->FindClass("android/graphics/Bitmap");
-        jclassBitmap = (jclass) env->NewGlobalRef(jclassBitmap);
-        jmidCreateBitmap = env->GetStaticMethodID(jclassBitmap, "createBitmap",
-                                                     "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
-        jclass jclassBitmapConfig = env->FindClass("android/graphics/Bitmap$Config");
-        jfieldID fidAlpha8 = env->GetStaticFieldID(jclassBitmapConfig , "ALPHA_8", "Landroid/graphics/Bitmap$Config;");
-        jfieldID fidARGB8888 = env->GetStaticFieldID(jclassBitmapConfig , "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
-        jfieldID fidRGB565 = env->GetStaticFieldID(jclassBitmapConfig , "RGB_565", "Landroid/graphics/Bitmap$Config;");
-        configAlpha8 = env->NewGlobalRef(env->GetStaticObjectField(jclassBitmapConfig, fidAlpha8));
-        configARGB8888 = env->NewGlobalRef(env->GetStaticObjectField(jclassBitmapConfig, fidARGB8888));
-        configRGB565 = env->NewGlobalRef(env->GetStaticObjectField(jclassBitmapConfig, fidRGB565));
-    }
-    jobject jformat;
-    if (format == BITMAPFORMAT_RGBA32) jformat = configARGB8888;
-    else if (format == BITMAPFORMAT_RGB565) jformat = configRGB565;
-    else if (format == BITMAPFORMAT_A8) jformat = configAlpha8;
-    else assert(0);
-    _androidBitmap = env->CallStaticObjectMethod(jclassBitmap, jmidCreateBitmap, width, height, jformat);
-    assert(_androidBitmap);
-    _androidBitmap = env->NewGlobalRef(_androidBitmap);
     _needsUpload = true;
+    _androidBitmap = createAndroidBitmap(width, height, format, NULL);
 }
 
 Bitmap::Bitmap(jobject jbitmap) {
-    JNIEnv* env = getJNIEnv();
+    auto env = getBitmapEnv();
     assert(jbitmap);
     _androidBitmap = env->NewGlobalRef(jbitmap);
     _texTarget = GL_TEXTURE_2D;
@@ -70,13 +102,13 @@ Bitmap::Bitmap(GLuint textureId) {
 
 Bitmap::~Bitmap() {
     if (_androidBitmap) {
-        getJNIEnv()->DeleteGlobalRef(_androidBitmap);
+        getBitmapEnv()->DeleteGlobalRef(_androidBitmap);
         _androidBitmap = NULL;
     }
 }
 
 void BitmapBase::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
-    JNIEnv* env = getJNIEnv();
+    auto env = getBitmapEnv();
     if (!jclassBitmapFactory) {
         jclassBitmapFactory = env->FindClass("android/graphics/BitmapFactory");
         jclassBitmapFactory = (jclass) env->NewGlobalRef(jclassBitmapFactory);
@@ -95,7 +127,7 @@ void BitmapBase::createFromData(const void* data, int cb, std::function<void(Bit
 
 
 void Bitmap::lock(PIXELDATA* pixelData, bool forWriting) {
-    JNIEnv* env = getJNIEnv();
+    auto env = getBitmapEnv();
     assert(_androidBitmap);
     AndroidBitmapInfo info;
     AndroidBitmap_getInfo(env, _androidBitmap, &info);
@@ -104,15 +136,13 @@ void Bitmap::lock(PIXELDATA* pixelData, bool forWriting) {
     AndroidBitmap_lockPixels(env, _androidBitmap, &pixelData->data);
 }
 void Bitmap::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
-    JNIEnv* env = getJNIEnv();
+    auto env = getBitmapEnv();
     AndroidBitmap_unlockPixels(env, _androidBitmap);
     _needsUpload |= pixelDataChanged;
 }
 
 void Bitmap::bind() {
-
     BitmapBase::bind();
-
 
     // If bitmap data changed we may need to update texture data
     if (!_needsUpload) {
@@ -133,5 +163,19 @@ void Bitmap::bind() {
     unlock(&pixeldata, false);
 }
 
+void Bitmap::fromVariant(const variant& v) {
+    BitmapBase::fromVariant(v);
+    auto bb = v.bytearrayVal("bb");
+    _androidBitmap = createAndroidBitmap(_width, _height, _format, &bb);
+    _needsUpload = true;
+}
+void Bitmap::toVariant(variant& v) {
+    BitmapBase::toVariant(v);
+    auto env = getBitmapEnv();
+    int stride = env->CallIntMethod(_androidBitmap, jmidGetRowBytes);
+    int cb = stride * _height;
+    jobject byteBuffer = env->CallStaticObjectMethod(jclassByteBuffer, jmidAllocateDirect, cb);
+    env->CallVoidMethod(_androidBitmap, jmidCopyPixelsToBuffer, byteBuffer);
+    v["bb"] = bytearray((const uint8_t*)env->GetDirectBufferAddress(byteBuffer), cb);
+}
 #endif
-

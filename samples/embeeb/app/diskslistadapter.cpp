@@ -12,7 +12,7 @@ DisksListAdapter::DisksListAdapter(string srcfile,const string& itemLayoutId)
 	: SimpleListAdapter(itemLayoutId) {
     this->srcfile = srcfile;
         
-    URLRequest::get(srcfile)->handleJson([&](int httpStatus, const Variant& json) {
+    URLRequest::get(srcfile)->handleJson([&](URLRequest* req, const variant& json) {
         handleJson(json);
     });
 
@@ -57,9 +57,9 @@ string DisksListItem::getImageUrl() {
 
 
 //
-void DisksListAdapter::handleJson(const Variant& json) {
+void DisksListAdapter::handleJson(const variant& json) {
     _items.clear();
-    if (json.type != Variant::ARRAY) {
+    if (json.type != variant::ARRAY) {
 		app.log("Oops!");
 	} else {
 		auto& vals = json.arrayVal();

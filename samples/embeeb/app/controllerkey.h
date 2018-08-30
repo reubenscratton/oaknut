@@ -24,10 +24,10 @@ public:
 
 
 
-class ControllerKey : public Object, ISerializeToVariant {
+class ControllerKey : public Object, public ISerializeToVariant {
 public:
 
-	static ControllerKey* keyFromJson(const Variant& v, Controller* controller);
+	static ControllerKey* keyFromJson(const variant& v, Controller* controller);
 
 	Controller* _controller; 	// Weak cos pointing against ownership dir
 	IControllerKeyDelegate* _delegate;
@@ -52,8 +52,8 @@ public:
     virtual void detachFromView(ControllerView* view);
 
     // ISerializeToVariant
-    void fromVariant(const Variant& v) override;
-	void toVariant(Variant& v) override;
+    void fromVariant(const variant& v) override;
+	void toVariant(variant& v) override;
 
 	// Touch
 	virtual void handleTouchBegan();
@@ -80,8 +80,8 @@ public:
 	ControllerKeySingle(Controller* controller);
     
     // ISerializeToVariant
-    void fromVariant(const Variant& v) override;
-    void toVariant(Variant& v) override;
+    void fromVariant(const variant& v) override;
+    void toVariant(variant& v) override;
 
     void setBeebKey(BeebKey* beebKey);
 	

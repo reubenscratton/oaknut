@@ -23,6 +23,10 @@ public:
     bool writeInt32(int32_t val);
     bool readUint32(uint32_t* val);
     bool writeUint32(uint32_t val);
+    bool readByteArray(bytearray* ba);
+    bool writeByteArray(const bytearray& ba);
     bool readString(string* str);
     bool writeString(const string& str);
+    bool readVariant(class variant* val);
+    bool writeVariant(const variant& val);
 };

@@ -91,6 +91,9 @@ public:
     T* operator-> () const {
         return (T*)_obj;
     }
+    T* operator& () const {
+        return (T*)_obj;
+    }
 	void assign(T* obj) {
 		if (obj != _obj) {
 			if (_obj) {

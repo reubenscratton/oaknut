@@ -60,6 +60,7 @@ public:
     RECT _surfaceRect;
 	float _scale;
 	bool _inLayoutPass;
+    EDGEINSETS _safeAreaInsets;
     class MotionTracker {
     public:
         MotionTracker(int source);

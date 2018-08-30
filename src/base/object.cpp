@@ -23,11 +23,11 @@ Object::Object() : _refs(0) {
 Object::~Object() {
 }
 void Object::retain() {
-	_refs++;
+    _refs++; // TODO: Should be atomic to cover rare cases where retain/release from worker thread
 }
 void Object::release() {
 	if (--_refs == 0) {
-        s_autodeletePool.push_back(this);
+        s_autodeletePool.push_back(this); // TODO: protect with mutex
 		//delete this;
 	}
     assert(_refs >= 0);

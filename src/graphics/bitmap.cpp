@@ -27,16 +27,14 @@ BitmapBase::~BitmapBase() {
 }
 
 // ISerializableToVariant
-void BitmapBase::fromVariant(const Variant& v) {
+void BitmapBase::fromVariant(const variant& v) {
     _width = v.intVal("w");
     _height = v.intVal("h");
     _format = v.intVal("f");
     _needsUpload = true;
 }
 
-
-
-void BitmapBase::toVariant(Variant& v) {
+void BitmapBase::toVariant(variant& v) {
     v.set("w", _width);
     v.set("h", _height);
     v.set("f", _format);

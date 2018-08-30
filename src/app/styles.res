@@ -15,13 +15,13 @@ colors: {
 }
 
 listview: {
-    selected-bkgnd-color: 0xffd9d9d9
-    divider-color: 0xffcccccc
+    selected-bkgnd-color: #d9d9d9
+    divider-color: #ccc
     item-title: {
-        forecolor: 0xff333333
+        forecolor: #333
     }
     item-subtitle: {
-        forecolor: 0xff777777
+        forecolor: #777
     }
 }
 
@@ -82,11 +82,6 @@ SegmentedControl: {
     corner-radius: 4dp
 }
 
-statusbar: {
-    height: 0dp
-    height@android: 20dp
-    height@iOS: 20dp
-}
 
 navbar: {
     height: 44dp

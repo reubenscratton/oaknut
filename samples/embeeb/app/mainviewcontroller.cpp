@@ -26,9 +26,6 @@ MainViewController::MainViewController() {
     
     // Inflate layout
     View* view = app.layoutInflate("layout/main.res");
-    EDGEINSETS padding = {0,0,0,0};
-    padding.top = app.getStyleFloat("navbar.height") + app.getStyleFloat("statusbar.height"); // TODO: this should be automatic
-    view->setPadding(padding);
     _beebView = (BeebView*)view->findViewById("beebView");
     _controllerView = (ControllerView*)view->findViewById("controllerView");
     setView(view);
@@ -64,7 +61,7 @@ MainViewController::MainViewController() {
     _navigationItem->addRightButton(NavigationItem::createIconButton("images/time_machine.png", [&](View*) {
         ObjPtr<SnapshotsViewController> vc = new SnapshotsViewController(_beeb, _beebView, _currentDiskInfo, [=](Snapshot* snapshot){
             _currentSnapshot = snapshot;
-            _beeb->serialize(false, snapshot->_data->data);
+            _beeb->serialize(false, (uint8_t*)snapshot->_data.data());
             // TODO: load controller
         });
         _navigationController->pushViewController(vc);
@@ -73,13 +70,18 @@ MainViewController::MainViewController() {
         ObjPtr<DisksViewController> vc = new DisksViewController([&](Game* game) {
             _currentSnapshot = NULL;
             _currentDiskInfo = game->defaultDiskInfo();
-            URLRequest::get(_currentDiskInfo->diskUrl())->handleData([&](int httpStatus, ByteBuffer* data) {
+            URLRequest::get(_currentDiskInfo->diskUrl())->handleData([&](URLRequest* req) {
+                if (req->error()) {
+                    // TODO: show user error
+                    return;
+                }
                 // Hold shift key down for 2 seconds across the reset
                 _beeb->postKeyboardEvent(ScanCode_Shift, true);
                 Timer::start([=]() {
                     _beeb->postKeyboardEvent(ScanCode_Shift, false);
                 }, 2000, false);
-                _beeb->loadDisc((uint8_t*)data->data, (int)data->cb, 1);
+                auto data = req->getResponseData();
+                _beeb->loadDisc(data.data(), data.size(), 1);
             });
         });
         _navigationController->pushViewController(vc);

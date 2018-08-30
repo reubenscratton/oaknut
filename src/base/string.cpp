@@ -1,4 +1,99 @@
+//
+// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
+//
+// This file is part of 'Oaknut' which is released under the MIT License.
+// See the LICENSE file in the root of this installation for details.
+//
+
 #include <oaknut.h>
+
+
+// Modification
+void bytearray::assign(const uint8_t* p, int32_t cb) {
+    if (_p) {
+        free(_p);
+    }
+    if (p) {
+        _cb = cb;
+        _p = (uint8_t*)malloc(_cb);
+        memcpy(_p, p, _cb);
+    } else {
+        _p = NULL;
+        _cb = 0;
+    }
+}
+void bytearray::assignNoCopy(uint8_t* p, int32_t cb) {
+    if (_p) {
+        free(_p);
+    }
+    _p = p;
+    _cb = cb;
+}
+
+bytearray& bytearray::operator=(const bytearray& ba) {
+    assign(ba._p, ba._cb);
+    return *this;
+}
+void bytearray::append(const bytearray& ba) {
+    append(ba._p, ba._cb);
+}
+void bytearray::append(const uint8_t* p, int32_t cb) {
+    if (!cb) return;
+    int32_t newCb = _cb+cb;
+    _p = (uint8_t*)realloc(_p, newCb+1);
+    memcpy(_p+_cb, p, cb);
+    _cb = newCb;
+}
+void bytearray::append(uint8_t byte) {
+    append(&byte, 1);
+}
+bytearray operator+(const bytearray& lhs, const bytearray& rhs) {
+    bytearray r(lhs);
+    r.append(rhs);
+    return r;
+}
+void bytearray::insert(int32_t offset, const bytearray& ba) {
+    insert(offset, ba._p, ba._cb);
+}
+void bytearray::insert(int32_t offset, const uint8_t* p, int32_t cb) {
+    if (!cb) return;
+    int newCb = _cb+cb;
+    _p = (uint8_t*)realloc(_p, newCb);
+    auto insertionPoint = _p + offset;
+    auto cbToMove = _cb - offset;
+    memmove(insertionPoint+cb, insertionPoint, cbToMove); // move tail forwards in memory
+    memcpy(insertionPoint, p, cb);
+    _cb = newCb;
+    _p[_cb] = 0;
+}
+
+void bytearray::erase(int32_t offset) {
+    erase(offset, 1);
+}
+void bytearray::erase(int32_t offset, int32_t cb) {
+    memmove(_p+offset, _p, _cb - cb);
+    _cb -= cb;
+    _p = (uint8_t*)realloc(_p, _cb);
+
+}
+void bytearray::resize(int32_t newSize) {
+    _cb = newSize;
+    _p = (uint8_t*)realloc(_p, _cb);
+}
+
+string bytearray::toString(bool copy) {
+    if (copy) {
+        return string((char*)_p, _cb);
+    }
+    // Move the data to ownership of the string without making a copy
+    string str;
+    str._p = (char*)_p;
+    str._cb = _cb;
+    _p = NULL;
+    _cb = 0;
+    return str;
+    
+}
 
 const unsigned char kFirstBitMask = 128; // 1000000
 //const unsigned char kSecondBitMask = 64; // 0100000
@@ -84,7 +179,11 @@ int32_t string::charIndexToByteIndex(int32_t charIndex) const {
     return int32_t(p - _p);
 }
 char32_t string::readUtf8(int32_t& byteOffset) const {
-    assert(byteOffset >=0 && byteOffset < _cb);
+    assert(byteOffset >=0);
+    if (byteOffset >= _cb) {
+        byteOffset = -1;
+        return 0;
+    }
     char* p = _p+byteOffset;
     char32_t codePoint = 0;
     char firstByte = *p;
@@ -130,7 +229,17 @@ int32_t string::find(const string& str) const {
     char* p = strstr(_p, str._p);
     return p ? int32_t(p-_p) : -1;
 }
+int32_t string::find(const string& str, int32_t start) const {
+    auto o = charIndexToByteIndex(start);
+    if (o >= _cb) {
+        return -1;
+    }
+    char* p = strstr(_p + o, str._p);
+    return p ? int32_t(p-_p) : -1;
+
+}
 int32_t string::find(const char* s) const {
+    if (!_p) return -1;
     char* p = strstr(_p, s);
     return p ? int32_t(p-_p) : -1;
 }
@@ -459,44 +568,52 @@ string string::hex(const void* p, int cb) {
     const char* bytes = (const char*)p;
     char* o = (char*)str.data();
     for (size_t i=0 ; i<cb ; i++) {
-        sprintf(o, "%02X", bytes[i]);
-        o+=2;
+        uint8_t byte = bytes[i];
+        uint8_t hi_nib = (byte>>4);
+        uint8_t lo_nib = (byte&15);
+        *o++ = (hi_nib>=10) ? ((hi_nib-10)+'A') : (hi_nib+'0');
+        *o++ = (lo_nib>=10) ? ((lo_nib-10)+'A') : (lo_nib+'0');
     }
     str._p[str._cb] = 0;
     return str;
 }
-
-string string::toBase64() const {
-    string result;
-    int i;
-    result._cb = result._cc = ((_cb + 2) / 3 * 4) + 1;
-    result._p  = (char*)malloc(result._cb+1);
-    char* p = result._p;
-    char* input = _p;
+bytearray string::unhex() {
+    bytearray ba((_cb+1)>>1);
+    uint8_t* p = (uint8_t*)ba.data();
+    for (int i=0 ; i<_cb ; i+=2) {
+        char ch = _p[i];
+        uint8_t byte = (ch>='A'&&ch<='F') ? (10+ch-'A') : (
+                      (ch>='a'&&ch<='f') ? (10+ch-'a') : (
+                      (ch>='0'&&ch<='9') ? (ch-'0') : 0));
+        byte <<= 4;
+        ch = _p[i+1];
+        byte |= (ch>='A'&&ch<='F') ? (10+ch-'A') : (
+                (ch>='a'&&ch<='f') ? (10+ch-'a') : (
+                (ch>='0'&&ch<='9') ? (ch-'0') : 0));
+        *p++ = byte;
+    }
+    return ba;
     
-    static const char basis_64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+}
 
-    for (i = 0; i < _cb - 2; i += 3) {
-        *p++ = basis_64[(input[i] >> 2) & 0x3F];
-        *p++ = basis_64[((input[i] & 0x3) << 4) | ((int) (input[i + 1] & 0xF0) >> 4)];
-        *p++ = basis_64[((input[i + 1] & 0xF) << 2) | ((int) (input[i + 2] & 0xC0) >> 6)];
-        *p++ = basis_64[input[i + 2] & 0x3F];
+vector<string> string::split(const string& delimiter) {
+    if (delimiter.length()==0) {
+        return {*this};
     }
-    if (i < _cb) {
-        *p++ = basis_64[(input[i] >> 2) & 0x3F];
-        if (i == (_cb - 1)) {
-            *p++ = basis_64[((input[i] & 0x3) << 4)];
-            *p++ = '=';
+    vector<string> result;
+    int32_t start = 0;
+    while (start >= 0) {
+        int32_t next = start;
+        start = find(delimiter, next);
+        result.push_back(substr(next, start));
+        if (start < 0) {
+            break;
         }
-        else {
-            *p++ = basis_64[((input[i] & 0x3) << 4) | ((int) (input[i + 1] & 0xF0) >> 4)];
-            *p++ = basis_64[((input[i + 1] & 0xF) << 2)];
-        }
-        *p++ = '=';
+        start += delimiter.length();
     }
-    *p++ = '\0';
     return result;
 }
+
 
 
 

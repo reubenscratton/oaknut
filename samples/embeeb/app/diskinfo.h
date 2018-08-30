@@ -29,8 +29,8 @@ public:
 	string imageUrl();
 
     // ISerializableToVariant
-    void fromVariant(const Variant& v) override;
-    void toVariant(Variant& v) override;
+    void fromVariant(const variant& v) override;
+    void toVariant(variant& v) override;
 
 
 protected:
@@ -44,12 +44,12 @@ protected:
 class Game : public Object, public ISerializeToVariant {
 public:
 	string _title;
-	vector<Variant> _publishers;
+	vector<variant> _publishers;
 	vector<ObjPtr<DiskInfo>> _diskInfos;
 	
     // ISerializeToVariant
-    void fromVariant(const Variant& v) override;
-    void toVariant(Variant& v) override;
+    void fromVariant(const variant& v) override;
+    void toVariant(variant& v) override;
 
 	//- (id)initAsLocalDisk:(NSString*)localFilePath fileHash:(NSString*)fileHash diskInfo:(DiskInfo*)diskInfo;
 	DiskInfo* defaultDiskInfo();

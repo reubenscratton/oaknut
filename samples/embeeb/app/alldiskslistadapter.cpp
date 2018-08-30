@@ -27,7 +27,7 @@ Object* AllDisksListAdapter::getItem(LISTINDEX index) {
 }
 
 
-void AllDisksListAdapter::handleJson(const Variant& json) {
+void AllDisksListAdapter::handleJson(const variant& json) {
     _sections.clear();
     _sectionMap.clear();
     DisksListAdapter::handleJson(json);

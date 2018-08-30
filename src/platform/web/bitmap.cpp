@@ -193,23 +193,20 @@ string base64_encode(const char* input, size_t len) {
 }
 
 // ISerializableToVariant
-void Bitmap::fromVariant(const Variant& v) {
+void Bitmap::fromVariant(const variant& v) {
     BitmapBase::fromVariant(v);
     _pixelData.stride = _width*bytesPerPixelForFormat(_format);
     _pixelData.cb = _pixelData.stride*_height;
     _pixelData.data = malloc(_pixelData.cb);
     _buff = val(typed_memory_view((size_t)_pixelData.cb, (unsigned char*)_pixelData.data));
-    ByteBuffer* bb = v.byteBufferVal("bb");
-    if (bb) {
-        memcpy(_pixelData.data, bb->data, _pixelData.cb);
-    }
+    auto& bb = v.bytearrayVal("bb");
+    memcpy(_pixelData.data, bb.data(), _pixelData.cb);
 }
-void Bitmap::toVariant(Variant& v) {
+void Bitmap::toVariant(variant& v) {
     BitmapBase::toVariant(v);
     PIXELDATA pixelData;
     lock(&pixelData, false);
-    ByteBuffer* bb = new ByteBuffer((uint8_t*)pixelData.data, pixelData.cb, false);
-    v.set("bb", Variant(bb));
+    v.set("bb", bytearray((uint8_t*)pixelData.data, pixelData.cb));
     unlock(&pixelData, false);
 }
 

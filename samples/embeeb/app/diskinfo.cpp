@@ -14,7 +14,7 @@
 //extern NSString* s_docsDir;
 
 
-void Game::fromVariant(const Variant& v) {
+void Game::fromVariant(const variant& v) {
 	_title = v.stringVal("t");
     _publishers = v.arrayVal("p");
     auto diskInfos = v.arrayVal("m");
@@ -29,7 +29,7 @@ void Game::fromVariant(const Variant& v) {
     }
 }
 
-void Game::toVariant(Variant& v) {
+void Game::toVariant(variant& v) {
     v.set("t", _title);
     assert(0); // time to uncomment the lines below
     //map->setStringArray("p", _publishers);
@@ -82,7 +82,7 @@ DiskInfo* Game::defaultDiskInfo() {
 DiskInfo::DiskInfo() {
 }
 
-void DiskInfo::fromVariant(const Variant& v) {
+void DiskInfo::fromVariant(const variant& v) {
 	_title = v.stringVal("t");
 	_publisher = v.stringVal("p");
 	_mediaFilename = v.stringVal("u");
@@ -95,7 +95,7 @@ void DiskInfo::fromVariant(const Variant& v) {
     _localFilePath = v.stringVal("lfp");
 }
 
-void DiskInfo::toVariant(Variant& v) {
+void DiskInfo::toVariant(variant& v) {
     v.set("t", _title);
     v.set("p", _publisher);
     v.set("u", _mediaFilename);

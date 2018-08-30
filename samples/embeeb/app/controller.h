@@ -24,8 +24,8 @@ public:
 	virtual void addKey(ControllerKey* key);
 	virtual void removeKey(ControllerKey* key);
 
-    void fromVariant(const Variant& v) override;
-    void toVariant(Variant& v) override;
+    void fromVariant(const variant& v) override;
+    void toVariant(variant& v) override;
 
 	// IControllerKeyDelegate
 	void handleTouchBeganInKey(ControllerKey* key, ControllerView* controllerView) override;

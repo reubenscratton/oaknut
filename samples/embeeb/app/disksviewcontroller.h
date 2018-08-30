@@ -16,14 +16,13 @@
 class DisksViewController : public ViewController {
 public:
 	ListView* _listView;
-    float _minTopScrollInset;
     
-    DisksViewController(std::function<void(Game*)> delegate);
-	
+    DisksViewController(std::function<void(Game*)> delegate);	
 	
 	// Overrides
-	virtual void onWillResume();
-	virtual void onDidPause();
+	void onWillResume() override;
+	void onDidPause() override;
+    void setSafeAreaInsets(const EDGEINSETS& safeAreaInsets) override;
 
 protected:
     std::function<void(Game*)> _delegate;
@@ -32,6 +31,9 @@ protected:
 	
 	ObjPtr<DisksListAdapter> _disksListAdapterBest;
 	ObjPtr<DisksListAdapter> _disksListAdapterAll;
+    
+    EDGEINSETS _safeAreaInsets;
+    void updateInsets();
 };
 
 #endif

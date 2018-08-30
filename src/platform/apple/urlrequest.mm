@@ -31,8 +31,8 @@ public:
             [req setValue:headerValue forHTTPHeaderField:headerName];
         }
         _dataTask = [[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-            if (data.length==0 || error.code == -999) { // cancelled, just abort.
-                dispatchResult(0, {}, NULL);
+            if (_cancelled || error.code == -999) { // cancelled, just abort.
+                dispatchResult(0, {});
             } else {
                 NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
                 
@@ -42,13 +42,12 @@ public:
                     responseHeaders[[[headerName lowercaseString] cStringUsingEncoding:NSUTF8StringEncoding]] = [httpResponse.allHeaderFields[headerName] cStringUsingEncoding:NSUTF8StringEncoding];
                 }
                 
-                // Get a contiguous copy of the data
-                ByteBuffer* emdata = new ByteBuffer(data.length);
+                // Slurp the data
                 [data enumerateByteRangesUsingBlock:^(const void * _Nonnull bytes, NSRange byteRange, BOOL * _Nonnull stop) {
-                    memcpy(emdata->data+byteRange.location, bytes, byteRange.length);
+                    _responseData.append((uint8_t*)bytes, (int32_t)byteRange.length);
                 }];
 
-                dispatchResult((int)httpResponse.statusCode, responseHeaders, emdata);
+                dispatchResult((int)httpResponse.statusCode, responseHeaders);
             }
         }];
         [_dataTask resume];

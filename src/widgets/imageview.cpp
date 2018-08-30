@@ -101,7 +101,7 @@ void ImageView::loadImage() {
         });
     } else if (_url.length() > 0) {
         _request = URLRequest::get(_url, URL_FLAG_BITMAP);
-        _request->handleBitmap([=](int httpStatus, Bitmap* bitmap) {
+        _request->handleBitmap([=](URLRequest* req, Bitmap* bitmap) {
             setBitmap(bitmap);
         });
     }

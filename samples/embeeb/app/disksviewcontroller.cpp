@@ -27,7 +27,7 @@ DisksViewController::DisksViewController(std::function<void(Game*)> delegate) {
     _segctrl->setSegmentSelectedDelegate([=](int index) {
         _searchBox->getParent()->setVisibility((index==1) ? Visible : Gone);
         _listView->setAdapter(index?_disksListAdapterAll:_disksListAdapterBest);
-        _listView->setScrollInsets(EDGEINSETS(0, _minTopScrollInset + ((index==0)?0:app.dp(40)), 0, 0));
+        updateInsets();
     });
 	_navigationItem->setTitleView(_segctrl);
     _navigationItem->addLeftButton(NavigationItem::createIconButton("images/back.png", [&] (View*) { onBackButtonClicked(); }));
@@ -36,8 +36,6 @@ DisksViewController::DisksViewController(std::function<void(Game*)> delegate) {
 	_disksListAdapterAll = new AllDisksListAdapter("http://www.ibeeb.co.uk/all.json");
 	
     _listView = (ListView*)view->findViewById("listView");
-    float statusBarHeight = app.getStyleFloat("statusbar.height");
-    _minTopScrollInset = app.getStyleFloat("navbar.height") + statusBarHeight;
     _listView->_onItemTapDelegate = [=](View* itemView, LISTINDEX index) {
         DisksListItem* gameItem = (DisksListItem*)_listView->_adapter->getItem(index);
         _delegate(gameItem->_game);
@@ -47,7 +45,6 @@ DisksViewController::DisksViewController(std::function<void(Game*)> delegate) {
     };
     
     _searchBox = (SearchBox*)view->findViewById("searchBox");
-    _searchBox->getParent()->setAlignSpecs(ALIGNSPEC::Left(), ALIGNSPEC(NULL, 0.0f, 0.0f, _minTopScrollInset));
     _searchBox->setSearchTextChangedDelegate([=](SearchBox* searchBox, const string& text) {
         _disksListAdapterAll->setFilter(text);
     });
@@ -80,3 +77,13 @@ void DisksViewController::onDidPause() {
 	app.setIntSetting("disksY", _listView->getContentOffset().y);
 }
 
+void DisksViewController::setSafeAreaInsets(const EDGEINSETS &safeAreaInsets) {
+    _safeAreaInsets = safeAreaInsets;
+    updateInsets();
+}
+
+void DisksViewController::updateInsets() {
+    int index = _segctrl->getSelectedIndex();
+    _listView->setScrollInsets(EDGEINSETS(0, _safeAreaInsets.top + ((index==0)?0:app.dp(40)), 0, 0));
+    _searchBox->getParent()->setAlignSpecs(ALIGNSPEC::Left(), ALIGNSPEC(NULL, 0.0f, 0.0f, _safeAreaInsets.top ));
+}

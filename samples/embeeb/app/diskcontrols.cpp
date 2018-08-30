@@ -78,13 +78,13 @@ static DiskControlsManager s_manager;
 DiskControls::DiskControls() {
 }
 
-void DiskControls::fromVariant(const Variant& v) {
+void DiskControls::fromVariant(const variant& v) {
 	_controllers = v.arrayVal<Controller>("layouts");
 }
-void DiskControls::toVariant(Variant& v) {
-    Variant array;
+void DiskControls::toVariant(variant& v) {
+    variant array;
     for (auto& e : _controllers) {
-        Variant ev;
+        variant ev;
         e->toVariant(ev);
         array.appendVal(ev);
     }

@@ -22,7 +22,7 @@ Controller::Controller(const Controller& src) {
 }
 
 
-void Controller::fromVariant(const Variant& v) {
+void Controller::fromVariant(const variant& v) {
     _name = v.stringVal("name");
     auto keys = v.arrayVal("keys");
     for (auto& key : keys) {
@@ -31,16 +31,15 @@ void Controller::fromVariant(const Variant& v) {
     _trigger = v.stringVal("trigger");
 }
 
-void Controller::toVariant(Variant& v) {
+void Controller::toVariant(variant& v) {
 	v.set("name", _name);
 	if (_trigger.length()) {
 		v.set("trigger", _trigger);
 	}
-    vector<Variant> vkeys;
+    variant vkeys;
+    vkeys.setType(variant::ARRAY);
     for (auto& key : _keys) {
-        Variant vkey;
-        key->toVariant(vkey);
-		vkeys.push_back(vkey);
+		vkeys.appendVal(key._obj);
 	}
 	v.set("keys", vkeys);
 }

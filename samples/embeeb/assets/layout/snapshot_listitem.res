@@ -4,14 +4,14 @@
     height: 64dp
     paddingHorz: 16dp
     paddingVert: 8dp
-    [subviews: {
+    subviews: [{
         class: ImageView
         id: image
         width: 72dp
         height: 52dp
         alignX: left
         alignY: center
-        background: 0xff333333
+        background: #333
         paddingHorz: 1dp
         paddingVert: 1dp
     }, {

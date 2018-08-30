@@ -2,7 +2,7 @@ package org.oaknut.main;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-
+import android.text.TextUtils;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -13,6 +13,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.List;
+import java.util.Map;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 
 public class URLRequest implements Runnable {
@@ -23,13 +26,13 @@ public class URLRequest implements Runnable {
 
     long cobj;
     String url;
+    String method;
     Future<?> future;
 
-    public URLRequest(long cobj, String url) {
-        // NB: This is called on native-app-glue engine thread, not app thread.
-        // NB: Not sure if the above comment is still true...
+    public URLRequest(long cobj, String url, String method) {
         this.cobj = cobj;
         this.url = url;
+        this.method = method;
         future = executor.submit(this);
     }
 
@@ -43,48 +46,44 @@ public class URLRequest implements Runnable {
         try {
             URL url = new URL(this.url);
             urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestMethod(method);
             // todo: upload request body
             InputStream inputStream = new BufferedInputStream(urlConnection.getInputStream());
 
-            String contentType = urlConnection.getHeaderField("Content-Type");
-            if ("image/jpeg".equalsIgnoreCase(contentType) || "image/png".equalsIgnoreCase(contentType)) {
-                final Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                if (bitmap != null) {
-                    App.handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            nativeOnGotBitmap(cobj, bitmap);
-                        }
-                    });
-                    return;
+            // Put the response headers into a single String
+            String headers = "";
+            for(Map.Entry<String, List<String>> entry : urlConnection.getHeaderFields().entrySet()) {
+                if (entry.getKey() != null) {
+                  headers += entry.getKey() + ":";
+                  headers += TextUtils.join(";", entry.getValue());
+                  headers += "\n";
                 }
-            } else {
-                final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                byte[] byteChunk = new byte[4096];
-                int n;
-                while ((n = inputStream.read(byteChunk)) > 0 ) {
-                    baos.write(byteChunk, 0, n);
-                }
-                App.handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        nativeOnGotGenericData(cobj, baos.toByteArray());
-                    }
-                });
-                return;
             }
+
+            // Read whole response into memory.
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] byteChunk = new byte[4096];
+            int n;
+            while ((n = inputStream.read(byteChunk)) > 0 ) {
+                baos.write(byteChunk, 0, n);
+            }
+
+            // Pass to C++ for dispatch
+            nativeOnGotData(cobj, urlConnection.getResponseCode(),
+              headers.getBytes(UTF_8),
+              baos.toByteArray());
+
         } catch (IOException e) {
             android.util.Log.e("Oaknut",  e.toString());
+            nativeOnGotData(cobj, 999, null, null);
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
             }
         }
-        // If we get here something went wrong
     }
 
-    native void nativeOnGotBitmap(long cobj, Bitmap bitmap);
-    native void nativeOnGotGenericData(long cobj, byte[] data);
+    native void nativeOnGotData(long cobj, int httpStatus, byte[] headersUtf8, byte[] data);
 
 
 }

@@ -12,6 +12,10 @@
 extern dispatch_queue_t oakQueue;
 
 
+EDGEINSETS App::getWindowSafeAreaInsets() {
+    return {0,dp(20),0,0};
+}
+
 
 @implementation OaknutView
 

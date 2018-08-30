@@ -23,17 +23,13 @@ struct android_app {
     float scale;
 };
 
-android_app* aapp;
-
-AAssetManager *assetManager;
 JavaVM* g_jvm;
-jclass jclassApp;
-jmethodID jmethodIDAppLoadAsset;
-jmethodID jmethodIDAppGetDocsPath;
+static android_app* g_app;
+static AAssetManager* g_assetManager;
+static bool g_calledMain = false;
 
 
 extern "C" jint JNI_OnLoad(JavaVM *jvm, void *reserved) {
-    LOGI("JNI_OnLoad");
     g_jvm = jvm;
     return JNI_VERSION_1_6;
 }
@@ -50,51 +46,32 @@ JNIEnv* getJNIEnv() {
     return env;
 }
 
-bool _calledMain = false;
 
 static void engine_draw_rect() {
-    if (aapp->display == NULL) {
+    if (g_app->display == NULL) {
         return;
     }
 
-    if (!_calledMain) {
+    if (!g_calledMain) {
         app.main();
-        _calledMain = true;
+        g_calledMain = true;
     }
     app._window->draw();
 
 
-    eglSwapBuffers(aapp->display, aapp->surface);
+    eglSwapBuffers(g_app->display, g_app->surface);
 }
 
 
 JAVA_FN(void, MainActivity, onCreateNative)(JNIEnv *env, jobject obj,
                                             jobject jassetManager, jfloat screenScale) {
     // Create our app object
-    aapp = (struct android_app*)malloc(sizeof(struct android_app));
-    memset(aapp, 0, sizeof(struct android_app));
-
-    aapp->scale = screenScale;
-
-    /*
-    if (savedState != NULL) {
-        app->savedState = malloc(savedStateSize);
-        app->savedStateSize = savedStateSize;
-        memcpy(app->savedState, savedState, savedStateSize);
-    }*/
-
-    //aapp->config = AConfiguration_new();
-    //AConfiguration_fromAssetManager(aapp->config, aapp->activity->assetManager);
-    //print_cur_config(app);
-
+    g_app = (struct android_app*)malloc(sizeof(struct android_app));
+    memset(g_app, 0, sizeof(struct android_app));
+    g_app->scale = screenScale;
 
     app._window = new Window();
-
-    assetManager = AAssetManager_fromJava(env, jassetManager);
-    jclassApp = env->FindClass(PACKAGE "/App");
-    jclassApp = (jclass)env->NewGlobalRef(jclassApp);
-    jmethodIDAppLoadAsset = env->GetStaticMethodID(jclassApp, "loadAsset", "(Ljava/lang/String;)[B");
-    jmethodIDAppGetDocsPath = env->GetStaticMethodID(jclassApp, "getDocsPath", "()Ljava/lang/String;");
+    g_assetManager = AAssetManager_fromJava(env, jassetManager);
 }
 
 JAVA_FN(void, MainActivity, onStartNative)(JNIEnv *env, jobject obj) {
@@ -142,15 +119,15 @@ JAVA_FN(void, MainActivity, onConfigurationChangedNative)(JNIEnv *env, jobject o
 
 JAVA_FN(void, MainActivity, onWindowFocusChangedNative)(JNIEnv *env, jobject obj, jboolean focused) {
     if (focused) {
-        aapp->animating = 1;
+        g_app->animating = 1;
     } else {
-        aapp->animating = 0;
+        g_app->animating = 0;
     }
 }
 
 
 JAVA_FN(void, MainActivity, onSurfaceCreatedNative)(JNIEnv* env, jobject clazz, jobject jsurface) {
-    aapp->window = ANativeWindow_fromSurface(env, jsurface);
+    g_app->window = ANativeWindow_fromSurface(env, jsurface);
 
     // initialize OpenGL ES and EGL
     const EGLint attribs[] = {
@@ -173,9 +150,9 @@ JAVA_FN(void, MainActivity, onSurfaceCreatedNative)(JNIEnv* env, jobject clazz, 
     eglChooseConfig(display, attribs, &config, 1, &numConfigs);
     eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &format);
 
-    ANativeWindow_setBuffersGeometry(aapp->window, 0, 0, format);
+    ANativeWindow_setBuffersGeometry(g_app->window, 0, 0, format);
 
-    surface = eglCreateWindowSurface(display, config, aapp->window, NULL);
+    surface = eglCreateWindowSurface(display, config, g_app->window, NULL);
 
     const EGLint attrib_list[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
     context = eglCreateContext(display, config, NULL, attrib_list);
@@ -188,17 +165,17 @@ JAVA_FN(void, MainActivity, onSurfaceCreatedNative)(JNIEnv* env, jobject clazz, 
     eglQuerySurface(display, surface, EGL_WIDTH, &w);
     eglQuerySurface(display, surface, EGL_HEIGHT, &h);
 
-    aapp->display = display;
-    aapp->context = context;
-    aapp->surface = surface;
-    aapp->width = w;
-    aapp->height = h;
+    g_app->display = display;
+    g_app->context = context;
+    g_app->surface = surface;
+    g_app->width = w;
+    g_app->height = h;
 
     // Initialize GL state.
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
 
-    app._window->resizeSurface(w, h, aapp->scale);
+    app._window->resizeSurface(w, h, g_app->scale);
 
     engine_draw_rect();
 
@@ -207,7 +184,7 @@ JAVA_FN(void, MainActivity, onSurfaceCreatedNative)(JNIEnv* env, jobject clazz, 
 JAVA_FN(void, MainActivity, onSurfaceChangedNative)(JNIEnv* env, jobject obj, jobject jsurface,
                                 jint format, jint width, jint height) {
 
-    aapp->window = ANativeWindow_fromSurface(env, jsurface);
+    g_app->window = ANativeWindow_fromSurface(env, jsurface);
     // TODO: handle size changes. But how likely is that?
 }
 
@@ -222,25 +199,25 @@ JAVA_FN(void, MainActivity, onSurfaceRedrawNeededNative)(JNIEnv* env, jobject ob
 
 JAVA_FN(void, MainActivity, onSurfaceDestroyedNative)(JNIEnv* env, jobject obj, jobject jsurface) {
 
-    if (aapp->window) {
-        ANativeWindow_release(aapp->window);
-        aapp->window = NULL;
+    if (g_app->window) {
+        ANativeWindow_release(g_app->window);
+        g_app->window = NULL;
     }
 
-    if (aapp->display != EGL_NO_DISPLAY) {
-        eglMakeCurrent(aapp->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-        if (aapp->context != EGL_NO_CONTEXT) {
-            eglDestroyContext(aapp->display, aapp->context);
+    if (g_app->display != EGL_NO_DISPLAY) {
+        eglMakeCurrent(g_app->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        if (g_app->context != EGL_NO_CONTEXT) {
+            eglDestroyContext(g_app->display, g_app->context);
         }
-        if (aapp->surface != EGL_NO_SURFACE) {
-            eglDestroySurface(aapp->display, aapp->surface);
+        if (g_app->surface != EGL_NO_SURFACE) {
+            eglDestroySurface(g_app->display, g_app->surface);
         }
-        eglTerminate(aapp->display);
+        eglTerminate(g_app->display);
     }
-    aapp->animating = 0;
-    aapp->display = EGL_NO_DISPLAY;
-    aapp->context = EGL_NO_CONTEXT;
-    aapp->surface = EGL_NO_SURFACE;
+    g_app->animating = 0;
+    g_app->display = EGL_NO_DISPLAY;
+    g_app->context = EGL_NO_CONTEXT;
+    g_app->surface = EGL_NO_SURFACE;
 }
 
 
@@ -253,8 +230,8 @@ JAVA_FN(void, MainActivity, onContentRectChangedNative)(JNIEnv* env, jobject obj
 
 JAVA_FN(void, MainActivity, onTouchEventNative)(JNIEnv* env, jobject obj, jint finger, jint action, jlong time, jfloat x, jfloat y) {
     INPUTEVENT event;
-    event.source = INPUTEVENT::Mouse;
-    event.index = finger;
+    event.deviceType = INPUTEVENT::Mouse;
+    event.deviceIndex = finger;
     switch (action) {
         case AMOTION_EVENT_ACTION_DOWN: event.type=INPUT_EVENT_DOWN; break;
         case AMOTION_EVENT_ACTION_MOVE: event.type=INPUT_EVENT_MOVE; break;
@@ -265,53 +242,8 @@ JAVA_FN(void, MainActivity, onTouchEventNative)(JNIEnv* env, jobject obj, jint f
     event.pt.x = x * app._window->_scale;
     event.pt.y = y * app._window->_scale;
     event.time = time;
-    app._window->dispatchInputEvent(&event);
+    app._window->dispatchInputEvent(event);
 }
 
-
-void App::log(char const* fmt, ...) {
-    char ach[512];
-    va_list args;
-    va_start(args, fmt);
-    vsprintf(ach, fmt, args);
-    LOGI("%s", ach);
-}
-
-
-TIMESTAMP App::currentMillis() {
-    timespec t;
-    clock_gettime(CLOCK_REALTIME, &t);
-    TIMESTAMP l = t.tv_sec*1000 + (t.tv_nsec / 1000000);
-    return l;
-}
-
-
-ByteBuffer* App::loadAsset(const char* assetPath) {
-    JNIEnv* env = getJNIEnv();
-    jobject jstr = env->NewStringUTF(assetPath);
-    jbyteArray result = (jbyteArray)env->CallStaticObjectMethod(jclassApp, jmethodIDAppLoadAsset, jstr);
-    ByteBuffer* data = NULL;
-    if (result != NULL) {
-        data = new ByteBuffer();
-        data->cb = env->GetArrayLength(result);
-        data->data = (uint8_t*)malloc(data->cb);
-        env->GetByteArrayRegion(result, 0, data->cb, reinterpret_cast<jbyte*>(data->data));
-    }
-    return data;
-}
-
-
-
-void App::requestRedraw() {
-
-}
-
-void App::keyboardShow(bool show) {
-
-}
-
-void App::keyboardNotifyTextChanged() {
-
-}
 
 #endif
