@@ -106,7 +106,7 @@ void App::keyboardNotifyTextChanged() {
 }
 
 EDGEINSETS App::getWindowSafeAreaInsets() {
-    return {0,40,0,0};
+    return {0,40,0,100};
 }
 
 class jstringHelper {

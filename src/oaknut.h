@@ -28,6 +28,7 @@
 #include <cmath>
 #include <cstdarg>
 #include <cfloat>
+#include <cctype>
 #else
 #include <math.h>
 #include <stdarg.h>

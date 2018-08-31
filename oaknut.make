@@ -71,6 +71,12 @@ xcode: $(XCODE_PROJECT_FILE)
 cmake:
 	@perl $(OAKNUT_DIR)/build/cmake.pl -projectname $(PROJECT_NAME) > CMakeLists.txt
 
+androidstudio:
+	@mkdir -p  $(PROJECT_NAME).androidstudio/app
+	@perl $(OAKNUT_DIR)/build/androidstudio.pl -projectname $(PROJECT_NAME) \
+		-android_ver $(ANDROID_VER) \
+		-package_name $(ANDROID_PACKAGE_NAME)
+
 
 # This prevents make from automatically deleting .dep files cos it regards them as intermediate
 .PRECIOUS: $(DEPS)

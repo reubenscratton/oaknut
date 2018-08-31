@@ -239,8 +239,8 @@ JAVA_FN(void, MainActivity, onTouchEventNative)(JNIEnv* env, jobject obj, jint f
         case AMOTION_EVENT_ACTION_CANCEL: event.type=INPUT_EVENT_CANCEL; break;
     }
     //LOGI("ev %d %f,%f scale=%f", em_action, x, y, app._window->_scale);
-    event.pt.x = x * app._window->_scale;
-    event.pt.y = y * app._window->_scale;
+    event.pt.x = x; //* app._window->_scale;
+    event.pt.y = y;// * app._window->_scale;
     event.time = time;
     app._window->dispatchInputEvent(event);
 }

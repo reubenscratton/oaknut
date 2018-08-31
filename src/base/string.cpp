@@ -64,7 +64,6 @@ void bytearray::insert(int32_t offset, const uint8_t* p, int32_t cb) {
     memmove(insertionPoint+cb, insertionPoint, cbToMove); // move tail forwards in memory
     memcpy(insertionPoint, p, cb);
     _cb = newCb;
-    _p[_cb] = 0;
 }
 
 void bytearray::erase(int32_t offset) {

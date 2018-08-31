@@ -1,7 +1,8 @@
 PROJECT_NAME:=embeeb
 
 # Android
-ANDROID_ABIS=x86 arm64-v8a
+ANDROID_PACKAGE_NAME:=com.sandcastle.embeeb
+ANDROID_ABIS:=x86 arm64-v8a
 ANDROID_VER:=26
 ANDROID_BUILDTOOLS:=26.0.2
 ANDROID_KEYSTORE:=/Users/reuben/.android/debug.keystore
@@ -20,4 +21,3 @@ MACOS_SDK=MacOSX10.13.sdk
 
 
 include $(OAKNUT_DIR)/oaknut.make
-

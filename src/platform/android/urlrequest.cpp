@@ -57,20 +57,24 @@ URLRequest* URLRequest::create(const string& url, const string& method, const st
 }
 
 JAVA_FN(void, URLRequest, nativeOnGotData)(JNIEnv *env, jobject jobj, jlong cobj, jint httpStatus, jbyteArray httpHeadersUtf8, jbyteArray array) {
-    URLRequestAndroid* req = (URLRequestAndroid*)cobj;
-    int cb = env->GetArrayLength(array);
-    bytearray data(cb);
-    env->GetByteArrayRegion(array, 0, cb, reinterpret_cast<jbyte*>(data.data()));
-    cb = env->GetArrayLength(httpHeadersUtf8);
-    bytearray httpHeadersUtf8Bytes(cb);
-    env->GetByteArrayRegion(httpHeadersUtf8, 0, cb, reinterpret_cast<jbyte*>(httpHeadersUtf8Bytes.data()));
-    string httpHeadersStr((char*)httpHeadersUtf8Bytes.data());
-    auto httpHeadersVec = httpHeadersStr.split("\n");
-    map<string,string> responseHeaders;
-    for (auto& it : httpHeadersVec) {
-      string header = it;
-      string name = header.extractUpTo(":", true);
-      responseHeaders[name.lowercase()] = header;
+    URLRequestAndroid *req = (URLRequestAndroid *) cobj;
+    map<string, string> responseHeaders;
+    bytearray data;
+    if (array) {
+        int cb = env->GetArrayLength(array);
+        data.resize(cb);
+        env->GetByteArrayRegion(array, 0, cb, reinterpret_cast<jbyte *>(data.data()));
+        cb = env->GetArrayLength(httpHeadersUtf8);
+        bytearray httpHeadersUtf8Bytes(cb);
+        env->GetByteArrayRegion(httpHeadersUtf8, 0, cb,
+                                reinterpret_cast<jbyte *>(httpHeadersUtf8Bytes.data()));
+        string httpHeadersStr((char *) httpHeadersUtf8Bytes.data());
+        auto httpHeadersVec = httpHeadersStr.split("\n");
+        for (auto &it : httpHeadersVec) {
+            string header = it;
+            string name = header.extractUpTo(":", true);
+            responseHeaders[name.lowercase()] = header;
+        }
     }
     req->dispatchResult((int)httpStatus, responseHeaders, data);
 }
