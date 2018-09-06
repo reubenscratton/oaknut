@@ -70,3 +70,6 @@ void ViewController::setSafeAreaInsets(const EDGEINSETS& safeAreaInsets) {
     _view->setPadding(safeAreaInsets);
 }
 
+bool ViewController::navigateBack() {
+	return false;
+}

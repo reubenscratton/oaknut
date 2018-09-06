@@ -17,6 +17,7 @@ static jmethodID jmidAppGetPrefsInt;
 static jmethodID jmidAppSetPrefsInt;
 static jmethodID jmidAppGetPrefsString;
 static jmethodID jmidAppSetPrefsString;
+static jmethodID jmidAppCreateUUID;
 
 static JNIEnv* getAppEnv() {
   JNIEnv* env = getJNIEnv();
@@ -29,6 +30,7 @@ static JNIEnv* getAppEnv() {
     jmidAppSetPrefsInt = env->GetStaticMethodID(jclassApp, "setPrefsInt", "([BI)V");
     jmidAppGetPrefsString = env->GetStaticMethodID(jclassApp, "getPrefsString", "([B[B)[B");
     jmidAppSetPrefsString = env->GetStaticMethodID(jclassApp, "setPrefsString", "([B[B)V");
+    jmidAppCreateUUID = env->GetStaticMethodID(jclassApp, "createUUID", "()Ljava/lang/String;");
   }
   return env;
 }
@@ -91,6 +93,14 @@ ByteBuffer* App::loadAsset(const char* assetPath) {
     return data;
 }
 
+string string::uuid() {
+    JNIEnv* env = getAppEnv();
+    jstring jstr = (jstring)env->CallStaticObjectMethod(jclassApp, jmidAppCreateUUID);
+    jboolean isCopy = false;
+    auto sz = env->GetStringUTFChars(jstr, &isCopy);
+    return string(sz);
+
+}
 
 
 void App::requestRedraw() {
@@ -122,7 +132,7 @@ public:
     }
   }
   jstringHelper(jbyteArray jba) {
-    _jba = (jbyteArray)getAppEnv()->NewLocalRef(jba);
+    _jba = jba ? (jbyteArray)getAppEnv()->NewLocalRef(jba) : NULL;
   }
 
   ~jstringHelper() {

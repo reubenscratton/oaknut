@@ -32,7 +32,8 @@ public:
 	virtual void onDidResume();
 	virtual void onWillPause();
 	virtual void onDidPause();
-	
+
+	bool navigateBack() override;
 
 
 protected:

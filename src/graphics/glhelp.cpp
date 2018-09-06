@@ -8,6 +8,44 @@
 #include <oaknut.h>
 
 
+template<>
+void Uniform<int>::load() {
+    check_gl(glUniform1i, position, val);
+}
+
+template<>
+void Uniform<float>::load() {
+    check_gl(glUniform1f, position, val);
+};
+
+template<>
+void Uniform<Vector2>::load() {
+    check_gl(glUniform2f, position, val.x, val.y);
+}
+
+template<>
+void Uniform<COLOR>::load() {
+    float c[4];
+    c[3] = ((val&0xff000000)>>24)/255.0f;
+    c[2] = (val&0xff)/255.0f;
+    c[1] = ((val&0xff00)>>8)/255.0f;
+    c[0] = ((val&0xff0000)>>16)/255.0f;
+    check_gl(glUniform4f, position, c[0], c[1], c[2], c[3]);
+}
+
+template<>
+void Uniform<Vector4>::load() {
+    check_gl(glUniform4f, position, val.x, val.y, val.z, val.w);
+}
+
+
+template<>
+void Uniform<POINT>::load() {
+    check_gl(glUniform2f, position, val.x, val.y);
+}
+
+
+
 
 static GLuint loadShader(GLenum shaderType, const char* pSource) {
     GLuint shader = check_gl(glCreateShader, shaderType);
@@ -127,10 +165,18 @@ void GLProgram::findVariables() {
 	_alpha.position = check_gl(glGetUniformLocation, _program, "alpha");
 }
 
+void GLProgram::unload() {
+    check_gl(glDeleteShader, _program);
+    _loaded = false;
+    _sampler.dirty = true;
+    _alpha.dirty = true;
+    memset(&_mvp, 0, sizeof(_mvp));
+}
 void GLProgram::use(Window* window) {
     if (!_loaded) {
         _loaded = true;
         load();
+        window->_loadedProgs.push_back(this);
     }
     if (window->_currentProg != _program) {
         window->_currentProg = _program;
@@ -142,7 +188,6 @@ void GLProgram::use(Window* window) {
         window->setVertexConfig(_vertexConfig);
     }
 }
-
 
 void GLProgram::setMvp(const Matrix4& mvp) {
     if (0!=memcmp(mvp.get(), _mvp.get(), 16*sizeof(float))) {

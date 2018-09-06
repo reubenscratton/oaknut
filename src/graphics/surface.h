@@ -35,6 +35,7 @@ public:
     POINT _savedOrigin;
     list<RenderOp*> _opsNeedingValidation;
     list<ObjPtr<RenderBatch>> _listBatches;
+    bool _isPrivate;
     bool _supportsPartialRedraw;
     ObjPtr<PrivateSurfaceRenderOp> _op;
     int _mvpNum;

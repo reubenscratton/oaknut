@@ -11,6 +11,7 @@
 BitmapBase::BitmapBase() {
     _texSampleMethod = GL_LINEAR;
     _texTarget = GL_TEXTURE_2D;
+    _renderContextIt = app._window->_loadedTextures.end();
 }
 
 BitmapBase::BitmapBase(int awidth, int aheight, int format) : BitmapBase() {
@@ -23,6 +24,9 @@ BitmapBase::~BitmapBase() {
 	//app.log("~Bitmap %d x %d", _width, _height);
     if (_textureId) {
         check_gl(glDeleteTextures, 1, &_textureId);
+    }
+    if (_renderContextIt != app._window->_loadedTextures.end()) {
+        app._window->_loadedTextures.erase(_renderContextIt);
     }
 }
 
@@ -110,6 +114,7 @@ uint8_t* BitmapBase::pixelAddress(PIXELDATA* pixelData, int x, int y) {
 void BitmapBase::bind() {
     if (!_textureId) {
         check_gl(glGenTextures, 1, &_textureId);
+        _renderContextIt = app._window->_loadedTextures.insert(app._window->_loadedTextures.end(), this);
     }
     check_gl(glBindTexture, _texTarget, _textureId);
     if (!_paramsValid) {
@@ -119,6 +124,14 @@ void BitmapBase::bind() {
         check_gl(glTexParameteri, _texTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         _paramsValid = true;
     }
+}
+
+void BitmapBase::onRenderContextDestroyed() {
+    _textureId = 0;
+    _allocdTexData = false;
+    _paramsValid = false;
+    _needsUpload = true;
+    _renderContextIt = app._window->_loadedTextures.end();
 }
 
 

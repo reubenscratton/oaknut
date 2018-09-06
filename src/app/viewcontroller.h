@@ -89,7 +89,8 @@ public:
     
     
     virtual void setSafeAreaInsets(const EDGEINSETS& safeAreaInsets);
-	
+
+    virtual bool navigateBack();
 
 protected:
     ObjPtr<View> _view;

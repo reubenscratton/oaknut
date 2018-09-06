@@ -54,6 +54,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
     private native void onSurfaceDestroyedNative();
     private native void onContentRectChangedNative(int x, int y, int w, int h);
     private native void onTouchEventNative(int pointer, int action, long time, float x, float y);
+    private native boolean onBackPressedNative();
+    private native void onDestroyNative();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +95,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
             onSurfaceDestroyedNative();
             mCurSurfaceHolder = null;
         }
+        onDestroyNative();
         super.onDestroy();
     }
 
@@ -224,4 +227,12 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
         redrawNative();
         Choreographer.getInstance().postFrameCallback(this);
     }
+
+    @Override
+    public void onBackPressed() {
+        if (!onBackPressedNative()) {
+            super.onBackPressed();
+        }
+    }
+
 }

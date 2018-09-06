@@ -19,9 +19,9 @@ void Window::setRootViewController(ViewController* viewController) {
     }
     ViewController *currentRootVC = _rootViewController;
     if (currentRootVC) {
-        viewController->onWillPause();
+        currentRootVC->onWillPause();
         currentRootVC->detachFromWindow();
-        viewController->onDidPause();
+        currentRootVC->onDidPause();
     }
     _rootVcAttached = false;
     _rootViewController = viewController;
@@ -56,6 +56,25 @@ void Window::resizeSurface(int width, int height, float scale) {
         }
         _rootViewController->getView()->setNeedsLayout();
 	}
+}
+void Window::destroySurface() {
+    if (_surface) {
+        if (_rootVcAttached) {
+            _rootViewController->detachFromWindow();
+            _rootVcAttached = false;
+        }
+        _surface = NULL;
+        _doneGlInit = false;
+        //delete _quadBuffer; todo: fix this leak
+    }
+    for (auto bitmap : _loadedTextures) {
+        bitmap->onRenderContextDestroyed();
+    }
+    _loadedTextures.clear();
+    for (auto prog : _loadedProgs) {
+        prog->unload();
+    }
+    _loadedProgs.clear();
 }
 
 Window::MotionTracker::MotionTracker(int source) {
@@ -463,7 +482,7 @@ void Window::prepareToDraw() {
         check_gl(glDepthMask, GL_TRUE);
         check_gl(glClear, GL_DEPTH_BUFFER_BIT);
         check_gl(glDepthMask, GL_FALSE);
-        check_gl(glClearColor, 1,0,0,1);
+        check_gl(glClearColor, 1, 0, 0, 1);
         check_gl(glClear, GL_COLOR_BUFFER_BIT);
         check_gl(glDisable, GL_DEPTH_TEST);
         check_gl(glActiveTexture, GL_TEXTURE0);

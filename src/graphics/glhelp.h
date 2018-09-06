@@ -37,32 +37,14 @@ void checkGlErr(const char* file, int line, const char* cmd);
 
 
 
+template <class T>
 class Uniform {
 public:
     GLint position;  // as returned by glGetUniformLocation
-    virtual void use()=0;
-};
 
-template <class T>
-class CachedUniform : public Uniform {
-public:
-    T* src;
-    T lastVal;
-    virtual void use() {
-        if (*src != lastVal) {
-            lastVal = *src;
-            load();
-        }
-    }
-    virtual void load()=0;
-};
-
-template <class T>
-class CachedUniform2 : public Uniform {
-public:
     T val;
     bool dirty;
-    CachedUniform2() {
+    Uniform() {
         dirty = true;
     }
     virtual void set(T val) {
@@ -77,80 +59,7 @@ public:
             dirty = false;
         }
     }
-    virtual void load()=0;
-};
-
-class UniformInt : public CachedUniform2<int> {
-public:
-    void load() {
-        check_gl(glUniform1i, position, val);
-    }
-};
-
-class UniformFloat : public CachedUniform2<float> {
-public:
-    void load() {
-        check_gl(glUniform1f, position, val);
-    }
-};
-
-class UniformVector2 : public CachedUniform2<Vector2> {
-public:
-    void load() {
-        check_gl(glUniform2f, position, val.x, val.y);
-    }
-};
-
-class UniformColor : public CachedUniform2<int> {
-public:
-    void load() {
-        float c[4];
-        c[3] = ((val&0xff000000)>>24)/255.0f;
-        c[2] = (val&0xff)/255.0f;
-        c[1] = ((val&0xff00)>>8)/255.0f;
-        c[0] = ((val&0xff0000)>>16)/255.0f;
-        check_gl(glUniform4f, position, c[0], c[1], c[2], c[3]);
-    }
-};
-
-class UniformFloat4 : public CachedUniform2<Vector4> {
-public:
-    void load() {
-        check_gl(glUniform4f, position, val.x, val.y, val.z, val.w);
-    }
-};
-
-
-
-class UniformPOINT : public CachedUniform<POINT> {
-public:
-    void load() {
-        check_gl(glUniform2f, position, lastVal.x, lastVal.y);
-    }
-};
-
-template <class T>
-class UniformCounted : public Uniform {
-public:
-    
-    class Value {
-    public:
-        T val;
-        int counter;
-    };
-
-    Value* src;
-    int counter;
-    
-    void setSource(Value* src) {
-        if (src != this->src) {
-            this->src = src;
-            counter = src->counter-1;
-        }
-    }
-    
-    virtual void use()=0;
-    
+    void load();
 };
 
 
@@ -166,11 +75,12 @@ public:
 
 	// Standard uniforms
     GLint _posMvp;
-	UniformFloat _alpha;
-    UniformInt _sampler;
+    Uniform<float> _alpha;
+    Uniform<int> _sampler;
     Matrix4 _mvp;
     
 	virtual void load() = 0;
+    virtual void unload();
 	virtual void findVariables();
     virtual void use(class Window* window);
 	virtual void setAlpha(float alpha);

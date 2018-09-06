@@ -663,13 +663,14 @@ void View::detachFromWindow() {
 
     // If this view owns its surface, remove the op that renders it from the render target
     if (_ownsPrivateSurface && _surface->_op) {
+        _surface->cleanup();
         _surface->_op = NULL;
     }
 
     _surface = nullptr;
     _window = nullptr;
-    _nextView = nullptr;
-    _previousView = nullptr;
+    //_nextView = nullptr;
+    //_previousView = nullptr;
 
 }
 
@@ -750,7 +751,7 @@ void View::insertSubview(View* subview, int index) {
     while (rightmost->_subviews.size() > 0) {
         rightmost = rightmost->_subviews.at(rightmost->_subviews.size()-1);
     }
-    assert(!rightmost->_nextView);
+    //assert(!rightmost->_nextView);
     rightmost->_nextView = next;     // link 7 to 8
     if (next) {
         next->_previousView = rightmost; // link 8 to 7

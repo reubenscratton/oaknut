@@ -69,6 +69,7 @@ JAVA_FN(void, MainActivity, onCreateNative)(JNIEnv *env, jobject obj,
     g_app = (struct android_app*)malloc(sizeof(struct android_app));
     memset(g_app, 0, sizeof(struct android_app));
     g_app->scale = screenScale;
+    g_app->context = EGL_NO_CONTEXT;
 
     app._window = new Window();
     g_assetManager = AAssetManager_fromJava(env, jassetManager);
@@ -142,8 +143,6 @@ JAVA_FN(void, MainActivity, onSurfaceCreatedNative)(JNIEnv* env, jobject clazz, 
     EGLint numConfigs;
     EGLConfig config;
     EGLSurface surface;
-    EGLContext context;
-
     EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 
     eglInitialize(display, 0, 0);
@@ -154,10 +153,12 @@ JAVA_FN(void, MainActivity, onSurfaceCreatedNative)(JNIEnv* env, jobject clazz, 
 
     surface = eglCreateWindowSurface(display, config, g_app->window, NULL);
 
-    const EGLint attrib_list[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
-    context = eglCreateContext(display, config, NULL, attrib_list);
+    if (g_app->context == EGL_NO_CONTEXT) {
+        const EGLint attrib_list[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
+        g_app->context = eglCreateContext(display, config, NULL, attrib_list);
+    }
 
-    if (eglMakeCurrent(display, surface, surface, context) == EGL_FALSE) {
+    if (eglMakeCurrent(display, surface, surface, g_app->context) == EGL_FALSE) {
         LOGI("Unable to eglMakeCurrent");
         return;
     }
@@ -166,7 +167,6 @@ JAVA_FN(void, MainActivity, onSurfaceCreatedNative)(JNIEnv* env, jobject clazz, 
     eglQuerySurface(display, surface, EGL_HEIGHT, &h);
 
     g_app->display = display;
-    g_app->context = context;
     g_app->surface = surface;
     g_app->width = w;
     g_app->height = h;
@@ -199,6 +199,8 @@ JAVA_FN(void, MainActivity, onSurfaceRedrawNeededNative)(JNIEnv* env, jobject ob
 
 JAVA_FN(void, MainActivity, onSurfaceDestroyedNative)(JNIEnv* env, jobject obj, jobject jsurface) {
 
+    app._window->destroySurface();
+
     if (g_app->window) {
         ANativeWindow_release(g_app->window);
         g_app->window = NULL;
@@ -208,16 +210,16 @@ JAVA_FN(void, MainActivity, onSurfaceDestroyedNative)(JNIEnv* env, jobject obj, 
         eglMakeCurrent(g_app->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         if (g_app->context != EGL_NO_CONTEXT) {
             eglDestroyContext(g_app->display, g_app->context);
+            g_app->context = EGL_NO_CONTEXT;
         }
         if (g_app->surface != EGL_NO_SURFACE) {
             eglDestroySurface(g_app->display, g_app->surface);
+            g_app->surface = EGL_NO_SURFACE;
         }
         eglTerminate(g_app->display);
+        g_app->display = EGL_NO_DISPLAY;
     }
     g_app->animating = 0;
-    g_app->display = EGL_NO_DISPLAY;
-    g_app->context = EGL_NO_CONTEXT;
-    g_app->surface = EGL_NO_SURFACE;
 }
 
 
@@ -245,5 +247,15 @@ JAVA_FN(void, MainActivity, onTouchEventNative)(JNIEnv* env, jobject obj, jint f
     app._window->dispatchInputEvent(event);
 }
 
+JAVA_FN(jboolean, MainActivity, onBackPressedNative)(JNIEnv* env, jobject obj) {
+    Window* window = app._window;
+    ViewController* vc = window->_rootViewController;
+    return vc->navigateBack();
+}
+
+JAVA_FN(void, MainActivity, onDestroyNative)(JNIEnv* env, jobject obj) {
+    app._window->setRootViewController(NULL);
+    g_calledMain = false;
+}
 
 #endif

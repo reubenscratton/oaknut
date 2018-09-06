@@ -26,12 +26,42 @@ public:
       if (!s_jclass) {
           s_jclass = env->FindClass(PACKAGE "/URLRequest");
           s_jclass = (jclass) env->NewGlobalRef(s_jclass);
-          s_jmidConstructor = env->GetMethodID(s_jclass, "<init>", "(JLjava/lang/String;Ljava/lang/String;)V");
+          s_jmidConstructor = env->GetMethodID(s_jclass, "<init>", "(JLjava/lang/String;Ljava/lang/String;[B[B)V");
           s_jmidCancel = env->GetMethodID(s_jclass, "cancel", "()V");
       }
       jobject url = env->NewStringUTF(_url.data());
       jobject method = env->NewStringUTF(_method.data());
-      jobject object = env->NewObject(s_jclass, s_jmidConstructor, jlong(this), url, method);
+
+      // Concatenate the headers into a single string
+      jbyteArray headersBytes = NULL;
+      string headersStr;
+      for (auto it : _headers) {
+          if (headersStr.lengthInBytes()>0) {
+              headersStr.append('\n');
+          }
+          headersStr.append(it.first);
+          headersStr.append(':');
+          headersStr.append(it.second);
+      }
+      int32_t cb = headersStr.lengthInBytes();
+      if (cb) {
+          headersBytes = env->NewByteArray(cb);
+          jbyte *buf = env->GetByteArrayElements(headersBytes, NULL);
+          memcpy((char*)buf, headersStr.data(), cb);
+          env->ReleaseByteArrayElements(headersBytes, buf, 0);
+      }
+
+        // Body bytes
+        jbyteArray bodyBytes = NULL;
+        cb = _body.lengthInBytes();
+        if (cb) {
+            bodyBytes = env->NewByteArray(cb);
+            jbyte *buf = env->GetByteArrayElements(bodyBytes, NULL);
+            memcpy((char*)buf, _body.data(), cb);
+            env->ReleaseByteArrayElements(bodyBytes, buf, 0);
+        }
+
+        jobject object = env->NewObject(s_jclass, s_jmidConstructor, jlong(this), url, method, headersBytes, bodyBytes);
       _osobj = env->NewGlobalRef(object);
     }
 

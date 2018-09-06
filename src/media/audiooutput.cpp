@@ -135,7 +135,6 @@ void AudioOutput::open() {
     SLDataSink dataSink;
     dataSink.pLocator = &dataLocatorOut;
     dataSink.pFormat = NULL;
-    app.log("Got to here 3");
 
     // create audio player
     const SLInterfaceID ids[2] = {SL_IID_PLAY, SL_IID_BUFFERQUEUE};

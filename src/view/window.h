@@ -101,6 +101,7 @@ public:
 	virtual void setRootViewController(ViewController* viewController);
 	virtual void setNeedsLayout();
 	virtual void resizeSurface(int width, int height, float scale);
+	virtual void destroySurface();
 	virtual void draw();
 	virtual void requestRedraw();
 	virtual void dispatchInputEvent(INPUTEVENT event);
@@ -114,6 +115,8 @@ public:
     
 	// Render state
 	int _doneGlInit;
+    vector<GLProgram*> _loadedProgs;
+    list<BitmapBase*> _loadedTextures;
 	bool _rootVcAttached;
 	QuadBuffer* _quadBuffer;
     stack<RECT> _clips;

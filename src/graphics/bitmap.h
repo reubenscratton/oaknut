@@ -74,7 +74,8 @@ public:
     bool _allocdTexData;
     bool _paramsValid;
     bool _needsUpload;
-
+    list<BitmapBase*>::iterator _renderContextIt;
+    
     BitmapBase(int width, int height, int format);
     // Constructor is protected, use Bitmap::createXXX() APIs to instantiate
 protected:
@@ -89,6 +90,7 @@ public:
 
     // Rendering
     virtual void bind();
+    virtual void onRenderContextDestroyed();
 
     int getBytesPerPixel();
     GLenum getGlFormat();

@@ -125,3 +125,10 @@ void NavigationController::onDidPause() {
 	}
 }
 
+bool NavigationController::navigateBack() {
+	if (!_navStack.size()) {
+		return false;
+	}
+	popViewController();
+	return true;
+}

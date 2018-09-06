@@ -60,6 +60,9 @@ void TextRenderer::setGravity(GRAVITY gravity) {
 }
 
 void TextRenderer::measure() {
+    if (_measuredSizeValid) {
+        return;
+    }
     measure({0,0});
 }
 

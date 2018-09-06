@@ -1,6 +1,7 @@
 PROJECT_NAME:=textedit
 
 # Android
+ANDROID_PACKAGE_NAME:=net.oaknut.textedit
 ANDROID_ABIS=x86 arm64-v8a
 ANDROID_VER:=26
 ANDROID_BUILDTOOLS:=26.0.2

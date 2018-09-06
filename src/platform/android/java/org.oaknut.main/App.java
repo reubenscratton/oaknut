@@ -5,10 +5,13 @@ import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
+
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 
@@ -63,9 +66,15 @@ public class App extends Application {
         prefs.edit().putInt(new String(key, UTF_8),val).commit();
     }
     public static byte[] getPrefsString(byte[] key, byte[] defaultVal) {
-        return prefs.getString(new String(key, UTF_8), new String(defaultVal, UTF_8)).getBytes(UTF_8);
+        if (defaultVal == null) defaultVal=new byte[] {};
+        String s = prefs.getString(new String(key, UTF_8), new String(defaultVal, UTF_8));
+        return s.getBytes(UTF_8);
     }
     public static void setPrefsString(byte[] key, byte[] val) {
         prefs.edit().putString(new String(key, UTF_8), new String(val, UTF_8)).commit();
+    }
+
+    public static String createUUID() {
+        return UUID.randomUUID().toString();
     }
 }

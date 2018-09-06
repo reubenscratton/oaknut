@@ -47,20 +47,24 @@ Surface::Surface() {
 Surface::Surface(View* owningView) : Surface() {
 
     _supportsPartialRedraw = true;
-
-#ifndef PLATFORM_MACOS
-    check_gl(glGetIntegerv, GL_IMPLEMENTATION_COLOR_READ_TYPE, &_pixelType);
-    check_gl(glGetIntegerv, GL_IMPLEMENTATION_COLOR_READ_FORMAT, &_pixelFormat);
-#endif
-    if(_pixelFormat == 0) {
-        _pixelFormat = GL_RGBA;
-        _pixelType = GL_UNSIGNED_BYTE;
-    }
-    check_gl(glGenTextures, 1, &_tex);
-    check_gl(glGenFramebuffers, 1, &_fb);
+    _isPrivate = true;
+    
 }
 
 void Surface::setupPrivateFbo() {
+
+    if (!_tex) {
+#ifndef PLATFORM_MACOS
+        check_gl(glGetIntegerv, GL_IMPLEMENTATION_COLOR_READ_TYPE, &_pixelType);
+        check_gl(glGetIntegerv, GL_IMPLEMENTATION_COLOR_READ_FORMAT, &_pixelFormat);
+#endif
+        if(_pixelFormat == 0) {
+            _pixelFormat = GL_RGBA;
+            _pixelType = GL_UNSIGNED_BYTE;
+        }
+        check_gl(glGenTextures, 1, &_tex);
+        check_gl(glGenFramebuffers, 1, &_fb);
+    }
     GLint oldFBO, oldTex;
     check_gl(glGetIntegerv, GL_FRAMEBUFFER_BINDING, &oldFBO);
     check_gl(glGetIntegerv, GL_TEXTURE_BINDING_2D, &oldTex);
@@ -91,7 +95,7 @@ void Surface::setSize(SIZE size) {
             _invalidRegion.rects.clear();
             _invalidRegion.addRect(RECT(0,0,size.width,size.height));
         }
-        if (_tex) {
+        if (_isPrivate) {
             setupPrivateFbo();
         }
     }

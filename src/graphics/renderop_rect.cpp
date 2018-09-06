@@ -64,8 +64,8 @@ public:
 
 class GLProgramRoundRect : public GLProgramRect {
 public:
-    UniformColor _strokeColor;
-    UniformFloat4 _u;
+    Uniform<COLOR> _strokeColor;
+    Uniform<Vector4> _u;
     
     void findVariables() override {
         GLProgram::findVariables();
@@ -82,15 +82,20 @@ public:
         _strokeColor.set(op->_strokeColor);
         _u.set(Vector4(op->_rect.size.width/2,op->_rect.size.height/2,0,op->_strokeWidth));
     }
+    void unload() override {
+        GLProgramRect::unload();
+        _strokeColor.dirty = true;
+        _u.dirty = true;
+    }
 };
 
 class GLProgramRoundRectOne : public GLProgramRoundRect {
 public:
-    GLint _posRadius;
+    Uniform<float> _radius;
     
     void findVariables() override {
         GLProgramRoundRect::findVariables();
-        _posRadius = check_gl(glGetUniformLocation, _program, "radius");
+        _radius.position = check_gl(glGetUniformLocation, _program, "radius");
     }
     
     //void setRadius(float radius) {
@@ -122,18 +127,27 @@ public:
     
     void configureForRenderOp(RectRenderOp* op) override {
         GLProgramRoundRect::configureForRenderOp(op);
-        check_gl(glUniform1f, _posRadius, op->_radii[0]);
+        _radius.set(op->_radii[0]);
+    }
+    void lazyLoadUniforms() override {
+        GLProgramRoundRect::lazyLoadUniforms();
+        _radius.use();
+    }
+
+    void unload() override {
+        GLProgramRoundRect::unload();
+        _radius.dirty = true;
     }
 
 };
 
 class GLProgramRoundRectSymmetric : public GLProgramRoundRect {
 public:
-    GLint _posRadii;
-    
+    Uniform<Vector2> _radii;
+
     void findVariables() override {
         GLProgramRoundRect::findVariables();
-        _posRadii = check_gl(glGetUniformLocation, _program, "radii");
+        _radii.position = check_gl(glGetUniformLocation, _program, "radii");
     }
     
     void load() override {
@@ -169,10 +183,15 @@ public:
     
     void configureForRenderOp(RectRenderOp* op) override {
         GLProgramRoundRect::configureForRenderOp(op);
-        float r[2];
-        r[0] = op->_radii[0];
-        r[1] = op->_radii[3];
-        check_gl(glUniform2fv, _posRadii, 1, r);
+        _radii.set({op->_radii[0], op->_radii[3]});
+    }
+    void lazyLoadUniforms() override {
+        GLProgramRoundRect::lazyLoadUniforms();
+        _radii.use();
+    }
+    void unload() override {
+        GLProgramRoundRect::unload();
+        _radii.dirty = true;
     }
 
 };
