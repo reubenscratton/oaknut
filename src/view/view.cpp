@@ -154,7 +154,7 @@ RenderOp* View::processDrawable(const StyleValue* value) {
         assert(0);
     }*/
 
-    RectRenderOp* op = new RectRenderOp(this);
+    RectRenderOp* op = new RectRenderOp();
     
     
     if (value->type == StyleValue::Type::Compound) {
@@ -842,7 +842,7 @@ void View::setBackground(RenderOp* op) {
 }
 
 void View::setBackgroundColor(COLOR color) {
-    auto op = new RectRenderOp(this);
+    auto op = new RectRenderOp();
     op->setColor(color);
     setBackground(op);
 }
@@ -888,7 +888,7 @@ void View::addScrollbarOp(RenderOp* renderOp) {
         scrollbarsView->_rect = getOwnRect();
         _scrollbarsView = scrollbarsView;
     }
-    renderOp->_view = _scrollbarsView;
+    //renderOp->_view = _scrollbarsView;
     _scrollbarsView->addRenderOp(renderOp);
     _window->_viewLayoutValid = layoutValid;
 }
@@ -909,12 +909,19 @@ void View::addRenderOp(RenderOp* renderOp) {
     addRenderOp(renderOp, false);
 }
 void View::addRenderOp(RenderOp* renderOp, bool atFront) {
+    if (renderOp->_view) {
+        assert(renderOp->_view == this);
+        return;
+    }
+    assert(!renderOp->_view);
+    renderOp->_view = this;
     renderOp->_viewListIterator = _renderList.insert(atFront ? _renderList.begin() : _renderList.end(), renderOp);
     if (_surface) {
         _surface->addRenderOp(renderOp);
     }
 }
 void View::removeRenderOp(RenderOp* renderOp) {
+    assert(renderOp->_view);
     if (renderOp->_viewListIterator != _renderList.end()) {
          if (_surface) {
              _surface->removeRenderOp(renderOp);
@@ -922,6 +929,7 @@ void View::removeRenderOp(RenderOp* renderOp) {
          _renderList.erase(renderOp->_viewListIterator);
         renderOp->_viewListIterator = _renderList.end();
     }
+    renderOp->_view = NULL;
 }
 
 

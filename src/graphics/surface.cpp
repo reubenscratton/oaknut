@@ -278,8 +278,11 @@ void Surface::renderPhase1(View* view, Window* window, POINT origin) {
     }
     
     bool changesMvp = view->_matrix || !view->_contentOffset.isZero();
+    int mvpNumToRestore;
     if (changesMvp) {
-        _mvpNum++;
+        mvpNumToRestore = _mvpNum;
+        _mvpNumPeak++;
+        _mvpNum = _mvpNumPeak;
     }
     for (auto r:view->_renderList) {
         r->_mvpNum = _mvpNum;
@@ -302,13 +305,14 @@ void Surface::renderPhase1(View* view, Window* window, POINT origin) {
     }
 
     if (changesMvp) {
-        _mvpNum--;
+        _mvpNum = mvpNumToRestore;
     }
 
 }
 
 
-PrivateSurfaceRenderOp::PrivateSurfaceRenderOp(View* view, const RECT& rect)  : TextureRenderOp(view, rect, NULL, NULL, 0) {
+PrivateSurfaceRenderOp::PrivateSurfaceRenderOp(View* view, const RECT& rect)  : TextureRenderOp(rect, NULL, NULL, 0) {
+    _view = view;
     _dirty = true;
     validateShader();
 }
@@ -434,7 +438,7 @@ void Surface::render(View* view, Window* window) {
 
     _renderInProgress = true;
     
-    _mvpNum = 0;
+    _mvpNum = _mvpNumPeak = 0;
     
     /** PHASE 1: ENSURE ALL RENDER LISTS ARE VALID **/
     renderPhase1(view, window, {0,0});

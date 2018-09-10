@@ -9,7 +9,7 @@
 
 
 
-RenderOp::RenderOp(View* view) : _view(view), _alpha(1.0f) {
+RenderOp::RenderOp() : _view(NULL), _alpha(1.0f) {
 }
 RenderOp::~RenderOp() {
 }

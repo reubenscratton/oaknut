@@ -9,7 +9,7 @@
 		id: topBar
 		width: match_parent
 		height: 44dp
-        background: 0xFFDDDDDD
+        background: #ddd
         padding: 4dp
         subviews: [{
             class: LinearLayout

@@ -30,7 +30,7 @@ void BeebView::setBeeb(Beeb* beeb) {
     _bitmap = new Bitmap(SURFACE_WIDTH, SURFACE_HEIGHT, format);
     _bitmap->lock(&_bitmapData, true);
     beeb->setVideoBitmapParams((uint8_t*)_bitmapData.data, _bitmapData.stride);
-    _renderOp = new TextureRenderOp(this, RECT_Zero, _bitmap, &_visibleArea, 0);
+    _renderOp = new TextureRenderOp(RECT_Zero, _bitmap, &_visibleArea, 0);
     addRenderOp(_renderOp);
 }
 

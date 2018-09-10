@@ -11,7 +11,7 @@ DECLARE_DYNCREATE(ImageView);
 
 ImageView::ImageView() {
     applyStyle("ImageView");
-    _renderOp = new TextureRenderOp(this);
+    _renderOp = new TextureRenderOp();
     addRenderOp(_renderOp);
 }
 

@@ -21,7 +21,8 @@ GetOptions ("projectname=s" => \$projectname,
 my $proj_ios=$projectname."_ios";
 my $proj_macos=$projectname."_macos";
 my $proj_android=$projectname."_android";
-my $proj_web=$projectname."_web";
+my $proj_web_asmjs=$projectname."_web_asmjs";
+my $proj_web_wasm=$projectname."_web_wasm";
 
 mkdir '.idea' unless -d '.idea';
 my $filename = '.idea/workspace.xml';
@@ -33,7 +34,8 @@ print $fh qq(<?xml version="1.0" encoding="UTF-8"?>
 print $fh "<config projectName=\"$projectname\" targetName=\"".$proj_ios."\" />";
 print $fh "<config projectName=\"$projectname\" targetName=\"".$proj_macos."\" />";
 print $fh "<config projectName=\"$projectname\" targetName=\"".$proj_android."\" />";
-print $fh "<config projectName=\"$projectname\" targetName=\"".$proj_web."\" />";
+print $fh "<config projectName=\"$projectname\" targetName=\"".$proj_web_asmjs."\" />";
+print $fh "<config projectName=\"$projectname\" targetName=\"".$proj_web_wasm."\" />";
 print $fh "<config projectName=\"$projectname\" targetName=\"".$projectname."_do_not_build\" />";
 print $fh qq(
 </generated>
@@ -63,10 +65,16 @@ print $fh qq(
 <configuration name="$proj_macos" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="$projectname" TARGET_NAME="$proj_macos" CONFIG_NAME="Release" RUN_PATH="\$PROJECT_DIR\$/.build/macos/debug/$projectname.app/Contents/MacOS/$projectname">
 <envs />
 </configuration>
-<configuration name="$proj_web" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="$ENV{'EMSCRIPTEN_ROOT'}/emrun.py xx.html" WORKING_DIR="file://\$PROJECT_DIR\$/.build/web/debug/webroot" PASS_PARENT_ENVS_2="true" PROJECT_NAME="$projectname" TARGET_NAME="$proj_web" CONFIG_NAME="Debug" RUN_PATH="/usr/bin/python">
+<configuration name="$proj_web_asmjs" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="$ENV{'EMSCRIPTEN_ROOT'}/emrun.py xx.html" WORKING_DIR="file://\$PROJECT_DIR\$/.build/web_asmjs/debug/webroot" PASS_PARENT_ENVS_2="true" PROJECT_NAME="$projectname" TARGET_NAME="$proj_web_asmjs" CONFIG_NAME="Debug" RUN_PATH="/usr/bin/python">
 <envs />
 </configuration>
-<configuration name="$proj_web" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="$ENV{'EMSCRIPTEN_ROOT'}/emrun.py xx.html" WORKING_DIR="file://\$PROJECT_DIR\$/.build/web/release/webroot" PASS_PARENT_ENVS_2="true" PROJECT_NAME="$projectname" TARGET_NAME="$proj_web" CONFIG_NAME="Release" RUN_PATH="/usr/bin/python">
+<configuration name="$proj_web_asmjs" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="$ENV{'EMSCRIPTEN_ROOT'}/emrun.py xx.html" WORKING_DIR="file://\$PROJECT_DIR\$/.build/web_asmjs/release/webroot" PASS_PARENT_ENVS_2="true" PROJECT_NAME="$projectname" TARGET_NAME="$proj_web_asmjs" CONFIG_NAME="Release" RUN_PATH="/usr/bin/python">
+<envs />
+</configuration>
+<configuration name="$proj_web_wasm" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="$ENV{'EMSCRIPTEN_ROOT'}/emrun.py xx.html" WORKING_DIR="file://\$PROJECT_DIR\$/.build/web_wasm/debug/webroot" PASS_PARENT_ENVS_2="true" PROJECT_NAME="$projectname" TARGET_NAME="$proj_web_wasm" CONFIG_NAME="Debug" RUN_PATH="/usr/bin/python">
+<envs />
+</configuration>
+<configuration name="$proj_web_wasm" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="$ENV{'EMSCRIPTEN_ROOT'}/emrun.py xx.html" WORKING_DIR="file://\$PROJECT_DIR\$/.build/web_wasm/release/webroot" PASS_PARENT_ENVS_2="true" PROJECT_NAME="$projectname" TARGET_NAME="$proj_web_wasm" CONFIG_NAME="Release" RUN_PATH="/usr/bin/python">
 <envs />
 </configuration>
 

@@ -29,7 +29,7 @@ public:
     COLOR _color;
     
 public:
-    RenderOp(View* view);
+    RenderOp();
     ~RenderOp();
     virtual int numQuads();
     virtual bool canMergeWith(const RenderOp* op);

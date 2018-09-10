@@ -101,18 +101,6 @@ static View* inflateFromResource(const StyleValue& value, View* parent) {
         parent->addSubview(view);
     }
     
-    // Bring in default style attributes for this view type
-    /*map<string, StyleValue*> attribs;
-    
-    // Process the custom attributes and subviews
-    //assert(props->type == StyleValue::Type::Compound);
-    map<string, StyleValue*> customAttribs;
-    for (auto i : value->compoundVal()->_values)  {
-        if (i.first == "subviews") continue;
-        attribs[i.first] = val;
-    }*/
-
-    
     // Apply the attributes to the inflated view.
     view->applyStyleValues(value);
     

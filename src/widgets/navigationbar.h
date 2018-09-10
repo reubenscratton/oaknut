@@ -14,11 +14,13 @@ public:
     
 	NavigationBar();
 	
-	virtual void setBackground(RenderOp* renderOp);
-    virtual void setBackgroundColor(COLOR backgroundColor);
+	void setBackground(RenderOp* renderOp) override;
+    void setBackgroundColor(COLOR backgroundColor) override;
     virtual void addNavigationItem(NavigationItem* navigationItem);
     virtual void removeNavigationItem(NavigationItem* navigationItem);
     virtual void setBlurEnabled(bool blurEnabled);
+    
+    void updateContentSize(float parentWidth, float parentHeight) override;
 
 };
 

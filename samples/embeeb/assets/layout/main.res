@@ -13,12 +13,12 @@
         width: fill_parent
         height: 0
         weight: 1
-        background: 0xFF000000
+        background: black
       },{
         class: ControllerView
         id: controllerView
         width: fill_parent
         height: aspect(0.675)
-        background: 0xFF222222
+        background: #222
       }]
 }

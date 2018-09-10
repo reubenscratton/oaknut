@@ -74,7 +74,7 @@ bool ScrollInfo::canScroll(View* view, bool isVertical) {
 void ScrollInfo::updateVisibility(View* view, bool isVertical) {
     if (canScroll(view, isVertical)) {
         if (!_renderOp) {
-            _renderOp = new RectRenderOp(NULL);
+            _renderOp = new RectRenderOp();
             _renderOp->setFillColor(0xFF4E4E4E);
             _renderOp->setCornerRadius(2.5); // todo: STYLE!
             view->addScrollbarOp(_renderOp);

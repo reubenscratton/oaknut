@@ -202,7 +202,7 @@ static GLProgramRoundRectOne glprogRoundRect1;
 static GLProgramRoundRectSymmetric glprogRoundRectSymmetric;
 
 
-RectRenderOp::RectRenderOp(View* view) : RenderOp(view) {
+RectRenderOp::RectRenderOp() : RenderOp() {
     _prog = &glprogSolidFill;
     _blendMode = BLENDMODE_NONE;
 }

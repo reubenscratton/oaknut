@@ -176,9 +176,9 @@ static bool s_mouseIsDown;
 
 @end
 
-EDGEINSETS App::getWindowSafeAreaInsets() {
+/*EDGEINSETS App::getWindowSafeAreaInsets() {
     return {0,0,0,0};
-}
+}*/
 
 void App::requestRedraw() {
     if (!_renderNeeded) {

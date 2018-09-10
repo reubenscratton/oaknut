@@ -97,11 +97,11 @@ static GLProgramTextureTint glprogTextureTint;
 static GLProgramTextureTintAlpha glprogTextureTintAlpha;
 
 
-TextureRenderOp::TextureRenderOp(View* view) : RenderOp(view) {
+TextureRenderOp::TextureRenderOp() : RenderOp() {
     _alpha = 1.0f;
     _rectTex = RECT(0,0,1,1);
 }
-TextureRenderOp::TextureRenderOp(View* view, const RECT& rect, Bitmap* bitmap, const RECT* rectTex, COLOR tintColor) : RenderOp(view) {
+TextureRenderOp::TextureRenderOp(const RECT& rect, Bitmap* bitmap, const RECT* rectTex, COLOR tintColor) : RenderOp() {
     _bitmap = bitmap;
     _alpha = 1.0f;
     _color = tintColor;
@@ -116,7 +116,7 @@ TextureRenderOp::TextureRenderOp(View* view, const RECT& rect, Bitmap* bitmap, c
 /**
  * Constructor for tinted .png icons
  */
-TextureRenderOp::TextureRenderOp(View* view, const char* assetPath, int tintColor) : TextureRenderOp(view) {
+TextureRenderOp::TextureRenderOp(const char* assetPath, int tintColor) : TextureRenderOp() {
     _alpha = 1.0f;
     _color = tintColor;
     ByteBuffer* data = app.loadAsset(assetPath);

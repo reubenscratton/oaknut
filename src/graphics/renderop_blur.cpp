@@ -49,7 +49,7 @@ static GLProgramBlur s_progBlur(BLUR_RADIUS, BLUR_RADIUS);
 static GLProgramPostBlur s_progBlurPost;
 
 
-BlurRenderOp::BlurRenderOp(View* view) : RenderOp(view) {
+BlurRenderOp::BlurRenderOp() : RenderOp() {
     _prog = &s_progBlurPost;
     GLint otex;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &otex);
@@ -207,8 +207,6 @@ GLProgramBlur::GLProgramBlur(int blurRadius, int sigma) : _blurRadius(blurRadius
 
 void GLProgramBlur::load() {
 
-	
-	
 	// First, generate the normal Gaussian weights for a given sigma
 	GLfloat standardGaussianWeights[_blurRadius + 1];
     GLfloat sumOfWeights = 0.0;
@@ -314,6 +312,10 @@ void GLProgramBlur::load() {
 	loadShaders(vertexShader.data(), fragShader.data());
     
 	_posTexOffset = glGetUniformLocation(_program, "texOffset");
+}
+
+void GLProgramBlur::unload() {
+    GLProgram::unload();
 }
 
 void GLProgramBlur::setTexOffset(POINT texOffset) {

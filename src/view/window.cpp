@@ -27,11 +27,14 @@ void Window::setRootViewController(ViewController* viewController) {
     _rootViewController = viewController;
     attachRootVC();
 }
+
+
 void Window::attachRootVC() {
 	if (_rootViewController && _surface && !_rootVcAttached) {
         _rootViewController->onWillResume();
 		prepareToDraw();
         _rootViewController->attachToWindow(this);
+        updateSafeArea();
         _rootViewController->onDidResume();
         _rootVcAttached = true;
 	}
@@ -45,7 +48,6 @@ void Window::resizeSurface(int width, int height, float scale) {
     if (_surface->_size.width==width && _surface->_size.height==height) {
         return;
     }
-    _safeAreaInsets = app.getWindowSafeAreaInsets();
 	//app.log("Window::resize %d %d %d", width, height, scale);
     _surfaceRect = RECT(0,0,width,height);
 	_scale = scale;
@@ -54,6 +56,7 @@ void Window::resizeSurface(int width, int height, float scale) {
         if (!_rootVcAttached) {
             attachRootVC();
         }
+        updateSafeArea();
         _rootViewController->getView()->setNeedsLayout();
 	}
 }
@@ -482,8 +485,6 @@ void Window::prepareToDraw() {
         check_gl(glDepthMask, GL_TRUE);
         check_gl(glClear, GL_DEPTH_BUFFER_BIT);
         check_gl(glDepthMask, GL_FALSE);
-        check_gl(glClearColor, 1, 0, 0, 1);
-        check_gl(glClear, GL_COLOR_BUFFER_BIT);
         check_gl(glDisable, GL_DEPTH_TEST);
         check_gl(glActiveTexture, GL_TEXTURE0);
         _blendMode = BLENDMODE_NONE;
@@ -494,6 +495,16 @@ void Window::prepareToDraw() {
         // As long as we only have one quadbuffer we only need to bind the once
         _quadBuffer->bind();
         _currentVertexConfig = 0;
+
+        COLOR windowBackgroundColor = app.getStyleColor("window.background-color");
+        _backgroundColor[0] = (windowBackgroundColor & 0xFF) / 255.0f;
+        _backgroundColor[1] = ((windowBackgroundColor & 0xFF00)>>8) / 255.0f;
+        _backgroundColor[2] = ((windowBackgroundColor & 0xFF0000)>>16) / 255.0f;
+        _backgroundColor[3] = ((windowBackgroundColor & 0xFF000000)>>24) / 255.0f;
+        check_gl(glClearColor, _backgroundColor[0],_backgroundColor[1],_backgroundColor[2],_backgroundColor[3]);
+    }
+    if (_backgroundColor[3] > 0.f) {
+        check_gl(glClear, GL_COLOR_BUFFER_BIT);
     }
 
     _renderCounter++;
@@ -527,7 +538,21 @@ void Window::bindTexture(Bitmap* texture) {
         _currentTexture = texture;
         texture->bind();
     }
+}
 
+void Window::updateSafeArea() {
+    RECT safeArea = _surfaceRect;
+    EDGEINSETS safeInsets = _safeAreaInsets;
+    safeInsets.bottom += _softKeyboardRect.size.height;
+    safeInsets.applyToRect(safeArea);
+    _rootViewController->updateSafeArea(safeArea);
+}
+
+void Window::setSoftKeyboardRect(const RECT rect) {
+    _softKeyboardRect = rect;
+    if (_rootViewController && _rootVcAttached) {
+        updateSafeArea();
+    }
 }
 
 

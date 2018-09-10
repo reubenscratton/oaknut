@@ -66,7 +66,7 @@ void EditText::updateCursor() {
         return;
     }
     if (!_cursorRenderOp) {
-        _cursorRenderOp = new RectRenderOp(this);
+        _cursorRenderOp = new RectRenderOp();
         _cursorRenderOp->setColor(0xff333333); // todo: style
         _cursorOn = true;
     }
@@ -134,7 +134,7 @@ void EditText::updateClearButton() {
     } else {
         if (_showClearButtonWhenNotEmpty) {
             if (!_clearButtonOp) {
-                _clearButtonOp = new TextureRenderOp(this, "images/edittext_clear.png", 0xff999999);
+                _clearButtonOp = new TextureRenderOp("images/edittext_clear.png", 0xff999999);
                 RECT rect = getOwnRectPadded();
                 _clearButtonOp->_rect.origin.x = rect.origin.x+rect.size.width-app.dp(22);
                 _clearButtonOp->_rect.origin.y = rect.origin.y+(rect.size.height-app.dp(22)) / 2;

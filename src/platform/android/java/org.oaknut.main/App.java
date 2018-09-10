@@ -10,9 +10,11 @@ import android.util.Log;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
+import java.nio.charset.Charset;
+import java.util.Base64;
 import java.util.UUID;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 
 public class App extends Application {
@@ -23,8 +25,8 @@ public class App extends Application {
     static {
         handler = new Handler(Looper.getMainLooper());
     }
-
-
+    static final Charset UTF_8 = Charset.forName("UTF-8");
+    static WeakReference<MainActivity> currentActivity;
 
     public App() {
         app = this;
@@ -65,6 +67,7 @@ public class App extends Application {
     public static void setPrefsInt(byte[] key, int val) {
         prefs.edit().putInt(new String(key, UTF_8),val).commit();
     }
+
     public static byte[] getPrefsString(byte[] key, byte[] defaultVal) {
         if (defaultVal == null) defaultVal=new byte[] {};
         String s = prefs.getString(new String(key, UTF_8), new String(defaultVal, UTF_8));
@@ -74,7 +77,25 @@ public class App extends Application {
         prefs.edit().putString(new String(key, UTF_8), new String(val, UTF_8)).commit();
     }
 
+    public static byte[] getPrefsByteArray(String key, byte[] defaultVal) {
+        String s = prefs.getString(key, null);
+        if (s == null) {
+            return defaultVal;
+        }
+        return android.util.Base64.decode(s, 0);
+    }
+    public static void setPrefsByteArray(String key, byte[] val) {
+        prefs.edit().putString(key, android.util.Base64.encodeToString(val, 0)).commit();
+    }
+
     public static String createUUID() {
         return UUID.randomUUID().toString();
+    }
+
+    public static void showKeyboard(boolean show) {
+        MainActivity activity = currentActivity.get();
+        if (activity != null) {
+            activity.showKeyboard(show);
+        }
     }
 }

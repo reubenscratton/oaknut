@@ -28,7 +28,7 @@ typedef struct {
 
 
 // NB: DONT leave error checking in release builds! It's weirdly slow in JS...
-#if 0
+#if 1
 #define check_gl(cmd, ...) cmd(__VA_ARGS__)
 #else
 void checkGlErr(const char* file, int line, const char* cmd);

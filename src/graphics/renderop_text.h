@@ -27,7 +27,7 @@ public:
     vector<RECT> _rectsTex;
     TEXTRENDERPARAMS _textRenderParams;
     
-    TextRenderOp(View* view, const TEXTRENDERPARAMS* textRenderParams);
+    TextRenderOp(const TEXTRENDERPARAMS* textRenderParams);
 
 
     void addGlyph(Glyph* glyph, const RECT& rect);

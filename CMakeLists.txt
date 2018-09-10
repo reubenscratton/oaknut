@@ -12,8 +12,13 @@
 file(GLOB_RECURSE SOURCES  "app/*.*" "assets/*.*" "platform/*.*" "${CMAKE_CURRENT_LIST_DIR}/src/*.*")
 
 # Web
-add_custom_target(${PROJECT_NAME}_web COMMAND make -C ${PROJECT_SOURCE_DIR}
-        PLATFORM=web
+add_custom_target(${PROJECT_NAME}_web_wasm COMMAND make -C ${PROJECT_SOURCE_DIR}
+        PLATFORM=web_wasm
+        PROJECT_NAME=${PROJECT_NAME}
+        CONFIG=$ENV{CONFIG}
+        SOURCES ${SOURCES})
+add_custom_target(${PROJECT_NAME}_web_asmjs COMMAND make -C ${PROJECT_SOURCE_DIR}
+        PLATFORM=web_asmjs
         PROJECT_NAME=${PROJECT_NAME}
         CONFIG=$ENV{CONFIG}
         SOURCES ${SOURCES})

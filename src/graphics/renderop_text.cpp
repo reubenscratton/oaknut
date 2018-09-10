@@ -28,7 +28,7 @@ public:
 
 static GLProgramTextGlyph glprogTextGlyph;
 
-TextRenderOp::TextRenderOp(View* view, const TEXTRENDERPARAMS* textRenderParams) : RenderOp(view) {
+TextRenderOp::TextRenderOp(const TEXTRENDERPARAMS* textRenderParams) : RenderOp() {
     _alpha = 1.0f;
     _textRenderParams = *textRenderParams;
     this->_blendMode = BLENDMODE_NORMAL;

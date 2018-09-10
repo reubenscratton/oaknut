@@ -18,6 +18,7 @@ static jmethodID jmidAppSetPrefsInt;
 static jmethodID jmidAppGetPrefsString;
 static jmethodID jmidAppSetPrefsString;
 static jmethodID jmidAppCreateUUID;
+static jmethodID jmidAppShowKeyboard;
 
 static JNIEnv* getAppEnv() {
   JNIEnv* env = getJNIEnv();
@@ -31,6 +32,7 @@ static JNIEnv* getAppEnv() {
     jmidAppGetPrefsString = env->GetStaticMethodID(jclassApp, "getPrefsString", "([B[B)[B");
     jmidAppSetPrefsString = env->GetStaticMethodID(jclassApp, "setPrefsString", "([B[B)V");
     jmidAppCreateUUID = env->GetStaticMethodID(jclassApp, "createUUID", "()Ljava/lang/String;");
+      jmidAppShowKeyboard = env->GetStaticMethodID(jclassApp, "showKeyboard", "(Z)V");
   }
   return env;
 }
@@ -108,16 +110,17 @@ void App::requestRedraw() {
 }
 
 void App::keyboardShow(bool show) {
-
+    JNIEnv* env = getAppEnv();
+    env->CallStaticVoidMethod(jclassApp, jmidAppShowKeyboard, show);
 }
 
 void App::keyboardNotifyTextChanged() {
 
 }
 
-EDGEINSETS App::getWindowSafeAreaInsets() {
-    return {0,40,0,100};
-}
+/*EDGEINSETS App::getWindowSafeAreaInsets() {
+    return {0,40,0,100}; // TODO: determine properly
+}*/
 
 class jstringHelper {
 public:
@@ -148,9 +151,11 @@ public:
     if (_jba) {
       JNIEnv* env = getAppEnv();
       int cb = env->GetArrayLength(_jba);
-      bytearray ba(cb);
-      env->GetByteArrayRegion(_jba, 0, cb, (jbyte*)ba.data());
-      return string((char*)ba.data());
+      if (cb > 0) {
+          bytearray ba(cb);
+          env->GetByteArrayRegion(_jba, 0, cb, (jbyte *) ba.data());
+          return string((char *) ba.data());
+      }
     }
     return "";
   }

@@ -69,7 +69,7 @@ void ControllerKey::attachToView(ControllerView* view) {
     rect.inset(1, 1);
     //_bkgndOp = new RoundRectRenderOp(_view, rect, _isTouched ? colourForPressedKey : colourForKeyBackground, 0,0, 4);
     //COLOUR fillColour = (_isTouched||_highlighted)? colourForPressedKey : _keyColour;
-    _bkgndOp = new RectRenderOp(_view);
+    _bkgndOp = new RectRenderOp();
     _bkgndOp->setRect(rect);
     _bkgndOp->setFillColor(_keyColour);
     view->addRenderOp(_bkgndOp);

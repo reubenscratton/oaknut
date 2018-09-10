@@ -21,6 +21,8 @@ struct android_app {
     int32_t width;
     int32_t height;
     float scale;
+    float statusBarHeight;
+    float navigationBarHeight;
 };
 
 JavaVM* g_jvm;
@@ -53,6 +55,8 @@ static void engine_draw_rect() {
     }
 
     if (!g_calledMain) {
+        app._window->_safeAreaInsets.top = g_app->statusBarHeight;
+        app._window->_safeAreaInsets.bottom = g_app->navigationBarHeight;
         app.main();
         g_calledMain = true;
     }
@@ -64,11 +68,13 @@ static void engine_draw_rect() {
 
 
 JAVA_FN(void, MainActivity, onCreateNative)(JNIEnv *env, jobject obj,
-                                            jobject jassetManager, jfloat screenScale) {
+                                            jobject jassetManager, jfloat screenScale, jfloat statusBarHeight, jfloat navigationBarHeight) {
     // Create our app object
     g_app = (struct android_app*)malloc(sizeof(struct android_app));
     memset(g_app, 0, sizeof(struct android_app));
     g_app->scale = screenScale;
+    g_app->statusBarHeight = statusBarHeight;
+    g_app->navigationBarHeight = navigationBarHeight;
     g_app->context = EGL_NO_CONTEXT;
 
     app._window = new Window();
@@ -245,6 +251,23 @@ JAVA_FN(void, MainActivity, onTouchEventNative)(JNIEnv* env, jobject obj, jint f
     event.pt.y = y;// * app._window->_scale;
     event.time = time;
     app._window->dispatchInputEvent(event);
+}
+
+JAVA_FN(jboolean, MainActivity, onKeyEventNative)(JNIEnv* env, jobject obj, jboolean isDown, jint keyCode, jint charCode) {
+    if (keyCode == 4) { // Don't handle 'back' button, let that go via onBackPressed so Android can handle it properly
+        return false;
+    }
+    KeyboardInputSpecialKeyCode sk = SpecialKeyNone;
+    if (keyCode == 21) sk = SpecialKeyCursorLeft;
+    else if (keyCode == 22) sk = SpecialKeyCursorRight;
+    else if (keyCode == 20) sk = SpecialKeyCursorDown;
+    else if (keyCode == 19) sk = SpecialKeyCursorUp;
+    if (keyCode == 67) sk = SpecialKeyDelete;
+    if (app._window->_keyboardHandler) {
+        app._window->_keyboardHandler->keyInputEvent(isDown ? KeyDown : KeyUp, sk, keyCode, charCode);
+        return true;
+    }
+    return false;
 }
 
 JAVA_FN(jboolean, MainActivity, onBackPressedNative)(JNIEnv* env, jobject obj) {

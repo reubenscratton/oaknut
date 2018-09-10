@@ -26,9 +26,9 @@ public:
     ObjPtr<BitmapProvider> _bitmapProvider;
     RECT _rectTex;
     
-    TextureRenderOp(View* view);
-    TextureRenderOp(View* view, const RECT& rect, Bitmap* texture, const RECT* rectTex, COLOR tintColor);
-    TextureRenderOp(View* view, const char* assetPath, int tintColor);
+    TextureRenderOp();
+    TextureRenderOp(const RECT& rect, Bitmap* texture, const RECT* rectTex, COLOR tintColor);
+    TextureRenderOp(const char* assetPath, int tintColor);
     
     // API
     virtual void setBitmap(Bitmap* bitmap);

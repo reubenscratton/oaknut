@@ -7,7 +7,7 @@
 
 class RectRenderOp : public RenderOp {
 public:
-    RectRenderOp(View* view);
+    RectRenderOp();
 
     // API
     COLOR getFillColor() const;

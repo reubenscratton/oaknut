@@ -77,8 +77,11 @@ void DisksViewController::onDidPause() {
 	app.setIntSetting("disksY", _listView->getContentOffset().y);
 }
 
-void DisksViewController::setSafeAreaInsets(const EDGEINSETS &safeAreaInsets) {
-    _safeAreaInsets = safeAreaInsets;
+void DisksViewController::updateSafeArea(const RECT &safeArea) {
+    _safeAreaInsets.left = safeArea.left();
+    _safeAreaInsets.top = safeArea.top();
+    _safeAreaInsets.right = _window->_surfaceRect.size.width - safeArea.right();
+    _safeAreaInsets.bottom = _window->_surfaceRect.size.height - safeArea.bottom();
     updateInsets();
 }
 

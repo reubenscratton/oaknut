@@ -96,7 +96,6 @@ void RenderBatch::render(Window* window, Surface* surface, RenderOp* firstOp) {
             if (++it == _ops.end()) {
                 break;
             }
-            //baseOp = nextOpInBatch;
             nextOpInBatch = *it;
         } else {
             region.addRect(currentOp->surfaceRect());
@@ -117,7 +116,6 @@ void RenderBatch::render(Window* window, Surface* surface, RenderOp* firstOp) {
         currentOp = *jt;
         
     }
-
 
     // If redrawing an invalid region, start iterating the region rects here
     RECT rect;

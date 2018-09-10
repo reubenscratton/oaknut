@@ -13,14 +13,15 @@ public:
     
     GLProgramBlur(int blurRadius, int sigma);
 
-    virtual void load();
+    void load() override;
+    void unload() override;
     virtual void setTexOffset(POINT texOffset);
 };
 
 
 class BlurRenderOp : public RenderOp {
 public:
-	BlurRenderOp(View* view);
+	BlurRenderOp();
     ~BlurRenderOp();
     
     SIZEI _fullSizePow2;

@@ -12,9 +12,9 @@
 static val ls = val::global("localStorage");
 static val lsGetInt = val::global("lsGetInt");
 
-EDGEINSETS App::getWindowSafeAreaInsets() {
+/*EDGEINSETS App::getWindowSafeAreaInsets() {
     return {0,0,0,0};
-}
+}*/
 
 int App::getIntSetting(const char *key, const int defaultValue) {
     val value = lsGetInt(val(key), val(defaultValue));

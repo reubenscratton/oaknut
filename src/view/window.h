@@ -60,7 +60,6 @@ public:
     RECT _surfaceRect;
 	float _scale;
 	bool _inLayoutPass;
-    EDGEINSETS _safeAreaInsets;
     class MotionTracker {
     public:
         MotionTracker(int source);
@@ -115,6 +114,7 @@ public:
     
 	// Render state
 	int _doneGlInit;
+    GLfloat _backgroundColor[4];
     vector<GLProgram*> _loadedProgs;
     list<BitmapBase*> _loadedTextures;
 	bool _rootVcAttached;
@@ -131,7 +131,11 @@ public:
 	void prepareToDraw();
 	void setCurrentSurface(Surface* surface);
 	void setVertexConfig(int vertexConfig);
-
+    
+    EDGEINSETS _safeAreaInsets; // not including keyboard
+    RECT _softKeyboardRect;
+    void setSoftKeyboardRect(const RECT rect);
+    void updateSafeArea();
 };
 
 

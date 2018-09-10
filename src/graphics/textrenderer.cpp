@@ -371,7 +371,7 @@ void TextRenderer::updateRenderOps(View* view) {
                 if (currentParams != character.renderParams) {
                     currentParams = character.renderParams;
                     if (!currentParams->renderOp) {
-                        currentParams->renderOp = new TextRenderOp(view, currentParams);
+                        currentParams->renderOp = new TextRenderOp(currentParams);
                     }
                     auto t = uniqueParams.insert(currentParams);
                     if (t.second) {

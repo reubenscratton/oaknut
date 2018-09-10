@@ -6,16 +6,23 @@ import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.PixelFormat;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.Choreographer;
+import android.view.Display;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewTreeObserver;
+import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+
+import java.lang.ref.WeakReference;
 
 
 public class MainActivity extends Activity implements SurfaceHolder.Callback2, ViewTreeObserver.OnGlobalLayoutListener, Choreographer.FrameCallback {
@@ -27,7 +34,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
     private static final String KEY_NATIVE_SAVED_STATE = "android:native_state";
 
     private View mNativeContentView;
-    private InputMethodManager mIMM;
 
     private SurfaceHolder mCurSurfaceHolder;
 
@@ -39,7 +45,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
 
     private boolean mDestroyed;
 
-    private native void onCreateNative(AssetManager assetManager, float screenScale);
+    private native void onCreateNative(AssetManager assetManager, float screenScale, float statusBarHeight, float navigationBarHeight);
     private native void onStartNative();
     private native void onResumeNative();
     private native byte[] onSaveInstanceStateNative();
@@ -53,6 +59,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
     private native void redrawNative();
     private native void onSurfaceDestroyedNative();
     private native void onContentRectChangedNative(int x, int y, int w, int h);
+    private native boolean onKeyEventNative(boolean isDown, int keyCode, int charCode);
     private native void onTouchEventNative(int pointer, int action, long time, float x, float y);
     private native boolean onBackPressedNative();
     private native void onDestroyNative();
@@ -60,13 +67,11 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        mIMM = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-
-        getWindow().takeSurface(this);
-        getWindow().setFormat(PixelFormat.RGBA_8888);
-        getWindow().setSoftInputMode(
-                WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED
-                        | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        Window window = getWindow();
+        window.takeSurface(this);
+        window.setFormat(PixelFormat.RGBA_8888);
+        window.setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
 
         mNativeContentView = new View(this);
         setContentView(mNativeContentView);
@@ -74,14 +79,35 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
         mNativeContentView.getViewTreeObserver().addOnGlobalLayoutListener(this);
 
 
+        // Get status bar height. If it's non-zero then the top window inset is zero because
+        // we can't render under it. If it's zero then work out what the bar height is
+        // and use that as the inset.
+        Rect rectangle = new Rect();
+        window.getDecorView().getWindowVisibleDisplayFrame(rectangle);
+        int statusBarHeight = rectangle.top;
+        if (statusBarHeight == 0) {
+            int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+            if (resourceId > 0) {
+                statusBarHeight = getResources().getDimensionPixelSize(resourceId);
+            }
+        } else {
+            statusBarHeight = 0;
+        }
 
-        byte[] nativeSavedState = savedInstanceState != null
-                ? savedInstanceState.getByteArray(KEY_NATIVE_SAVED_STATE) : null;
+        // Detect nav bar
+        Display d = getWindowManager().getDefaultDisplay();
+        DisplayMetrics realDisplayMetrics = new DisplayMetrics();
+        d.getRealMetrics(realDisplayMetrics);
+        int realHeight = realDisplayMetrics.heightPixels;
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        d.getMetrics(displayMetrics);
+        int displayHeight = displayMetrics.heightPixels;
+        float navigationBarHeight =  (realHeight - displayHeight);
+
 
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
-
-        onCreateNative(getAssets(), metrics.density);
+        onCreateNative(getAssets(), metrics.density, statusBarHeight, navigationBarHeight);
 
         super.onCreate(savedInstanceState);
 
@@ -108,6 +134,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
     @Override
     protected void onResume() {
         super.onResume();
+        App.currentActivity = new WeakReference<>(this);
         onResumeNative();
     }
 
@@ -213,14 +240,29 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
         getWindow().setFormat(format);
     }
 
-    void showIme(int mode) {
-        mIMM.showSoftInput(mNativeContentView, mode);
+    void showKeyboard(boolean show) {
+        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (show) {
+            imm.showSoftInput(mNativeContentView, InputMethodManager.SHOW_FORCED);
+        } else {
+            imm.hideSoftInputFromWindow(mNativeContentView.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+        }
     }
 
-    void hideIme(int mode) {
-        mIMM.hideSoftInputFromWindow(mNativeContentView.getWindowToken(), mode);
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        return onKeyEventNative(true, keyCode, event.getUnicodeChar());
     }
 
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (keyCode==KeyEvent.KEYCODE_BACK) {
+            onBackPressed();
+            return true;
+        }
+        return onKeyEventNative(false, keyCode, event.getUnicodeChar());
+    }
 
     @Override
     public void doFrame(long frameTimeNanos) {

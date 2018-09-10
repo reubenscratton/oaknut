@@ -87,12 +87,17 @@ public:
      */
     virtual void detachFromWindow();
     
-    
-    virtual void setSafeAreaInsets(const EDGEINSETS& safeAreaInsets);
+    virtual void updateSafeArea(const RECT& safeArea);
 
     virtual bool navigateBack();
 
+    virtual void addChildViewController(ViewController* childVC);
+    
+    virtual void updateChildSafeArea(ViewController* childVC, const RECT& safeArea);
+
 protected:
     ObjPtr<View> _view;
+    RECT _safeArea;
+    vector<ObjPtr<ViewController>> _childViewControllers;
 };
 

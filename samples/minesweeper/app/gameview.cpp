@@ -34,7 +34,7 @@ void GameView::setGame(Game* game) {
     for (int y=0 ; y<_game->_rows ; y++) {
         for (int x=0 ; x<_game->_cols ; x++) {
             Cell &cell = _game->cellAt(x, y);
-            cell._renderOp = new TextureRenderOp(this);
+            cell._renderOp = new TextureRenderOp();
             cell._renderOp->setRect(RECT(x*_cellSize,y*_cellSize,_cellSize,_cellSize));
             updateCell(cell);
             addRenderOp(cell._renderOp);

@@ -12,10 +12,6 @@
 extern dispatch_queue_t oakQueue;
 
 
-EDGEINSETS App::getWindowSafeAreaInsets() {
-    return {0,dp(20),0,0};
-}
-
 
 @implementation OaknutView
 
@@ -76,6 +72,7 @@ EDGEINSETS App::getWindowSafeAreaInsets() {
         
     
     if (!_calledMain) {
+        app._window->_safeAreaInsets.top = [UIApplication sharedApplication].statusBarFrame.size.height * [UIScreen mainScreen].scale;
         app.main();
         _calledMain = true;
     }
@@ -254,11 +251,25 @@ void App::requestRedraw() {
  
 	app._window = new Window();
 	app._window->_scale = s_oaknutView.contentScaleFactor;
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onKeyboardFrameChanged:) name:UIKeyboardWillChangeFrameNotification object:nil];
+    
 	
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
 	
     return YES;
+}
+
+- (void)onKeyboardFrameChanged:(NSNotification*)notification {
+    CGRect keyboardFrame = ((NSValue*)notification.userInfo[UIKeyboardFrameEndUserInfoKey]).CGRectValue;
+    RECT rect;
+    float scale = [UIScreen mainScreen].scale;
+    rect.origin.x = keyboardFrame.origin.x * scale;
+    rect.origin.y = keyboardFrame.origin.y * scale;
+    rect.size.width = keyboardFrame.size.width * scale;
+    rect.size.height = keyboardFrame.size.height * scale;
+    app._window->setSoftKeyboardRect(rect);
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {

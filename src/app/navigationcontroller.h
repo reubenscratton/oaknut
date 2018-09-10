@@ -28,11 +28,14 @@ public:
 	NavigationController();
 	virtual void pushViewController(ViewController* vc);
 	virtual void popViewController();
-	virtual void onWillResume();
-	virtual void onDidResume();
-	virtual void onWillPause();
-	virtual void onDidPause();
-
+    
+    void updateChildSafeArea(ViewController* childVc, const RECT& safeArea) override;
+    
+    void updateSafeArea(const RECT& safeArea) override;
+    void onWillResume() override;
+	void onDidResume() override;
+	void onWillPause() override;
+	void onDidPause() override;
 	bool navigateBack() override;
 
 

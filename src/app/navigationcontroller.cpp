@@ -21,15 +21,30 @@ NavigationController::NavigationController() {
 	_navBar = new NavigationBar();
 	_view->addSubview(_navBar);
 
+}
 
+void NavigationController::updateSafeArea(const RECT& safeArea) {
+    _safeArea = safeArea;
+    _navBar->setPadding({0,safeArea.top(),0,0});
+    // don't apply safe area to root view cos we want to extend our navbar under status bar rather than have padding
+    if (_currentViewController) {
+        updateChildSafeArea(_currentViewController, safeArea);
+    }
+    for (auto it : _navStack) {
+        updateChildSafeArea(it, safeArea);
+    }
+}
+
+void NavigationController::updateChildSafeArea(ViewController* childVc, const RECT& safeArea) {
+    RECT childSafeArea = safeArea;
+    EDGEINSETS navbarInsets = {0,app.getStyleFloat("navbar.height"),0,0};
+    navbarInsets.applyToRect(childSafeArea);
+    childVc->updateSafeArea(childSafeArea);
 }
 
 void NavigationController::pushViewController(ViewController* vc) {
     
-    // Give the new chld VC appropriate safe area insets
-    EDGEINSETS safeAreaInsets = app.getWindowSafeAreaInsets();
-    safeAreaInsets.top += app.getStyleFloat("navbar.height");
-    vc->setSafeAreaInsets(safeAreaInsets);
+    addChildViewController(vc);
 
     if (!_currentViewController) {
 		vc->_navigationController = this;

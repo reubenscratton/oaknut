@@ -10,10 +10,12 @@
 DECLARE_DYNCREATE(NavigationBar);
 
 NavigationBar::NavigationBar() {
-    auto safeAreaInsets = app.getWindowSafeAreaInsets();
-    setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::Abs(app.getStyleFloat("navbar.height")+safeAreaInsets.top));
-	_padding = EDGEINSETS(0,safeAreaInsets.top,0,0);
+    setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::WrapContent());
 	setBackgroundColor(0xffffffff);
+}
+
+void NavigationBar::updateContentSize(float parentWidth, float parentHeight) {
+    _contentSize.height = app.getStyleFloat("navbar.height");
 }
 
 void NavigationBar::addNavigationItem(NavigationItem* navigationItem) {
@@ -36,7 +38,7 @@ void NavigationBar::setBackground(RenderOp* renderOp) {
 }
 void NavigationBar::setBackgroundColor(COLOR color) {
     _backgroundColor = color;
-    RenderOp* op = _blurEnabled ? (RenderOp*)new BlurRenderOp(this) : new RectRenderOp(this);
+    RenderOp* op = _blurEnabled ? (RenderOp*)new BlurRenderOp() : new RectRenderOp();
     op->setRect(getOwnRect());
     op->setColor(color);
     View::setBackground(op);

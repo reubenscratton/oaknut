@@ -22,7 +22,7 @@ public:
 	// Overrides
 	void onWillResume() override;
 	void onDidPause() override;
-    void setSafeAreaInsets(const EDGEINSETS& safeAreaInsets) override;
+    void updateSafeArea(const RECT& safeArea) override;
 
 protected:
     std::function<void(Game*)> _delegate;

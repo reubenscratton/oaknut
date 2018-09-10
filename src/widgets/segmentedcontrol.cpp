@@ -69,7 +69,7 @@ void SegmentedControl::addSegment(const string& label) {
     COLOR actualColor = _textColor ? _textColor : _effectiveTintColor;
     segment.label->setColor(actualColor);
     float r = _cornerRadius;
-    segment.rectOp = new RectRenderOp(this);
+    segment.rectOp = new RectRenderOp();
     segment.rectOp->setFillColor(0);
     addRenderOp(segment.rectOp);
 	_segments.push_back(segment);

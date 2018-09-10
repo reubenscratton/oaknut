@@ -38,7 +38,7 @@ public:
     bool _isPrivate;
     bool _supportsPartialRedraw;
     ObjPtr<PrivateSurfaceRenderOp> _op;
-    int _mvpNum;
+    int _mvpNum, _mvpNumPeak;
     bool _renderInProgress;
     
     Surface();

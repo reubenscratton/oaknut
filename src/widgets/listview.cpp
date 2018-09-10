@@ -311,7 +311,7 @@ pair<LISTINDEX,View*> ListView::createItemView(LISTINDEX index, bool atFront, fl
     itemView->setRectOrigin(rect.origin);
     pair<LISTINDEX,ItemView*> result(index,itemView);
     _itemViews.insert(atFront ? _itemViews.begin() : _itemViews.end(), result);
-    RectRenderOp* dividerOp = new RectRenderOp(itemView);
+    RectRenderOp* dividerOp = new RectRenderOp();
     dividerOp->setFillColor(_dividerColor);
     RECT dividerRect = itemView->getOwnRect();
     dividerRect.origin.y = dividerRect.bottom() - _dividerHeight;
