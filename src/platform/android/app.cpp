@@ -105,18 +105,12 @@ string string::uuid() {
 }
 
 
-void App::requestRedraw() {
-
-}
 
 void App::keyboardShow(bool show) {
     JNIEnv* env = getAppEnv();
     env->CallStaticVoidMethod(jclassApp, jmidAppShowKeyboard, show);
 }
 
-void App::keyboardNotifyTextChanged() {
-
-}
 
 /*EDGEINSETS App::getWindowSafeAreaInsets() {
     return {0,40,0,100}; // TODO: determine properly

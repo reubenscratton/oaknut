@@ -114,6 +114,27 @@ static View* inflateFromResource(const StyleValue& value, View* parent) {
 }
 
 
+void App::layoutInflateExistingView(View* view, const string& assetPath) {
+    ObjPtr<ByteBuffer> data = loadAsset(assetPath.data());
+    if (!data) {
+        return;
+    }
+    StringProcessor it(data->toString(false));
+    StyleValue layoutRoot;
+    bool parsed = layoutRoot.parse(it);
+    assert(parsed);
+    assert(layoutRoot.type == StyleValue::Type::Compound);
+
+    // Apply the attributes to the inflated view.
+    view->applyStyleValues(layoutRoot);
+    
+    // Inflate the subviews
+    auto& subviews = layoutRoot.arrayVal("subviews");
+    for (auto& subview : subviews) {
+        inflateFromResource(subview, view);
+    }
+}
+
 View* App::layoutInflate(const string& assetPath) {
     ObjPtr<ByteBuffer> data = loadAsset(assetPath.data());
     if (!data) {

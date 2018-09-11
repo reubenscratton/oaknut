@@ -44,20 +44,12 @@ public:
 
     /**@}*/
 
-    /** Ask the underlying OS to schedule a redraw */
-    void requestRedraw();
-
     /** @name Keyboard
      * @{
      */
     
-    /** Show or hide the system soft keyboard, if there is one */
-    void keyboardShow(bool show);
-    
     /**@}*/
     
-    void keyboardNotifyTextChanged();
-
     string getPathForGeneralFiles();
     string getPathForUserDocuments();
     string getPathForCacheFiles();
@@ -95,6 +87,7 @@ public:
     
     /** Loads a view from an asset file. See the Layout Guide for details */
     class View* layoutInflate(const string& assetPath);
+    void layoutInflateExistingView(View* view, const string& assetPath);
     
     /** Converts a 'dp' measurement into physical pixels. Dp is a device-independent pixel and is based on 320dpi */
     float dp(float dp);

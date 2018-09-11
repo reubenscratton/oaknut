@@ -7,8 +7,16 @@
 
 #include "disksviewcontroller.h"
 #include "diskinfo.h"
-#include "bestdiskslistadapter.h"
 #include "alldiskslistadapter.h"
+
+
+class BestDisksListAdapter : public DisksListAdapter {
+public:
+    BestDisksListAdapter(string srcfile) : DisksListAdapter(srcfile) {
+    }
+
+    
+};
 
 
 
@@ -32,13 +40,13 @@ DisksViewController::DisksViewController(std::function<void(Game*)> delegate) {
 	_navigationItem->setTitleView(_segctrl);
     _navigationItem->addLeftButton(NavigationItem::createIconButton("images/back.png", [&] (View*) { onBackButtonClicked(); }));
 	
-	_disksListAdapterBest = new BestDisksListAdapter("http://www.ibeeb.co.uk/best.json");
-	_disksListAdapterAll = new AllDisksListAdapter("http://www.ibeeb.co.uk/all.json");
+	_disksListAdapterBest = new DisksListAdapter("http://www.ibeeb.co.uk/best.json");
+	_disksListAdapterAll = new DisksListAdapter("http://www.ibeeb.co.uk/all.json");
 	
     _listView = (ListView*)view->findViewById("listView");
     _listView->_onItemTapDelegate = [=](View* itemView, LISTINDEX index) {
-        DisksListItem* gameItem = (DisksListItem*)_listView->_adapter->getItem(index);
-        _delegate(gameItem->_game);
+        DiskItem& gameItem = _disksListAdapterBest->getItem(index);
+        _delegate(gameItem._game);
         _navigationController->popViewController();
     };
     _listView->_onItemLongPressDelegate = [=](View* itemView, LISTINDEX index) {

@@ -8,50 +8,45 @@
 #include "diskslistadapter.h"
 
 
-DisksListAdapter::DisksListAdapter(string srcfile,const string& itemLayoutId) 
-	: SimpleListAdapter(itemLayoutId) {
+DiskItem::DiskItem(Game* game) : _game(game) {
+}
+string DiskItem::getTitle() {
+    if (!_selectedDiskInfo) {
+        _selectedDiskInfo = _game->defaultDiskInfo();
+    }
+    return _game->_title;
+}
+string DiskItem::getSubtitle() {
+    if (!_selectedDiskInfo) {
+        _selectedDiskInfo = _game->defaultDiskInfo();
+    }
+    return _selectedDiskInfo->_publisher;
+}
+string DiskItem::getImageUrl() {
+    if (!_selectedDiskInfo) {
+        _selectedDiskInfo = _game->defaultDiskInfo();
+    }
+    return _selectedDiskInfo->imageUrl();
+}
+
+
+
+DisksListAdapter::DisksListAdapter(string srcfile) : SimpleListAdapter() {
     this->srcfile = srcfile;
         
     URLRequest::get(srcfile)->handleJson([&](URLRequest* req, const variant& json) {
         handleJson(json);
     });
+}
 
-	_itemViewBindFunc = [=](View* view, LISTINDEX index, Object* item) {
-		DisksListItem* disksListItem = (DisksListItem*)item;
-        Label* numberLabel = (Label*)view->findViewById("number");
-        if (numberLabel) {
-            numberLabel->setText(string::format("%d.", LISTINDEX_ITEM(index)+1));
-        }
-        ImageView* imageView = (ImageView*)view->findViewById("image");
-        imageView->setImageUrl(disksListItem->getImageUrl());
-		Label* titleLabel = (Label*)view->findViewById("title");
-		titleLabel->setText(disksListItem->getTitle());
-		Label* subtitleLabel = (Label*)view->findViewById("subtitle");
-		subtitleLabel->setText(disksListItem->getSubtitle());
-	};
+void DisksListAdapter::bindItemView(View* itemview, LISTINDEX index) {
+    DiskItemView* diskItemView = (DiskItemView*)itemview;
+    DiskItem& diskItem = _items[listIndexToRealIndex(index)];
+    diskItemView->bind(diskItem, LISTINDEX_ITEM(index)+1);
 }
 DisksListAdapter::~DisksListAdapter() {
 }
-DisksListItem::DisksListItem(Game* game) : _game(game) {
-}
-string DisksListItem::getTitle() {
-	if (!_selectedDiskInfo) {
-		_selectedDiskInfo = _game->defaultDiskInfo();
-	}
-	return _game->_title;
-}
-string DisksListItem::getSubtitle() {
-	if (!_selectedDiskInfo) {
-		_selectedDiskInfo = _game->defaultDiskInfo();
-	}
-	return _selectedDiskInfo->_publisher;
-}
-string DisksListItem::getImageUrl() {
-	if (!_selectedDiskInfo) {
-		_selectedDiskInfo = _game->defaultDiskInfo();
-	}
-    return _selectedDiskInfo->imageUrl();
-}
+
 
 
 
@@ -66,7 +61,7 @@ void DisksListAdapter::handleJson(const variant& json) {
         for (auto& val : vals) {
 			Game* game = new Game();
             game->fromVariant(val);
-            _items.push_back(new DisksListItem(game));
+            _items.push_back(DiskItem(game));
 		}
 	}
 	invalidate();

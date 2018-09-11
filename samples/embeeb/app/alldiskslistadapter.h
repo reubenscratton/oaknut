@@ -15,11 +15,11 @@ public:
     int getSectionCount() override;
     int getItemCount(int section) override;
     string getSectionTitle(int section) override;
-    Object* getItem(LISTINDEX index) override;
+    //Object* getItem(LISTINDEX index) override;
     void handleJson(const variant& json) override;
 
-    map<char32_t, vector<DisksListItem*>> _sectionMap;
-    vector<map<char32_t, vector<DisksListItem*>>::iterator> _sections;
+    map<char32_t, vector<DiskItem*>> _sectionMap;
+    vector<map<char32_t, vector<DiskItem*>>::iterator> _sections;
 
 };
 

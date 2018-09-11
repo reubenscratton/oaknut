@@ -300,7 +300,7 @@ void ListView::deleteRow(LISTINDEX index) {
 pair<LISTINDEX,View*> ListView::createItemView(LISTINDEX index, bool atFront, float itemHeight, float top) {
     View* contentView = _adapter->createItemView(index);
     assert(contentView); // dude, where's my item content view??
-    _adapter->bindItemView(contentView, index, _adapter->getItem(index));
+    _adapter->bindItemView(contentView, index);
     ItemView* itemView = new ItemView(this, index, contentView);
     itemView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::Abs(itemHeight));
     insertSubview(itemView, (int)_itemViews.size());

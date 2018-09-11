@@ -21,8 +21,9 @@ public:
 	virtual float getItemHeight(LISTINDEX index) = 0;
 	virtual View* createItemView(LISTINDEX index) = 0;
     virtual View* createHeaderView(int section) = 0;
-	virtual Object* getItem(LISTINDEX index) = 0;
-    virtual void bindItemView(View* itemview, LISTINDEX index, Object* item) = 0;
+    virtual void bindItemView(View* itemview, LISTINDEX index) = 0;
+	//virtual Object* getItem(LISTINDEX index) = 0;
+    //virtual void bindItemView(View* itemview, LISTINDEX index, Object* item) = 0;
     virtual bool canDeleteItem(LISTINDEX index) = 0;
     virtual void deleteItem(LISTINDEX index) = 0;
 };
