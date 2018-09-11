@@ -6,25 +6,14 @@
 //
 #if PLATFORM_MACOS
 
-#import "AppDelegate.h"
+#include "NativeView.h"
 
 
-
-
-@interface GLView : NSOpenGLView {
-    NSTouch* _touches[10];
-}
-
-@end
-
-static GLView* s_oaknutView;
-static bool _calledMain = false;
-static bool _renderNeeded;
 static bool s_mouseIsDown;
 
 
 
-@implementation GLView
+@implementation NativeView
 
 - (void)dispatchInputEvent:(NSEvent*)event type:(int)type isScrollwheel:(BOOL)isScrollWheel {
     INPUTEVENT inputEvent;
@@ -93,8 +82,6 @@ static bool s_mouseIsDown;
 - (void)awake {
     
     self.acceptsTouchEvents = YES;
-    
-    s_oaknutView = self;
     
     [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawNever];
 
@@ -165,9 +152,6 @@ static bool s_mouseIsDown;
     NSOpenGLContext* context = [self openGLContext];
     [context makeCurrentContext];
     CGLLockContext([context CGLContextObj]);
-    if (!_calledMain) {
-        _calledMain = true;
-    }
     app._window->draw();
     CGLFlushDrawable([context CGLContextObj]);
     CGLUnlockContext([context CGLContextObj]);
@@ -176,40 +160,6 @@ static bool s_mouseIsDown;
 
 @end
 
-/*EDGEINSETS App::getWindowSafeAreaInsets() {
-    return {0,0,0,0};
-}*/
 
-void App::requestRedraw() {
-    if (!_renderNeeded) {
-        _renderNeeded = YES;
-        dispatch_async(dispatch_get_main_queue(), ^{
-            _renderNeeded = NO;
-            [s_oaknutView setNeedsDisplay:YES];
-        });
-    }
-
-}
-
-@interface AppDelegate ()
-
-@end
-
-
-@implementation AppDelegate
-
-
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-    GLView* view =  [GLView new];
-    self.window.contentView = view;
-    [view awake];
-
-}
-
-
-- (void)applicationWillTerminate:(NSNotification *)aNotification {
-}
-
-@end
 
 #endif

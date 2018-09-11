@@ -7,13 +7,20 @@
 #if PLATFORM_MACOS
 
 #import <Cocoa/Cocoa.h>
-#import "AppDelegate.h"
+#include <oaknut.h>
+#include "NativeView.h"
 
-@interface MyResponder : NSResponder
+
+@interface NativeWindow : NSWindow {
+@public
+    Window* _window;
+}
 @end
-@implementation MyResponder
+
+@implementation NativeWindow
+
 - (void)handleKey:(KeyboardInputEventType)eventType event:(NSEvent*)event {
-    if (app._window->_keyboardHandler) {
+    if (_window->_keyboardHandler) {
         char32_t charCode = event.characters.length ? [event.characters characterAtIndex:0] : 0;
         KeyboardInputSpecialKeyCode sk = SpecialKeyNone;
         if (event.keyCode == 123) sk = SpecialKeyCursorLeft;
@@ -32,58 +39,101 @@
     [self handleKey:KeyUp event:event];
 }
 - (void)flagsChanged:(NSEvent *)event {
-    if (app._window->_keyboardHandler) {
+    if (_window->_keyboardHandler) {
         if (event.keyCode == 55 || event.keyCode == 54) { // Cmd or CmdRight
             bool down = (event.modifierFlags & NSEventModifierFlagCommand);
-            app._window->_keyboardHandler->keyInputEvent(down?KeyDown:KeyUp, SpecialKeyCommand, event.keyCode, 0);
+            _window->_keyboardHandler->keyInputEvent(down?KeyDown:KeyUp, SpecialKeyCommand, event.keyCode, 0);
         }
         if (event.keyCode == 56 || event.keyCode == 60) { // Shift & ShiftRt. Gawd knows where this enum is hiding...
             bool shiftDown = (event.modifierFlags & NSEventModifierFlagShift);
-            app._window->_keyboardHandler->keyInputEvent(shiftDown?KeyDown:KeyUp, SpecialKeyShift, event.keyCode, 0);
+            _window->_keyboardHandler->keyInputEvent(shiftDown?KeyDown:KeyUp, SpecialKeyShift, event.keyCode, 0);
         } else if (event.keyCode == 57) { // Caps Lock
             // We don't get separate down/up events for CapsLock so lets synthesize them
-            app._window->_keyboardHandler->keyInputEvent(KeyDown, SpecialKeyCapsLock, event.keyCode, 0);
-            app._window->_keyboardHandler->keyInputEvent(KeyUp, SpecialKeyCapsLock, event.keyCode, 0);
+            _window->_keyboardHandler->keyInputEvent(KeyDown, SpecialKeyCapsLock, event.keyCode, 0);
+            _window->_keyboardHandler->keyInputEvent(KeyUp, SpecialKeyCapsLock, event.keyCode, 0);
         }
     }
 }
 @end
 
-int main(int argc, const char * argv[]) {
-    NSApplication * application = [NSApplication sharedApplication];
+class WindowOSX : public Window {
+public:
+    WindowOSX() {
+        _scale = [NSScreen mainScreen].backingScaleFactor;
 
-    app._window = new Window();
-    app._window->_scale = [NSScreen mainScreen].backingScaleFactor;
+        _nativeView =  [NativeView new];
+        [_nativeView awake];
+    }
+    
+    void show() override {
+        float width = app.getStyleFloat("window.default-width") / _scale;
+        float height = app.getStyleFloat("window.default-height") / _scale;
+        _nativeWindow = [[NativeWindow alloc] initWithContentRect:NSMakeRect(0, 0, width, height)
+                                                        styleMask:NSWindowStyleMaskTitled
+                                                          backing:NSBackingStoreBuffered
+                                                            defer:NO];
+        _nativeWindow->_window = this;
+        [_nativeWindow setStyleMask:[_nativeWindow styleMask] | NSWindowStyleMaskResizable];
+        [_nativeWindow cascadeTopLeftFromPoint:NSMakePoint(20,20)];
+        [_nativeWindow setTitle: [[NSProcessInfo processInfo] processName]];
+        _nativeWindow.contentView = _nativeView;
+
+        [_nativeWindow makeFirstResponder:_nativeWindow];
+        [_nativeWindow makeKeyAndOrderFront:nil];
+    }
+    
+    void requestRedrawNative() override {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            _redrawNeeded = NO;
+            [_nativeView setNeedsDisplay:YES];
+        });
+    }
+    
+    NativeView* _nativeView;
+    NativeWindow* _nativeWindow;
+};
+
+
+@interface AppDelegate : NSObject <NSApplicationDelegate>
+
+@end
+
+
+@implementation AppDelegate
+
+
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+    
+    // Got to create app object before we create any native elements so we can get at style system
+    app._window = new WindowOSX();
     app.main();
-
+    
+    // Create app menu
     NSMenu* menubar = [NSMenu new];
     NSMenuItem* appMenuItem = [NSMenuItem new];
     [menubar addItem:appMenuItem];
     [NSApp setMainMenu:menubar];
     id appName = [[NSProcessInfo processInfo] processName];
     id quitTitle = [@"Quit " stringByAppendingString:appName];
-    id quitMenuItem = [[NSMenuItem alloc] initWithTitle:quitTitle
-                                                action:@selector(terminate:) keyEquivalent:@"q"];
+    id quitMenuItem = [[NSMenuItem alloc] initWithTitle:quitTitle action:@selector(terminate:) keyEquivalent:@"q"];
     NSMenu* appMenu = [NSMenu new];
     [appMenu addItem:quitMenuItem];
     [appMenuItem setSubmenu:appMenu];
-    AppDelegate* del = [AppDelegate new];
-    float width = app.getStyleFloat("window.default-width") / app._window->_scale;
-    float height = app.getStyleFloat("window.default-height") / app._window->_scale;
-    del.window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, width, height)
-                                             styleMask:NSWindowStyleMaskTitled
-                                               backing:NSBackingStoreBuffered
-                                                 defer:NO];
-    [del.window setStyleMask:[del.window styleMask] | NSWindowStyleMaskResizable];
-    [del.window cascadeTopLeftFromPoint:NSMakePoint(20,20)];
-    [del.window setTitle: [[NSProcessInfo processInfo] processName]];
-    [del.window makeFirstResponder:[MyResponder new]];
-    [del.window makeKeyAndOrderFront:nil];
-
     
+    app._window->show();
+}
+
+- (void)applicationWillTerminate:(NSNotification *)aNotification {
+}
+
+@end
+
+
+int main(int argc, const char * argv[]) {
+    NSApplication * application = [NSApplication sharedApplication];
+    AppDelegate* del = [AppDelegate new];
     [application setDelegate:del];
     [application run];
-    
     return EXIT_SUCCESS;
 }
 

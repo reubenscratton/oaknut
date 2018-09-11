@@ -111,8 +111,8 @@ void EditText::setText(const string& text) {
     _selectionStart = MIN(_selectionStart, (int)text.length());
     _insertionPoint = MIN(_insertionPoint, (int)text.length());
     updateClearButton();
-    if (isFocused()) {
-        app.keyboardNotifyTextChanged();
+    if (_window && isFocused()) {
+        _window->keyboardNotifyTextChanged();
     }
 }
 void EditText::setAttributedText(const AttributedString& text) {
@@ -120,8 +120,8 @@ void EditText::setAttributedText(const AttributedString& text) {
     _selectionStart = MIN(_selectionStart, (int)text.length());
     _insertionPoint = MIN(_insertionPoint, (int)text.length());
     updateClearButton();
-    if (isFocused()) {
-        app.keyboardNotifyTextChanged();
+    if (_window && isFocused()) {
+        _window->keyboardNotifyTextChanged();
     }
 }
 

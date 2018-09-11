@@ -9,18 +9,7 @@
 #include "oaknut.h"
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
-@property (strong, nonatomic) UIWindow *window;
 @end
 
-@interface OaknutView : UIView {
-@public
-    CAEAGLLayer* glLayer;
-    EAGLContext* glContext;
-    CADisplayLink* displayLink;
-    GLuint renderbuffer;
-    UITouch* _touches[10];
-    bool _calledMain;
-    bool _renderNeeded;
-}
-@end
+
 

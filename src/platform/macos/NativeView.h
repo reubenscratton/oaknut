@@ -6,13 +6,16 @@
 //
 #if PLATFORM_MACOS
 
-#import "AppDelegate.h"
+#import <Cocoa/Cocoa.h>
+#include "oaknut.h"
 
-
-void App::keyboardShow(bool show) {
+@interface NativeView : NSOpenGLView {
+    NSTouch* _touches[10];
 }
 
-void App::keyboardNotifyTextChanged() {
-}
+- (void)awake;
+
+@end
 
 #endif
+

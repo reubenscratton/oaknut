@@ -11,6 +11,8 @@
 Window::Window() : _rootViewController(NULL), _scale(1) {
 }
 
+void Window::show() {
+}
 
 
 void Window::setRootViewController(ViewController* viewController) {
@@ -397,13 +399,16 @@ void Window::setNeedsLayout() {
 	requestRedraw();
 }
 
-
 void Window::requestRedraw() {
 	if (_redrawNeeded) {
 		return;
 	}
 	_redrawNeeded = true;
-    app.requestRedraw();
+    requestRedrawNative();
+}
+
+void Window::requestRedrawNative() {
+    // no-op
 }
 
 POINT Window::offsetToView(View* view) {
@@ -415,6 +420,13 @@ POINT Window::offsetToView(View* view) {
 		view = view->_parent;
 	}
 	return pt;
+}
+
+void Window::keyboardShow(bool show) {
+    // no-op
+}
+void Window::keyboardNotifyTextChanged() {
+    // no-op
 }
 
 bool Window::setFocusedView(View* view) {
@@ -430,10 +442,10 @@ bool Window::setFocusedView(View* view) {
         _keyboardHandler = view->getKeyboardInputHandler();
         _textInputReceiver = view->getTextInputReceiver();
         if (_textInputReceiver != NULL) {
-            app.keyboardShow(true);
+            keyboardShow(true);
         }
     } else {
-         app.keyboardShow(false);
+         keyboardShow(false);
     }
     return true;
 }

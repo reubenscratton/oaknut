@@ -7,12 +7,10 @@
 #if PLATFORM_IOS
 
 #import "AppDelegate.h"
+#import "NativeView.h"
 
-//#define NSLOG NSLog
-#define NSLOG(x,...)
-
-@interface OaknutView (TextInput) <UITextInput, UITextInputTraits>
-@end
+#define NSLOG NSLog
+//#define NSLOG(x,...)
 
 @interface SimpleTextPos : UITextPosition <NSCopying>
 @property NSInteger pos;
@@ -32,7 +30,6 @@
 @end
 
 static UITextInputStringTokenizer* _tokenizer;
-static id<UITextInputDelegate> _textInputDelegate;
 
 @interface SimpleTextRange : UITextRange <NSCopying> {
 @public SimpleTextPos *_start;
@@ -54,25 +51,9 @@ static id<UITextInputDelegate> _textInputDelegate;
 }
 @end
 
-void App::keyboardShow(bool show) {
-    OaknutView* view = (OaknutView*)[UIApplication sharedApplication].delegate.window.rootViewController.view;
-    if (show) {
-        [view becomeFirstResponder];
-    } else {
-        [view resignFirstResponder];
-    }
-}
-
-void App::keyboardNotifyTextChanged() {
-    OaknutView* view = (OaknutView*)[UIApplication sharedApplication].delegate.window.rootViewController.view;
-    if (_textInputDelegate) {
-        [_textInputDelegate textWillChange: view];
-        [_textInputDelegate textDidChange: view];
-    }
-}
 
 
-@implementation OaknutView (TextInput)
+@implementation NativeView (TextInput)
 
 - (UITextRange*)markedTextRange {
     NSLOG(@"markedTextRange");
