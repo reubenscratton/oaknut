@@ -33,6 +33,7 @@ public:
 	void onEffectiveTintColorChanged() override;
 	void layout() override;
     bool applyStyleValue(const string& name, const StyleValue* value) override;
+    void updateContentSize(float parentWidth, float parentHeight) override;
 
 	// Internal helpers
 	void loadImage();

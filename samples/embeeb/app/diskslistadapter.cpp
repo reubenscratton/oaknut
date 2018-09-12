@@ -8,7 +8,7 @@
 #include "diskslistadapter.h"
 
 
-DiskItem::DiskItem(Game* game) : _game(game) {
+DiskItem::DiskItem(Game* game) : _game(game), _selectedDiskInfo(NULL) {
 }
 string DiskItem::getTitle() {
     if (!_selectedDiskInfo) {

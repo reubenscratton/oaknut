@@ -143,6 +143,7 @@ int Surface::renderOrder(View* view1, View* view2) {
 
 void Surface::addRenderOp(RenderOp* op) {
     op->_mustRedraw = true;
+    assert(!op->_batch);
     _opsNeedingValidation.push_back(op);
 }
 

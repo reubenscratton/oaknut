@@ -178,6 +178,7 @@ void oakFaceDetectorClose(void* osobj);
 #include "widgets/segmentedcontrol.h"
 #include "widgets/searchbox.h"
 #include "widgets/canvasview.h"
+#include "widgets/checkbox.h"
 
 // Platform-specific types
 #include __incstr(platform/PLATFORM/bitmap.h)

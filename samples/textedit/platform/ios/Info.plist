@@ -9,7 +9,7 @@
 	<key>CFBundleExecutable</key>
 	<string>textedit</string>
 	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<string>net.oaknut.samples.textedit.ios</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>

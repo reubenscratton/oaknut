@@ -99,13 +99,17 @@ public:
 @end
 
 
+Window* Window::create() {
+    return new WindowOSX();
+}
+
 @implementation AppDelegate
 
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     
     // Got to create app object before we create any native elements so we can get at style system
-    app._window = new WindowOSX();
+    app._window = Window::create();
     app.main();
     
     // Create app menu

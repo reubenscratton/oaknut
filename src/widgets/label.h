@@ -23,6 +23,8 @@ public:
     void layout() override;
     void onEffectiveTintColorChanged() override;
     void setGravity(GRAVITY gravity) override;
+    void setRectSize(const SIZE& size) override;
+
     
     // API
     virtual const string& getText() { return _textRenderer.getText(); }

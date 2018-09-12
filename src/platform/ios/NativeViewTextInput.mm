@@ -9,8 +9,8 @@
 #import "AppDelegate.h"
 #import "NativeView.h"
 
-#define NSLOG NSLog
-//#define NSLOG(x,...)
+//#define NSLOG NSLog
+#define NSLOG(x,...)
 
 @interface SimpleTextPos : UITextPosition <NSCopying>
 @property NSInteger pos;

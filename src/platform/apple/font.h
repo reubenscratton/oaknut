@@ -9,7 +9,7 @@ class Font : public FontBase {
 public:
     CTFontRef _ctfont;
     
-    Font(const string& fontAssetPath, float size);
+    Font(const string& fontAssetPath, float size, float weight);
     
 protected:
     CTFontRef createCTFont();

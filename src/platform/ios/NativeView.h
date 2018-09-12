@@ -19,6 +19,7 @@
     bool _calledMain;
     bool _renderNeeded;
     id<UITextInputDelegate> _textInputDelegate;
+    Window* _window;
 }
 @end
 @interface NativeView (TextInput) <UITextInput, UITextInputTraits>

@@ -66,12 +66,12 @@
     //dispatch_async(oakQueue, ^{
     
     
+    
     if (!_calledMain) {
-        app._window->_safeAreaInsets.top = [UIApplication sharedApplication].statusBarFrame.size.height * [UIScreen mainScreen].scale;
         app.main();
         _calledMain = true;
     }
-    app._window->draw();
+    _window->draw();
     
     [glContext presentRenderbuffer:GL_RENDERBUFFER];
     
@@ -89,9 +89,7 @@
     [super layoutSubviews];
     int scale = [UIScreen mainScreen].scale;
     CGRect bounds = self.bounds;
-    //dispatch_async(oakQueue, ^{
-    app._window->resizeSurface(bounds.size.width * scale, bounds.size.height * scale, scale);
-    //});
+    _window->resizeSurface(bounds.size.width * scale, bounds.size.height * scale, scale);
 }
 
 - (void)handleTouches:(NSSet<UITouch *> *)touches eventType:(int)eventType remove:(BOOL)remove {
@@ -120,10 +118,10 @@
         inputEvent.deviceType = INPUTEVENT::Mouse;
         inputEvent.deviceIndex = 0;
         inputEvent.type = eventType;
-        inputEvent.pt.x = pt.x*app._window->_scale;
-        inputEvent.pt.y = pt.y*app._window->_scale;
+        inputEvent.pt.x = pt.x*_window->_scale;
+        inputEvent.pt.y = pt.y*_window->_scale;
         inputEvent.time = touch.timestamp*1000;
-        app._window->dispatchInputEvent(inputEvent);
+        _window->dispatchInputEvent(inputEvent);
         [self setNeedsDisplay];
         //});
     }

@@ -47,6 +47,12 @@ void TextRenderer::setFontSize(float fontSize) {
         _fontValid = false;
     }
 }
+void TextRenderer::setFontWeight(float fontWeight) {
+    if (_fontWeight != fontWeight) {
+        _fontWeight = fontWeight;
+        _fontValid = false;
+    }
+}
 
 
 void TextRenderer::setMaxLines(int maxLines) {
@@ -73,7 +79,7 @@ void TextRenderer::measure(SIZE maxSize) {
     
     // Get font if not got it yet
     if (!_fontValid) {
-        _font = Font::get(_fontName, _fontSize);
+        _font = Font::get(_fontName, _fontSize, _fontWeight);
         _fontValid = true;
     }
     

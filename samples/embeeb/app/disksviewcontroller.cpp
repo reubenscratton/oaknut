@@ -13,11 +13,8 @@
 class BestDisksListAdapter : public DisksListAdapter {
 public:
     BestDisksListAdapter(string srcfile) : DisksListAdapter(srcfile) {
-    }
-
-    
+    }    
 };
-
 
 
 DisksViewController::DisksViewController(std::function<void(Game*)> delegate) {

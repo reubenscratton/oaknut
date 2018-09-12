@@ -328,10 +328,13 @@ public:
         the state bits that get updated. */
     virtual void setState(STATE mask, STATE value);
     
-    virtual bool isPressed();
+    virtual bool isPressed() const;
     virtual void setPressed(bool isPressed);
-    virtual bool isEnabled();
+    virtual bool isEnabled() const;
     virtual void setEnabled(bool enabled);
+    virtual bool isChecked() const;
+    virtual void setChecked(bool checked);
+
 
 protected:
     /** Called whenever state changes.  */
@@ -361,7 +364,7 @@ protected:
     virtual bool applyStyleValueFromChild(const string& name, const StyleValue* value, View* subview);
     virtual bool handleStatemapDeclaration(const string& name, const StyleValue* value);
     virtual void applyStatemapStyleValue(const string& name, const StyleValue* value);
-    map<string, const StyleValue*>* _statemapStyleValues;
+    map<string, StyleValue>* _statemapStyleValues;
     RenderOp* processDrawable(const StyleValue* value);
     /**  \endcond */
     /**@}*/
@@ -373,7 +376,7 @@ protected:
 public:
     std::function<bool(View*,INPUTEVENT*)> onInputEventDelegate;
     std::function<void(View*)> onClickDelegate;
-    virtual View* hitTest(POINT pt, POINT* ptRel);
+    virtual View* hitTest(POINT& pt);
     virtual View* subviewContainingPoint(POINT pt);
     virtual int indexOfSubviewContainingPoint(POINT pt);
 protected:

@@ -78,10 +78,13 @@ void LinearLayout::measure(float parentWidth, float parentHeight) {
 					View* view = _subviews.at(i);
                     if (view == _scrollbarsView) continue;
 					float excessForThisSubview = (_weights[i]/_weightsTotal)*excess;
-                    RECT rect = view->getRect();
-					rect.size.width += excessForThisSubview;
-                    view->setRectSize(rect.size);
-					_contentSize.width += excessForThisSubview;
+                    if (excessForThisSubview > 0) {
+                        RECT rect = view->getRect();
+                        rect.size.width += excessForThisSubview;
+                        view->setRectSize(rect.size);
+                        _contentSize.height = fmaxf(_contentSize.height, view->getHeight());
+                        _contentSize.width += excessForThisSubview;
+                    }
 				}
 			}
 		}
@@ -101,8 +104,8 @@ void LinearLayout::measure(float parentWidth, float parentHeight) {
 
 void LinearLayout::layout() {
     View::layout();
-	_contentSize.height = 0;
-	_contentSize.width = 0;
+	//_contentSize.height = 0;
+	//_contentSize.width = 0;
 	POINT pt = {_padding.left,_padding.top};
     if (_orientation == Vertical) {
         for (int i=0 ; i<_subviews.size() ; i++) {

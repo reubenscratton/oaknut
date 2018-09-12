@@ -31,6 +31,7 @@ public:
     /** Gets the current system time, in milliseconds */
     TIMESTAMP currentMillis(); // millis
 
+    void presentWindow(Window* window);
 
     /** @name Logging
      * @{

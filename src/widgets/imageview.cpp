@@ -17,6 +17,9 @@ ImageView::ImageView() {
 
 bool ImageView::applyStyleValue(const string& name, const StyleValue* value) {
     if (name=="image") {
+        if (handleStatemapDeclaration(name, value)) {
+            return true;
+        }
         // TODO: leverage drawable code
         ByteBuffer* data = app.loadAsset(value->stringVal().data());
         Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
@@ -104,6 +107,13 @@ void ImageView::loadImage() {
         _request->handleBitmap([=](URLRequest* req, Bitmap* bitmap) {
             setBitmap(bitmap);
         });
+    }
+}
+
+void ImageView::updateContentSize(float parentWidth, float parentHeight) {
+    if (_renderOp->_bitmap) {
+        _contentSize.width = _renderOp->_bitmap->_width;
+        _contentSize.height = _renderOp->_bitmap->_height;
     }
 }
 

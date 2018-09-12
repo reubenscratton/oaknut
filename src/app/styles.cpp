@@ -75,9 +75,21 @@ int StyleValue::intVal() const {
     if (val->type==Type::Int) return val->i;
     else if (val->type==Type::Float) return (int)val->f;
     else if (val->type==Type::Measure) return (int)val->measurement.val();
-    app.warn("intVal() called on non-numeric StyleValue");
+    app.warn("intVal() type coerce failed");
     return 0.f;
 }
+bool StyleValue::boolVal() const {
+    auto val = select();
+    if (val->type==Type::Int) return val->i != 0;
+    else if (val->type==Type::Float) return ((int)val->f) != 0;
+    else if (val->type==Type::String) {
+        if (val->str == "false") return false;
+        else if (val->str == "true") return true;
+    }
+    app.warn("boolVal() type coerce failed");
+    return 0.f;
+}
+
 int StyleValue::intVal(const string& name) const {
     auto val = select();
     assert(val->type == Compound);
@@ -93,7 +105,7 @@ float StyleValue::floatVal() const {
     if (val->type==Type::Int) return (float)val->i;
     else if (val->type==Type::Float) return val->f;
     else if (val->type==Type::Measure) return val->measurement.val();
-    app.warn("floatVal() called on non-numeric StyleValue");
+    app.warn("floatVal() type coerce failed");
     return 0.f;
 }
 
@@ -105,7 +117,7 @@ string StyleValue::stringVal() const {
     else if (val->type==Type::Array) {
         // todo: might be useful to concat the element stringVals...
     }
-    app.warn("stringVal() called on non-stringable StyleValue");
+    app.warn("stringVal() type coerce failed");
     return "";
 }
 string StyleValue::stringVal(const string& name) const {
@@ -119,7 +131,7 @@ const vector<StyleValue>& StyleValue::arrayVal() const {
     if (val->type==Array) {
         return *array;
     }
-    app.warn("arrayVal() called on non-array StyleValue");
+    app.warn("arrayVal() type coerce failed");
     return s_emptyArray;
 }
 const vector<StyleValue>& StyleValue::arrayVal(const string& name) const {
@@ -135,7 +147,7 @@ static map<string, StyleValue> s_emptyMap;
 const map<string, StyleValue>& StyleValue::compoundVal() const {
     auto val = select();
     if (val->type==Type::Compound) return *(val->compound);
-    app.warn("compoundVal() called on non-compound StyleValue");
+    app.warn("compoundVal() type coerce failed");
     return s_emptyMap;
 }
 
@@ -389,6 +401,26 @@ EDGEINSETS StyleValue::edgeInsetsVal() const {
         }
     }
     return insets;
+}
+
+float StyleValue::fontWeightVal() const {
+    auto val = select();
+    if (val->isNumeric()) {
+        return val->floatVal();
+    } else if (val->isString()) {
+        string fw = val->stringVal().lowercase();
+        if (fw=="bold") return FONT_WEIGHT_BOLD;
+        if (fw=="regular") return FONT_WEIGHT_REGULAR;
+        if (fw=="medium") return FONT_WEIGHT_MEDIUM;
+        if (fw=="semibold") return FONT_WEIGHT_SEMIBOLD;
+        if (fw=="light") return FONT_WEIGHT_LIGHT;
+        if (fw=="thin") return FONT_WEIGHT_THIN;
+        if (fw=="ultralight") return FONT_WEIGHT_ULTRA_LIGHT;
+        if (fw=="heavy") return FONT_WEIGHT_HEAVY;
+        if (fw=="black") return FONT_WEIGHT_BLACK;
+    }
+    app.warn("Invalid fontWeight");
+    return 0;
 }
 
 const StyleValue* StyleValue::select() const {

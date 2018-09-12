@@ -10,7 +10,7 @@ class Font : public FontBase {
 public:
     jobject _obj;
     
-    Font(const string& fontAssetPath, float size);
+    Font(const string& fontAssetPath, float size, float weight);
     Glyph* createGlyph(char32_t ch, Atlas* atlas);
 };
 

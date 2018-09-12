@@ -106,6 +106,9 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, Window* window
         ptDown = event.pt;
         timeOfDownEvent = event.time;
         touchedView = window->_rootViewController->getView()->dispatchInputEvent(&event);
+        if (!touchedView) {
+            touchedView = window->_rootViewController->getView();
+        }
         if (touchedView && event.deviceType!=INPUTEVENT::ScrollWheel) {
             _didSendLongpressEvent = false;
             _longpressTimer = Timer::start([=] {
@@ -180,7 +183,6 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, Window* window
                     if (touchedView) {
                         INPUTEVENT tapEvent = event;
                         tapEvent.type = INPUT_EVENT_TAP;
-                        tapEvent.pt += touchedView->_surfaceOrigin;
                         touchedView->dispatchInputEvent(&tapEvent);
                         app.log("tap %d", numClicks);
                     }

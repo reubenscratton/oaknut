@@ -9,7 +9,6 @@
 #import "AppDelegate.h"
 #import "NativeView.h"
 
-extern dispatch_queue_t oakQueue;
 
 @interface NativeViewController : UIViewController
 @end
@@ -22,7 +21,7 @@ extern dispatch_queue_t oakQueue;
     return self;
 }
 - (UIStatusBarStyle) preferredStatusBarStyle {
-    return UIStatusBarStyleLightContent;
+    return UIStatusBarStyleDefault;
 }
 - (void)onKeyboardFrameChanged:(NSNotification*)notification {
     CGRect keyboardFrame = ((NSValue*)notification.userInfo[UIKeyboardFrameEndUserInfoKey]).CGRectValue;
@@ -37,21 +36,42 @@ extern dispatch_queue_t oakQueue;
 
 @end
 
+static UIWindow* _nativeWindow;
+static bool _nativeWindowOwnedByOaknut;
+
+void ensureNativeWindowExists() {
+    if (!_nativeWindow) {
+        _nativeWindow = [UIApplication sharedApplication].keyWindow;
+        if (!_nativeWindow) {
+            _nativeWindowOwnedByOaknut = true;
+            _nativeWindow = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+            _nativeWindow.backgroundColor = [UIColor whiteColor];
+            [_nativeWindow makeKeyAndVisible];
+        }
+
+    }
+}
+
 class WindowIOS : public Window {
 public:
     
     WindowIOS() {
-        _nativeWindow = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-        _nativeWindow.backgroundColor = [UIColor whiteColor];
+        ensureNativeWindowExists();
         _nativeView = [[NativeView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-        UIViewController * viewController = [[NativeViewController alloc] initWithNibName:nil bundle:nil];
-        viewController.view = _nativeView;
-        _nativeWindow.rootViewController = viewController;
-        _scale = _nativeView.contentScaleFactor;
+        _nativeView->_window = this;
+        _viewController = [[NativeViewController alloc] initWithNibName:nil bundle:nil];
+        _viewController.view = _nativeView;
+        _scale = [UIScreen mainScreen].scale;
+        _safeAreaInsets.top = [UIApplication sharedApplication].statusBarFrame.size.height * _scale;
+
     }
     
     void show() override {
-        [_nativeWindow makeKeyAndVisible];
+        if (_nativeWindowOwnedByOaknut) {
+            _nativeWindow.rootViewController = _viewController;
+        } else {
+            [_nativeWindow.rootViewController presentViewController:_viewController animated:YES completion:nil];
+        }
     }
     
     void requestRedrawNative() override {
@@ -75,21 +95,28 @@ public:
         }
     }
 
-
-    UIWindow* _nativeWindow;
+    UIViewController* _viewController;
     NativeView* _nativeView;
     
 };
 
 
+Window* Window::create() {
+    return new WindowIOS();
+}
 
-
+void App::presentWindow(Window* window) {
+    if (!app._window) {
+        app._window = window;
+    }
+    window->show();
+}
 
 @implementation AppDelegate
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-	app._window = new WindowIOS();
+    app._window = Window::create();
     app._window->show();
     return YES;
 }

@@ -35,6 +35,7 @@ public:
     COLOR getColor() const { return _color; }
     void setFontName(const string& fontName);
     void setFontSize(float fontSize);
+    void setFontWeight(float fontWeight);
     void setFont(Font* font);
     const Font* getFont() const { return _font; }
     void setGravity(GRAVITY gravity);
@@ -79,6 +80,7 @@ protected:
     AttributedString _text;
     string _fontName;
     float _fontSize;
+    float _fontWeight;
     bool _fontValid;
     ObjPtr<Font> _font;
     COLOR _color;

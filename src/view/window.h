@@ -40,7 +40,7 @@ typedef struct INPUTEVENT {
     } deviceType;
     int deviceIndex; 
     TIMESTAMP time;
-    POINT pt;
+    POINT pt, ptLocal;
     POINT delta; // specific to ScrollWheel
     POINT velocity; // specific to flings
 } INPUTEVENT;
@@ -52,8 +52,11 @@ typedef struct INPUTEVENT {
  *  @ingroup views
  */
 class Window : public Object {
+protected:
+    Window();
 public:
-	
+    static Window* create();
+
 	ObjPtr<class ViewController> _rootViewController;
 	vector<ObjPtr<ViewController>> _viewControllers;
     ObjPtr<Surface> _surface;
@@ -96,7 +99,6 @@ public:
     class IKeyboardInputHandler* _keyboardHandler;
     class ITextInputReceiver* _textInputReceiver;
 	
-	Window();
 	virtual void setRootViewController(ViewController* viewController);
 	virtual void setNeedsLayout();
 	virtual void resizeSurface(int width, int height, float scale);

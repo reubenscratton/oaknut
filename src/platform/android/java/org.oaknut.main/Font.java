@@ -15,10 +15,11 @@ public class Font {
     Rect rect = new Rect();
     android.graphics.Canvas canvas = new android.graphics.Canvas();
 
-    public Font(long cobj, String name, float size) {
+    public Font(long cobj, String name, float size, float weight) {
         this.cobj = cobj;
         if (TextUtils.isEmpty(name)) {
-            typeface = Typeface.DEFAULT;
+            //typeface = Typeface.DEFAULT;
+            typeface = Typeface.create("sans-serif-thin", Typeface.NORMAL);
         } else {
             typeface = Typeface.createFromAsset(App.app.getAssets(), name);
         }

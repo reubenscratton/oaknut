@@ -22,13 +22,13 @@ EditText::EditText() : Label() {
 
 bool EditText::onInputEvent(INPUTEVENT* event) {
     if (event->type == INPUT_EVENT_DOWN && event->deviceType!=INPUTEVENT::ScrollWheel) {
-        POINT pt = event->pt;
-        pt.x += _contentOffset.x;
-        pt.y += _contentOffset.y;
+        POINT pt = event->ptLocal;
+        //pt.x += _contentOffset.x;
+        //pt.y += _contentOffset.y;
         setInsertionPoint(_textRenderer.characterIndexFromPoint(pt));
     }
     if (event->type == INPUT_EVENT_TAP) {
-        if (_clearButtonOp && _clearButtonOp->_rect.contains(event->pt)) {
+        if (_clearButtonOp && _clearButtonOp->_rect.contains(event->ptLocal)) {
             setText("");
             return true;
         }

@@ -7,6 +7,8 @@
 
 #include <oaknut.h>
 
+DECLARE_DYNCREATE(CanvasView);
+
 CanvasView::CanvasView() {
     applyStyle("CanvasView");
     _canvas = Canvas::create();

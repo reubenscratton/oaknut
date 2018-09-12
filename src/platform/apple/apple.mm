@@ -143,7 +143,7 @@ TaskQueue* TaskQueue::create(const string& name) {
 
 ByteBuffer* App::loadAsset(const char* assetPath) {
 
-    NSString* path = [NSBundle mainBundle].bundlePath;
+    NSString* path = [NSBundle bundleForClass:NSClassFromString(@"NativeView")].bundlePath;
     string str = string([path UTF8String]);
 #if TARGET_OS_OSX
     str.append("/Contents/Resources/");

@@ -47,6 +47,7 @@ public:
 
     // Accessors. Use these instead of accessing the private data to benefit from some implicit conversions.
     int intVal() const;
+    bool boolVal() const;
     float floatVal() const;
     string stringVal() const;
     COLOR colorVal() const;
@@ -54,6 +55,7 @@ public:
     const map<string, StyleValue>& compoundVal() const;
     Vector4 cornerRadiiVal() const;
     EDGEINSETS edgeInsetsVal() const;
+    float fontWeightVal() const;
 
     // Compound accessors
     const StyleValue* get(const string& keypath) const;

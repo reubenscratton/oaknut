@@ -99,5 +99,7 @@ protected:
     ObjPtr<View> _view;
     RECT _safeArea;
     vector<ObjPtr<ViewController>> _childViewControllers;
+    bool _viewHasSafeAreaPaddingApplied;
+    EDGEINSETS _safeAreaInsets;
 };
 

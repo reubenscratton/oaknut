@@ -8,7 +8,6 @@
 class NavigationBar : public View {
 public:
 
-	//ObjPtr<NavigationItem> _navigationItem;
 	bool _blurEnabled;
     COLOR _backgroundColor;
     

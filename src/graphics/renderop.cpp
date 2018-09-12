@@ -129,8 +129,8 @@ void RenderOp::invalidate() {
         if (_view->_surface) {
             if (_batch) {
                 _view->_surface->unbatchRenderOp(this);
+                _view->_surface->_opsNeedingValidation.push_back(this);
             }
-            _view->_surface->_opsNeedingValidation.push_back(this);
         }
     }
 }

@@ -12,9 +12,10 @@ static bool s_inited;
 static map<string, ObjPtr<Font>> s_loadedFonts;
 
 
-FontBase::FontBase(const string& name, float size) {
+FontBase::FontBase(const string& name, float size, float weight) {
     _name = name;
 	_size = size;
+    _weight = weight;
 }
 
 FontBase::~FontBase() {
@@ -24,13 +25,16 @@ FontBase::~FontBase() {
 
 
 
-Font* FontBase::get(const string& name, float size) {
-    string fkey = string::format(name.length() ? "%f-%s" : "%f", size, name.data());
+Font* FontBase::get(const string& name, float size, float weight/*=FONT_WEIGHT_REGULAR*/) {
+    string fkey = string::format("%f-%f", size, weight);
+    if (name.length() > 0) {
+        fkey.insert(0, name);
+    }
     auto it = s_loadedFonts.find(fkey);
     if (it != s_loadedFonts.end()) {
         return it->second;
     }
-    Font* font = new Font(name, size);
+    Font* font = new Font(name, size, weight);
     s_loadedFonts[fkey] = font;
     return font;
 }

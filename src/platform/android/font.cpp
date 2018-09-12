@@ -13,12 +13,12 @@ static jmethodID s_jmidConstructor;
 static jmethodID s_jmidCreateGlyph;
 static jmethodID s_jmidDrawGlyph;
 
-Font::Font(const string& fontAssetPath, float size) : FontBase(fontAssetPath, size) {
+Font::Font(const string& fontAssetPath, float size, float weight) : FontBase(fontAssetPath, size, weight) {
     JNIEnv *env = getJNIEnv();
     if (!s_jclass) {
         s_jclass = env->FindClass(PACKAGE "/Font");
         s_jclass = (jclass) env->NewGlobalRef(s_jclass);
-        s_jmidConstructor = env->GetMethodID(s_jclass, "<init>", "(JLjava/lang/String;F)V");
+        s_jmidConstructor = env->GetMethodID(s_jclass, "<init>", "(JLjava/lang/String;FF)V");
         s_jmidCreateGlyph = env->GetMethodID(s_jclass, "createGlyph", "(JI)J");
         s_jmidDrawGlyph = env->GetMethodID(s_jclass, "drawGlyph", "(ILandroid/graphics/Bitmap;FF)V");
     }

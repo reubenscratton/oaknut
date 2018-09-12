@@ -47,6 +47,7 @@ void ViewController::setView(View* view) {
 		_view->detachFromWindow();
 	}
 	_view = view;
+    _viewHasSafeAreaPaddingApplied = false;
 	if (view) {
         view->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::FillParent());
 		if (_window) {
@@ -76,12 +77,31 @@ void ViewController::onBackButtonClicked() {
 }
 
 void ViewController::updateSafeArea(const RECT& safeArea) {
+    
+    // Get view padding and unapply previous safe area
+    EDGEINSETS padding = _view->_padding;
+    if (_viewHasSafeAreaPaddingApplied) {
+        padding.left -= _safeAreaInsets.left;
+        padding.right -= _safeAreaInsets.right;
+        padding.top -= _safeAreaInsets.top;
+        padding.bottom -= _safeAreaInsets.bottom;
+    }
+    
+    // Convert safe area rect to edgeinsets
+    _safeAreaInsets.left = safeArea.left() - _window->_surfaceRect.left();
+    _safeAreaInsets.top = safeArea.top() - _window->_surfaceRect.top();
+    _safeAreaInsets.right = _window->_surfaceRect.right() - safeArea.right();
+    _safeAreaInsets.bottom =  _window->_surfaceRect.bottom() - safeArea.bottom();
+
     _safeArea = safeArea;
-    EDGEINSETS padding;
-    padding.left = safeArea.left() - _window->_surfaceRect.left();
-    padding.top = safeArea.top() - _window->_surfaceRect.top();
-    padding.right = _window->_surfaceRect.right() - safeArea.right();
-    padding.bottom =  _window->_surfaceRect.bottom() - safeArea.bottom();
+
+    // Add safe area insets to view padding
+    padding.left += _safeAreaInsets.left;
+    padding.top += _safeAreaInsets.top;
+    padding.right += _safeAreaInsets.right;
+    padding.bottom += _safeAreaInsets.bottom;
+
+    _viewHasSafeAreaPaddingApplied = true;
     _view->setPadding(padding);
 }
 

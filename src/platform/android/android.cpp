@@ -9,6 +9,15 @@
 
 #include <oaknut.h>
 
+class WindowAndroid : public Window {
+public:
+
+};
+
+Window* Window::create() {
+    return new WindowAndroid();
+}
+
 struct android_app {
     AConfiguration* config;
     ANativeWindow* window;
@@ -77,7 +86,7 @@ JAVA_FN(void, MainActivity, onCreateNative)(JNIEnv *env, jobject obj,
     g_app->navigationBarHeight = navigationBarHeight;
     g_app->context = EGL_NO_CONTEXT;
 
-    app._window = new Window();
+    app._window = Window::create();
     g_assetManager = AAssetManager_fromJava(env, jassetManager);
 }
 

@@ -51,8 +51,8 @@ Button: {
 }
 
 ToolbarButton: {
-    width: aspect(1)
-    height: match_parent
+    width: 40dp
+    height: 40dp
     padding: 8dp
     alpha: 0.5
 }

@@ -216,7 +216,7 @@ bool SegmentedControl::onInputEvent(INPUTEVENT* event) {
 		_pressedIndex = -1;
 		for (int i=0 ; i<_segments.size() ; i++) {
 			Segment& segment = _segments.at(i);
-			if (segment.rect.contains(event->pt)) {
+			if (segment.rect.contains(event->ptLocal)) {
                 setPressedIndex(i);
 				break;
 			}
@@ -224,7 +224,7 @@ bool SegmentedControl::onInputEvent(INPUTEVENT* event) {
 	} else if (event->type == INPUT_EVENT_UP) {
 		if (_pressedIndex >= 0) {
             Segment& segment = _segments.at(_pressedIndex);
-			if (segment.rect.contains(event->pt)) {
+			if (segment.rect.contains(event->ptLocal)) {
 				onSegmentTap(_pressedIndex);
 				if (_pressedIndex != _selectedIndex) {
 					if (_selectedIndex >= 0) {

@@ -58,6 +58,10 @@ bool Label::applyStyleValue(const string& name, const StyleValue* value) {
         _textRenderer.setFontSize(value->floatVal());
         return true;
     }
+    if (name=="font-weight") {
+        _textRenderer.setFontWeight(value->fontWeightVal());
+        return true;
+    }
     if (name=="forecolor") {
         setTextColor(value->colorVal());
         return true;
@@ -123,6 +127,23 @@ void Label::setContentOffset(POINT contentOffset) {
     _textRenderer.updateRenderOps(this);
 
 }
+
+void Label::setRectSize(const SIZE& asize) {
+    if (asize.width == _rect.size.width) {
+        return;
+    }
+    // This is called when our parent view (typically a LinearLayout) is overriding the size we wanted to be
+    // and this means we have to remeasure the text. Which means the height may grow (or shrink).
+    _textRenderer._measuredSizeValid = false;
+    SIZE size = asize;
+    updateContentSize(size.width, MAXFLOAT);
+    if (_heightMeasureSpec.refType == MEASURESPEC::RefTypeContent) {
+        size.height = _contentSize.height + _padding.top+_padding.bottom;
+    }
+    View::setRectSize(size);
+}
+
+
 void Label::updateContentSize(float parentWidth, float parentHeight) {
 
     _contentSize.width = 0;

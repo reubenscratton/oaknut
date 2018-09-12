@@ -9,7 +9,7 @@
 #include <oaknut.h>
 
 
-Font::Font(const string& fontAssetPath, float size) : FontBase(fontAssetPath, size) {
+Font::Font(const string& fontAssetPath, float size, float weight) : FontBase(fontAssetPath, size, weight) {
     _ctfont = createCTFont();
     _ascent = CTFontGetAscent(_ctfont);
     _descent = -CTFontGetDescent(_ctfont); // as per Freetype convention, this is -ve.
@@ -24,7 +24,7 @@ CTFontRef Font::createCTFont() {
     CGFloat size = _size;
     if (_name.length() == 0) {
 #if TARGET_OS_IOS
-        UIFont* font = [UIFont systemFontOfSize:size];
+        UIFont* font = [UIFont systemFontOfSize:size weight:_weight];
         _ascent = font.ascender;
         _descent = font.descender;
         _height = font.lineHeight;

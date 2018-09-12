@@ -82,6 +82,9 @@ bool View::applyStyleValue(const string& name, const StyleValue* value) {
         }
         setBackground(processDrawable(value));
         return true;
+    } else if (name == "enabled") {
+        setEnabled(value->boolVal());
+        return true;
     }
     if (name=="gravityX") {
         uint8_t horz = 0;
@@ -196,8 +199,10 @@ bool View::handleStatemapDeclaration(const string& name, const StyleValue* value
         if (k.first == "enabled") c++;
         else if (k.first == "disabled") c++;
         else if (k.first == "pressed") c++;
+        else if (k.first == "unpressed") c++;
         else if (k.first == "selected") c++;
         else if (k.first == "checked") c++;
+        else if (k.first == "unchecked") c++;
         else if (k.first == "focused") c++;
     }
     if (!c) {
@@ -209,9 +214,9 @@ bool View::handleStatemapDeclaration(const string& name, const StyleValue* value
         _statemapStyleValues->erase(name);
     }
     if (!_statemapStyleValues) {
-        _statemapStyleValues = new map<string, const StyleValue*>();
+        _statemapStyleValues = new map<string, StyleValue>();
     }
-    auto newval = make_pair(name, value);
+    auto newval = make_pair(name, *value);
     _statemapStyleValues->insert(newval);
     
     // Choose initial value immediately
@@ -223,20 +228,25 @@ void View::applyStatemapStyleValue(const string& name, const StyleValue* statema
     // Walk the map and find the values which apply. Longest (i.e. most state bits) matching value wins.
     list<StyleValue*> matchingValues;
     const StyleValue* bestMatchValue = NULL;
+    int best_pri=0;
     for (auto& it : statemap->compoundVal()) {
+        int pri=1;
         
         // Convert the map entry to a stateset
         STATESET stateset = {0,0};
         if (it.first == "enabled") stateset.setBits(STATE_DISABLED, 0);
-        else if (it.first == "disabled") stateset.setBits(STATE_DISABLED, STATE_DISABLED);
+        else if (it.first == "disabled") {stateset.setBits(STATE_DISABLED, STATE_DISABLED); pri=2;}
+        else if (it.first == "unpressed") stateset.setBits(STATE_PRESSED, 0);
+        else if (it.first == "focused") stateset.setBits(STATE_FOCUSED, STATE_FOCUSED);
+        else if (it.first == "unchecked") stateset.setBits(STATE_CHECKED, 0);
         else if (it.first == "pressed") stateset.setBits(STATE_PRESSED, STATE_PRESSED);
         else if (it.first == "selected") stateset.setBits(STATE_SELECTED, STATE_SELECTED);
         else if (it.first == "checked") stateset.setBits(STATE_CHECKED, STATE_CHECKED);
-        else if (it.first == "focused") stateset.setBits(STATE_FOCUSED, STATE_FOCUSED);
         
         // If the stateset matches
-        if ((_state & stateset.mask) == stateset.state) {
+        if ((_state & stateset.mask) == stateset.state && pri>best_pri) {
             bestMatchValue = &it.second;
+            best_pri = pri;
         }
     }
     
@@ -542,7 +552,7 @@ float View::getAlignspecVal(const ALIGNSPEC& spec, bool isVertical) {
 
     View* anchor = (spec.anchor == NO_ANCHOR) ? NULL : (spec.anchor?spec.anchor:_parent);
     float anchorVal = 0;
-    RECT& refRect = anchor ? anchor->_rect : app._window->_surfaceRect;
+    RECT& refRect = anchor ? anchor->_rect : _window->_surfaceRect;
     float anchorSize = isVertical ? refRect.size.height : refRect.size.width;
     float ownSize = isVertical ? _rect.size.height : _rect.size.width;
     if (anchor) {
@@ -570,6 +580,9 @@ float View::getAlignspecVal(const ALIGNSPEC& spec, bool isVertical) {
 }
 
 void View::layout() {
+    if (!_window) {
+        return;
+    }
     POINT pt;
     pt.x = getAlignspecVal(_alignspecHorz, false);
     pt.y = getAlignspecVal(_alignspecVert, true);
@@ -848,21 +861,28 @@ void View::setBackgroundColor(COLOR color) {
 }
 
 
-bool View::isPressed() {
+bool View::isPressed() const {
     return (_state & STATE_PRESSED)!=0;
 }
 void View::setPressed(bool isPressed) {
     setState(STATE_PRESSED, (STATE)(isPressed?STATE_PRESSED:0));
 }
-bool View::isEnabled() {
+bool View::isEnabled() const {
     return (_state & STATE_DISABLED)==0;
 }
 void View::setEnabled(bool isEnabled) {
     setState(STATE_DISABLED, (STATE)(isEnabled?0:STATE_DISABLED));
 }
+bool View::isChecked() const {
+    return (_state & STATE_CHECKED)!=0;
+}
+void View::setChecked(bool checked) {
+    setState(STATE_CHECKED, (STATE)(checked?STATE_CHECKED:0));
+}
+
 
 void View::setState(STATE mask, STATE value) {
-    uint16_t oldstate = _state & mask;
+    uint16_t oldstate = _state;
     uint16_t newstate = (_state & ~mask) | value;
     if (oldstate != newstate) {
         _state = newstate;
@@ -873,7 +893,7 @@ void View::setState(STATE mask, STATE value) {
 void View::onStateChanged(STATESET changedStates) {
     if (_statemapStyleValues) {
         for (auto& it : *_statemapStyleValues) {
-            applyStatemapStyleValue(it.first, it.second);
+            applyStatemapStyleValue(it.first, &it.second);
         }
     }
 }
@@ -1024,22 +1044,21 @@ int View::indexOfSubviewContainingPoint(POINT pt) {
 	return -1;
 }
 
-View* View::hitTest(POINT pt, POINT* ptRel) {
+
+View* View::hitTest(POINT& pt) {
 	
 	// Find the leaf view that corresponds to the given point
+    pt.x += _contentOffset.x;
+    pt.y += _contentOffset.y;
 	if (_visibility==Visible && _rect.contains(pt)) {
-		POINT ptClient = pt;
-		ptClient.x -= _rect.origin.x;
-		ptClient.y -= _rect.origin.y;
+        pt.x -= _rect.origin.x;
+        pt.y -= _rect.origin.y;
         for (long i=_subviews.size()-(_scrollbarsView?2:1) ; i>=0 ; i--) {
 			View* subview = _subviews.at(i);
-			View* hitTestSubview = subview->hitTest(ptClient, ptRel);
-			if (hitTestSubview) {
-				return hitTestSubview;
+			auto hitTestSub = subview->hitTest(pt);
+			if (hitTestSub) {
+				return hitTestSub;
 			}
-		}
-		if (ptRel) {
-			*ptRel = ptClient;
 		}
 		return this;
 	}
@@ -1055,18 +1074,23 @@ View* View::dispatchInputEvent(INPUTEVENT* event) {
     }
     
 	// Find the most distant leaf view containing the point
-	//POINT ptRel;
-	View* view = hitTest(event->pt, &event->pt);
+    POINT hitPoint = event->pt;
+	View* hitView = hitTest(hitPoint);
 	
 	// Offer the event to the leaf view and if it doesn't handle it pass
 	// it up the view tree until a view handles it.
-	while (view) {
-		if (view->onInputEvent(event)) {
-			return view;
+	while (hitView) {
+        event->ptLocal = hitPoint;
+		if (hitView->onInputEvent(event)) {
+			return hitView;
 		}
-		event->pt.x += view->_rect.origin.x;
-		event->pt.y += view->_rect.origin.y;
-		view = view->_parent;
+        hitPoint.x += hitView->_rect.origin.x;
+        hitPoint.y += hitView->_rect.origin.y;
+		hitView = hitView->_parent;
+        if (hitView) {
+            hitPoint.x -= hitView->_contentOffset.x;
+            hitPoint.y -= hitView->_contentOffset.y;
+        }
 	}
 
 	return onInputEvent(event) ? this : NULL;
@@ -1081,16 +1105,21 @@ void ScrollbarsView::layout() {
 bool View::onInputEvent(INPUTEVENT* event) {
 
     bool retVal = false;
-    if ((onInputEventDelegate || onClickDelegate) && isEnabled()) {
-        retVal = true;
+    
+    if (isEnabled()) {
         if (event->type == INPUT_EVENT_DOWN) {
             setPressed(true);
         }
         if (event->type == INPUT_EVENT_CANCEL || event->type==INPUT_EVENT_UP) {
             setPressed(false);
         }
+
+        if ((onInputEventDelegate || onClickDelegate)) {
+            retVal = true;
+        }
     }
     
+    app.log("%X y=%f", this, event->pt.y);
     bool scrolled = _scrollVert.handleEvent(this, true, event);
     scrolled |= _scrollHorz.handleEvent(this, false, event);
     
@@ -1103,6 +1132,8 @@ bool View::onInputEvent(INPUTEVENT* event) {
 	if (onInputEventDelegate) {
         return onInputEventDelegate(this, event);
 	}
+
+
 	return retVal || scrolled;
 }
 
