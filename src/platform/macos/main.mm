@@ -110,6 +110,7 @@ Window* Window::create() {
     
     // Got to create app object before we create any native elements so we can get at style system
     app._window = Window::create();
+    app.loadStyleAsset("styles.res");
     app.main();
     
     // Create app menu

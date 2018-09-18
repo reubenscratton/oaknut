@@ -7,16 +7,12 @@
    }
 
     barButton: {
-        width: 28dp
-        height: 28dp
-        padding: 4dp
+        width: 40dp
+        height: 40dp
+        padding: 8dp
         background: {
             pressed: 0xFFEEEEFF
             selected: 0xFFEEEEEE
         }
-    }
-
-    ButtonGroup: {
-
     }
 }

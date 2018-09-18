@@ -35,7 +35,8 @@
                 image: images/align_right.png
             }]
         }]
-    },{
+    },
+    {
         class:EditText
 		id: editText
 		width: match_parent
@@ -51,5 +52,4 @@
         padding: 16dp
 		alignY: below,topBar
 	}]
-}
 }

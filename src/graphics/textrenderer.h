@@ -27,10 +27,8 @@ public:
     void layout(RECT rect);
     const SIZE measuredSize() { return _measuredSize; }
     void updateRenderOps(View* view);
-    const string& getText() { return _text; }
-    void setText(const string& text);
-    const AttributedString& getAttributedText() { return _text; }
-    void setAttributedText(const AttributedString& text);
+    const AttributedString& getText() { return _text; }
+    void setText(const AttributedString& text);
     void setColor(COLOR color);
     COLOR getColor() const { return _color; }
     void setFontName(const string& fontName);
@@ -46,6 +44,7 @@ public:
     
     typedef struct {
         int32_t codepointIndex; // index into _text of first codepoint of this character
+        float leadingSpace;
         RECT rect;    // client coords. TODO: wasteful. Any given char rect is almost same as adjacent rects, esp. vertically. There's probably a dozen more efficient delta encodings could be used here.
         TEXTRENDERPARAMS* renderParams;
         int16_t numCodepoints; // one less than the number of codepoints used in this char, so usually 0. todo: wasteful, explore better ways once we have more control over char rendering
@@ -75,6 +74,7 @@ public:
     const TEXTLINE* getLineForCharacterIndex(int32_t charIndex, int dLine) const;
 
     friend class Label;
+    friend class EditText;
     
 protected:
     AttributedString _text;

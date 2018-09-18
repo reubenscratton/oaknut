@@ -34,6 +34,7 @@ int RenderOp::numQuads() {
 RECT RenderOp::surfaceRect() {
     RECT rect = _rect;
     rect.origin += _view->_surfaceOrigin;
+    rect.origin += _view->_contentOffsetAccum;
     return rect;
 }
 bool RenderOp::intersects(RenderOp *op) {

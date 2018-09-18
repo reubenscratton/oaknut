@@ -28,9 +28,8 @@ MEASURESPEC::MEASURESPEC(const StyleValue* value) {
         return;
     }
     string str = value->stringVal();
-    if (str == "wrap_content") { *this = WrapContent(); return; }
-    if (str == "fill_parent") { *this = FillParent(); return; }
-    if (str == "match_parent") { *this = FillParent(); return; }
+    if (str == "wrap" || str=="wrap_content") { *this = WrapContent(); return; }
+    if (str == "fill" || str=="fill_parent" || str=="match_parent") { *this = FillParent(); return; }
     if (str.hadPrefix("aspect(")) {
         *this = UseAspect(atof(str.data()));
         return;

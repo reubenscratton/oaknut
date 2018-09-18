@@ -37,6 +37,11 @@ const struct _POINT& POINT::operator+=(const struct _POINT& d) {
     y+=d.y;
     return *this;
 }
+const struct _POINT& POINT::operator-=(const struct _POINT& d) {
+    x-=d.x;
+    y-=d.y;
+    return *this;
+}
 
 
 float RECT::midX() {

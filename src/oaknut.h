@@ -95,7 +95,9 @@ typedef uint64_t TIMESTAMP;
 // Include platform headers
 #include __incstr(platform/PLATFORM/platform.h)
 
-// Oaknut types (The order here matters!)
+// Oaknut types
+#include "base/bytearray.h"
+#include "base/hash.h"
 #include "base/string.h"
 #include "base/object.h"
 #include "base/timer.h"
@@ -107,6 +109,7 @@ typedef uint64_t TIMESTAMP;
 #include "data/bytebuffer.h"
 #include "data/bytebufferstream.h"
 #include "text/stringprocessor.h"
+#include "text/regex.h"
 #include "base/variant.h"
 #include "data/localstorage.h"
 #include "graphics/bitmap.h"

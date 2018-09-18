@@ -27,10 +27,8 @@ public:
 
     
     // API
-    virtual const string& getText() { return _textRenderer.getText(); }
-	virtual void setText(const string& text);
-    virtual const AttributedString& getAttributedText() { return _textRenderer.getAttributedText(); }
-    virtual void setAttributedText(const AttributedString& text);
+    virtual const AttributedString& getText() { return _textRenderer.getText(); }
+	virtual void setText(const AttributedString& text);
     virtual void setTextColor(COLOR color);
 	virtual void setFont(Font* font);
     virtual void setFontName(const string& fontName);

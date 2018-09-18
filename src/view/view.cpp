@@ -550,7 +550,7 @@ void View::measure(float parentWidth, float parentHeight) {
 
 float View::getAlignspecVal(const ALIGNSPEC& spec, bool isVertical) {
 
-    View* anchor = (spec.anchor == NO_ANCHOR) ? NULL : (spec.anchor?spec.anchor:_parent);
+    View* anchor = (spec.anchor?spec.anchor:_parent);
     float anchorVal = 0;
     RECT& refRect = anchor ? anchor->_rect : _window->_surfaceRect;
     float anchorSize = isVertical ? refRect.size.height : refRect.size.width;
@@ -633,6 +633,7 @@ void View::attachToWindow(Window *window) {
 	_window = window;
     if (_parent) {
         _surfaceOrigin = {_parent->_surfaceOrigin.x + _rect.origin.x, _parent->_surfaceOrigin.y + _rect.origin.y};
+        _contentOffsetAccum = _contentOffset + _parent->_contentOffsetAccum;
     } else {
         _surfaceOrigin = _rect.origin;
     }
@@ -682,9 +683,7 @@ void View::detachFromWindow() {
 
     _surface = nullptr;
     _window = nullptr;
-    //_nextView = nullptr;
-    //_previousView = nullptr;
-
+    _contentOffsetAccum = _contentOffset;
 }
 
 
@@ -974,13 +973,21 @@ POINT View::getContentOffset() const {
 }
 
 void View::setContentOffset(POINT contentOffset) {
-	if (!contentOffset.equals(_contentOffset)) {
+    POINT d = _contentOffset - contentOffset;
+	if (!d.isZero()) {
 		_contentOffset = contentOffset;
+        adjustContentOffsetAccum(d);
         updateScrollbarVisibility();
         updateBackgroundRect();
 	}
     if (_window) {
         _window->requestRedraw();
+    }
+}
+void View::adjustContentOffsetAccum(const POINT& d) {
+    _contentOffsetAccum += d;
+    for (auto subview : _subviews) {
+        subview->adjustContentOffsetAccum(d);
     }
 }
 
@@ -1048,11 +1055,9 @@ int View::indexOfSubviewContainingPoint(POINT pt) {
 View* View::hitTest(POINT& pt) {
 	
 	// Find the leaf view that corresponds to the given point
-    pt.x += _contentOffset.x;
-    pt.y += _contentOffset.y;
 	if (_visibility==Visible && _rect.contains(pt)) {
-        pt.x -= _rect.origin.x;
-        pt.y -= _rect.origin.y;
+        pt += _contentOffset;
+        pt -= _rect.origin;
         for (long i=_subviews.size()-(_scrollbarsView?2:1) ; i>=0 ; i--) {
 			View* subview = _subviews.at(i);
 			auto hitTestSub = subview->hitTest(pt);
@@ -1119,7 +1124,7 @@ bool View::onInputEvent(INPUTEVENT* event) {
         }
     }
     
-    app.log("%X y=%f", this, event->pt.y);
+    //app.log("%X y=%f", this, event->pt.y);
     bool scrolled = _scrollVert.handleEvent(this, true, event);
     scrolled |= _scrollHorz.handleEvent(this, false, event);
     

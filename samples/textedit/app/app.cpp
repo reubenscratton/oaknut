@@ -64,19 +64,12 @@ public:
         _alignRight->setState(STATE_SELECTED, (gravity==GRAVITY_RIGHT) ? STATE_SELECTED : 0);
         _editText->setGravity({static_cast<uint8_t>(gravity), 0});
     }
-
-
 };
 
 
 
-
 void App::main() {
-    
-    loadStyleAsset("styles.res");
-
-    MainViewController* mainVC = new MainViewController();
-    _window->setRootViewController(mainVC);
+    _window->setRootViewController(new MainViewController());
 }
 
 

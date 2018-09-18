@@ -33,7 +33,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
 
     private static final String KEY_NATIVE_SAVED_STATE = "android:native_state";
 
-    private View mNativeContentView;
+    private long nativePtr;
+    private NativeView nativeView;
 
     private SurfaceHolder mCurSurfaceHolder;
 
@@ -45,24 +46,30 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
 
     private boolean mDestroyed;
 
-    private native void onCreateNative(AssetManager assetManager, float screenScale, float statusBarHeight, float navigationBarHeight);
-    private native void onStartNative();
-    private native void onResumeNative();
-    private native byte[] onSaveInstanceStateNative();
-    private native void onPauseNative();
-    private native void onStopNative();
-    private native void onConfigurationChangedNative();
-    private native void onWindowFocusChangedNative(boolean focused);
-    private native void onSurfaceCreatedNative(Surface surface);
-    private native void onSurfaceChangedNative(Surface surface, int format, int width, int height);
-    private native void onSurfaceRedrawNeededNative(Surface surface);
-    private native void redrawNative();
-    private native void onSurfaceDestroyedNative();
-    private native void onContentRectChangedNative(int x, int y, int w, int h);
-    private native boolean onKeyEventNative(boolean isDown, int keyCode, int charCode);
-    private native void onTouchEventNative(int pointer, int action, long time, float x, float y);
-    private native boolean onBackPressedNative();
-    private native void onDestroyNative();
+    private native long onCreateNative(AssetManager assetManager, float screenScale, float statusBarHeight, float navigationBarHeight, long rootVC);
+    private native void onStartNative(long nativePtr);
+    private native void onResumeNative(long nativePtr);
+    private native byte[] onSaveInstanceStateNative(long nativePtr);
+    private native void onPauseNative(long nativePtr);
+    private native void onStopNative(long nativePtr);
+    private native void onConfigurationChangedNative(long nativePtr);
+    private native void onWindowFocusChangedNative(long nativePtr, boolean focused);
+    private native void onSurfaceCreatedNative(long nativePtr, Surface surface);
+    private native void onSurfaceChangedNative(long nativePtr, Surface surface, int format, int width, int height);
+    private native void onSurfaceRedrawNeededNative(long nativePtr, Surface surface);
+    private native void redrawNative(long nativePtr);
+    private native void onSurfaceDestroyedNative(long nativePtr);
+    private native void onContentRectChangedNative(long nativePtr, int x, int y, int w, int h);
+    private native boolean onKeyEventNative(long nativePtr, boolean isDown, int keyCode, int charCode);
+    private native void onTouchEventNative(long nativePtr, int pointer, int action, long time, float x, float y);
+    private native boolean onBackPressedNative(long nativePtr);
+    private native void onDestroyNative(long nativePtr);
+
+    private static class NativeView extends View {
+        NativeView(Context context) {
+            super(context);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,10 +80,10 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
         window.setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
 
-        mNativeContentView = new View(this);
-        setContentView(mNativeContentView);
-        mNativeContentView.requestFocus();
-        mNativeContentView.getViewTreeObserver().addOnGlobalLayoutListener(this);
+        nativeView = new NativeView(this);
+        setContentView(nativeView);
+        nativeView.requestFocus();
+        nativeView.getViewTreeObserver().addOnGlobalLayoutListener(this);
 
 
         // Get status bar height. If it's non-zero then the top window inset is zero because
@@ -105,9 +112,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
         float navigationBarHeight =  (realHeight - displayHeight);
 
 
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
-        onCreateNative(getAssets(), metrics.density, statusBarHeight, navigationBarHeight);
+        long rootVC = getIntent().getLongExtra("rootVC", 0);
+        nativePtr = onCreateNative(getAssets(), realDisplayMetrics.density, statusBarHeight, navigationBarHeight, rootVC);
 
         super.onCreate(savedInstanceState);
 
@@ -118,30 +124,30 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
     protected void onDestroy() {
         mDestroyed = true;
         if (mCurSurfaceHolder != null) {
-            onSurfaceDestroyedNative();
+            onSurfaceDestroyedNative(nativePtr);
             mCurSurfaceHolder = null;
         }
-        onDestroyNative();
+        onDestroyNative(nativePtr);
         super.onDestroy();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        onPauseNative();
+        onPauseNative(nativePtr);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         App.currentActivity = new WeakReference<>(this);
-        onResumeNative();
+        onResumeNative(nativePtr);
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        byte[] state = onSaveInstanceStateNative();
+        byte[] state = onSaveInstanceStateNative(nativePtr);
         if (state != null) {
             outState.putByteArray(KEY_NATIVE_SAVED_STATE, state);
         }
@@ -150,20 +156,20 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
     @Override
     protected void onStart() {
         super.onStart();
-        onStartNative();
+        onStartNative(nativePtr);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        onStopNative();
+        onStopNative(nativePtr);
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         if (!mDestroyed) {
-            onConfigurationChangedNative();
+            onConfigurationChangedNative(nativePtr);
         }
     }
 
@@ -171,7 +177,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (!mDestroyed) {
-            onWindowFocusChangedNative(hasFocus);
+            onWindowFocusChangedNative(nativePtr, hasFocus);
         }
     }
 
@@ -179,7 +185,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
         if (!mDestroyed) {
             mCurSurfaceHolder = holder;
             Surface surface = holder.getSurface();
-            onSurfaceCreatedNative(surface);
+            onSurfaceCreatedNative(nativePtr, surface);
             Choreographer.getInstance().postFrameCallback(this);
         }
     }
@@ -187,28 +193,28 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
         if (!mDestroyed) {
             mCurSurfaceHolder = holder;
-            onSurfaceChangedNative(holder.getSurface(), format, width, height);
+            onSurfaceChangedNative(nativePtr, holder.getSurface(), format, width, height);
         }
     }
 
     public void surfaceRedrawNeeded(SurfaceHolder holder) {
         if (!mDestroyed) {
             mCurSurfaceHolder = holder;
-            onSurfaceRedrawNeededNative(holder.getSurface());
+            onSurfaceRedrawNeededNative(nativePtr, holder.getSurface());
         }
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
         mCurSurfaceHolder = null;
         if (!mDestroyed) {
-            onSurfaceDestroyedNative();
+            onSurfaceDestroyedNative(nativePtr);
         }
     }
 
     public void onGlobalLayout() {
-        mNativeContentView.getLocationInWindow(mLocation);
-        int w = mNativeContentView.getWidth();
-        int h = mNativeContentView.getHeight();
+        nativeView.getLocationInWindow(mLocation);
+        int w = nativeView.getWidth();
+        int h = nativeView.getHeight();
         if (mLocation[0] != mLastContentX || mLocation[1] != mLastContentY
                 || w != mLastContentWidth || h != mLastContentHeight) {
             mLastContentX = mLocation[0];
@@ -216,7 +222,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
             mLastContentWidth = w;
             mLastContentHeight = h;
             if (!mDestroyed) {
-                onContentRectChangedNative(mLastContentX,
+                onContentRectChangedNative(nativePtr, mLastContentX,
                         mLastContentY, mLastContentWidth, mLastContentHeight);
             }
         }
@@ -228,7 +234,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
         int finger = event.getPointerId(0);
         float x = event.getRawX();
         float y = event.getRawY();
-        onTouchEventNative(finger, action, event.getEventTime(), x, y);
+        onTouchEventNative(nativePtr, finger, action, event.getEventTime(), x, y);
         return true;
     }
 
@@ -240,19 +246,11 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
         getWindow().setFormat(format);
     }
 
-    void showKeyboard(boolean show) {
-        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-        if (show) {
-            imm.showSoftInput(mNativeContentView, InputMethodManager.SHOW_FORCED);
-        } else {
-            imm.hideSoftInputFromWindow(mNativeContentView.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
-        }
-    }
-
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        return onKeyEventNative(true, keyCode, event.getUnicodeChar());
+        onKeyEventNative(nativePtr,true, keyCode, event.getUnicodeChar());
+        return false; // always return false, otherwise we don't get compound key events eg Shift+etc
     }
 
     @Override
@@ -261,20 +259,35 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
             onBackPressed();
             return true;
         }
-        return onKeyEventNative(false, keyCode, event.getUnicodeChar());
+        return onKeyEventNative(nativePtr,false, keyCode, event.getUnicodeChar());
     }
 
     @Override
     public void doFrame(long frameTimeNanos) {
-        redrawNative();
+        redrawNative(nativePtr);
         Choreographer.getInstance().postFrameCallback(this);
     }
 
     @Override
     public void onBackPressed() {
-        if (!onBackPressedNative()) {
+        if (!onBackPressedNative(nativePtr)) {
             super.onBackPressed();
         }
+    }
+
+    public void showKeyboard(boolean show) {
+        nativeView.requestFocus();
+        App.handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (show) {
+                    imm.showSoftInput(nativeView, InputMethodManager.SHOW_FORCED);
+                } else {
+                    imm.hideSoftInputFromWindow(nativeView.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                }
+            }
+        }, 200);
     }
 
 }

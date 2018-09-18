@@ -16,7 +16,6 @@
     CADisplayLink* displayLink;
     GLuint renderbuffer;
     UITouch* _touches[10];
-    bool _calledMain;
     bool _renderNeeded;
     id<UITextInputDelegate> _textInputDelegate;
     Window* _window;

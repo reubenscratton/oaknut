@@ -8,6 +8,11 @@
 
 #include <oaknut.h>
 
+#ifdef PLATFORM_IOS
+#define NSUI(x) UI##x
+#else
+#define NSUI(x) NS##x
+#endif
 
 Font::Font(const string& fontAssetPath, float size, float weight) : FontBase(fontAssetPath, size, weight) {
     _ctfont = createCTFont();
@@ -19,12 +24,24 @@ Font::Font(const string& fontAssetPath, float size, float weight) : FontBase(fon
     }
 }
 
+float UIFontWeightFromStandardWeight(float weight) {
+    if (weight < FONT_WEIGHT_THIN) return NSUI(FontWeightUltraLight);
+    if (weight < FONT_WEIGHT_LIGHT) return NSUI(FontWeightThin);
+    if (weight < FONT_WEIGHT_REGULAR) return NSUI(FontWeightLight);
+    if (weight < FONT_WEIGHT_MEDIUM) return NSUI(FontWeightRegular);
+    if (weight < FONT_WEIGHT_SEMIBOLD) return NSUI(FontWeightMedium);
+    if (weight < FONT_WEIGHT_BOLD) return NSUI(FontWeightSemibold);
+    if (weight < FONT_WEIGHT_HEAVY) return NSUI(FontWeightBold);
+    if (weight < FONT_WEIGHT_BLACK) return NSUI(FontWeightHeavy);
+    return NSUI(FontWeightBlack);
+}
+
 CTFontRef Font::createCTFont() {
     CTFontRef ctfont = NULL;
     CGFloat size = _size;
     if (_name.length() == 0) {
 #if TARGET_OS_IOS
-        UIFont* font = [UIFont systemFontOfSize:size weight:_weight];
+        UIFont* font = [UIFont systemFontOfSize:size weight:UIFontWeightFromStandardWeight(_weight)];
         _ascent = font.ascender;
         _descent = font.descender;
         _height = font.lineHeight;

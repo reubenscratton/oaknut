@@ -23,8 +23,6 @@ EditText::EditText() : Label() {
 bool EditText::onInputEvent(INPUTEVENT* event) {
     if (event->type == INPUT_EVENT_DOWN && event->deviceType!=INPUTEVENT::ScrollWheel) {
         POINT pt = event->ptLocal;
-        //pt.x += _contentOffset.x;
-        //pt.y += _contentOffset.y;
         setInsertionPoint(_textRenderer.characterIndexFromPoint(pt));
     }
     if (event->type == INPUT_EVENT_TAP) {
@@ -52,6 +50,22 @@ bool EditText::setFocused(bool focused) {
     return r;
 }
 
+bool EditText::applyStyleValue(const string& name, const StyleValue* value) {
+    if (name == "softKeyboardType") {
+        string softKeyboardType = value->stringVal().lowercase();
+        if (softKeyboardType == "phone") {
+            _softKeyboardType = Phone;
+        } else if (softKeyboardType == "email") {
+            _softKeyboardType = Email;
+        } else if (softKeyboardType == "general") {
+            _softKeyboardType = General;
+        } else {
+            app.warn("invalid softKeyboardType '%s'", softKeyboardType.data());
+        }
+        return true;
+    }
+    return Label::applyStyleValue(name, value);
+}
 
 void EditText::updateCursor() {
     if (_blinkCursorTimer) {
@@ -106,19 +120,14 @@ void EditText::updateContentSize(float parentWidth, float parentHeight) {
     _cursorOn = true;
     updateCursor();
 }
-void EditText::setText(const string& text) {
-    Label::setText(text);
-    _selectionStart = MIN(_selectionStart, (int)text.length());
-    _insertionPoint = MIN(_insertionPoint, (int)text.length());
-    updateClearButton();
-    if (_window && isFocused()) {
-        _window->keyboardNotifyTextChanged();
+void EditText::setText(const AttributedString& text) {
+    auto tt = text;
+    if (onTextChange) {
+        onTextChange(_textRenderer._text, tt);
     }
-}
-void EditText::setAttributedText(const AttributedString& text) {
-    Label::setAttributedText(text);
-    _selectionStart = MIN(_selectionStart, (int)text.length());
-    _insertionPoint = MIN(_insertionPoint, (int)text.length());
+    Label::setText(tt);
+    _selectionStart = MIN(_selectionStart, (int)tt.length());
+    _insertionPoint = MIN(_insertionPoint, (int)tt.length());
     updateClearButton();
     if (_window && isFocused()) {
         _window->keyboardNotifyTextChanged();
@@ -158,13 +167,19 @@ void EditText::layout() {
 /*
  ITextInputReceiver
  */
-void EditText::insertText(string insertionText, int replaceStart, int replaceEnd) {
+bool EditText::insertText(string insertionText, int replaceStart, int replaceEnd) {
+    if (insertionText=="\n" && _textRenderer._maxLines >0) {
+        if (_textRenderer._lines.size() >= _textRenderer._maxLines) {
+            return false;
+        }
+    }
     string text = getText();
     if (replaceEnd-replaceStart > 0) {
         text.erase(replaceStart, replaceEnd);
     }
     text.insert(replaceStart, insertionText);
     setText(text);
+    return true;
 }
 
 void EditText::deleteBackward() {
@@ -236,6 +251,11 @@ void EditText::moveCursor(int dx, int dy) {
     setInsertionPoint(_textRenderer.moveCharacterIndex(_insertionPoint, dx, dy));
 }
 
+SoftKeyboardType EditText::getSoftKeyboardType() {
+    return _softKeyboardType;
+}
+
+
 /*
 IKeyboardInputHandler
 */
@@ -243,6 +263,7 @@ void EditText::keyInputEvent(KeyboardInputEventType keyboardInputEventType, Keyb
     if (keyboardInputEventType == KeyboardInputEventType::KeyUp) {
         return;
     }
+    
     switch (specialKeyCode) {
         case SpecialKeyNone:
             break;
@@ -264,8 +285,15 @@ void EditText::keyInputEvent(KeyboardInputEventType keyboardInputEventType, Keyb
         default:
             return;
     }
-    string str;
+
     if (charCode=='\r') charCode = '\n';
+    if (charCode=='\n' && _textRenderer._maxLines >0) {
+        if (_textRenderer._lines.size() >= _textRenderer._maxLines) {
+            return;
+        }
+    }
+
+    string str;
     str.append(charCode);
     insertText(str, _selectionStart, _insertionPoint);
     _selectionStart++;

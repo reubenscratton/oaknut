@@ -242,7 +242,7 @@ public:
 protected:
     /**  \cond INTERNAL */
     SIZE _contentSize;
-    POINT _contentOffset;
+    POINT _contentOffset, _contentOffsetAccum;
     bool _contentSizeValid;
     bool _clipsContent;
     GRAVITY _gravity;
@@ -251,6 +251,7 @@ protected:
     ScrollInfo _scrollHorz;
     virtual void updateScrollbarVisibility();
     virtual void updateScrollOffsets();
+    void adjustContentOffsetAccum(const POINT& d);
     /** @} */
 /**  \endcond */
 /**@}*/

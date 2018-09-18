@@ -151,8 +151,6 @@ bool ListView::onInputEvent(INPUTEVENT* event) {
 	if (event->type == INPUT_EVENT_DOWN) {
 		
         POINT pt = event->ptLocal;
-        //pt.x += _contentOffset.x;
-        //pt.y += _contentOffset.y;
         
         for (auto it = _itemViews.begin() ; it!= _itemViews.end() ; it++) {
             View* itemView = it->second;

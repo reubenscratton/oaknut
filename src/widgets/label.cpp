@@ -77,12 +77,8 @@ bool Label::applyStyleValue(const string& name, const StyleValue* value) {
     return View::applyStyleValue(name, value);
 }
 
-void Label::setText(const string& text) {
+void Label::setText(const AttributedString& text) {
     _textRenderer.setText(text);
-    invalidateContentSize();
-}
-void Label::setAttributedText(const AttributedString& text) {
-    _textRenderer.setAttributedText(text);
     invalidateContentSize();
 }
 
@@ -129,7 +125,7 @@ void Label::setContentOffset(POINT contentOffset) {
 }
 
 void Label::setRectSize(const SIZE& asize) {
-    if (asize.width == _rect.size.width) {
+    if (asize.width == _rect.size.width && asize.height == _rect.size.height) {
         return;
     }
     // This is called when our parent view (typically a LinearLayout) is overriding the size we wanted to be

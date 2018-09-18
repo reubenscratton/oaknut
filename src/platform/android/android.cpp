@@ -9,41 +9,15 @@
 
 #include <oaknut.h>
 
-class WindowAndroid : public Window {
-public:
-
-};
-
-Window* Window::create() {
-    return new WindowAndroid();
-}
-
-struct android_app {
-    AConfiguration* config;
-    ANativeWindow* window;
-    ARect contentRect;
-    int activityState;
-    int animating;
-    EGLDisplay display;
-    EGLSurface surface;
-    EGLContext context;
-    int32_t width;
-    int32_t height;
-    float scale;
-    float statusBarHeight;
-    float navigationBarHeight;
-};
-
 JavaVM* g_jvm;
-static android_app* g_app;
-static AAssetManager* g_assetManager;
-static bool g_calledMain = false;
+
 
 
 extern "C" jint JNI_OnLoad(JavaVM *jvm, void *reserved) {
     g_jvm = jvm;
     return JNI_VERSION_1_6;
 }
+
 
 JNIEnv* getJNIEnv() {
     JNIEnv* env = NULL;
@@ -58,47 +32,106 @@ JNIEnv* getJNIEnv() {
 }
 
 
-static void engine_draw_rect() {
-    if (g_app->display == NULL) {
-        return;
+class WindowAndroid : public Window {
+public:
+    jobject activity;
+    AConfiguration* config;
+    ANativeWindow* window;
+    AAssetManager* assetManager;
+    ARect contentRect;
+    int activityState;
+    int animating;
+    EGLDisplay display;
+    EGLSurface surface;
+    EGLContext context;
+    int32_t width;
+    int32_t height;
+
+    WindowAndroid() {
+        context = EGL_NO_CONTEXT;
+    }
+    void draw() override {
+        if (display == NULL) {
+            return;
+        }
+
+        Window::draw();
+        eglSwapBuffers(display, surface);
     }
 
-    if (!g_calledMain) {
-        app._window->_safeAreaInsets.top = g_app->statusBarHeight;
-        app._window->_safeAreaInsets.bottom = g_app->navigationBarHeight;
+    void destroySurface() override {
+        if (window) {
+            ANativeWindow_release(window);
+            window = NULL;
+        }
+
+        if (display != EGL_NO_DISPLAY) {
+            eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+            if (context != EGL_NO_CONTEXT) {
+                eglDestroyContext(display, context);
+                context = EGL_NO_CONTEXT;
+            }
+            if (surface != EGL_NO_SURFACE) {
+                eglDestroySurface(display, surface);
+                surface = EGL_NO_SURFACE;
+            }
+            eglTerminate(display);
+            display = EGL_NO_DISPLAY;
+        }
+        animating = 0;
+
+        Window::destroySurface();
+    }
+
+    void keyboardShow(bool show) override {
+        JNIEnv* env = getJNIEnv();
+        jmethodID jmidShowKeyboard = env->GetMethodID(env->GetObjectClass(activity), "showKeyboard", "(Z)V");
+        env->CallVoidMethod(activity, jmidShowKeyboard, show);
+    }
+
+};
+
+Window* Window::create() {
+    return new WindowAndroid();
+}
+
+
+JAVA_FN(jlong, MainActivity, onCreateNative)(JNIEnv *env, jobject obj,
+                                            jobject jassetManager, jfloat screenScale,
+                                             jfloat statusBarHeight, jfloat navigationBarHeight,
+                                            jlong rootVCcreator) {
+    WindowAndroid* window = (WindowAndroid*)Window::create();
+    window->retain();
+    window->activity = env->NewGlobalRef(obj);
+    window->_safeAreaInsets.top = statusBarHeight;
+    window->_safeAreaInsets.bottom = navigationBarHeight;
+    window->_scale = screenScale;
+    window->assetManager = AAssetManager_fromJava(env, jassetManager);
+
+    app.loadStyleAsset("styles.res");
+
+    // If no VC created then this is app startup
+    if (!rootVCcreator) {
+        app._window = window;
         app.main();
-        g_calledMain = true;
+    } else {
+        app._window = window; // this sucks. I'd like to lose app._window completely...
+        ViewController* rootVC = ((ViewController* (*)(void*))rootVCcreator)(NULL);
+        window->setRootViewController((ViewController*)rootVC);
     }
-    app._window->draw();
-
-
-    eglSwapBuffers(g_app->display, g_app->surface);
+    window->show();
+    return (jlong)window;
 }
 
-
-JAVA_FN(void, MainActivity, onCreateNative)(JNIEnv *env, jobject obj,
-                                            jobject jassetManager, jfloat screenScale, jfloat statusBarHeight, jfloat navigationBarHeight) {
-    // Create our app object
-    g_app = (struct android_app*)malloc(sizeof(struct android_app));
-    memset(g_app, 0, sizeof(struct android_app));
-    g_app->scale = screenScale;
-    g_app->statusBarHeight = statusBarHeight;
-    g_app->navigationBarHeight = navigationBarHeight;
-    g_app->context = EGL_NO_CONTEXT;
-
-    app._window = Window::create();
-    g_assetManager = AAssetManager_fromJava(env, jassetManager);
-}
-
-JAVA_FN(void, MainActivity, onStartNative)(JNIEnv *env, jobject obj) {
+JAVA_FN(void, MainActivity, onStartNative)(JNIEnv *env, jobject obj, jlong nativePtr) {
 
 }
 
-JAVA_FN(void, MainActivity, onResumeNative)(JNIEnv *env, jobject obj) {
+JAVA_FN(void, MainActivity, onResumeNative)(JNIEnv *env, jobject obj, jlong nativePtr) {
 
 }
 
-JAVA_FN(jbyteArray, MainActivity, onSaveInstanceStateNative)(JNIEnv* env, jobject clazz) {
+JAVA_FN(jbyteArray, MainActivity, onSaveInstanceStateNative)(JNIEnv* env, jobject obj, jlong nativePtr) {
 
     // TODO: implement
     jbyte* state = NULL;
@@ -118,32 +151,34 @@ JAVA_FN(jbyteArray, MainActivity, onSaveInstanceStateNative)(JNIEnv* env, jobjec
     return array;
 }
 
-JAVA_FN(void, MainActivity, onPauseNative)(JNIEnv *env, jobject obj) {
+JAVA_FN(void, MainActivity, onPauseNative)(JNIEnv *env, jobject obj, jlong nativePtr) {
 
 }
 
-JAVA_FN(void, MainActivity, onStopNative)(JNIEnv *env, jobject obj) {
+JAVA_FN(void, MainActivity, onStopNative)(JNIEnv *env, jobject obj, jlong nativePtr) {
 
 }
 
 
-JAVA_FN(void, MainActivity, onConfigurationChangedNative)(JNIEnv *env, jobject obj) {
+JAVA_FN(void, MainActivity, onConfigurationChangedNative)(JNIEnv *env, jobject obj, jlong nativePtr) {
     //AConfiguration_fromAssetManager(android_app->config,
     //                                android_app->assetManager);
     //print_cur_config(android_app);
 }
 
-JAVA_FN(void, MainActivity, onWindowFocusChangedNative)(JNIEnv *env, jobject obj, jboolean focused) {
+JAVA_FN(void, MainActivity, onWindowFocusChangedNative)(JNIEnv *env, jobject obj, jlong nativePtr, jboolean focused) {
+    WindowAndroid* window = (WindowAndroid*)nativePtr;
     if (focused) {
-        g_app->animating = 1;
+        window->animating = 1;
     } else {
-        g_app->animating = 0;
+        window->animating = 0;
     }
 }
 
 
-JAVA_FN(void, MainActivity, onSurfaceCreatedNative)(JNIEnv* env, jobject clazz, jobject jsurface) {
-    g_app->window = ANativeWindow_fromSurface(env, jsurface);
+JAVA_FN(void, MainActivity, onSurfaceCreatedNative)(JNIEnv* env, jobject obj, jlong nativePtr, jobject jsurface) {
+    WindowAndroid* window = (WindowAndroid*)nativePtr;
+    window->window = ANativeWindow_fromSurface(env, jsurface);
 
     // initialize OpenGL ES and EGL
     const EGLint attribs[] = {
@@ -164,16 +199,16 @@ JAVA_FN(void, MainActivity, onSurfaceCreatedNative)(JNIEnv* env, jobject clazz, 
     eglChooseConfig(display, attribs, &config, 1, &numConfigs);
     eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &format);
 
-    ANativeWindow_setBuffersGeometry(g_app->window, 0, 0, format);
+    ANativeWindow_setBuffersGeometry(window->window, 0, 0, format);
 
-    surface = eglCreateWindowSurface(display, config, g_app->window, NULL);
+    surface = eglCreateWindowSurface(display, config, window->window, NULL);
 
-    if (g_app->context == EGL_NO_CONTEXT) {
+    if (window->context == EGL_NO_CONTEXT) {
         const EGLint attrib_list[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
-        g_app->context = eglCreateContext(display, config, NULL, attrib_list);
+        window->context = eglCreateContext(display, config, NULL, attrib_list);
     }
 
-    if (eglMakeCurrent(display, surface, surface, g_app->context) == EGL_FALSE) {
+    if (eglMakeCurrent(display, surface, surface, window->context) == EGL_FALSE) {
         LOGI("Unable to eglMakeCurrent");
         return;
     }
@@ -181,71 +216,54 @@ JAVA_FN(void, MainActivity, onSurfaceCreatedNative)(JNIEnv* env, jobject clazz, 
     eglQuerySurface(display, surface, EGL_WIDTH, &w);
     eglQuerySurface(display, surface, EGL_HEIGHT, &h);
 
-    g_app->display = display;
-    g_app->surface = surface;
-    g_app->width = w;
-    g_app->height = h;
+    window->display = display;
+    window->surface = surface;
+    window->width = w;
+    window->height = h;
 
     // Initialize GL state.
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
 
-    app._window->resizeSurface(w, h, g_app->scale);
-
-    engine_draw_rect();
-
+    window->resizeSurface(w, h, window->_scale);
+    window->draw();
 }
 
-JAVA_FN(void, MainActivity, onSurfaceChangedNative)(JNIEnv* env, jobject obj, jobject jsurface,
+JAVA_FN(void, MainActivity, onSurfaceChangedNative)(JNIEnv* env, jobject obj, jlong nativePtr, jobject jsurface,
                                 jint format, jint width, jint height) {
-
-    g_app->window = ANativeWindow_fromSurface(env, jsurface);
+    WindowAndroid* window = (WindowAndroid*)nativePtr;
+    window->window = ANativeWindow_fromSurface(env, jsurface);
     // TODO: handle size changes. But how likely is that?
 }
 
 
-JAVA_FN(void, MainActivity, redrawNative)(JNIEnv* env, jobject obj) {
-    engine_draw_rect();
+JAVA_FN(void, MainActivity, redrawNative)(JNIEnv* env, jobject obj, jlong nativePtr) {
+    WindowAndroid* window = (WindowAndroid*)nativePtr;
+    window->draw();
 }
 
-JAVA_FN(void, MainActivity, onSurfaceRedrawNeededNative)(JNIEnv* env, jobject obj, jobject jsurface) {
-    engine_draw_rect();
+JAVA_FN(void, MainActivity, onSurfaceRedrawNeededNative)(JNIEnv* env, jobject obj, jlong nativePtr, jobject jsurface) {
+    WindowAndroid* window = (WindowAndroid*)nativePtr;
+    window->draw();
 }
 
-JAVA_FN(void, MainActivity, onSurfaceDestroyedNative)(JNIEnv* env, jobject obj, jobject jsurface) {
+JAVA_FN(void, MainActivity, onSurfaceDestroyedNative)(JNIEnv* env, jobject obj, jlong nativePtr) {
+    WindowAndroid* window = (WindowAndroid*)nativePtr;
+    window->destroySurface();
 
-    app._window->destroySurface();
-
-    if (g_app->window) {
-        ANativeWindow_release(g_app->window);
-        g_app->window = NULL;
-    }
-
-    if (g_app->display != EGL_NO_DISPLAY) {
-        eglMakeCurrent(g_app->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-        if (g_app->context != EGL_NO_CONTEXT) {
-            eglDestroyContext(g_app->display, g_app->context);
-            g_app->context = EGL_NO_CONTEXT;
-        }
-        if (g_app->surface != EGL_NO_SURFACE) {
-            eglDestroySurface(g_app->display, g_app->surface);
-            g_app->surface = EGL_NO_SURFACE;
-        }
-        eglTerminate(g_app->display);
-        g_app->display = EGL_NO_DISPLAY;
-    }
-    g_app->animating = 0;
 }
 
 
-JAVA_FN(void, MainActivity, onContentRectChangedNative)(JNIEnv* env, jobject obj,
+JAVA_FN(void, MainActivity, onContentRectChangedNative)(JNIEnv* env, jobject obj, jlong nativePtr,
                                     jint x, jint y, jint w, jint h) {
-    //app._window->resizeClientArea(x,y,w,h);
+    WindowAndroid* window = (WindowAndroid*)nativePtr;
+    //window->resizeClientArea(x,y,w,h);
     check_gl(glClear, GL_COLOR_BUFFER_BIT);
 }
 
 
-JAVA_FN(void, MainActivity, onTouchEventNative)(JNIEnv* env, jobject obj, jint finger, jint action, jlong time, jfloat x, jfloat y) {
+JAVA_FN(void, MainActivity, onTouchEventNative)(JNIEnv* env, jobject obj, jlong nativePtr, jint finger, jint action, jlong time, jfloat x, jfloat y) {
+    WindowAndroid* window = (WindowAndroid*)nativePtr;
     INPUTEVENT event;
     event.deviceType = INPUTEVENT::Mouse;
     event.deviceIndex = finger;
@@ -255,14 +273,15 @@ JAVA_FN(void, MainActivity, onTouchEventNative)(JNIEnv* env, jobject obj, jint f
         case AMOTION_EVENT_ACTION_UP: event.type=INPUT_EVENT_UP; break;
         case AMOTION_EVENT_ACTION_CANCEL: event.type=INPUT_EVENT_CANCEL; break;
     }
-    //LOGI("ev %d %f,%f scale=%f", em_action, x, y, app._window->_scale);
-    event.pt.x = x; //* app._window->_scale;
-    event.pt.y = y;// * app._window->_scale;
+    //LOGI("ev %d %f,%f scale=%f", em_action, x, y, window->_scale);
+    event.pt.x = x; //* window->_scale;
+    event.pt.y = y;// * window->_scale;
     event.time = time;
-    app._window->dispatchInputEvent(event);
+    window->dispatchInputEvent(event);
 }
 
-JAVA_FN(jboolean, MainActivity, onKeyEventNative)(JNIEnv* env, jobject obj, jboolean isDown, jint keyCode, jint charCode) {
+JAVA_FN(jboolean, MainActivity, onKeyEventNative)(JNIEnv* env, jobject obj, jlong nativePtr, jboolean isDown, jint keyCode, jint charCode) {
+    WindowAndroid* window = (WindowAndroid*)nativePtr;
     if (keyCode == 4) { // Don't handle 'back' button, let that go via onBackPressed so Android can handle it properly
         return false;
     }
@@ -271,23 +290,28 @@ JAVA_FN(jboolean, MainActivity, onKeyEventNative)(JNIEnv* env, jobject obj, jboo
     else if (keyCode == 22) sk = SpecialKeyCursorRight;
     else if (keyCode == 20) sk = SpecialKeyCursorDown;
     else if (keyCode == 19) sk = SpecialKeyCursorUp;
-    if (keyCode == 67) sk = SpecialKeyDelete;
-    if (app._window->_keyboardHandler) {
-        app._window->_keyboardHandler->keyInputEvent(isDown ? KeyDown : KeyUp, sk, keyCode, charCode);
+    else if (keyCode == 59) sk = SpecialKeyShift;
+    else if (keyCode == 67) sk = SpecialKeyDelete;
+    if (window->_keyboardHandler) {
+        window->_keyboardHandler->keyInputEvent(isDown ? KeyDown : KeyUp, sk, keyCode, charCode);
         return true;
     }
     return false;
 }
 
-JAVA_FN(jboolean, MainActivity, onBackPressedNative)(JNIEnv* env, jobject obj) {
-    Window* window = app._window;
+JAVA_FN(jboolean, MainActivity, onBackPressedNative)(JNIEnv* env, jobject obj, jlong nativePtr) {
+    WindowAndroid* window = (WindowAndroid*)nativePtr;
     ViewController* vc = window->_rootViewController;
     return vc->navigateBack();
 }
 
-JAVA_FN(void, MainActivity, onDestroyNative)(JNIEnv* env, jobject obj) {
-    app._window->setRootViewController(NULL);
-    g_calledMain = false;
+JAVA_FN(void, MainActivity, onDestroyNative)(JNIEnv* env, jobject obj, jlong nativePtr) {
+    WindowAndroid* window = (WindowAndroid*)nativePtr;
+    window->setRootViewController(NULL);
+    env->DeleteGlobalRef(window->activity);
+    window->activity = NULL;
+    window->release();
 }
+
 
 #endif

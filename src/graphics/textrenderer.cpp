@@ -9,17 +9,13 @@
 
 
 TextRenderer::TextRenderer() {
+    _fontWeight = FONT_WEIGHT_REGULAR;
 }
 
-void TextRenderer::setText(const string& text) {
+void TextRenderer::setText(const AttributedString& text) {
     _text = text;
     _measuredSizeValid = false;
 }
-void TextRenderer::setAttributedText(const AttributedString& text) {
-    _text = text;
-    _measuredSizeValid = false;
-}
-
 void TextRenderer::setColor(COLOR color) {
     _color = color;
     _measuredSizeValid = false; // lazy. color doesn't affect size!
@@ -109,6 +105,7 @@ void TextRenderer::measure(SIZE maxSize) {
     
     // Defaults
     Font* currentFont = _font;
+    float leadingSpace = 0;
     
     // Start with an empty line and no characters
     _characters.clear(); // todo: reserve some empirical number of chars
@@ -139,10 +136,13 @@ void TextRenderer::measure(SIZE maxSize) {
                 currentFont = fontStack.top();
                 fontStack.pop();
             }
-            if (endingSpan.attribute._type == Attribute::Type::Forecolor) {
+            else if (endingSpan.attribute._type == Attribute::Type::Forecolor) {
                 textRenderParams.forecolor = forecolorStack.top();
                 forecolorStack.pop();
                 paramsChanged = true;
+            }
+            else if (endingSpan.attribute._type == Attribute::Type::LeadingSpace) {
+                leadingSpace = 0;
             }
             spanEndIterator++;
         }
@@ -154,11 +154,17 @@ void TextRenderer::measure(SIZE maxSize) {
                 fontStack.push(currentFont);
                 currentFont = startingSpan.attribute._font;
             }
-            if (startingSpan.attribute._type == Attribute::Type::Forecolor) {
+            else if (startingSpan.attribute._type == Attribute::Type::Forecolor) {
                 forecolorStack.push(textRenderParams.forecolor);
                 textRenderParams.forecolor = startingSpan.attribute._color;
                 paramsChanged = true;
             }
+            else if (startingSpan.attribute._type == Attribute::Type::LeadingSpace) {
+                leadingSpace = startingSpan.attribute._space;
+            } else {
+                app.warn("unrecognized attribute type");
+            }
+            
             spanStartIterator++;
         }
         
@@ -217,7 +223,7 @@ void TextRenderer::measure(SIZE maxSize) {
 
             // Will adding this glyph to the current line cause the line to exceed bounds?
             //auto glyphAdvance = glyph->advance.width;
-            auto newBoundsWidth = currentLine->bounds.size.width + glyphAdvance;
+            auto newBoundsWidth = currentLine->bounds.size.width + leadingSpace + glyphAdvance;
             bool exceedsBounds = newBoundsWidth>=maxSize.width && currentLine->numCharacters > 0
                     && maxSize.height>0;
             
@@ -231,10 +237,20 @@ void TextRenderer::measure(SIZE maxSize) {
                 int32_t charsOnNextLine = currentLine->numCharacters - breakOpportunity;
                 for (int32_t bi=0; bi < charsOnNextLine; bi++) {
                     auto& character = _characters[currentLine->startCharacterIndex + breakOpportunity + bi];
-                    xx += character.glyph->advance.width;
+                    xx += character.leadingSpace + character.glyph->advance.width;
                 }
                 currentLine->numCharacters -= charsOnNextLine;
                 currentLine->bounds.size.width -= xx;
+                // Remove any trailing whitespace from the measured line length, it shouldn't
+                // count towards the measured line width.
+                int32_t bi = breakOpportunity;
+                while (--bi>=0) {
+                    auto& character = _characters[currentLine->startCharacterIndex + bi];
+                    if (!isWhitespace(character.glyph->charCode)) {
+                        break;
+                    }
+                    currentLine->bounds.size.width -= character.leadingSpace + character.glyph->advance.width;
+                }
                 currentLine = _lines.emplace(_lines.end(), TEXTLINE {currentLine->startCharacterIndex + breakOpportunity});
                 currentLine->font = currentFont;
                 currentLine->bounds.size.width = xx;
@@ -243,10 +259,10 @@ void TextRenderer::measure(SIZE maxSize) {
             }
             
             // Add the character to our vector
-            _characters.emplace_back(DISPLAYED_CHAR {codepointIndex, {0,0,glyphAdvance,glyphHeight}, currentParams, 0, glyph});
+            _characters.emplace_back(DISPLAYED_CHAR {codepointIndex, leadingSpace, {0,0,glyphAdvance,glyphHeight}, currentParams, 0, glyph});
 
             // Add the glyph to the current line
-            currentLine->bounds.size.width += glyphAdvance;
+            currentLine->bounds.size.width += leadingSpace+glyphAdvance;
             currentLine->numCharacters++;
             
             // If char was a hard break, start a new line
@@ -332,14 +348,16 @@ void TextRenderer::layout(RECT rect) {
         for (int32_t charIndex=line.startCharacterIndex ; charIndex<line.startCharacterIndex+line.numCharacters ; charIndex++) {
             auto& character = _characters[charIndex];
             Glyph* glyph = character.glyph;
+            int ix = (int)x;
             if (!glyph) {
-                character.rect = RECT(x, y + line.baseline, 0, 0);
+                character.rect = RECT(ix, y + line.baseline, 0, 0);
             } else {
-                character.rect = RECT(x + glyph->bitmapLeft,
+                ix += character.leadingSpace;
+                character.rect = RECT(ix + glyph->bitmapLeft,
                                 y + line.baseline - (glyph->bitmapHeight+ glyph->bitmapTop),
                                 glyph->atlasNode->rect.size.width,
                                 glyph->atlasNode->rect.size.height);
-                x += glyph->advance.width;
+                x += character.leadingSpace + glyph->advance.width;
             }
         }
         

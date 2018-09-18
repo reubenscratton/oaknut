@@ -11,13 +11,25 @@
 AttributedString::AttributedString() {
     
 }
-AttributedString::AttributedString(const string& str) {
-    assign(str.data(), str.lengthInBytes());
+AttributedString::AttributedString(const char* p) : string(p) {
 }
-AttributedString::AttributedString(const AttributedString& str) {
+AttributedString::AttributedString(const string& str) : string(str) {
+}
+AttributedString::AttributedString(const AttributedString& str) : string(str) {
     _attributes = str._attributes;
 }
 
 void AttributedString::setAttribute(const Attribute& attribute, int32_t start, int32_t end) {
     _attributes.emplace(attribute, start, end);
 }
+
+void AttributedString::clearAttributes() {
+    _attributes.clear();
+}
+
+AttributedString& AttributedString::operator=(const AttributedString& str) {
+    string::operator=(str);
+    _attributes = str._attributes;
+    return *this;
+}
+

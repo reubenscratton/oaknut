@@ -18,8 +18,19 @@ public class Font {
     public Font(long cobj, String name, float size, float weight) {
         this.cobj = cobj;
         if (TextUtils.isEmpty(name)) {
-            //typeface = Typeface.DEFAULT;
-            typeface = Typeface.create("sans-serif-thin", Typeface.NORMAL);
+
+            // Before API 28 we can get at 8 "weights", bold and non-bold renders of 4 underlying font variations
+            //   0 -  199 : thin
+            // 200 -  399 : light
+            // 400 -  699 : normal
+            // 700 - 1000 : medium
+            String suffix = "";
+            boolean fakeBold = false;
+            if (weight < 200) {suffix = "-thin"; if (weight>=100) fakeBold=true;}
+            else if (weight < 400) {suffix = "-light"; if (weight>=300) fakeBold=true;}
+            else if (weight < 700) {suffix = ""; if (weight>500) fakeBold=true;}
+            else {suffix = "-medium"; if (weight>800) fakeBold=true;}
+            typeface = Typeface.create("sans-serif" + suffix, fakeBold?Typeface.BOLD:Typeface.NORMAL);
         } else {
             typeface = Typeface.createFromAsset(App.app.getAssets(), name);
         }

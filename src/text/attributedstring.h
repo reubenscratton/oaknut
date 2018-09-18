@@ -11,15 +11,18 @@ public:
     typedef enum {
         Forecolor,
         BackgroundColor,
-        Font
+        Font,
+        LeadingSpace
     } Type;
     Type _type;
     union {
         COLOR _color;
         ObjPtr<class Font> _font;
+        float _space;
     };
     
     Attribute(Type type, COLOR color) : _type(type), _color(color) {}
+    Attribute(Type type, float space) : _type(type), _space(space) {}
     ~Attribute() { if (_type == Font) { _font.~ObjPtr(); } }
     Attribute(const Attribute& attr) : _type(attr._type) {
         assign(attr);
@@ -43,21 +46,26 @@ public:
             case Forecolor: _color = src._color; break;
             case BackgroundColor: _color = src._color; break;
             case Font: _font = src._font; break;
+            case LeadingSpace: _space = src._space; break;
         }
     }
     static Attribute forecolor(COLOR color) { return Attribute(Forecolor, color); }
-    
+    static Attribute leadingSpace(float space) { return Attribute(LeadingSpace,  space); }
 };
 
 
-class AttributedString : public Object, public string {
+class AttributedString : public string {
 public:
     
     AttributedString();
+    AttributedString(const char* p);
     AttributedString(const string& str);
     AttributedString(const AttributedString& str);
     
     void setAttribute(const Attribute& attribute, int start, int end);
+    void clearAttributes();
+    AttributedString& operator=(const AttributedString& str);
+
     
     friend class TextRenderer;
     

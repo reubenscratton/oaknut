@@ -105,18 +105,14 @@ Window* Window::create() {
     return new WindowIOS();
 }
 
-void App::presentWindow(Window* window) {
-    if (!app._window) {
-        app._window = window;
-    }
-    window->show();
-}
 
 @implementation AppDelegate
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     app._window = Window::create();
+    app.loadStyleAsset("styles.res");
+    app.main();
     app._window->show();
     return YES;
 }

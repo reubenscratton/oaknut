@@ -16,8 +16,6 @@
 // that of the anchor's width, the second is that of one's own width, and the margin is a delta in pixels.
 //
 
-#define NO_ANCHOR ((View*)-1)
-
 typedef struct ALIGNSPEC {
     View* anchor;
     float multiplierAnchor;

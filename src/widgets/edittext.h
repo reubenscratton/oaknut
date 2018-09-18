@@ -13,7 +13,9 @@ public:
     EditText();
     virtual void setInsertionPoint(int32_t newInsertionPoint);
     
+    
     // Overrides
+    bool applyStyleValue(const string& name, const StyleValue* value) override;
     void setPadding(EDGEINSETS padding) override;
     IKeyboardInputHandler* getKeyboardInputHandler() override;
     ITextInputReceiver* getTextInputReceiver() override;
@@ -22,21 +24,23 @@ public:
     void updateRenderOps() override;
     void layout() override;
     void detachFromWindow() override;
-    void setText(const string& text) override;
-    void setAttributedText(const AttributedString& text) override;
+    void setText(const AttributedString& text) override;
     void updateContentSize(float parentWidth, float parentHeight) override;
     
     // IKeyboardInputHandler
     void keyInputEvent(KeyboardInputEventType keyboardInputEventType, KeyboardInputSpecialKeyCode specialKeyCode, int osKeyCode, char32_t charCode) override;
 
     // ITextInputReceiver
-    void insertText(string text, int replaceStart, int replaceEnd) override;
+    bool insertText(string text, int replaceStart, int replaceEnd) override;
     void deleteBackward() override;
     int getTextLength() override;
     int getSelectionStart() override;
     int getInsertionPoint() override;
     string textInRange(int start, int end) override;
     void setSelectedRange(int start, int end) override;
+    SoftKeyboardType getSoftKeyboardType() override;
+    
+    std::function<void(const AttributedString& before, AttributedString& after)> onTextChange;
 
 protected:
     int32_t _selectionStart;    // Text index, not character index
@@ -47,6 +51,7 @@ protected:
     ObjPtr<Timer> _blinkCursorTimer;
     ObjPtr<RectRenderOp> _cursorRenderOp;
     ObjPtr<TextureRenderOp> _clearButtonOp;
+    SoftKeyboardType _softKeyboardType = General;
     
     void updateCursor();
     void updateClearButton();

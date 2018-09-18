@@ -58,8 +58,8 @@ static UITextInputStringTokenizer* _tokenizer;
 - (UITextRange*)markedTextRange {
     NSLOG(@"markedTextRange");
     /*SimpleTextRange* range = [SimpleTextRange new];
-    range->_start = [SimpleTextPos pos:app._window->_textInputReceiver->getSelectionStart()];
-    range->_end = [SimpleTextPos pos:app._window->_textInputReceiver->getInsertionPoint()];
+    range->_start = [SimpleTextPos pos:_window->_textInputReceiver->getSelectionStart()];
+    range->_end = [SimpleTextPos pos:_window->_textInputReceiver->getInsertionPoint()];
     NSLOG(@"markedTextRange -> %d:%d", range->_start.pos, range->_end.pos);
     return range;*/
     return nil;
@@ -83,23 +83,24 @@ static UITextInputStringTokenizer* _tokenizer;
 
 - (BOOL)hasText {
     NSLOG(@"hasText");
-    return app._window->_textInputReceiver->getTextLength() > 0;
+    return _window->_textInputReceiver->getTextLength() > 0;
 }
 - (void)insertText:(NSString *)text {
     NSLOG(@"insertText %@", text);
     [_textInputDelegate textWillChange:self];
     const char* cstr = [text cStringUsingEncoding:NSUTF8StringEncoding];
-    int selStart = app._window->_textInputReceiver->getSelectionStart();
-    int selEnd = app._window->_textInputReceiver->getInsertionPoint();
-    app._window->_textInputReceiver->insertText(cstr, selStart, selEnd);
-    selStart += text.length;
-    app._window->_textInputReceiver->setSelectedRange(selStart, selStart);
-    [_textInputDelegate textDidChange:self];
+    int selStart = _window->_textInputReceiver->getSelectionStart();
+    int selEnd = _window->_textInputReceiver->getInsertionPoint();
+    if (_window->_textInputReceiver->insertText(cstr, selStart, selEnd)) {
+        selStart += text.length;
+        _window->_textInputReceiver->setSelectedRange(selStart, selStart);
+        [_textInputDelegate textDidChange:self];
+    }
 }
 - (void)deleteBackward {
     NSLOG(@"deleteBackward");
     [_textInputDelegate textWillChange:self];
-    app._window->_textInputReceiver->deleteBackward();
+    _window->_textInputReceiver->deleteBackward();
     [_textInputDelegate textDidChange:self];
 }
 
@@ -114,8 +115,8 @@ static UITextInputStringTokenizer* _tokenizer;
 }
 
 - (UITextPosition*)endOfDocument {
-    NSLOG(@"endOfDocument -> %d", app._window->_textInputReceiver->getTextLength());
-    return [SimpleTextPos pos:app._window->_textInputReceiver->getTextLength()];
+    NSLOG(@"endOfDocument -> %d", _window->_textInputReceiver->getTextLength());
+    return [SimpleTextPos pos:_window->_textInputReceiver->getTextLength()];
 }
 
 - (id<UITextInputTokenizer>)tokenizer {
@@ -128,8 +129,8 @@ static UITextInputStringTokenizer* _tokenizer;
 
 - (UITextRange*)selectedTextRange {
     SimpleTextRange* range = [SimpleTextRange new];
-    range->_start = [SimpleTextPos pos:app._window->_textInputReceiver->getSelectionStart()];
-    range->_end = [SimpleTextPos pos:app._window->_textInputReceiver->getInsertionPoint()];
+    range->_start = [SimpleTextPos pos:_window->_textInputReceiver->getSelectionStart()];
+    range->_end = [SimpleTextPos pos:_window->_textInputReceiver->getInsertionPoint()];
     NSLOG(@"selectedTextRange -> %d:%d", range->_start.pos, range->_end.pos);
     return range;
 }
@@ -137,7 +138,7 @@ static UITextInputStringTokenizer* _tokenizer;
     int start = (int)((SimpleTextPos*)selectedTextRange.start).pos;
     int end = (int)((SimpleTextPos*)selectedTextRange.end).pos;
     NSLOG(@"setSelectedTextRange start=%d end=%d", start, end);
-    app._window->_textInputReceiver->setSelectedRange(start, end);
+    _window->_textInputReceiver->setSelectedRange(start, end);
 }
 
 - (UITextWritingDirection)baseWritingDirectionForPosition:(nonnull UITextPosition *)position inDirection:(UITextStorageDirection)direction {
@@ -207,7 +208,7 @@ static UITextInputStringTokenizer* _tokenizer;
             break;
     }
     NSInteger end = p + offset;
-    if (end > app._window->_textInputReceiver->getTextLength() || end < 0)
+    if (end > _window->_textInputReceiver->getTextLength() || end < 0)
         return nil;
     return [SimpleTextPos pos:end];
 }
@@ -216,7 +217,7 @@ static UITextInputStringTokenizer* _tokenizer;
     NSInteger p = ((SimpleTextPos*)position).pos;
     NSLOG(@"positionFromPosition %d offset=%d", (int)p, (int)offset);
     NSInteger end = p + offset;
-    if (end > app._window->_textInputReceiver->getTextLength() || end < 0)
+    if (end > _window->_textInputReceiver->getTextLength() || end < 0)
         return nil;
     return [SimpleTextPos pos:end];
 }
@@ -228,8 +229,8 @@ static UITextInputStringTokenizer* _tokenizer;
 
 - (void)replaceRange:(nonnull UITextRange *)range withText:(nonnull NSString *)text {
     SimpleTextRange* r = (SimpleTextRange*)range;
-    int selStart = app._window->_textInputReceiver->getSelectionStart();
-    int insertionPoint = app._window->_textInputReceiver->getInsertionPoint();
+    int selStart = _window->_textInputReceiver->getSelectionStart();
+    int insertionPoint = _window->_textInputReceiver->getInsertionPoint();
     int selShift = 0;
     if (insertionPoint <= r->_end.pos) {
         selShift = (int)text.length - (int)(r->_end.pos-r->_start.pos);
@@ -237,9 +238,9 @@ static UITextInputStringTokenizer* _tokenizer;
     NSLOG(@"replaceRange %d:%d %@", (int)r->_start.pos, (int)r->_end.pos, text);
     const char* cstr = [text cStringUsingEncoding:NSUTF8StringEncoding];
     [_textInputDelegate textWillChange:self];
-    app._window->_textInputReceiver->insertText(cstr, (int)r->_start.pos, (int)r->_end.pos);
+    _window->_textInputReceiver->insertText(cstr, (int)r->_start.pos, (int)r->_end.pos);
     if (selShift != 0) {
-        app._window->_textInputReceiver->setSelectedRange(selStart+selShift, insertionPoint+selShift);
+        _window->_textInputReceiver->setSelectedRange(selStart+selShift, insertionPoint+selShift);
     }
     [_textInputDelegate textDidChange:self];
 }
@@ -260,7 +261,7 @@ static UITextInputStringTokenizer* _tokenizer;
 - (nullable NSString *)textInRange:(nonnull UITextRange *)range {
     SimpleTextPos* posStart = (SimpleTextPos*)range.start;
     SimpleTextPos* posEnd = (SimpleTextPos*)range.end;
-    string text = app._window->_textInputReceiver->textInRange((int)posStart.pos, (int)posEnd.pos);
+    string text = _window->_textInputReceiver->textInRange((int)posStart.pos, (int)posEnd.pos);
     if (text.data() == NULL) text = "";
     NSLOG(@"textInRange %d:%d -> %s", posStart.pos, posEnd.pos, text.data());
     return [NSString stringWithUTF8String:text.data()];
@@ -292,6 +293,20 @@ static UITextInputStringTokenizer* _tokenizer;
 - (UITextStorageDirection)selectionAffinity {
     return UITextStorageDirectionForward;
 }
+
+
+/** UITextInputTraits **/
+
+- (UIKeyboardType)keyboardType {
+    switch (_window->_textInputReceiver->getSoftKeyboardType()) {
+        case Phone: return UIKeyboardTypePhonePad;
+        case Email: return UIKeyboardTypeEmailAddress;
+        default:
+            break;
+    }
+    return UIKeyboardTypeDefault;
+}
+
 @end
 
 #endif

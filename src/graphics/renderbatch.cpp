@@ -98,7 +98,10 @@ void RenderBatch::render(Window* window, Surface* surface, RenderOp* firstOp) {
             }
             nextOpInBatch = *it;
         } else {
-            region.addRect(currentOp->surfaceRect());
+            // Add op to region of stuff thats yet to render, unless of course it already has been rendered
+            if (currentOp->_renderCounter != window->_renderCounter) {
+                region.addRect(currentOp->surfaceRect());
+            }
         }
         
         // Move to next op in render order

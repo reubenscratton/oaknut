@@ -390,6 +390,9 @@ EDGEINSETS StyleValue::edgeInsetsVal() const {
         auto& a = val->arrayVal();
         if (a.size()==1) {
             insets.left = insets.top = insets.right = insets.bottom = a[0].floatVal();
+        } else if (a.size()==2) {
+            insets.left = insets.right = a[0].floatVal();
+            insets.top = insets.bottom = a[1].floatVal();
         } else if (a.size()==4) {
             insets.left = a[0].floatVal();
             insets.top = a[1].floatVal();

@@ -65,12 +65,6 @@
     _renderNeeded = NO;
     //dispatch_async(oakQueue, ^{
     
-    
-    
-    if (!_calledMain) {
-        app.main();
-        _calledMain = true;
-    }
     _window->draw();
     
     [glContext presentRenderbuffer:GL_RENDERBUFFER];

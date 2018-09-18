@@ -11,12 +11,11 @@
 
 
 void App::main() {
-
-    loadStyleAsset("styles.res");
-    
 	NavigationController* rootVC = new NavigationController();
     rootVC->_navBar->setBackgroundColor(app.getStyleColor("navbar.background"));
 	rootVC->_navBar->setTintColor(app.getStyleColor("navbar.tint"));
+    rootVC->pushViewController(new MainViewController());
+    _window->setRootViewController(rootVC);
 
     /*
     vector<pair<const string&,const Variant&>> foo; // 24 bytes
@@ -41,11 +40,8 @@ void App::main() {
     vm2.readSelfFromStream(&bb);
     */
     
-	MainViewController* mainVC = new MainViewController();
     //DisksViewController* mainVC = new DisksViewController(NULL);
     //SnapshotsViewController* mainVC = new SnapshotsViewController(NULL, NULL, NULL, NULL);
-	rootVC->pushViewController(mainVC);
-	_window->setRootViewController(rootVC);
 }
 
 

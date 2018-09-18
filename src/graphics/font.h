@@ -5,16 +5,17 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-// These values taken from iOS UIFontWeight definitions. They may well change.
-#define FONT_WEIGHT_ULTRA_LIGHT -0.800000011920929
-#define FONT_WEIGHT_THIN -0.6000000238418579
-#define FONT_WEIGHT_LIGHT -0.4000000059604645
-#define FONT_WEIGHT_REGULAR 0
-#define FONT_WEIGHT_MEDIUM 0.2300000041723251
-#define FONT_WEIGHT_SEMIBOLD 0.300000011920929
-#define FONT_WEIGHT_BOLD 0.4000000059604645
-#define FONT_WEIGHT_HEAVY 0.5600000023841858
-#define FONT_WEIGHT_BLACK 0.6200000047683716
+// These values taken from Android & Windows definitions.
+
+#define FONT_WEIGHT_ULTRA_LIGHT 100     // -0.800000011920929
+#define FONT_WEIGHT_THIN        200     // -0.6000000238418579
+#define FONT_WEIGHT_LIGHT       300     // -0.4000000059604645
+#define FONT_WEIGHT_REGULAR     400     // 0
+#define FONT_WEIGHT_MEDIUM      500     // 0.2300000041723251
+#define FONT_WEIGHT_SEMIBOLD    600     // 0.300000011920929
+#define FONT_WEIGHT_BOLD        700     // 0.4000000059604645
+#define FONT_WEIGHT_HEAVY       800     // 0.5600000023841858
+#define FONT_WEIGHT_BLACK       900     // 0.6200000047683716
 
 class Font;
 class FontBase : public Object {

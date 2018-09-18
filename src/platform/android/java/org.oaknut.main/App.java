@@ -19,6 +19,8 @@ import java.util.UUID;
 
 public class App extends Application {
 
+    // TODO: Move all this into MainActivity
+
     static App app;
     static SharedPreferences prefs;
     static Handler handler;
@@ -92,10 +94,4 @@ public class App extends Application {
         return UUID.randomUUID().toString();
     }
 
-    public static void showKeyboard(boolean show) {
-        MainActivity activity = currentActivity.get();
-        if (activity != null) {
-            activity.showKeyboard(show);
-        }
-    }
 }

@@ -535,6 +535,13 @@ variant variant::parse(StringProcessor& it, int flags) {
     else if (ch == '\"' || (flags & FLAG_ALLOW_JSONLITE)) {
         val = parseJsonString(it, flags);
     }
+    else if (ch == 'n') {
+        if (it.nextWas("null")) {
+            val.setType(EMPTY); // should we have null? is it really meaningful?
+        }
+    } else {
+        assert(0);
+    }
     return val;
 }
 
