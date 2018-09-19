@@ -62,6 +62,7 @@ public:
     int intVal(const string& name) const;
     string stringVal(const string& name) const;
     const vector<StyleValue>& arrayVal(const string& name) const;
+    void importValues(const map<string, StyleValue>& values);
 
     bool parse(class StringProcessor& it, bool inArrayVal=false);
 

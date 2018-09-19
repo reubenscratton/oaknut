@@ -382,6 +382,9 @@ void Window::stopAnimation(Animation* animation) {
 }
 
 void Window::detachView(View* view) {
+    if (_textInputReceiver && _textInputReceiver==view->getTextInputReceiver()) {
+        setFocusedView(NULL);
+    }
     if (view->_animationCount > 0) {
         for (auto it=_animations.begin() ; it!=_animations.end(); ) {
             auto anim = *it++;
@@ -436,11 +439,11 @@ bool Window::setFocusedView(View* view) {
         return false;
     }
     if (_focusedView) {
-        _focusedView->setState(STATE_FOCUSED, 0);
+        _focusedView->setFocused(false);
     }
     _focusedView = view;
     if (view) {
-        view->setState(STATE_FOCUSED, STATE_FOCUSED);
+        view->setFocused(true);
         _keyboardHandler = view->getKeyboardInputHandler();
         auto newTextInputReceiver = view->getTextInputReceiver();
         if (newTextInputReceiver != _textInputReceiver) {

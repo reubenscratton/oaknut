@@ -46,19 +46,19 @@ public:
         _alignRight = view->findViewById("alignRight");
         _bold = view->findViewById("bold");
         
-        _alignLeft->onInputEventDelegate = [&](View* view,INPUTEVENT* ev) -> bool {
+        _alignLeft->onInputEvent = [&](View* view,INPUTEVENT* ev) -> bool {
             if (ev->type == INPUT_EVENT_TAP) {
                 setTextAlignment(GRAVITY_LEFT);
             }
             return true;
         };
-        _alignCenter->onInputEventDelegate = [&](View*,INPUTEVENT* ev) -> bool {
+        _alignCenter->onInputEvent = [&](View*,INPUTEVENT* ev) -> bool {
             if (ev->type == INPUT_EVENT_TAP) {
                 setTextAlignment(GRAVITY_CENTER);
             }
             return true;
         };
-        _alignRight->onInputEventDelegate = [&](View*,INPUTEVENT* ev) -> bool {
+        _alignRight->onInputEvent = [&](View*,INPUTEVENT* ev) -> bool {
             if (ev->type == INPUT_EVENT_TAP) {
                 setTextAlignment(GRAVITY_RIGHT);
             }
@@ -70,7 +70,7 @@ public:
             bool isBold = (fontWeightAttrib && fontWeightAttrib->_f >= FONT_WEIGHT_BOLD);
             _bold->setSelected(isBold);
         };
-        _bold->onClickDelegate = [&](View*) -> bool {
+        _bold->onClick = [&](View*) -> bool {
             return true;
         };
     }

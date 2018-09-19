@@ -204,7 +204,20 @@ RenderOp* View::processDrawable(const StyleValue* value) {
     return op;
 }
 
+static bool isState(const string& name) {
+    if (name == "enabled") return true;
+    if (name == "disabled") return true;
+    if (name == "pressed") return true;
+    if (name == "unpressed") return true;
+    if (name == "selected") return true;
+    if (name == "checked") return true;
+    if (name == "unchecked") return true;
+    if (name == "focused") return true;
+    if (name == "unfocused") return true;
+    if (name == "errored") return true;
+    return false;
 
+}
 bool View::handleStatemapDeclaration(const string& name, const StyleValue* value) {
     if (value->type != StyleValue::Compound) {
         return false;
@@ -214,19 +227,30 @@ bool View::handleStatemapDeclaration(const string& name, const StyleValue* value
     auto& compoundVal = value->compoundVal();
     int c = 0;
     for (auto& k : compoundVal) {
-        if (k.first == "enabled") c++;
-        else if (k.first == "disabled") c++;
-        else if (k.first == "pressed") c++;
-        else if (k.first == "unpressed") c++;
-        else if (k.first == "selected") c++;
-        else if (k.first == "checked") c++;
-        else if (k.first == "unchecked") c++;
-        else if (k.first == "focused") c++;
+        if (isState(k.first)) {
+            c++;
+        }
     }
     if (!c) {
         return false;
     }
     
+    // Its a statemap. Find all the non-state values and apply them to the state values.
+    map<string,StyleValue> shared;
+    for (auto& k : compoundVal) {
+        if (!isState(k.first)) {
+            shared.insert(k);
+        }
+    }
+    for (auto& k : compoundVal) {
+        if (isState(k.first)) {
+            const_cast<StyleValue&>(k.second).importValues(shared);
+        }
+    }
+    for (auto& k : shared) {
+        const_cast<map<string, StyleValue>&>(compoundVal).erase(k.first);
+    }
+
     // Its a statemap.
     if (_statemapStyleValues) {
         _statemapStyleValues->erase(name);
@@ -260,7 +284,8 @@ void View::applyStatemapStyleValue(const string& name, const StyleValue* statema
         else if (it.first == "pressed") stateset.setBits(STATE_PRESSED, STATE_PRESSED);
         else if (it.first == "selected") stateset.setBits(STATE_SELECTED, STATE_SELECTED);
         else if (it.first == "checked") stateset.setBits(STATE_CHECKED, STATE_CHECKED);
-        
+        else if (it.first == "errored") {stateset.setBits(STATE_ERRORED, STATE_ERRORED); pri=2;}
+
         // If the stateset matches
         if ((_state & stateset.mask) == stateset.state && pri>best_pri) {
             bestMatchValue = &it.second;
@@ -909,6 +934,19 @@ bool View::isSelected() const {
 void View::setSelected(bool selected) {
     setState(STATE_SELECTED, (STATE)(selected?STATE_SELECTED:0));
 }
+bool View::isFocused() const {
+    return (_state & STATE_FOCUSED)!=0;
+}
+void View::setFocused(bool focused) {
+    setState(STATE_FOCUSED, (STATE)(focused?STATE_FOCUSED:0));
+}
+bool View::isErrored() const {
+    return (_state & STATE_ERRORED)!=0;
+}
+void View::setErrored(bool errored) {
+    setState(STATE_ERRORED, (STATE)(errored?STATE_ERRORED:0));
+}
+
 
 
 void View::setState(STATE mask, STATE value) {
@@ -918,6 +956,11 @@ void View::setState(STATE mask, STATE value) {
         _state = newstate;
         onStateChanged({(STATE)(oldstate^newstate), newstate});
         setNeedsFullRedraw();
+        if (_subviewsInheritState) {
+            for (auto& subview : _subviews) {
+                subview->setState(mask, value);
+            }
+        }
     }
 }
 void View::onStateChanged(STATESET changedStates) {
@@ -1180,22 +1223,9 @@ ITextInputReceiver* View::getTextInputReceiver() {
     return NULL;
 }
 
-bool View::setFocused(bool focused) {
-    if (focused) {
-        if (_window) {
-            return _window->setFocusedView(this);
-        }
-    } else {
-        if (isFocused()) {
-            _window->setFocusedView(NULL);
-            return true;
-        }
-    }
-    return false;
-}
-bool View::isFocused() {
+bool View::requestFocus() {
     if (_window) {
-        return _window->_focusedView == this;
+        return _window->setFocusedView(this);
     }
     return false;
 }

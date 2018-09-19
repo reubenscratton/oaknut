@@ -20,7 +20,7 @@ public:
     IKeyboardInputHandler* getKeyboardInputHandler() override;
     ITextInputReceiver* getTextInputReceiver() override;
     bool handleInputEvent(INPUTEVENT* event) override;
-    bool setFocused(bool focused) override;
+    void onStateChanged(STATESET changedStates) override;
     void updateRenderOps() override;
     void layout() override;
     void detachFromWindow() override;

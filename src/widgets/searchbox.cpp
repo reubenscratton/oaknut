@@ -38,9 +38,9 @@ void SearchBox::layout() {
     _searchIconOp->setRect(RECT(rect.origin.x+(rect.size.width-searchIconSize.width)/2,rect.origin.y+(rect.size.height-searchIconSize.height)/2, searchIconSize.width, searchIconSize.height));
 }
 
-bool SearchBox::setFocused(bool focused) {
-    bool r = EditText::setFocused(focused);
-    if (focused && r) {
+void SearchBox::onStateChanged(STATESET changes) {
+    EditText::onStateChanged(changes);
+    if ((changes.mask & STATE_FOCUSED) && (changes.state & STATE_FOCUSED)) {
         Animation::start(this, 250,  [=](float val) {
             RECT iconRect;
             iconRect.size = {app.dp(16), app.dp(16)};
@@ -56,7 +56,6 @@ bool SearchBox::setFocused(bool focused) {
             setNeedsFullRedraw();
         });
     }
-    return r;
 }
 
 

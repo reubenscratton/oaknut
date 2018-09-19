@@ -755,3 +755,8 @@ void StyleValue::copyFrom(const StyleValue* other) {
         case QualifiedCompound: compound->insert(other->compound->begin(), other->compound->end()); break;
     }
 }
+
+void StyleValue::importValues(const map<string, StyleValue>& values) {
+    assert(type == Compound);
+    compound->insert(values.begin(), values.end());
+}

@@ -30,24 +30,22 @@ bool EditText::handleInputEvent(INPUTEVENT* event) {
             setText("");
             return true;
         }
-        setFocused(true);
+        requestFocus();
     }
     Label::handleInputEvent(event);
     return true;
 }
 
 void EditText::detachFromWindow() {
-    if (isFocused()) {
-        setFocused(false);
-    }
     Label::detachFromWindow();
     updateCursor();
 }
 
-bool EditText::setFocused(bool focused) {
-    bool r = Label::setFocused(focused);
-    updateCursor();
-    return r;
+void EditText::onStateChanged(STATESET changedStates) {
+    Label::onStateChanged(changedStates);
+    if (changedStates.mask & STATE_FOCUSED) {
+        updateCursor();
+    }
 }
 
 bool EditText::applyStyleValue(const string& name, const StyleValue* value) {

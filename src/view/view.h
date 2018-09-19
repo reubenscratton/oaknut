@@ -14,11 +14,12 @@ enum Visibility {
 
 
 // State
-#define STATE_DISABLED 1
-#define STATE_FOCUSED  2
-#define STATE_SELECTED 4
-#define STATE_CHECKED  8
-#define STATE_PRESSED 16
+#define STATE_DISABLED  1
+#define STATE_FOCUSED   2
+#define STATE_SELECTED  4
+#define STATE_CHECKED   8
+#define STATE_PRESSED  16
+#define STATE_ERRORED  32
 typedef uint16_t STATE;
 typedef struct _STATESET {
     STATE mask;
@@ -340,6 +341,10 @@ public:
     virtual void setChecked(bool checked);
     virtual bool isSelected() const;
     virtual void setSelected(bool checked);
+    virtual bool isFocused() const;
+    virtual void setFocused(bool focused);
+    virtual bool isErrored() const;
+    virtual void setErrored(bool errored);
 
 
 protected:
@@ -348,6 +353,7 @@ protected:
 
     /**  \cond INTERNAL */
     STATE _state;
+    bool _subviewsInheritState;
     /**  \endcond */
     /**@}*/
 
@@ -400,8 +406,7 @@ public:
     // Keyboard and text handling
     virtual IKeyboardInputHandler* getKeyboardInputHandler();
     virtual ITextInputReceiver* getTextInputReceiver();
-    virtual bool setFocused(bool focused);
-    virtual bool isFocused();
+    virtual bool requestFocus();
 
 	// Animation
 	virtual void animateAlpha(float target, float duration);
