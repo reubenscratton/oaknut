@@ -187,6 +187,10 @@ void Label::setGravity(GRAVITY gravity) {
     _textRenderer.setGravity(gravity);
 }
 
+const Attribute* Label::getAttribute(int32_t pos, Attribute::Type type) {
+    return _textRenderer._text.getAttribute(pos, type);
+}
+
 
 #ifdef DEBUG
 

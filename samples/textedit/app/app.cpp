@@ -16,6 +16,7 @@ public:
     View* _alignLeft;
     View* _alignCenter;
     View* _alignRight;
+    View* _bold;
 
     MainViewController() {
         View* view = app.layoutInflate("layout/main.res");
@@ -29,7 +30,12 @@ public:
         str.setAttribute(Attribute::forecolor(0xFF007F00), 3, 4);
         str.setAttribute(Attribute::forecolor(0xFF0000FF), 4, 5);
         str.setAttribute(Attribute::forecolor(0xFF00007F), 5, 6);
-        _editText->setAttributedText(str);
+        str.setAttribute(Attribute::bold(), 0, 6);
+        _editText->setText(str);
+        
+        _editText->onInsertionPointChanged = [&](int32_t before, int32_t& after) {
+            //asm("int3;");
+        };
         
         //string str("AA BB CC DD EE FF GG HH II JJ KK LL MM NN OO PP QQ RR SS TT UU VV WW XX YY ZZ");
         //_editText->setText(str);
@@ -38,6 +44,8 @@ public:
         _alignLeft = view->findViewById("alignLeft");
         _alignCenter = view->findViewById("alignCenter");
         _alignRight = view->findViewById("alignRight");
+        _bold = view->findViewById("bold");
+        
         _alignLeft->onInputEventDelegate = [&](View* view,INPUTEVENT* ev) -> bool {
             if (ev->type == INPUT_EVENT_TAP) {
                 setTextAlignment(GRAVITY_LEFT);
@@ -54,6 +62,15 @@ public:
             if (ev->type == INPUT_EVENT_TAP) {
                 setTextAlignment(GRAVITY_RIGHT);
             }
+            return true;
+        };
+        
+        _editText->onInsertionPointChanged = [&](int32_t insertionPointBefore, int32_t& insertionPointAfter) {
+            auto fontWeightAttrib = _editText->getAttribute(insertionPointAfter, Attribute::FontWeight);
+            bool isBold = (fontWeightAttrib && fontWeightAttrib->_f >= FONT_WEIGHT_BOLD);
+            _bold->setSelected(isBold);
+        };
+        _bold->onClickDelegate = [&](View*) -> bool {
             return true;
         };
     }

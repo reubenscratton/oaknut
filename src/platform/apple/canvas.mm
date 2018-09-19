@@ -61,6 +61,7 @@ public:
         _size.width = width;
         _size.height = height;
         _bitmap = new Bitmap(width, height, BITMAPFORMAT_RGBA32);
+        _bitmap->_hasPremultipliedAlpha = true;
     }
     void clear(COLOR color) {
         CGContextSetBlendMode(_bitmap->_context, kCGBlendModeCopy);

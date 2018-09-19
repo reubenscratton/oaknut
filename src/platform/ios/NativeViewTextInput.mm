@@ -89,11 +89,12 @@ static UITextInputStringTokenizer* _tokenizer;
     NSLOG(@"insertText %@", text);
     [_textInputDelegate textWillChange:self];
     const char* cstr = [text cStringUsingEncoding:NSUTF8StringEncoding];
-    int selStart = _window->_textInputReceiver->getSelectionStart();
-    int selEnd = _window->_textInputReceiver->getInsertionPoint();
-    if (_window->_textInputReceiver->insertText(cstr, selStart, selEnd)) {
+    auto tr = _window->_textInputReceiver;
+    int selStart = tr->getSelectionStart();
+    int selEnd = tr->getInsertionPoint();
+    if (tr->insertText(cstr, selStart, selEnd)) {
         selStart += text.length;
-        _window->_textInputReceiver->setSelectedRange(selStart, selStart);
+        tr->setSelectedRange(selStart, selStart);
         [_textInputDelegate textDidChange:self];
     }
 }

@@ -43,13 +43,13 @@ void NavigationItem::setTitleView(View* titleView) {
 	_titleView = titleView;
 }
 
-ImageView* NavigationItem::createIconButton(const string& src, std::function<void(View*)> onClickDelegate) {
+ImageView* NavigationItem::createIconButton(const string& src, std::function<void(View*)> onClick) {
 	ToolbarButton* button = new ToolbarButton();
     ByteBuffer* data = app.loadAsset(src.data());
     Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
         button->setBitmap(bitmap);
     });
-	button->onClickDelegate = onClickDelegate;
+	button->onClick = onClick;
 	return button;
 }
 

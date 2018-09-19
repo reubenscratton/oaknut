@@ -90,7 +90,9 @@ public:
     }
     void keyboardNotifyTextChanged() override {
         if (_nativeView->_textInputDelegate) {
+            [_nativeView->_textInputDelegate selectionWillChange: _nativeView];
             [_nativeView->_textInputDelegate textWillChange: _nativeView];
+            [_nativeView->_textInputDelegate selectionDidChange: _nativeView];
             [_nativeView->_textInputDelegate textDidChange: _nativeView];
         }
     }

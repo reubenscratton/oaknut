@@ -24,6 +24,9 @@ bool LinearLayout::applyStyleValue(const string& name, const StyleValue* value) 
             _orientation = Vertical;
             return true;
         }
+    } else if (name == "spacing") {
+        setSpacing(value->floatVal());
+        return true;
     }
     return View::applyStyleValue(name, value);
 }
@@ -54,6 +57,14 @@ void LinearLayout::measure(float parentWidth, float parentHeight) {
             _contentSize.height = fmaxf(_contentSize.height, view->getHeight());
 			_contentSize.width += view->getWidth();
         }
+    }
+    
+    // Add min spacing between views
+    float totalSpacing = _spacing * (_subviews.size()-1);
+    if (_orientation == Vertical) {
+        _contentSize.height += totalSpacing;
+    } else {
+        _contentSize.width += totalSpacing;
     }
 	
 	// If we're using weights to distribute leftover space among subviews, do that now
@@ -113,7 +124,7 @@ void LinearLayout::layout() {
             if (view == _scrollbarsView) continue;
 			view->layout();
             view->setRectOrigin(pt);
-            pt.y += view->getHeight();
+            pt.y += view->getHeight() + _spacing;
         }
     } else if (_orientation == Horizontal) {
         for (int i=0 ; i<_subviews.size() ; i++) {
@@ -121,7 +132,7 @@ void LinearLayout::layout() {
             if (view == _scrollbarsView) continue;
 			view->layout();
             view->setRectOrigin(pt);
-            pt.x += view->getWidth();
+            pt.x += view->getWidth() + _spacing;
         }
     }
 }
@@ -142,4 +153,11 @@ void LinearLayout::setWeight(View* subview, float weight) {
 	_weightsTotal += weight - _weights[index];
 	_weights[index] = weight;
 	setNeedsLayout();	
+}
+
+void LinearLayout::setSpacing(float spacing) {
+    if (_spacing != spacing) {
+        _spacing = spacing;
+        setNeedsLayout();
+    }
 }

@@ -83,7 +83,7 @@ public:
 	void updateContentSize(float parentWidth, float parentHeight) override;
     void layout() override;
     void setContentOffset(POINT contentOffset) override;
-	bool onInputEvent(INPUTEVENT* event) override;
+	bool handleInputEvent(INPUTEVENT* event) override;
     void removeSubview(View* subview) override;
 	
 	

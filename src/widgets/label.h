@@ -33,6 +33,7 @@ public:
 	virtual void setFont(Font* font);
     virtual void setFontName(const string& fontName);
     virtual void setMaxLines(int maxLines);
+    virtual const Attribute* getAttribute(int32_t pos, Attribute::Type type);
     
 #ifdef DEBUG
     string debugViewType() override;

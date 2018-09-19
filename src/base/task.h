@@ -15,6 +15,7 @@ public:
     static Task* create(TASKFUNC func);
     static void ensureSharedGLContext(); // use this if you need to use GL from a background thread (i.e. image processing)
     static void nextTick(TASKFUNC func);
+    static void after(int delay, TASKFUNC func);
 
 protected:
     Task(TASKFUNC func);

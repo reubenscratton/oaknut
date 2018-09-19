@@ -211,7 +211,7 @@ void SegmentedControl::setPressedIndex(int pressedIndex) {
     }
 }
 
-bool SegmentedControl::onInputEvent(INPUTEVENT* event) {
+bool SegmentedControl::handleInputEvent(INPUTEVENT* event) {
 	if (event->type == INPUT_EVENT_DOWN) {
 		_pressedIndex = -1;
 		for (int i=0 ; i<_segments.size() ; i++) {

@@ -192,7 +192,17 @@ void TextureRenderOp::setBitmap(Bitmap *bitmap) {
     }
     if (bitmap != _bitmap) {
         _bitmap = bitmap;
-        setBlendMode(bitmap && bitmap->hasAlpha() ? BLENDMODE_NORMAL : BLENDMODE_NONE);
+        if (bitmap) {
+            if (bitmap->hasAlpha()) {
+                if (bitmap->hasPremultipliedAlpha()) {
+                    setBlendMode(BLENDMODE_PREMULTIPLIED);
+                 } else {
+                     setBlendMode(BLENDMODE_NORMAL);
+                 }
+            } else {
+                setBlendMode(BLENDMODE_NONE);
+            }
+        }
         invalidate();
         if (_view) {
             _view->setNeedsFullRedraw(); // lazy

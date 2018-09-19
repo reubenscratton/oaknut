@@ -22,6 +22,18 @@ AttributedString::AttributedString(const AttributedString& str) : string(str) {
 void AttributedString::setAttribute(const Attribute& attribute, int32_t start, int32_t end) {
     _attributes.emplace(attribute, start, end);
 }
+const Attribute* AttributedString::getAttribute(int32_t pos, Attribute::Type type) {
+    const Attribute* attr = NULL;
+    for (auto& attribUse : _attributes) {
+        if (attribUse.attribute._type == type) {
+            if (attribUse.start<= pos && attribUse.end>pos) {
+                attr = &attribUse.attribute;
+            }
+        }
+    }
+    return attr;
+}
+
 
 void AttributedString::clearAttributes() {
     _attributes.clear();

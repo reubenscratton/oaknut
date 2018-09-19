@@ -12,17 +12,18 @@ public:
         Forecolor,
         BackgroundColor,
         Font,
-        LeadingSpace
+        LeadingSpace,
+        FontWeight
     } Type;
     Type _type;
     union {
         COLOR _color;
         ObjPtr<class Font> _font;
-        float _space;
+        float _f;
     };
     
     Attribute(Type type, COLOR color) : _type(type), _color(color) {}
-    Attribute(Type type, float space) : _type(type), _space(space) {}
+    Attribute(Type type, float f) : _type(type), _f(f) {}
     ~Attribute() { if (_type == Font) { _font.~ObjPtr(); } }
     Attribute(const Attribute& attr) : _type(attr._type) {
         assign(attr);
@@ -30,6 +31,10 @@ public:
     Attribute& operator=(const Attribute& rhs) {
         assign(rhs);
         return *this;
+    }
+    bool operator<(const Attribute& rhs) const {
+        if (_type<rhs._type) return true;
+        return false;
     }
     void setType(Type newType) {
         if (_type == newType) return;
@@ -46,9 +51,11 @@ public:
             case Forecolor: _color = src._color; break;
             case BackgroundColor: _color = src._color; break;
             case Font: _font = src._font; break;
-            case LeadingSpace: _space = src._space; break;
+            case LeadingSpace: _f = src._f; break;
+            case FontWeight: _f = src._f; break;
         }
     }
+    static Attribute bold() { return Attribute(FontWeight, FONT_WEIGHT_BOLD); }
     static Attribute forecolor(COLOR color) { return Attribute(Forecolor, color); }
     static Attribute leadingSpace(float space) { return Attribute(LeadingSpace,  space); }
 };
@@ -62,7 +69,9 @@ public:
     AttributedString(const string& str);
     AttributedString(const AttributedString& str);
     
-    void setAttribute(const Attribute& attribute, int start, int end);
+    void setAttribute(const Attribute& attribute, int32_t start, int32_t end);
+    const Attribute* getAttribute(int32_t pos, Attribute::Type type);
+
     void clearAttributes();
     AttributedString& operator=(const AttributedString& str);
 
@@ -75,7 +84,9 @@ private:
         int32_t start;
         int32_t end;
         bool operator<(const AttributeUse& rhs) const {
-            return start<rhs.start;
+            if (start<rhs.start) return true;
+            if (attribute<rhs.attribute) return true;
+            return false;
         }
         AttributeUse(const Attribute& aattribute, int32_t start, int32_t end)  : attribute(aattribute) {
             this->start = start;

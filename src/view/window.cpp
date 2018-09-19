@@ -442,7 +442,11 @@ bool Window::setFocusedView(View* view) {
     if (view) {
         view->setState(STATE_FOCUSED, STATE_FOCUSED);
         _keyboardHandler = view->getKeyboardInputHandler();
-        _textInputReceiver = view->getTextInputReceiver();
+        auto newTextInputReceiver = view->getTextInputReceiver();
+        if (newTextInputReceiver != _textInputReceiver) {
+            _textInputReceiver = newTextInputReceiver;
+            keyboardNotifyTextChanged();
+        }
         if (_textInputReceiver != NULL) {
             keyboardShow(true);
         }
@@ -451,6 +455,8 @@ bool Window::setFocusedView(View* view) {
     }
     return true;
 }
+
+
 
 
 void Window::setBlendMode(int blendMode) {

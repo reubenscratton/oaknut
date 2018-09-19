@@ -20,7 +20,7 @@ EditText::EditText() : Label() {
     applyStyle("EditText");
 }
 
-bool EditText::onInputEvent(INPUTEVENT* event) {
+bool EditText::handleInputEvent(INPUTEVENT* event) {
     if (event->type == INPUT_EVENT_DOWN && event->deviceType!=INPUTEVENT::ScrollWheel) {
         POINT pt = event->ptLocal;
         setInsertionPoint(_textRenderer.characterIndexFromPoint(pt));
@@ -32,7 +32,7 @@ bool EditText::onInputEvent(INPUTEVENT* event) {
         }
         setFocused(true);
     }
-    Label::onInputEvent(event);
+    Label::handleInputEvent(event);
     return true;
 }
 
@@ -63,6 +63,9 @@ bool EditText::applyStyleValue(const string& name, const StyleValue* value) {
             app.warn("invalid softKeyboardType '%s'", softKeyboardType.data());
         }
         return true;
+    } else if (name == "maxLength") {
+        setMaxLength(value->intVal());
+        return true;
     }
     return Label::applyStyleValue(name, value);
 }
@@ -74,7 +77,9 @@ void EditText::updateCursor() {
     }
     if (!_window || !isFocused()) {
         if (_cursorRenderOp) {
-            removeRenderOp(_cursorRenderOp);
+            if (_cursorRenderOp->_view) {
+                removeRenderOp(_cursorRenderOp);
+            }
             _cursorRenderOp = NULL;
         }
         return;
@@ -178,6 +183,9 @@ bool EditText::insertText(string insertionText, int replaceStart, int replaceEnd
         text.erase(replaceStart, replaceEnd);
     }
     text.insert(replaceStart, insertionText);
+    if (_maxLength>0 && text.length() > _maxLength) {
+        return false;
+    }
     setText(text);
     return true;
 }
@@ -189,7 +197,9 @@ void EditText::deleteBackward() {
         int e = MAX(_selectionStart, _insertionPoint);
         text.erase(s, e);
         setText(text);
-        _insertionPoint = _selectionStart = MIN(s, (int)text.length());
+        int newInsertionPoint = MIN(s, (int)text.length());
+        setInsertionPointReal(newInsertionPoint);
+        _selectionStart = newInsertionPoint;
     }
     else if (_insertionPoint > 0) {
         text.erase(_insertionPoint - 1);
@@ -228,7 +238,7 @@ string EditText::textInRange(int start, int end) {
 }
 
 void EditText::setInsertionPoint(int32_t newInsertionPoint) {
-    _insertionPoint = newInsertionPoint;
+    setInsertionPointReal(newInsertionPoint);
     _selectionStart = newInsertionPoint; // todo: not if shift held
     _cursorOn = true;
     updateCursor();
@@ -250,6 +260,7 @@ void EditText::setInsertionPoint(int32_t newInsertionPoint) {
 void EditText::moveCursor(int dx, int dy) {
     setInsertionPoint(_textRenderer.moveCharacterIndex(_insertionPoint, dx, dy));
 }
+
 
 SoftKeyboardType EditText::getSoftKeyboardType() {
     return _softKeyboardType;
@@ -298,4 +309,23 @@ void EditText::keyInputEvent(KeyboardInputEventType keyboardInputEventType, Keyb
     insertText(str, _selectionStart, _insertionPoint);
     _selectionStart++;
     setInsertionPoint(_selectionStart);
+}
+
+void EditText::setInsertionPointReal(int32_t& newInsertionPoint) {
+    if (onInsertionPointChanged) {
+        onInsertionPointChanged(_insertionPoint, newInsertionPoint);
+    }
+    _insertionPoint = newInsertionPoint;
+}
+
+void EditText::setMaxLength(int32_t maxLength) {
+    if (maxLength != _maxLength) {
+        _maxLength = maxLength;
+        auto& text = _textRenderer.getText();
+        if (text.length() > maxLength) {
+            AttributedString truncText = text;
+            truncText.erase(maxLength, -1);
+            setText(truncText);
+        }
+    }
 }

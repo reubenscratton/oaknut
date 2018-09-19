@@ -47,7 +47,7 @@ CTFontRef Font::createCTFont() {
         _height = font.lineHeight;
         ctfont = CTFontCreateWithName((__bridge CFStringRef)font.fontName, size, NULL);
 #else
-        NSFont* font = [NSFont systemFontOfSize:size];
+        NSFont* font = [NSFont systemFontOfSize:size weight:UIFontWeightFromStandardWeight(_weight)];
         _ascent = font.ascender;
         _descent = font.descender;
         _height = ceilf(_ascent-_descent);

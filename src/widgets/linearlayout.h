@@ -12,6 +12,7 @@ public:
     LinearLayout();
     
     // API
+    void setSpacing(float spacing);
     enum {
         Horizontal,
         Vertical
@@ -28,7 +29,9 @@ public:
 protected:
     void setWeight(View* subview, float weight);
 
+    
     vector<float> _weights;
     float _weightsTotal;
+    float _spacing;
 
 };

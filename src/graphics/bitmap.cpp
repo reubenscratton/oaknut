@@ -88,6 +88,9 @@ int BitmapBase::getGlPixelType() {
 bool BitmapBase::hasAlpha() {
     return _format!=BITMAPFORMAT_RGB565;
 }
+bool BitmapBase::hasPremultipliedAlpha() {
+    return _hasPremultipliedAlpha;
+}
 
 int BitmapBase::getBytesPerPixel() {
     switch (_format) {

@@ -13,12 +13,12 @@ Checkbox::Checkbox() {
 }
 
 
-bool Checkbox::onInputEvent(INPUTEVENT* event) {
+bool Checkbox::handleInputEvent(INPUTEVENT* event) {
     if (event->type == INPUT_EVENT_TAP) {
         setChecked(!isChecked());
         return true;
     }
-    return ImageView::onInputEvent(event);
+    return ImageView::handleInputEvent(event);
 }
 
 void Checkbox::onStateChanged(STATESET changes) {

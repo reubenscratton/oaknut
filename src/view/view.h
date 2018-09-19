@@ -62,6 +62,9 @@ public:
     /** Inserts a subview at a particular index, z-order ascending */
     virtual void insertSubview(View* subview, int index);
 
+    /** Get a subview at a particular index, z-order ascending. Returns NULL if no such index. */
+    virtual View* getSubview(int index);
+
     /** Removes a subview */
     virtual void removeSubview(View* subview);
 
@@ -335,6 +338,8 @@ public:
     virtual void setEnabled(bool enabled);
     virtual bool isChecked() const;
     virtual void setChecked(bool checked);
+    virtual bool isSelected() const;
+    virtual void setSelected(bool checked);
 
 
 protected:
@@ -375,15 +380,15 @@ protected:
      * @{
      */
 public:
-    std::function<bool(View*,INPUTEVENT*)> onInputEventDelegate;
-    std::function<void(View*)> onClickDelegate;
+    std::function<bool(View*,INPUTEVENT*)> onInputEvent;
+    std::function<void(View*)> onClick;
     virtual View* hitTest(POINT& pt);
     virtual View* subviewContainingPoint(POINT pt);
     virtual int indexOfSubviewContainingPoint(POINT pt);
 protected:
     /**  \cond INTERNAL */
     virtual View* dispatchInputEvent(INPUTEVENT* event);
-    virtual bool onInputEvent(INPUTEVENT* event);
+    virtual bool handleInputEvent(INPUTEVENT* event);
 	
     POINT _ptDrag;
     /**  \endcond */

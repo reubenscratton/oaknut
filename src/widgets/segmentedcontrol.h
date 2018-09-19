@@ -29,7 +29,7 @@ public:
 	void measure(float parentWidth, float parentHeight) override;
 	void layout() override;
     void updateRenderOps() override;
-	bool onInputEvent(INPUTEVENT* event) override;
+	bool handleInputEvent(INPUTEVENT* event) override;
     void onEffectiveTintColorChanged() override;
 
 protected:

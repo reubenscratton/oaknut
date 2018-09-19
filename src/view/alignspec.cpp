@@ -66,17 +66,24 @@ ALIGNSPEC::ALIGNSPEC(const StyleValue* value, View* view) {
     } else {
         type = value->stringVal();
     }
+    bool anchorMustBeSibling = false;
     if (type=="center") *this=Center();
     else if (type=="centre") *this=Center();
     else if (type=="left") *this=Left();
     else if (type=="right") *this=Right();
     else if (type=="top") *this=Top();
     else if (type=="bottom") *this=Bottom();
-    else if (type=="toLeftOf") {multiplierAnchor=1.0f; multiplierSelf=-1.0f;}
-    else if (type=="toRightOf") {multiplierAnchor=1.0f; multiplierSelf=0.0f;}
-    else if (type=="above") {multiplierAnchor=1.0f; multiplierSelf=-1.0f;}
-    else if (type=="below") {multiplierAnchor=1.0f; multiplierSelf=0.0f;}
+    else if (type=="toLeftOf") {multiplierAnchor=1.0f; multiplierSelf=-1.0f; anchorMustBeSibling=true; }
+    else if (type=="toRightOf") {multiplierAnchor=1.0f; multiplierSelf=0.0f; anchorMustBeSibling=true; }
+    else if (type=="above") {multiplierAnchor=1.0f; multiplierSelf=-1.0f; anchorMustBeSibling=true; }
+    else if (type=="below") {multiplierAnchor=1.0f; multiplierSelf=0.0f; anchorMustBeSibling=true; }
     else assert(false); // unknown alignspec
     
+    // Implicit anchoring to previously-declared view
+    if (anchorMustBeSibling && !anchor) {
+        int index = view->getParent()->indexOfSubview(view);
+        assert(index>=1);
+        anchor = view->getParent()->getSubview(index-1);
+    }
 }
 

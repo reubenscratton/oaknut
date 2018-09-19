@@ -15,7 +15,7 @@ public:
     std::function<void(View*,bool)> onIsCheckedChanged;
     
 protected:
-    bool onInputEvent(INPUTEVENT* event) override;
+    bool handleInputEvent(INPUTEVENT* event) override;
     void onStateChanged(STATESET changes) override;
 
 };

@@ -12,14 +12,14 @@ public:
     // API
     EditText();
     virtual void setInsertionPoint(int32_t newInsertionPoint);
-    
+    virtual void setMaxLength(int32_t maxLength);
     
     // Overrides
     bool applyStyleValue(const string& name, const StyleValue* value) override;
     void setPadding(EDGEINSETS padding) override;
     IKeyboardInputHandler* getKeyboardInputHandler() override;
     ITextInputReceiver* getTextInputReceiver() override;
-    bool onInputEvent(INPUTEVENT* event) override;
+    bool handleInputEvent(INPUTEVENT* event) override;
     bool setFocused(bool focused) override;
     void updateRenderOps() override;
     void layout() override;
@@ -41,10 +41,13 @@ public:
     SoftKeyboardType getSoftKeyboardType() override;
     
     std::function<void(const AttributedString& before, AttributedString& after)> onTextChange;
+    std::function<void(int32_t insertionPointBefore, int32_t& insertionPointAfter)> onInsertionPointChanged;
 
+    
 protected:
     int32_t _selectionStart;    // Text index, not character index
     int32_t _insertionPoint;    // Text index, not character index
+    int32_t _maxLength;
     bool _cursorOn;
     bool _cursorValid;
     bool _showClearButtonWhenNotEmpty;
@@ -56,5 +59,6 @@ protected:
     void updateCursor();
     void updateClearButton();
     void moveCursor(int dx, int dy);
+    void setInsertionPointReal(int32_t& newInsertionPoint);
 };
 

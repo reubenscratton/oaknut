@@ -17,7 +17,7 @@ public:
     ObjPtr<LinearLayout> _rightButtonsFrame;
 	
     NavigationItem();
-	static class ImageView* createIconButton(const string& src, std::function<void(View*)> onClickDelegate);
+	static class ImageView* createIconButton(const string& src, std::function<void(View*)> onClick);
 	void setTitle(const string& title);
 	void setTitleView(View* titleView);
 	void addLeftButton(ImageView* button);

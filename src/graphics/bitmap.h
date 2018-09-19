@@ -74,6 +74,7 @@ public:
     bool _allocdTexData;
     bool _paramsValid;
     bool _needsUpload;
+    bool _hasPremultipliedAlpha;
     list<BitmapBase*>::iterator _renderContextIt;
     
     BitmapBase(int width, int height, int format);
@@ -97,6 +98,7 @@ public:
     GLenum getGlInternalFormat();
     int getGlPixelType();
     bool hasAlpha();
+    bool hasPremultipliedAlpha();
     
     int sizeInBytes();
     Bitmap* convertToFormat(int newFormat);

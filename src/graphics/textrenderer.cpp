@@ -100,12 +100,14 @@ void TextRenderer::measure(SIZE maxSize) {
     // Prepare to walk the ordered spans collection
     stack<Font*> fontStack;
     stack<COLOR> forecolorStack;
+    stack<float> fontWeightStack;
     auto spanStartIterator = _text._attributes.begin();
     auto spanEndIterator = _text._attributes.begin();
     
     // Defaults
     Font* currentFont = _font;
     float leadingSpace = 0;
+    float currentFontWeight = FONT_WEIGHT_REGULAR;
     
     // Start with an empty line and no characters
     _characters.clear(); // todo: reserve some empirical number of chars
@@ -144,6 +146,12 @@ void TextRenderer::measure(SIZE maxSize) {
             else if (endingSpan.attribute._type == Attribute::Type::LeadingSpace) {
                 leadingSpace = 0;
             }
+            else if (endingSpan.attribute._type == Attribute::Type::FontWeight) {
+                currentFont = fontStack.top();
+                fontStack.pop();
+                currentFontWeight = fontWeightStack.top();
+                fontWeightStack.pop();
+            }
             spanEndIterator++;
         }
 
@@ -160,7 +168,13 @@ void TextRenderer::measure(SIZE maxSize) {
                 paramsChanged = true;
             }
             else if (startingSpan.attribute._type == Attribute::Type::LeadingSpace) {
-                leadingSpace = startingSpan.attribute._space;
+                leadingSpace = startingSpan.attribute._f;
+            }
+            else if (startingSpan.attribute._type == Attribute::Type::FontWeight) {
+                fontWeightStack.push(currentFontWeight);
+                currentFontWeight = startingSpan.attribute._f;
+                fontStack.push(currentFont);
+                currentFont = Font::get(currentFont->_name, currentFont->_size, currentFontWeight);
             } else {
                 app.warn("unrecognized attribute type");
             }

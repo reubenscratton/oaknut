@@ -18,7 +18,7 @@ public:
     
     ToolbarButton();
     
-    bool onInputEvent(INPUTEVENT* event) override;
+    bool handleInputEvent(INPUTEVENT* event) override;
     
 };
 

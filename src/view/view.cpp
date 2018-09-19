@@ -64,6 +64,12 @@ bool View::applyStyleValue(const string& name, const StyleValue* value) {
     if (name == "id") {
         _id = value->stringVal();
         return true;
+    } else if (name == "size") {
+        assert(value->isArray());
+        auto arrayVal = value->arrayVal();
+        _widthMeasureSpec = MEASURESPEC(&arrayVal[0]);
+        _heightMeasureSpec = MEASURESPEC(&arrayVal[1]);
+        return true;
     } else if (name == "height") {
         _heightMeasureSpec = MEASURESPEC(value);
         return true;
@@ -74,6 +80,7 @@ bool View::applyStyleValue(const string& name, const StyleValue* value) {
         _alignspecHorz = ALIGNSPEC(value, this);
         return true;
     } else if (name == "alignY") {
+        //asm("int3;");
         _alignspecVert = ALIGNSPEC(value, this);
         return true;
     } else if (name == "background") {
@@ -85,8 +92,19 @@ bool View::applyStyleValue(const string& name, const StyleValue* value) {
     } else if (name == "enabled") {
         setEnabled(value->boolVal());
         return true;
-    }
-    if (name=="gravityX") {
+    } else if (name == "visibility") {
+        string str = value->stringVal();
+        if (str == "visible") {
+            setVisibility(Visible);
+        } else if (str == "hidden" || str == "invisible") {
+            setVisibility(Invisible);
+        } else if (str == "gone") {
+            setVisibility(Gone);
+        } else {
+            app.warn("Invalid visibility: '%s'", str.data());
+        }
+        return true;
+    } else if (name=="gravityX") {
         uint8_t horz = 0;
         string str = value->stringVal();
         if (str == "left") {
@@ -580,7 +598,10 @@ float View::getAlignspecVal(const ALIGNSPEC& spec, bool isVertical) {
 }
 
 void View::layout() {
-    if (!_window) {
+    //if (!_window) {
+    //    return;
+    //}
+    if (_visibility == Gone) {
         return;
     }
     POINT pt;
@@ -588,9 +609,6 @@ void View::layout() {
     pt.y = getAlignspecVal(_alignspecVert, true);
     setRectOrigin(pt);
 
-    /*if (_backgroundOp) {
-        _backgroundOp->setRect(RECT(0, 0, _rect.size.width, _rect.size.height));
-    }*/
     updateBackgroundRect();
 
     for (int i=0 ; i<_subviews.size() ; i++) {
@@ -716,6 +734,13 @@ View* View::getParent() const {
 void View::addSubview(View* subview) {
 	insertSubview(subview, (int)_subviews.size());
 }
+View* View::getSubview(int index) {
+    if (index>=0 && index<_subviews.size()) {
+        return _subviews[index];
+    }
+    return NULL;
+}
+
 void View::insertSubview(View* subview, int index) {
     
     // If adding to end of list, make sure we don't draw on top of scrollbars view
@@ -781,8 +806,8 @@ void View::insertSubview(View* subview, int index) {
 
 int View::indexOfSubview(View* subview) {
 	int i=0;
-	for (vector<ObjPtr<View>>::iterator it = _subviews.begin() ; it != _subviews.end() ; it++) {
-		if (subview == (*it)) {
+    for (auto& it : _subviews) {
+		if (subview == it) {
 			return i;
 		}
 		i++;
@@ -877,6 +902,12 @@ bool View::isChecked() const {
 }
 void View::setChecked(bool checked) {
     setState(STATE_CHECKED, (STATE)(checked?STATE_CHECKED:0));
+}
+bool View::isSelected() const {
+    return (_state & STATE_SELECTED)!=0;
+}
+void View::setSelected(bool selected) {
+    setState(STATE_SELECTED, (STATE)(selected?STATE_SELECTED:0));
 }
 
 
@@ -1086,7 +1117,7 @@ View* View::dispatchInputEvent(INPUTEVENT* event) {
 	// it up the view tree until a view handles it.
 	while (hitView) {
         event->ptLocal = hitPoint;
-		if (hitView->onInputEvent(event)) {
+		if (hitView->handleInputEvent(event)) {
 			return hitView;
 		}
         hitPoint.x += hitView->_rect.origin.x;
@@ -1098,7 +1129,7 @@ View* View::dispatchInputEvent(INPUTEVENT* event) {
         }
 	}
 
-	return onInputEvent(event) ? this : NULL;
+	return handleInputEvent(event) ? this : NULL;
 }
 
 void ScrollbarsView::measure(float parentWidth, float parentHeight) {
@@ -1107,7 +1138,7 @@ void ScrollbarsView::measure(float parentWidth, float parentHeight) {
 void ScrollbarsView::layout() {
 }
 
-bool View::onInputEvent(INPUTEVENT* event) {
+bool View::handleInputEvent(INPUTEVENT* event) {
 
     bool retVal = false;
     
@@ -1119,7 +1150,7 @@ bool View::onInputEvent(INPUTEVENT* event) {
             setPressed(false);
         }
 
-        if ((onInputEventDelegate || onClickDelegate)) {
+        if ((onInputEvent || onClick)) {
             retVal = true;
         }
     }
@@ -1128,14 +1159,14 @@ bool View::onInputEvent(INPUTEVENT* event) {
     bool scrolled = _scrollVert.handleEvent(this, true, event);
     scrolled |= _scrollHorz.handleEvent(this, false, event);
     
-    if (onClickDelegate) {
+    if (onClick) {
         retVal = true;
         if (event->type == INPUT_EVENT_TAP) {
-            onClickDelegate(this);
+            onClick(this);
         }
     }
-	if (onInputEventDelegate) {
-        return onInputEventDelegate(this, event);
+	if (onInputEvent) {
+        return onInputEvent(this, event);
 	}
 
 

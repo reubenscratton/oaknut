@@ -19,7 +19,7 @@ ToolbarButton::ToolbarButton() {
     applyStyle("ToolbarButton");
 }
 
-bool ToolbarButton::onInputEvent(INPUTEVENT* event) {
+bool ToolbarButton::handleInputEvent(INPUTEVENT* event) {
     
     // TODO: this is an iOS-only effect
     if (event->type == INPUT_EVENT_DOWN) {
@@ -31,5 +31,5 @@ bool ToolbarButton::onInputEvent(INPUTEVENT* event) {
         }
     }
     
-    return ImageView::onInputEvent(event);
+    return ImageView::handleInputEvent(event);
 }

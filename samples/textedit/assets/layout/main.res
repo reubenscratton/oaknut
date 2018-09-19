@@ -29,10 +29,15 @@
                 style: $barButton
                 image: images/align_center.png
             },{
-            class: ImageView
+                class: ImageView
                 id: alignRight
                 style: $barButton
                 image: images/align_right.png
+            },{
+                class: ImageView
+                id: bold
+                style: $barButton
+                image: images/bold.png
             }]
         }]
     },
