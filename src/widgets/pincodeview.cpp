@@ -14,6 +14,16 @@ PinCodeView::PinCodeView() {
     _subviewsInheritState = true;
 }
 
+void PinCodeView::clear() {
+    View* firstField = _subviews[0];
+    for (auto subview : _subviews) {
+        EditText* field = (EditText*)(View*)subview;
+        field->setText("");
+        field->setEnabled(field == firstField);
+    }
+    firstField->requestFocus();
+}
+
 class PinCodeViewField : public EditText {
 public:
     PinCodeViewField() {
@@ -26,6 +36,7 @@ public:
             if (_prev) {
                 _prev->requestFocus();
                 _prev->deleteBackward();
+                setEnabled(false);
             }
             return;
         }

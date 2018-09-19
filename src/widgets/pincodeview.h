@@ -10,6 +10,7 @@ public:
     PinCodeView();
     
     // API
+    void clear();
     std::function<void(bool)> onFilled;
     
     // Overrides
