@@ -1,16 +1,19 @@
 //
 //  Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
-#if PLATFORM_APPLE && OAKNUT_WANT_AUDIOINPUT
+#if PLATFORM_APPLE
 
-#include "oaknut.h"
+#include <oaknut.h>
 #import <AVFoundation/AVFoundation.h>
 #import <AVFoundation/AVCaptureDevice.h>
 #import <AVFoundation/AVCaptureOutput.h>
 
 #define BUFFER_SIZE 8192
 
-@interface AudioInput : NSObject <AVCaptureAudioDataOutputSampleBufferDelegate>
+
+
+
+@interface AudioInputHelper : NSObject <AVCaptureAudioDataOutputSampleBufferDelegate>
 
 @property (nonatomic) int sampleRate;
 @property (nonatomic) AVCaptureSession* session;
@@ -21,7 +24,7 @@
 @property (nonatomic) AudioStreamBasicDescription audioConverterInputFormat;
 @property (nonatomic) NSMutableData* audioConverterInputBuffer;
 @property (nonatomic) NSMutableData* appBuffer;
-@property (nonatomic) AudioInputDelegate delegate;
+@property (nonatomic) AudioInput* delegate;
 @property (nonatomic) NSMutableArray* sentBuffers;
 
 - (OSStatus)encoderCallback:(UInt32*)ioNumberDataPackets ioData:(AudioBufferList*)ioData;
@@ -47,11 +50,11 @@
  */
 static OSStatus EncoderDataProc(AudioConverterRef inAudioConverter, UInt32 *ioNumberDataPackets, AudioBufferList *ioData, AudioStreamPacketDescription **outDataPacketDescription, void *inUserData) {
     assert(!outDataPacketDescription);
-    AudioInput* audioInput = (__bridge AudioInput*)inUserData;
+    AudioInputHelper* audioInput = (__bridge AudioInputHelper*)inUserData;
     return [audioInput encoderCallback:ioNumberDataPackets ioData:ioData];
 }
 
-@implementation AudioInput
+@implementation AudioInputHelper
 
 - (void)start {
     self.session = [[AVCaptureSession alloc] init];
@@ -156,7 +159,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
     // Pass the converted data to the app
     int numAppPackets = (int)self.appBuffer.length/sizeof(int16_t);
-    int numProcessed = self.delegate(numAppPackets, (int16_t*)self.appBuffer.bytes);
+    int numProcessed = self.delegate->onNewAudioSamples(numAppPackets, (int16_t*)self.appBuffer.bytes);
     assert(numProcessed <= numAppPackets);
     
     // Remove whatever the app processed from the front of its buffer
@@ -206,22 +209,37 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 @end
 
 
-const void* oakAudioInputOpen(int sampleRate) { // samples are always int16_t, always record in mono.
-    AudioInput* input = [AudioInput new];
-    input.sampleRate = sampleRate;
-    return CFBridgingRetain(input);
-}
-void oakAudioInputStart(const void* osobj, AudioInputDelegate delegate) {
-    AudioInput* input = (__bridge AudioInput*)osobj;
-    input.delegate = delegate;
-    [input start];
-}
-void oakAudioInputStop(const void* osobj) {
-    AudioInput* input = (__bridge AudioInput*)osobj;
-    [input stop];
-}
-void oakAudioInputClose(const void* osobj) {
-    AudioInput* input = (AudioInput*)CFBridgingRelease(osobj);
+class AudioInputApple : public AudioInput {
+public:
+    
+    // API
+    AudioInputApple() {
+        sampleRate = 22050; // assume this is supported on all iOS+macOS
+    }
+    
+    void open() override {
+        _helper = [AudioInputHelper new];
+        _helper.sampleRate = sampleRate;
+        CFBridgingRetain(_helper);
+    }
+    void start() override {
+        _helper.delegate = this;
+        [_helper start];
+    }
+    void stop() override {
+        [_helper stop];
+    }
+    void close() override {
+        //CFBridgingRelease(_helper);
+        _helper = nil;
+    }
+    
+    
+    AudioInputHelper* _helper;
+};
+
+AudioInput* AudioInput::create() {
+    return new AudioInputApple();
 }
 
 #endif

@@ -204,16 +204,17 @@ RenderOp* View::processDrawable(const StyleValue* value) {
     return op;
 }
 
-static bool isState(const string& name) {
+static bool isStateName(const string& name) {
     if (name == "enabled") return true;
     if (name == "disabled") return true;
-    if (name == "pressed") return true;
-    if (name == "unpressed") return true;
-    if (name == "selected") return true;
-    if (name == "checked") return true;
-    if (name == "unchecked") return true;
     if (name == "focused") return true;
     if (name == "unfocused") return true;
+    if (name == "selected") return true;
+    if (name == "unselected") return true;
+    if (name == "pressed") return true;
+    if (name == "unpressed") return true;
+    if (name == "checked") return true;
+    if (name == "unchecked") return true;
     if (name == "errored") return true;
     return false;
 
@@ -227,7 +228,7 @@ bool View::handleStatemapDeclaration(const string& name, const StyleValue* value
     auto& compoundVal = value->compoundVal();
     int c = 0;
     for (auto& k : compoundVal) {
-        if (isState(k.first)) {
+        if (isStateName(k.first)) {
             c++;
         }
     }
@@ -238,17 +239,19 @@ bool View::handleStatemapDeclaration(const string& name, const StyleValue* value
     // Its a statemap. Find all the non-state values and apply them to the state values.
     map<string,StyleValue> shared;
     for (auto& k : compoundVal) {
-        if (!isState(k.first)) {
+        if (!isStateName(k.first)) {
             shared.insert(k);
         }
     }
-    for (auto& k : compoundVal) {
-        if (isState(k.first)) {
-            const_cast<StyleValue&>(k.second).importValues(shared);
+    if (shared.size() > 0) {
+        for (auto& k : compoundVal) {
+            if (isStateName(k.first)) {
+                const_cast<StyleValue&>(k.second).importValues(shared);
+            }
         }
-    }
-    for (auto& k : shared) {
-        const_cast<map<string, StyleValue>&>(compoundVal).erase(k.first);
+        for (auto& k : shared) {
+            const_cast<map<string, StyleValue>&>(compoundVal).erase(k.first);
+        }
     }
 
     // Its a statemap.

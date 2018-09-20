@@ -20,6 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#pragma once
+
 #ifndef _OAKNUT_H_INCLUDED_
 #define _OAKNUT_H_INCLUDED_
 
@@ -113,24 +115,8 @@ typedef uint64_t TIMESTAMP;
 #include "base/variant.h"
 #include "data/localstorage.h"
 #include "graphics/bitmap.h"
-
-// Camera
-#if OAKNUT_WANT_CAMERA
-typedef std::function<void (Bitmap* cameraFrame, float brightness)> CameraPreviewDelegate;
-void* oakCameraOpen(int cameraId);
-void oakCameraPreviewStart(void* osobj, CameraPreviewDelegate delegate);
-void oakCameraPreviewStop(void* osobj);
-void oakCameraClose(void* osobj);
-#endif
-
-// Audio recording
-#if OAKNUT_WANT_AUDIOINPUT
-typedef std::function<int (int numSamples, int16_t* samples)> AudioInputDelegate;
-const void* oakAudioInputOpen(int sampleRate); // samples are always int16_t, always record in mono.
-void oakAudioInputStart(const void* osobj, AudioInputDelegate delegate);
-void oakAudioInputStop(const void* osobj);
-void oakAudioInputClose(const void* osobj);
-#endif
+#include "media/camera.h"
+#include "media/audioinput.h"
 
 // Face detection
 void* oakFaceDetectorCreate();
@@ -170,12 +156,13 @@ void oakFaceDetectorClose(void* osobj);
 #include "view/ikeyboardinputhandler.h"
 #include "view/anim.h"
 #include "view/view.h"
-#include "widgets/label.h"
-#include "widgets/edittext.h"
+#include "widgets/cameraview.h"
 #include "widgets/imageview.h"
+#include "widgets/label.h"
+#include "widgets/button.h"
+#include "widgets/edittext.h"
 #include "widgets/listview.h"
 #include "widgets/simplelistadapter.h"
-#include "widgets/button.h"
 #include "widgets/navigationbar.h"
 #include "widgets/linearlayout.h"
 #include "widgets/segmentedcontrol.h"

@@ -4,16 +4,16 @@
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
 //
-#if PLATFORM_APPLE && OAKNUT_WANT_CAMERA
+#if PLATFORM_APPLE
 
 #include <oaknut.h>
 #import <AVFoundation/AVFoundation.h>
 #import <CoreImage/CoreImage.h>
 
 
-@interface Camera : NSObject <AVCaptureVideoDataOutputSampleBufferDelegate> {
+@interface CameraHelper : NSObject <AVCaptureVideoDataOutputSampleBufferDelegate> {
 @public
-    CameraPreviewDelegate _delegate;
+    Camera* _delegate;
 }
 
 @property (nonatomic) AVCaptureSession* captureSession;
@@ -21,7 +21,7 @@
 
 @end
 
-@implementation Camera
+@implementation CameraHelper
 
 - (void)startPreview {
     self.captureSession = [[AVCaptureSession alloc] init];
@@ -70,10 +70,12 @@
         [connection setVideoMirrored:YES];
     }
     
-    //self.cameraView.delegate = self;
     [self.captureSession commitConfiguration];
     [self.captureSession startRunning];
-     
+}
+
+- (void)stopPreview {
+    [self.captureSession stopRunning];
 }
 
 //
@@ -97,7 +99,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
         ObjPtr<Bitmap> bitmap = new Bitmap(imageBuffer, true);
         
         // Call delegate
-        _delegate(bitmap, brightnessValue);
+        _delegate->onNewCameraFrame(bitmap, brightnessValue);
     }
 
 }
@@ -106,25 +108,38 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 @end
 
-// Camera
-void* oakCameraOpen(int cameraId) {
-    Camera* camera = [Camera new];
-    return (__bridge_retained void*) camera;
+
+class CameraApple : public Camera {
+public:
+    
+    CameraApple(int cameraId) {
+    }
+    
+    void open() override {
+        _helper = [CameraHelper new];
+    }
+    
+    void start() override {
+        _helper->_delegate = this;
+        [_helper startPreview];
+    }
+    
+    void stop() override {
+        _helper->_delegate = NULL;
+        [_helper stopPreview];
+    }
+    
+    void close() override {
+//        CFBridgingRelease(_helper);
+        _helper = nil;
+    }
+
+    CameraHelper* _helper;
+};
+
+Camera* Camera::create(int cameraId) {
+    return new CameraApple(cameraId);
 }
 
-void oakCameraPreviewStart(void* osobj, CameraPreviewDelegate delegate) {
-    Camera* camera = (__bridge Camera*)osobj;
-    camera->_delegate = delegate;
-    [camera startPreview];
-}
-
-void oakCameraPreviewStop(void* osobj) {
-    Camera* __unused camera = (__bridge Camera*)osobj;
-}
-
-void oakCameraClose(void* osobj) {
-    Camera* __unused camera = (Camera*)CFBridgingRelease(osobj);
-
-}
 
 #endif

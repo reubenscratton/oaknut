@@ -5,16 +5,21 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-class PinCodeView : public LinearLayout {
+
+class CameraView : public View {
 public:
-    PinCodeView();
     
     // API
-    string getText();
-    void clear();
-    std::function<void(bool)> onFilled;
+    std::function<void(Bitmap* bitmap, float brightness)> onNewCameraFrame;
     
     // Overrides
-    bool applyStyleValue(const string &name, const StyleValue *value) override;
+    virtual void attachToWindow(Window* window);
+    virtual void detachFromWindow();
+
     
+protected:
+    Camera* _camera;
+    TextureRenderOp* _renderOp;
 };
+
+

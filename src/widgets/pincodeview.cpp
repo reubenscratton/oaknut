@@ -14,6 +14,15 @@ PinCodeView::PinCodeView() {
     _subviewsInheritState = true;
 }
 
+string PinCodeView::getText() {
+    string str;
+    for (auto subview : _subviews) {
+        EditText* field = (EditText*)(View*)subview;
+        str.append(field->getText());
+    }
+    return str;
+}
+
 void PinCodeView::clear() {
     View* firstField = _subviews[0];
     for (auto subview : _subviews) {

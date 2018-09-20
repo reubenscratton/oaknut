@@ -23,12 +23,7 @@ public class App extends Application {
 
     static App app;
     static SharedPreferences prefs;
-    static Handler handler;
-    static {
-        handler = new Handler(Looper.getMainLooper());
-    }
     static final Charset UTF_8 = Charset.forName("UTF-8");
-    static WeakReference<MainActivity> currentActivity;
 
     public App() {
         app = this;

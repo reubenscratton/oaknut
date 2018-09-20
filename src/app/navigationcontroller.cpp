@@ -30,6 +30,9 @@ void NavigationController::updateSafeArea(const RECT& safeArea) {
     if (_currentViewController) {
         updateChildSafeArea(_currentViewController, safeArea);
     }
+    if (_incomingViewController) {
+        updateChildSafeArea(_incomingViewController, safeArea);
+    }
     for (auto it : _navStack) {
         updateChildSafeArea(it, safeArea);
     }
@@ -66,6 +69,10 @@ void NavigationController::popViewController() {
 	ObjPtr<ViewController> vc  = *_navStack.rbegin();
     _navStack.pop_back();
 	startNavAnimation(vc, Pop);
+}
+
+void NavigationController::navigate(int eventId) {
+    // no-op
 }
 
 void NavigationController::startNavAnimation(ViewController* incomingVC, AnimationState animationState) {

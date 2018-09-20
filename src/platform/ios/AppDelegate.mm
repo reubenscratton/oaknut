@@ -15,7 +15,9 @@
 @implementation NativeViewController
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
     if (self=[super initWithNibName:nibNameOrNil bundle:nibBundleOrNil]) {
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onKeyboardFrameChanged:) name:UIKeyboardWillChangeFrameNotification object:nil];
+        //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onKeyboardFrameChanged:) name:UIKeyboardWillChangeFrameNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onKeyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onKeyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
 
     }
     return self;
@@ -23,7 +25,7 @@
 - (UIStatusBarStyle) preferredStatusBarStyle {
     return UIStatusBarStyleDefault;
 }
-- (void)onKeyboardFrameChanged:(NSNotification*)notification {
+- (void)onKeyboardWillShow:(NSNotification*)notification {
     CGRect keyboardFrame = ((NSValue*)notification.userInfo[UIKeyboardFrameEndUserInfoKey]).CGRectValue;
     RECT rect;
     float scale = [UIScreen mainScreen].scale;
@@ -32,6 +34,9 @@
     rect.size.width = keyboardFrame.size.width * scale;
     rect.size.height = keyboardFrame.size.height * scale;
     app._window->setSoftKeyboardRect(rect);
+}
+- (void)onKeyboardWillHide:(NSNotification*)notification {
+    app._window->setSoftKeyboardRect(RECT_Zero);
 }
 
 @end

@@ -44,7 +44,7 @@ public class Font {
         float ascent = textPaint.ascent();   // -ve in android
         float descent = textPaint.descent(); // +ve in android
 
-        nativeSetMetrics(cobj, -ascent, -descent, 4);
+        nativeSetMetrics(cobj, -ascent, -descent, 0);
     }
 
     private Rect rect2 = new Rect();
@@ -53,11 +53,14 @@ public class Font {
         char[] ach = Character.toChars(charcode);
         float advance = rect.width();
         if (charcode != ' ') {
+            float width = textPaint.measureText(ach, 0, 1);
             textPaint.getTextBounds(ach, 0, 1, rect);
-            textPaint.getTextBounds("L", 0, 1, rect2);
-            int pipeWidth = rect2.width();
-            textPaint.getTextBounds(new String(ach) + "L", 0, 2, rect2);
-            advance = (rect2.width() - pipeWidth);
+            //textPaint.getTextBounds("L", 0, 1, rect2);
+            //int pipeWidth = rect2.width();
+            //textPaint.getTextBounds(new String(ach) + "L", 0, 2, rect2);
+            //advance = (rect2.width() - pipeWidth);
+            advance = width + 1;
+            android.util.Log.d("TEXT", ach[0] + " width: " + width + " advance:" +advance);
         }
         long foo = nativeCreateGlyph(cobj, atlas, charcode, rect.left, -rect.bottom, rect.width(), rect.height(), advance);
         return foo;

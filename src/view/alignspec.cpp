@@ -40,7 +40,7 @@ ALIGNSPEC ALIGNSPEC::Below(View* view, float margin) {
 
 ALIGNSPEC::ALIGNSPEC(const StyleValue* value, View* view) {
     anchor = NULL;
-    margin = 0;
+    float margin = 0;
     string type;
     if (value->isArray()) {
         auto& a = value->arrayVal();
@@ -78,6 +78,7 @@ ALIGNSPEC::ALIGNSPEC(const StyleValue* value, View* view) {
     else if (type=="above") {multiplierAnchor=1.0f; multiplierSelf=-1.0f; anchorMustBeSibling=true; }
     else if (type=="below") {multiplierAnchor=1.0f; multiplierSelf=0.0f; anchorMustBeSibling=true; }
     else assert(false); // unknown alignspec
+    this->margin = margin;
     
     // Implicit anchoring to previously-declared view
     if (anchorMustBeSibling && !anchor) {

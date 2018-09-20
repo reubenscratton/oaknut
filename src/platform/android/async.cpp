@@ -19,7 +19,7 @@ static JNIEnv* getTaskEnv() {
   if (!jclassAsync) {
      jclassAsync = env->FindClass(PACKAGE "/Async");
      jclassAsync = (jclass)env->NewGlobalRef(jclassAsync);
-     jmidRunOnMainThread = env->GetStaticMethodID(jclassAsync, "runOnMainThread", "(J)V");
+     jmidRunOnMainThread = env->GetStaticMethodID(jclassAsync, "runOnMainThread", "(IJ)V");
   }
   return env;
 }
@@ -42,11 +42,16 @@ void oakAsyncQueueEnqueueItem(void* osobj, function<void(void)> func) {
     env->CallVoidMethod((jobject)osobj, jmidEnqueue, (jlong)cpy);
 }
 
-
 void Task::nextTick(std::function<void ()> func) {
+    function<void(void)>* cpy = new function<void(void)>();
+    *cpy = func;
+    getTaskEnv()->CallStaticVoidMethod(jclassAsync, jmidRunOnMainThread, 0, (jlong)cpy);
+}
+
+void Task::after(int delay, std::function<void ()> func) {
   function<void(void)>* cpy = new function<void(void)>();
   *cpy = func;
-  getTaskEnv()->CallStaticVoidMethod(jclassAsync, jmidRunOnMainThread, (jlong)cpy);
+  getTaskEnv()->CallStaticVoidMethod(jclassAsync, jmidRunOnMainThread, (jint)delay, (jlong)cpy);
 }
 
 JAVA_FN(void, Async, nativeRun)(JNIEnv *env, jobject obj, jlong nativeObj) {

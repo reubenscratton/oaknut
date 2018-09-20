@@ -620,7 +620,7 @@ bool StyleValue::parse(StringProcessor& it, bool inArrayVal/*=false*/) {
     // Non-compound
     else {
         char ch = it.peek();
-        if (ch>='0' && ch<='9') {
+        if ((ch>='0' && ch<='9') || ch=='-') {
             variant v = variant::parseNumber(it);
             if (it.nextWas("dp")) {
                 setType(Measure);

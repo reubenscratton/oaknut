@@ -69,6 +69,11 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
         NativeView(Context context) {
             super(context);
         }
+
+        @Override
+        public boolean onCheckIsTextEditor() {
+            return true;
+        }
     }
 
     @Override
@@ -140,7 +145,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
     @Override
     protected void onResume() {
         super.onResume();
-        App.currentActivity = new WeakReference<>(this);
         onResumeNative(nativePtr);
     }
 
@@ -277,7 +281,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
 
     public void showKeyboard(boolean show) {
         nativeView.requestFocus();
-        App.handler.postDelayed(new Runnable() {
+        Async.handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
