@@ -44,5 +44,6 @@ protected:
 	virtual void startNavAnimation(ViewController* incomingVC, AnimationState animationState);
 	virtual void applyNavTransitionToViewController(ViewController* vc, float val, bool incoming);
 	virtual void onNavTransitionApply(float val);
+	virtual void completeIncoming();
 };
 

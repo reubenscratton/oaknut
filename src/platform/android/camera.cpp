@@ -4,7 +4,7 @@
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
 //
-#if PLATFORM_ANDROID && OAKNUT_WANT_CAMERA
+#if PLATFORM_ANDROID
 
 #include <oaknut.h>
 
@@ -50,42 +50,55 @@ static GLuint loadShader(GLenum shaderType, const char* pSource) {
 }
 
 
-class Camera {
+class CameraAndroid : public Camera {
 public:
     jobject camera;
-    CameraPreviewDelegate delegate;
     GLuint fb;
     GLuint indexBufferId, vertexBufferId;
     GLuint program;
     GLuint posMvp;
 
-    Camera() {
-        JNIEnv* env = getJNIEnv();
+    CameraAndroid(int cameraId) : Camera() {
+        JNIEnv *env = getJNIEnv();
+        jclassCamera = env->FindClass(PACKAGE "/Camera");
+        jclassCamera = (jclass) env->NewGlobalRef(jclassCamera);
+        jmidConstructor = env->GetMethodID(jclassCamera, "<init>", "()V");
+        jmidOpen = env->GetMethodID(jclassCamera, "open", "(JI)V");
+        jmidStartPreview = env->GetMethodID(jclassCamera, "startPreview", "()V");
+        jmidStopPreview = env->GetMethodID(jclassCamera, "stopPreview", "()V");
+        jmidClose = env->GetMethodID(jclassCamera, "close", "()V");
+        fb = 0;
+    }
+
+
+    void open() override {
+        JNIEnv *env = getJNIEnv();
         camera = env->NewObject(jclassCamera, jmidConstructor);
         camera = env->NewGlobalRef(camera);
         env->CallVoidMethod(camera, jmidOpen, (jlong)this, (jint)0);
-        fb = 0;
     }
-    ~Camera() {
+
+    void start() override {
+        getJNIEnv()->CallVoidMethod(camera, jmidStartPreview);
+    }
+    void stop() override {
+        getJNIEnv()->CallVoidMethod(camera, jmidStopPreview);
+    }
+
+    void close() override {
+        JNIEnv *env = getJNIEnv();
+        env->CallVoidMethod(camera, jmidClose);
+        env->DeleteGlobalRef(camera);
+        camera = NULL;
         if (fb != 0) {
             check_gl(glDeleteFramebuffers, 1, &fb);
             check_gl(glDeleteBuffers, 1, &indexBufferId);
             check_gl(glDeleteBuffers, 1, &vertexBufferId);
+            fb = 0;
         }
-
-        JNIEnv* env = getJNIEnv();
-        env->CallVoidMethod(camera, jmidClose);
-        env->DeleteGlobalRef(camera);
-    }
-    void startPreview(CameraPreviewDelegate delegate) {
-        this->delegate = delegate;
-        getJNIEnv()->CallVoidMethod(camera, jmidStartPreview);
-    }
-    void stopPreview() {
-        getJNIEnv()->CallVoidMethod(camera, jmidStopPreview);
     }
     
-    void nativeOnGotFrame(int textureId, int width, int height, jfloat* transform) {
+    void handleNewFrame(int textureId, int width, int height, jfloat* transform) {
 
         GLint oldFBO, oldTex;
         GLint viewport[4], oldProg;
@@ -98,7 +111,7 @@ public:
         check_gl(glGetIntegerv, GL_ELEMENT_ARRAY_BUFFER_BINDING, &oldIndexBuffer);
 
         // Reset the canvas' vertex config since our binding to another VBO trashed existing attrib config
-        app._window->_canvas->_currentVertexConfig = -1;
+        app._window->_currentVertexConfig = -1;
 
         // Create a framebuffer and a normal 2D texture to render to
         GLuint texId2 = 0;
@@ -111,7 +124,7 @@ public:
             check_gl(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, indexBufferId);
             check_gl(glBindBuffer, GL_ARRAY_BUFFER, vertexBufferId);
             GLshort indexes[] = {0,1,2,2,1,3};
-            QUAD quad = QUADFromRECT(RECT(-1,0,2,2),0); // I don't know why y be 0 rather than -1 but it do...
+            QUAD quad = QUADFromRECT(RECT(0,-1,2,2),0); // I don't know why y be 0 rather than -1 but it do...
             check_gl(glBufferData, GL_ELEMENT_ARRAY_BUFFER, sizeof(GLshort) * 6, indexes, GL_STATIC_DRAW);
             check_gl(glBufferData, GL_ARRAY_BUFFER, sizeof(quad), &quad, GL_DYNAMIC_DRAW);
 
@@ -175,36 +188,19 @@ public:
         bitmap->_height = height;
 
 
-        delegate(bitmap, 5.0);
+        onNewCameraFrame(bitmap, 5.0);
     }
 
 };
 
-void* oakCameraOpen(int cameraId) {
-    JNIEnv* env = getJNIEnv();
-    jclassCamera = env->FindClass(PACKAGE "/Camera");
-    jclassCamera = (jclass)env->NewGlobalRef(jclassCamera);
-    jmidConstructor = env->GetMethodID(jclassCamera, "<init>", "()V");
-    jmidOpen = env->GetMethodID(jclassCamera, "open", "(JI)V");
-    jmidStartPreview = env->GetMethodID(jclassCamera, "startPreview", "()V");
-    jmidStopPreview = env->GetMethodID(jclassCamera, "stopPreview", "()V");
-    jmidClose = env->GetMethodID(jclassCamera, "close", "()V");
-    return new Camera();
-}
-void oakCameraPreviewStart(void* oscamera, CameraPreviewDelegate delegate) {
-    ((Camera*)oscamera)->startPreview(delegate);
-}
-void oakCameraPreviewStop(void* oscamera) {
-    ((Camera*)oscamera)->stopPreview();
-}
-void oakCameraClose(void* oscamera) {
-    delete (Camera*)oscamera;
+Camera* Camera::create(int cameraId) {
+    return new CameraAndroid(cameraId);
 }
 
 
 JAVA_FN(void, Camera, nativeOnFrameAvailable)(JNIEnv *env, jobject oscamera, jlong camera, jint textureId, jint width, jint height, jfloatArray transform) {
     jfloat* transformVals = env->GetFloatArrayElements(transform, NULL);
-    ((Camera*)camera)->nativeOnGotFrame(textureId, width, height, transformVals);
+    ((CameraAndroid*)camera)->handleNewFrame(textureId, width, height, transformVals);
     env->ReleaseFloatArrayElements(transform, transformVals, 0);
 }
 

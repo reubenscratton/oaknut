@@ -205,6 +205,13 @@ void EditText::deleteBackward() {
         _selectionStart--;
         setText(text);
     }
+    notifySelectionChanged();
+}
+
+void EditText::notifySelectionChanged() {
+    if (_window && _window->_textInputReceiver == this) {
+        _window->keyboardNotifyTextSelectionChanged();
+    }
 }
 
 int EditText::getTextLength() {
@@ -221,6 +228,7 @@ void EditText::setSelectedRange(int start, int end) {
     _selectionStart = start;
     _insertionPoint = end;
     _cursorValid = false;
+    notifySelectionChanged();
 }
 
 string EditText::textInRange(int start, int end) {
@@ -252,7 +260,7 @@ void EditText::setInsertionPoint(int32_t newInsertionPoint) {
             scrollBy({0,dy});
         }
     }
-    
+    notifySelectionChanged();
 }
 
 void EditText::moveCursor(int dx, int dy) {

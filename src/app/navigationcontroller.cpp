@@ -87,6 +87,11 @@ void NavigationController::startNavAnimation(ViewController* incomingVC, Animati
     
 	_contentView->addSubview(_incomingViewController->getView());
 
+	if(!_window) {
+		completeIncoming();
+		return;
+	}
+
 	// Do an initial apply so the translation and alpha on the incoming view & navitem is correct
 	onNavTransitionApply(0);
 
@@ -96,15 +101,20 @@ void NavigationController::startNavAnimation(ViewController* incomingVC, Animati
     });
     anim->_interpolator = regularEaseInOut;
     anim->_onFinished = [=](Animation* anim) {
-        _currentViewController->getView()->removeFromParent();
-        _navBar->removeNavigationItem(_currentViewController->_navigationItem);
-        _currentViewController->onDidPause();
-        _currentViewController = _incomingViewController;
-        _incomingViewController = NULL;
-        _currentViewController->onDidResume();
+		completeIncoming();
         _animationState = None;
     };
 	_view->setNeedsLayout();
+}
+
+void NavigationController::completeIncoming() {
+	_currentViewController->getView()->removeFromParent();
+	_navBar->removeNavigationItem(_currentViewController->_navigationItem);
+	_currentViewController->onDidPause();
+	_currentViewController = _incomingViewController;
+	_incomingViewController = NULL;
+	_currentViewController->onDidResume();
+
 }
 
 

@@ -10,9 +10,8 @@ typedef std::function<void(void)> TASKFUNC;
 class Task : public Object {
 public:
     void exec();
-    bool cancel();
+    virtual bool cancel()=0;
 
-    static Task* create(TASKFUNC func);
     static void ensureSharedGLContext(); // use this if you need to use GL from a background thread (i.e. image processing)
     static void nextTick(TASKFUNC func);
     static void after(int delay, TASKFUNC func);
@@ -22,7 +21,6 @@ protected:
 
     ObjPtr<class TaskQueue> _queue;
     TASKFUNC _func;
-
 };
 
 class TaskQueue : public Object {
@@ -30,13 +28,11 @@ public:
 
     static TaskQueue* create(const string& name);
 
-    virtual void enqueueTask(Task* task)=0;
-    virtual bool cancelTask(Task* task)=0;
+    virtual Task* enqueueTask(TASKFUNC task)=0;
 
 protected:
     TaskQueue(const string& name);
 
     string _name;
     vector<ObjPtr<Task>> _tasks;
-
 };

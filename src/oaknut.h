@@ -20,8 +20,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#pragma once
-
 #ifndef _OAKNUT_H_INCLUDED_
 #define _OAKNUT_H_INCLUDED_
 
@@ -41,10 +39,10 @@
 #include <unistd.h>
 #ifdef __cplusplus
 #include <typeinfo>
+#include <cstring>
 #include <map>
 #include <unordered_map>
-//#include <string>
-#include <cstring>
+#include <iterator>
 #include <vector>
 #include <list>
 #include <stack>
@@ -100,7 +98,7 @@ typedef uint64_t TIMESTAMP;
 // Oaknut types
 #include "base/bytearray.h"
 #include "base/hash.h"
-#include "base/string.h"
+#include "base/string_.h"
 #include "base/object.h"
 #include "base/timer.h"
 #include "base/task.h"

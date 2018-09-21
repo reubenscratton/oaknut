@@ -12,18 +12,18 @@ public class Timer implements Runnable {
         timer.nativeObj = nativeObj;
         timer.delay = delay;
         timer.repeats = repeats;
-        Async.handler.postDelayed(timer, delay);
+        TaskQueue.handler.postDelayed(timer, delay);
         return timer;
     }
 
     public void unschedule() {
-        Async.handler.removeCallbacks(this);
+        TaskQueue.handler.removeCallbacks(this);
     }
 
     @Override
     public void run() {
         if (repeats) {
-            Async.handler.postDelayed(this, delay);   // todo: correct for drift
+            TaskQueue.handler.postDelayed(this, delay);   // todo: correct for drift
         }
         nativeDispatch(nativeObj);
     }

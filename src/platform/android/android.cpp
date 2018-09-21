@@ -88,6 +88,16 @@ public:
         jmethodID jmidShowKeyboard = env->GetMethodID(env->GetObjectClass(activity), "showKeyboard", "(Z)V");
         env->CallVoidMethod(activity, jmidShowKeyboard, show);
     }
+    void keyboardNotifyTextChanged() override {
+        JNIEnv* env = getJNIEnv();
+        jmethodID jmid = env->GetMethodID(env->GetObjectClass(activity), "keyboardNotifyTextChanged", "()V");
+        env->CallVoidMethod(activity, jmid);
+    }
+    void keyboardNotifyTextSelectionChanged() override {
+        JNIEnv* env = getJNIEnv();
+        jmethodID jmid = env->GetMethodID(env->GetObjectClass(activity), "keyboardNotifyTextSelectionChanged", "()V");
+        env->CallVoidMethod(activity, jmid);
+    }
 
 };
 
@@ -279,6 +289,77 @@ JAVA_FN(void, MainActivity, onTouchEventNative)(JNIEnv* env, jobject obj, jlong 
     event.time = time;
     window->dispatchInputEvent(event);
 }
+
+JAVA_FN(jboolean, MainActivity, textInputIsFocused)(JNIEnv* env, jobject obj, jlong nativePtr) {
+    WindowAndroid *window = (WindowAndroid *) nativePtr;
+    return window->_textInputReceiver != NULL;
+}
+
+// From Android's InputType.java:
+static const int TYPE_CLASS_TEXT = 0x00000001;
+static const int TYPE_CLASS_NUMBER = 0x00000002;
+static const int TYPE_CLASS_PHONE = 0x00000003;
+static const int TYPE_TEXT_VARIATION_EMAIL_ADDRESS = 0x00000020;
+
+JAVA_FN(jint, MainActivity, textInputGetInputType)(JNIEnv* env, jobject obj, jlong nativePtr) {
+    WindowAndroid *window = (WindowAndroid *) nativePtr;
+    if (!window->_textInputReceiver) {
+        return 0;
+    }
+    int keyboardType = window->_textInputReceiver->getSoftKeyboardType();
+    if (keyboardType == SoftKeyboardType::Phone) return TYPE_CLASS_PHONE;
+    if (keyboardType == SoftKeyboardType::Number) return TYPE_CLASS_NUMBER;
+    if (keyboardType == SoftKeyboardType::Email) return TYPE_CLASS_TEXT | TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
+    return TYPE_CLASS_TEXT;
+}
+
+JAVA_FN(jbyteArray, MainActivity, textInputGetText)(JNIEnv* env, jobject obj, jlong nativePtr) {
+    WindowAndroid *window = (WindowAndroid *) nativePtr;
+    if (!window->_textInputReceiver) {
+        return NULL;
+    }
+    int len = window->_textInputReceiver->getTextLength();
+    string text = window->_textInputReceiver->textInRange(0, len);
+    jbyteArray array = NULL;
+    if (len > 0) {
+        array = env->NewByteArray(text.lengthInBytes());
+        if (array != NULL) {
+            env->SetByteArrayRegion(array, 0, text.lengthInBytes(), (jbyte*)text.data());
+        }
+    }
+    return array;
+}
+
+JAVA_FN(void, MainActivity, textInputSetText)(JNIEnv* env, jobject obj, jlong nativePtr, jbyteArray textBytes, jint newCursorPosition) {
+    WindowAndroid *window = (WindowAndroid *) nativePtr;
+    if (!window->_textInputReceiver) {
+        return;
+    }
+
+    int cb = env->GetArrayLength(textBytes);
+    bytearray data(cb);
+    env->GetByteArrayRegion(textBytes, 0, cb, reinterpret_cast<jbyte*>(data.data()));
+    string text((char*)data.data());
+
+    window->_textInputReceiver->insertText(text, window->_textInputReceiver->getSelectionStart(),  window->_textInputReceiver->getInsertionPoint());
+    window->_textInputReceiver->setSelectedRange(newCursorPosition, newCursorPosition);
+}
+
+JAVA_FN(jint, MainActivity, textInputGetSelStart)(JNIEnv* env, jobject obj, jlong nativePtr) {
+    WindowAndroid *window = (WindowAndroid *) nativePtr;
+    if (!window->_textInputReceiver) {
+        return 0;
+    }
+    return window->_textInputReceiver->getSelectionStart();
+}
+JAVA_FN(jint, MainActivity, textInputGetSelEnd)(JNIEnv* env, jobject obj, jlong nativePtr) {
+    WindowAndroid *window = (WindowAndroid *) nativePtr;
+    if (!window->_textInputReceiver) {
+        return 0;
+    }
+    return window->_textInputReceiver->getInsertionPoint();
+}
+
 
 JAVA_FN(jboolean, MainActivity, onKeyEventNative)(JNIEnv* env, jobject obj, jlong nativePtr, jboolean isDown, jint keyCode, jint charCode) {
     WindowAndroid* window = (WindowAndroid*)nativePtr;

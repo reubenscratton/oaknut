@@ -433,6 +433,9 @@ void Window::keyboardShow(bool show) {
 void Window::keyboardNotifyTextChanged() {
     // no-op
 }
+void Window::keyboardNotifyTextSelectionChanged() {
+    // no-op
+}
 
 bool Window::setFocusedView(View* view) {
     if (_focusedView == view) {
@@ -450,11 +453,9 @@ bool Window::setFocusedView(View* view) {
             _textInputReceiver = newTextInputReceiver;
             keyboardNotifyTextChanged();
         }
-        if (_textInputReceiver != NULL) {
-            keyboardShow(true);
-        }
+        keyboardShow(_textInputReceiver != NULL);
     } else {
-         keyboardShow(false);
+        keyboardShow(false);
     }
     return true;
 }

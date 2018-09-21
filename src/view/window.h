@@ -111,7 +111,7 @@ public:
     /** Show or hide the system soft keyboard, if there is one */
     virtual void keyboardShow(bool show);
     virtual void keyboardNotifyTextChanged();    
-
+    virtual void keyboardNotifyTextSelectionChanged();
 
 	virtual void dispatchInputEvent(INPUTEVENT event);
 	virtual POINT offsetToView(View* view);

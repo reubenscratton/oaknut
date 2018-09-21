@@ -9,7 +9,8 @@
 enum SoftKeyboardType {
     General,
     Phone,
-    Email
+    Number,
+    Email,
 };
 
 /**

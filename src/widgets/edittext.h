@@ -60,5 +60,6 @@ protected:
     void updateClearButton();
     void moveCursor(int dx, int dy);
     void setInsertionPointReal(int32_t& newInsertionPoint);
+    void notifySelectionChanged();
 };
 

@@ -6,8 +6,6 @@
 //
 #if PLATFORM_ANDROID
 
-#if OAKNUT_WANT_AUDIOINPUT
-
 #include <oaknut.h>
 
 static jclass jclassAudioInput;
@@ -15,58 +13,51 @@ static jmethodID jmidConstructor;
 static jmethodID jmidStart;
 static jmethodID jmidStop;
 
-class AudioInput {
+class AudioInputAndroid : public AudioInput {
 public:
     jobject javaobj;
-    AudioInputDelegate delegate;
 
-    AudioInput(int sampleRate) {
+    AudioInputAndroid() {
         JNIEnv* env = getJNIEnv();
         jclassAudioInput = env->FindClass(PACKAGE "/AudioInput");
         jclassAudioInput = (jclass)env->NewGlobalRef(jclassAudioInput);
         jmidConstructor = env->GetMethodID(jclassAudioInput, "<init>", "(JI)V");
         jmidStart = env->GetMethodID(jclassAudioInput, "start", "()V");
         jmidStop = env->GetMethodID(jclassAudioInput, "stop", "()V");
-        javaobj = env->NewObject(jclassAudioInput, jmidConstructor, (jlong)this, (jint)sampleRate);
     }
-    ~AudioInput() {
+    ~AudioInputAndroid() {
         getJNIEnv()->DeleteGlobalRef(javaobj);
     }
 
-    void start(AudioInputDelegate delegate) {
-        this->delegate = delegate;
+    void open() override {
+        JNIEnv* env = getJNIEnv();
+        javaobj = env->NewObject(jclassAudioInput, jmidConstructor, (jlong)this, (jint)sampleRate);
+        javaobj = env->NewGlobalRef(javaobj);
+    }
+    void start() override {
         getJNIEnv()->CallVoidMethod(javaobj, jmidStart);
     }
 
-    void stop() {
+    void stop() override {
         getJNIEnv()->CallVoidMethod(javaobj, jmidStop);
+    }
+
+    void close() override {
+
     }
 };
 
-
-const void* oakAudioInputOpen(int sampleRate) { // samples are always int16_t, always record in mono.
-    return new AudioInput(sampleRate);
+AudioInput* AudioInput::create() {
+    return new AudioInputAndroid();
 }
 
-void oakAudioInputStart(const void* osobj, AudioInputDelegate delegate) {
-    AudioInput* audioInput = (AudioInput*)osobj;
-    audioInput->start(delegate);
-}
-void oakAudioInputStop(const void* osobj) {
-    AudioInput* audioInput = (AudioInput*)osobj;
-    audioInput->stop();
-}
-void oakAudioInputClose(const void* osobj) {
-    delete (AudioInput*)osobj;
-}
 
 JAVA_FN(void, AudioInput, nativeOnGotData)(JNIEnv *env, jobject javaobj, jlong nativeObj, jshortArray buffer, jint offset, jint len) {
     //app.log("Got audio data!");
-    AudioInput* audioInput = (AudioInput*)nativeObj;
+    AudioInputAndroid* audioInput = (AudioInputAndroid*)nativeObj;
     jshort* vals = env->GetShortArrayElements(buffer, NULL);
-    audioInput->delegate(len, vals+offset);
+    audioInput->onNewAudioSamples(len, vals+offset);
     env->ReleaseShortArrayElements(buffer, vals, 0);
 }
 
-#endif
 #endif

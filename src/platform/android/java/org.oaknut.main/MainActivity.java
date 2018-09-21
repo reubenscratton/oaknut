@@ -2,13 +2,19 @@ package org.oaknut.main;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.text.Editable;
+import android.text.InputType;
+import android.text.SpannableStringBuilder;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Choreographer;
 import android.view.Display;
 import android.view.KeyEvent;
@@ -16,13 +22,19 @@ import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.View;
-import android.view.ViewConfiguration;
 import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.BaseInputConnection;
+import android.view.inputmethod.CompletionInfo;
+import android.view.inputmethod.CorrectionInfo;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.ExtractedText;
+import android.view.inputmethod.ExtractedTextRequest;
+import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputContentInfo;
 import android.view.inputmethod.InputMethodManager;
 
-import java.lang.ref.WeakReference;
 
 
 public class MainActivity extends Activity implements SurfaceHolder.Callback2, ViewTreeObserver.OnGlobalLayoutListener, Choreographer.FrameCallback {
@@ -65,15 +77,222 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
     private native boolean onBackPressedNative(long nativePtr);
     private native void onDestroyNative(long nativePtr);
 
-    private static class NativeView extends View {
+    private native boolean textInputIsFocused(long nativePtr);
+    private native int textInputGetInputType(long nativePtr);
+    private native int textInputGetSelStart(long nativePtr);
+    private native int textInputGetSelEnd(long nativePtr);
+    private native byte[] textInputGetText(long nativePtr);
+    private native void textInputSetText(long nativePtr, byte[] text, int newCursorPosition);
+
+
+    //Editable editable = new SpannableStringBuilder();
+    NativeInputConnection currentInputConnection;
+
+    /*void updateEditable() {
+        byte[] textBytes = textInputGetText(nativePtr);
+        editable.clear();
+        if (textBytes != null) {
+            editable.append(new String(textBytes, App.UTF_8));
+        }
+    }*/
+
+
+    String getCurrentText() {
+        byte[] textBytes = textInputGetText(nativePtr);
+        String str = "";
+        if (textBytes != null) {
+            str = new String(textBytes, App.UTF_8);
+        }
+        return str;
+    }
+
+
+    /**
+     * Important lesson re IMEs: sometimes the IME will call sendKeyEvent() cos you pressed a key
+     * and other times it will decide itself what the new text is and call commitText().
+     */
+
+    private class NativeInputConnection implements InputConnection {
+
+
+        @Override
+        public CharSequence getTextBeforeCursor(int n, int flags) {
+            return null;
+        }
+
+        @Override
+        public CharSequence getTextAfterCursor(int n, int flags) {
+            return null;
+        }
+
+        @Override
+        public CharSequence getSelectedText(int flags) {
+            String str = getCurrentText();
+            int s = textInputGetSelStart(nativePtr);
+            int e = textInputGetSelEnd(nativePtr);
+            s = Math.min(s, str.length());
+            e = Math.min(e, str.length());
+            if (e<s) {
+                int tmp = e;
+                e = s;
+                s = tmp;
+            }
+            return str.substring(s,e);
+        }
+
+        @Override
+        public int getCursorCapsMode(int reqModes) {
+            return 0;
+        }
+
+        @Override
+        public ExtractedText getExtractedText(ExtractedTextRequest request, int flags) {
+            return null;
+        }
+
+        @Override
+        public boolean deleteSurroundingText(int beforeLength, int afterLength) {
+            return false;
+        }
+
+        @Override
+        public boolean deleteSurroundingTextInCodePoints(int beforeLength, int afterLength) {
+            return false;
+        }
+
+        @Override
+        public boolean setComposingText(CharSequence text, int newCursorPosition) {
+            return false;
+        }
+
+        @Override
+        public boolean setComposingRegion(int start, int end) {
+            return false;
+        }
+
+        @Override
+        public boolean finishComposingText() {
+            return false;
+        }
+
+        @Override
+        public boolean commitText(CharSequence text, int newCursorPosition) {
+            textInputSetText(nativePtr, text.toString().getBytes(App.UTF_8), newCursorPosition);
+            return true;
+        }
+
+        @Override
+        public boolean commitCompletion(CompletionInfo text) {
+            return false;
+        }
+
+        @Override
+        public boolean commitCorrection(CorrectionInfo correctionInfo) {
+            return false;
+        }
+
+        @Override
+        public boolean setSelection(int start, int end) {
+            return false;
+        }
+
+        @Override
+        public boolean performEditorAction(int editorAction) {
+            return false;
+        }
+
+        @Override
+        public boolean performContextMenuAction(int id) {
+            return false;
+        }
+
+        @Override
+        public boolean beginBatchEdit() {
+            return false;
+        }
+
+        @Override
+        public boolean endBatchEdit() {
+            return false;
+        }
+
+        @Override
+        public boolean sendKeyEvent(KeyEvent event) {
+            return dispatchKeyEvent(event);
+        }
+
+        @Override
+        public boolean clearMetaKeyStates(int states) {
+            return false;
+        }
+
+        @Override
+        public boolean reportFullscreenMode(boolean enabled) {
+            return false;
+        }
+
+        @Override
+        public boolean performPrivateCommand(String action, Bundle data) {
+            return false;
+        }
+
+        @Override
+        public boolean requestCursorUpdates(int cursorUpdateMode) {
+            return false;
+        }
+
+        @Override
+        public Handler getHandler() {
+            return null;
+        }
+
+        @Override
+        public void closeConnection() {
+
+        }
+
+        @Override
+        public boolean commitContent(@NonNull InputContentInfo inputContentInfo, int flags, @Nullable Bundle opts) {
+            return false;
+        }
+    }
+
+
+    private class NativeView extends View {
         NativeView(Context context) {
             super(context);
+            setFocusableInTouchMode(true);
         }
 
         @Override
         public boolean onCheckIsTextEditor() {
-            return true;
+            return textInputIsFocused(nativePtr);
         }
+
+        @Override
+        public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+            if (!textInputIsFocused(nativePtr)) {
+                currentInputConnection = null;
+            } else {
+                outAttrs.inputType = textInputGetInputType(nativePtr);
+                outAttrs.initialSelStart = textInputGetSelStart(nativePtr);
+                outAttrs.initialSelEnd = textInputGetSelEnd(nativePtr);
+                currentInputConnection = new NativeInputConnection();
+            }
+            return currentInputConnection;
+        }
+    }
+
+    void keyboardNotifyTextChanged() {
+        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.restartInput(nativeView);
+    }
+    void keyboardNotifyTextSelectionChanged() {
+        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+        int selStart = textInputGetSelStart(nativePtr);
+        int selEnd = textInputGetSelEnd(nativePtr);
+        imm.updateSelection(nativeView, selStart, selEnd, 0, 0);
+        //currentInputConnection.setSelection(selStart, selEnd);
     }
 
     @Override
@@ -85,9 +304,11 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
         window.setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING);
 
+        window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+
         nativeView = new NativeView(this);
         setContentView(nativeView);
-        nativeView.requestFocus();
+        //nativeView.requestFocus();
         nativeView.getViewTreeObserver().addOnGlobalLayoutListener(this);
 
 
@@ -280,18 +501,14 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
     }
 
     public void showKeyboard(boolean show) {
-        nativeView.requestFocus();
-        Async.handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-                if (show) {
-                    imm.showSoftInput(nativeView, InputMethodManager.SHOW_FORCED);
-                } else {
-                    imm.hideSoftInputFromWindow(nativeView.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
-                }
-            }
-        }, 200);
+        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (show) {
+            nativeView.requestFocus();
+            imm.showSoftInput(nativeView, InputMethodManager.SHOW_FORCED);
+            imm.restartInput(nativeView);
+        } else {
+            imm.hideSoftInputFromWindow(nativeView.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+        }
     }
 
 }

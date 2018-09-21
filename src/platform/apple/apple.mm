@@ -98,11 +98,17 @@ public:
             _func();
         }];
     }
+    
+    bool cancel() override {
+        if (!_op.isCancelled && !_op.isFinished && !_op.isExecuting) {
+            [_op cancel];
+            return _op.isCancelled;
+        }
+        return false;
+    }
+
 };
 
-Task* Task::create(TASKFUNC func) {
-    return new AppleTask(func);
-}
 
 class AppleTaskQueue : public TaskQueue {
 public:
@@ -126,16 +132,10 @@ public:
         _queue = nil;
     }
 
-    void enqueueTask(Task* task) {
-        [_queue addOperation:((AppleTask*)task)->_op];
-    }
-    bool cancelTask(Task* atask) {
-        AppleTask* task = (AppleTask*)atask;
-        if (!task->_op.isCancelled && !task->_op.isFinished && !task->_op.isExecuting) {
-            [task->_op cancel];
-            return task->_op.isCancelled;
-        }
-        return false;
+    Task* enqueueTask(TASKFUNC func) {
+        AppleTask* task = new AppleTask(func);
+        [_queue addOperation:task->_op];
+        return task;
     }
 
 };
