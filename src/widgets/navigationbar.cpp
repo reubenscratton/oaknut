@@ -10,16 +10,35 @@
 DECLARE_DYNCREATE(NavigationBar);
 
 NavigationBar::NavigationBar() {
-    setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::WrapContent());
-	setBackgroundColor(0xffffffff);
+    applyStyle("NavigationBar");
+}
+
+bool NavigationBar::applyStyleValue(const string& name, const StyleValue* value) {
+    if (name == "title") {
+        _titleStyle = *value;
+        return true;
+    }
+    if (name == "preferredContentHeight") {
+        _preferredContentHeight = value->floatVal();
+        return true;
+    }
+    return View::applyStyleValue(name, value);
 }
 
 void NavigationBar::updateContentSize(float parentWidth, float parentHeight) {
-    _contentSize.height = app.getStyleFloat("navbar.height");
+    _contentSize.height = _preferredContentHeight;
 }
 
 void NavigationBar::addNavigationItem(NavigationItem* navigationItem) {
     addSubview(navigationItem->_leftButtonsFrame);
+    if (navigationItem->_title.length()) {
+        Label* titleLabel = new Label();
+        titleLabel->setMeasureSpecs(MEASURESPEC::WrapContent(), MEASURESPEC::WrapContent());
+        titleLabel->setAlignSpecs(ALIGNSPEC::Center(), ALIGNSPEC(NULL, 0.5f, -0.5f, 0));
+        titleLabel->setText(navigationItem->_title);
+        titleLabel->applyStyle(_titleStyle);
+        navigationItem->_titleView = titleLabel;
+    }
     if (navigationItem->_titleView) {
         addSubview(navigationItem->_titleView);
     }
@@ -33,9 +52,6 @@ void NavigationBar::removeNavigationItem(NavigationItem* navigationItem) {
     navigationItem->_rightButtonsFrame->removeFromParent();
 }
 
-void NavigationBar::setBackground(RenderOp* renderOp) {
-	assert(false); // Navbars don't have arbitrary backgrounds, it can only be a color
-}
 void NavigationBar::setBackgroundColor(COLOR color) {
     _backgroundColor = color;
     RenderOp* op = _blurEnabled ? (RenderOp*)new BlurRenderOp() : new RectRenderOp();

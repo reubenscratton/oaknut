@@ -21,17 +21,9 @@ NavigationItem::NavigationItem() {
 void NavigationItem::setTitle(const string& title) {
 	if (_titleView) {
 		_titleView->removeFromParent();
+        _titleView = NULL;
 	}
-	Label* titleLabel = new Label();
-	_titleView = titleLabel;
-	titleLabel->setMeasureSpecs(MEASURESPEC::WrapContent(), MEASURESPEC::WrapContent());
-    titleLabel->setAlignSpecs(ALIGNSPEC::Center(), ALIGNSPEC(NULL, 0.5f, -0.5f, 0));
-	
-    // Todo: use an "apply style" method here
-	titleLabel->setFont(app.getStyleFont("navbar.title"));
-	titleLabel->setTextColor(app.getStyleColor("navbar.title.forecolor"));
-	titleLabel->setText(title);
-
+    _title = title;
 }
 
 void NavigationItem::setTitleView(View* titleView) {
@@ -41,6 +33,7 @@ void NavigationItem::setTitleView(View* titleView) {
 	titleView->setMeasureSpecs(MEASURESPEC::WrapContent(), MEASURESPEC::WrapContent());
     titleView->setAlignSpecs(ALIGNSPEC::Center(), ALIGNSPEC(NULL, 0.5f, -0.5f, 0));
 	_titleView = titleView;
+    _title = "";
 }
 
 ImageView* NavigationItem::createIconButton(const string& src, std::function<void(View*)> onClick) {

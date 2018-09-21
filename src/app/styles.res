@@ -61,6 +61,17 @@ EditText: {
     gravityY: center
 }
 
+NavigationBar: {
+    size: fill,wrap
+    preferredContentHeight: 44dp
+    background: white
+    padding: 8dp,0
+    title: {
+        font-size: 17dp
+        forecolor: black
+    }
+}
+
 SearchBox: {
     background: {
         inset: 6dp
@@ -83,15 +94,6 @@ SegmentedControl: {
 }
 
 
-navbar: {
-    height: 44dp
-    background: 0xfff6f6f9
-    title: {
-        font-size: 17dp
-        forecolor: 0xff000000
-    }
-    bottom-divider-color: 0xffa7a7aa
-}
 
 
 }

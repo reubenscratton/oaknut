@@ -40,7 +40,7 @@ void NavigationController::updateSafeArea(const RECT& safeArea) {
 
 void NavigationController::updateChildSafeArea(ViewController* childVc, const RECT& safeArea) {
     RECT childSafeArea = safeArea;
-    EDGEINSETS navbarInsets = {0,app.getStyleFloat("navbar.height"),0,0};
+    EDGEINSETS navbarInsets = {0,_navBar->getPreferredContentHeight(),0,0};
     navbarInsets.applyToRect(childSafeArea);
     childVc->updateSafeArea(childSafeArea);
 }

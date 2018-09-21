@@ -30,17 +30,17 @@ View::~View() {
 void View::applyStyle(const string& style) {
     auto value = app.getStyleValue(style);
     if (value) {
-        applyStyleValues(*value);
+        applyStyle(*value);
     }
 }
 
-void View::applyStyleValues(const StyleValue& value) {
+void View::applyStyle(const StyleValue& value) {
     
     auto& compound = value.compoundVal();
     // Ensure the 'style' attribute, if present, gets processed first, because the others may override it
     for (auto& field : compound) {
         if (field.first == "style") {
-            applyStyleValues(field.second);
+            applyStyle(field.second);
             break;
         }
     }

@@ -10,17 +10,22 @@ public:
 
 	bool _blurEnabled;
     COLOR _backgroundColor;
-    
+
+    // API
 	NavigationBar();
-	
-	void setBackground(RenderOp* renderOp) override;
-    void setBackgroundColor(COLOR backgroundColor) override;
     virtual void addNavigationItem(NavigationItem* navigationItem);
     virtual void removeNavigationItem(NavigationItem* navigationItem);
     virtual void setBlurEnabled(bool blurEnabled);
-    
+    float getPreferredContentHeight() { return _preferredContentHeight; }
+
+    // Overrides
+    bool applyStyleValue(const string& name, const StyleValue* value) override;
+	void setBackgroundColor(COLOR backgroundColor) override;
     void updateContentSize(float parentWidth, float parentHeight) override;
 
+protected:
+    StyleValue _titleStyle;
+    float _preferredContentHeight;
 };
 
 

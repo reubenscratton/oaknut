@@ -365,7 +365,7 @@ protected:
 public:
     /** Applies a set of styles to the view */
     virtual void applyStyle(const string& style);
-    virtual void applyStyleValues(const StyleValue& value);
+    virtual void applyStyle(const StyleValue& value);
 
 protected:
     /** Applies a single style value for the given attribute name. Custom views

@@ -12,6 +12,7 @@
  */
 class NavigationItem : public Object {
 public:
+    string _title;
 	ObjPtr<class View> _titleView;
     ObjPtr<class LinearLayout> _leftButtonsFrame;
     ObjPtr<LinearLayout> _rightButtonsFrame;

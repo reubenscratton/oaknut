@@ -72,9 +72,6 @@ public:
 
     /** Get a named style value and coerce to a COLOR */
     COLOR getStyleColor(const string& key);
-
-    /** Get the Font for a named font style */
-    class Font* getStyleFont(const string& key);
     
     /**@}*/
     

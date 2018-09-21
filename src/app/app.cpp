@@ -50,12 +50,6 @@ void App::loadStyleAsset(const string& assetPath) {
     _styles.parse(it);
 }
 
-Font* App::getStyleFont(const string &key) {
-    string fontName = getStyleString(key + ".font-name", "");
-    float fontSize = getStyleFloat(key + ".font-size");
-    Font* font = Font::get(fontName, fontSize);
-    return font;
-}
 
 const StyleValue* App::getStyleValue(const string& keypath) {
     return _styles.get(keypath);
@@ -102,7 +96,7 @@ static View* inflateFromResource(const StyleValue& value, View* parent) {
     }
     
     // Apply the attributes to the inflated view.
-    view->applyStyleValues(value);
+    view->applyStyle(value);
     
     // Inflate the subviews
     auto& subviews = value.arrayVal("subviews");
@@ -126,7 +120,7 @@ void App::layoutInflateExistingView(View* view, const string& assetPath) {
     assert(layoutRoot.type == StyleValue::Type::Compound);
 
     // Apply the attributes to the inflated view.
-    view->applyStyleValues(layoutRoot);
+    view->applyStyle(layoutRoot);
     
     // Inflate the subviews
     auto& subviews = layoutRoot.arrayVal("subviews");

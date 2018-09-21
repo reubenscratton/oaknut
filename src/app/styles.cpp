@@ -90,16 +90,6 @@ bool StyleValue::boolVal() const {
     return 0.f;
 }
 
-int StyleValue::intVal(const string& name) const {
-    auto val = select();
-    assert(val->type == Compound);
-    auto val2 = val->compound->find(name);
-    if (val2 == val->compound->end()) {
-        app.warn("Value missing for field '%'", name.data());
-        return 0;
-    }
-    return val2->second.intVal();
-}
 float StyleValue::floatVal() const {
     auto val = select();
     if (val->type==Type::Int) return (float)val->i;
@@ -119,6 +109,25 @@ string StyleValue::stringVal() const {
     }
     app.warn("stringVal() type coerce failed");
     return "";
+}
+
+int StyleValue::intVal(const string& name) const {
+    auto val = select();
+    assert(val->type == Compound);
+    auto val2 = val->compound->find(name);
+    if (val2 == val->compound->end()) {
+        app.warn("Value missing for field '%'", name.data());
+        return 0;
+    }
+    return val2->second.intVal();
+}
+float StyleValue::floatVal(const string& name) const {
+    auto field = get(name);
+    if (!field) {
+        app.warn("Value missing for field '%'", name.data());
+        return 0;
+    }
+    return field->floatVal();
 }
 string StyleValue::stringVal(const string& name) const {
     return get(name)->stringVal();

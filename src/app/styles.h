@@ -60,6 +60,7 @@ public:
     // Compound accessors
     const StyleValue* get(const string& keypath) const;
     int intVal(const string& name) const;
+    float floatVal(const string& name) const;
     string stringVal(const string& name) const;
     const vector<StyleValue>& arrayVal(const string& name) const;
     void importValues(const map<string, StyleValue>& values);
