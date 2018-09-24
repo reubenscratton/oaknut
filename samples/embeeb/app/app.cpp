@@ -12,8 +12,6 @@
 
 void App::main() {
 	NavigationController* rootVC = new NavigationController();
-    rootVC->_navBar->setBackgroundColor(app.getStyleColor("navbar.background"));
-	rootVC->_navBar->setTintColor(app.getStyleColor("navbar.tint"));
     rootVC->pushViewController(new MainViewController());
     _window->setRootViewController(rootVC);
 

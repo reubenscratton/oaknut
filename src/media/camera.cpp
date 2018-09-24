@@ -5,8 +5,13 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+#ifdef OAKNUT_WANT_CAMERA
+
 #include <oaknut.h>
 
 
 Camera::Camera() {
 }
+
+#endif
+

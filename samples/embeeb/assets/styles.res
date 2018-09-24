@@ -5,25 +5,27 @@ window: {
     default-height:520dp
 }
 
-navbar: {
-    background: 0xFF707070
-    tint: 0xFFF6E9CC
+NavigationBar: {
+    background: #707070
+    tint: #F6E9CC
 }
 
 keyboard: {
-    background: 0xFF222222
-    backgroundKeyNormal: 0xFF444444
-    backgroundKeyFunction: 0xFFDD2222
-    backgroundKeyLED: 0xFF801111
-    backgroundKeyPressed: 0xFFAA8877
-    forecolour: 0xFFFFFFFF
+    background: #222
+    backgroundKeyNormal: #444
+    backgroundKeyFunction: #d22
+    backgroundKeyLED: #801111
+    backgroundKeyPressed: #A87
     labels-normal: {
+        forecolor: white
         font-size: 14dp
     }
     labels-small: {
+        forecolor: white
         font-size: 12dp
     }
     labels-tiny: {
+        forecolor: white
         font-size: 10dp
     }
 }

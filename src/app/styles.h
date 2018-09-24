@@ -83,9 +83,18 @@ private:
 
 };
 
-
-
-
-
-
+/**
+ Abstract base class for objects that can have style values applied.
+ In practice this means Views, but also TextRenderer.
+ */
+class Styleable : public Object {
+public:
+    virtual void applyStyle(const string& style);
+    virtual void applyStyle(const class StyleValue& value);
+    
+protected:
+    /** Applies a single style value for the given attribute name. Custom views
+     should override this method to add support for custom attributes. */
+    virtual bool applyStyleValue(const string& name, const StyleValue* value) = 0;
+};
 

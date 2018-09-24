@@ -35,7 +35,7 @@ typedef struct _STATESET {
  *  @brief Fundamental UI building block
  *  @ingroup views
  */
-class View : public Object {
+class View : public Styleable {
 public:
     
     // These friend classes are tightly bound to View and are allowed to directly manipulate state.
@@ -362,18 +362,12 @@ protected:
      * @{
      * A view may be declaratively configured in layout and style resource files.
      */
-public:
-    /** Applies a set of styles to the view */
-    virtual void applyStyle(const string& style);
-    virtual void applyStyle(const StyleValue& value);
-
 protected:
     /** Applies a single style value for the given attribute name. Custom views
         should override this method to add support for custom attributes. */
-    virtual bool applyStyleValue(const string& name, const StyleValue* value);
+    bool applyStyleValue(const string& name, const StyleValue* value) override;
     
     /**  \cond INTERNAL */
-    virtual bool applyStyleValueFromChild(const string& name, const StyleValue* value, View* subview);
     virtual bool handleStatemapDeclaration(const string& name, const StyleValue* value);
     virtual void applyStatemapStyleValue(const string& name, const StyleValue* value);
     map<string, StyleValue>* _statemapStyleValues;
@@ -387,7 +381,7 @@ protected:
      */
 public:
     std::function<bool(View*,INPUTEVENT*)> onInputEvent;
-    std::function<void(View*)> onClick;
+    std::function<void()> onClick;
     virtual View* hitTest(POINT& pt);
     virtual View* subviewContainingPoint(POINT pt);
     virtual int indexOfSubviewContainingPoint(POINT pt);

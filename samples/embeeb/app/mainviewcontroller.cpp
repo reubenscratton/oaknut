@@ -51,14 +51,14 @@ MainViewController::MainViewController() {
 	_navigationItem->setTitle("emBeeb");
     //self.controllersButton.enabled = NO;
    // self.nextControllerButton.enabled = NO;
-    _controllersButton = NavigationItem::createIconButton("images/controller.png", [&](View*) {
+    _controllersButton = NavigationItem::createIconButton("images/controller.png", [=]() {
     });
     _navigationItem->addLeftButton(_controllersButton);
-    _nextControllerButton = NavigationItem::createIconButton("images/next_layout.png", [&](View*) {
+    _nextControllerButton = NavigationItem::createIconButton("images/next_layout.png", [=]() {
     });
     _navigationItem->addLeftButton(_nextControllerButton);
 
-    _navigationItem->addRightButton(NavigationItem::createIconButton("images/time_machine.png", [&](View*) {
+    _navigationItem->addRightButton(NavigationItem::createIconButton("images/time_machine.png", [=]() {
         ObjPtr<SnapshotsViewController> vc = new SnapshotsViewController(_beeb, _beebView, _currentDiskInfo, [=](Snapshot* snapshot){
             _currentSnapshot = snapshot;
             _beeb->serialize(false, (uint8_t*)snapshot->_data.data());
@@ -66,7 +66,7 @@ MainViewController::MainViewController() {
         });
         _navigationController->pushViewController(vc);
     }));
-    _navigationItem->addRightButton(NavigationItem::createIconButton("images/floppy_disk.png", [&](View*) {
+    _navigationItem->addRightButton(NavigationItem::createIconButton("images/floppy_disk.png", [=]() {
         ObjPtr<DisksViewController> vc = new DisksViewController([&](Game* game) {
             _currentSnapshot = NULL;
             _currentDiskInfo = game->defaultDiskInfo();

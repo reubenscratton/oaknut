@@ -13,6 +13,7 @@ public:
     string getText();
     void clear();
     std::function<void(bool)> onFilled;
+    std::function<void()> onKeyboardAction;
     
     // Overrides
     bool applyStyleValue(const string &name, const StyleValue *value) override;

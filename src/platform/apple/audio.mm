@@ -1,7 +1,8 @@
 //
 //  Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
-#if PLATFORM_APPLE
+#if PLATFORM_APPLE && OAKNUT_WANT_AUDIO_INPUT
+
 
 #include <oaknut.h>
 #import <AVFoundation/AVFoundation.h>

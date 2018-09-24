@@ -14,6 +14,10 @@ NavigationBar::NavigationBar() {
 }
 
 bool NavigationBar::applyStyleValue(const string& name, const StyleValue* value) {
+    if (name == "background") {
+        setBackgroundColor(value->colorVal()); // ONLY COLOR BACKGROUNDS ALLOWED ON NAVBAR
+        return true;
+    }
     if (name == "title") {
         _titleStyle = *value;
         return true;
@@ -50,6 +54,10 @@ void NavigationBar::removeNavigationItem(NavigationItem* navigationItem) {
         navigationItem->_titleView->removeFromParent();
     }
     navigationItem->_rightButtonsFrame->removeFromParent();
+}
+
+void NavigationBar::setBackground(RenderOp* renderOp) {
+    assert(false); // Navbars don't have arbitrary backgrounds, it can only be a color
 }
 
 void NavigationBar::setBackgroundColor(COLOR color) {

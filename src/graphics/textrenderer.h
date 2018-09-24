@@ -18,7 +18,7 @@
  */
 
 
-class TextRenderer : public Object {
+class TextRenderer : public Styleable {
     
 public:
     TextRenderer();
@@ -40,7 +40,9 @@ public:
     void setMaxLines(int maxLines);
     void getCharacterOrigin(int32_t characterIndex, POINT* origin, float* ascent, float* descent) const;
     
-    
+    /** Styleable */
+    bool applyStyleValue(const string& name, const StyleValue* value) override;
+
     
     typedef struct {
         int32_t codepointIndex; // index into _text of first codepoint of this character

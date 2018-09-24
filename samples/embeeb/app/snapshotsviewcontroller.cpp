@@ -74,8 +74,8 @@ SnapshotsViewController::SnapshotsViewController(Beeb* beeb, BeebView* beebView,
 
     // Navbar
     _navigationItem->setTitle("Snapshots");
-    _navigationItem->addLeftButton(NavigationItem::createIconButton("images/back.png", [&] (View*) { onBackButtonClicked(); }));
-    _navigationItem->addRightButton(NavigationItem::createIconButton("images/add.png", [&] (View*) {
+    _navigationItem->addLeftButton(NavigationItem::createIconButton("images/back.png", [=] () { onBackButtonClicked(); }));
+    _navigationItem->addRightButton(NavigationItem::createIconButton("images/add.png", [=] () {
         Snapshot* snapshot = new Snapshot();
         snapshot->_diskInfo = _diskInfo;
         _showCreateButton = false;

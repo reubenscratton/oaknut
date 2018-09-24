@@ -83,7 +83,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
     private native int textInputGetSelEnd(long nativePtr);
     private native byte[] textInputGetText(long nativePtr);
     private native void textInputSetText(long nativePtr, byte[] text, int newCursorPosition);
-
+    private native void textInputActionPressed(long nativePtr);
 
     //Editable editable = new SpannableStringBuilder();
     NativeInputConnection currentInputConnection;
@@ -109,7 +109,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
 
     /**
      * Important lesson re IMEs: sometimes the IME will call sendKeyEvent() cos you pressed a key
-     * and other times it will decide itself what the new text is and call commitText().
+     * and other times it will call commitText() with the text to insert or replace.
      */
 
     private class NativeInputConnection implements InputConnection {
@@ -198,7 +198,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
 
         @Override
         public boolean performEditorAction(int editorAction) {
-            return false;
+            textInputActionPressed(nativePtr);
+            return true;
         }
 
         @Override
@@ -504,10 +505,10 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         if (show) {
             nativeView.requestFocus();
-            imm.showSoftInput(nativeView, InputMethodManager.SHOW_FORCED);
+            imm.showSoftInput(nativeView, InputMethodManager.SHOW_IMPLICIT);
             imm.restartInput(nativeView);
         } else {
-            imm.hideSoftInputFromWindow(nativeView.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+            imm.hideSoftInputFromWindow(nativeView.getWindowToken(), InputMethodManager.HIDE_IMPLICIT_ONLY);
         }
     }
 

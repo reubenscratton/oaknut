@@ -5,6 +5,7 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+#ifdef OAKNUT_WANT_CAMERA
 
 class Camera : public Object {
 public:
@@ -23,4 +24,6 @@ protected:
     Camera();
     
 };
+
+#endif
 

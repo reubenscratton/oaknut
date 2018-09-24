@@ -3,6 +3,7 @@
     width: fill_parent
     height: fill_parent
     orientation: vertical
+    weights: 0,1,0
     subviews: [{
         class: BeebView
         id: beebView
@@ -12,7 +13,6 @@
         class: View
         width: fill_parent
         height: 0
-        weight: 1
         background: black
       },{
         class: ControllerView

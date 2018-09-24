@@ -24,7 +24,7 @@ public:
 	ControllerView();
 	
 	// Overrides
-	bool onInputEvent(INPUTEVENT* event) override;
+	bool handleInputEvent(INPUTEVENT* event) override;
 	void layout() override;
     IKeyboardInputHandler* getKeyboardInputHandler() override;
 

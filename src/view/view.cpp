@@ -27,48 +27,28 @@ View::~View() {
     }
 }
 
-void View::applyStyle(const string& style) {
-    auto value = app.getStyleValue(style);
-    if (value) {
-        applyStyle(*value);
-    }
-}
-
-void View::applyStyle(const StyleValue& value) {
-    
-    auto& compound = value.compoundVal();
-    // Ensure the 'style' attribute, if present, gets processed first, because the others may override it
-    for (auto& field : compound) {
-        if (field.first == "style") {
-            applyStyle(field.second);
-            break;
-        }
-    }
-
-    for (auto& field : compound) {
-        if (field.first == "style" || field.first == "class") {
-            continue;
-        }
-        const StyleValue& val = field.second;
-        if (!applyStyleValue(field.first, &val)) {
-            if (_parent && !_parent->applyStyleValueFromChild(field.first, &val, this)) {
-                app.warn("Ignored unknown attribute '%s'", field.first.data());
-            }
-        }
-    }
-}
 
 
 
 bool View::applyStyleValue(const string& name, const StyleValue* value) {
+    // Ignore "class" and "subviews" which are handled by layoutInflate
+    if (name=="class" || name=="subviews") {
+        return true;
+    }
+    
     if (name == "id") {
         _id = value->stringVal();
         return true;
     } else if (name == "size") {
-        assert(value->isArray());
-        auto arrayVal = value->arrayVal();
-        _widthMeasureSpec = MEASURESPEC(&arrayVal[0]);
-        _heightMeasureSpec = MEASURESPEC(&arrayVal[1]);
+        if (value->isNumeric()) {
+            _widthMeasureSpec = MEASURESPEC(value);
+            _heightMeasureSpec = MEASURESPEC(value);
+        } else {
+            assert(value->isArray());
+            auto arrayVal = value->arrayVal();
+            _widthMeasureSpec = MEASURESPEC(&arrayVal[0]);
+            _heightMeasureSpec = MEASURESPEC(&arrayVal[1]);
+        }
         return true;
     } else if (name == "height") {
         _heightMeasureSpec = MEASURESPEC(value);
@@ -150,10 +130,6 @@ bool View::applyStyleValue(const string& name, const StyleValue* value) {
         setTintColor(value->colorVal());
         return true;
     }
-    return false;
-}
-
-bool View::applyStyleValueFromChild(const string& name, const StyleValue* value, View* subview) {
     return false;
 }
 
@@ -1208,7 +1184,7 @@ bool View::handleInputEvent(INPUTEVENT* event) {
     if (onClick) {
         retVal = true;
         if (event->type == INPUT_EVENT_TAP) {
-            onClick(this);
+            onClick();
         }
     }
 	if (onInputEvent) {

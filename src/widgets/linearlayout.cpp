@@ -27,17 +27,20 @@ bool LinearLayout::applyStyleValue(const string& name, const StyleValue* value) 
     } else if (name == "spacing") {
         setSpacing(value->floatVal());
         return true;
+    } else if (name == "weights") {
+        assert(value->isArray());
+        auto weights = value->arrayVal();
+        for (auto& weight : weights) {
+            float f = weight.floatVal();
+            _weights.push_back(f);
+            _weightsTotal += f;
+        }
+        return true;
     }
+
     return View::applyStyleValue(name, value);
 }
 
-bool LinearLayout::applyStyleValueFromChild(const string& name, const StyleValue* value, View* subview) {
-    if (name == "weight") {
-        setWeight(subview, value->floatVal());
-        return true;
-    }
-    return false;
-}
 
 void LinearLayout::measure(float parentWidth, float parentHeight) {
 

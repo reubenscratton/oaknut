@@ -54,7 +54,7 @@ void ControllerView::setTouchedKey(int finger, ControllerKey* currentKey) {
 }
 
 
-bool ControllerView::onInputEvent(INPUTEVENT *event) {
+bool ControllerView::handleInputEvent(INPUTEVENT *event) {
 
 	if (event->type==INPUT_EVENT_DOWN || event->type==INPUT_EVENT_MOVE) {
 		setTouchedKey(event->deviceIndex, hitTest(event->ptLocal));

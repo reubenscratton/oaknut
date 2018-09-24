@@ -4,7 +4,7 @@
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
 //
-#if PLATFORM_ANDROID
+#if PLATFORM_ANDROID && OAKNUT_WANT_CAMERA
 
 #include <oaknut.h>
 

@@ -89,6 +89,11 @@ bool PinCodeView::applyStyleValue(const string &name, const StyleValue *value) {
                     }
                 }
             };
+            field->onKeyboardAction = [=]() {
+                if (onKeyboardAction) {
+                    onKeyboardAction();
+                }
+            };
             addSubview(field);
         }
         return true;

@@ -20,6 +20,7 @@ public:
 
     // Overrides
     bool applyStyleValue(const string& name, const StyleValue* value) override;
+    void setBackground(RenderOp* renderOp) override;
 	void setBackgroundColor(COLOR backgroundColor) override;
     void updateContentSize(float parentWidth, float parentHeight) override;
 

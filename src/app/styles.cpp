@@ -769,3 +769,33 @@ void StyleValue::importValues(const map<string, StyleValue>& values) {
     assert(type == Compound);
     compound->insert(values.begin(), values.end());
 }
+
+
+
+
+void Styleable::applyStyle(const string& style) {
+    auto value = app.getStyleValue(style);
+    if (value) {
+        applyStyle(*value);
+    }
+}
+
+void Styleable::applyStyle(const StyleValue& value) {
+    
+    auto& compound = value.compoundVal();
+    // Ensure the 'style' attribute, if present, gets processed first, because the others may override it
+    for (auto& field : compound) {
+        if (field.first == "style") {
+            applyStyle(field.second);
+            break;
+        }
+    }
+    
+    for (auto& field : compound) {
+        if (field.first == "style") continue;
+        const StyleValue& val = field.second;
+        if (!applyStyleValue(field.first, &val)) {
+            app.warn("Ignored unknown attribute '%s'", field.first.data());
+        }
+    }
+}

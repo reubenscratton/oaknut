@@ -359,6 +359,15 @@ JAVA_FN(jint, MainActivity, textInputGetSelEnd)(JNIEnv* env, jobject obj, jlong 
     }
     return window->_textInputReceiver->getInsertionPoint();
 }
+JAVA_FN(void, MainActivity, textInputActionPressed)(JNIEnv* env, jobject obj, jlong nativePtr) {
+    WindowAndroid *window = (WindowAndroid *) nativePtr;
+    if (!window->_textInputReceiver) {
+        return;
+    }
+    return window->_textInputReceiver->handleActionPressed();
+}
+
+
 
 
 JAVA_FN(jboolean, MainActivity, onKeyEventNative)(JNIEnv* env, jobject obj, jlong nativePtr, jboolean isDown, jint keyCode, jint charCode) {

@@ -5,6 +5,8 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+#if OAKNUT_WANT_CAMERA
+
 #include <oaknut.h>
 
 DECLARE_DYNCREATE(CameraView);
@@ -79,3 +81,6 @@ void CameraView::detachFromWindow() {
     removeRenderOp(_renderOp);
     _renderOp = NULL;
 }
+
+#endif
+

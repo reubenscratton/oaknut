@@ -10,30 +10,30 @@ public:
     TextRenderer _textRenderer;
     COLOR _defaultColor;
     float _prevParentWidth;
-    
-    Label();
-	~Label();
-    
-    // Overrides
-    bool applyStyleValue(const string& name, const StyleValue* value) override;
-    void updateRenderOps() override;
-    void measure(float parentWidth, float parentHeight) override;
-    void updateContentSize(float parentWidth, float parentHeight) override;
-    void setContentOffset(POINT contentOffset) override;
-    void layout() override;
-    void onEffectiveTintColorChanged() override;
-    void setGravity(GRAVITY gravity) override;
-    void setRectSize(const SIZE& size) override;
-
-    
+        
     // API
+    Label();
+    ~Label();
     virtual const AttributedString& getText() { return _textRenderer.getText(); }
-	virtual void setText(const AttributedString& text);
+    virtual void setText(const AttributedString& text);
     virtual void setTextColor(COLOR color);
-	virtual void setFont(Font* font);
+    virtual void setFont(Font* font);
     virtual void setFontName(const string& fontName);
     virtual void setMaxLines(int maxLines);
     virtual const Attribute* getAttribute(int32_t pos, Attribute::Type type);
+
+    // Overrides
+    bool applyStyleValue(const string& name, const StyleValue* value) override;
+    void measure(float parentWidth, float parentHeight) override;
+    void layout() override;
+    void onEffectiveTintColorChanged() override;
+    void setContentOffset(POINT contentOffset) override;
+    void setGravity(GRAVITY gravity) override;
+    void setRectSize(const SIZE& size) override;
+    void updateContentSize(float parentWidth, float parentHeight) override;
+    void updateRenderOps() override;
+
+    
     
 #ifdef DEBUG
     string debugViewType() override;

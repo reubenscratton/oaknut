@@ -24,7 +24,6 @@ public:
 	void addSubview(View* subview) override;
 	void removeSubview(View* subview) override;
     bool applyStyleValue(const string& name, const StyleValue* value) override;
-    bool applyStyleValueFromChild(const string& name, const StyleValue* value, View* subview) override;
 
 protected:
     void setWeight(View* subview, float weight);

@@ -27,6 +27,7 @@ public:
     virtual void setSelectedRange(int start, int end) = 0;
     virtual string textInRange(int start, int end) = 0;
     virtual SoftKeyboardType getSoftKeyboardType() = 0;
+    virtual void handleActionPressed() = 0;
 };
 
 /**

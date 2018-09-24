@@ -335,3 +335,9 @@ void EditText::setMaxLength(int32_t maxLength) {
         }
     }
 }
+
+void EditText::handleActionPressed() {
+    if (onKeyboardAction) {
+        onKeyboardAction();
+    }
+}

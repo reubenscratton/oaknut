@@ -68,6 +68,18 @@ void TextRenderer::measure() {
     measure({0,0});
 }
 
+bool TextRenderer::applyStyleValue(const string& name, const StyleValue* value) {
+    if (name == "forecolor") {
+        setColor(value->colorVal());
+        return true;
+    }
+    if (name == "font-size") {
+        setFontSize(value->floatVal());
+        return true;
+    }
+    return false;
+}
+
 #define isWhitespace(c) (c==' ')
 
 void TextRenderer::measure(SIZE maxSize) {

@@ -4,6 +4,7 @@
 	height: match_parent
     background: lightGray
     orientation: vertical
+    weights: 0,1
 	subviews: [{
         class: View
 		id: topBar
@@ -46,7 +47,6 @@
 		id: editText
 		width: match_parent
 		height: 0dp
-        weight: 1
         background: {
             inset: 4dp
             fill: white

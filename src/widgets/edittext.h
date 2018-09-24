@@ -39,9 +39,12 @@ public:
     string textInRange(int start, int end) override;
     void setSelectedRange(int start, int end) override;
     SoftKeyboardType getSoftKeyboardType() override;
-    
+    void handleActionPressed() override;
+
+
     std::function<void(const AttributedString& before, AttributedString& after)> onTextChange;
     std::function<void(int32_t insertionPointBefore, int32_t& insertionPointAfter)> onInsertionPointChanged;
+    std::function<void()> onKeyboardAction;
 
     
 protected:
