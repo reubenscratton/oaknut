@@ -44,22 +44,19 @@ void ProgressSpinner::redraw() {
     COLOR colour = _effectiveTintColor;
     assert(colour); // this widget expects a tint colour
     _canvas->setAffineTransform(NULL);
-    float stroke = app.dp(5);
-    _canvas->setStrokeWidth(stroke);
-    float rx = (_rect.size.width - stroke) / 2;
-    float ry = (_rect.size.height - stroke) / 2;
+    float dotSize = app.dp(5);
+    float midX = getWidth() / 2;
+    float midY = getHeight() / 2;
+    float rx = (_rect.size.width - dotSize) / 2;
+    float ry = (_rect.size.height - dotSize) / 2;
     for (uint32_t i=0 ; i<12 ; i++) {
         float a = 2*M_PI * (i/12.0);
-        POINT pt = {
-            getWidth()/2 + cosf(a) * rx,
-            getHeight()/2 + sinf(a) * ry
-        };
+        RECT rect(midX + cosf(a) * rx - dotSize/2,
+                  midY + sinf(a) * ry - dotSize/2,
+                  dotSize,dotSize);
         uint32_t alpha = 255 - (((i+_phase)%12) * 16);
-        ObjPtr<Path> path = _canvas->createPath();
-        _canvas->setStrokeColor((colour & 0xFFFFFF) | (alpha<<24));
-        path->moveTo(pt);
-        path->lineTo(pt);
-        _canvas->drawPath(path);
+        _canvas->setFillColor((colour & 0xFFFFFF) | (alpha<<24));
+        _canvas->drawOval(rect);
     }
     setNeedsFullRedraw();
 }

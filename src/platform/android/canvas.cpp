@@ -72,6 +72,7 @@ public:
         getJNIEnv()->CallVoidMethod(_canvas, jmidResize, width, height);
         jobject jbitmap = getJNIEnv()->CallObjectMethod(_canvas, jmidGetBitmap);
         _bitmap = new Bitmap(jbitmap);
+        _bitmap->_hasPremultipliedAlpha = true;
     }
     void clear(COLOR color) {
         getJNIEnv()->CallVoidMethod(_canvas, jmidClear, (jint)color);

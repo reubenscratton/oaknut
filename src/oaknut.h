@@ -90,8 +90,6 @@ typedef double TIMESTAMP;
 typedef uint64_t TIMESTAMP;
 #endif
 
-
-
 // Include platform headers
 #include __incstr(platform/PLATFORM/platform.h)
 
@@ -115,12 +113,7 @@ typedef uint64_t TIMESTAMP;
 #include "graphics/bitmap.h"
 #include "media/camera.h"
 #include "media/audioinput.h"
-
-// Face detection
-void* oakFaceDetectorCreate();
-int oakFaceDetectorDetectFaces(void* osobj, class Bitmap* bitmap);
-void oakFaceDetectorClose(void* osobj);
-
+#include "util/facedetector.h"
 #include "graphics/matrix.h"
 #include "graphics/geom.h"
 #include "graphics/quadbuffer.h"

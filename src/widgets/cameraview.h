@@ -12,7 +12,8 @@ public:
     
     // API
     std::function<void(Bitmap* bitmap, float brightness)> onNewCameraFrame;
-    
+    void show();
+
     // Overrides
     virtual void attachToWindow(Window* window);
     virtual void detachFromWindow();

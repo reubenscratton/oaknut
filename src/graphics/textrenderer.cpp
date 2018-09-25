@@ -469,9 +469,9 @@ int32_t TextRenderer::moveCharacterIndex(int32_t charIndex, int dx, int dy) cons
 
 int32_t TextRenderer::characterIndexFromPoint(const POINT& pt) const {
     assert(_measuredSizeValid);
-    const TEXTLINE* line = NULL;
-    for (auto& it: _lines) {
-        if (pt.y>=it.bounds.origin.y && pt.y<it.bounds.bottom()) {
+    const TEXTLINE *line = NULL;
+    for (auto &it: _lines) {
+        if (pt.y >= it.bounds.origin.y && pt.y < it.bounds.bottom()) {
             line = &it;
             break;
         }
@@ -483,20 +483,23 @@ int32_t TextRenderer::characterIndexFromPoint(const POINT& pt) const {
         if (pt.y < _lines.begin()->bounds.origin.y) {
             line = &_lines.at(0);
         } else {
-            line = &_lines.at(_lines.size()-1);
+            line = &_lines.at(_lines.size() - 1);
         }
     }
-    
-    float minErr = FLT_MAX;
-    int32_t nearestCharIndex=0;
-    for (int32_t charIndex=0 ; charIndex < line->numCharacters ; charIndex++) {
-        auto character = _characters[line->startCharacterIndex + charIndex];
-        float dx = fabs(pt.x - character.rect.origin.x);
-        if (dx < minErr) {
-            nearestCharIndex = charIndex;
-            minErr = dx;
+
+    int32_t nearestCharIndex = 0;
+    if (pt.x >= line->bounds.right()) {
+        nearestCharIndex = line->numCharacters;
+    } else {
+        float minErr = FLT_MAX;
+        for (int32_t charIndex = 0; charIndex < line->numCharacters; charIndex++) {
+            auto character = _characters[line->startCharacterIndex + charIndex];
+            float dx = fabs(pt.x - character.rect.midX());
+            if (dx < minErr) {
+                nearestCharIndex = charIndex;
+                minErr = dx;
+            }
         }
-        charIndex++;
     }
     return line->startCharacterIndex + nearestCharIndex;
 }

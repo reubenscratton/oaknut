@@ -9,39 +9,44 @@
 #include "oaknut.h"
 #import <CoreImage/CoreImage.h>
 
-
-void* oakFaceDetectorCreate() {
+class FaceDetectorApple : public FaceDetector {
+public:
+    CIDetector* _detector;
     
-    CIContext* context =
+    FaceDetectorApple() {
+    
+        CIContext* context =
 #if TARGET_OS_IPHONE
-        [CIContext contextWithEAGLContext:[EAGLContext currentContext]];
+            [CIContext contextWithEAGLContext:[EAGLContext currentContext]];
 #else
-         [CIContext contextWithCGLContext:CGLGetCurrentContext()
+            [CIContext contextWithCGLContext:CGLGetCurrentContext()
                                                   pixelFormat:nil
                                                    colorSpace:nil
                                                       options:nil];    
 #endif
 
-    return (__bridge_retained void*)
-        [CIDetector detectorOfType:CIDetectorTypeFace
+        _detector = [CIDetector detectorOfType:CIDetectorTypeFace
                            context:context
                            options:@{ CIDetectorAccuracy : CIDetectorAccuracyHigh }];
-}
+    }
+    
 
-int oakFaceDetectorDetectFaces(void* osobj, Bitmap* bitmap) {
-    CIDetector* detector = (__bridge CIDetector*)osobj;
-    PIXELDATA pixeldata;
-    bitmap->lock(&pixeldata, false);
-    NSData* data = [NSData dataWithBytesNoCopy:pixeldata.data length:pixeldata.cb freeWhenDone:NO];
-    CIImage* image = [CIImage imageWithBitmapData:data bytesPerRow:pixeldata.stride size:CGSizeMake(bitmap->_width,bitmap->_height) format:kCIFormatRGBA8 colorSpace:nil];
-    //[CIImage imageWithTexture:tex->_textureId size: flipped:NO colorSpace:nil];
-    NSArray *features = [detector featuresInImage:image options:@{}];
-    bitmap->unlock(&pixeldata, false);
-    //app.log("faces: %d", features.count);
-    return (int)features.count;
-}
-void oakFaceDetectorClose(void* osobj) {
-    CIDetector* __unused detector = (__bridge_transfer CIDetector*)osobj;
+    int detectFaces(Bitmap* bitmap) override {
+        PIXELDATA pixeldata;
+        bitmap->lock(&pixeldata, false);
+        NSData* data = [NSData dataWithBytesNoCopy:pixeldata.data length:pixeldata.cb freeWhenDone:NO];
+        CIImage* image = [CIImage imageWithBitmapData:data bytesPerRow:pixeldata.stride size:CGSizeMake(bitmap->_width,bitmap->_height) format:kCIFormatRGBA8 colorSpace:nil];
+        //[CIImage imageWithTexture:tex->_textureId size: flipped:NO colorSpace:nil];
+        NSArray *features = [_detector featuresInImage:image options:@{}];
+        bitmap->unlock(&pixeldata, false);
+        //app.log("faces: %d", features.count);
+        return (int)features.count;
+    }
+};
+
+
+FaceDetector* FaceDetector::create() {
+    return new FaceDetectorApple();
 }
 
 #endif

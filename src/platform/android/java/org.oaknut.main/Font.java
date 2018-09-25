@@ -59,8 +59,8 @@ public class Font {
             //int pipeWidth = rect2.width();
             //textPaint.getTextBounds(new String(ach) + "L", 0, 2, rect2);
             //advance = (rect2.width() - pipeWidth);
-            advance = width + 1;
-            android.util.Log.d("TEXT", ach[0] + " width: " + width + " advance:" +advance);
+            advance = width + 1; // terrible hack but looks ok!
+            //android.util.Log.d("TEXT", ach[0] + " width: " + width + " advance:" +advance);
         }
         long foo = nativeCreateGlyph(cobj, atlas, charcode, rect.left, -rect.bottom, rect.width(), rect.height(), advance);
         return foo;

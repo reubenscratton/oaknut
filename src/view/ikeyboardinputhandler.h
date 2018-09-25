@@ -7,10 +7,18 @@
 
 
 enum SoftKeyboardType {
-    General,
-    Phone,
-    Number,
-    Email,
+    KeyboardGeneral,
+    KeyboardPhone,
+    KeyboardNumber,
+    KeyboardEmail,
+};
+
+enum ActionType {
+    ActionNone,
+    ActionNext,
+    ActionSearch,
+    ActionDone,
+    ActionGo
 };
 
 /**
@@ -27,6 +35,7 @@ public:
     virtual void setSelectedRange(int start, int end) = 0;
     virtual string textInRange(int start, int end) = 0;
     virtual SoftKeyboardType getSoftKeyboardType() = 0;
+    virtual ActionType getPreferredActionType() = 0;
     virtual void handleActionPressed() = 0;
 };
 

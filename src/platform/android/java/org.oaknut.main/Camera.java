@@ -172,10 +172,10 @@ public class Camera extends Object implements SurfaceTexture.OnFrameAvailableLis
 
     @Override
     public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-
-        cameraTexture.updateTexImage();
-        cameraTexture.getTransformMatrix(cameraTextureMatrix);
-        nativeOnFrameAvailable(cppCamera, textureId, previewSize.width, previewSize.height, cameraTextureMatrix);
-
+        if (cameraTexture != null) {
+            cameraTexture.updateTexImage();
+            cameraTexture.getTransformMatrix(cameraTextureMatrix);
+            nativeOnFrameAvailable(cppCamera, textureId, previewSize.width, previewSize.height, cameraTextureMatrix);
+        }
     }
 }

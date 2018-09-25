@@ -34,11 +34,28 @@ static GLProgramTextureDesaturated s_prog;
 
 void CameraView::attachToWindow(Window* window) {
     View::attachToWindow(window);
+    show();
+}
+
+void CameraView::show() {
+    if (!_window) {
+        return;
+    }
+    if (_renderOp) {
+        return;
+    }
+    if (!_window->hasPermission(PermissionCamera)) {
+        setBackgroundColor(0xFF000000);
+        return;
+    }
     _renderOp = new TextureRenderOp();
-    _renderOp->_prog = &s_prog;
     addRenderOp(_renderOp);
+    _renderOp->_prog = &s_prog;
     _camera = Camera::create(0);
     _camera->onNewCameraFrame = [=](Bitmap* bitmap, float brightness) {
+        if (_backgroundOp) {
+            setBackground(NULL);
+        }
         _renderOp->setBitmap(bitmap);
         //if (!_renderOp->_batch) {
         //    addRenderOp(_renderOp);
@@ -52,15 +69,15 @@ void CameraView::attachToWindow(Window* window) {
         } else {
             rect.scale(1.0, scaleWidth/scaleHeight);
         }
-        
+
         // Center the texture rect on the bounds rect
         rect.origin.x = bounds.midX() - rect.size.width/2;
         rect.origin.y = bounds.midY() - rect.size.height/2;
-        
+
         _renderOp->setRect(rect);
-        
+
         onNewCameraFrame(bitmap, brightness);
-        
+
         GLint oldTex;
         check_gl(glGetIntegerv, GL_TEXTURE_BINDING_2D, &oldTex);
         check_gl(glBindTexture, GL_TEXTURE_2D, bitmap->_textureId);
@@ -76,10 +93,14 @@ void CameraView::attachToWindow(Window* window) {
 
 void CameraView::detachFromWindow() {
     View::detachFromWindow();
-    _camera->stop();
-    _camera->close();
-    removeRenderOp(_renderOp);
-    _renderOp = NULL;
+    if (_camera) {
+        _camera->stop();
+        _camera->close();
+    }
+    if (_renderOp) {
+        removeRenderOp(_renderOp);
+        _renderOp = NULL;
+    }
 }
 
 #endif

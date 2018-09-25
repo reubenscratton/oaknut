@@ -38,6 +38,7 @@ public:
     PinCodeViewField() {
         applyStyle("pincodeField");
         setMaxLength(1);
+        setPreferredActionType(ActionNext);
     }
     
     void deleteBackward() override {

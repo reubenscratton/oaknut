@@ -52,16 +52,34 @@ bool EditText::applyStyleValue(const string& name, const StyleValue* value) {
     if (name == "softKeyboardType") {
         string softKeyboardType = value->stringVal().lowercase();
         if (softKeyboardType == "phone") {
-            _softKeyboardType = Phone;
+            _softKeyboardType = KeyboardPhone;
         } else if (softKeyboardType == "email") {
-            _softKeyboardType = Email;
+            _softKeyboardType = KeyboardEmail;
         } else if (softKeyboardType == "general") {
-            _softKeyboardType = General;
+            _softKeyboardType = KeyboardGeneral;
         } else {
             app.warn("invalid softKeyboardType '%s'", softKeyboardType.data());
         }
         return true;
-    } else if (name == "maxLength") {
+    }
+    if (name == "preferredActionType") {
+        string preferredActionType = value->stringVal().lowercase();
+        if (preferredActionType == "none") {
+            _preferredActionType = ActionNone;
+        } else if (preferredActionType == "next") {
+            _preferredActionType = ActionNext;
+        } else if (preferredActionType == "search") {
+            _preferredActionType = ActionSearch;
+        } else if (preferredActionType == "done") {
+            _preferredActionType = ActionDone;
+        } else if (preferredActionType == "go") {
+            _preferredActionType = ActionGo;
+        } else {
+            app.warn("invalid preferredActionType '%s'", preferredActionType.data());
+        }
+        return true;
+    }
+    if (name == "maxLength") {
         setMaxLength(value->intVal());
         return true;
     }
@@ -268,9 +286,11 @@ void EditText::moveCursor(int dx, int dy) {
 }
 
 
-SoftKeyboardType EditText::getSoftKeyboardType() {
-    return _softKeyboardType;
+
+void EditText::setPreferredActionType(ActionType preferredActionType) {
+    _preferredActionType = preferredActionType;
 }
+
 
 
 /*
@@ -340,4 +360,12 @@ void EditText::handleActionPressed() {
     if (onKeyboardAction) {
         onKeyboardAction();
     }
+}
+
+SoftKeyboardType EditText::getSoftKeyboardType() {
+    return _softKeyboardType;
+}
+
+ActionType EditText::getPreferredActionType() {
+    return _preferredActionType;
 }

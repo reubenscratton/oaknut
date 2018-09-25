@@ -564,8 +564,8 @@ void View::measure(float parentWidth, float parentHeight) {
     }
 	
 	// Align view sizes to pixel grid
-	_rect.size.width = floorf(_rect.size.width);
-	_rect.size.height = floorf(_rect.size.height);
+	_rect.size.width = ceilf(_rect.size.width);
+	_rect.size.height = ceilf(_rect.size.height);
 
 }
 

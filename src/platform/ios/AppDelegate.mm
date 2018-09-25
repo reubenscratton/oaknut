@@ -8,7 +8,9 @@
 
 #import "AppDelegate.h"
 #import "NativeView.h"
-
+#if OAKNUT_WANT_CAMERA || OAKNUT_WANT_AUDIO_INPUT
+#import <AVFoundation/AVFoundation.h>
+#endif
 
 @interface NativeViewController : UIViewController
 @end
@@ -100,6 +102,85 @@ public:
             [_nativeView->_textInputDelegate selectionDidChange: _nativeView];
             [_nativeView->_textInputDelegate textDidChange: _nativeView];
         }
+    }
+    
+    /**
+     Permissions
+     */
+    virtual bool hasPermission(Permission permission) override {
+        if (permission == PermissionCamera) {
+#ifdef OAKNUT_WANT_CAMERA
+            AVAuthorizationStatus status = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+            return status == AVAuthorizationStatusAuthorized;
+#else
+            return false;
+#endif
+        }
+        if (permission == PermissionMic) {
+#ifdef OAKNUT_WANT_AUDIO_INPUT
+            AVAuthorizationStatus status = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeAudio];
+            return status == AVAuthorizationStatusAuthorized;
+#else
+            return false;
+#endif
+        }
+        assert(0); // unknown permission
+        return false;
+    }
+    
+    class PermissionRequest {
+    public:
+        vector<Permission> _permissions;
+        std::function<void(vector<bool>)> _callback;
+        int _index;
+        vector<bool> _results;
+        PermissionRequest(const vector<Permission>& permissions, const std::function<void(vector<bool>)>& callback) {
+            _permissions = permissions;
+            _callback = callback;
+            _index = 0;
+        }
+        void addResult(BOOL result) {
+            _results.push_back(result);
+            if (_results.size() >= _permissions.size()) {
+                _callback(_results);
+                delete this;
+            } else {
+                drain();
+            }
+        }
+        void drain() {
+            Permission permission = _permissions[_index++];
+            if (permission == PermissionCamera) {
+#ifdef OAKNUT_WANT_CAMERA
+                [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        addResult(granted);
+                    });
+                }];
+#else
+                addResult(false);
+#endif
+            }
+            else if (permission == PermissionMic) {
+#ifdef OAKNUT_WANT_AUDIO_INPUT
+                [AVCaptureDevice requestAccessForMediaType:AVMediaTypeAudio completionHandler:^(BOOL granted) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        addResult(granted);
+                    });
+                }];
+#else
+                addResult(false);
+#endif
+            }
+            else {
+                assert(0); // unknown permission
+            }
+        }
+    };
+    
+    virtual void runWithPermissions(vector<Permission> permissions, std::function<void(vector<bool>)> callback) override {
+        PermissionRequest* req = new PermissionRequest(permissions, callback);
+        req->drain();
     }
 
     UIViewController* _viewController;

@@ -1,7 +1,9 @@
 package org.oaknut.main;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.PixelFormat;
@@ -10,11 +12,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.text.Editable;
-import android.text.InputType;
-import android.text.SpannableStringBuilder;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Choreographer;
 import android.view.Display;
 import android.view.KeyEvent;
@@ -25,7 +25,6 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.CompletionInfo;
 import android.view.inputmethod.CorrectionInfo;
 import android.view.inputmethod.EditorInfo;
@@ -35,9 +34,11 @@ import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputContentInfo;
 import android.view.inputmethod.InputMethodManager;
 
+import java.util.ArrayList;
+import java.util.Stack;
 
 
-public class MainActivity extends Activity implements SurfaceHolder.Callback2, ViewTreeObserver.OnGlobalLayoutListener, Choreographer.FrameCallback {
+public class MainActivity extends Activity implements InputConnection, SurfaceHolder.Callback2, ViewTreeObserver.OnGlobalLayoutListener, Choreographer.FrameCallback {
 
     static {
         System.loadLibrary("oaknutapp");
@@ -76,26 +77,60 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
     private native void onTouchEventNative(long nativePtr, int pointer, int action, long time, float x, float y);
     private native boolean onBackPressedNative(long nativePtr);
     private native void onDestroyNative(long nativePtr);
+    private native void onGotPermissionsResults(long nativePtr, long nativeRequestPtr, boolean[] granted);
 
     private native boolean textInputIsFocused(long nativePtr);
     private native int textInputGetInputType(long nativePtr);
+    private native int textInputGetPreferredActionType(long nativePtr);
     private native int textInputGetSelStart(long nativePtr);
     private native int textInputGetSelEnd(long nativePtr);
     private native byte[] textInputGetText(long nativePtr);
     private native void textInputSetText(long nativePtr, byte[] text, int newCursorPosition);
     private native void textInputActionPressed(long nativePtr);
 
-    //Editable editable = new SpannableStringBuilder();
-    NativeInputConnection currentInputConnection;
 
-    /*void updateEditable() {
-        byte[] textBytes = textInputGetText(nativePtr);
-        editable.clear();
-        if (textBytes != null) {
-            editable.append(new String(textBytes, App.UTF_8));
+
+    private static final int PERMISSIONS_REQUEST = 123;
+    private static class AsyncPermissionRequest {
+        String[] permissionNames;
+        long nativeRequestPtr;
+        AsyncPermissionRequest(String[] permissionNames, long nativeRequestPtr) {
+            this.permissionNames = permissionNames;
+            this.nativeRequestPtr = nativeRequestPtr;
         }
-    }*/
+    }
+    private ArrayList<AsyncPermissionRequest> permissionRequests = new ArrayList<>();
+    AsyncPermissionRequest currentPermissionReq;
 
+    boolean hasPermission(byte[] permissionBytes) {
+        String permission = new String(permissionBytes, App.UTF_8);
+        return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED;
+    }
+    void requestPermission(long nativeRequestPtr, String[] permissionNames) {
+        permissionRequests.add(new AsyncPermissionRequest(permissionNames, nativeRequestPtr));
+        drainPermissionRequests();
+    }
+    void drainPermissionRequests() {
+        if (permissionRequests.size() > 0 && currentPermissionReq==null) {
+            currentPermissionReq = permissionRequests.remove(0);
+            ActivityCompat.requestPermissions(this, currentPermissionReq.permissionNames, PERMISSIONS_REQUEST);
+        }
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        if (requestCode == PERMISSIONS_REQUEST && currentPermissionReq!=null) {
+            boolean[] results = new boolean[grantResults.length];
+            for (int i=0 ; i<grantResults.length ; i++) {
+                results[i] = grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            }
+            onGotPermissionsResults(nativePtr, currentPermissionReq.nativeRequestPtr, results);
+            currentPermissionReq = null;
+            drainPermissionRequests();
+        }
+    }
 
     String getCurrentText() {
         byte[] textBytes = textInputGetText(nativePtr);
@@ -106,23 +141,47 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
         return str;
     }
 
+    private void log(String s) {
+        //android.util.Log.d("TEXT", s);
+    }
 
     /**
      * Important lesson re IMEs: sometimes the IME will call sendKeyEvent() cos you pressed a key
      * and other times it will call commitText() with the text to insert or replace.
      */
 
-    private class NativeInputConnection implements InputConnection {
-
-
         @Override
         public CharSequence getTextBeforeCursor(int n, int flags) {
-            return null;
+            String str = getCurrentText();
+            int s = textInputGetSelStart(nativePtr);
+            int e = textInputGetSelEnd(nativePtr);
+            s = Math.min(s, str.length());
+            e = Math.min(e, str.length());
+            if (e<s) {
+                int tmp = e;
+                e = s;
+                s = tmp;
+            }
+            str = str.substring(0,s);
+            log("getTextBeforeCursor(" +n + "," + flags + ") sel=" + s +"," + e + " ret=" + str);
+            return str;
         }
 
         @Override
         public CharSequence getTextAfterCursor(int n, int flags) {
-            return null;
+            String str = getCurrentText();
+            int s = textInputGetSelStart(nativePtr);
+            int e = textInputGetSelEnd(nativePtr);
+            s = Math.min(s, str.length());
+            e = Math.min(e, str.length());
+            if (e<s) {
+                int tmp = e;
+                e = s;
+                s = tmp;
+            }
+            str = str.substring(e);
+            log("getTextAfterCursor(" +n + "," + flags + ") sel=" + s +"," + e + " ret=" + str);
+            return str;
         }
 
         @Override
@@ -137,126 +196,154 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
                 e = s;
                 s = tmp;
             }
-            return str.substring(s,e);
+            str = str.substring(s,e);
+            log("getSelectedText(" + flags + ") sel=" + s +"," + e + " ret=" + str);
+            return str;
         }
 
         @Override
         public int getCursorCapsMode(int reqModes) {
+            log("getCursorCapsMode");
             return 0;
         }
 
         @Override
         public ExtractedText getExtractedText(ExtractedTextRequest request, int flags) {
+            log("getExtractedText");
             return null;
         }
 
         @Override
         public boolean deleteSurroundingText(int beforeLength, int afterLength) {
+            log("deleteSurroundingText");
             return false;
         }
 
         @Override
         public boolean deleteSurroundingTextInCodePoints(int beforeLength, int afterLength) {
+            log("deleteSurroundingTextInCodePoints");
             return false;
         }
 
         @Override
         public boolean setComposingText(CharSequence text, int newCursorPosition) {
+            log("setComposingText");
             return false;
         }
 
         @Override
         public boolean setComposingRegion(int start, int end) {
+            log("setComposingRegion");
             return false;
         }
 
         @Override
         public boolean finishComposingText() {
+            log("finishComposingText");
             return false;
         }
 
         @Override
         public boolean commitText(CharSequence text, int newCursorPosition) {
+            log("commitText(" + text + ", newCursorPos="+newCursorPosition +")");
+            //The new cursor position around the text, If > 0, this is relative to the end
+            // of the text - 1; if <= 0, this is relative to the start of the text.
             textInputSetText(nativePtr, text.toString().getBytes(App.UTF_8), newCursorPosition);
             return true;
         }
 
         @Override
         public boolean commitCompletion(CompletionInfo text) {
+            log("commitCompletion");
             return false;
         }
 
         @Override
         public boolean commitCorrection(CorrectionInfo correctionInfo) {
+            log("commitCorrection");
             return false;
         }
 
         @Override
         public boolean setSelection(int start, int end) {
+            log("setSelection(" + start + "," + end + ")");
             return false;
         }
 
         @Override
         public boolean performEditorAction(int editorAction) {
+            log("performEditorAction(" + editorAction + ")");
             textInputActionPressed(nativePtr);
             return true;
         }
 
         @Override
         public boolean performContextMenuAction(int id) {
+            log("performContextMenuAction");
             return false;
         }
 
         @Override
         public boolean beginBatchEdit() {
+            log("beginBatchEdit");
             return false;
         }
 
         @Override
         public boolean endBatchEdit() {
+            log("endBatchEdit");
             return false;
         }
 
         @Override
         public boolean sendKeyEvent(KeyEvent event) {
-            return dispatchKeyEvent(event);
+            log("sendKeyEvent(" + event.toString() + ")");
+            dispatchKeyEvent(event);
+            return true;
         }
 
         @Override
         public boolean clearMetaKeyStates(int states) {
+            log("clearMetaKeyStates");
             return false;
         }
 
         @Override
         public boolean reportFullscreenMode(boolean enabled) {
+            log("reportFullscreenMode");
             return false;
         }
 
         @Override
         public boolean performPrivateCommand(String action, Bundle data) {
+            log("performPrivateCommand");
             return false;
         }
 
         @Override
         public boolean requestCursorUpdates(int cursorUpdateMode) {
+            log("requestCursorUpdates");
             return false;
         }
 
         @Override
         public Handler getHandler() {
+            log("getHandler");
             return null;
         }
 
         @Override
         public void closeConnection() {
+            log("closeConnection");
 
         }
 
         @Override
         public boolean commitContent(@NonNull InputContentInfo inputContentInfo, int flags, @Nullable Bundle opts) {
+            log("commitContent");
             return false;
         }
-    }
+
 
 
     private class NativeView extends View {
@@ -273,18 +360,22 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
         @Override
         public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
             if (!textInputIsFocused(nativePtr)) {
-                currentInputConnection = null;
+                //currentInputConnection = null;
+                log("onCreateInputConnection - no current field");
             } else {
                 outAttrs.inputType = textInputGetInputType(nativePtr);
+                outAttrs.imeOptions = textInputGetPreferredActionType(nativePtr);
                 outAttrs.initialSelStart = textInputGetSelStart(nativePtr);
                 outAttrs.initialSelEnd = textInputGetSelEnd(nativePtr);
-                currentInputConnection = new NativeInputConnection();
+                log("onCreateInputConnection - new conn s=" + outAttrs.initialSelStart + " e=" + outAttrs.initialSelEnd);
+                //currentInputConnection = new NativeInputConnection();
             }
-            return currentInputConnection;
+            return MainActivity.this;
         }
     }
 
     void keyboardNotifyTextChanged() {
+        log("keyboardNotifyTextChanged");
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.restartInput(nativeView);
     }
@@ -292,6 +383,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback2, V
         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
         int selStart = textInputGetSelStart(nativePtr);
         int selEnd = textInputGetSelEnd(nativePtr);
+        log("keyboardNotifyTextSelectionChanged s=" + selStart + " e=" + selEnd);
         imm.updateSelection(nativeView, selStart, selEnd, 0, 0);
         //currentInputConnection.setSelection(selStart, selEnd);
     }

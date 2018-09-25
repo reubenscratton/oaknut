@@ -46,6 +46,10 @@ typedef struct INPUTEVENT {
 } INPUTEVENT;
 
 
+enum Permission {
+    PermissionCamera,
+    PermissionMic,
+};
 
 /** @class Window
  *  @brief A window is the top level container for app UI. There is usually only one Window instance, accessible through `app.window`.
@@ -90,6 +94,11 @@ public:
     void stopAnimation(Animation* animation);
     void detachView(View* view);
     bool _animationsModified;
+    
+    // Permissions
+	virtual bool hasPermission(Permission permission);
+	virtual void runWithPermission(Permission permission, std::function<void(bool)> callback);
+    virtual void runWithPermissions(vector<Permission> permission, std::function<void(vector<bool>)> callback);
     
 
     vector<MotionTracker*> _motionTrackers;

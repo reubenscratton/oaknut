@@ -438,20 +438,20 @@ void Window::keyboardNotifyTextSelectionChanged() {
 }
 
 bool Window::setFocusedView(View* view) {
-    if (_focusedView == view) {
-        return false;
-    }
-    if (_focusedView) {
+    bool settingToExisting = (_focusedView == view);
+    if (_focusedView && !settingToExisting) {
         _focusedView->setFocused(false);
     }
     _focusedView = view;
     if (view) {
-        view->setFocused(true);
-        _keyboardHandler = view->getKeyboardInputHandler();
-        auto newTextInputReceiver = view->getTextInputReceiver();
-        if (newTextInputReceiver != _textInputReceiver) {
-            _textInputReceiver = newTextInputReceiver;
-            keyboardNotifyTextChanged();
+        if (!settingToExisting) {
+            view->setFocused(true);
+            _keyboardHandler = view->getKeyboardInputHandler();
+            auto newTextInputReceiver = view->getTextInputReceiver();
+            if (newTextInputReceiver != _textInputReceiver) {
+                _textInputReceiver = newTextInputReceiver;
+                keyboardNotifyTextChanged();
+            }
         }
         keyboardShow(_textInputReceiver != NULL);
     } else {
@@ -580,5 +580,18 @@ void Window::setSoftKeyboardRect(const RECT rect) {
 }
 
 
+// Permissions. By default there is no runtime permissions system.
+// // Of course iOS and Android implement these differently...
+bool Window::hasPermission(Permission permission) {
+    return true;
+}
+void Window::runWithPermission(Permission permission, std::function<void(bool)> callback) {
+    runWithPermissions({permission}, [=](vector<bool> callback2) {
+        callback(callback2[0]);
+    });
+}
+void Window::runWithPermissions(vector<Permission> permissions, std::function<void(vector<bool>)> callback) {
+    callback({true});
+}
 
 

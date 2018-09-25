@@ -300,8 +300,8 @@ static UITextInputStringTokenizer* _tokenizer;
 
 - (UIKeyboardType)keyboardType {
     switch (_window->_textInputReceiver->getSoftKeyboardType()) {
-        case Phone: return UIKeyboardTypePhonePad;
-        case Email: return UIKeyboardTypeEmailAddress;
+        case KeyboardPhone: return UIKeyboardTypePhonePad;
+        case KeyboardEmail: return UIKeyboardTypeEmailAddress;
         default:
             break;
     }

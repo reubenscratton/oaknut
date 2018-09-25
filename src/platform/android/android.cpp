@@ -31,6 +31,26 @@ JNIEnv* getJNIEnv() {
     return env;
 }
 
+jbyteArray jbyteArrayFromString(JNIEnv* env, const string& str) {
+    jbyteArray array = NULL;
+    int cb = str.lengthInBytes();
+    if (cb > 0) {
+        array = env->NewByteArray(cb);
+        if (array != NULL) {
+            env->SetByteArrayRegion(array, 0, cb, (jbyte*)str.data());
+        }
+    }
+    return array;
+}
+
+jstring jstringFromString(JNIEnv* env, const string& str) {
+    int cb = str.lengthInBytes();
+    if (cb > 0) {
+        return env->NewStringUTF(str.data());
+    }
+    return NULL;
+}
+
 
 class WindowAndroid : public Window {
 public:
@@ -97,6 +117,60 @@ public:
         JNIEnv* env = getJNIEnv();
         jmethodID jmid = env->GetMethodID(env->GetObjectClass(activity), "keyboardNotifyTextSelectionChanged", "()V");
         env->CallVoidMethod(activity, jmid);
+    }
+
+    /**
+     * Permissions
+     */
+    string androidPermissionName(Permission permission) {
+        switch (permission) {
+            case PermissionCamera:
+                return "android.permission.CAMERA";
+            case PermissionMic:
+                return "android.permission.RECORD_AUDIO";
+        }
+        assert(0); // unknown permission
+        return "";
+    }
+    struct AsyncPermissionRequest {
+        std::function<void(vector<bool>)> callback;
+    };
+    bool hasPermission(Permission permission) override {
+        JNIEnv* env = getJNIEnv();
+        string permissionName = androidPermissionName(permission);
+        jmethodID jmid = env->GetMethodID(env->GetObjectClass(activity), "hasPermission", "([B)Z");
+        return env->CallBooleanMethod(activity, jmid, jbyteArrayFromString(env, permissionName));
+    }
+
+    void runWithPermissions(vector<Permission> permissions, std::function<void(vector<bool>)> callback) override {
+        JNIEnv* env = getJNIEnv();
+        jobjectArray names = env->NewObjectArray(permissions.size(), env->FindClass("java/lang/String"), NULL);
+        int i=0;
+        for (Permission permission : permissions) {
+            string permissionName = androidPermissionName(permission);
+            jstring permissionNameStr = jstringFromString(env, permissionName);
+            env->SetObjectArrayElement(names, i++, permissionNameStr);
+        }
+
+        // Async
+        AsyncPermissionRequest* req = new AsyncPermissionRequest();
+        req->callback = callback;
+        jmethodID  jmid = env->GetMethodID(env->GetObjectClass(activity), "requestPermission", "(J[Ljava/lang/String;)V");
+        env->CallVoidMethod(activity, jmid, (jlong)req, names);
+    }
+    void onGotPermissionsResults(jlong nativeRequestPtr, jbooleanArray results) {
+        JNIEnv* env = getJNIEnv();
+        AsyncPermissionRequest* req = (AsyncPermissionRequest*)nativeRequestPtr;
+        int c = env->GetArrayLength(results);
+        jboolean* jbools = new jboolean[c];
+        env->GetBooleanArrayRegion(results, 0, c, jbools);
+        vector<bool> vec(c);
+        for (int i=0 ; i<c ; i++) {
+            vec[i] = jbools[i];
+        }
+        delete [] jbools;
+        req->callback(vec);
+        delete req;
     }
 
 };
@@ -301,17 +375,45 @@ static const int TYPE_CLASS_NUMBER = 0x00000002;
 static const int TYPE_CLASS_PHONE = 0x00000003;
 static const int TYPE_TEXT_VARIATION_EMAIL_ADDRESS = 0x00000020;
 
+static const int IME_ACTION_UNSPECIFIED = 0x00000000;
+static const int IME_ACTION_NONE = 0x00000001;
+static const int IME_ACTION_GO = 0x00000002;
+static const int IME_ACTION_SEARCH = 0x00000003;
+static const int IME_ACTION_SEND = 0x00000004;
+static const int IME_ACTION_NEXT = 0x00000005;
+static const int IME_ACTION_DONE = 0x00000006;
+
 JAVA_FN(jint, MainActivity, textInputGetInputType)(JNIEnv* env, jobject obj, jlong nativePtr) {
     WindowAndroid *window = (WindowAndroid *) nativePtr;
     if (!window->_textInputReceiver) {
         return 0;
     }
     int keyboardType = window->_textInputReceiver->getSoftKeyboardType();
-    if (keyboardType == SoftKeyboardType::Phone) return TYPE_CLASS_PHONE;
-    if (keyboardType == SoftKeyboardType::Number) return TYPE_CLASS_NUMBER;
-    if (keyboardType == SoftKeyboardType::Email) return TYPE_CLASS_TEXT | TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
+    if (keyboardType == SoftKeyboardType::KeyboardPhone) return TYPE_CLASS_PHONE;
+    if (keyboardType == SoftKeyboardType::KeyboardNumber) return TYPE_CLASS_NUMBER;
+    if (keyboardType == SoftKeyboardType::KeyboardEmail) return TYPE_CLASS_TEXT | TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
     return TYPE_CLASS_TEXT;
 }
+
+JAVA_FN(jint, MainActivity, textInputGetPreferredActionType)(JNIEnv* env, jobject obj, jlong nativePtr) {
+    WindowAndroid *window = (WindowAndroid *) nativePtr;
+    if (window->_textInputReceiver) {
+        switch (window->_textInputReceiver->getPreferredActionType()) {
+            case ActionNone:
+                return IME_ACTION_NONE;
+            case ActionNext:
+                return IME_ACTION_NEXT;
+            case ActionSearch:
+                return IME_ACTION_SEARCH;
+            case ActionDone:
+                return IME_ACTION_DONE;
+            case ActionGo:
+                return IME_ACTION_GO;
+        }
+    }
+    return IME_ACTION_UNSPECIFIED;
+}
+
 
 JAVA_FN(jbyteArray, MainActivity, textInputGetText)(JNIEnv* env, jobject obj, jlong nativePtr) {
     WindowAndroid *window = (WindowAndroid *) nativePtr;
@@ -320,13 +422,7 @@ JAVA_FN(jbyteArray, MainActivity, textInputGetText)(JNIEnv* env, jobject obj, jl
     }
     int len = window->_textInputReceiver->getTextLength();
     string text = window->_textInputReceiver->textInRange(0, len);
-    jbyteArray array = NULL;
-    if (len > 0) {
-        array = env->NewByteArray(text.lengthInBytes());
-        if (array != NULL) {
-            env->SetByteArrayRegion(array, 0, text.lengthInBytes(), (jbyte*)text.data());
-        }
-    }
+    jbyteArray array = jbyteArrayFromString(env, text);
     return array;
 }
 
@@ -336,12 +432,26 @@ JAVA_FN(void, MainActivity, textInputSetText)(JNIEnv* env, jobject obj, jlong na
         return;
     }
 
+    // Get the inserted text to a string
     int cb = env->GetArrayLength(textBytes);
     bytearray data(cb);
     env->GetByteArrayRegion(textBytes, 0, cb, reinterpret_cast<jbyte*>(data.data()));
-    string text((char*)data.data());
+    string text = data.toString(true);
 
-    window->_textInputReceiver->insertText(text, window->_textInputReceiver->getSelectionStart(),  window->_textInputReceiver->getInsertionPoint());
+    // Perform the insert/replace
+    int32_t s = window->_textInputReceiver->getSelectionStart();
+    int32_t e = window->_textInputReceiver->getInsertionPoint();
+    window->_textInputReceiver->insertText(text, s, e);
+
+    // newCursorPosition: One of Android's dumber API parameters, it's key to note this position is
+    // relative to the text PARAMETER given to this function, not the text in the EditText. Almost
+    // a whole day lost to this misunderstanding. >:-[
+    if (newCursorPosition > 0) { // relative to end of inserted text - 1
+        newCursorPosition = MIN(s,e) + text.length() + newCursorPosition - 1;
+    } else { // relative to the start of the inserted text.
+        newCursorPosition =  MIN(s,e) - newCursorPosition;
+    }
+
     window->_textInputReceiver->setSelectedRange(newCursorPosition, newCursorPosition);
 }
 
@@ -403,5 +513,9 @@ JAVA_FN(void, MainActivity, onDestroyNative)(JNIEnv* env, jobject obj, jlong nat
     window->release();
 }
 
+JAVA_FN(void, MainActivity, onGotPermissionsResults)(JNIEnv* env, jobject obj, jlong nativePtr, jlong nativeReqPtr, jbooleanArray results) {
+    WindowAndroid *window = (WindowAndroid *) nativePtr;
+    window->onGotPermissionsResults(nativeReqPtr, results);
+}
 
 #endif
