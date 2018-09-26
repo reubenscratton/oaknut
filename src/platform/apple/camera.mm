@@ -14,6 +14,7 @@
 @interface CameraHelper : NSObject <AVCaptureVideoDataOutputSampleBufferDelegate> {
 @public
     Camera* _delegate;
+    Bitmap* _lastFrameBitmap;
 }
 
 @property (nonatomic) AVCaptureSession* captureSession;
@@ -86,20 +87,12 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        fromConnection:(AVCaptureConnection *)connection {
     if (captureOutput == self.videoOutput) {
 
-        
-        // Get brightness
-        CFDictionaryRef metadataDict = CMCopyDictionaryOfAttachments(NULL, sampleBuffer, kCMAttachmentMode_ShouldPropagate);
-        NSDictionary *metadata = [[NSMutableDictionary alloc] initWithDictionary:(__bridge NSDictionary*)metadataDict];
-        CFRelease(metadataDict);
-        NSDictionary *exifMetadata = metadata[(NSString*)kCGImagePropertyExifDictionary];
-        float brightnessValue = exifMetadata ? [exifMetadata[(NSString *)kCGImagePropertyExifBrightnessValue] floatValue] : 5.0f; // assume midrange brightness if exif data doesnt have it
-        
         // Create the new bitmap
         CVPixelBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
-        ObjPtr<Bitmap> bitmap = new Bitmap(imageBuffer, true);
+        _lastFrameBitmap = new Bitmap(imageBuffer, true);
         
         // Call delegate
-        _delegate->onNewCameraFrame(bitmap, brightnessValue);
+        _delegate->onNewCameraFrame();
     }
 
 }
@@ -111,6 +104,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 class CameraApple : public Camera {
 public:
+    Bitmap* _lastFrameBitmap;
     
     CameraApple(int cameraId) {
     }
@@ -132,6 +126,10 @@ public:
     void close() override {
 //        CFBridgingRelease(_helper);
         _helper = nil;
+    }
+
+    Bitmap* lastFrameAsBitmap() override {
+        return _helper->_lastFrameBitmap;
     }
 
     CameraHelper* _helper;

@@ -159,12 +159,12 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     free(outputBufferList.mBuffers[0].mData);
 
     // Pass the converted data to the app
-    int numAppPackets = (int)self.appBuffer.length/sizeof(int16_t);
-    int numProcessed = self.delegate->onNewAudioSamples(numAppPackets, (int16_t*)self.appBuffer.bytes);
-    assert(numProcessed <= numAppPackets);
+    int numBytes = (int)self.appBuffer.length;
+    self.delegate->onNewAudioSamples(self.appBuffer.mutableBytes, numBytes);
+    //assert(numProcessed <= numAppPackets);
     
     // Remove whatever the app processed from the front of its buffer
-    [self.appBuffer replaceBytesInRange:NSMakeRange(0,numProcessed*sizeof(int16_t)) withBytes:nil length:0];
+    [self.appBuffer replaceBytesInRange:NSMakeRange(0,numBytes) withBytes:nil length:0];
 
 }
 
@@ -213,14 +213,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 class AudioInputApple : public AudioInput {
 public:
     
-    // API
-    AudioInputApple() {
-        sampleRate = 22050; // assume this is supported on all iOS+macOS
-    }
     
-    void open() override {
+    void open(int sampleRate) override {
         _helper = [AudioInputHelper new];
-        _helper.sampleRate = sampleRate;
+        _helper.sampleRate = 22050; // assume this is supported on all iOS+macOS
         CFBridgingRetain(_helper);
     }
     void start() override {

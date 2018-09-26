@@ -31,7 +31,6 @@ void GLProgramTextureDesaturated::load()  {
 
 static GLProgramTextureDesaturated s_prog;
 
-
 void CameraView::attachToWindow(Window* window) {
     View::attachToWindow(window);
     show();
@@ -51,52 +50,47 @@ void CameraView::show() {
     _renderOp = new TextureRenderOp();
     addRenderOp(_renderOp);
     _renderOp->_prog = &s_prog;
-    _camera = Camera::create(0);
-    _camera->onNewCameraFrame = [=](Bitmap* bitmap, float brightness) {
-        if (_backgroundOp) {
-            setBackground(NULL);
-        }
-        _renderOp->setBitmap(bitmap);
-        //if (!_renderOp->_batch) {
-        //    addRenderOp(_renderOp);
-        //}
-        float scaleWidth = _rect.size.width / (float)bitmap->_width;
-        float scaleHeight = _rect.size.height / (float)bitmap->_height;
-        RECT bounds = getOwnRect();
-        RECT rect = bounds;
-        if (scaleHeight >= scaleWidth) {
-            rect.scale(scaleHeight/scaleWidth, 1.0);
-        } else {
-            rect.scale(1.0, scaleWidth/scaleHeight);
-        }
-
-        // Center the texture rect on the bounds rect
-        rect.origin.x = bounds.midX() - rect.size.width/2;
-        rect.origin.y = bounds.midY() - rect.size.height/2;
-
-        _renderOp->setRect(rect);
-
-        onNewCameraFrame(bitmap, brightness);
-
-        GLint oldTex;
-        check_gl(glGetIntegerv, GL_TEXTURE_BINDING_2D, &oldTex);
-        check_gl(glBindTexture, GL_TEXTURE_2D, bitmap->_textureId);
-        check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        check_gl(glBindTexture, GL_TEXTURE_2D, oldTex);
-        setNeedsFullRedraw();
-    };
-    _camera->open();
-    _camera->start();
 }
+
+void CameraView::handleNewCameraFrame(Bitmap* bitmap) {
+    if (_backgroundOp) {
+        setBackground(NULL);
+    }
+
+    _renderOp->setBitmap(bitmap);
+    //if (!_renderOp->_batch) {
+    //    addRenderOp(_renderOp);
+    //}
+    float scaleWidth = _rect.size.width / (float)bitmap->_width;
+    float scaleHeight = _rect.size.height / (float)bitmap->_height;
+    RECT bounds = getOwnRect();
+    RECT rect = bounds;
+    if (scaleHeight >= scaleWidth) {
+        rect.scale(scaleHeight/scaleWidth, 1.0);
+    } else {
+        rect.scale(1.0, scaleWidth/scaleHeight);
+    }
+    
+    // Center the texture rect on the bounds rect
+    rect.origin.x = bounds.midX() - rect.size.width/2;
+    rect.origin.y = bounds.midY() - rect.size.height/2;
+    
+    _renderOp->setRect(rect);
+    
+
+    GLint oldTex;
+    check_gl(glGetIntegerv, GL_TEXTURE_BINDING_2D, &oldTex);
+    check_gl(glBindTexture, GL_TEXTURE_2D, bitmap->_textureId);
+    check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    check_gl(glBindTexture, GL_TEXTURE_2D, oldTex);
+    setNeedsFullRedraw();
+}
+
 
 
 void CameraView::detachFromWindow() {
     View::detachFromWindow();
-    if (_camera) {
-        _camera->stop();
-        _camera->close();
-    }
     if (_renderOp) {
         removeRenderOp(_renderOp);
         _renderOp = NULL;

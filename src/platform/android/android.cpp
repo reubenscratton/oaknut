@@ -518,4 +518,9 @@ JAVA_FN(void, MainActivity, onGotPermissionsResults)(JNIEnv* env, jobject obj, j
     window->onGotPermissionsResults(nativeReqPtr, results);
 }
 
+JAVA_FN(jlong, MainActivity, getMainEGLContext)(JNIEnv* env, jobject obj, jlong nativePtr) {
+    WindowAndroid *window = (WindowAndroid *) nativePtr;
+    return (jlong)window->context;
+}
+
 #endif

@@ -26,10 +26,9 @@ public:
         jmidStop = env->GetMethodID(jclassAudioInput, "stop", "()V");
     }
     ~AudioInputAndroid() {
-        getJNIEnv()->DeleteGlobalRef(javaobj);
     }
 
-    void open() override {
+    void open(int sampleRate) override {
         JNIEnv* env = getJNIEnv();
         javaobj = env->NewObject(jclassAudioInput, jmidConstructor, (jlong)this, (jint)sampleRate);
         javaobj = env->NewGlobalRef(javaobj);
@@ -43,7 +42,7 @@ public:
     }
 
     void close() override {
-
+        getJNIEnv()->DeleteGlobalRef(javaobj);
     }
 };
 
@@ -52,12 +51,10 @@ AudioInput* AudioInput::create() {
 }
 
 
-JAVA_FN(void, AudioInput, nativeOnGotData)(JNIEnv *env, jobject javaobj, jlong nativeObj, jshortArray buffer, jint offset, jint len) {
-    //app.log("Got audio data!");
+JAVA_FN(void, AudioInput, nativeOnGotData)(JNIEnv *env, jobject javaobj, jlong nativeObj, jobject byteBuffer, jint cb) {
     AudioInputAndroid* audioInput = (AudioInputAndroid*)nativeObj;
-    jshort* vals = env->GetShortArrayElements(buffer, NULL);
-    audioInput->onNewAudioSamples(len, vals+offset);
-    env->ReleaseShortArrayElements(buffer, vals, 0);
+    void* bytes = env->GetDirectBufferAddress(byteBuffer);
+    audioInput->onNewAudioSamples(bytes, cb);
 }
 
 #endif

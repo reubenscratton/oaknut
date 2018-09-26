@@ -76,6 +76,9 @@ public:
         camera = env->NewObject(jclassCamera, jmidConstructor);
         camera = env->NewGlobalRef(camera);
         env->CallVoidMethod(camera, jmidOpen, (jlong)this, (jint)0);
+
+        _previewWidth = env->GetIntField(camera, env->GetFieldID(jclassCamera, "previewWidth", "I"));
+        _previewHeight = env->GetIntField(camera, env->GetFieldID(jclassCamera, "previewHeight", "I"));
     }
 
     void start() override {
@@ -97,9 +100,9 @@ public:
             fb = 0;
         }
     }
-    
-    void handleNewFrame(int textureId, int width, int height, jfloat* transform) {
 
+
+    Bitmap* lastFrameAsBitmap() override {
         GLint oldFBO, oldTex;
         GLint viewport[4], oldProg;
         GLint oldVertexBuffer, oldIndexBuffer;
@@ -155,19 +158,19 @@ public:
         check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        check_gl(glTexImage2D, GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        check_gl(glTexImage2D, GL_TEXTURE_2D, 0, GL_RGBA, _frameWidth, _frameHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         check_gl(glBindTexture, GL_TEXTURE_2D, 0);
         check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texId2,0);
         //GLuint e = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         //assert(e == GL_FRAMEBUFFER_COMPLETE);
 
         // Bind to the camera texture
-        check_gl(glBindTexture, GL_TEXTURE_EXTERNAL_OES, textureId);
+        check_gl(glBindTexture, GL_TEXTURE_EXTERNAL_OES, _frameTextureId);
 
         // Render to texture
         check_gl(glUseProgram, program);
-        check_gl(glUniformMatrix4fv, posMvp, 1, 0, transform);
-        check_gl(glViewport, 0,0,width,height);
+        check_gl(glUniformMatrix4fv, posMvp, 1, 0, _frameTransform);
+        check_gl(glViewport, 0,0,_frameWidth,_frameHeight);
         check_gl(glVertexAttribPointer, VERTEXATTRIB_POSITION, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), 0);
         check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), (void*)8);
         check_gl(glEnableVertexAttribArray, VERTEXATTRIB_POSITION);
@@ -183,14 +186,12 @@ public:
         check_gl(glUseProgram, oldProg);
 
 
-        ObjPtr<Bitmap> bitmap = new Bitmap(texId2);
-        bitmap->_width = width;
-        bitmap->_height = height;
+        Bitmap* bitmap = new Bitmap(texId2);
+        bitmap->_width = _frameWidth;
+        bitmap->_height = _frameHeight;
+        return bitmap;
 
-
-        onNewCameraFrame(bitmap, 5.0);
     }
-
 };
 
 Camera* Camera::create(int cameraId) {
@@ -198,10 +199,14 @@ Camera* Camera::create(int cameraId) {
 }
 
 
-JAVA_FN(void, Camera, nativeOnFrameAvailable)(JNIEnv *env, jobject oscamera, jlong camera, jint textureId, jint width, jint height, jfloatArray transform) {
-    jfloat* transformVals = env->GetFloatArrayElements(transform, NULL);
-    ((CameraAndroid*)camera)->handleNewFrame(textureId, width, height, transformVals);
-    env->ReleaseFloatArrayElements(transform, transformVals, 0);
+JAVA_FN(void, Camera, nativeOnFrameAvailable)(JNIEnv *env, jobject obj, jlong cameraPtr, jint textureId, jlong timestamp, jint width, jint height, jfloatArray transform) {
+    CameraAndroid* camera = (CameraAndroid*)cameraPtr;
+    camera->_frameTextureId = textureId;
+    camera->_frameTimestamp = timestamp;
+    camera->_frameWidth = width;
+    camera->_frameHeight = height;
+    env->GetFloatArrayRegion(transform, 0, 16, camera->_frameTransform);
+    camera->onNewCameraFrame();
 }
 
 

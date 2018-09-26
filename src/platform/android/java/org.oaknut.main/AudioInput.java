@@ -5,6 +5,8 @@ import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 
+import java.nio.ByteBuffer;
+
 public class AudioInput {
 
     long nativeObj;
@@ -39,21 +41,20 @@ public class AudioInput {
     private Runnable threadFunc = new Runnable() {
         @Override
         public void run() {
-            short buff[] = new short[8192];
+            ByteBuffer buff = ByteBuffer.allocateDirect(16384);
             AudioRecord audioRecord;
-            int mbs = AudioRecord.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
-            audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, buff.length);
+            audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, buff.capacity());
             audioRecord.startRecording();
             while (started) {
-                int numRead = audioRecord.read(buff, 0, buff.length);
-                if (numRead == 0) {
+                int cbRead = audioRecord.read(buff, buff.capacity());
+                if (cbRead == 0) {
                     try {
                         Thread.sleep(250);
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        break;
                     }
-                } else if (numRead > 0) {
-                    nativeOnGotData(nativeObj, buff, 0, numRead);
+                } else if (cbRead > 0) {
+                    nativeOnGotData(nativeObj, buff, cbRead);
                 }
             }
             audioRecord.stop();
@@ -61,5 +62,5 @@ public class AudioInput {
         }
     };
 
-    private native void nativeOnGotData(long nativeObj, short[] buff, int offset, int length);
+    private native void nativeOnGotData(long nativeObj, ByteBuffer buff, int cb);
 }

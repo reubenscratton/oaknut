@@ -14,10 +14,9 @@ public:
 
     // API
     static AudioInput* create();
-    int sampleRate;
-    std::function<int (int numSamples, int16_t* samples)> onNewAudioSamples;
+    std::function<void (void* samplesData, int numBytes)> onNewAudioSamples;
     
-    virtual void open()=0;
+    virtual void open(int sampleRate)=0;
     virtual void start()=0;
     virtual void stop()=0;
     virtual void close()=0;

@@ -32,19 +32,17 @@ import static android.opengl.GLES20.*;
 
 public class Camera extends Object implements SurfaceTexture.OnFrameAvailableListener {
 
-    static class Size {
-        int width;
-        int height;
-    }
 
     android.hardware.Camera camera;
     long cppCamera;
     int cameraId;
     int cameraOrientation;
-    Size previewSizeActual = new Size();
-    Size previewSize = new Size();
+    int previewWidth;
+    int previewHeight;
+    int previewWidthActual;
+    int previewHeightActual;
     int textureId;
-    SurfaceTexture cameraTexture;
+    SurfaceTexture surfaceTexture;
     float cameraTextureMatrix[] = new float[16];
 
 
@@ -83,19 +81,19 @@ public class Camera extends Object implements SurfaceTexture.OnFrameAvailableLis
             }
         }
 
-        previewSizeActual.width = nearestSize.width;
-        previewSizeActual.height = nearestSize.height;
+        previewWidthActual = nearestSize.width;
+        previewHeightActual = nearestSize.height;
         if (cameraOrientation == 0 || cameraOrientation == 180) {
-            previewSize.width = previewSizeActual.width;
-            previewSize.height = previewSizeActual.height;
+            previewWidth = previewWidthActual;
+            previewHeight = previewHeightActual;
         } else {
-            previewSize.width = previewSizeActual.height;
-            previewSize.height = previewSizeActual.width;
+            previewWidth = previewHeightActual;
+            previewHeight = previewWidthActual;
         }
 
         // Configure camera with desired preview size and other settings
         android.hardware.Camera.Parameters parameters = camera.getParameters();
-        parameters.setPreviewSize(previewSizeActual.width, previewSizeActual.height);
+        parameters.setPreviewSize(previewWidthActual, previewHeightActual);
         //parameters.setPreviewFrameRate(30);
         List<String> focusModes = parameters.getSupportedFocusModes();
         if (focusModes.contains(android.hardware.Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
@@ -146,11 +144,11 @@ public class Camera extends Object implements SurfaceTexture.OnFrameAvailableLis
         glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-        cameraTexture = new SurfaceTexture(textureId);
-        cameraTexture.setOnFrameAvailableListener(this);
+        surfaceTexture = new SurfaceTexture(textureId);
+        surfaceTexture.setOnFrameAvailableListener(this);
 
         try {
-            camera.setPreviewTexture(cameraTexture);
+            camera.setPreviewTexture(surfaceTexture);
         } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
@@ -158,24 +156,29 @@ public class Camera extends Object implements SurfaceTexture.OnFrameAvailableLis
     }
 
     public void stopPreview() {
-        cameraTexture.setOnFrameAvailableListener(null);
-        cameraTexture.release();
-        cameraTexture = null;
-
         camera.stopPreview();
+        try {
+            camera.setPreviewTexture(null);
+        } catch (IOException ioe) {
+        }
+        surfaceTexture.setOnFrameAvailableListener(null);
+        surfaceTexture.release();
+        surfaceTexture = null;
     }
 
 
 
 
-    private native void nativeOnFrameAvailable(long cppCamera, int textureId, int width, int height, float[] transform);
+    private native void nativeOnFrameAvailable(long cppCamera, int textureId, long timestamp, int width, int height, float[] transform);
 
     @Override
     public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-        if (cameraTexture != null) {
-            cameraTexture.updateTexImage();
-            cameraTexture.getTransformMatrix(cameraTextureMatrix);
-            nativeOnFrameAvailable(cppCamera, textureId, previewSize.width, previewSize.height, cameraTextureMatrix);
+        if (surfaceTexture != null) {
+            surfaceTexture.updateTexImage();
+            surfaceTexture.getTransformMatrix(cameraTextureMatrix);
+            long timestamp = surfaceTexture.getTimestamp();
+            nativeOnFrameAvailable(cppCamera, textureId, timestamp, previewWidth, previewHeight, cameraTextureMatrix);
+
         }
     }
 }

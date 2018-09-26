@@ -11,16 +11,15 @@ class CameraView : public View {
 public:
     
     // API
-    std::function<void(Bitmap* bitmap, float brightness)> onNewCameraFrame;
     void show();
-
+    void handleNewCameraFrame(Bitmap* newFrame);
+    
     // Overrides
     virtual void attachToWindow(Window* window);
     virtual void detachFromWindow();
 
     
 protected:
-    Camera* _camera;
     TextureRenderOp* _renderOp;
 };
 
