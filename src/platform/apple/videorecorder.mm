@@ -7,25 +7,8 @@
 #if PLATFORM_APPLE
 
 #import <oaknut.h>
-#import <objc/runtime.h>
-#import <AVFoundation/AVFoundation.h>
-
-/*
-
-
-
-- (void)cancelRecording {
-    dispatch_async(self.recordingQueue, ^{
-        [self.assetWriterInputAudio markAsFinished];
-        [self.assetWriterInputVideo markAsFinished];
-        [self.assetWriter cancelWriting];
-        self.assetWriter = nil;
-        self.assetWriterInputAudio = nil;
-        self.assetWriterInputVideo = nil;
-    });
-}
-*/
-
+#include "audioinput.h"
+#include "camera.h"
 
 
 class VideoRecorderApple : public VideoRecorder {
@@ -93,9 +76,10 @@ public:
         }
     }
 
-    void handleNewCameraFrame(int textureId, long timestamp, float* transform) override {
+    void handleNewCameraFrame(CameraFrame* aframe) override {
 
-        //- (void)onNewCameraFrame:(CMSampleBufferRef)sampleBuffer brightness:(float)brightness {
+        CameraFrameApple* frame = (CameraFrameApple*)aframe;
+        CMSampleBufferRef sampleBuffer = frame->sampleBuffer;
         
         // Recording
         if (assetWriter) {
@@ -111,15 +95,16 @@ public:
         }
     }
     
-    void handleNewAudioSamples(void* samples, int numBytes) override {
+    void handleNewAudioSamples(AudioInputSamples* audioSamples) override {
         //- (void)onAudioNewData:(CMSampleBufferRef)sampleBuffer {
         if (!assetWriter) {
             return;
         }
+        CMSampleBufferRef sampleBuffer = ((AudioInputSamplesApple*)audioSamples)->_sampleBuffer;
         CFRetain(sampleBuffer);
-        dispatch_async(_recordingQueue, ^{
-            [self ensureSessionStarted:sampleBuffer];
-            if ([self.assetWriterInputAudio isReadyForMoreMediaData]) {
+        dispatch_async(recordingQueue, ^{
+            ensureSessionStarted(sampleBuffer);
+            if ([assetWriterInputAudio isReadyForMoreMediaData]) {
                 BOOL ok = [assetWriterInputAudio appendSampleBuffer:sampleBuffer];
                 assert(ok);
             }

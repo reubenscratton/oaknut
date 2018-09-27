@@ -14,6 +14,13 @@ ViewController::ViewController() : _view(NULL), _window(NULL) {
 ViewController::~ViewController() {
 }
 
+View* ViewController::inflate(const string& layoutAsset) {
+    View* view = app.layoutInflate(layoutAsset);
+    assert(view);
+    setView(view);
+    return view;
+}
+
 void ViewController::attachToWindow(Window* window) {
 	detachFromWindow();
 	_window = window;

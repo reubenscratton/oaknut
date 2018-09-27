@@ -7,6 +7,11 @@
 
 #if OAKNUT_WANT_AUDIO_INPUT
 
+class AudioInputSamples : public Object {
+public:
+    bytearray _data;
+};
+
 class AudioInput : public Object {
 public:
     
@@ -14,7 +19,7 @@ public:
 
     // API
     static AudioInput* create();
-    std::function<void (void* samplesData, int numBytes)> onNewAudioSamples;
+    std::function<void (AudioInputSamples* samples)> onNewAudioSamples;
     
     virtual void open(int sampleRate)=0;
     virtual void start()=0;

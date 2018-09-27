@@ -16,7 +16,7 @@ public:
     virtual void load();
 };
 
-
+// TODO: Desaturation should be an optional shader attribute once we have shader cache done
 void GLProgramTextureDesaturated::load()  {
     loadShaders(TEXTURE_VERTEX_SHADER,
         "varying vec2 v_texcoord;\n"
@@ -44,7 +44,6 @@ void CameraView::show() {
         return;
     }
     if (!_window->hasPermission(PermissionCamera)) {
-        setBackgroundColor(0xFF000000);
         return;
     }
     _renderOp = new TextureRenderOp();
@@ -56,11 +55,7 @@ void CameraView::handleNewCameraFrame(Bitmap* bitmap) {
     if (_backgroundOp) {
         setBackground(NULL);
     }
-
     _renderOp->setBitmap(bitmap);
-    //if (!_renderOp->_batch) {
-    //    addRenderOp(_renderOp);
-    //}
     float scaleWidth = _rect.size.width / (float)bitmap->_width;
     float scaleHeight = _rect.size.height / (float)bitmap->_height;
     RECT bounds = getOwnRect();
@@ -76,15 +71,6 @@ void CameraView::handleNewCameraFrame(Bitmap* bitmap) {
     rect.origin.y = bounds.midY() - rect.size.height/2;
     
     _renderOp->setRect(rect);
-    
-
-    GLint oldTex;
-    check_gl(glGetIntegerv, GL_TEXTURE_BINDING_2D, &oldTex);
-    check_gl(glBindTexture, GL_TEXTURE_2D, bitmap->_textureId);
-    check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    check_gl(glBindTexture, GL_TEXTURE_2D, oldTex);
-    setNeedsFullRedraw();
 }
 
 

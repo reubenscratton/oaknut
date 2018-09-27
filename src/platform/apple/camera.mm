@@ -7,129 +7,105 @@
 #if PLATFORM_APPLE && OAKNUT_WANT_CAMERA
 
 #include <oaknut.h>
-#import <AVFoundation/AVFoundation.h>
-#import <CoreImage/CoreImage.h>
+#include "camera.h"
 
+Bitmap* CameraFrameApple::asBitmap() {
+    CVPixelBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+    return new Bitmap(imageBuffer, true);
+}
 
 @interface CameraHelper : NSObject <AVCaptureVideoDataOutputSampleBufferDelegate> {
 @public
-    Camera* _delegate;
-    Bitmap* _lastFrameBitmap;
+    Camera* _camera;
 }
-
-@property (nonatomic) AVCaptureSession* captureSession;
-@property (nonatomic) AVCaptureVideoDataOutput* videoOutput;
-
 @end
 
-@implementation CameraHelper
-
-- (void)startPreview {
-    self.captureSession = [[AVCaptureSession alloc] init];
-    assert(self.captureSession);
-    [self.captureSession beginConfiguration];
-    
-    [self.captureSession setSessionPreset:AVCaptureSessionPreset640x480];
-    
-    
-    // Get the a video device with preference to the front facing camera
-    AVCaptureDevice* videoDevice = nil;
-    NSArray* devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
-    for (AVCaptureDevice* device in devices) {
-        if ([device position] == AVCaptureDevicePositionFront) {
-            videoDevice = device;
-        }
-    }
-    
-    if(videoDevice == nil) {
-        videoDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
-    }
-    assert(videoDevice);
-    
-    // Device input
-    NSError* error = nil;
-    AVCaptureDeviceInput *deviceInput = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:&error];
-    assert(!error);
-    [self.captureSession addInput:deviceInput];
-    
-#if TARGET_OS_IOS
-    [videoDevice lockForConfiguration:nil];
-    videoDevice.videoZoomFactor = 1.0f;
-    [videoDevice unlockForConfiguration];
-#endif
-
-    self.videoOutput = [[AVCaptureVideoDataOutput alloc] init];
-    [self.videoOutput setAlwaysDiscardsLateVideoFrames:YES];
-    [self.videoOutput setVideoSettings:[NSDictionary dictionaryWithObject:[NSNumber numberWithInt:kCVPixelFormatType_32BGRA] forKey:(id)kCVPixelBufferPixelFormatTypeKey]];
-    [self.videoOutput setSampleBufferDelegate:self queue:dispatch_get_main_queue()];
-    
-    [self.captureSession addOutput:self.videoOutput];
-    for (AVCaptureConnection *connection in [self.videoOutput connections]) {
-        if([connection isVideoOrientationSupported]) {
-            [connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
-        }
-        [connection setVideoMirrored:YES];
-    }
-    
-    [self.captureSession commitConfiguration];
-    [self.captureSession startRunning];
-}
-
-- (void)stopPreview {
-    [self.captureSession stopRunning];
-}
-
-//
-// AVCaptureVideoDataOutputSampleBufferDelegate
-//
-- (void)captureOutput:(AVCaptureOutput *)captureOutput
-didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
-       fromConnection:(AVCaptureConnection *)connection {
-    if (captureOutput == self.videoOutput) {
-
-        // Create the new bitmap
-        CVPixelBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
-        _lastFrameBitmap = new Bitmap(imageBuffer, true);
-        
-        // Call delegate
-        _delegate->onNewCameraFrame();
-    }
-
-}
-
-
-
-@end
 
 
 class CameraApple : public Camera {
 public:
-    Bitmap* _lastFrameBitmap;
-    
+
+    AVCaptureSession* captureSession;
+    AVCaptureVideoDataOutput* videoOutput;
+    CameraFrameApple _frame;
+
     CameraApple(int cameraId) {
+        _helper = [CameraHelper new];
+        _helper->_camera = this;
     }
     
     void open() override {
-        _helper = [CameraHelper new];
     }
     
     void start() override {
-        _helper->_delegate = this;
-        [_helper startPreview];
+        captureSession = [[AVCaptureSession alloc] init];
+        assert(captureSession);
+        [captureSession beginConfiguration];
+        
+        [captureSession setSessionPreset:AVCaptureSessionPreset640x480];
+        
+        // Get the a video device with preference to the front facing camera
+        AVCaptureDevice* videoDevice = nil;
+        NSArray* devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+        for (AVCaptureDevice* device in devices) {
+            if ([device position] == AVCaptureDevicePositionFront) {
+                videoDevice = device;
+            }
+        }
+        if(videoDevice == nil) {
+            videoDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+        }
+        assert(videoDevice);
+        
+        // Device input
+        NSError* error = nil;
+        AVCaptureDeviceInput *deviceInput = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:&error];
+        assert(!error);
+        [captureSession addInput:deviceInput];
+        
+#if TARGET_OS_IOS
+        [videoDevice lockForConfiguration:nil];
+        videoDevice.videoZoomFactor = 1.0f;
+        [videoDevice unlockForConfiguration];
+#endif
+      
+        // Data output
+        videoOutput = [[AVCaptureVideoDataOutput alloc] init];
+        [videoOutput setAlwaysDiscardsLateVideoFrames:YES];
+        [videoOutput setVideoSettings:[NSDictionary dictionaryWithObject:[NSNumber numberWithInt:kCVPixelFormatType_32BGRA] forKey:(id)kCVPixelBufferPixelFormatTypeKey]];
+        [videoOutput setSampleBufferDelegate:_helper queue:dispatch_get_main_queue()];
+        
+        [captureSession addOutput:videoOutput];
+        for (AVCaptureConnection *connection in [videoOutput connections]) {
+            if([connection isVideoOrientationSupported]) {
+                [connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
+            }
+            [connection setVideoMirrored:YES];
+        }
+        
+        [captureSession commitConfiguration];
+        
+        auto formatDescription = [videoDevice activeFormat].formatDescription;
+        auto dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription);
+        _previewWidth = dimensions.width;
+        _previewHeight = dimensions.height;
+        if (true) { // if (portrait) : todo: make this work
+            _previewWidth = dimensions.height;
+            _previewHeight = dimensions.width;
+        }
+        [captureSession startRunning];
     }
     
+    void handleNewSampleBuffer(CMSampleBufferRef sampleBuffer) {
+        _frame.sampleBuffer = sampleBuffer;
+        onNewCameraFrame(&_frame);
+    }
+
     void stop() override {
-        _helper->_delegate = NULL;
-        [_helper stopPreview];
+        [captureSession stopRunning];
     }
     
     void close() override {
-//        CFBridgingRelease(_helper);
-        _helper = nil;
-    }
-
-    Bitmap* lastFrameAsBitmap() override {
-        return _helper->_lastFrameBitmap;
     }
 
     CameraHelper* _helper;
@@ -139,5 +115,26 @@ Camera* Camera::create(int cameraId) {
     return new CameraApple(cameraId);
 }
 
+
+
+@implementation CameraHelper
+
+//
+// AVCaptureVideoDataOutputSampleBufferDelegate
+//
+- (void)captureOutput:(AVCaptureOutput *)captureOutput
+didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
+       fromConnection:(AVCaptureConnection *)connection {
+    
+    CameraApple* camera = (CameraApple*)_camera;
+    if (captureOutput == camera->videoOutput) {
+        camera->handleNewSampleBuffer(sampleBuffer);
+    }
+
+}
+
+
+
+@end
 
 #endif

@@ -19,8 +19,13 @@ public:
     View* _bold;
 
     MainViewController() {
-        View* view = app.layoutInflate("layout/main.res");
-        _editText = (EditText*)view->findViewById("editText");
+        inflate("layout/main.res");
+        bindView(_editText, "editText");
+        bindView(_alignLeft, "alignLeft");
+        bindView(_alignCenter, "alignCenter");
+        bindView(_alignRight, "alignRight");
+        bindView(_bold, "bold");
+
         _editText->setGravity({GRAVITY_CENTER, GRAVITY_TOP});
         AttributedString str("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz. A long piece of text that should allow me to test multiline behaviours without having to type stuff in over and over and over. With a bit of luck this second sentence should push the whole EditText to overflow its bounds and thereby let me exercise the scroll behaviour");
         //AttributedString str("A\nB\nC\nD\nE\nF\nG\nH");
@@ -39,12 +44,7 @@ public:
         
         //string str("AA BB CC DD EE FF GG HH II JJ KK LL MM NN OO PP QQ RR SS TT UU VV WW XX YY ZZ");
         //_editText->setText(str);
-        setView(view);
 
-        _alignLeft = view->findViewById("alignLeft");
-        _alignCenter = view->findViewById("alignCenter");
-        _alignRight = view->findViewById("alignRight");
-        _bold = view->findViewById("bold");
         
         _alignLeft->onInputEvent = [&](View* view,INPUTEVENT* ev) -> bool {
             if (ev->type == INPUT_EVENT_TAP) {
@@ -70,7 +70,7 @@ public:
             bool isBold = (fontWeightAttrib && fontWeightAttrib->_f >= FONT_WEIGHT_BOLD);
             _bold->setSelected(isBold);
         };
-        _bold->onClick = [&](View*) -> bool {
+        _bold->onClick = []() -> bool {
             return true;
         };
     }

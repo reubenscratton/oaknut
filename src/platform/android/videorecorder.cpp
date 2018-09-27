@@ -8,6 +8,7 @@
 
 #include <oaknut.h>
 #include "platform.h"
+#include "camera.h"
 
 
 class VideoRecorderAndroid : public VideoRecorder {
@@ -37,19 +38,19 @@ public:
         env->CallVoidMethod(_jobject, jmid, (jint)size.width, (jint)size.height, frameRate, keyframeRate, audioSampleRate);
     }
 
-    void handleNewCameraFrame(int textureId, long timestamp, float* transform) override {
+    void handleNewCameraFrame(CameraFrame* aframe) override {
         JNIEnv* env = getJNIEnv();
         jmethodID jmid = env->GetMethodID(_jclass, "handleNewCameraFrame", "(IJ[F)V");
         jfloatArray jtransform = env->NewFloatArray(16);
-        env->SetFloatArrayRegion(jtransform, 0, 16, transform);
-        env->CallVoidMethod(_jobject, jmid, textureId, timestamp, jtransform);
+        env->SetFloatArrayRegion(jtransform, 0, 16, aframe->_transform);
+        env->CallVoidMethod(_jobject, jmid, aframe->_textureId, aframe->_timestamp, jtransform);
     }
 
-    void handleNewAudioSamples(void* samples, int numBytes) override {
+    void handleNewAudioSamples(AudioInputSamples* samples) override {
         JNIEnv* env = getJNIEnv();
         jmethodID jmid = env->GetMethodID(_jclass, "handleNewAudioSamples", "([B)V");
-        jbyteArray jsamples = env->NewByteArray(numBytes);
-        env->SetByteArrayRegion(jsamples, 0, numBytes, (jbyte*)samples);
+        jbyteArray jsamples = env->NewByteArray(samples->_data.size());
+        env->SetByteArrayRegion(jsamples, 0, samples->_data.size(), (jbyte*)samples->_data.data());
         env->CallVoidMethod(_jobject, jmid, jsamples);
     }
 

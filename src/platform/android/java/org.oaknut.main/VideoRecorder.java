@@ -67,6 +67,7 @@ class VideoRecorder  {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            workerThread = null;
         }
     }
     void handleNewCameraFrame(int textureId, long timestamp, float[] transform) {

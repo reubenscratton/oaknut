@@ -54,7 +54,9 @@ AudioInput* AudioInput::create() {
 JAVA_FN(void, AudioInput, nativeOnGotData)(JNIEnv *env, jobject javaobj, jlong nativeObj, jobject byteBuffer, jint cb) {
     AudioInputAndroid* audioInput = (AudioInputAndroid*)nativeObj;
     void* bytes = env->GetDirectBufferAddress(byteBuffer);
-    audioInput->onNewAudioSamples(bytes, cb);
+    ObjPtr<AudioInputSamples> samples = new AudioInputSamples();
+    samples->_data = bytearray((uint8_t*)bytes, cb);
+    audioInput->onNewAudioSamples(samples);
 }
 
 #endif
