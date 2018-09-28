@@ -66,11 +66,10 @@ public:
     ObjPtr<Surface> _surface;
     RECT _surfaceRect;
 	float _scale;
-	bool _inLayoutPass;
     class MotionTracker {
     public:
         MotionTracker(int source);
-        void dispatchInputEvent(INPUTEVENT& event, Window* window);
+        void dispatchInputEvent(INPUTEVENT& event, ViewController* topVC);
 
         int source;
         ObjPtr<class View>  touchedView;
@@ -99,17 +98,17 @@ public:
 	virtual bool hasPermission(Permission permission);
 	virtual void runWithPermission(Permission permission, std::function<void(bool)> callback);
     virtual void runWithPermissions(vector<Permission> permission, std::function<void(vector<bool>)> callback);
-    
+
+    // Show modal VCs
+    virtual void presentModalViewController(ViewController* viewController);
 
     vector<MotionTracker*> _motionTrackers;
-	bool _viewLayoutValid;
 	bool _redrawNeeded;
     View* _focusedView;
     class IKeyboardInputHandler* _keyboardHandler;
     class ITextInputReceiver* _textInputReceiver;
 	
 	virtual void setRootViewController(ViewController* viewController);
-	virtual void setNeedsLayout();
 	virtual void resizeSurface(int width, int height, float scale);
 	virtual void destroySurface();
 	virtual void draw();
@@ -126,7 +125,8 @@ public:
 	virtual POINT offsetToView(View* view);
     
     virtual bool setFocusedView(View* view);
-	void attachRootVC();
+	void attachViewController(ViewController* vc);
+    void detachViewController(ViewController* vc);
 
     void pushClip(RECT clip);
     void popClip();
@@ -136,7 +136,6 @@ public:
     GLfloat _backgroundColor[4];
     vector<GLProgram*> _loadedProgs;
     list<BitmapBase*> _loadedTextures;
-	bool _rootVcAttached;
 	QuadBuffer* _quadBuffer;
     stack<RECT> _clips;
 	void setBlendMode(int blendMode);

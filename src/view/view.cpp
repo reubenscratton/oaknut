@@ -27,6 +27,9 @@ View::~View() {
     }
 }
 
+void View::inflate(const string& layoutFile) {
+    app.layoutInflateExistingView(this, layoutFile);
+}
 
 
 
@@ -439,8 +442,9 @@ void View::setAlignSpecs(ALIGNSPEC alignspecHorz, ALIGNSPEC alignspecVert) {
 
 
 void View::setNeedsLayout() {
-	if (_window) {
-		_window->setNeedsLayout();
+    _layoutValid = false;
+	if (_parent) {
+		_parent->setNeedsLayout();
 	}
 }
 
@@ -622,6 +626,8 @@ void View::layout() {
 	
     updateScrollbarVisibility();
     setNeedsFullRedraw();
+    
+    _layoutValid = true;
 }
 
 
@@ -650,6 +656,9 @@ void View::updatePrivateSurface(bool updateSubviews) {
 
 void View::attachToWindow(Window *window) {
     if (_visibility != Visible) {
+        return;
+    }
+    if (_window) {
         return;
     }
 	_window = window;
@@ -951,7 +960,7 @@ void View::onStateChanged(STATESET changedStates) {
 }
 
 void View::addScrollbarOp(RenderOp* renderOp) {
-    bool layoutValid = _window->_viewLayoutValid; // we preserve this flag to avoid scrollbars triggering layout
+    bool layoutValid = _layoutValid; // we preserve this flag to avoid scrollbars triggering layout
     if (!_scrollbarsView) {
         ScrollbarsView* scrollbarsView = new ScrollbarsView();
         //scrollbarsView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::FillParent());
@@ -962,18 +971,18 @@ void View::addScrollbarOp(RenderOp* renderOp) {
     }
     //renderOp->_view = _scrollbarsView;
     _scrollbarsView->addRenderOp(renderOp);
-    _window->_viewLayoutValid = layoutValid;
+    _layoutValid = layoutValid;
 }
 
 void View::removeScrollbarOp(RenderOp* renderOp) {
-    bool layoutValid = _window->_viewLayoutValid; // we preserve this flag to avoid scrollbars triggering layout
+    bool layoutValid = _layoutValid; // we preserve this flag to avoid scrollbars triggering layout
     assert(_scrollbarsView);
     _scrollbarsView->removeRenderOp(renderOp);
     if (_scrollbarsView->_renderList.size() == 0) {
         removeSubview(_scrollbarsView);
         _scrollbarsView = NULL;
     }
-    _window->_viewLayoutValid = layoutValid;
+    _layoutValid = layoutValid;
 }
 
 
@@ -987,6 +996,7 @@ void View::addRenderOp(RenderOp* renderOp, bool atFront) {
     }
     assert(!renderOp->_view);
     renderOp->_view = this;
+    renderOp->setAlpha(_effectiveAlpha);
     renderOp->_viewListIterator = _renderList.insert(atFront ? _renderList.begin() : _renderList.end(), renderOp);
     if (_surface) {
         _surface->addRenderOp(renderOp);
@@ -1257,7 +1267,7 @@ void View::updateEffectiveAlpha() {
 }
 
 void View::updateEffectiveTint() {
-    COLOR parentVal = _parent ? _parent->_effectiveTintColor : 0;
+    COLOR parentVal = _parent ? _parent->_effectiveTintColor : COLOR(0);
     COLOR newTint = _tintColor ? _tintColor : parentVal;
     if (newTint != _effectiveTintColor) {
         _effectiveTintColor = newTint;
@@ -1292,6 +1302,11 @@ void View::animateTranslate(POINT translation, float duration) {
             setTranslate({translation.x*val, translation.y*val});
         });
     }
+}
+void View::animateInFromBottom(float duration, InterpolateFunc interpolater/* = strongEaseOut*/) {
+    Animation::start(this, duration, [=](float val) {
+        setTranslate({0, _rect.size.height * (1-val)});
+    }, interpolater);
 }
 
 

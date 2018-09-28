@@ -206,6 +206,7 @@ protected:
     ALIGNSPEC _alignspecVert;
     EDGEINSETS _padding;
     Visibility _visibility;
+    bool _layoutValid;
     void adjustRectSize(const SIZE& d);
     void adjustSurfaceOrigin(const POINT& d);
     float getAlignspecVal(const ALIGNSPEC& spec, bool isVertical);
@@ -272,6 +273,7 @@ protected:
      */
 public:
     virtual void setBackground(RenderOp* renderOp);
+    virtual RenderOp* getBackgroundOp() const { return _backgroundOp; }
     virtual void setBackgroundColor(COLOR color);
     virtual void addRenderOp(RenderOp* renderOp);
     virtual void addRenderOp(RenderOp* renderOp, bool atFront);
@@ -358,6 +360,12 @@ protected:
     /**@}*/
 
     
+    void inflate(const string& layoutFile);
+    template<class T>
+    void bind(T*& rview, const string& id) {
+        rview = (T*)findViewById(id);
+    }
+
     /** @name Styles
      * @{
      * A view may be declaratively configured in layout and style resource files.
@@ -405,6 +413,7 @@ public:
 	// Animation
 	virtual void animateAlpha(float target, float duration);
     virtual void animateTranslate(POINT translation, float duration);
+    virtual void animateInFromBottom(float duration, InterpolateFunc interpolater = strongEaseOut);
 	virtual void setTranslate(POINT translation);
     int _animationCount; // number of active animations currently attached to the view
     

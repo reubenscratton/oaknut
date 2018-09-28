@@ -52,6 +52,9 @@ void CameraView::show() {
 }
 
 void CameraView::handleNewCameraFrame(Bitmap* bitmap) {
+    if (!_renderOp) {
+        return;
+    }
     if (_backgroundOp) {
         setBackground(NULL);
     }

@@ -24,22 +24,27 @@ void Window::setRootViewController(ViewController* viewController) {
         currentRootVC->onWillPause();
         currentRootVC->detachFromWindow();
         currentRootVC->onDidPause();
+        _viewControllers.erase(_viewControllers.begin());
     }
-    _rootVcAttached = false;
     _rootViewController = viewController;
-    attachRootVC();
+    _viewControllers.insert(_viewControllers.begin(), viewController);
+    attachViewController(_rootViewController);
 }
 
 
-void Window::attachRootVC() {
-	if (_rootViewController && _surface && !_rootVcAttached) {
-        _rootViewController->onWillResume();
+void Window::attachViewController(ViewController *vc) {
+	if (_surface && !vc->_window) {
+        vc->onWillResume();
 		prepareToDraw();
-        _rootViewController->attachToWindow(this);
+        vc->attachToWindow(this);
         updateSafeArea();
-        _rootViewController->onDidResume();
-        _rootVcAttached = true;
+        vc->onDidResume();
 	}
+}
+void Window::detachViewController(ViewController* vc) {
+    if (vc->_window) {
+        vc->detachFromWindow();
+    }
 }
 
 void Window::resizeSurface(int width, int height, float scale) {
@@ -54,19 +59,18 @@ void Window::resizeSurface(int width, int height, float scale) {
     _surfaceRect = RECT(0,0,width,height);
 	_scale = scale;
     _surface->setSize({(float)width, (float)height});
-	if (_rootViewController) {
-        if (!_rootVcAttached) {
-            attachRootVC();
+    for (auto vc : _viewControllers) {
+        if (!vc->_window) {
+            attachViewController(vc);
         }
         updateSafeArea();
-        _rootViewController->getView()->setNeedsLayout();
+        vc->getView()->setNeedsLayout();
 	}
 }
 void Window::destroySurface() {
     if (_surface) {
-        if (_rootVcAttached) {
-            _rootViewController->detachFromWindow();
-            _rootVcAttached = false;
+        for (auto vc : _viewControllers) {
+            detachViewController(vc);
         }
         _surface = NULL;
         _doneGlInit = false;
@@ -91,7 +95,7 @@ Window::MotionTracker::MotionTracker(int source) {
     numClicks = 0;
 }
 
-void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, Window* window) {
+void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController* topVC) {
     if (touchedView && !touchedView->_window) {
         touchedView = NULL; // avoid sending events to detached views
     }
@@ -105,9 +109,9 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, Window* window
         pastIndex = pastCount = 0;
         ptDown = event.pt;
         timeOfDownEvent = event.time;
-        touchedView = window->_rootViewController->getView()->dispatchInputEvent(&event);
+        touchedView = topVC->getView()->dispatchInputEvent(&event);
         if (!touchedView) {
-            touchedView = window->_rootViewController->getView();
+            touchedView = topVC->getView();
         }
         if (touchedView && event.deviceType!=INPUTEVENT::ScrollWheel) {
             _didSendLongpressEvent = false;
@@ -151,7 +155,7 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, Window* window
                 isDragging = true;
                 INPUTEVENT dragEvent = event;
                 dragEvent.type = INPUT_EVENT_DRAG;
-                View *interceptView = window->_rootViewController->getView()->dispatchInputEvent(&dragEvent);
+                View *interceptView = topVC->getView()->dispatchInputEvent(&dragEvent);
                 if (interceptView) {
                     if (touchedView) {
                         INPUTEVENT cancelEvent = event;
@@ -261,7 +265,7 @@ void Window::dispatchInputEvent(INPUTEVENT event) {
         }
 
         // Let the tracker process the new input event
-        tracker->dispatchInputEvent(event,  this);
+        tracker->dispatchInputEvent(event,  *_viewControllers.rbegin());
 
     //}
 }
@@ -291,19 +295,12 @@ void Window::draw() {
 	prepareToDraw();
 
 	// Draw view controllers
-	ViewController* rootVC = _rootViewController;
-	if (rootVC) {
-		View* view = rootVC->getView();
-		if (!_viewLayoutValid) {
-			//app.log("Performing measure() and layout() %d", _surfaceRect.size.width);
-			_inLayoutPass = true;
+    for (ViewController* vc : _viewControllers) {
+		View* view = vc->getView();
+		if (!view->_layoutValid) {
 			view->measure(_surfaceRect.size.width, _surfaceRect.size.height);
 			view->layout();
-			_viewLayoutValid = true;
-			_inLayoutPass = false;
 		}
-        
-//        std::this_thread::sleep_for (std::chrono::milliseconds(100));
         _surface->render(view, this);
 	}
 
@@ -394,14 +391,6 @@ void Window::detachView(View* view) {
         }
         assert(view->_animationCount == 0);
     }
-}
-
-void Window::setNeedsLayout() {
-	if (_inLayoutPass) {
-		return;
-	}
-	_viewLayoutValid = false;
-	requestRedraw();
 }
 
 void Window::requestRedraw() {
@@ -569,14 +558,16 @@ void Window::updateSafeArea() {
     EDGEINSETS safeInsets = _safeAreaInsets;
     safeInsets.bottom += _softKeyboardRect.size.height;
     safeInsets.applyToRect(safeArea);
-    _rootViewController->updateSafeArea(safeArea);
+    for (auto vc : _viewControllers) {
+        if (vc->_window) {
+            vc->updateSafeArea(safeArea);
+        }
+    }
 }
 
 void Window::setSoftKeyboardRect(const RECT rect) {
     _softKeyboardRect = rect;
-    if (_rootViewController && _rootVcAttached) {
-        updateSafeArea();
-    }
+    updateSafeArea();
 }
 
 
@@ -594,4 +585,10 @@ void Window::runWithPermissions(vector<Permission> permissions, std::function<vo
     callback({true});
 }
 
+
+void Window::presentModalViewController(ViewController *viewController) {
+    _viewControllers.push_back(viewController);
+    attachViewController(viewController);
+    requestRedraw();
+}
 

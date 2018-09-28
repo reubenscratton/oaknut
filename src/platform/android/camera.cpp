@@ -185,16 +185,20 @@ public:
         getJNIEnv()->CallVoidMethod(camera, jmidStartPreview);
     }
     void stop() override {
-        getJNIEnv()->CallVoidMethod(camera, jmidStopPreview);
-        delete frame;
-        frame = NULL;
+        if (camera) {
+            getJNIEnv()->CallVoidMethod(camera, jmidStopPreview);
+            delete frame;
+            frame = NULL;
+        }
     }
 
     void close() override {
-        JNIEnv *env = getJNIEnv();
-        env->CallVoidMethod(camera, jmidClose);
-        env->DeleteGlobalRef(camera);
-        camera = NULL;
+        if (camera) {
+            JNIEnv *env = getJNIEnv();
+            env->CallVoidMethod(camera, jmidClose);
+            env->DeleteGlobalRef(camera);
+            camera = NULL;
+        }
     }
 
 

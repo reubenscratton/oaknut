@@ -200,7 +200,7 @@ void SegmentedControl::updateRenderOps() {
 void SegmentedControl::setPressedIndex(int pressedIndex) {
     if (_pressedIndex >= 0) {
         Segment& segment = _segments.at(_pressedIndex);
-        segment.rectOp->setColor((_pressedIndex==_selectedIndex) ? _effectiveTintColor : 0);
+        segment.rectOp->setColor((_pressedIndex==_selectedIndex) ? _effectiveTintColor : COLOR(0));
         invalidateRect(segment.rect);
     }
     _pressedIndex = pressedIndex;

@@ -12,7 +12,21 @@
 #define VERTEXATTRIBS_CONFIG_NORMAL     1 // float x,y; uint16 s,t; uint32 color = 16 bytes
 #define VERTEXATTRIBS_CONFIG_ROUNDRECT  2 // float x,y; uint16 dist_xy; uint32 fillColor; uint32 strokeColor; strokeWidth; radii
 
-typedef uint32_t COLOR;
+class COLOR {
+public:
+    COLOR() : _val(0) {}
+    COLOR(uint32_t val) : _val(val) {}
+    operator uint32_t() const { return _val; }
+    COLOR operator=(uint32_t val) { _val=val; return *this; }
+    bool operator==(uint32_t val) const { return val==_val;}
+    
+
+    static COLOR interpolate(COLOR start, COLOR end, float val);
+    
+private:
+    uint32_t _val;
+};
+
 
 
 // Gravity

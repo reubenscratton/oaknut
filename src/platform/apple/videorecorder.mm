@@ -4,7 +4,7 @@
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
 //
-#if PLATFORM_APPLE
+#if PLATFORM_APPLE && OAKNUT_WANT_CAMERA
 
 #import <oaknut.h>
 #include "audioinput.h"
@@ -112,7 +112,7 @@ public:
         });
     }
     
-    void stop() override {
+    void stop(std::function<void()> onFinished) override {
         dispatch_async(recordingQueue, ^{
             [assetWriterInputAudio markAsFinished];
             [assetWriterInputVideo markAsFinished];
@@ -122,7 +122,7 @@ public:
             assetWriterInputVideo = nil;
             [writer finishWritingWithCompletionHandler:^{
                 dispatch_async(dispatch_get_main_queue(), ^() {
-                    // todo: callback
+                    onFinished();
                 });
             }];
         });

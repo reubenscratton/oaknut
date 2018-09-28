@@ -20,11 +20,11 @@ public:
 
     MainViewController() {
         inflate("layout/main.res");
-        bindView(_editText, "editText");
-        bindView(_alignLeft, "alignLeft");
-        bindView(_alignCenter, "alignCenter");
-        bindView(_alignRight, "alignRight");
-        bindView(_bold, "bold");
+        bind(_editText, "editText");
+        bind(_alignLeft, "alignLeft");
+        bind(_alignCenter, "alignCenter");
+        bind(_alignRight, "alignRight");
+        bind(_bold, "bold");
 
         _editText->setGravity({GRAVITY_CENTER, GRAVITY_TOP});
         AttributedString str("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz. A long piece of text that should allow me to test multiline behaviours without having to type stuff in over and over and over. With a bit of luck this second sentence should push the whole EditText to overflow its bounds and thereby let me exercise the scroll behaviour");

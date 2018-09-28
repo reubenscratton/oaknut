@@ -151,6 +151,7 @@ public:
     }
     
     void load() override {
+        
         loadShaders(
             TEXTURE_VERTEX_SHADER
             ,
@@ -196,10 +197,72 @@ public:
 
 };
 
+class GLProgramRoundRectComplex : public GLProgramRoundRect {
+public:
+    Uniform<Vector4> _radii;
+    
+    void findVariables() override {
+        GLProgramRoundRect::findVariables();
+        _radii.position = check_gl(glGetUniformLocation, _program, "radii");
+    }
+    
+    void load() override {
+        
+        loadShaders(
+                    TEXTURE_VERTEX_SHADER
+                    ,
+                    "varying lowp vec4 v_color;\n"
+                    "uniform mediump float alpha;\n"
+                    "varying vec2 v_texcoord;\n" // not actually texture coords, this is x-dist and y-dist from quad centre
+                    "uniform vec4 u;\n" // xy = quad half size, w = strokeWidth
+                    "uniform mediump vec4 radii;\n"
+                    "uniform lowp vec4 strokeColor;\n"
+                    
+
+                    "void main() {\n"
+
+                    // Branchless selection of radius
+                    // NB: step(val,edge) ==  ((val < edge) ? 0.0 : 1.0)
+                    // NB: radii.x=top left, radii.y=top right, radii.z=bot left, radii.w = bot right
+                    "   float l=step(v_texcoord.x,0.0);"
+                    "   float r=1.0-l;"
+                    "   float t=step(v_texcoord.y,0.0);"
+                    "   float b=1.0-t;"
+                    "   float radius = t*l*radii.x + t*r*radii.y + b*l*radii.z + b*r*radii.w;\n"
+                    
+                    // Round rect distance function
+                    "    vec2 foo = max(abs(v_texcoord) - (u.xy - vec2(radius)), vec2(0.0)); \n"
+                    "    float dist = 1.0 - clamp(length(foo) - radius, 0.0, 1.0);"
+
+                    // Blend stroke & fill (TODO: stroke)
+                    "    vec4 col = v_color;\n"
+                    "    col.a *= dist;\n"
+                    "    col.a *= alpha;\n"
+                    "    gl_FragColor = col;\n"
+                    "}\n"
+                    );
+    }
+    
+    void configureForRenderOp(RectRenderOp* op) override {
+        GLProgramRoundRect::configureForRenderOp(op);
+        _radii.set(op->_radii);
+    }
+    void lazyLoadUniforms() override {
+        GLProgramRoundRect::lazyLoadUniforms();
+        _radii.use();
+    }
+    void unload() override {
+        GLProgramRoundRect::unload();
+        _radii.dirty = true;
+    }
+    
+};
+
 static GLProgramRect glprogSolidFill;
 static GLProgramRectAlpha glprogSolidFillAlpha;
 static GLProgramRoundRectOne glprogRoundRect1;
 static GLProgramRoundRectSymmetric glprogRoundRectSymmetric;
+static GLProgramRoundRectComplex glprogRoundRectComplex;
 
 
 RectRenderOp::RectRenderOp() : RenderOp() {
@@ -242,6 +305,17 @@ void RectRenderOp::setCornerRadius(float radius) {
 void RectRenderOp::setCornerRadii(const Vector4& radii) {
     if (_radii != radii) {
         _radii = radii;
+        
+        bool singleRadius = (radii[0]==radii[1] && radii[2]==radii[3] && radii[0]==radii[3]);
+        if (singleRadius) {
+            if (radii[0] == 0.0f) {
+                _flags = _flags & ~(OPFLAG_CORNER1|OPFLAG_CORNER4);
+            } else {
+                _flags |= OPFLAG_CORNER1;
+            }
+        } else {
+            _flags |= OPFLAG_CORNER4;
+        }
         invalidate();
     }
 }
@@ -268,7 +342,7 @@ void RectRenderOp::validateShader() {
             _prog = &glprogRoundRectSymmetric;
         }
         else {
-            assert(0); // unsupported combination
+            _prog = &glprogRoundRectComplex;
         }
     }
     _blendMode = BLENDMODE_NORMAL;
@@ -281,13 +355,16 @@ bool RectRenderOp::canMergeWith(const RenderOp* op) {
     if (!RenderOp::canMergeWith(op)) {
         return false;
     }
-    if (_prog == &glprogRoundRect1 || _prog == &glprogRoundRectSymmetric) {
+    // TODO: this is utter bollocks, fix when implementing shader cache
+    if (_prog == &glprogRoundRect1 || _prog == &glprogRoundRectSymmetric || _prog == &glprogRoundRectComplex) {
         return _rect.size.width == ((const RectRenderOp*)op)->_rect.size.width
         && _rect.size.height == ((const RectRenderOp*)op)->_rect.size.height
         && _strokeColor==((const RectRenderOp*)op)->_strokeColor
         && _strokeWidth==((const RectRenderOp*)op)->_strokeWidth
         && _radii[0] ==((const RectRenderOp*)op)->_radii[0]
-        && _radii[1] ==((const RectRenderOp*)op)->_radii[1];
+        && _radii[1] ==((const RectRenderOp*)op)->_radii[1]
+        && _radii[2] ==((const RectRenderOp*)op)->_radii[2]
+        && _radii[3] ==((const RectRenderOp*)op)->_radii[3];
     }
     return true;
 }
@@ -296,7 +373,8 @@ bool RectRenderOp::canMergeWith(const RenderOp* op) {
 
 void RectRenderOp::asQuads(QUAD *quad) {
     rectToSurfaceQuad(_rect, quad);
-    if (_prog == &glprogRoundRect1 || _prog == &glprogRoundRectSymmetric) {
+    // TODO: this is utter bollocks, fix when implementing shader cache
+    if (_prog == &glprogRoundRect1 || _prog == &glprogRoundRectSymmetric || _prog == &glprogRoundRectComplex) {
         // Put the quad size into the texture coords so the frag shader
         // can trivially know distance to quad center
         quad->tl.s = quad->bl.s = -_rect.size.width/2;

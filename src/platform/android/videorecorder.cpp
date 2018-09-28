@@ -55,10 +55,11 @@ public:
     }
 
 
-    void stop() override {
+    void stop(std::function<void()> onFinished) override {
         JNIEnv* env = getJNIEnv();
         jmethodID jmid = env->GetMethodID(_jclass, "stop", "()V");
         env->CallVoidMethod(_jobject, jmid);
+        onFinished();
     }
 
 };

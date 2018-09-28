@@ -24,16 +24,14 @@ View* ViewController::inflate(const string& layoutAsset) {
 void ViewController::attachToWindow(Window* window) {
 	detachFromWindow();
 	_window = window;
-    if (window->_rootViewController == this) {
-        setView(_view);
-    }
+    _view->attachToWindow(window);
     for (auto it : _childViewControllers) {
         it->attachToWindow(window);
     }
 }
 
 void ViewController::detachFromWindow() {
-    if (_window && _window->_rootViewController == this) {
+    if (_window) {
         View* view = _view;
         if (view) {
             view->detachFromWindow();

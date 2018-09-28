@@ -148,6 +148,7 @@ typedef uint64_t TIMESTAMP;
 #include "view/view.h"
 #include "app/viewcontroller.h"
 #include "app/navigationcontroller.h"
+#include "view/actionsheet.h"
 #include "widgets/cameraview.h"
 #include "widgets/imageview.h"
 #include "widgets/label.h"

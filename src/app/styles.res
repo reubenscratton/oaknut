@@ -94,7 +94,46 @@ SegmentedControl: {
 }
 
 
-
+ActionSheet: {
+    OuterGroup: {
+        orientation: vertical
+        size:fill, wrap
+        alignY: bottom
+        padding: 16dp
+        spacing: 8dp
+    }
+    Group: {
+        orientation: vertical
+        size:fill, wrap
+        background: {
+            fill: #F7F6F5
+            corner-radius: 12dp
+        }
+    }
+    Title: {
+        size: fill, 46dp
+        alignX: center
+        alignY: center
+        gravityX: center
+        gravityY: center
+        font-size: 18dp
+        forecolor: #BBB
+    }
+    Action: {
+        style: $ActionSheet.Title
+        size: fill, 56dp
+        font-size: 22dp
+        forecolor: #007AFF
+        background: {
+            pressed: #DDD
+        }
+    }
+    Cancel: {
+        style: $ActionSheet.Action
+        font-weight: medium
+    }
 
 }
-)"
+
+
+})"

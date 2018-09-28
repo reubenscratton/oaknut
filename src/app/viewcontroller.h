@@ -48,7 +48,7 @@ public:
     virtual View* inflate(const string& layoutAsset);
     
     template<class T>
-    void bindView(T*& rview, const string& id) {
+    void bind(T*& rview, const string& id) {
         rview = (T*)_view->findViewById(id);
     }
 

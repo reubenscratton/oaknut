@@ -156,14 +156,19 @@ public class Camera extends Object implements SurfaceTexture.OnFrameAvailableLis
     }
 
     public void stopPreview() {
-        camera.stopPreview();
-        try {
-            camera.setPreviewTexture(null);
-        } catch (IOException ioe) {
+        if (camera != null) {
+            camera.stopPreview();
+            try {
+                camera.setPreviewTexture(null);
+            } catch (IOException ioe) {
+            }
         }
-        surfaceTexture.setOnFrameAvailableListener(null);
-        surfaceTexture.release();
-        surfaceTexture = null;
+        if (surfaceTexture != null) {
+            surfaceTexture.setOnFrameAvailableListener(null);
+            surfaceTexture.release();
+            surfaceTexture = null;
+        }
+
     }
 
 
@@ -173,7 +178,7 @@ public class Camera extends Object implements SurfaceTexture.OnFrameAvailableLis
 
     @Override
     public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-        if (surfaceTexture != null) {
+        if (this.surfaceTexture != null) {
             surfaceTexture.updateTexImage();
             surfaceTexture.getTransformMatrix(cameraTextureMatrix);
             long timestamp = surfaceTexture.getTimestamp();

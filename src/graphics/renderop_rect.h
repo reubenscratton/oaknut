@@ -32,15 +32,12 @@ public:
     float _strokeWidth;
     Vector4 _radii;
     
-    enum {
-        None,
-        All,
-        LeftOnly,
-        RightOnly,
-        TopOnly,
-        BottomOnly,
-    } cornerRoundingType;
-    
+#define OPFLAG_FILL 1
+#define OPFLAG_STROKE 2
+#define OPFLAG_CORNER1 4
+#define OPFLAG_CORNER4 8
+    int _flags;
+
 };
 
 
