@@ -16,6 +16,8 @@
 // that of the anchor's width, the second is that of one's own width, and the margin is a delta in pixels.
 //
 
+#define NO_ANCHOR ((View*)-1)
+
 typedef struct ALIGNSPEC {
     View* anchor;
     float multiplierAnchor;
@@ -25,8 +27,8 @@ typedef struct ALIGNSPEC {
     ALIGNSPEC();
     ALIGNSPEC(View* anchor, float multiplierAnchor, float multiplierOwn, float margin);
     ALIGNSPEC(const StyleValue* value, View* view);
-    
-    static ALIGNSPEC None();
+
+    static ALIGNSPEC None(); // Use when view positioning is done in code
     static ALIGNSPEC Left();
     static ALIGNSPEC Center();
     static ALIGNSPEC Right();
@@ -36,5 +38,8 @@ typedef struct ALIGNSPEC {
     static ALIGNSPEC ToRightOf(View* view, float margin);
     static ALIGNSPEC Above(View* view, float margin);
     static ALIGNSPEC Below(View* view, float margin);
+    
+    float calc(float measuredSize, float containingOrigin, float containingSize) const;
+    
 } ALIGNSPEC;
 

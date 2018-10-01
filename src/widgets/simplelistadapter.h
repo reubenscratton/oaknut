@@ -19,33 +19,23 @@ public:
     virtual float getHeaderHeight(int section) {
         if (_filterText.length()) return 0;
         string title = getSectionTitle(section);
-        return title.length() ? app.dp(30) : 0;
+        return title.length() ? app.dp(30) : 0; // TODO: style
     }
     virtual int getItemCount(int section) {
         assert(section<=0);
         return (int)_items.size();
     }
     virtual float getItemHeight(LISTINDEX index) {
-        return app.dp(64);
+        return app.dp(64); // TODO: style
     }
 
     virtual View* createItemView(LISTINDEX index) {
-        return (View*)new ITEMVIEW(); //app.layoutInflate(_itemLayoutId);
+        return (View*)new ITEMVIEW();
     }
     
     virtual ITEM& getItem(LISTINDEX index) {
         return _items.at(LISTINDEX_ITEM(index));
     }
-    /*virtual void bindItemView(View* itemView, LISTINDEX index, ITEM* item) {
-        //assert(LISTINDEX_SECTION(index)==0);
-        //Item* item = (_filterText.length()) ? _itemsFiltered.at(LISTINDEX_ITEM(index)) :
-        //     _items.at(LISTINDEX_ITEM(index));
-        if (_itemViewBindFunc) {
-            _itemViewBindFunc(itemView, index, item);
-        } else {
-            assert(0); // need an item view-binding function!
-        }
-    }*/
     virtual View* createHeaderView(int section) {
         Label* label = new Label();
         label->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::WrapContent());

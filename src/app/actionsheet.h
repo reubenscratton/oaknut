@@ -19,7 +19,10 @@ public:
     void attachToWindow(Window *window) override;
     
 protected:
+    virtual void dismissWithAction(std::function<void()> action);
+    
     LinearLayout* _outerGroup;
     string _title;
-    vector<pair<string, std::function<void()>>> _actions;
+    vector<pair<const string, std::function<void()>>> _actions;
+    bool _hasCancel;
 };

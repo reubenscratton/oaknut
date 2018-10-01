@@ -168,6 +168,8 @@ void Label::updateRenderOps() {
         _textRendererMustRelayout = false;
     }
     _textRenderer.updateRenderOps(this);
+    //updateEffectiveAlpha();
+    //app.log("Eff. alpha %f for label '%s'", _effectiveAlpha, _textRenderer._text.data());
 }
 
 void Label::layout() {

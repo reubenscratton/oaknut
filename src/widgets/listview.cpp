@@ -120,6 +120,7 @@ ListView::ItemView* ListView::indexToView(LISTINDEX index) {
     return NULL;
 }
 
+
 void ListView::setSelectedIndex(LISTINDEX index) {
 	if (_selectedIndex != LISTINDEX_NONE) {
 		View* itemView = indexToView(_selectedIndex);
@@ -198,6 +199,7 @@ void ListView::setContentOffset(POINT contentOffset) {
 
 
 ListView::ItemView::ItemView(ListView* listView, LISTINDEX listIndex, View* contentView) {
+    setAlignSpecs(ALIGNSPEC::None(), ALIGNSPEC::None());
     _listView = listView;
     _listIndex = listIndex;
     _contentView = contentView;

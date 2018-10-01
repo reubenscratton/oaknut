@@ -43,8 +43,9 @@ public:
         
         ItemView(ListView* listView, LISTINDEX listIndex, View* contentView);
         void updateDeleteButton(bool animate);
-        void attachToWindow(Window* window);
         void showDeleteConfirmButton(bool show);
+        
+        void attachToWindow(Window* window) override;
     };
     
     Bitmap* _bmpDelete;

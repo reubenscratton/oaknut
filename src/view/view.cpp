@@ -12,8 +12,8 @@
 DECLARE_DYNCREATE(View);
 
 View::View() : _alpha(1.0f),
-                _alignspecHorz(ALIGNSPEC::None()),
-                _alignspecVert(ALIGNSPEC::None()),
+                _alignspecHorz(ALIGNSPEC::Left()),
+                _alignspecVert(ALIGNSPEC::Top()),
                 _widthMeasureSpec(MEASURESPEC::None()),
                 _heightMeasureSpec(MEASURESPEC::None())
 {
@@ -43,15 +43,7 @@ bool View::applyStyleValue(const string& name, const StyleValue* value) {
         _id = value->stringVal();
         return true;
     } else if (name == "size") {
-        if (value->isNumeric()) {
-            _widthMeasureSpec = MEASURESPEC(value);
-            _heightMeasureSpec = MEASURESPEC(value);
-        } else {
-            assert(value->isArray());
-            auto arrayVal = value->arrayVal();
-            _widthMeasureSpec = MEASURESPEC(&arrayVal[0]);
-            _heightMeasureSpec = MEASURESPEC(&arrayVal[1]);
-        }
+        processSizeStyleValue(value, &_widthMeasureSpec, &_heightMeasureSpec);
         return true;
     } else if (name == "height") {
         _heightMeasureSpec = MEASURESPEC(value);
@@ -59,11 +51,13 @@ bool View::applyStyleValue(const string& name, const StyleValue* value) {
     } else if (name == "width") {
         _widthMeasureSpec = MEASURESPEC(value);
         return true;
+    } else if (name == "align") {
+        processAlignStyleValue(value, &_alignspecHorz, &_alignspecVert);
+        return true;
     } else if (name == "alignX") {
         _alignspecHorz = ALIGNSPEC(value, this);
         return true;
     } else if (name == "alignY") {
-        //asm("int3;");
         _alignspecVert = ALIGNSPEC(value, this);
         return true;
     } else if (name == "background") {
@@ -134,6 +128,24 @@ bool View::applyStyleValue(const string& name, const StyleValue* value) {
         return true;
     }
     return false;
+}
+
+void View::processSizeStyleValue(const StyleValue* sizeValue, MEASURESPEC* widthspec, MEASURESPEC* heightspec) {
+    if (sizeValue->isNumeric()) {
+        *widthspec = MEASURESPEC(sizeValue);
+        *heightspec = MEASURESPEC(sizeValue);
+    } else {
+        assert(sizeValue->isArray());
+        auto arrayVal = sizeValue->arrayVal();
+        *widthspec = MEASURESPEC(&arrayVal[0]);
+        *heightspec = MEASURESPEC(&arrayVal[1]);
+    }
+}
+void View::processAlignStyleValue(const StyleValue* alignValue, ALIGNSPEC* horzspec, ALIGNSPEC* vertspec) {
+    assert(alignValue->isArray());
+    auto arrayVal = alignValue->arrayVal();
+    *horzspec = ALIGNSPEC(&arrayVal[0], this);
+    *vertspec = ALIGNSPEC(&arrayVal[1], this);
 }
 
 void processFill(RectRenderOp* op, const StyleValue& value) {
@@ -505,38 +517,17 @@ void View::measure(float parentWidth, float parentHeight) {
 		updateContentSize(parentWidth, parentHeight);
 		_contentSizeValid = true;
 	}
-    
-    // Width
-	if (MEASURESPEC::RefTypeContent == _widthMeasureSpec.refType) {
-        _rect.size.width = _contentSize.width + _padding.left + _padding.right;
-	} else if (MEASURESPEC::RefTypeAbs == _widthMeasureSpec.refType) {
-        _rect.size.width = _widthMeasureSpec.abs;
-    } else if (MEASURESPEC::RefTypeView == _widthMeasureSpec.refType) {
-        float refWidth = (_widthMeasureSpec.refView == NULL) ? parentWidth : _widthMeasureSpec.refView->_rect.size.width;
-        _rect.size.width = refWidth * _widthMeasureSpec.refSizeMultiplier;
-		_rect.size.width += _widthMeasureSpec.abs;
+  
+    // Naive measurement. Note that if aspect-ratio width is used we have to do height first
+    if (MEASURESPEC::RefTypeAspect != _widthMeasureSpec.refType) {
+        _rect.size.width = _widthMeasureSpec.calc(this, parentWidth, 0, false);
+        _rect.size.height = _heightMeasureSpec.calc(this, parentHeight, _rect.size.width, true);
+    } else {
+        _rect.size.height = _heightMeasureSpec.calc(this, parentHeight, 0, true);
+        _rect.size.width = _widthMeasureSpec.calc(this, parentWidth, _rect.size.height, false);
     }
 
     
-    // Height
-	if (MEASURESPEC::RefTypeContent == _heightMeasureSpec.refType) {
-		_rect.size.height = _contentSize.height + _padding.top + _padding.bottom;
-	} else if (MEASURESPEC::RefTypeAbs == _heightMeasureSpec.refType) {
-		_rect.size.height = _heightMeasureSpec.abs;
-	} else if (MEASURESPEC::RefTypeView == _heightMeasureSpec.refType) {
-		float refHeight = (_heightMeasureSpec.refView == NULL) ? parentHeight : _heightMeasureSpec.refView->_rect.size.height;
-		_rect.size.height = refHeight * _heightMeasureSpec.refSizeMultiplier;
-		_rect.size.height += _heightMeasureSpec.abs;
-	}
-	
-    // Aspect
-    if (MEASURESPEC::RefTypeAspect == _widthMeasureSpec.refType) {
-        _rect.size.width = _rect.size.height * _widthMeasureSpec.refSizeMultiplier;
-    } else if (MEASURESPEC::RefTypeAspect == _heightMeasureSpec.refType) {
-        _rect.size.height = _rect.size.width * _heightMeasureSpec.refSizeMultiplier;
-    }
-	
-	
 	    
     // At this point we've done relative-to-parent sizing. But if a size value depends on
     // wrapping subview size(s) then pass down the parent size.
@@ -576,7 +567,7 @@ void View::measure(float parentWidth, float parentHeight) {
 
 float View::getAlignspecVal(const ALIGNSPEC& spec, bool isVertical) {
 
-    View* anchor = (spec.anchor?spec.anchor:_parent);
+    View* anchor = (spec.anchor == NO_ANCHOR) ? NULL : (spec.anchor?spec.anchor:_parent);
     float anchorVal = 0;
     RECT& refRect = anchor ? anchor->_rect : _window->_surfaceRect;
     float anchorSize = isVertical ? refRect.size.height : refRect.size.width;
@@ -594,15 +585,11 @@ float View::getAlignspecVal(const ALIGNSPEC& spec, bool isVertical) {
     }
     float val = 0;
     if (anchor) {
-        val = anchorVal + (spec.multiplierAnchor * anchorSize)
-                         + (spec.multiplierSelf * ownSize)
-                         + spec.margin;
-        val = floorf(val);
+        val = spec.calc(ownSize, anchorVal, anchorSize);
     } else {
         val = isVertical ? _rect.origin.y : _rect.origin.x;
     }
     return val;
-
 }
 
 void View::layout() {
@@ -1303,9 +1290,14 @@ void View::animateTranslate(POINT translation, float duration) {
         });
     }
 }
-void View::animateInFromBottom(float duration, InterpolateFunc interpolater/* = strongEaseOut*/) {
-    Animation::start(this, duration, [=](float val) {
+Animation* View::animateInFromBottom(float duration, InterpolateFunc interpolater/* = strongEaseOut*/) {
+    return Animation::start(this, duration, [=](float val) {
         setTranslate({0, _rect.size.height * (1-val)});
+    }, interpolater);
+}
+Animation* View::animateOutToBottom(float duration, InterpolateFunc interpolater/* = strongEaseIn*/) {
+    return Animation::start(this, duration, [=](float val) {
+        setTranslate({0, _rect.size.height * (val)});
     }, interpolater);
 }
 

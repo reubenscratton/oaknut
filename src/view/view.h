@@ -39,6 +39,7 @@ class View : public Styleable {
 public:
     
     // These friend classes are tightly bound to View and are allowed to directly manipulate state.
+    friend class MEASURESPEC;
     friend class Surface;
     friend class RenderOp;
     friend class RenderBatch;
@@ -380,6 +381,8 @@ protected:
     virtual void applyStatemapStyleValue(const string& name, const StyleValue* value);
     map<string, StyleValue>* _statemapStyleValues;
     RenderOp* processDrawable(const StyleValue* value);
+    void processSizeStyleValue(const StyleValue* sizeValue, MEASURESPEC* widthspec, MEASURESPEC* heightspec);
+    void processAlignStyleValue(const StyleValue* alignValue, ALIGNSPEC* horzspec, ALIGNSPEC* vertspec);
     /**  \endcond */
     /**@}*/
 
@@ -413,7 +416,8 @@ public:
 	// Animation
 	virtual void animateAlpha(float target, float duration);
     virtual void animateTranslate(POINT translation, float duration);
-    virtual void animateInFromBottom(float duration, InterpolateFunc interpolater = strongEaseOut);
+    virtual Animation* animateInFromBottom(float duration, InterpolateFunc interpolater = strongEaseOut);
+    virtual Animation* animateOutToBottom(float duration, InterpolateFunc interpolater = strongEaseIn);
 	virtual void setTranslate(POINT translation);
     int _animationCount; // number of active animations currently attached to the view
     

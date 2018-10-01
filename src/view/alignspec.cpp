@@ -17,7 +17,7 @@ ALIGNSPEC::ALIGNSPEC(View* anchor, float multiplierAnchor, float multiplierSelf,
     this->margin = margin;
 }
 
-ALIGNSPEC ALIGNSPEC::None()   { return ALIGNSPEC(NULL, 0,0,0); }
+ALIGNSPEC ALIGNSPEC::None()   { return ALIGNSPEC(NO_ANCHOR, 0,0,0); }
 ALIGNSPEC ALIGNSPEC::Left()   { return ALIGNSPEC(NULL, 0.0f, 0.0f, 0); }
 ALIGNSPEC ALIGNSPEC::Center() { return ALIGNSPEC(NULL, 0.5f,-0.5f, 0); }
 ALIGNSPEC ALIGNSPEC::Right()  { return ALIGNSPEC(NULL, 1.0f,-1.0f, 0); }
@@ -86,5 +86,32 @@ ALIGNSPEC::ALIGNSPEC(const StyleValue* value, View* view) {
         assert(index>=1);
         anchor = view->getParent()->getSubview(index-1);
     }
+}
+
+float ALIGNSPEC::calc(float measuredSize, float containingOrigin, float containingSize) const {
+    
+    if (anchor == NO_ANCHOR) {
+        return containingOrigin;
+    }
+    float val = containingOrigin + (multiplierAnchor * containingSize)
+              + (multiplierSelf * measuredSize)
+              + margin;
+    return floorf(val);
+    /*float anchorVal = 0;
+    if (anchor == _parent) {
+        anchorVal = isVertical ? _parent->_padding.top : _parent->_padding.left;
+        anchorSize -= isVertical ? (anchor->_padding.top+anchor->_padding.bottom):  (anchor->_padding.left+anchor->_padding.right);
+    } else {
+        anchorVal = isVertical ? anchor->_rect.origin.y : anchor->_rect.origin.x;
+    }
+    }
+    float val = 0;
+    if (anchor) {
+        val =
+    } else {
+        val = containingOrigin;
+    }
+    return val;*/
+    
 }
 

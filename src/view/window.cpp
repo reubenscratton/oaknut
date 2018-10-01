@@ -572,7 +572,7 @@ void Window::setSoftKeyboardRect(const RECT rect) {
 
 
 // Permissions. By default there is no runtime permissions system.
-// // Of course iOS and Android implement these differently...
+// (NB: Of course iOS and Android implement these differently...)
 bool Window::hasPermission(Permission permission) {
     return true;
 }
@@ -589,6 +589,13 @@ void Window::runWithPermissions(vector<Permission> permissions, std::function<vo
 void Window::presentModalViewController(ViewController *viewController) {
     _viewControllers.push_back(viewController);
     attachViewController(viewController);
+    requestRedraw();
+}
+void Window::dismissModalViewController(ViewController* viewController) {
+    auto currentTop = _viewControllers.rbegin();
+    assert(*currentTop == viewController);
+    detachViewController(viewController);
+    _viewControllers.pop_back();
     requestRedraw();
 }
 

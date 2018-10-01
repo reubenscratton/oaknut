@@ -28,12 +28,52 @@ MEASURESPEC::MEASURESPEC(const StyleValue* value) {
         return;
     }
     string str = value->stringVal();
-    if (str == "wrap" || str=="wrap_content") { *this = WrapContent(); return; }
-    if (str == "fill" || str=="fill_parent" || str=="match_parent") { *this = FillParent(); return; }
-    if (str.hadPrefix("aspect(")) {
-        *this = UseAspect(atof(str.data()));
-        return;
+    string type = str.tokenise("(");
+    if (type == "wrap" || type=="wrap_content") {
+        *this = WrapContent();
     }
-    assert(false); // unknown measurespec
-    *this =  WrapContent();
+    else if (type == "fill" || type=="fill_parent" || type=="match_parent") {
+        *this = FillParent();
+    }
+    else if (type == "aspect") {
+        *this = UseAspect(atof(str.data()));
+        assert(str.length() > 0); // aspect must have supplementary vals
+    } else {
+        assert(false); // unknown measurespec
+        *this =  WrapContent();
+    }
+    if (str.length() > 0) {
+        StringProcessor proc(str);
+        StyleValue mul;
+        mul.parse(proc);
+        refSizeMultiplier = mul.floatVal();
+        proc.skipWhitespace();
+        if (proc.peek()!=')') {
+            StyleValue offset;
+            offset.parse(proc);
+            abs = offset.floatVal();
+            proc.skipWhitespace();
+        }
+        assert(proc.peek()==')');
+    }
+}
+
+float MEASURESPEC::calc(View* view, float parentSize, float otherSize, bool isVertical) const {
+    if (RefTypeContent == refType) {
+        if (isVertical) {
+            return view->_contentSize.height + view->_padding.top + view->_padding.bottom;
+        } else {
+            return view->_contentSize.width + view->_padding.left + view->_padding.right;
+        }
+    } else if (RefTypeAbs == refType) {
+        return abs;
+    } else if (RefTypeView == refType) {
+        float refWidth = (refView == NULL) ? parentSize : refView->_rect.size.width;
+        return refWidth * refSizeMultiplier + abs;
+    } else if (RefTypeAspect == refType) {
+        return otherSize * refSizeMultiplier + abs;
+    } else {
+        assert(0);
+    }
+
 }

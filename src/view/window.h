@@ -101,6 +101,7 @@ public:
 
     // Show modal VCs
     virtual void presentModalViewController(ViewController* viewController);
+    virtual void dismissModalViewController(ViewController* viewController);
 
     vector<MotionTracker*> _motionTrackers;
 	bool _redrawNeeded;
