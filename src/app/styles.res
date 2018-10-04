@@ -46,8 +46,7 @@ Button: {
             corner-radii: 4dp
         }
     }
-    gravityX: center
-    gravityY: center
+    gravity: center
 }
 
 ToolbarButton: {
@@ -81,8 +80,7 @@ SearchBox: {
         corner-radii: 8dp
     }
     maxLines: 1
-    gravityX: left
-    gravityY: center
+    gravity: left, center
     padding: 16dp, 2dp, 16dp, 2dp
     forecolor: #000
 }
@@ -111,10 +109,8 @@ ActionSheet: {
     }
     Action: {
         size: fill, 57dp
-        alignX: center
-        alignY: center
-        gravityX: center
-        gravityY: center
+        align: center
+        gravity: center
         font-size: 20dp
         forecolor: #007AFF
         background: {

@@ -13,6 +13,7 @@ public:
     // API
     void show();
     void handleNewCameraFrame(Bitmap* newFrame);
+    RECT getDisplayedFrameRect() const;
     
     // Overrides
     virtual void attachToWindow(Window* window);

@@ -86,5 +86,10 @@ void CameraView::detachFromWindow() {
     }
 }
 
+RECT CameraView::getDisplayedFrameRect() const {
+    return _renderOp ? _renderOp->_rect : RECT_Zero;
+}
+
+
 #endif
 

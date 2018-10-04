@@ -1,45 +1,34 @@
 {
     class: View
-    width: fill_parent
-    height: 64dp
-    paddingHorz: 16dp
-    paddingVert: 8dp
+    size: fill, 64dp
+    padding: 16dp, 8dp
     subviews: [{
         class: Label
         id: number
         style: $listview.item-title
-        width: 52dp
-        height: wrap_content
-        alignX: left
-        alignY: center
+        size: 52dp, wrap_content
+        align: left, center
         gravityX: right
         font-size: 32dp
       },{
         class: ImageView
         id: image
-        width: 40dp
-        height: 52dp
-        alignX: toRightOf, number, 8dp
-        alignY: center
-        background: 0xff333333
-        paddingHorz: 1dp
-        paddingVert: 1dp
+        size: 40dp, 52dp
+        align: toRightOf(number 8dp), center
+        background: #333
+        padding: 1dp
       }, {
         class: Label
         id: title
         style: $listview.item-title
-        width: fill_parent
-        height: wrap_content
-        alignX: toRightOf, image, 8dp
-        alignY: top
+        size: fill, wrap
+        align: toRightOf(image 8dp), top
       }, {
         class: Label
         id: subtitle
         style: $listview.item-subtitle
-        width: fill_parent
-        height: wrap_content
-        alignX: toRightOf, image, 8dp
-        alignY: bottom
+        size: fill, wrap
+        align: toRightOf(image 8dp), bottom
     }]
 }
 

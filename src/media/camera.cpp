@@ -10,7 +10,7 @@
 #include <oaknut.h>
 
 
-Camera::Camera() {
+Camera::Camera(const Options& options) : _options(options) {
 }
 
 #endif

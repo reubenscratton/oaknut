@@ -158,7 +158,7 @@ public:
     jobject camera;
     CameraFrameAndroid* frame;
 
-    CameraAndroid(int cameraId) : Camera() {
+    CameraAndroid(const Options& options) : Camera(options) {
         JNIEnv *env = getJNIEnv();
         jclassCamera = env->FindClass(PACKAGE "/Camera");
         jclassCamera = (jclass) env->NewGlobalRef(jclassCamera);
@@ -204,8 +204,8 @@ public:
 
 };
 
-Camera* Camera::create(int cameraId) {
-    return new CameraAndroid(cameraId);
+Camera* Camera::create(bool frontFacing) {
+    return new CameraAndroid(frontFacing);
 }
 
 

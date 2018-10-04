@@ -94,6 +94,16 @@ public:
     /**@}*/
 
     
+    /** @name Locale
+     * @{
+     */
+
+    /** Returns ISO-3166 two-letter country code the device is configured for, which is
+        not necessarily the country the device is currently in.  */
+    string currentCountryCode() const;
+    /**@}*/
+
+    
     /** @name Settings
      * @{
      */

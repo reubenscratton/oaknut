@@ -7,9 +7,8 @@
 #if PLATFORM_APPLE && OAKNUT_WANT_CAMERA
 
 #pragma once
-#import <AVFoundation/AVFoundation.h>
-#import <CoreImage/CoreImage.h>
-
+//#import <CoreImage/CoreImage.h>
+#include <CoreMedia/CoreMedia.h>
 
 class CameraFrameApple : public CameraFrame {
 public:

@@ -35,6 +35,9 @@ TIMESTAMP App::currentMillis() {
     return ms.count();
 }
 
+string App::currentCountryCode() const {
+    return [NSLocale currentLocale].countryCode.UTF8String;
+}
 
 static string getPath(NSSearchPathDirectory spd) {
     // TODO: Create a 'appname' subdirectory for app support and cache options rather than blart all over the root dir

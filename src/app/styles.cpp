@@ -503,7 +503,7 @@ const StyleValue* StyleValue::get(const string& keypath) const {
 }
 
 
-bool StyleValue::parse(StringProcessor& it, bool inArrayVal/*=false*/) {
+bool StyleValue::parse(StringProcessor& it, int flags/*=0*/) {
     it.skipWhitespace();
 
     // Parse a compound value
@@ -608,7 +608,7 @@ bool StyleValue::parse(StringProcessor& it, bool inArrayVal/*=false*/) {
             
             // Parse the next element
             StyleValue elem;
-            if (!elem.parse(it, true)) {
+            if (!elem.parse(it, PARSEFLAG_IN_ARRAY)) {
                 return false;
             }
             array->push_back(std::move(elem));
@@ -659,6 +659,9 @@ bool StyleValue::parse(StringProcessor& it, bool inArrayVal/*=false*/) {
             while (!it.eof()) {
                 ch = it.peek();
                 if (!quotedString) {
+                    if ((ch==' '||ch==')') && (flags & PARSEFLAG_IS_ARGUMENT)) {
+                        break;
+                    }
                     if (ch=='\r' || ch=='\n' || ch==',') {
                         break;
                     }
@@ -689,14 +692,14 @@ bool StyleValue::parse(StringProcessor& it, bool inArrayVal/*=false*/) {
 
     // Implicit array (detected when there's a comma after the value)
     it.skipWhitespace();
-    if (!inArrayVal && it.peek() == ',') {
+    if (!(flags&PARSEFLAG_IN_ARRAY) && it.peek() == ',') {
         StyleValue firstElem(std::move(*this));
         setType(Array);
         array->push_back(std::move(firstElem));
         while (it.peek() == ',') {
             it.next();
             StyleValue elem;
-            if (!elem.parse(it, true)) {
+            if (!elem.parse(it, PARSEFLAG_IN_ARRAY)) {
                 return false;
             }
             array->push_back(std::move(elem));

@@ -40,48 +40,59 @@ ALIGNSPEC ALIGNSPEC::Below(View* view, float margin) {
 
 ALIGNSPEC::ALIGNSPEC(const StyleValue* value, View* view) {
     anchor = NULL;
-    float margin = 0;
-    string type;
-    if (value->isArray()) {
-        auto& a = value->arrayVal();
-        type = a[0].stringVal();
-        if (a.size()>=2) {
-            if (a[1].isNumeric()) {
-                margin = a[1].floatVal();
-            } else if (a[1].isString()) {
-                string anchorId = a[1].stringVal();
-                anchor = view->getParent()->findViewById(anchorId);
-                assert(anchor); // NB: anchor must be previously declared. TODO: remove this restriction
-            }
-            if (a.size()>=3) {
-                assert(a[2].isNumeric());
-                margin = a[2].floatVal();
-            }
-        }
-    } else if (value->isNumeric()) {
+    if (value->isNumeric()) {
         multiplierAnchor = 0;
         multiplierSelf = 0;
         margin = value->floatVal();
         return;
-    } else {
-        type = value->stringVal();
     }
-    bool anchorMustBeSibling = false;
+    string str = value->stringVal();
+    string type = str.tokenise("(");
+
+    bool anchorMandatory = false;
     if (type=="center") *this=Center();
     else if (type=="centre") *this=Center();
     else if (type=="left") *this=Left();
     else if (type=="right") *this=Right();
     else if (type=="top") *this=Top();
     else if (type=="bottom") *this=Bottom();
-    else if (type=="toLeftOf") {multiplierAnchor=1.0f; multiplierSelf=-1.0f; anchorMustBeSibling=true; }
-    else if (type=="toRightOf") {multiplierAnchor=1.0f; multiplierSelf=0.0f; anchorMustBeSibling=true; }
-    else if (type=="above") {multiplierAnchor=1.0f; multiplierSelf=-1.0f; anchorMustBeSibling=true; }
-    else if (type=="below") {multiplierAnchor=1.0f; multiplierSelf=0.0f; anchorMustBeSibling=true; }
-    else assert(false); // unknown alignspec
-    this->margin = margin;
+    else if (type=="toLeftOf") {multiplierAnchor=1.0f; multiplierSelf=-1.0f; anchorMandatory=true; }
+    else if (type=="toRightOf") {multiplierAnchor=1.0f; multiplierSelf=0.0f; anchorMandatory=true; }
+    else if (type=="above") {multiplierAnchor=1.0f; multiplierSelf=-1.0f; anchorMandatory=true; }
+    else if (type=="below") {multiplierAnchor=1.0f; multiplierSelf=0.0f; anchorMandatory=true; }
+    else assert(false); // unknown alignspec type
+
+    margin = 0;
+
+    // Arguments: if only one argument then its either anchor or margin.
+    if (str.length() > 0) {
+        string anchorName;
+        StringProcessor proc(str);
+        StyleValue arg1, arg2;
+        arg1.parse(proc, PARSEFLAG_IS_ARGUMENT);
+        proc.skipWhitespace();
+        if (proc.peek()==')') {
+            if (arg1.isString()) {
+                anchorName = arg1.stringVal();
+            } else {
+                margin  = arg1.floatVal();
+            }
+        } else {
+            arg2.parse(proc, PARSEFLAG_IS_ARGUMENT);
+            assert(arg1.isString()); // if two args provided, first must be anchor
+            assert(arg2.isNumeric()); // and second must be margin
+            anchorName = arg1.stringVal();
+            margin = arg2.floatVal();
+            assert(proc.peek()==')');
+        }
+        if (anchorName.length()) {
+            anchor = view->getParent()->findViewById(anchorName);
+            assert(anchor); // NB: anchor must be previously declared. TODO: remove this restriction
+        }
+    }
     
-    // Implicit anchoring to previously-declared view
-    if (anchorMustBeSibling && !anchor) {
+    // If an anchor is required but none was declared, implicitly anchor to previously-declared view
+    if (anchorMandatory && !anchor) {
         int index = view->getParent()->indexOfSubview(view);
         assert(index>=1);
         anchor = view->getParent()->getSubview(index-1);

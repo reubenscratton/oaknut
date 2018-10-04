@@ -18,12 +18,20 @@ public:
     virtual Bitmap* asBitmap()=0;
 };
 
+
 class Camera : public Object {
 public:
     
+    // Options.
+    struct Options {
+        bool frontFacing;
+        int frameSizeShort; // e.g. 480
+        int frameSizeLong;  // e.g. 640
+        int frameRate;
+    };
+
     // API
-    static bool hasCamera(int cameraId);
-    static Camera* create(int cameraId);
+    static Camera* create(const Options& options);
     std::function<void (CameraFrame* frame)> onNewCameraFrame;
     int _previewWidth;
     int _previewHeight;
@@ -34,9 +42,9 @@ public:
     virtual void close()=0;
 
 protected:
-    Camera();
+    Camera(const Options& options);
 
-
+    Options _options;
 };
 
 #endif

@@ -65,7 +65,10 @@ public:
     const vector<StyleValue>& arrayVal(const string& name) const;
     void importValues(const map<string, StyleValue>& values);
 
-    bool parse(class StringProcessor& it, bool inArrayVal=false);
+#define PARSEFLAG_IN_ARRAY 1
+#define PARSEFLAG_IS_ARGUMENT 2
+
+    bool parse(class StringProcessor& it, int flags=0);
 
 private:
     void setType(Type newType);

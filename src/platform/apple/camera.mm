@@ -8,6 +8,7 @@
 
 #include <oaknut.h>
 #include "camera.h"
+#import <AVFoundation/AVFoundation.h>
 
 Bitmap* CameraFrameApple::asBitmap() {
     CVPixelBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
@@ -28,8 +29,9 @@ public:
     AVCaptureSession* captureSession;
     AVCaptureVideoDataOutput* videoOutput;
     CameraFrameApple _frame;
+    bool _portrait;
 
-    CameraApple(int cameraId) {
+    CameraApple(const Options& options) : Camera(options) {
         _helper = [CameraHelper new];
         _helper->_camera = this;
     }
@@ -38,17 +40,16 @@ public:
     }
     
     void start() override {
-        captureSession = [[AVCaptureSession alloc] init];
-        assert(captureSession);
-        [captureSession beginConfiguration];
         
-        [captureSession setSessionPreset:AVCaptureSessionPreset640x480];
         
-        // Get the a video device with preference to the front facing camera
+        // Get the video device that matches the front/back option
         AVCaptureDevice* videoDevice = nil;
         NSArray* devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
         for (AVCaptureDevice* device in devices) {
-            if ([device position] == AVCaptureDevicePositionFront) {
+            if (_options.frontFacing && [device position] == AVCaptureDevicePositionFront) {
+                videoDevice = device;
+            }
+            if (!_options.frontFacing && [device position] != AVCaptureDevicePositionFront) {
                 videoDevice = device;
             }
         }
@@ -57,6 +58,45 @@ public:
         }
         assert(videoDevice);
         
+        // Find the rate that
+        AVCaptureDeviceFormat *bestFormat = nil;
+        AVFrameRateRange *bestFrameRateRange = nil;
+        uint32_t bestSizeDiff = INT32_MAX;
+        for (AVCaptureDeviceFormat *format in [videoDevice formats]) {
+            CMVideoDimensions dims = CMVideoFormatDescriptionGetDimensions(format.formatDescription);
+            int shortSize = MIN(dims.width, dims.height);
+            int longSize = MAX(dims.width, dims.height);
+            
+            // Calculate the size diff
+            auto shortDiff = shortSize - _options.frameSizeShort;
+            auto longDiff = longSize - _options.frameSizeLong;
+            auto sizeDiff = shortDiff*shortDiff + longDiff*longDiff;
+            
+            // Get the size nearest the requested one
+            if (!bestFormat || (sizeDiff < bestSizeDiff)) {
+                bestFormat = format;
+                bestSizeDiff = sizeDiff;
+            }
+
+
+            /*for ( AVFrameRateRange *range in format.videoSupportedFrameRateRanges ) {
+                if ( range.maxFrameRate > bestFrameRateRange.maxFrameRate ) {
+                    bestFormat = format;
+                    bestFrameRateRange = range;
+                }
+            }*/
+        }
+        
+        [videoDevice lockForConfiguration:nil];
+        videoDevice.activeFormat = bestFormat;
+        [videoDevice unlockForConfiguration];
+
+        
+        captureSession = [[AVCaptureSession alloc] init];
+        assert(captureSession);
+        [captureSession beginConfiguration];
+        
+
         // Device input
         NSError* error = nil;
         AVCaptureDeviceInput *deviceInput = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:&error];
@@ -80,24 +120,26 @@ public:
             if([connection isVideoOrientationSupported]) {
                 [connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
             }
-            [connection setVideoMirrored:YES];
+            if (_options.frontFacing) {
+                [connection setVideoMirrored:YES];
+            }
         }
         
         [captureSession commitConfiguration];
         
+        _portrait = true; // todo!
+        
         auto formatDescription = [videoDevice activeFormat].formatDescription;
         auto dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription);
-        _previewWidth = dimensions.width;
-        _previewHeight = dimensions.height;
-        if (true) { // if (portrait) : todo: make this work
-            _previewWidth = dimensions.height;
-            _previewHeight = dimensions.width;
-        }
+        _previewWidth = _portrait ? dimensions.height : dimensions.width;
+        _previewHeight = _portrait ? dimensions.width : dimensions.height;
         [captureSession startRunning];
     }
     
     void handleNewSampleBuffer(CMSampleBufferRef sampleBuffer) {
         _frame.sampleBuffer = sampleBuffer;
+        _frame._width = _previewWidth;
+        _frame._height = _previewHeight;
         onNewCameraFrame(&_frame);
     }
 
@@ -111,8 +153,8 @@ public:
     CameraHelper* _helper;
 };
 
-Camera* Camera::create(int cameraId) {
-    return new CameraApple(cameraId);
+Camera* Camera::create(const Options& options) {
+    return new CameraApple(options);
 }
 
 

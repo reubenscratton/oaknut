@@ -115,11 +115,11 @@ bool View::applyStyleValue(const string& name, const StyleValue* value) {
         EDGEINSETS padding = value->edgeInsetsVal();
         setPadding(padding);
         return true;
-    } else if (name == "paddingHorz") {
+    } else if (name == "paddingX") {
         float pad = value->floatVal();
         setPadding(EDGEINSETS(pad,_padding.top,pad,_padding.bottom));
         return true;
-    } else if (name == "paddingVert") {
+    } else if (name == "paddingY") {
         float pad = value->floatVal();
         setPadding(EDGEINSETS(_padding.left,pad,_padding.right,pad));
         return true;
@@ -131,14 +131,14 @@ bool View::applyStyleValue(const string& name, const StyleValue* value) {
 }
 
 void View::processSizeStyleValue(const StyleValue* sizeValue, MEASURESPEC* widthspec, MEASURESPEC* heightspec) {
-    if (sizeValue->isNumeric()) {
-        *widthspec = MEASURESPEC(sizeValue);
-        *heightspec = MEASURESPEC(sizeValue);
-    } else {
-        assert(sizeValue->isArray());
+    if (sizeValue->isArray()) {
         auto arrayVal = sizeValue->arrayVal();
+        assert(arrayVal.size()==2);
         *widthspec = MEASURESPEC(&arrayVal[0]);
         *heightspec = MEASURESPEC(&arrayVal[1]);
+    } else {
+        *widthspec = MEASURESPEC(sizeValue);
+        *heightspec = MEASURESPEC(sizeValue);
     }
 }
 void View::processAlignStyleValue(const StyleValue* alignValue, ALIGNSPEC* horzspec, ALIGNSPEC* vertspec) {

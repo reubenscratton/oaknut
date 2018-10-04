@@ -167,6 +167,7 @@ typedef uint64_t TIMESTAMP;
 
 // Platform-specific types
 #include __incstr(platform/PLATFORM/bitmap.h)
+#include __incstr(platform/PLATFORM/camera.h)
 #include __incstr(platform/PLATFORM/font.h)
 
 #endif

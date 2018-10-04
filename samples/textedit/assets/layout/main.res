@@ -1,23 +1,19 @@
 {
     class: LinearLayout
-	width: match_parent
-	height: match_parent
+	size: fill
     background: lightGray
     orientation: vertical
     weights: 0,1
 	subviews: [{
         class: View
 		id: topBar
-		width: match_parent
-		height: 44dp
+		size: fill, 44dp
         background: #ddd
         padding: 4dp
         subviews: [{
             class: LinearLayout
-            width: wrap_content
-            height: wrap_content
-            alignX: left
-            alignY: center
+            size: wrap
+            align: left, center
             orientation: horizontal
             subviews: [{
                 class: ImageView
@@ -45,8 +41,7 @@
     {
         class:EditText
 		id: editText
-		width: match_parent
-		height: 0dp
+		size: fill, 0dp
         background: {
             inset: 4dp
             fill: white
@@ -55,6 +50,6 @@
             corner-radii: 8dp
         }
         padding: 16dp
-		alignY: below,topBar
+		alignY: below(topBar)
 	}]
 }

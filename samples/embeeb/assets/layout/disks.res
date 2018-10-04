@@ -1,23 +1,24 @@
 {
     class: View
-    width: fill_parent
-    height: fill_parent
+    size: fill
     background: #f8f8f8
-    subviews: {
+    subviews: [
+    {
         class: ListView
         id: listView
-        width: fill_parent
-        height: fill_parent
-      }, {
+        size: fill
+    },
+    {
         class: View
-        width: fill_parent
-        height: wrap_content
+        size: fill, wrap
         background: #ddd
-        subviews: [{
+        subviews: [
+        {
             class: SearchBox
             id: searchBox
-            width: fill_parent
-            height: 40dp
-        }]
+            size: fill, 40dp
+        }
+        ]
     }
+    ]
 }

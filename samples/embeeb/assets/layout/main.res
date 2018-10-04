@@ -1,24 +1,24 @@
 {
     class: LinearLayout
-    width: fill_parent
-    height: fill_parent
+    size: fill
     orientation: vertical
     weights: 0,1,0
-    subviews: [{
+    subviews: [
+    {
         class: BeebView
         id: beebView
-        width: fill_parent
-        height: aspect(0.8)
-      },{
+        size: fill, aspect(0.8)
+    },
+    {
         class: View
-        width: fill_parent
-        height: 0
+        size: fill, 0
         background: black
-      },{
+    },
+    {
         class: ControllerView
         id: controllerView
-        width: fill_parent
-        height: aspect(0.675)
+        size: fill, aspect(0.675)
         background: #222
-      }]
+    }
+    ]
 }
