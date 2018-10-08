@@ -21,14 +21,17 @@ ALLOPTS:= $(CFLAGS) -DPLATFORM_WEB=1 -DEMSCRIPTEN $(OPTS) \
          -isystem $(EMSCRIPTEN_ROOT)/system/include \
          -s USE_PTHREADS=1 -s TOTAL_MEMORY=33554432
 
-PCH=$(BUILD_DIR)/oaknut.pch
-$(PCH) : $(OAKNUT_DIR)/src/oaknut.h
+$(PCH).dep : $(OAKNUT_DIR)/src/oaknut.h
 	@mkdir -p $(dir $@)
-	@$(EMSCRIPTEN_ROOT)/emcc $(ALLOPTS) -std=c++11 -x c++-header $< -emit-pch -o $@
+	@$(EMSCRIPTEN_ROOT)/emcc $(ALLOPTS) -std=c++11 -x c++-header -E -M -MT $(PCH) $< -o $(PCH).dep
+	echo "	$(EMSCRIPTEN_ROOT)/emcc $(ALLOPTS) -std=c++11 -x c++-header $(OAKNUT_DIR)/src/oaknut.h -emit-pch -o $(PCH)" >>$@
+
+DEPS := $(PCH).dep $(DEPS)
 
 
-$(OBJ_DIR)%.bc : %
-$(OBJ_DIR)%.bc : % $(OBJ_DIR)%.dep $(PCH)
+#$(OBJ_DIR)%.bc : %
+
+$(OBJ_DIR)%.bc : % $(OBJ_DIR)%.dep
 	@echo $(PLATFORM): Compiling $(notdir $<)
 	@mkdir -p $(dir $@)
 	@$(EMSCRIPTEN_ROOT)/emcc  \
@@ -42,7 +45,7 @@ $(OBJ_DIR)%.bc : % $(OBJ_DIR)%.dep $(PCH)
 
 EXECUTABLE=$(OUTPUT_DIR)/xx.html
 
-$(EXECUTABLE): $(OBJS) $(HTML_FILE)
+$(EXECUTABLE): $(PCH).dep $(PCH) $(OBJS) $(HTML_FILE)
 	@echo $(PLATFORM): Linking app
 	@mkdir -p $(dir $(EXECUTABLE))
 	@$(EMSCRIPTEN_ROOT)/emcc --bind $(OPTS) --emrun --preload-file $(PROJECT_ROOT)/assets@/assets --shell-file $(HTML_FILE) $(OBJS) -o $@

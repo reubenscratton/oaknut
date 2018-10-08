@@ -8,44 +8,39 @@
 
 #include <oaknut.h>
 
-
-class WebCamera : public Bitmap  {
+class CameraFrameWeb : public CameraFrame {
 public:
-    WebCamera(int cameraId);
-    ~WebCamera();
     
-    int _cameraId;
-    CameraPreviewDelegate _delegate;
-    val _texture;
-    
-    void startPreview(CameraPreviewDelegate delegate);
-    void stopPreview();
-
-    static void OnUpdate(WebCamera* webcam) {
-        webcam->_delegate(webcam, 5);
-    }
-
-    void bind() {
-        val::global("gl").call<void>("bindTexture", GL_TEXTURE_2D, _texture);
-    }
-
 };
 
+CameraWeb::CameraWebBitmap::CameraWebBitmap() : _texture(val::null())  {
+}
+void CameraWeb::CameraWebBitmap::bind() {
+    val::global("gl").call<void>("bindTexture", GL_TEXTURE_2D, _texture);
+}
 
-WebCamera::WebCamera(int cameraId) : _texture(val::null()) {
-    _cameraId = cameraId;
+void CameraWeb::CameraWebBitmap::create() {
+    val gl = val::global("gl");
+    _texture = gl.call<val>("createTexture");
+}
+
+static void OnCameraWebUpdate(CameraWeb* webcam) {
+    webcam->onNewCameraFrame(webcam, 5);
+}
+
+
+
+CameraWeb::CameraWeb(const Options& options) : Camera(options) {
     _width = 640;
     _height = 480;
     _format = BITMAPFORMAT_RGBA32;
 }
-WebCamera::~WebCamera() {
+CameraWeb::~CameraWeb() {
 }
 
-void WebCamera::startPreview(CameraPreviewDelegate delegate) {
-    _delegate = delegate;
-    val gl = val::global("gl");
-    _texture = gl.call<val>("createTexture");
-    int gotIndex = val::global("gotSet")(_texture);
+void CameraWeb::start() {
+    _bitmap.create();
+    int gotIndex = val::global("gotSet")(_bitmap->_texture);
     EM_ASM_({
         var webcam=$0;
         var onUpdate=$1;
@@ -88,27 +83,15 @@ void WebCamera::startPreview(CameraPreviewDelegate delegate) {
             log("Failed to open webcam: " + e);
         });
 
-    }, this, OnUpdate, gotIndex);
+    }, this, OnCameraWebUpdate, gotIndex);
 }
-void WebCamera::stopPreview() {
+void CameraWeb::stopPreview() {
     
 }
 
 
-void* oakCameraOpen(int cameraId) {
-    return new WebCamera(cameraId);
-}
-void oakCameraPreviewStart(void* oscamera, CameraPreviewDelegate delegate) {
-    WebCamera* webcam = (WebCamera*)oscamera;
-    webcam->startPreview(delegate);
-}
-void oakCameraPreviewStop(void* oscamera) {
-    WebCamera* webcam = (WebCamera*)oscamera;
-    webcam->stopPreview();
-}
-void oakCameraClose(void* oscamera) {
-    WebCamera* webcam = (WebCamera*)oscamera;
-    delete webcam;
+Camera* Camera::create(const Options& options) {
+    return new CameraWeb(options);
 }
 
 

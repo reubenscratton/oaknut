@@ -109,11 +109,14 @@ void Label::onEffectiveTintColorChanged() {
 
 void Label::measure(float parentWidth, float parentHeight) {
     
-    // If the width changed and the label isn't absolutely sized, force a re-evaluation of content size
-    if (parentWidth != _prevParentWidth && _widthMeasureSpec.refType!=MEASURESPEC::RefTypeAbs) {
-        _textRenderer._measuredSizeValid = false;
-        _contentSizeValid = false;
-        _prevParentWidth = parentWidth;
+    // If the parent width changed and the label size is relative to parent
+    // then force a re-evaluation of content size.
+    if (parentWidth != _prevParentWidth) {
+        if (_widthMeasureSpec.ref==nullptr && _widthMeasureSpec.mul != 0.0f) {
+            _textRenderer._measuredSizeValid = false;
+            _contentSizeValid = false;
+            _prevParentWidth = parentWidth;
+        }
     }
     View::measure(parentWidth, parentHeight);
 }
@@ -132,8 +135,8 @@ void Label::setRectSize(const SIZE& asize) {
     // and this means we have to remeasure the text. Which means the height may grow (or shrink).
     _textRenderer._measuredSizeValid = false;
     SIZE size = asize;
-    updateContentSize(size.width, MAXFLOAT);
-    if (_heightMeasureSpec.refType == MEASURESPEC::RefTypeContent) {
+    updateContentSize(size.width, FLT_MAX);
+    if (_heightMeasureSpec.type == MEASURESPEC::TypeContent) {
         size.height = _contentSize.height + _padding.top+_padding.bottom;
     }
     View::setRectSize(size);

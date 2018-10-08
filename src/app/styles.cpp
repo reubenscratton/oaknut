@@ -12,19 +12,17 @@
  - Resources are a hierarchy of JSON-style key-value pairs but without quote marks around everything.
  - No commas needed to separate fields, field ends at newline unless it is a quoted string which is
    allowed to contain newlines and escaped characters.
- - Resources are treated as both a map and a list.
- - Keys are always strings, values are [string|int|float|map]
+ - Keys are always strings, values are [string|int|float|ref|array|map]
  - Keys are chainable, i.e. the hierarchy can be traversed by "key.subkey.value".
- - Values cascade, i.e. if a requested value is not present in a map then the parent map is checked, then the grandparent, etc.
  - Values can refer to other values via a $ prefix.
- - Maps can 'extend' other maps that aren't ancestors via a $ declaration in the key name
  - Later declarations override earlier ones if they have exactly the same name.
 
 */
 
-float Measurement::val() const {
+float measurement::val() const {
     if (_unit==DP) return app.dp(_val);
     if (_unit==SP) return app.dp(_val);
+    if (_unit==PC) return _val/100;
     return _val;
 }
 
@@ -39,7 +37,7 @@ StyleValue::StyleValue(StyleValue&& rval) noexcept : type(rval.type), str(NULL) 
         case Int: i = rval.i; rval.i=0; break;
         case Float: f = rval.f; rval.f=0; break;
         case String: str = rval.str; rval.str = NULL; break;
-        case Measure: measurement = rval.measurement; break;
+        case Measure: _measurement = rval._measurement; break;
         case Reference: str = rval.str; rval.str = NULL; break;
         case Array: array = rval.array; rval.array=NULL; break;
         case Compound: compound = rval.compound; rval.compound=NULL; break;
@@ -66,6 +64,9 @@ bool StyleValue::isNumeric() const {
 bool StyleValue::isString() const {
     return type==Type::String;
 }
+bool StyleValue::isMeasurement() const {
+    return type==Type::Measure;
+}
 bool StyleValue::isArray() const {
     return type == Type::Array;
 }
@@ -74,7 +75,7 @@ int StyleValue::intVal() const {
     auto val = select();
     if (val->type==Type::Int) return val->i;
     else if (val->type==Type::Float) return (int)val->f;
-    else if (val->type==Type::Measure) return (int)val->measurement.val();
+    else if (val->type==Type::Measure) return (int)val->_measurement.val();
     app.warn("intVal() type coerce failed");
     return 0.f;
 }
@@ -94,7 +95,7 @@ float StyleValue::floatVal() const {
     auto val = select();
     if (val->type==Type::Int) return (float)val->i;
     else if (val->type==Type::Float) return val->f;
-    else if (val->type==Type::Measure) return val->measurement.val();
+    else if (val->type==Type::Measure) return val->_measurement.val();
     app.warn("floatVal() type coerce failed");
     return 0.f;
 }
@@ -131,6 +132,10 @@ float StyleValue::floatVal(const string& name) const {
 }
 string StyleValue::stringVal(const string& name) const {
     return get(name)->stringVal();
+}
+measurement StyleValue::measurementVal() const {
+    assert(type == Measure);
+    return _measurement;
 }
 
 static vector<StyleValue> s_emptyArray;
@@ -503,6 +508,37 @@ const StyleValue* StyleValue::get(const string& keypath) const {
 }
 
 
+bool StyleValue::parseNumberOrMeasurement(StringProcessor& it) {
+    char ch = it.peek();
+    if ((ch>='0' && ch<='9') || ch=='-' || ch=='+') {
+        variant v = variant::parseNumber(it);
+        if (it.nextWas("%")) {
+            setType(Measure);
+            _measurement = measurement(v.floatVal(), measurement::PC);
+        } else if (it.nextWas("dp")) {
+            setType(Measure);
+            _measurement = measurement(v.floatVal(), measurement::DP);
+        } else if (it.nextWas("sp")) {
+            setType(Measure);
+            _measurement = measurement(v.floatVal(), measurement::SP);
+        } else if (it.nextWas("px")) {
+            setType(Measure);
+            _measurement = measurement(v.floatVal(), measurement::PX);
+        } else {
+            if (v.type == variant::FLOAT32) {
+                setType(Float);
+                f = v.floatVal();
+            } else {
+                setType(Int);
+                i = v.floatVal();
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
+
 bool StyleValue::parse(StringProcessor& it, int flags/*=0*/) {
     it.skipWhitespace();
 
@@ -628,36 +664,26 @@ bool StyleValue::parse(StringProcessor& it, int flags/*=0*/) {
     
     // Non-compound
     else {
-        char ch = it.peek();
-        if ((ch>='0' && ch<='9') || ch=='-') {
-            variant v = variant::parseNumber(it);
-            if (it.nextWas("dp")) {
-                setType(Measure);
-                measurement = Measurement(v.floatVal(), Measurement::DP);
+        
+        // Parse a measurement. Size expressions allow a number to be followed by another number,
+        // in this case we convert self to an array containing the numbers
+        if (parseNumberOrMeasurement(it)) {
+            it.skipWhitespace();
+            StyleValue secondNumber;
+            if (secondNumber.parseNumberOrMeasurement(it)) {
+                StyleValue firstNumber = *this;
+                setType(Array);
+                array->push_back(firstNumber);
+                array->push_back(secondNumber);
             }
-            else if (it.nextWas("sp")) {
-                setType(Measure);
-                measurement = Measurement(v.floatVal(), Measurement::SP);
-            }
-            else if (it.nextWas("px")) {
-                setType(Measure);
-                measurement = Measurement(v.floatVal(), Measurement::PX);
-            } else {
-                if (v.type == variant::FLOAT32) {
-                    setType(Float);
-                    f = v.floatVal();
-                } else {
-                    setType(Int);
-                    i = v.floatVal();
-                }
-            }
-            
-            // String value
-        } else {
+        }
+        
+        // String value
+        else {
             setType(it.nextWas("$") ? Reference : String);
             bool quotedString = it.nextWas("\"");
             while (!it.eof()) {
-                ch = it.peek();
+                auto ch = it.peek();
                 if (!quotedString) {
                     if ((ch==' '||ch==')') && (flags & PARSEFLAG_IS_ARGUMENT)) {
                         break;
@@ -760,7 +786,7 @@ void StyleValue::copyFrom(const StyleValue* other) {
         case Int: i = other->i; break;
         case Float: f = other->f; break;
         case String: str = other->str; break;
-        case Measure: measurement = other->measurement; break;
+        case Measure: _measurement = other->_measurement; break;
         case Reference: str = other->str; break;
         case Array: array->insert(array->end(), other->array->begin(), other->array->end()); break;
         case Compound:

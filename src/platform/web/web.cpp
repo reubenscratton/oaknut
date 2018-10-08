@@ -10,6 +10,26 @@
 #include "bitmap.h"
 
 
+class WindowWeb : public Window {
+public:
+
+    void requestRedrawNative() override {
+        EM_ASM({ requestAnimationFrame( function() { _dispatchMainWindowDraw(); }) });
+    }
+
+    void keyboardShow(bool show) override {
+        
+    }
+    void keyboardNotifyTextChanged() override {
+        
+    }
+
+};
+
+Window* Window::create() {
+    return new WindowWeb();
+}
+
 static val getTimestamp = val::global("getTimestamp");
 
 TIMESTAMP App::currentMillis() {
@@ -21,9 +41,6 @@ extern "C" void dispatchMainWindowDraw() {
     app._window->draw();
 }
 
-void App::requestRedraw() {
-    EM_ASM({ requestAnimationFrame( function() { _dispatchMainWindowDraw(); }) });
-}
 
 
 class OSTimer : public Timer {
@@ -91,15 +108,17 @@ void oakMessageLoop() {
     //    app._window->draw();
 }
 
-static void appMain() {
+static void oak_main() {
+    app.loadStyleAsset("styles.res");
     app.main();
+    app._window->show();
 }
 
 EMSCRIPTEN_BINDINGS(oaknut) {
     emscripten::function("oak_setWindowSize", &oak_setWindowSize);
     emscripten::function("oak_userEvent", &oak_userEvent);
     emscripten::function("oak_keyEvent", &oak_keyEvent);
-    emscripten::function("oak_main", &appMain);
+    emscripten::function("oak_main", &oak_main);
 }
 
 
@@ -126,8 +145,8 @@ int main(int argc, char *argv[]) {
     emscripten_webgl_make_context_current(ctx);
     
     
-    app._window = new Window();
-    
+    app._window = Window::create();
+
     // Run the main loop (which does nothing)
     emscripten_set_main_loop(oakMessageLoop, 1, 1);
     
@@ -157,11 +176,5 @@ ByteBuffer* App::loadAsset(const char* assetPath) {
 
 
 
-void App::keyboardShow(bool show) {
-    
-}
-void App::keyboardNotifyTextChanged() {
-    
-}
 
 #endif

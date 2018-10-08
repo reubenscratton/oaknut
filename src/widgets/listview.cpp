@@ -203,7 +203,7 @@ ListView::ItemView::ItemView(ListView* listView, LISTINDEX listIndex, View* cont
     _listView = listView;
     _listIndex = listIndex;
     _contentView = contentView;
-    contentView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::FillParent());
+    contentView->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Fill());
     addSubview(contentView);
 }
 
@@ -254,7 +254,7 @@ void ListView::ItemView::showDeleteConfirmButton(bool show) {
             _deleteConfirmButton->setTextColor(0xFFFFFFFF);
             _deleteConfirmButton->setText("Delete");
             _deleteConfirmButton->setGravity({GRAVITY_CENTER, GRAVITY_CENTER});
-            _deleteConfirmButton->setMeasureSpecs(MEASURESPEC::Abs(CONFIRM_BUTTON_WIDTH), MEASURESPEC::FillParent());
+            _deleteConfirmButton->setMeasureSpecs(MEASURESPEC::Abs(CONFIRM_BUTTON_WIDTH), MEASURESPEC::Fill());
             _deleteConfirmButton->setAlignSpecs(ALIGNSPEC(NULL,1,0,0), ALIGNSPEC::Top());
             _deleteConfirmButton->onInputEvent = [&] (View* view, INPUTEVENT* event)  -> bool {
                 if (event->type == INPUT_EVENT_TAP) {
@@ -302,7 +302,7 @@ pair<LISTINDEX,View*> ListView::createItemView(LISTINDEX index, bool atFront, fl
     assert(contentView); // dude, where's my item content view??
     _adapter->bindItemView(contentView, index);
     ItemView* itemView = new ItemView(this, index, contentView);
-    itemView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::Abs(itemHeight));
+    itemView->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Abs(itemHeight));
     insertSubview(itemView, (int)_itemViews.size());
     itemView->measure(_rect.size.width, itemHeight);
     itemView->layout();
@@ -437,7 +437,7 @@ void ListView::updateVisibleItems() {
             if (headerViewIt==_headerViews.end() || section != headerViewIt->first) {
                 View* headerView = _adapter->createHeaderView(section);
                 assert(headerView);
-                headerView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::Abs(it->headerHeight));
+                headerView->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Abs(it->headerHeight));
                 addSubview(headerView);
                 headerView->measure(_rect.size.width, it->headerHeight);
                 headerView->layout();

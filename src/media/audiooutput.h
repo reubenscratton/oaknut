@@ -5,7 +5,6 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#if OAKNUT_WANT_AUDIO_OUTPUT
 // TODO: this is a mess, fix it
 
 #if EMSCRIPTEN
@@ -63,5 +62,5 @@ public:
     void resume();
     void pause();
 };
-#endif
+
 

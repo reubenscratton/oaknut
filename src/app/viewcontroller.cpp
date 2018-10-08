@@ -54,7 +54,7 @@ void ViewController::setView(View* view) {
 	_view = view;
     _viewHasSafeAreaPaddingApplied = false;
 	if (view) {
-        view->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::FillParent());
+        view->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Fill());
 		if (_window) {
 			view->attachToWindow(_window);
 		}

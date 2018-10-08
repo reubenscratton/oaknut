@@ -164,6 +164,7 @@ typedef uint64_t TIMESTAMP;
 #include "widgets/checkbox.h"
 #include "widgets/pincodeview.h"
 #include "widgets/progressspinner.h"
+#include "widgets/textfield.h"
 
 // Platform-specific types
 #include __incstr(platform/PLATFORM/bitmap.h)

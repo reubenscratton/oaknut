@@ -412,8 +412,16 @@ string parseJsonString(StringProcessor& it, int flags) {
 // rolling my own...
 variant variant::parseNumber(StringProcessor& it) {
     variant val = 0;
-    bool neg=(it.peek()=='-');
-    if (neg) it.next();
+    
+    // Skip leading '+' and '-'
+    bool neg = false;
+    while (it.peek()=='+' || it.peek()=='-') {
+        if (it.peek()=='-') {
+            neg=!neg;
+        }
+        it.next();
+        it.skipWhitespace();
+    }
     
     int base = 10;
     

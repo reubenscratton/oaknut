@@ -70,7 +70,7 @@ void ImageView::setImageNode(AtlasNode* node) {
     _rectTex.origin.y /= node->page->_bitmap->_height;
     _rectTex.size.width /= node->page->_bitmap->_width;
     _rectTex.size.height /= node->page->_bitmap->_height;
-    // todo: if wrap_content then invalidate layout
+    // todo: if sizespec==wrap then invalidate layout
     setNeedsFullRedraw();
 }
 

@@ -5,11 +5,18 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-class Font : public FontBase {
+class TextField  : public View {
 public:
-    val _fontHelper;
     
-    Font(const string& fontAssetPath, float size, float weight);
+    // API
+    TextField();
+    EditText* editText;
     
-    Glyph* createGlyph(char32_t ch, Atlas* atlas);
+    // Overrides
+    bool applyStyleValue(const string& name, const StyleValue* value) override;
+    
+protected:
+    Label* _label;
+    
 };
+

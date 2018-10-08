@@ -239,7 +239,7 @@ document.addEventListener('keyup', (e) => {
 
 
 /** Text measuring **/
-function FontHelper(name, size, fontFamily) {
+function FontHelper(name, size, weight, fontFamily) {
     this.name = name;
     this.size = size;
     
@@ -247,13 +247,14 @@ function FontHelper(name, size, fontFamily) {
     this.canvas.width = size * 2;
     this.canvas.height = size * 2;
     this.ctxt = this.canvas.getContext("2d");
-    this.ctxt.font = size + "px " + fontFamily;
+    this.ctxt.font = weight + " " + size + "px " + fontFamily;
     this.ctxt.textBaseline = "top";
 
     // Clever ascent/descent calc is from https://stackoverflow.com/a/25355178/440602
     this.text = document.createElement("span");
     this.text.style.fontFamily = fontFamily;
     this.text.style.fontSize = size + "px";
+    this.text.style.fontWeight = weight;
     this.block = document.createElement("div");
     this.block.style.display = "inline-block";
     this.block.style.width = "1px";

@@ -7,28 +7,27 @@
 
 
 typedef struct MEASURESPEC {
-    enum RefType {
-        RefTypeNone,  // no measuring is done, frame must be set in code
-        RefTypeAbs,  // measurement is absolute (i.e. abs field)
-        RefTypeContent, // measurement is taken from intrinsic content size, plus padding
-        RefTypeView, //  measure relative to another view (normally the parent)
-        RefTypeAspect   // measure relative to opposite dimension
+    enum Type {
+        TypeNone,     // no measuring done via this measurespec, measurement is set in code
+        TypeRelative, // measurement is relative to another view (normally the parent)
+        TypeContent,  // measurement is taken from intrinsic content size, plus padding
+        TypeAspect    // measurement relative to this view's opposite dimension
     };
     
-    RefType refType;
-    class View* refView;
-    float refSizeMultiplier;
-    float abs;
+    Type type;
+    class View* ref;
+    float mul;
+    float con;
     
-    MEASURESPEC(RefType refType, class View* refView, float refSizeMultiplier, float delta);
-    MEASURESPEC(const class StyleValue* value);
+    MEASURESPEC(Type type, class View* ref, float mul, float con);
+    MEASURESPEC(const class StyleValue* value, View* view);
     float calc(View* view, float parentSize, float otherSize, bool isVertical) const;
     
     static MEASURESPEC None();
     static MEASURESPEC Abs(float x);
-    static MEASURESPEC WrapContent();
-    static MEASURESPEC UseAspect(float x);
-    static MEASURESPEC FillParent();
+    static MEASURESPEC Wrap();
+    static MEASURESPEC Aspect(float x);
+    static MEASURESPEC Fill();
 
 } MEASURESPEC;
 

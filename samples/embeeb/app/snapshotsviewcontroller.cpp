@@ -90,7 +90,7 @@ SnapshotsViewController::SnapshotsViewController(Beeb* beeb, BeebView* beebView,
 
     // Listview
     _listView = new ListView();
-    _listView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::FillParent());
+    _listView->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Fill());
     float statusBarHeight = app.getStyleFloat("statusbar.height");
     _minTopScrollInset = app.getStyleFloat("navbar.height") + statusBarHeight;
     _listView->setScrollInsets(_EDGEINSETS(0, _minTopScrollInset, 0, 0));

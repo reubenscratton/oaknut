@@ -46,10 +46,10 @@ bool View::applyStyleValue(const string& name, const StyleValue* value) {
         processSizeStyleValue(value, &_widthMeasureSpec, &_heightMeasureSpec);
         return true;
     } else if (name == "height") {
-        _heightMeasureSpec = MEASURESPEC(value);
+        _heightMeasureSpec = MEASURESPEC(value, this);
         return true;
     } else if (name == "width") {
-        _widthMeasureSpec = MEASURESPEC(value);
+        _widthMeasureSpec = MEASURESPEC(value, this);
         return true;
     } else if (name == "align") {
         processAlignStyleValue(value, &_alignspecHorz, &_alignspecVert);
@@ -81,37 +81,16 @@ bool View::applyStyleValue(const string& name, const StyleValue* value) {
             app.warn("Invalid visibility: '%s'", str.data());
         }
         return true;
+    } else if (name=="gravity") {
+        processGravityStyleValue(value, true, true);
+        return true;
     } else if (name=="gravityX") {
-        uint8_t horz = 0;
-        string str = value->stringVal();
-        if (str == "left") {
-            horz = GRAVITY_LEFT;
-        } else if (str == "right") {
-            horz = GRAVITY_RIGHT;
-        } else if (str == "center" || str == "centre") {
-            horz = GRAVITY_CENTER;
-        } else {
-            assert(0);
-        }
-        setGravity({horz, _gravity.vert});
+        processGravityStyleValue(value, true, false);
         return true;
-    }
-    if (name=="gravityY") {
-        uint8_t vert = 0;
-        string str = value->stringVal();
-        if (str == "top") {
-            vert = GRAVITY_TOP;
-        } else if (str == "bottom") {
-            vert = GRAVITY_BOTTOM;
-        } else if (str == "center" || str == "centre") {
-            vert = GRAVITY_CENTER;
-        } else {
-            assert(0);
-        }
-        setGravity({_gravity.horz, vert});
+    } else if (name=="gravityY") {
+        processGravityStyleValue(value, false, true);
         return true;
-    }
-    if (name == "padding") {
+    } else if (name == "padding") {
         EDGEINSETS padding = value->edgeInsetsVal();
         setPadding(padding);
         return true;
@@ -134,18 +113,62 @@ void View::processSizeStyleValue(const StyleValue* sizeValue, MEASURESPEC* width
     if (sizeValue->isArray()) {
         auto arrayVal = sizeValue->arrayVal();
         assert(arrayVal.size()==2);
-        *widthspec = MEASURESPEC(&arrayVal[0]);
-        *heightspec = MEASURESPEC(&arrayVal[1]);
+        *widthspec = MEASURESPEC(&arrayVal[0], this);
+        *heightspec = MEASURESPEC(&arrayVal[1], this);
     } else {
-        *widthspec = MEASURESPEC(sizeValue);
-        *heightspec = MEASURESPEC(sizeValue);
+        *widthspec = MEASURESPEC(sizeValue, this);
+        *heightspec = MEASURESPEC(sizeValue, this);
     }
 }
 void View::processAlignStyleValue(const StyleValue* alignValue, ALIGNSPEC* horzspec, ALIGNSPEC* vertspec) {
-    assert(alignValue->isArray());
-    auto arrayVal = alignValue->arrayVal();
-    *horzspec = ALIGNSPEC(&arrayVal[0], this);
-    *vertspec = ALIGNSPEC(&arrayVal[1], this);
+    if (alignValue->isArray()) {
+        auto arrayVal = alignValue->arrayVal();
+        assert(arrayVal.size()==2);
+        *horzspec = ALIGNSPEC(&arrayVal[0], this);
+        *vertspec = ALIGNSPEC(&arrayVal[1], this);
+    } else {
+        *horzspec = ALIGNSPEC(alignValue, this);
+        *vertspec = ALIGNSPEC(alignValue, this);
+    }
+}
+
+static uint8_t gravityValueFromString(const string& str) {
+    if (str == "left") {
+        return GRAVITY_LEFT;
+    }
+    if (str == "right") {
+        return GRAVITY_RIGHT;
+    }
+    if (str == "center" || str == "centre") {
+        return GRAVITY_CENTER;
+    }
+    if (str == "top") {
+        return GRAVITY_TOP;
+    }
+    if (str == "bottom") {
+        return GRAVITY_BOTTOM;
+    }
+    assert(0);
+}
+
+void View::processGravityStyleValue(const StyleValue* gravityValue, bool applyToHorz, bool applyToVert) {
+    uint8_t horz = _gravity.horz;
+    uint8_t vert = _gravity.vert;
+    if (gravityValue->isArray()) {
+        auto arrayVal = gravityValue->arrayVal();
+        assert(arrayVal.size()==2);
+        horz = gravityValueFromString(arrayVal[0].stringVal());
+        vert = gravityValueFromString(arrayVal[1].stringVal());
+    } else {
+        string str = gravityValue->stringVal();
+        if (applyToHorz) {
+            horz = gravityValueFromString(str);
+        }
+        if (applyToVert) {
+            vert = gravityValueFromString(str);
+        }
+    }
+    setGravity({horz, vert});
 }
 
 void processFill(RectRenderOp* op, const StyleValue& value) {
@@ -462,7 +485,7 @@ void View::setNeedsLayout() {
 
 void View::invalidateContentSize() {
 	_contentSizeValid = false;
-    if (_widthMeasureSpec.refType==MEASURESPEC::RefTypeContent || _heightMeasureSpec.refType==MEASURESPEC::RefTypeContent) {
+    if (_widthMeasureSpec.type==MEASURESPEC::TypeContent || _heightMeasureSpec.type==MEASURESPEC::TypeContent) {
 		setNeedsLayout();
     } else {
         setNeedsFullRedraw();
@@ -519,7 +542,7 @@ void View::measure(float parentWidth, float parentHeight) {
 	}
   
     // Naive measurement. Note that if aspect-ratio width is used we have to do height first
-    if (MEASURESPEC::RefTypeAspect != _widthMeasureSpec.refType) {
+    if (MEASURESPEC::TypeAspect != _widthMeasureSpec.type) {
         _rect.size.width = _widthMeasureSpec.calc(this, parentWidth, 0, false);
         _rect.size.height = _heightMeasureSpec.calc(this, parentHeight, _rect.size.width, true);
     } else {
@@ -531,8 +554,8 @@ void View::measure(float parentWidth, float parentHeight) {
 	    
     // At this point we've done relative-to-parent sizing. But if a size value depends on
     // wrapping subview size(s) then pass down the parent size.
-	bool wrapWidth = _contentSize.width<=0 && _widthMeasureSpec.refType == MEASURESPEC::RefTypeContent;
-	bool wrapHeight =  _contentSize.height<=0 && _heightMeasureSpec.refType == MEASURESPEC::RefTypeContent;
+	bool wrapWidth = _contentSize.width<=0 && _widthMeasureSpec.type == MEASURESPEC::TypeContent;
+	bool wrapHeight =  _contentSize.height<=0 && _heightMeasureSpec.type == MEASURESPEC::TypeContent;
 	float widthForSubviewMeasure = wrapWidth ? parentWidth : _rect.size.width;
 	float heightForSubviewMeasure = wrapHeight ? parentHeight : _rect.size.height;
 
@@ -550,7 +573,7 @@ void View::measure(float parentWidth, float parentHeight) {
         largestChildHeight = fmaxf(largestChildHeight, view->_rect.size.height);
     }
     
-    // wrap_content
+    // wrap
     if (wrapWidth) {
         _rect.size.width = _padding.left + largestChildWidth + _padding.right;
     }

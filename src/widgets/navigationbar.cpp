@@ -37,7 +37,7 @@ void NavigationBar::addNavigationItem(NavigationItem* navigationItem) {
     addSubview(navigationItem->_leftButtonsFrame);
     if (navigationItem->_title.length()) {
         Label* titleLabel = new Label();
-        titleLabel->setMeasureSpecs(MEASURESPEC::WrapContent(), MEASURESPEC::WrapContent());
+        titleLabel->setMeasureSpecs(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
         titleLabel->setAlignSpecs(ALIGNSPEC::Center(), ALIGNSPEC(NULL, 0.5f, -0.5f, 0));
         titleLabel->setText(navigationItem->_title);
         titleLabel->applyStyle(_titleStyle);

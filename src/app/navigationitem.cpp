@@ -10,11 +10,11 @@
 NavigationItem::NavigationItem() {
     _leftButtonsFrame = new LinearLayout();
     _leftButtonsFrame->_orientation = LinearLayout::Horizontal;
-    _leftButtonsFrame->setMeasureSpecs(MEASURESPEC::WrapContent(), MEASURESPEC::WrapContent());
+    _leftButtonsFrame->setMeasureSpecs(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
     _leftButtonsFrame->setAlignSpecs(ALIGNSPEC::Left(), ALIGNSPEC::Center());
     _rightButtonsFrame = new LinearLayout();
     _rightButtonsFrame->_orientation = LinearLayout::Horizontal;
-    _rightButtonsFrame->setMeasureSpecs(MEASURESPEC::WrapContent(), MEASURESPEC::WrapContent());
+    _rightButtonsFrame->setMeasureSpecs(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
     _rightButtonsFrame->setAlignSpecs(ALIGNSPEC::Right(), ALIGNSPEC::Center());
 }
 
@@ -30,7 +30,7 @@ void NavigationItem::setTitleView(View* titleView) {
 	if (_titleView) {
 		_titleView->removeFromParent();
 	}
-	titleView->setMeasureSpecs(MEASURESPEC::WrapContent(), MEASURESPEC::WrapContent());
+	titleView->setMeasureSpecs(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
     titleView->setAlignSpecs(ALIGNSPEC::Center(), ALIGNSPEC(NULL, 0.5f, -0.5f, 0));
 	_titleView = titleView;
     _title = "";

@@ -13,7 +13,7 @@ extern string base64_encode(const char* input, size_t len);
 static map<string,string> s_customFonts;
 
 
-Font::Font(const string& fontAssetPath, float size) : FontBase(fontAssetPath, size),
+Font::Font(const string& fontAssetPath, float size, float weight) : FontBase(fontAssetPath, size, weight),
     _fontHelper(val::null()) {
     string fontFamily = "sans-serif";
     if (fontAssetPath.length()) {
@@ -42,7 +42,7 @@ Font::Font(const string& fontAssetPath, float size) : FontBase(fontAssetPath, si
         }
     }
     
-    _fontHelper = val::global("FontHelper").new_(val(_name.data()), val(_size), val(fontFamily.data()));
+    _fontHelper = val::global("FontHelper").new_(val(_name.data()), val(_size), val(_weight), val(fontFamily.data()));
 }
     
 Glyph* Font::createGlyph(char32_t ch, Atlas* atlas) {

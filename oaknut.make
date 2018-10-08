@@ -52,6 +52,7 @@ endif
 
 BUILD_DIR := $(PROJECT_ROOT)/.build/$(PLATFORM)/$(CONFIG)
 OBJ_DIR:=$(BUILD_DIR)/obj
+PCH:=$(BUILD_DIR)/oaknut.pch
 
 OBJS := $(patsubst %,$(OBJ_DIR)%.o,$(SOURCES))
 DEPS:=$(OBJS:.o=.dep)

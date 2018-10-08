@@ -5,18 +5,19 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-class Measurement {
+class measurement {
 public:
     float val() const;
     enum {
         PX,
         DP,
-        SP
+        SP,
+        PC
     };
-    Measurement(float v, int unit) : _val(v), _unit(unit) {}
+    measurement(float v, int unit) : _val(v), _unit(unit) {}
+    int _unit;
 private:
     float _val;
-    int _unit;
 };
 
 class StyleValue {
@@ -43,6 +44,7 @@ public:
     bool isEmpty() const;
     bool isNumeric() const;
     bool isString() const;
+    bool isMeasurement() const;
     bool isArray() const;
 
     // Accessors. Use these instead of accessing the private data to benefit from some implicit conversions.
@@ -50,6 +52,7 @@ public:
     bool boolVal() const;
     float floatVal() const;
     string stringVal() const;
+    measurement measurementVal() const;
     COLOR colorVal() const;
     const vector<StyleValue>& arrayVal() const;
     const map<string, StyleValue>& compoundVal() const;
@@ -77,13 +80,14 @@ private:
         int i;
         float f;
         string str; // includes refs
-        Measurement measurement;
+        measurement _measurement;
         vector<StyleValue>* array;
         map<string, StyleValue>* compound;
     };
 
     const StyleValue* select() const;
 
+    bool parseNumberOrMeasurement(StringProcessor& it);
 };
 
 /**

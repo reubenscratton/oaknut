@@ -73,7 +73,7 @@ void LinearLayout::measure(float parentWidth, float parentHeight) {
 	// If we're using weights to distribute leftover space among subviews, do that now
 	if (_weightsTotal > 0) {
 		if (_orientation == Vertical) {
-            if (_heightMeasureSpec.refType == MEASURESPEC::RefTypeView && _heightMeasureSpec.refView==nullptr) {
+            if (_heightMeasureSpec.type == MEASURESPEC::TypeRelative && _heightMeasureSpec.ref==nullptr) {
 				float excess = (_rect.size.height - _contentSize.height) - (_padding.top+_padding.bottom);
 				for (int i=0 ; i<_subviews.size() ; i++) {
 					View* view = _subviews.at(i);
@@ -86,7 +86,7 @@ void LinearLayout::measure(float parentWidth, float parentHeight) {
 				}
 			}
         } else {
-			if (_widthMeasureSpec.refType == MEASURESPEC::RefTypeView && _widthMeasureSpec.refView==nullptr) {
+			if (_widthMeasureSpec.type == MEASURESPEC::TypeRelative && _widthMeasureSpec.ref==nullptr) {
 				float excess = (_rect.size.width - _contentSize.width) - (_padding.left+_padding.right);
 				for (int i=0 ; i<_subviews.size() ; i++) {
 					View* view = _subviews.at(i);
@@ -106,10 +106,10 @@ void LinearLayout::measure(float parentWidth, float parentHeight) {
 
 	
 	// If we're wrap-content, update to reflect the change in content size
-	if (_widthMeasureSpec.refType == MEASURESPEC::RefTypeContent) {
+	if (_widthMeasureSpec.type == MEASURESPEC::TypeContent) {
 		_rect.size.width = _padding.left + _contentSize.width + _padding.right;
 	}
-	if (_heightMeasureSpec.refType == MEASURESPEC::RefTypeContent) {
+	if (_heightMeasureSpec.type == MEASURESPEC::TypeContent) {
 		_rect.size.height = _padding.top + _contentSize.height + _padding.bottom;
 	}
 

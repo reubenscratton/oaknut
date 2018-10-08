@@ -8,9 +8,17 @@
 
 #include <oaknut.h>
 
-Task* Task::create(TASKFUNC func) {
-    return new Task(func);
-}
+
+class TaskWeb : public Task {
+public:
+    TaskWeb(TASKFUNC func, TaskQueue* queue) : Task(func), _queue(queue) {
+    }
+    
+    bool cancel() override;
+    
+    TaskQueue* _queue;
+};
+
 
 
 class PosixTaskQueue : public TaskQueue {
@@ -30,11 +38,13 @@ public:
         pthread_mutex_destroy(&_mutex);
     }
 
-    void enqueueTask(Task* task) {
+    Task* enqueueTask(TASKFUNC func) override {
+        TaskWeb* task = new TaskWeb(func, this);
         pthread_mutex_lock(&_mutex);
         _tasks.push_back(task);
         pthread_mutex_unlock(&_mutex);
         pthread_cond_signal(&_cond);
+        return task;
     }
     bool cancelTask(Task* task) {
         bool found = false;
@@ -80,6 +90,14 @@ public:
         pthread_exit(NULL);
     }
 };
+
+
+bool TaskWeb::cancel() {
+    if (_queue) {
+        ((PosixTaskQueue*)_queue)->cancelTask(this);
+    }
+    return true;
+}
 
 TaskQueue* TaskQueue::create(const string &name) {
     return new PosixTaskQueue(name);

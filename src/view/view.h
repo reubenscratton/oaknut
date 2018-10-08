@@ -383,6 +383,7 @@ protected:
     RenderOp* processDrawable(const StyleValue* value);
     void processSizeStyleValue(const StyleValue* sizeValue, MEASURESPEC* widthspec, MEASURESPEC* heightspec);
     void processAlignStyleValue(const StyleValue* alignValue, ALIGNSPEC* horzspec, ALIGNSPEC* vertspec);
+    void processGravityStyleValue(const StyleValue* gravityValue, bool horz, bool vert);
     /**  \endcond */
     /**@}*/
 
