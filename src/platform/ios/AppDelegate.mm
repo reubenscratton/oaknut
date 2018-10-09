@@ -104,6 +104,17 @@ public:
         }
     }
     
+    bool setFocusedView(View* view) override {
+        if (Window::setFocusedView(view)) {
+            if ([_nativeView isFirstResponder]) {
+                [_nativeView resignFirstResponder];
+                [_nativeView becomeFirstResponder];
+            }
+            return true;
+        }
+        return false;
+    }
+    
     /**
      Permissions
      */

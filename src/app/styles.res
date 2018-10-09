@@ -129,5 +129,17 @@ ActionSheet: {
 
 }
 
+TextField: {
+    label: {
+        size: wrap
+        font-size: 12dp
+        font-weight: light
+    }
+    edittext: {
+        padding: 8dp, 4dp
+        size: fill, wrap
+        align: left, below(4dp)
+    }
+}
 
 })"

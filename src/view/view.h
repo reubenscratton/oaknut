@@ -81,6 +81,9 @@ public:
 
     /** Find a view among the subviews (and all descendent views) given a string id */
     virtual View* findViewById(const string& id);
+    
+    /** Return the view at the root of the view tree */
+    virtual View* getRootView();
 
 
 protected:
@@ -151,6 +154,12 @@ public:
     
     /** Get the height of the view */
     float getHeight() const;
+
+    /** Get the X-coordinate of the left edge, in parent coords */
+    float getLeft() const;
+    
+    /** Get the Y-coordinate of the top edge, in parent coords */
+    float getTop() const;
 
     /** Get the current view rect, in parent coords */
     virtual RECT getRect() const;

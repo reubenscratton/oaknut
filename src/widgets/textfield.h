@@ -14,6 +14,7 @@ public:
     
     // Overrides
     bool applyStyleValue(const string& name, const StyleValue* value) override;
+    bool requestFocus() override;
     
 protected:
     Label* _label;

@@ -11,20 +11,32 @@ DECLARE_DYNCREATE(TextField);
 
 TextField::TextField() {
     _label = new Label();
-    _label->setMeasureSpecs(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
     addSubview(_label);
     editText = new EditText();
-    editText->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
-    editText->setAlignSpecs(ALIGNSPEC::Left(), ALIGNSPEC::Below(_label, app.dp(4)));
     addSubview(editText);
+    applyStyle("TextField");
 }
 
 bool TextField::applyStyleValue(const string& name, const StyleValue* value) {
     if (name == "label") {
-        _label->applyStyle(*value);
+        if (value->isString()) {
+            _label->setText(value->stringVal());
+        } else {
+            _label->applyStyle(*value);
+        }
+        return true;
+    }
+    if (name == "actionType" || name == "next") {
+        return editText->applyStyleValue(name, value);
+    }
+    if (name == "edittext") {
+        editText->applyStyle(*value);
         return true;
     }
     return View::applyStyleValue(name, value);
 }
 
+bool TextField::requestFocus() {
+    return editText->requestFocus();
+}
 

@@ -62,21 +62,26 @@ bool EditText::applyStyleValue(const string& name, const StyleValue* value) {
         }
         return true;
     }
-    if (name == "preferredActionType") {
-        string preferredActionType = value->stringVal().lowercase();
-        if (preferredActionType == "none") {
-            _preferredActionType = ActionNone;
-        } else if (preferredActionType == "next") {
-            _preferredActionType = ActionNext;
-        } else if (preferredActionType == "search") {
-            _preferredActionType = ActionSearch;
-        } else if (preferredActionType == "done") {
-            _preferredActionType = ActionDone;
-        } else if (preferredActionType == "go") {
-            _preferredActionType = ActionGo;
+    if (name == "actionType") {
+        string actionType = value->stringVal().lowercase();
+        if (actionType == "none") {
+            _actionType = ActionNone;
+        } else if (actionType == "next") {
+            _actionType = ActionNext;
+        } else if (actionType == "search") {
+            _actionType = ActionSearch;
+        } else if (actionType == "done") {
+            _actionType = ActionDone;
+        } else if (actionType == "go") {
+            _actionType = ActionGo;
         } else {
-            app.warn("invalid preferredActionType '%s'", preferredActionType.data());
+            app.warn("invalid actionType '%s'", actionType.data());
         }
+        return true;
+    }
+    if (name == "next") {
+        _next = value->stringVal();
+        _actionType = ActionNext;
         return true;
     }
     if (name == "maxLength") {
@@ -191,6 +196,7 @@ void EditText::layout() {
 bool EditText::insertText(string insertionText, int replaceStart, int replaceEnd) {
     if (insertionText=="\n" && _textRenderer._maxLines >0) {
         if (_textRenderer._lines.size() >= _textRenderer._maxLines) {
+            handleActionPressed();
             return false;
         }
     }
@@ -287,8 +293,8 @@ void EditText::moveCursor(int dx, int dy) {
 
 
 
-void EditText::setPreferredActionType(ActionType preferredActionType) {
-    _preferredActionType = preferredActionType;
+void EditText::setActionType(ActionType actionType) {
+    _actionType = actionType;
 }
 
 
@@ -360,12 +366,20 @@ void EditText::handleActionPressed() {
     if (onKeyboardAction) {
         onKeyboardAction();
     }
+    
+    // Move
+    if (_actionType == ActionNext && _next.length()>0) {
+        View* nextView = getRootView()->findViewById(_next);
+        if (nextView) {
+            nextView->requestFocus();
+        }
+    }
 }
 
 SoftKeyboardType EditText::getSoftKeyboardType() {
     return _softKeyboardType;
 }
 
-ActionType EditText::getPreferredActionType() {
-    return _preferredActionType;
+ActionType EditText::getActionType() {
+    return _actionType;
 }

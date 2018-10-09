@@ -13,7 +13,7 @@ public:
     EditText();
     virtual void setInsertionPoint(int32_t newInsertionPoint);
     virtual void setMaxLength(int32_t maxLength);
-    virtual void setPreferredActionType(ActionType preferredActionType);
+    virtual void setActionType(ActionType actionType);
     
     // Overrides
     bool applyStyleValue(const string& name, const StyleValue* value) override;
@@ -40,7 +40,7 @@ public:
     string textInRange(int start, int end) override;
     void setSelectedRange(int start, int end) override;
     SoftKeyboardType getSoftKeyboardType() override;
-    ActionType getPreferredActionType() override;
+    ActionType getActionType() override;
     void handleActionPressed() override;
 
 
@@ -60,7 +60,8 @@ protected:
     ObjPtr<RectRenderOp> _cursorRenderOp;
     ObjPtr<TextureRenderOp> _clearButtonOp;
     SoftKeyboardType _softKeyboardType = KeyboardGeneral;
-    ActionType _preferredActionType = ActionNone;
+    ActionType _actionType = ActionNone;
+    string _next; // id of next field
     
     void updateCursor();
     void updateClearButton();

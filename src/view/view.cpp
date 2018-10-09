@@ -401,6 +401,12 @@ float View::getWidth() const {
 float View::getHeight() const {
     return _rect.size.height;
 }
+float View::getLeft() const {
+    return _rect.origin.x;
+}
+float View::getTop() const {
+    return _rect.origin.y;
+}
 
 RECT View::getRect() const {
     return _rect;
@@ -487,9 +493,9 @@ void View::invalidateContentSize() {
 	_contentSizeValid = false;
     if (_widthMeasureSpec.type==MEASURESPEC::TypeContent || _heightMeasureSpec.type==MEASURESPEC::TypeContent) {
 		setNeedsLayout();
-    } else {
-        setNeedsFullRedraw();
     }
+    setNeedsFullRedraw();
+    
 }
 
 void View::updateContentSize(float parentWidth, float parentHeight) {
@@ -762,6 +768,14 @@ View* View::getSubview(int index) {
         return _subviews[index];
     }
     return NULL;
+}
+
+View* View::getRootView() {
+    View* v = this;
+    while (v->_parent) {
+        v = v->_parent;
+    }
+    return v;
 }
 
 void View::insertSubview(View* subview, int index) {

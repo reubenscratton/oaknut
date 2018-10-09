@@ -120,22 +120,23 @@ void LinearLayout::layout() {
     View::layout();
 	//_contentSize.height = 0;
 	//_contentSize.width = 0;
-	POINT pt = {_padding.left,_padding.top};
     if (_orientation == Vertical) {
+        float y = _padding.top;
         for (int i=0 ; i<_subviews.size() ; i++) {
             View* view = _subviews.at(i);
             if (view == _scrollbarsView) continue;
 			view->layout();
-            view->setRectOrigin(pt);
-            pt.y += view->getHeight() + _spacing;
+            view->setRectOrigin({view->getLeft(), y});
+            y += view->getHeight() + _spacing;
         }
     } else if (_orientation == Horizontal) {
+        float x = _padding.left;
         for (int i=0 ; i<_subviews.size() ; i++) {
             View* view = _subviews.at(i);
             if (view == _scrollbarsView) continue;
 			view->layout();
-            view->setRectOrigin(pt);
-            pt.x += view->getWidth() + _spacing;
+            view->setRectOrigin({x, view->getTop()});
+            x += view->getWidth() + _spacing;
         }
     }
 }

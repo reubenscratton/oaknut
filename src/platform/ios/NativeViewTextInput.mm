@@ -105,11 +105,6 @@ static UITextInputStringTokenizer* _tokenizer;
     [_textInputDelegate textDidChange:self];
 }
 
-- (UIReturnKeyType)returnKeyType {
-    NSLOG(@"returnKeyType");
-    return UIReturnKeySearch;
-}
-
 - (UITextPosition*)beginningOfDocument {
     NSLOG(@"beginningOfDocument -> 0");
     return [SimpleTextPos pos:0];
@@ -306,6 +301,23 @@ static UITextInputStringTokenizer* _tokenizer;
             break;
     }
     return UIKeyboardTypeDefault;
+}
+- (UIReturnKeyType)returnKeyType {
+    if (_window->_textInputReceiver) {
+        switch (_window->_textInputReceiver->getActionType()) {
+            case ActionNone:
+                return UIReturnKeyDefault;
+            case ActionNext:
+                return UIReturnKeyNext;
+            case ActionSearch:
+                return UIReturnKeySearch;
+            case ActionDone:
+                return UIReturnKeyDone;
+            case ActionGo:
+                return UIReturnKeyGo;
+        }
+    }
+    return UIReturnKeyDefault;
 }
 
 @end

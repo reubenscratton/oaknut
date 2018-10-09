@@ -31,21 +31,23 @@ MEASURESPEC::MEASURESPEC(const StyleValue* value, View* view) {
     // If the val is a string then it is a type & ref declaration
     if (value->isString()) {
         string str = value->stringVal();
-        string ref = str.tokenise("(");
-        if (ref == "wrap") {
+        string refstr = str.tokenise("(");
+        if (refstr == "wrap") {
             *this = Wrap();
         }
-        else if (ref == "fill") {
+        else if (refstr == "fill") {
             *this = Fill();
         }
-        else if (ref == "aspect") {
+        else if (refstr == "aspect") {
             type = TypeAspect;
             mul = 0;
             con = 0;
             assert(str.length() > 0); // aspect must have supplementary vals
         } else {
-            assert(false); // unknown measurespec. TODO: handle view refs
-            *this =  Wrap();
+            ref = view->getParent()->findViewById(refstr);
+            mul = 1;
+            con = 0;
+            assert(ref); // NB: ref view must be previously declared. TODO: remove this restriction
         }
 
         // Arguments may be given in a bracketed subexpression
