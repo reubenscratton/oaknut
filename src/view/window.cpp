@@ -152,16 +152,16 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
             float dy = event.pt.y - ptDown.y;
             float dist = sqrtf(dx * dx + dy * dy);
             if (app.idp(dist) >= TOUCH_SLOP) {
+                if (touchedView) {
+                    INPUTEVENT cancelEvent = event;
+                    cancelEvent.type = INPUT_EVENT_CANCEL;
+                    touchedView->dispatchInputEvent(&cancelEvent);
+                }
                 isDragging = true;
                 INPUTEVENT dragEvent = event;
                 dragEvent.type = INPUT_EVENT_DRAG;
                 View *interceptView = topVC->getView()->dispatchInputEvent(&dragEvent);
                 if (interceptView) {
-                    if (touchedView) {
-                        INPUTEVENT cancelEvent = event;
-                        cancelEvent.type = INPUT_EVENT_CANCEL;
-                        touchedView->dispatchInputEvent(&cancelEvent);
-                    }
                     touchedView = interceptView;
                 }
                 if (_longpressTimer) {
@@ -300,6 +300,7 @@ void Window::draw() {
 		if (!view->_layoutValid) {
 			view->measure(_surfaceRect.size.width, _surfaceRect.size.height);
 			view->layout();
+            ensureFocusedViewIsInSafeArea();
 		}
         _surface->render(view, this);
 	}
@@ -442,6 +443,7 @@ bool Window::setFocusedView(View* view) {
                 keyboardNotifyTextChanged();
             }
         }
+        ensureFocusedViewIsInSafeArea();
         keyboardShow(_textInputReceiver != NULL);
     } else {
         keyboardShow(false);
@@ -553,16 +555,22 @@ void Window::bindTexture(Bitmap* texture) {
     }
 }
 
-void Window::updateSafeArea() {
+RECT Window::getSafeArea() {
     RECT safeArea = _surfaceRect;
     EDGEINSETS safeInsets = _safeAreaInsets;
     safeInsets.bottom += _softKeyboardRect.size.height;
     safeInsets.applyToRect(safeArea);
+    return safeArea;
+}
+
+void Window::updateSafeArea() {
+    RECT safeArea = getSafeArea();
     for (auto vc : _viewControllers) {
         if (vc->_window) {
             vc->updateSafeArea(safeArea);
         }
     }
+    ensureFocusedViewIsInSafeArea();
 }
 
 void Window::setSoftKeyboardRect(const RECT rect) {
@@ -599,3 +607,34 @@ void Window::dismissModalViewController(ViewController* viewController) {
     requestRedraw();
 }
 
+void Window::ensureFocusedViewIsInSafeArea() {
+    if (_focusedView != nullptr) {
+        
+        // Get the focused view's window rect
+        RECT rect = _focusedView->getOwnRect();
+        rect.origin = _focusedView->mapPointToWindow(rect.origin);
+        
+        // Calculate the extent it is below the safe area
+        float dx=0,dy=0;
+        RECT safeArea = getSafeArea();
+        float d = rect.bottom() - safeArea.bottom();
+        if (d > 0) {
+            dy = -d;
+        }
+        d = rect.top() - safeArea.top();
+        if (d < 0) {
+            dy = -d;
+        }
+        d = rect.right() - safeArea.right();
+        if (d > 0) {
+            dx = -d;
+        }
+        d = rect.left() - safeArea.left();
+        if (d < 0) {
+            dx = -d;
+        }
+        if (dx!=0 || dy!=0) {
+            _rootViewController->requestScroll(-dx, -dy);
+        }
+    }
+}

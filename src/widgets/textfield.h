@@ -11,6 +11,7 @@ public:
     // API
     TextField();
     EditText* editText;
+    void setText(const string& text);
     
     // Overrides
     bool applyStyleValue(const string& name, const StyleValue* value) override;

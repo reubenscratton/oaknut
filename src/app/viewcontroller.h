@@ -102,6 +102,8 @@ public:
     
     virtual void updateChildSafeArea(ViewController* childVC, const RECT& safeArea);
 
+    virtual void requestScroll(float dx, float dy);
+
 protected:
     ObjPtr<View> _view;
     RECT _safeArea;

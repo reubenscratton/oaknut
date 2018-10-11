@@ -25,7 +25,7 @@ public:
         _gameView = (GameView*)view->findViewById("game");
         _labelNumFlags = (Label*)view->findViewById("flags");
         _imageViewFace = (ImageView*)view->findViewById("face");
-        _imageViewFace->onInputEventDelegate = [=](View* view, INPUTEVENT* event) -> bool {
+        _imageViewFace->onInputEvent = [=](View* view, INPUTEVENT* event) -> bool {
             if (event->type == INPUT_EVENT_TAP) {
                 if (_game->_state != InProgress) {
                     _game->restart();

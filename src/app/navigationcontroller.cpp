@@ -164,3 +164,10 @@ bool NavigationController::navigateBack() {
 	popViewController();
 	return true;
 }
+
+void NavigationController::requestScroll(float dx, float dy) {
+    if (_currentViewController) {
+        _currentViewController->requestScroll(dx, dy);
+    }
+}
+

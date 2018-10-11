@@ -154,7 +154,10 @@ public:
     EDGEINSETS _safeAreaInsets; // not including keyboard
     RECT _softKeyboardRect;
     void setSoftKeyboardRect(const RECT rect);
+    RECT getSafeArea();
     void updateSafeArea();
+    
+    void ensureFocusedViewIsInSafeArea();
 };
 
 

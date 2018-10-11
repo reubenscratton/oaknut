@@ -46,6 +46,7 @@ public:
         void showDeleteConfirmButton(bool show);
         
         void attachToWindow(Window* window) override;
+        void updateContentSize(SIZE constrainingSize) override;
     };
     
     Bitmap* _bmpDelete;
@@ -81,7 +82,7 @@ public:
 	// Overrides
     bool applyStyleValue(const string &name, const StyleValue *value) override;
 	void measure(float parentWidth, float parentHeight) override;
-	void updateContentSize(float parentWidth, float parentHeight) override;
+	void updateContentSize(SIZE constrainingSize) override;
     void layout() override;
     void setContentOffset(POINT contentOffset) override;
 	bool handleInputEvent(INPUTEVENT* event) override;

@@ -49,6 +49,7 @@ public:
     friend class ScrollInfo;
     friend class Animation;
     friend class LayoutAnimation;
+    friend class LinearLayout;
     
     // Construction
     View();
@@ -189,8 +190,7 @@ public:
         uses the MEASURESPECs passed to setMeasureSpecs() to calculate the view rect size. */
     virtual void measure(float parentWidth, float parentHeight);
 
-    /** Sets the size of the view rect. CAUTION! This API exists so Views may override the size of
-        their subviews during layout. Ideally it would not be a `public` API. */
+    /** Sets the size of the view rect. CAUTION! This API is dumb and will probably be removed. */
     virtual void setRectSize(const SIZE& size);
 
     /** Sets the position of the view. CAUTION! This API exists so Views may override the positioning
@@ -239,7 +239,7 @@ public:
     
     /** Called during measure() views should set the _contentSize property here. The
         defaut implementation does nothing. */
-    virtual void updateContentSize(float parentWidth, float parentHeight);
+    virtual void updateContentSize(SIZE constrainingSize);
     
     /** Set the gravity flags. Gravity affects how the content is aligned within the view rect
         when the view rect size exceeds the content size. */
@@ -250,6 +250,7 @@ public:
     virtual void setScrollInsets(EDGEINSETS scrollInsets);
     virtual bool canScrollHorizontally();
     virtual bool canScrollVertically();
+    virtual float getMaxScrollY();
     virtual bool getClipsContent() const;
     virtual void setClipsContent(bool clipsContent);
     virtual void scrollBy(POINT scrollAmount);
@@ -442,6 +443,7 @@ public:
 
 class ScrollbarsView : public View {
 public:
+    void updateContentSize(SIZE constraint) override;
     void measure(float parentWidth, float parentHeight) override;
     void layout() override;
 };

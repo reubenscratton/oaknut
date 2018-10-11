@@ -141,11 +141,12 @@ void EditText::setPadding(EDGEINSETS padding) {
     Label::setPadding(padding);
 }
 
-void EditText::updateContentSize(float parentWidth, float parentHeight) {
-    Label::updateContentSize(parentWidth, parentHeight);
+void EditText::updateContentSize(SIZE constrainingSize) {
+    Label::updateContentSize(constrainingSize);
     _cursorOn = true;
     updateCursor();
 }
+
 void EditText::setText(const AttributedString& text) {
     auto tt = text;
     if (onTextChange) {

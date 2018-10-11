@@ -99,12 +99,12 @@ ALIGNSPEC::ALIGNSPEC(const StyleValue* value, View* view) {
     }
 }
 
-float ALIGNSPEC::calc(float measuredSize, float containingOrigin, float containingSize) const {
+float ALIGNSPEC::calc(float measuredSize, float refOrigin, float refSize) const {
     
     if (anchor == NO_ANCHOR) {
-        return containingOrigin;
+        return refOrigin;
     }
-    float val = containingOrigin + (multiplierAnchor * containingSize)
+    float val = refOrigin + (multiplierAnchor * refSize)
               + (multiplierSelf * measuredSize)
               + margin;
     return floorf(val);

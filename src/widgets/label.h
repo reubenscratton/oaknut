@@ -24,13 +24,13 @@ public:
 
     // Overrides
     bool applyStyleValue(const string& name, const StyleValue* value) override;
+    void invalidateContentSize() override;
     void measure(float parentWidth, float parentHeight) override;
     void layout() override;
     void onEffectiveTintColorChanged() override;
     void setContentOffset(POINT contentOffset) override;
     void setGravity(GRAVITY gravity) override;
-    void setRectSize(const SIZE& size) override;
-    void updateContentSize(float parentWidth, float parentHeight) override;
+    void updateContentSize(SIZE constrainingSize) override;
     void updateRenderOps() override;
 
     

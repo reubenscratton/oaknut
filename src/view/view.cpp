@@ -493,13 +493,22 @@ void View::invalidateContentSize() {
 	_contentSizeValid = false;
     if (_widthMeasureSpec.type==MEASURESPEC::TypeContent || _heightMeasureSpec.type==MEASURESPEC::TypeContent) {
 		setNeedsLayout();
+    } else {
+        if (_layoutValid) {
+            SIZE constraint = _rect.size;
+            constraint.width -= (_padding.left + _padding.right);
+            constraint.height -= (_padding.top + _padding.bottom);
+            updateContentSize(constraint);
+            _contentSizeValid = true;
+        }
     }
     setNeedsFullRedraw();
-    
 }
 
-void View::updateContentSize(float parentWidth, float parentHeight) {
-	// no-op
+void View::updateContentSize(SIZE constrainingSize) {
+	// Default implementation sets content size to invalid values... this is the clue to layout()
+    // to set the content size to enclose any subviews
+    _contentSize.width = _contentSize.height = -1;
 }
 
 bool View::getClipsContent() const {
@@ -515,7 +524,7 @@ void View::setClipsContent(bool clipsContent) {
 
 void View::setGravity(GRAVITY gravity) {
 	_gravity = gravity;
-	setNeedsLayout();
+    setNeedsLayout(); // todo: gravity shouldn't affect layout, it should only trigger a repaint
 }
 
 void View::setVisibility(Visibility visibility) {
@@ -538,26 +547,43 @@ void View::setVisibility(Visibility visibility) {
 }
 
 
+
 //
 //
 void View::measure(float parentWidth, float parentHeight) {
 
-	if (!_contentSizeValid) {
-		updateContentSize(parentWidth, parentHeight);
-		_contentSizeValid = true;
-	}
-  
-    // Naive measurement. Note that if aspect-ratio width is used we have to do height first
+    // Find the constraining size. If aspect-ratio width is used we have to do height first
+    SIZE constraint;
     if (MEASURESPEC::TypeAspect != _widthMeasureSpec.type) {
-        _rect.size.width = _widthMeasureSpec.calc(this, parentWidth, 0, false);
-        _rect.size.height = _heightMeasureSpec.calc(this, parentHeight, _rect.size.width, true);
+        constraint.width = _widthMeasureSpec.calcConstraint(parentWidth, 0);
+        constraint.height = _heightMeasureSpec.calcConstraint(parentHeight, constraint.width);
     } else {
-        _rect.size.height = _heightMeasureSpec.calc(this, parentHeight, 0, true);
-        _rect.size.width = _widthMeasureSpec.calc(this, parentWidth, _rect.size.height, false);
+        constraint.height = _heightMeasureSpec.calcConstraint(parentHeight, 0);
+        constraint.width = _widthMeasureSpec.calcConstraint(parentWidth, constraint.height);
     }
 
+    // If content size is currently invalid, now's the time to update it
+    if (!_contentSizeValid) {
+        updateContentSize(constraint);
+		_contentSizeValid = true;
+	}
     
-	    
+    // Set the measured size, including padding if wrapping content
+    if (_widthMeasureSpec.type == MEASURESPEC::TypeContent) {
+        _rect.size.width = _contentSize.width + _padding.left + _padding.right;
+    } else {
+        _rect.size.width = constraint.width;
+    }
+    if (_heightMeasureSpec.type == MEASURESPEC::TypeContent) {
+        _rect.size.height = _contentSize.height + _padding.top + _padding.bottom;
+    } else {
+        _rect.size.height = constraint.height;
+    }
+
+    // Now to measure subviews, and here we hit a little snafu... if a view's measurespec
+    // is 'wrap', but it has no intrinsic content size of its own AND it contains one or
+    // more subviews, then its size must wrap that of the largest subview.
+    
     // At this point we've done relative-to-parent sizing. But if a size value depends on
     // wrapping subview size(s) then pass down the parent size.
 	bool wrapWidth = _contentSize.width<=0 && _widthMeasureSpec.type == MEASURESPEC::TypeContent;
@@ -635,10 +661,22 @@ void View::layout() {
 
     updateBackgroundRect();
 
+    POINT u = {0,0};
     for (int i=0 ; i<_subviews.size() ; i++) {
         View* view = _subviews.at(i);
         view->layout();
+        u.x = MAX(u.x, view->_rect.right());
+        u.y = MAX(u.y, view->_rect.bottom());
     }
+    
+    // If content-size is negative, update it to enclose subviews
+    if (_contentSize.width == -1) {
+        _contentSize.width = u.x - _padding.left;
+    }
+    if (_contentSize.height == -1) {
+        _contentSize.height = u.y - _padding.top;
+    }
+
 	
     updateScrollbarVisibility();
     setNeedsFullRedraw();
@@ -1080,6 +1118,13 @@ void View::adjustContentOffsetAccum(const POINT& d) {
 
 void View::scrollBy(POINT scrollAmount) {
     POINT origContentOffset = _contentOffset;
+    POINT targetContentOffset = _contentOffset + scrollAmount;
+    targetContentOffset.y = MAX(targetContentOffset.y, 0);
+    targetContentOffset.y = MIN(targetContentOffset.y, getMaxScrollY());
+    scrollAmount = targetContentOffset - origContentOffset;
+    if (scrollAmount.y == 0 && scrollAmount.x == 0) {
+        return;
+    }
     Animation::start(this, 350, [=](float a) { // todo: style
         POINT d = {a*scrollAmount.x, a*scrollAmount.y};
         POINT newOffset = origContentOffset + d;
@@ -1096,6 +1141,9 @@ bool View::canScrollHorizontally() {
     return _scrollHorz.canScroll(this, false);
 }
 
+float View::getMaxScrollY() {
+    return _scrollVert.maxScroll(this, true);
+}
 void View::updateScrollbarVisibility() {
     _scrollVert.updateVisibility(this, true);
     _scrollHorz.updateVisibility(this, false);
@@ -1188,10 +1236,16 @@ View* View::dispatchInputEvent(INPUTEVENT* event) {
 	return handleInputEvent(event) ? this : NULL;
 }
 
+void ScrollbarsView::updateContentSize(SIZE constraint) {
+    _contentSize = {0,0};
+    _contentSizeValid = true;
+}
+
 void ScrollbarsView::measure(float parentWidth, float parentHeight) {
     _rect = {0,0,parentWidth, parentHeight};
 }
 void ScrollbarsView::layout() {
+    _contentSizeValid = true;
 }
 
 bool View::handleInputEvent(INPUTEVENT* event) {
@@ -1205,6 +1259,13 @@ bool View::handleInputEvent(INPUTEVENT* event) {
         if (event->type == INPUT_EVENT_CANCEL || event->type==INPUT_EVENT_UP) {
             setPressed(false);
         }
+        
+        if (event->type == INPUT_EVENT_DRAG) {
+            if (canScrollVertically() || canScrollHorizontally()) {
+                retVal = true;
+            }
+        }
+
 
         if ((onInputEvent || onClick)) {
             retVal = true;
@@ -1248,8 +1309,8 @@ POINT View::mapPointToWindow(POINT pt) {
 	if (_window) {
 		View* view = this;
 		while (view) {
-			pt.x += view->_rect.origin.x;
-			pt.y += view->_rect.origin.y;
+			pt.x += view->_rect.origin.x - view->_contentOffset.x;
+			pt.y += view->_rect.origin.y - view->_contentOffset.y;
 			view = view->_parent;
 		}
 	}

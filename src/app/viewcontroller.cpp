@@ -128,3 +128,7 @@ void ViewController::addChildViewController(ViewController* childVC) {
 void ViewController::updateChildSafeArea(ViewController* childVc, const RECT& safeArea) {
     childVc->updateSafeArea(safeArea);
 }
+
+void ViewController::requestScroll(float dx, float dy) {
+    _view->scrollBy({dx, dy});
+}

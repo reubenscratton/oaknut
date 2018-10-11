@@ -127,31 +127,21 @@ void Label::setContentOffset(POINT contentOffset) {
 
 }
 
-void Label::setRectSize(const SIZE& asize) {
-    if (asize.width == _rect.size.width && asize.height == _rect.size.height) {
-        return;
-    }
-    // This is called when our parent view (typically a LinearLayout) is overriding the size we wanted to be
-    // and this means we have to remeasure the text. Which means the height may grow (or shrink).
+void Label::invalidateContentSize() {
     _textRenderer._measuredSizeValid = false;
-    SIZE size = asize;
-    updateContentSize(size.width, FLT_MAX);
-    if (_heightMeasureSpec.type == MEASURESPEC::TypeContent) {
-        size.height = _contentSize.height + _padding.top+_padding.bottom;
-    }
-    View::setRectSize(size);
+    View::invalidateContentSize();
 }
 
 
-void Label::updateContentSize(float parentWidth, float parentHeight) {
+void Label::updateContentSize(SIZE constrainingSize) {
 
     _contentSize.width = 0;
     _contentSize.height = 0;
 
-    parentWidth -= (_padding.left + _padding.right);
-    parentHeight -= (_padding.top + _padding.bottom);
+    constrainingSize.width -= (_padding.left + _padding.right);
+    constrainingSize.height -= (_padding.top + _padding.bottom);
     
-    _textRenderer.measure({parentWidth, parentHeight});
+    _textRenderer.measure(constrainingSize);
     
     _contentSize = _textRenderer.measuredSize();
     // If we had to use a soft linebreak then we know we filled the available width

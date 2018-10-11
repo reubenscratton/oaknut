@@ -7,25 +7,20 @@
 
 class ImageView : public View {
 public:
-
-	string _url;
-    string _assetPath;
-    ObjPtr<URLRequest> _request;
-    ObjPtr<TextureRenderOp> _renderOp;
-    ObjPtr<AtlasNode> _atlasNode;
-	//bool _errorDisplay;
-    bool _loaded;
-	TIMESTAMP _startLoadTime;
-	bool _useFadeEffect;
-    bool _useSharedTexture;
-    SIZE _sharedTextureSize;
-    RECT _rectTex;
+    
+    enum ContentMode {
+        ActualSize, // Image is shown at actual size (default)
+        AspectFit,  // Image is stretched to be as large as possible without overflowing bounds
+        AspectFill  // Image is stretched to fill the ImageView and overflow its bounds
+    };
 	
 	ImageView();
 	void setImageUrl(const string& url);
     void setImageAsset(const string& assetPath);
     void setBitmap(Bitmap* bitmap);
     void setImageNode(AtlasNode* node);
+    ContentMode getContentMode() const;
+    void setContentMode(ContentMode contentMode);
 	
 	// Overrides
 	void attachToWindow(Window* window) override;
@@ -33,11 +28,28 @@ public:
 	void onEffectiveTintColorChanged() override;
 	void layout() override;
     bool applyStyleValue(const string& name, const StyleValue* value) override;
-    void updateContentSize(float parentWidth, float parentHeight) override;
+    void updateContentSize(SIZE constrainingSize) override;
+    void updateRenderOps() override;
 
-	// Internal helpers
-	void loadImage();
+
+protected:
+    string _url;
+    string _assetPath;
+    ObjPtr<URLRequest> _request;
+    ObjPtr<TextureRenderOp> _renderOp;
+    ObjPtr<AtlasNode> _atlasNode;
+    bool _loaded;
+    TIMESTAMP _startLoadTime;
+    bool _useFadeEffect;
+    bool _useSharedTexture;
+    SIZE _sharedTextureSize;
+    RECT _rectTex;
+    ContentMode _contentMode;
+
+    // Internal helpers
+    void loadImage();
     void cancelLoad();
+    
 };
 
 

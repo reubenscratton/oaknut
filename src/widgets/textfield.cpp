@@ -40,3 +40,6 @@ bool TextField::requestFocus() {
     return editText->requestFocus();
 }
 
+void TextField::setText(const string &text) {
+    editText->setText(text);
+}

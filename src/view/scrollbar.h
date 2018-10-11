@@ -42,6 +42,7 @@ public:
 
     void updateVisibility(View* view, bool isVertical);
     bool canScroll(View* view, bool isVertical);
+    float maxScroll(View* view, bool isVertical);
     bool handleEvent(View* view, bool isVertical, INPUTEVENT* event);
 
     float flingUpdate();

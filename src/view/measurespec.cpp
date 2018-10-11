@@ -90,13 +90,9 @@ MEASURESPEC::MEASURESPEC(const StyleValue* value, View* view) {
     
 }
 
-float MEASURESPEC::calc(View* view, float parentSize, float otherSize, bool isVertical) const {
+float MEASURESPEC::calcConstraint(float parentSize, float otherSize) const {
     if (TypeContent == type) {
-        if (isVertical) {
-            return view->_contentSize.height + view->_padding.top + view->_padding.bottom;
-        } else {
-            return view->_contentSize.width + view->_padding.left + view->_padding.right;
-        }
+        return parentSize;
     } else if (TypeRelative == type) {
         float retval = con;
         if (mul != 0.0f) {
@@ -109,5 +105,5 @@ float MEASURESPEC::calc(View* view, float parentSize, float otherSize, bool isVe
     } else {
         assert(0);
     }
-
 }
+

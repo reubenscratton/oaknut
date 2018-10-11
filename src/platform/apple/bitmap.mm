@@ -269,6 +269,7 @@ void Bitmap::bind() {
     // Slow path
     if (!_cvImageBuffer) {
         void* data = CGBitmapContextGetData(_context);
+        assert(data);
         if (!_allocdTexData) {
             _allocdTexData = true;
             check_gl(glTexImage2D, _texTarget, 0, getGlInternalFormat(),

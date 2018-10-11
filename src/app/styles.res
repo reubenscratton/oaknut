@@ -7,11 +7,11 @@ window: {
 }
 
 colors: {
-    table_bkgnd: 0xffefeff4
-    table_border: 0xffc8c7cc
-    table_chevron:  0xffc7c7cc
-    table_selection_bkgnd: 0xffd9d9d9
-    text_link_default: 0xff007AFF
+    table_bkgnd: #efeff4
+    table_border: #c8c7cc
+    table_chevron:  #c7c7cc
+    table_selection_bkgnd: #d9d9d9
+    text_link_default: #007AFF
 }
 
 listview: {
@@ -53,7 +53,8 @@ ToolbarButton: {
     width: 40dp
     height: 40dp
     padding: 8dp
-    alpha: 0.5
+    contentMode: aspectFit
+    gravity: center
 }
 
 EditText: {

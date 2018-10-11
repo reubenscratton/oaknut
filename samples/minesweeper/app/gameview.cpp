@@ -66,7 +66,7 @@ void GameView::updateCell(Cell& cell) {
 }
 
 
-bool GameView::onInputEvent(INPUTEVENT* event) {
+bool GameView::handleInputEvent(INPUTEVENT* event) {
     if (_game->_state != InProgress) {
         return false;
     }
@@ -80,7 +80,7 @@ bool GameView::onInputEvent(INPUTEVENT* event) {
         }
     }
     if (event->type == INPUT_EVENT_DOWN) {
-        const POINT pt = event->pt;
+        const POINT pt = event->ptLocal;
         _wasLongPress = false;
         _timer = Timer::start([=] () {
             _wasLongPress = true;
@@ -89,7 +89,7 @@ bool GameView::onInputEvent(INPUTEVENT* event) {
     } else
     if (event->type == INPUT_EVENT_TAP) {
         if (!_wasLongPress) {
-            processCellTouch(event->pt, false);
+            processCellTouch(event->ptLocal, false);
         }
     }
     return true;

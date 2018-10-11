@@ -10,6 +10,7 @@
 DECLARE_DYNCREATE(ImageView);
 
 ImageView::ImageView() {
+    _contentMode = ActualSize;
     applyStyle("ImageView");
     _renderOp = new TextureRenderOp();
     addRenderOp(_renderOp);
@@ -25,6 +26,14 @@ bool ImageView::applyStyleValue(const string& name, const StyleValue* value) {
         Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
             setBitmap(bitmap);
         });
+        return true;
+    }
+    if (name=="contentMode") {
+        string mode = value->stringVal();
+        if (mode == "actualSize") setContentMode(ActualSize);
+        else if (mode == "aspectFit") setContentMode(AspectFit);
+        else if (mode == "aspectFill") setContentMode(AspectFill);
+        else assert(0);
         return true;
     }
     return View::applyStyleValue(name, value);
@@ -110,18 +119,66 @@ void ImageView::loadImage() {
     }
 }
 
-void ImageView::updateContentSize(float parentWidth, float parentHeight) {
-    if (_renderOp->_bitmap) {
-        _contentSize.width = _renderOp->_bitmap->_width;
-        _contentSize.height = _renderOp->_bitmap->_height;
+ImageView::ContentMode ImageView::getContentMode() const {
+    return _contentMode;
+}
+void ImageView::setContentMode(ContentMode contentMode) {
+    if (contentMode != _contentMode) {
+        _contentMode = contentMode;
+        invalidateContentSize();
     }
+}
+
+void ImageView::updateContentSize(SIZE constrainingSize) {
+    if (!_renderOp->_bitmap) {
+        _contentSize = {0,0};
+    } else {
+        float imageWidth = (float)_renderOp->_bitmap->_width;
+        float imageHeight = (float)_renderOp->_bitmap->_height;
+        if (_contentMode == ActualSize) {
+            _contentSize.width = imageWidth;
+            _contentSize.height = imageHeight;
+        } else {
+            float scaleWidth = constrainingSize.width / imageWidth;
+            float scaleHeight = constrainingSize.height / imageHeight;
+            float scale;
+            if (scaleHeight >= scaleWidth) {
+                scale = (_contentMode == AspectFit) ? scaleWidth : scaleHeight;
+            } else {
+                scale = (_contentMode == AspectFit) ? scaleHeight : scaleWidth;
+            }
+            _contentSize.width = imageWidth * scale;
+            _contentSize.height = imageHeight * scale;
+        }
+    }
+    
+    // Updating content size must trigger a renderop update
+    _updateRenderOpsNeeded = true;
+}
+
+
+void ImageView::updateRenderOps() {
+    RECT rect = {_padding.left,_padding.top,_contentSize.width,_contentSize.height};
+    RECT bounds = getOwnRect();
+    _padding.applyToRect(bounds);
+    float dx = bounds.size.width - rect.size.width;
+    float dy = bounds.size.height - rect.size.height;
+    if (_gravity.horz == GRAVITY_CENTER) {
+        rect.origin.x += dx/2;
+    } else if (_gravity.horz == GRAVITY_RIGHT) {
+        rect.origin.x += dx;
+    }
+    if (_gravity.vert == GRAVITY_CENTER) {
+        rect.origin.y += dy/2;
+    } else if (_gravity.vert == GRAVITY_BOTTOM) {
+        rect.origin.y += dy;
+    }
+    _renderOp->setRect(rect);
 }
 
 void ImageView::layout() {
     View::layout();
-    RECT bounds = getOwnRect();
-    _padding.applyToRect(bounds);
-    _renderOp->setRect(bounds);
+    _updateRenderOpsNeeded = true;
 }
 
 

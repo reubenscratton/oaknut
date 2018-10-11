@@ -29,7 +29,7 @@ bool NavigationBar::applyStyleValue(const string& name, const StyleValue* value)
     return View::applyStyleValue(name, value);
 }
 
-void NavigationBar::updateContentSize(float parentWidth, float parentHeight) {
+void NavigationBar::updateContentSize(SIZE constrainingSize) {
     _contentSize.height = _preferredContentHeight;
 }
 

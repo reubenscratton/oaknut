@@ -71,6 +71,17 @@ bool ScrollInfo::canScroll(View* view, bool isVertical) {
     return scrollableSize>0 && visibleSize < scrollableSize;
 }
 
+float ScrollInfo::maxScroll(View* view, bool isVertical) {
+    float padPre = isVertical ? view->_padding.top : view->_padding.left;
+    float padPost = isVertical ? view->_padding.bottom : view->_padding.right;
+    float scrollInset = isVertical ? (view->_scrollInsets.top+view->_scrollInsets.bottom) : (view->_scrollInsets.left+view->_scrollInsets.right);
+    float content = isVertical ? view->_contentSize.height : view->_contentSize.width;
+    float visibleSize = isVertical ? view->_rect.size.height : view->_rect.size.width;
+    float scrollableSize = padPre + content + scrollInset + padPost;
+    float m = (scrollableSize) - visibleSize;
+    app.log("padPre:%f padPost:%f inset:%f content:%f vis:%f  max:%f", padPre, padPost, scrollInset, content, visibleSize, m);
+    return (m>0) ? m : 0;
+}
 void ScrollInfo::updateVisibility(View* view, bool isVertical) {
     if (canScroll(view, isVertical)) {
         if (!_renderOp) {
@@ -157,6 +168,7 @@ bool ScrollInfo::handleEvent(View* view, bool isVertical, INPUTEVENT* event) {
         _offsetStart = offset;
         _dragTotal = 0;
         flingCancel();
+        rv = scrollableSize > viewSize;
     }
     if (event->type == INPUT_EVENT_MOVE) {
         if (event->deviceType == INPUTEVENT::Mouse) {

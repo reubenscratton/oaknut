@@ -1,6 +1,6 @@
 {
     class: View
-    size: fill, 64dp
+    size: fill
     padding: 16dp, 8dp
     subviews: [{
         class: Label

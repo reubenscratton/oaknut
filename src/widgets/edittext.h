@@ -26,7 +26,7 @@ public:
     void layout() override;
     void detachFromWindow() override;
     void setText(const AttributedString& text) override;
-    void updateContentSize(float parentWidth, float parentHeight) override;
+    void updateContentSize(SIZE constrainingSize) override;
     
     // IKeyboardInputHandler
     void keyInputEvent(KeyboardInputEventType keyboardInputEventType, KeyboardInputSpecialKeyCode specialKeyCode, int osKeyCode, char32_t charCode) override;

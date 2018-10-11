@@ -141,7 +141,7 @@ void SegmentedControl::setSegmentSelectedDelegate(SegmentSelectedDelegate delega
 	_segmentSelectedDelegate = delegate;
 }
 
-void SegmentedControl::updateContentSize(float parentWidth, float parentHeight) {
+void SegmentedControl::updateContentSize(SIZE constrainingSize) {
     
     if (!_fontValid) {
         _font = Font::get(_fontName, _fontSize);

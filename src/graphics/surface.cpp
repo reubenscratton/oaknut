@@ -269,15 +269,16 @@ void Surface::renderPhase1(View* view, Window* window, POINT origin) {
     }
     
     // If view's content size is invalid, now's a great time to update it
-    if (!view->_contentSizeValid) {
+    /*if (!view->_contentSizeValid) {
         assert(view->_widthMeasureSpec.type!=MEASURESPEC::TypeContent); // shoulda been done in measure()!
         assert(view->_heightMeasureSpec.type!=MEASURESPEC::TypeContent);
         float parentWidth = view->_parent?view->_parent->_rect.size.width : view->_window->_surfaceRect.size.width;
         float parentHeight = view->_parent?view->_parent->_rect.size.height : view->_window->_surfaceRect.size.height;
         view->updateContentSize(parentWidth, parentHeight);
         view->_contentSizeValid = true;
-    }
-    
+    }*/
+    //assert(view->_contentSizeValid); // content size must be valid for render loop
+
     bool changesMvp = view->_matrix || !view->_contentOffset.isZero();
     int mvpNumToRestore;
     if (changesMvp) {

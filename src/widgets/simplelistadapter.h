@@ -26,7 +26,7 @@ public:
         return (int)_items.size();
     }
     virtual float getItemHeight(LISTINDEX index) {
-        return app.dp(64); // TODO: style
+        return app.dp(68); // TODO: style
     }
 
     virtual View* createItemView(LISTINDEX index) {

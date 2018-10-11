@@ -24,7 +24,7 @@ public:
 
     // Overrides
     void updateContentSize(float parentWidth, float parentHeight) override;
-    bool onInputEvent(INPUTEVENT* event) override;
+    bool handleInputEvent(INPUTEVENT* event) override;
 
 protected:
     void processCellTouch(const POINT& pt, bool longPress);

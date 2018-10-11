@@ -81,6 +81,10 @@ public:
         _alignRight->setState(STATE_SELECTED, (gravity==GRAVITY_RIGHT) ? STATE_SELECTED : 0);
         _editText->setGravity({static_cast<uint8_t>(gravity), 0});
     }
+    
+    void requestScroll(float dx, float dy) override {
+        app.log("todo: remove this override once autofocus works properly");
+    }
 };
 
 

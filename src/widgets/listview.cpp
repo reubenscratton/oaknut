@@ -79,8 +79,8 @@ void ListView::measure(float parentWidth, float parentHeight) {
     updateVisibleItems();
 }
 
-void ListView::updateContentSize(float parentWidth, float parentHeight) {
-	_contentSize.width = parentWidth;
+void ListView::updateContentSize(SIZE constrainingSize) {
+	_contentSize.width = constrainingSize.width;
 	_contentSize.height = _scrollInsets.top;
     IListAdapter* adapter = _adapter;
     _sectionMetrics.clear();
@@ -210,6 +210,9 @@ ListView::ItemView::ItemView(ListView* listView, LISTINDEX listIndex, View* cont
 void ListView::ItemView::attachToWindow(Window *window) {
     View::attachToWindow(window);
     updateDeleteButton(false);
+}
+void ListView::ItemView::updateContentSize(SIZE constrainingSize) {
+    
 }
 
 void ListView::ItemView::updateDeleteButton(bool animate) {

@@ -70,35 +70,44 @@ void LinearLayout::measure(float parentWidth, float parentHeight) {
         _contentSize.width += totalSpacing;
     }
 	
-	// If we're using weights to distribute leftover space among subviews, do that now
+	// If we're using weights to distribute leftover space among subviews, do that now. The subviews
+    // that get assigned extra space have to be re-measured.
 	if (_weightsTotal > 0) {
 		if (_orientation == Vertical) {
             if (_heightMeasureSpec.type == MEASURESPEC::TypeRelative && _heightMeasureSpec.ref==nullptr) {
+                _contentSize.width = 0; // have to recalculate width if subviews are gonna be taller
 				float excess = (_rect.size.height - _contentSize.height) - (_padding.top+_padding.bottom);
 				for (int i=0 ; i<_subviews.size() ; i++) {
 					View* view = _subviews.at(i);
                     if (view == _scrollbarsView) continue;
 					float excessForThisSubview = (_weights[i]/_weightsTotal)*excess;
-                    RECT rect = view->getRect();
-					rect.size.height += excessForThisSubview;
-                    view->setRectSize(rect.size);
-					_contentSize.height += excessForThisSubview;
+                    if (excessForThisSubview > 0) {
+                        view->_heightMeasureSpec.con += excessForThisSubview;
+                        view->_layoutValid = false;
+                        view->invalidateContentSize();
+                        view->measure( _rect.size.width, _rect.size.height);
+                        view->_heightMeasureSpec.con -= excessForThisSubview;
+                        _contentSize.height += excessForThisSubview;
+                    }
+                    _contentSize.width = fmaxf(_contentSize.width, view->getWidth());
 				}
 			}
         } else {
 			if (_widthMeasureSpec.type == MEASURESPEC::TypeRelative && _widthMeasureSpec.ref==nullptr) {
+                _contentSize.height = 0; // have to recalculate height if subviews are gonna be wider
 				float excess = (_rect.size.width - _contentSize.width) - (_padding.left+_padding.right);
 				for (int i=0 ; i<_subviews.size() ; i++) {
 					View* view = _subviews.at(i);
                     if (view == _scrollbarsView) continue;
 					float excessForThisSubview = (_weights[i]/_weightsTotal)*excess;
                     if (excessForThisSubview > 0) {
-                        RECT rect = view->getRect();
-                        rect.size.width += excessForThisSubview;
-                        view->setRectSize(rect.size);
-                        _contentSize.height = fmaxf(_contentSize.height, view->getHeight());
+                        view->_widthMeasureSpec.con += excessForThisSubview;
+                        view->invalidateContentSize();
+                        view->measure( _rect.size.width, _rect.size.height);
+                        view->_widthMeasureSpec.con -= excessForThisSubview;
                         _contentSize.width += excessForThisSubview;
                     }
+                    _contentSize.height = fmaxf(_contentSize.height, view->getHeight());
 				}
 			}
 		}
@@ -125,7 +134,7 @@ void LinearLayout::layout() {
         for (int i=0 ; i<_subviews.size() ; i++) {
             View* view = _subviews.at(i);
             if (view == _scrollbarsView) continue;
-			view->layout();
+			//view->layout();
             view->setRectOrigin({view->getLeft(), y});
             y += view->getHeight() + _spacing;
         }
@@ -134,7 +143,7 @@ void LinearLayout::layout() {
         for (int i=0 ; i<_subviews.size() ; i++) {
             View* view = _subviews.at(i);
             if (view == _scrollbarsView) continue;
-			view->layout();
+			//view->layout();
             view->setRectOrigin({x, view->getTop()});
             x += view->getWidth() + _spacing;
         }

@@ -38,6 +38,7 @@ public:
 	void onWillPause() override;
 	void onDidPause() override;
 	bool navigateBack() override;
+    void requestScroll(float dx, float dy) override;
 
 
 protected:
