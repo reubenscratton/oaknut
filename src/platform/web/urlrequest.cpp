@@ -38,6 +38,9 @@ public:
         req->release();
     }
     static void OnNonImageLoad(URLRequestWeb* req, int httpStatus, uint8_t* data, int data_size, int timestamp, const char* szHeaders) {
+        //app.log("status %d len=%d", httpStatus, data_size);
+        //string foo((const char*)data, data_size);
+        //app.log("%s", foo.data());
         vector<string> headers = string(szHeaders).split("\r\n");
         map<string,string> headerMap;
         for (auto& header: headers) {

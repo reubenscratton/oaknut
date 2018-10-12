@@ -12,10 +12,13 @@ public:
     CameraWeb(const Options& options);
     ~CameraWeb();
     
+    void open() override;
     void start() override;
     void stop() override;
+    void close() override;
     
     class CameraWebBitmap : public Bitmap {
+    public:
         
         CameraWebBitmap();
 

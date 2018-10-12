@@ -16,6 +16,10 @@ static val lsGetInt = val::global("lsGetInt");
     return {0,0,0,0};
 }*/
 
+string App::currentCountryCode() const {
+    return "GB"; // todo
+}
+
 int App::getIntSetting(const char *key, const int defaultValue) {
     val value = lsGetInt(val(key), val(defaultValue));
     return value.as<int>();

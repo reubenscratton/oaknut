@@ -129,6 +129,7 @@ typedef uint64_t TIMESTAMP;
 #include "graphics/surface.h"
 #include "graphics/renderop_blur.h"
 #include "media/videorecorder.h"
+#include "media/videoplayer.h"
 #include "view/window.h"
 #include "text/attributedstring.h"
 #include "app/styles.h"

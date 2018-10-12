@@ -10,10 +10,22 @@
 
 class CameraFrameWeb : public CameraFrame {
 public:
+    CameraFrameWeb(CameraWeb* cam) : _cam(cam) {
+        _width = 640;
+        _height = 480;
+    }
     
+    Bitmap* asBitmap() override {
+        return &_cam->_bitmap;
+    }
+
+    CameraWeb* _cam;
 };
 
 CameraWeb::CameraWebBitmap::CameraWebBitmap() : _texture(val::null())  {
+    _width = 640;
+    _height = 480;
+    _format = BITMAPFORMAT_RGBA32;
 }
 void CameraWeb::CameraWebBitmap::bind() {
     val::global("gl").call<void>("bindTexture", GL_TEXTURE_2D, _texture);
@@ -25,22 +37,23 @@ void CameraWeb::CameraWebBitmap::create() {
 }
 
 static void OnCameraWebUpdate(CameraWeb* webcam) {
-    webcam->onNewCameraFrame(webcam, 5);
+    CameraFrameWeb frame(webcam);
+    webcam->onNewCameraFrame(&frame);
 }
 
 
 
 CameraWeb::CameraWeb(const Options& options) : Camera(options) {
-    _width = 640;
-    _height = 480;
-    _format = BITMAPFORMAT_RGBA32;
 }
 CameraWeb::~CameraWeb() {
 }
 
+void CameraWeb::open() {
+    
+}
 void CameraWeb::start() {
     _bitmap.create();
-    int gotIndex = val::global("gotSet")(_bitmap->_texture);
+    int gotIndex = val::global("gotSet")(_bitmap._texture).as<int>();
     EM_ASM_({
         var webcam=$0;
         var onUpdate=$1;
@@ -72,20 +85,23 @@ void CameraWeb::start() {
                 height: { ideal: 480 },
                 facingMode: "user"
         }, audio: true}).then(function(stream) {
+            video.onloadedmetadata = function(e) {log("onloadedmetadata"); timerCallback(); };
             if ("srcObject" in video) {
                 video.srcObject = stream;
             } else {
                 video.src = window.URL.createObjectURL(stream);
             }
-            //video.onloadedmetadata = function(e) {log("onloadedmetadata"); timerCallback(); };
-            setTimeout(timerCallback, 30);
+            //setTimeout(timerCallback, 30);
         }).catch(function(e) {
             log("Failed to open webcam: " + e);
         });
 
     }, this, OnCameraWebUpdate, gotIndex);
 }
-void CameraWeb::stopPreview() {
+void CameraWeb::stop() {
+    
+}
+void CameraWeb::close() {
     
 }
 

@@ -131,6 +131,7 @@ ActionSheet: {
 }
 
 TextField: {
+    height: wrap
     label: {
         size: wrap
         font-size: 12dp

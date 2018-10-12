@@ -52,7 +52,7 @@ public:
     string getPathForGeneralFiles();
     string getPathForUserDocuments();
     string getPathForCacheFiles();
-
+    string getPathForTemporaryFiles();
     
     /** @name Styles
      * @{

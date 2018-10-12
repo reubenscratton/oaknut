@@ -74,6 +74,7 @@ void CameraView::handleNewCameraFrame(Bitmap* bitmap) {
     rect.origin.y = bounds.midY() - rect.size.height/2;
     
     _renderOp->setRect(rect);
+    setNeedsFullRedraw();
 }
 
 

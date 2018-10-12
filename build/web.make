@@ -11,7 +11,8 @@ OBJS:=$(OBJS:.o=.bc)
 OBJS:=$(filter-out %.m.bc,$(OBJS))
 OBJS:=$(filter-out %.mm.bc,$(OBJS))
 
-OPTS+=$(if $(DEBUG),-O0 --profiling -s DEMANGLE_SUPPORT=1,-O3)
+#OPTS+=$(if $(DEBUG),-O0 --profiling -s DEMANGLE_SUPPORT=1,-O3)
+OPTS+= -O0 --profiling -s DEMANGLE_SUPPORT=1
 
 #PThreads is broken on WASM cos there's no Atomics support (it exists but is disabled cos of Spectre)
 #OPTS+= -s USE_PTHREADS=1
@@ -45,7 +46,10 @@ $(OBJ_DIR)%.bc : % $(OBJ_DIR)%.dep
 
 EXECUTABLE=$(OUTPUT_DIR)/xx.html
 
-$(EXECUTABLE): $(PCH).dep $(PCH) $(OBJS) $(HTML_FILE)
+ASSET_DIRS = $(shell find $(PROJECT_ROOT)/assets/ -type d)
+ASSET_FILES = $(shell find $(PROJECT_ROOT)/assets -type f -name '*')
+
+$(EXECUTABLE): $(PCH).dep $(PCH) $(OBJS) $(HTML_FILE) $(ASSET_DIRS) $(ASSET_FILES)
 	@echo $(PLATFORM): Linking app
 	@mkdir -p $(dir $(EXECUTABLE))
 	@$(EMSCRIPTEN_ROOT)/emcc --bind $(OPTS) --emrun --preload-file $(PROJECT_ROOT)/assets@/assets --shell-file $(HTML_FILE) $(OBJS) -o $@

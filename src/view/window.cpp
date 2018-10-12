@@ -590,7 +590,11 @@ void Window::runWithPermission(Permission permission, std::function<void(bool)> 
     });
 }
 void Window::runWithPermissions(vector<Permission> permissions, std::function<void(vector<bool>)> callback) {
-    callback({true});
+    vector<bool> results;
+    for (auto p : permissions) {
+        results.push_back(true);
+    }
+    callback(results);
 }
 
 

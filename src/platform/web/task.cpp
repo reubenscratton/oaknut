@@ -105,6 +105,7 @@ TaskQueue* TaskQueue::create(const string &name) {
 
 
 
+
 class Foo {
 public:
     Foo(std::function<void(void)> func) : _func(func) {
@@ -118,14 +119,19 @@ static void mainThreadThunk(Foo* foo) {
     delete foo;
 }
 
+
+
 void Task::nextTick(TASKFUNC func) {
     void* foo = new Foo(func);
     EM_ASM({
         window.setTimeout(function() { Runtime.dynCall('vi', $0, [$1]); }, 0);
     }, mainThreadThunk, foo);
 }
-
-
-
+void Task::after(int delay, TASKFUNC func) {
+    void* foo = new Foo(func);
+    EM_ASM({
+        window.setTimeout(function() { Runtime.dynCall('vi', $0, [$1]); }, $2);
+    }, mainThreadThunk, foo, delay);
+}
 #endif
 

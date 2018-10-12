@@ -4,19 +4,35 @@
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
 //
-#if PLATFORM_WEB && OAKNUT_WANT_AUDIOINPUT
+
+#if PLATFORM_WEB
 
 #include <oaknut.h>
 
-const void* oakAudioInputOpen(int sampleRate) { // samples are always int16_t, always record in mono.
-    return (void*)1;
+
+
+class AudioInputWeb : public AudioInput {
+public:
+    
+    AudioInputWeb() {
+    }
+    
+    void open(int sampleRate) override {
+    }
+    void start() override {
+    }
+    
+    void stop() override {
+    }
+    void close() override {
+    }
+    
+    
+};
+
+AudioInput* AudioInput::create() {
+    return new AudioInputWeb();
 }
 
-void oakAudioInputStart(const void* osobj, AudioInputDelegate delegate) {
-}
-void oakAudioInputStop(const void* osobj) {
-}
-void oakAudioInputClose(const void* osobj) {
-}
 
 #endif

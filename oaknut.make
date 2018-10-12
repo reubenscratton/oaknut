@@ -32,6 +32,7 @@ rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst 
 
 ifndef SOURCES
 SOURCES := $(call rwildcard,$(PROJECT_ROOT)/app/,*)
+SOURCES += $(call rwildcard,$(PROJECT_ROOT)/src/,*)
 SOURCES += $(call rwildcard,$(OAKNUT_DIR)/src/,*)
 endif
 

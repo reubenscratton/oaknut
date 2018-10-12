@@ -428,7 +428,7 @@ public:
 	virtual void animateAlpha(float target, float duration);
     virtual void animateTranslate(POINT translation, float duration);
     virtual Animation* animateInFromBottom(float duration, InterpolateFunc interpolater = strongEaseOut);
-    virtual Animation* animateOutToBottom(float duration, InterpolateFunc interpolater = strongEaseIn);
+    virtual Animation* animateOutToBottom(float duration, InterpolateFunc interpolater = strongEaseOut);
 	virtual void setTranslate(POINT translation);
     int _animationCount; // number of active animations currently attached to the view
     

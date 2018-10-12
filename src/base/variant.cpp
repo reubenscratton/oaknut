@@ -488,10 +488,11 @@ variant variant::parse(StringProcessor& it, int flags) {
                 return val;
             }
             variant fieldValue = parse(it, flags);
-            if (fieldValue.type == EMPTY) {
+            /* The JSON value 'null' maps to EMPTY, so this block is no longer needed
+             if (fieldValue.type == EMPTY) {
                 app.log("Invalid json: value expected");
                 return val;
-            }
+            }*/
             
             auto tt = val._map->emplace(std::move(fieldName), std::move(fieldValue));
             if (!tt.second) {

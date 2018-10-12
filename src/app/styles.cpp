@@ -179,7 +179,7 @@ COLOR StyleValue::colorVal()  const {
         string colorVal = val->str;
         // value is in either '#fff', '#ffffff', '#ffffffff',
         if (colorVal.hadPrefix("#")) {
-            unsigned int val = (unsigned int)strtol(colorVal.data(), NULL, 16);
+            unsigned int val = (unsigned int)strtoul(colorVal.data(), NULL, 16);
             if (colorVal.length() == 3) {
                 int r = (val & 0xF00)>>8;
                 int g = (val & 0xF0)>>4;

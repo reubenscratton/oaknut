@@ -56,6 +56,9 @@ string App::getPathForUserDocuments() {
 string App::getPathForCacheFiles() {
     return getPath(NSCachesDirectory);
 }
+string App::getPathForTemporaryFiles() {
+    return NSTemporaryDirectory().fileSystemRepresentation;
+}
 
 
 #if TARGET_OS_IOS
