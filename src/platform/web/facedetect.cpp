@@ -8,16 +8,33 @@
 
 #include <oaknut.h>
 
-static int num = 0;
 
-void* oakFaceDetectorCreate() {
-    return (void*)1;
-}
-int oakFaceDetectorDetectFaces(void* osobj, Bitmap* bitmap) {
-    num++;
-    return (num>=3) ? 1 : 0;
-}
-void oakFaceDetectorClose(void* osobj) {
+class FaceDetectorWeb : public FaceDetector {
+public:
+    
+    FaceDetectorWeb() {
+        EM_ASM_({
+            self.importScripts("face_detector.js");
+        });
+    }
+    virtual int detectFaces(class Bitmap* bitmap) {
+        PIXELDATA pixelData;
+        bitmap->lock(&pixelData, false);
+
+        int numFaces = EM_ASM_INT({
+            var pixelsPtr = new Uint8Array(Module.HEAPU8.buffer, $0, $1);
+            var nf = face_detector.detect(pixelsPtr, $2, $3, 4.0, 1.5, 2.0, 0.05);
+            return nf ? nf.length : 0;
+            //return face_detector.detect(pixelsPtr, $2, $3, 1.0, 1.25, 1.5, 0.2);
+        }, pixelData.data, pixelData.cb, bitmap->_width, bitmap->_height);
+        bitmap->unlock(&pixelData, false);
+        return numFaces;
+    }
+};
+
+
+FaceDetector* FaceDetector::create() {
+    return new FaceDetectorWeb();
 }
 
 #endif

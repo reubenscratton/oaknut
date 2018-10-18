@@ -57,6 +57,9 @@ public class App extends Application {
     public static byte[] getPath(int i) {
         return app.getFilesDir().getAbsolutePath().getBytes(UTF_8);
     }
+    public static byte[] getCurrentCountryCode() {
+        return app.getResources().getConfiguration().locale.getCountry().getBytes(UTF_8);
+    }
 
     public static int getPrefsInt(byte[] key, int defaultVal) {
         return prefs.getInt(new String(key, UTF_8), defaultVal);

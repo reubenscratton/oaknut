@@ -22,7 +22,9 @@ void BitmapProvider::dispatch(AtlasNode* node) {
     _ops.clear();
 }
 
-
+#ifndef GL_TEXTURE_EXTERNAL_OES
+#define GL_TEXTURE_EXTERNAL_OES 0x8D65
+#endif
 
 class GLProgramTexture : public GLProgram {
 public:
@@ -38,6 +40,19 @@ void GLProgramTexture::load()  {
         "}\n"
     );
 }
+
+class GLProgramTexture_OES_EGL : public GLProgram {
+    void load() override {
+        loadShaders(TEXTURE_VERTEX_SHADER,
+            "varying vec2 v_texcoord;\n"
+            "uniform samplerExternalOES sampler;\n"
+            "void main() {\n"
+            "    gl_FragColor = texture2D(sampler, v_texcoord);\n"
+            "}\n",
+                    "#extension GL_OES_EGL_image_external : require\n"
+        );
+    }
+};
 
 class GLProgramTextureTint : public GLProgram {
 public:
@@ -92,6 +107,7 @@ public:
 
 
 GLProgramTexture glprogTexture;
+static GLProgramTexture_OES_EGL glprogTexture_OES_EGL;
 static GLProgramTextureAlpha glprogTextureAlpha;
 static GLProgramTextureTint glprogTextureTint;
 static GLProgramTextureTintAlpha glprogTextureTintAlpha;
@@ -128,21 +144,27 @@ TextureRenderOp::TextureRenderOp(const char* assetPath, int tintColor) : Texture
 }
 
 void TextureRenderOp::validateShader() {
-    if (_alpha<1.0f) {
-        if (_color) {
-            _prog = &glprogTextureTintAlpha;
-        } else {
-            _prog = &glprogTextureAlpha;
-        }
-    } else {
-        if (_color) {
-            _prog = &glprogTextureTint;
-        } else {
-            _prog = &glprogTexture;
-        }
-    }
     if (!_bitmap) {
         return;
+    }
+    if (_bitmap->_texTarget == GL_TEXTURE_EXTERNAL_OES) {
+        _prog = &glprogTexture_OES_EGL;
+        assert(_alpha == 1.0f); // don't yet support variants
+        assert(_color == 0U); // don't yet support variants
+    } else {
+        if (_alpha<1.0f) {
+            if (_color) {
+                _prog = &glprogTextureTintAlpha;
+            } else {
+                _prog = &glprogTextureAlpha;
+            }
+        } else {
+            if (_color) {
+                _prog = &glprogTextureTint;
+            } else {
+                _prog = &glprogTexture;
+            }
+        }
     }
     _shaderValid = true;
 }
@@ -172,6 +194,9 @@ bool TextureRenderOp::canMergeWith(const RenderOp* op) {
 
 void TextureRenderOp::render(Window* window, Surface* surface) {
     if (_bitmap) {
+        if (_prog == &glprogTexture_OES_EGL) {
+            app.log("glprogTexture_OES_EGL render!");
+        }
         RenderOp::render(window, surface);
         window->bindTexture(_bitmap);
     }

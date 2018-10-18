@@ -83,16 +83,17 @@ void Task::ensureSharedGLContext() {
 #endif
 }
 
-void Task::nextTick(TASKFUNC func) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        func();
-    });
-}
-void Task::after(int delay, TASKFUNC func) {
-    float delayInSeconds = (float)delay / 1000.f;
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        func();
-    });
+void Task::postToMainThread(TASKFUNC func, int delay) {
+    if (delay <= 0) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            func();
+        });
+    } else {
+        float delayInSeconds = (float)delay / 1000.f;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            func();
+        });
+    }
 }
 
 class AppleTask : public Task {

@@ -102,7 +102,7 @@ public:
     virtual void setMvp(const Matrix4& mvp);
     
 protected:
-	virtual void loadShaders(const char* vertexShader, const char* fragShader);
+	virtual void loadShaders(const char* vertexShader, const char* fragShader, const char* szPreprocs=NULL);
 };
 
 

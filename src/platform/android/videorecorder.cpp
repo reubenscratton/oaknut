@@ -7,9 +7,10 @@
 #ifdef PLATFORM_ANDROID
 
 #include <oaknut.h>
-#include "platform.h"
-#include "camera.h"
 
+
+jbyteArray jbyteArrayFromString(JNIEnv* env, const string& str);
+jstring jstringFromString(JNIEnv* env, const string& str);
 
 class VideoRecorderAndroid : public VideoRecorder {
 public:
@@ -17,12 +18,12 @@ public:
     jclass _jclass;
     jobject _jobject;
 
-    VideoRecorderAndroid() {
+    VideoRecorderAndroid(const string& outputPath) : VideoRecorder(outputPath) {
         JNIEnv* env = getJNIEnv();
         _jclass = env->FindClass(PACKAGE "/VideoRecorder");
         _jclass = (jclass)env->NewGlobalRef(_jclass);
-        jmethodID jmidConstructor = env->GetMethodID(_jclass, "<init>", "(J)V");
-        _jobject = env->NewObject(_jclass, jmidConstructor, (jlong)this);
+        jmethodID jmidConstructor = env->GetMethodID(_jclass, "<init>", "(J[B)V");
+        _jobject = env->NewObject(_jclass, jmidConstructor, (jlong)this, jbyteArrayFromString(env, outputPath));
         _jobject = env->NewGlobalRef(_jobject);
     }
     ~VideoRecorderAndroid() {
@@ -42,7 +43,7 @@ public:
         JNIEnv* env = getJNIEnv();
         jmethodID jmid = env->GetMethodID(_jclass, "handleNewCameraFrame", "(IJ[F)V");
         jfloatArray jtransform = env->NewFloatArray(16);
-        env->SetFloatArrayRegion(jtransform, 0, 16, aframe->_transform);
+        env->SetFloatArrayRegion(jtransform, 0, 16, ((CameraFrameAndroid*)aframe)->_transform);
         env->CallVoidMethod(_jobject, jmid, aframe->_textureId, aframe->_timestamp, jtransform);
     }
 
@@ -64,8 +65,8 @@ public:
 
 };
 
-VideoRecorder* VideoRecorder::create() {
-    return new VideoRecorderAndroid();
+VideoRecorder* VideoRecorder::create(const string& outputPath) {
+    return new VideoRecorderAndroid(outputPath);
 }
 
 #endif

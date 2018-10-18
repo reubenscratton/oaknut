@@ -9,7 +9,7 @@
 
 #include <oaknut.h>
 
-VideoRecorder::VideoRecorder() {
+VideoRecorder::VideoRecorder(const string& outputPath) : _outputPath(outputPath) {
     
 }
 

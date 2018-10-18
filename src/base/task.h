@@ -13,8 +13,7 @@ public:
     virtual bool cancel()=0;
 
     static void ensureSharedGLContext(); // use this if you need to use GL from a background thread (i.e. image processing)
-    static void nextTick(TASKFUNC func);
-    static void after(int delay, TASKFUNC func);
+    static void postToMainThread(TASKFUNC func, int delay=0);
 
 protected:
     Task(TASKFUNC func);

@@ -21,6 +21,9 @@ public:
     bool assetWriterSessionStarted;
     CFTimeInterval recordingStartTime;
 
+    VideoRecorderApple(const string& outputPath) : VideoRecorder(outputPath) {
+
+    }
     void start(SIZE size, int frameRate, int keyframeRate, int audioSampleRate) override {
         recordingQueue = dispatch_queue_create("RecordingQueue", DISPATCH_QUEUE_SERIAL);
         recordingStartTime = CACurrentMediaTime();
@@ -30,8 +33,7 @@ public:
         dispatch_async(recordingQueue, ^{
             
             // Create a temporary file to write the asset to
-            NSString* tempDirectory = NSTemporaryDirectory();
-            NSString* outputPath =  [tempDirectory stringByAppendingPathComponent:@"safie.mp4"];
+            NSString* outputPath =  [NSString stringWithUTF8String:_outputPath.data()];
             outputURL = [NSURL fileURLWithPath: outputPath];
             [[NSFileManager defaultManager] removeItemAtURL:outputURL error:nil];
             
@@ -131,8 +133,8 @@ public:
 
 };
 
-VideoRecorder* VideoRecorder::create() {
-    return new VideoRecorderApple();
+VideoRecorder* VideoRecorder::create(const string& outputPath) {
+    return new VideoRecorderApple(outputPath);
 }
 
 #endif

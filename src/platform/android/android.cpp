@@ -398,7 +398,7 @@ JAVA_FN(jint, MainActivity, textInputGetInputType)(JNIEnv* env, jobject obj, jlo
 JAVA_FN(jint, MainActivity, textInputGetPreferredActionType)(JNIEnv* env, jobject obj, jlong nativePtr) {
     WindowAndroid *window = (WindowAndroid *) nativePtr;
     if (window->_textInputReceiver) {
-        switch (window->_textInputReceiver->getPreferredActionType()) {
+        switch (window->_textInputReceiver->getActionType()) {
             case ActionNone:
                 return IME_ACTION_NONE;
             case ActionNext:

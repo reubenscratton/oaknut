@@ -38,7 +38,7 @@ URLRequest::URLRequest(const string& url, const string& method, const string& bo
 URLRequest* URLRequest::createAndStart(const string& url, const string& method, const string& body, int flags) {
     auto req = create(url, method, body, flags);
     req->retain(); // keep request alive until run() completes async
-    Task::nextTick([=]() {
+    Task::postToMainThread([=]() {
         req->run();
     });
     return req;
@@ -83,7 +83,7 @@ void URLRequest::dispatchResult(int httpStatus, const map<string, string>& respo
     if (_handlerBitmap) {
         if (error()) {
             retain();
-            Task::nextTick([=]() {
+            Task::postToMainThread([=]() {
                 if (!_cancelled) {
                     _handlerBitmap(this, NULL);
                 }
@@ -111,7 +111,7 @@ void URLRequest::dispatchResult(int httpStatus, const map<string, string>& respo
             json = variant::parse(it, 0);
         }
         retain();
-        Task::nextTick([=]() {
+        Task::postToMainThread([=]() {
             if (!_cancelled) {
                 _handlerJson(this, json);
             }
@@ -123,7 +123,7 @@ void URLRequest::dispatchResult(int httpStatus, const map<string, string>& respo
         if (error()) {
             if (!_cancelled) {
                 retain();
-                Task::nextTick([=]() {
+                Task::postToMainThread([=]() {
                     _handlerData(this);
                     release();
                 });
@@ -131,7 +131,7 @@ void URLRequest::dispatchResult(int httpStatus, const map<string, string>& respo
             }
         } else {
             retain();
-            Task::nextTick([=]() {
+            Task::postToMainThread([=]() {
                 if (!_cancelled) {
                     _handlerData(this);
                 }

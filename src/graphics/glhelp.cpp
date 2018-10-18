@@ -58,10 +58,14 @@ void Uniform<POINT>::load() {
 
 
 
-static GLuint loadShader(GLenum shaderType, const char* pSource) {
+static GLuint loadShader(GLenum shaderType, const char* pSource, const char* preprocs=NULL) {
     GLuint shader = check_gl(glCreateShader, shaderType);
     if (shader) {
-		string source =
+		string source;
+		if (preprocs) {
+		    source = preprocs;
+		}
+		source +=
 #if TARGET_OS_IOS || defined(ANDROID) || defined(EMSCRIPTEN)
         "precision mediump float;\n";
         //"precision highp vec2;\n"
@@ -130,9 +134,9 @@ const char* TEXTURE_VERTEX_SHADER =
         "  v_color=color;\n"
 		"}\n";
 
-void GLProgram::loadShaders(const char *szVertexShader, const char *szFragShader) {
-    GLuint vertexShader = loadShader(GL_VERTEX_SHADER, szVertexShader);
-    GLuint pixelShader = loadShader(GL_FRAGMENT_SHADER, szFragShader);
+void GLProgram::loadShaders(const char *szVertexShader, const char *szFragShader, const char* szPreprocs/*=NULL*/) {
+    GLuint vertexShader = loadShader(GL_VERTEX_SHADER, szVertexShader, NULL);
+    GLuint pixelShader = loadShader(GL_FRAGMENT_SHADER, szFragShader, szPreprocs);
     _program = check_gl(glCreateProgram);
     
     _vertexConfig = VERTEXATTRIBS_CONFIG_NORMAL;

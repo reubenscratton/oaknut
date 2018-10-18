@@ -7,13 +7,12 @@
 
 #ifdef OAKNUT_WANT_CAMERA
 
-class CameraFrame {
+class CameraFrame : public Object {
 public:
     GLuint _textureId; // todo: this is android-specific?
     long _timestamp;
     int _width;
     int _height;
-    float _transform[16];
 
     virtual Bitmap* asBitmap()=0;
 };

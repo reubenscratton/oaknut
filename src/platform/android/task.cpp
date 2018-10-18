@@ -74,17 +74,12 @@ TaskQueue* TaskQueue::create(const string& name) {
 
 
 
-void Task::nextTick(std::function<void ()> func) {
-    Task* task = new TaskAndroid(func);
-    task->retain();
-    getTaskEnv()->CallStaticVoidMethod(jclassTaskQueue, jmidRunOnMainThread, 0, (jlong)task);
-}
-
-void Task::after(int delay, std::function<void ()> func) {
+void Task::postToMainThread(std::function<void ()> func, int delay/*=0*/) {
     Task* task = new TaskAndroid(func);
     task->retain();
     getTaskEnv()->CallStaticVoidMethod(jclassTaskQueue, jmidRunOnMainThread, (jint)delay, (jlong)task);
 }
+
 
 JAVA_FN(void, Task, nativeRun)(JNIEnv *env, jobject obj, jlong nativeObj) {
     TaskAndroid* task = (TaskAndroid*)nativeObj;

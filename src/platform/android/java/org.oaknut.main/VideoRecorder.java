@@ -18,12 +18,16 @@ import android.view.Surface;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 
 
 class VideoRecorder  {
 
+    static final Charset UTF_8 = Charset.forName("UTF-8");
+
     long nativePtr;
+    String outputPath;
     int videoWidth; // size of the recorded video output, not necessarily same as captured frame size
     int videoHeight;
     int desiredFrameRate;
@@ -33,9 +37,11 @@ class VideoRecorder  {
     EGLContext sharedContext;
     WorkerThread workerThread;
 
-    VideoRecorder(long nativePtr) {
+
+    VideoRecorder(long nativePtr, byte[] outputPath) {
         this.nativePtr = nativePtr;
         sharedContext = EGL14.eglGetCurrentContext();
+        this.outputPath = new String(outputPath, UTF_8);
     }
 
     void start(int videoWidth, int videoHeight, int desiredFrameRate, int desiredKeyframeRate, int audioSampleRate) {
@@ -49,9 +55,7 @@ class VideoRecorder  {
             audioBitRate = supportedAACbitRates.get(audioSampleRate); // exception? Maybe you asked for unsupported audio rate
         }
 
-        File dir = App.app.getFilesDir();
-        dir = App.app.getExternalFilesDir(Environment.DIRECTORY_MOVIES);
-        file = new File(dir, String.format("Avaya-%d.mp4", System.currentTimeMillis()));
+        file = new File(outputPath);
         if (file.exists()) {
             file.delete();
         }

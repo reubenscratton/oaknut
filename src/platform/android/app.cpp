@@ -18,6 +18,7 @@ static jmethodID jmidAppSetPrefsInt;
 static jmethodID jmidAppGetPrefsString;
 static jmethodID jmidAppSetPrefsString;
 static jmethodID jmidAppCreateUUID;
+static jmethodID jmidAppGetCurrentCountryCode;
 
 static JNIEnv* getAppEnv() {
   JNIEnv* env = getJNIEnv();
@@ -31,6 +32,7 @@ static JNIEnv* getAppEnv() {
     jmidAppGetPrefsString = env->GetStaticMethodID(jclassApp, "getPrefsString", "([B[B)[B");
     jmidAppSetPrefsString = env->GetStaticMethodID(jclassApp, "setPrefsString", "([B[B)V");
     jmidAppCreateUUID = env->GetStaticMethodID(jclassApp, "createUUID", "()Ljava/lang/String;");
+    jmidAppGetCurrentCountryCode = env->GetStaticMethodID(jclassApp, "getCurrentCountryCode", "()[B");
   }
   return env;
 }
@@ -54,7 +56,19 @@ string App::getPathForUserDocuments() {
 string App::getPathForCacheFiles() {
   return getPath(1);
 }
+string App::getPathForTemporaryFiles() {
+    return getPath(1);
+}
 
+string App::currentCountryCode() const {
+    JNIEnv* env = getAppEnv();
+    jbyteArray jbytes = (jbyteArray)env->CallStaticObjectMethod(jclassApp, jmidAppGetCurrentCountryCode);
+    int cb = env->GetArrayLength(jbytes);
+    bytearray data(cb);
+    env->GetByteArrayRegion(jbytes, 0, cb, reinterpret_cast<jbyte*>(data.data()));
+    string str((char*)data.data());
+    return str;
+}
 void App::log(char const* fmt, ...) {
     char ach[512];
     va_list args;

@@ -121,17 +121,15 @@ static void mainThreadThunk(Foo* foo) {
 
 
 
-void Task::nextTick(TASKFUNC func) {
+void Task::postToMainThread(TASKFUNC func, int delay) {
     void* foo = new Foo(func);
-    EM_ASM({
-        window.setTimeout(function() { Runtime.dynCall('vi', $0, [$1]); }, 0);
-    }, mainThreadThunk, foo);
-}
-void Task::after(int delay, TASKFUNC func) {
-    void* foo = new Foo(func);
-    EM_ASM({
-        window.setTimeout(function() { Runtime.dynCall('vi', $0, [$1]); }, $2);
-    }, mainThreadThunk, foo, delay);
+    if (emscripten_is_main_runtime_thread()) {
+        EM_ASM({
+            window.setTimeout(function() { Runtime.dynCall('vi', $0, [$1]); }, $2);
+        }, mainThreadThunk, foo, delay);
+    } else {
+        emscripten_async_run_in_main_runtime_thread(EM_FUNC_SIG_VI, mainThreadThunk, foo);
+    }
 }
 #endif
 

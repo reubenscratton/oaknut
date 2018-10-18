@@ -20,6 +20,12 @@ QUAD QUADFromRECT(const RECT& rect, uint32_t color) {
     q.tr = {r, t, 1, 0, color};
     q.bl = {l, b, 0, 1, color};
     q.br = {r, b, 1, 1, color};
+    
+    /* This rotates by 90 deg
+    q.tl = {r, t, 0, 0, color};
+    q.tr = {r, b, 1, 0, color};
+    q.bl = {l, t, 0, 1, color};
+    q.br = {l, b, 1, 1, color};*/
     return q;
 }
 

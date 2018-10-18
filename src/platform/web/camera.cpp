@@ -11,8 +11,6 @@
 class CameraFrameWeb : public CameraFrame {
 public:
     CameraFrameWeb(CameraWeb* cam) : _cam(cam) {
-        _width = 640;
-        _height = 480;
     }
     
     Bitmap* asBitmap() override {
@@ -23,8 +21,8 @@ public:
 };
 
 CameraWeb::CameraWebBitmap::CameraWebBitmap() : _texture(val::null())  {
-    _width = 640;
-    _height = 480;
+    _width = 1;
+    _height = 1;
     _format = BITMAPFORMAT_RGBA32;
 }
 void CameraWeb::CameraWebBitmap::bind() {
@@ -32,11 +30,20 @@ void CameraWeb::CameraWebBitmap::bind() {
 }
 
 void CameraWeb::CameraWebBitmap::create() {
-    val gl = val::global("gl");
-    _texture = gl.call<val>("createTexture");
+    int gotIndex = EM_ASM_INT({
+        var tex = gl.createTexture();
+        var id = GL.getNewId(GL.textures);
+        tex.name = id;
+        GL.textures[id] = tex;
+        return gotSet(tex);
+    });
+    _texture = val::global("gotGet")(gotIndex);
+    _textureId = _texture["name"].as<int>();
 }
 
-static void OnCameraWebUpdate(CameraWeb* webcam) {
+static void OnCameraWebUpdate(CameraWeb* webcam, int width, int height) {
+    webcam->_bitmap._width = width;
+    webcam->_bitmap._height = height;
     CameraFrameWeb frame(webcam);
     webcam->onNewCameraFrame(&frame);
 }
@@ -75,14 +82,14 @@ void CameraWeb::start() {
             }
             gl.bindTexture(gl.TEXTURE_2D, texture);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
-            Runtime.dynCall('vi', onUpdate, [webcam]);
+            Runtime.dynCall('viii', onUpdate, [webcam, video.videoWidth, video.videoHeight]);
             setTimeout(timerCallback, 30);
         }
         
         //var getUserMedia = navigator.mediaDevices.getUserMedia || navigator.mediaDevices.webkitGetUserMedia || navigator.mediaDevices.mozGetUserMedia;
         navigator.mediaDevices.getUserMedia({video: {
-                width: { ideal: 640 },
-                height: { ideal: 480 },
+                width: { ideal: 320 },
+                height: { ideal: 240 },
                 facingMode: "user"
         }, audio: true}).then(function(stream) {
             video.onloadedmetadata = function(e) {log("onloadedmetadata"); timerCallback(); };
@@ -91,7 +98,6 @@ void CameraWeb::start() {
             } else {
                 video.src = window.URL.createObjectURL(stream);
             }
-            //setTimeout(timerCallback, 30);
         }).catch(function(e) {
             log("Failed to open webcam: " + e);
         });

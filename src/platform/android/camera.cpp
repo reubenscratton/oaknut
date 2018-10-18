@@ -7,7 +7,6 @@
 #if PLATFORM_ANDROID && OAKNUT_WANT_CAMERA
 
 #include <oaknut.h>
-#include "camera.h"
 
 static jclass jclassCamera;
 static jmethodID jmidConstructor;
@@ -22,10 +21,10 @@ static const char* VERTEX_SHADER =
         "attribute highp vec2 vPosition;\n"
         "attribute vec2 texcoord;\n"
         "varying vec2 v_texcoord;\n"
-        "uniform highp mat4 mvp;\n"
+        "uniform highp mat4 matrixST;\n"
         "void main() {\n"
-        "  gl_Position = mvp * vec4(vPosition,0,1);\n"
-        "  v_texcoord = texcoord;\n"
+        "  gl_Position = vec4(vPosition,0,1);\n"
+        "  v_texcoord = vec4(matrixST * vec4(texcoord,0,1)).xy;\n"
         "}\n";
 
 static const char* FRAGMENT_SHADER =
@@ -50,10 +49,10 @@ static GLuint loadShader(GLenum shaderType, const char* pSource) {
 }
 
 
-CameraFrameAndroid::CameraFrameAndroid() {
+TextureConverter::TextureConverter() {
     fb = 0;
 }
-CameraFrameAndroid::~CameraFrameAndroid() {
+TextureConverter::~TextureConverter() {
     if (fb != 0) {
         check_gl(glDeleteFramebuffers, 1, &fb);
         check_gl(glDeleteBuffers, 1, &indexBufferId);
@@ -62,7 +61,7 @@ CameraFrameAndroid::~CameraFrameAndroid() {
     }
 }
 
-Bitmap* CameraFrameAndroid::asBitmap() {
+int TextureConverter::convert(GLuint texId, int width, int height, float* transform) {
     GLint oldFBO, oldTex;
     GLint viewport[4], oldProg;
     GLint oldVertexBuffer, oldIndexBuffer;
@@ -87,7 +86,7 @@ Bitmap* CameraFrameAndroid::asBitmap() {
         check_gl(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, indexBufferId);
         check_gl(glBindBuffer, GL_ARRAY_BUFFER, vertexBufferId);
         GLshort indexes[] = {0,1,2,2,1,3};
-        QUAD quad = QUADFromRECT(RECT(0,-1,2,2),0); // I don't know why y be 0 rather than -1 but it do...
+        QUAD quad = QUADFromRECT(RECT(-1,1,2,-2),0); // the default GL coordinate space, upside down
         check_gl(glBufferData, GL_ELEMENT_ARRAY_BUFFER, sizeof(GLshort) * 6, indexes, GL_STATIC_DRAW);
         check_gl(glBufferData, GL_ARRAY_BUFFER, sizeof(quad), &quad, GL_DYNAMIC_DRAW);
 
@@ -104,7 +103,7 @@ Bitmap* CameraFrameAndroid::asBitmap() {
         check_gl(glGetProgramiv, program, GL_LINK_STATUS, &linkStatus);
         assert(linkStatus);
 
-        posMvp = check_gl(glGetUniformLocation, program, "mvp");
+        matrixST = check_gl(glGetUniformLocation, program, "matrixST");
 
     } else {
         check_gl(glBindFramebuffer, GL_FRAMEBUFFER, fb);
@@ -118,19 +117,21 @@ Bitmap* CameraFrameAndroid::asBitmap() {
     check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    check_gl(glTexImage2D, GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    check_gl(glTexImage2D, GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     check_gl(glBindTexture, GL_TEXTURE_2D, 0);
     check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texId2,0);
     //GLuint e = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     //assert(e == GL_FRAMEBUFFER_COMPLETE);
 
-    // Bind to the camera texture
-    check_gl(glBindTexture, GL_TEXTURE_EXTERNAL_OES, _textureId);
+    // Bind to the input texture
+    check_gl(glBindTexture, GL_TEXTURE_EXTERNAL_OES, texId);
 
     // Render to texture
     check_gl(glUseProgram, program);
-    check_gl(glUniformMatrix4fv, posMvp, 1, 0, _transform);
-    check_gl(glViewport, 0,0,_width,_height);
+    check_gl(glUniformMatrix4fv, matrixST, 1, 0, transform);
+    check_gl(glViewport, 0,0,width,height);
+    //glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+    //glClear(GL_COLOR_BUFFER_BIT);
     check_gl(glVertexAttribPointer, VERTEXATTRIB_POSITION, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), 0);
     check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), (void*)8);
     check_gl(glEnableVertexAttribArray, VERTEXATTRIB_POSITION);
@@ -145,18 +146,19 @@ Bitmap* CameraFrameAndroid::asBitmap() {
     check_gl(glViewport, viewport[0], viewport[1], viewport[2], viewport[3]);
     check_gl(glUseProgram, oldProg);
 
+    return texId2;
 
-    Bitmap* bitmap = new Bitmap(texId2);
-    bitmap->_width = _width;
-    bitmap->_height = _height;
-    return bitmap;
+}
+
+Bitmap* CameraFrameAndroid::asBitmap() {
+    return _bitmap;
 };
 
 
 class CameraAndroid : public Camera {
 public:
     jobject camera;
-    CameraFrameAndroid* frame;
+    TextureConverter _converter;
 
     CameraAndroid(const Options& options) : Camera(options) {
         JNIEnv *env = getJNIEnv();
@@ -181,14 +183,11 @@ public:
     }
 
     void start() override {
-        frame = new CameraFrameAndroid();
         getJNIEnv()->CallVoidMethod(camera, jmidStartPreview);
     }
     void stop() override {
         if (camera) {
             getJNIEnv()->CallVoidMethod(camera, jmidStopPreview);
-            delete frame;
-            frame = NULL;
         }
     }
 
@@ -204,21 +203,24 @@ public:
 
 };
 
-Camera* Camera::create(bool frontFacing) {
-    return new CameraAndroid(frontFacing);
+Camera* Camera::create(const Options& options) {
+    return new CameraAndroid(options);
 }
 
 
-JAVA_FN(void, Camera, nativeOnFrameAvailable)(JNIEnv *env, jobject obj, jlong cameraPtr, jint textureId, jlong timestamp, jint width, jint height, jfloatArray transform) {
+JAVA_FN(void, Camera, nativeOnFrameAvailable)(JNIEnv *env, jobject obj, jlong cameraPtr, jint textureId, jlong timestamp, jint width, jint height, jfloatArray jtransform) {
     CameraAndroid* camera = (CameraAndroid*)cameraPtr;
-    if (camera->frame) {
-        camera->frame->_textureId = textureId;
-        camera->frame->_timestamp = timestamp;
-        camera->frame->_width = width;
-        camera->frame->_height = height;
-        env->GetFloatArrayRegion(transform, 0, 16, camera->frame->_transform);
-        camera->onNewCameraFrame(camera->frame);
-    }
+    ObjPtr<CameraFrameAndroid> frame = new CameraFrameAndroid();
+    env->GetFloatArrayRegion(jtransform, 0, 16, frame->_transform);
+    auto texId2 = camera->_converter.convert(textureId, width, height, frame->_transform);
+    frame->_bitmap = new Bitmap(texId2);
+    frame->_bitmap->_width = width;
+    frame->_bitmap->_height = height;
+    frame->_textureId = textureId;
+    frame->_timestamp = timestamp;
+    frame->_width = width;
+    frame->_height = height;
+    camera->onNewCameraFrame(frame);
 }
 
 
