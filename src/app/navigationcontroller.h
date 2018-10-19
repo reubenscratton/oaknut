@@ -28,7 +28,6 @@ public:
 	NavigationController();
 	virtual void pushViewController(ViewController* vc);
 	virtual void popViewController();
-    virtual void navigate(int eventId);
 
     void updateChildSafeArea(ViewController* childVc, const RECT& safeArea) override;
     

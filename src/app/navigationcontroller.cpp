@@ -71,10 +71,6 @@ void NavigationController::popViewController() {
 	startNavAnimation(vc, Pop);
 }
 
-void NavigationController::navigate(int eventId) {
-    // no-op
-}
-
 void NavigationController::startNavAnimation(ViewController* incomingVC, AnimationState animationState) {
 
 	_animationState = animationState;

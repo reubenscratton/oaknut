@@ -1,15 +1,21 @@
 package org.oaknut.main;
 
 import android.graphics.SurfaceTexture;
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioTrack;
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.opengl.GLES11Ext;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.Surface;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.concurrent.Semaphore;
 
@@ -24,25 +30,36 @@ public class VideoPlayer {
 
     static final Charset UTF_8 = Charset.forName("UTF-8");
 
-    class Track {
+    abstract class Track {
         int trackIndex;
+        long latencyUs;
         MediaCodec codec;
+        abstract boolean handleOutputBuffer(int outputBufferIndex, int bufferOffset, int bufferSize);
+
+        void handleOutputFormatChanged(MediaFormat newOutputFormat) {
+
+        }
+
         Thread thread = new Thread() {
             @Override
             public void run() {
                 MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
+
                 while (true) {
 
                     // Wait for next frame to arrive
                     int outputBufferIndex = codec.dequeueOutputBuffer(info, -1);
                     if (outputBufferIndex < 0) {
+                        if (outputBufferIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                            handleOutputFormatChanged(codec.getOutputFormat());
+                        }
                         continue;
                     }
 
                     // Sleep until frame is due to be presented
                     long dueUs = info.presentationTimeUs;
                     long nowUs = SystemClock.elapsedRealtime() * 1000;
-                    long delayUs = dueUs - nowUs;
+                    long delayUs = (dueUs - nowUs) + latencyUs;
                     if (delayUs > 0) {
                         try {
                             sleep(delayUs / 1000, (int) (delayUs % 1000));
@@ -63,10 +80,9 @@ public class VideoPlayer {
                         continue;
                     }
 
-                    // Visible frame. Release the output buffer which will automatically
-                    //  signal SurfaceTexture.onFrameAvailable on the main thread
-                    codec.releaseOutputBuffer(outputBufferIndex, true);
+                    boolean render = handleOutputBuffer(outputBufferIndex, info.offset, info.size);
 
+                    codec.releaseOutputBuffer(outputBufferIndex, render);
                 }
             }
         };
@@ -173,8 +189,58 @@ public class VideoPlayer {
         public void run() {
             MediaExtractor extractor;
 
-            Track video = new Track();
-            Track audio = new Track();
+            Track video = new Track() {
+                @Override
+                boolean handleOutputBuffer(int outputBufferIndex, int bufferOffset, int bufferSize) {
+                    // Nothing to do here. When the output buffer is released it will automatically
+                    // signal SurfaceTexture.onFrameAvailable on the main thread
+                    return true;
+                }
+            };
+            Track audio = new Track() {
+
+                AudioTrack audioTrack;
+
+                @Override
+                void handleOutputFormatChanged(MediaFormat newOutputFormat) {
+                    int sampleRate = newOutputFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE);
+                    int channelCount = newOutputFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT);
+                    int channelConfig = (channelCount==1) ? AudioFormat.CHANNEL_OUT_MONO : AudioFormat.CHANNEL_OUT_STEREO;
+                    int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
+                    int playbackBufferSize = AudioTrack.getMinBufferSize(sampleRate, channelConfig, audioFormat);
+                    audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
+                            sampleRate,
+                            channelConfig,
+                            audioFormat,
+                            playbackBufferSize,
+                            AudioTrack.MODE_STREAM);
+                    audioTrack.play();
+                }
+
+                @Override
+                boolean handleOutputBuffer(int outputBufferIndex, int bufferOffset, int bufferSize) {
+
+                    ByteBuffer buffer = codec.getOutputBuffers()[outputBufferIndex];
+                    // Such a clever API, here we have to do a completely pointless copy.
+                    // (They did fix it in API 23 though)
+                    byte[] bytes = new byte[bufferSize];
+                    buffer.get(bytes);
+                    audioTrack.write(bytes, bufferOffset, bufferSize);
+
+                    // Update latency
+                    long latencyUs = 0;
+                    try {
+                        Method getLatencyMethod =
+                                android.media.AudioTrack.class.getMethod("getLatency", (Class < ? > []) null);
+                        latencyUs = (Integer)getLatencyMethod.invoke(audioTrack, (Object[]) null) * 1000L;
+                    } catch (Exception e) {
+                        // There's no guarantee this method exists. Do nothing.
+                    }
+                    video.latencyUs = latencyUs + 200000; // the above is always a hopeless underestimate of the true latency
+
+                    return false;
+                }
+            };
 
             // Open the media file and find the codecs
             try {
@@ -203,6 +269,7 @@ public class VideoPlayer {
                         audio.trackIndex = i;
                         extractor.selectTrack(i);
                         audio.codec.configure(format, null, null, 0);
+
                     }
                 }
             } catch (IOException e) {
@@ -229,6 +296,7 @@ public class VideoPlayer {
 
                 // Block until allowed to play
                 if (isPaused) {
+
                     try {
                         playSemaphore.acquire();
                     } catch (InterruptedException e) {

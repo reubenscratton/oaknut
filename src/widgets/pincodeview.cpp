@@ -33,6 +33,11 @@ void PinCodeView::clear() {
     firstField->requestFocus();
 }
 
+bool PinCodeView::requestFocus() {
+    View* firstField = _subviews[0];
+    return firstField->requestFocus();
+}
+
 class PinCodeViewField : public EditText {
 public:
     PinCodeViewField() {
