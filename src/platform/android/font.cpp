@@ -13,7 +13,7 @@ static jmethodID s_jmidConstructor;
 static jmethodID s_jmidCreateGlyph;
 static jmethodID s_jmidDrawGlyph;
 
-Font::Font(const string& fontAssetPath, float size, float weight) : FontBase(fontAssetPath, size, weight) {
+FontAndroid::FontAndroid(const string& fontAssetPath, float size, float weight) : Font(fontAssetPath, size, weight) {
     JNIEnv *env = getJNIEnv();
     if (!s_jclass) {
         s_jclass = env->FindClass(PACKAGE "/Font");
@@ -27,17 +27,20 @@ Font::Font(const string& fontAssetPath, float size, float weight) : FontBase(fon
     _obj = env->NewGlobalRef(_obj);
 }
     
-Glyph* Font::createGlyph(char32_t ch, Atlas* atlas) {
+Glyph* FontAndroid::createGlyph(char32_t ch, Atlas* atlas) {
     JNIEnv *env = getJNIEnv();
     Glyph* glyph = (Glyph*)env->CallLongMethod(_obj, s_jmidCreateGlyph, (jlong)atlas, (jint)ch);
     if (glyph) {
         glyph->charCode = ch;
         POINT pt = glyph->atlasNode->rect.origin;
-        Bitmap* bitmap = (Bitmap*)glyph->atlasNode->page->_bitmap._obj;
+        BitmapAndroid* bitmap = (BitmapAndroid*)glyph->atlasNode->page->_bitmap._obj;
         env->CallVoidMethod(_obj, s_jmidDrawGlyph, (jint)ch, bitmap->_androidBitmap, pt.x-glyph->bitmapLeft, pt.y+glyph->bitmapHeight+glyph->bitmapTop);
         bitmap->_needsUpload = true;
     }
     return glyph;
+}
+Font* Font::create(const string& fontAssetPath, float size, float weight) {
+    return new FontAndroid(fontAssetPath, size, weight);
 }
 
 

@@ -43,7 +43,7 @@ public:
     virtual void load();
 };
 
-extern Matrix4 setOrthoFrustum(float l, float r, float b, float t, float n, float f);
+extern MATRIX4 setOrthoFrustum(float l, float r, float b, float t, float n, float f);
 
 static GLProgramBlur s_progBlur(BLUR_RADIUS, BLUR_RADIUS);
 static GLProgramPostBlur s_progBlurPost;

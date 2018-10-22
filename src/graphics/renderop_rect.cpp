@@ -65,7 +65,7 @@ public:
 class GLProgramRoundRect : public GLProgramRect {
 public:
     Uniform<COLOR> _strokeColor;
-    Uniform<Vector4> _u;
+    Uniform<VECTOR4> _u;
     
     void findVariables() override {
         GLProgram::findVariables();
@@ -80,7 +80,7 @@ public:
     void configureForRenderOp(RectRenderOp* op) override {
         _alpha.set(op->_alpha);
         _strokeColor.set(op->_strokeColor);
-        _u.set(Vector4(op->_rect.size.width/2,op->_rect.size.height/2,0,op->_strokeWidth));
+        _u.set(VECTOR4(op->_rect.size.width/2,op->_rect.size.height/2,0,op->_strokeWidth));
     }
     void unload() override {
         GLProgramRect::unload();
@@ -143,7 +143,7 @@ public:
 
 class GLProgramRoundRectSymmetric : public GLProgramRoundRect {
 public:
-    Uniform<Vector2> _radii;
+    Uniform<VECTOR2> _radii;
 
     void findVariables() override {
         GLProgramRoundRect::findVariables();
@@ -199,7 +199,7 @@ public:
 
 class GLProgramRoundRectComplex : public GLProgramRoundRect {
 public:
-    Uniform<Vector4> _radii;
+    Uniform<VECTOR4> _radii;
     
     void findVariables() override {
         GLProgramRoundRect::findVariables();
@@ -296,13 +296,13 @@ void RectRenderOp::setStrokeColor(COLOR strokeColor) {
         invalidate();
     }
 }
-Vector4 RectRenderOp::getCornerRadii() const {
+VECTOR4 RectRenderOp::getCornerRadii() const {
     return _radii;
 }
 void RectRenderOp::setCornerRadius(float radius) {
     setCornerRadii({radius, radius, radius, radius});
 }
-void RectRenderOp::setCornerRadii(const Vector4& radii) {
+void RectRenderOp::setCornerRadii(const VECTOR4& radii) {
     if (_radii != radii) {
         _radii = radii;
         

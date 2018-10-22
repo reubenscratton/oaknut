@@ -54,8 +54,8 @@ protected:
     float _dragStart, _dragLast, _dragTotal;
     float _offsetStart;
     float _alpha;
-    ObjPtr<class Animation> _fadeAnim;
-    ObjPtr<Timer> _fadeTimer;
+    sp<class Animation> _fadeAnim;
+    sp<Timer> _fadeTimer;
     Fling* _fling;
     RectRenderOp* _renderOp;
     

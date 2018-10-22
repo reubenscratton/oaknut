@@ -15,10 +15,10 @@ public:
     RECT _rect;
     EDGEINSETS _inset;
     GLProgram* _prog;
-    list<ObjPtr<RenderOp>>::iterator _viewListIterator; // view.renderList linked list entry
+    list<sp<RenderOp>>::iterator _viewListIterator; // view.renderList linked list entry
     int _mvpNum;
-    ObjPtr<class RenderBatch> _batch; // non-NULL when attached to surface
-    list<ObjPtr<RenderOp>>::iterator _batchIterator; // batch's linked list entry, valid when attached to surface
+    sp<class RenderBatch> _batch; // non-NULL when attached to surface
+    list<sp<RenderOp>>::iterator _batchIterator; // batch's linked list entry, valid when attached to surface
     int _renderBase; // offset into the batch vbo allocation
     int _renderCounter;
     bool _batchGeometryValid;

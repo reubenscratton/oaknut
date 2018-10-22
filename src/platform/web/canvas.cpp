@@ -73,16 +73,16 @@ public:
 };
 
 
-WebCanvas::WebCanvas() : _canvas(val::null()), _ctxt(val::null()) {
+CanvasWeb::CanvasWeb() : _canvas(val::null()), _ctxt(val::null()) {
     _canvas = val::global("document").call<val>("createElement", val("canvas"));
-    _bitmap = new Bitmap(this);
+    _bitmap = new BitmapWeb(this);
 }
 
-Bitmap* WebCanvas::getBitmap() {
+Bitmap* CanvasWeb::getBitmap() {
     return _bitmap;
 }
 
-void WebCanvas::resize(int width, int height) {
+void CanvasWeb::resize(int width, int height) {
     _bitmap->_width = width;
     _bitmap->_height = height;
     _canvas.set("width", width);
@@ -90,17 +90,17 @@ void WebCanvas::resize(int width, int height) {
     _ctxt = _canvas.call<val>("getContext", val("2d"));
     _hasChanged = true;
 }
-void WebCanvas::clear(COLOR color) {
+void CanvasWeb::clear(COLOR color) {
     _hasChanged = true;
 
 }
-void WebCanvas::setStrokeWidth(float strokeWidth) {
+void CanvasWeb::setStrokeWidth(float strokeWidth) {
     _strokeWidth = strokeWidth;
 }
-void WebCanvas::setStrokeColor(COLOR color) {
+void CanvasWeb::setStrokeColor(COLOR color) {
     _strokeColor = color;
 }
-void WebCanvas::setFillColor(COLOR color) {
+void CanvasWeb::setFillColor(COLOR color) {
     _fillColor = color;
 }
 string cssColorStr(uint32_t color) {
@@ -113,11 +113,11 @@ string cssColorStr(uint32_t color) {
     sprintf(ach, "#%08X", color);
     return string(ach);
 }
-void WebCanvas::setAffineTransform(AffineTransform* t) {
-    _transform = t ? (*t) : AffineTransform();
+void CanvasWeb::setAffineTransform(AFFINE_TRANSFORM* t) {
+    _transform = t ? (*t) : AFFINE_TRANSFORM();
     _hasChanged = true;
 }
-void WebCanvas::drawRect(RECT rect) {
+void CanvasWeb::drawRect(RECT rect) {
     _ctxt.call<void>("fillRect", val(rect.left()), val(rect.top()), val(rect.size.width), val(rect.size.height));
     if (_strokeWidth > 0) {
         _ctxt.set("lineWidth", val(_strokeWidth));
@@ -126,7 +126,7 @@ void WebCanvas::drawRect(RECT rect) {
     }
     _hasChanged = true;
 }
-void WebCanvas::drawOval(RECT rect) {
+void CanvasWeb::drawOval(RECT rect) {
     _ctxt.call<void>("save");
     _ctxt.call<void>("beginPath");
     _ctxt.call<void>("ellipse", val(rect.midX()), val(rect.midY()), val(rect.size.width/2), val(rect.size.height/2), val(0), val(0),val(2*M_PI));
@@ -136,7 +136,7 @@ void WebCanvas::drawOval(RECT rect) {
     _ctxt.call<void>("restore");
     _hasChanged = true;
 }
-void WebCanvas::drawPath(Path* apath) {
+void CanvasWeb::drawPath(Path* apath) {
     WebPath* path = (WebPath*)apath;
     _ctxt.call<void>("save");
     _ctxt.call<void>("beginPath");
@@ -173,7 +173,8 @@ void WebCanvas::drawPath(Path* apath) {
     _hasChanged = true;
 }
 
-void WebCanvas::drawBitmap(Bitmap* bitmap, const RECT& rectSrc, const RECT& rectDst) {
+void CanvasWeb::drawBitmap(Bitmap* abitmap, const RECT& rectSrc, const RECT& rectDst) {
+    BitmapWeb* bitmap = (BitmapWeb*)abitmap;
     
     // Get the source JS image. If there is no JS source (i.e. bitmap only exists
     // in the C++ heap) then a temporary JS Canvas must be created for it
@@ -200,12 +201,12 @@ void WebCanvas::drawBitmap(Bitmap* bitmap, const RECT& rectSrc, const RECT& rect
          val(rectDst.origin.x), val(rectDst.origin.y), val(rectDst.size.width), val(rectDst.size.height));
 }
 
-Path* WebCanvas::createPath() {
+Path* CanvasWeb::createPath() {
     return new WebPath();
 }
 
 Canvas* Canvas::create() {
-    return new WebCanvas();
+    return new CanvasWeb();
 }
 
 #endif

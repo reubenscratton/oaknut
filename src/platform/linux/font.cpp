@@ -12,7 +12,7 @@ static FT_Library ft_library;
 static cairo_t* cairo_for_measuring;
 
 
-Font::Font(const string& fontAssetPath, float size) : FontBase(fontAssetPath, size) {
+FontLinux::FontLinux(const string& fontAssetPath, float size) : Font(fontAssetPath, size) {
     size = dp(_size);
     //PangoFontMap* fm = pango_cairo_font_map_get_default();
     //PangoFontDescription* pfd = pango_font_description_new();
@@ -22,7 +22,7 @@ Font::Font(const string& fontAssetPath, float size) : FontBase(fontAssetPath, si
     //_pangoFont = pango_font_map_load_font (fm, _pangoContext, pfd);
     if (!ft_library) {
         FT_Init_FreeType(&ft_library);
-        Bitmap* bmp2 = new Bitmap(1,1,BITMAPFORMAT_RGBA32); // lives forever
+        Bitmap* bmp2 = new BitmapLinux(1,1,BITMAPFORMAT_RGBA32); // lives forever
         cairo_for_measuring = bmp2->getCairo();
     }
     
@@ -33,7 +33,7 @@ Font::Font(const string& fontAssetPath, float size) : FontBase(fontAssetPath, si
     _cairo_font_face = cairo_ft_font_face_create_for_ft_face(face, 0);
 }
     
-Glyph* Font::createGlyph(char32_t ch, Atlas* atlas) {
+Glyph* FontLinux::createGlyph(char32_t ch, Atlas* atlas) {
     app.log("Creating glyph for char code %d in font %X", ch, this);
     //UniChar uch = ch;
     

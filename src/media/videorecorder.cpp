@@ -5,12 +5,8 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#if OAKNUT_WANT_CAMERA
-
 #include <oaknut.h>
 
 VideoRecorder::VideoRecorder(const string& outputPath) : _outputPath(outputPath) {
     
 }
-
-#endif

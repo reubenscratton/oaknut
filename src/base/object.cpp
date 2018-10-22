@@ -47,7 +47,7 @@ string Object::debugDescription() {
 #endif
 
 
-map<string, Object* (*)()>* s_classRegister;
+map<string, Object* (*)()>* oak::s_classRegister;
 
 Object* Object::createByName(const string& className) {
     return s_classRegister->find(className)->second();

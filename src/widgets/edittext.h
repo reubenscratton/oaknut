@@ -56,9 +56,9 @@ protected:
     bool _cursorOn;
     bool _cursorValid;
     bool _showClearButtonWhenNotEmpty;
-    ObjPtr<Timer> _blinkCursorTimer;
-    ObjPtr<RectRenderOp> _cursorRenderOp;
-    ObjPtr<TextureRenderOp> _clearButtonOp;
+    sp<Timer> _blinkCursorTimer;
+    sp<RectRenderOp> _cursorRenderOp;
+    sp<TextureRenderOp> _clearButtonOp;
     SoftKeyboardType _softKeyboardType = KeyboardGeneral;
     ActionType _actionType = ActionNone;
     string _next; // id of next field

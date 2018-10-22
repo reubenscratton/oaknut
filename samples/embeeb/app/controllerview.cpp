@@ -23,7 +23,7 @@ void ControllerView::setController(Controller* controller) {
         key->attachToView(this);
 	}
 
-    _cachedFrameRect = RECT_Zero;
+    _cachedFrameRect = RECT::zero();
     invalidateContentSize();
 	setNeedsLayout();
 }

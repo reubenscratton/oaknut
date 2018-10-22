@@ -61,7 +61,7 @@ public:
         app.log("TODO! filter");
         /*_filterText = filterText;
          _itemsFiltered.clear();
-         vector<ObjPtr<Item>> secondaryMatches;
+         vector<sp<Item>> secondaryMatches;
          for (auto i : _items) {
          const string title = i->getTitle();
          if (stringStartsWith(title, filterText, false)) {

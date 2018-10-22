@@ -16,20 +16,20 @@
   a byte buffer type in lock(). This is obviously an expensive operation.
  */
 
-class Bitmap : public BitmapBase {
+class BitmapWeb : public Bitmap {
 public:
     val _img;
     val _buff;
     PIXELDATA _pixelData;
-    class WebCanvas* _canvas;
+    class CanvasWeb* _canvas;
     bool _isPng; // TODO: remove, now we have _format
     std::function<void(Bitmap*)> _tmp;
     
-    Bitmap();
-    Bitmap(int width, int height, int format);
-    Bitmap(WebCanvas* canvas);
-    Bitmap(val img, bool isPng);
-    ~Bitmap();
+    BitmapWeb();
+    BitmapWeb(int width, int height, int format);
+    BitmapWeb(CanvasWeb* canvas);
+    BitmapWeb(val img, bool isPng);
+    ~BitmapWeb();
 
     void lock(PIXELDATA* pixelData, bool forWriting) override;
     void unlock(PIXELDATA* pixelData, bool pixelsChanged) override;

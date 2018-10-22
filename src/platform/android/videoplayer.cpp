@@ -86,7 +86,7 @@ public:
         // external texture into a proper OpenGL texture that's the right way up.
 
         GLuint convertedTex = _converter.convert(textureId, width, height, transform);
-        ObjPtr<Bitmap> frame = new Bitmap(convertedTex);
+        sp<Bitmap> frame = new BitmapAndroid(convertedTex);
         frame->_width = width;
         frame->_height = height;
         //frame->_texTarget = GL_TEXTURE_EXTERNAL_OES;

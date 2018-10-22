@@ -13,7 +13,7 @@ OBJS:=$(filter-out %.mm.bc,$(OBJS))
 
 #OPTS+=$(if $(DEBUG),-O0 --profiling -s DEMANGLE_SUPPORT=1,-O3)
 OPTS+= -O0 --profiling -s DEMANGLE_SUPPORT=1
-OPTS+= -s USE_PTHREADS=1 
+OPTS+= -s USE_PTHREADS=1
 #PThreads is broken on WASM cos there's no Atomics support (it exists but is disabled cos of Spectre)
 #OPTS+= -s USE_PTHREADS=1
 
@@ -27,7 +27,8 @@ $(PCH).dep : $(OAKNUT_DIR)/src/oaknut.h
 	@$(EMSCRIPTEN_ROOT)/emcc $(ALLOPTS) -std=c++11 -x c++-header -E -M -MT $(PCH) $< -o $(PCH).dep
 	echo "	$(EMSCRIPTEN_ROOT)/emcc $(ALLOPTS) -std=c++11 -x c++-header $(OAKNUT_DIR)/src/oaknut.h -emit-pch -o $(PCH)" >>$@
 
-DEPS := $(PCH).dep $(DEPS)
+-include $(PCH).dep
+#DEPS := $(PCH).dep $(DEPS)
 
 
 #$(OBJ_DIR)%.bc : %

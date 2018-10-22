@@ -11,6 +11,7 @@
 #endif
 #include <CoreText/CoreText.h>
 #include <CoreGraphics/CoreGraphics.h>
+#include <CoreMedia/CoreMedia.h>
 #include <CoreVideo/CoreVideo.h>
 #if TARGET_OS_IOS
  #include <OpenGLES/gltypes.h>
@@ -25,6 +26,14 @@
  #include <OpenGL/glext.h>
  #define glGenVertexArrays glGenVertexArraysAPPLE
  #define glBindVertexArray glBindVertexArrayAPPLE
+#endif
+#if TARGET_OS_IOS
+#import <OpenAl/al.h>
+#import <OpenAl/alc.h>
+#define USE_NATIVE_IOS_AUDIO
+#import <AudioUnit/AudioUnit.h>
+#else
+#import <OpenAL/OpenAL.h>
 #endif
 #include <objc/runtime.h>
 #include <objc/message.h>

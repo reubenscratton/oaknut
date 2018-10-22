@@ -20,7 +20,7 @@ static int bytesPerPixelForFormat(int format) {
     return 0;
 }
 
-Bitmap::Bitmap(GdkPixbuf* pixbuf) : Bitmap() {
+BitmapLinux::BitmapLinux(GdkPixbuf* pixbuf) : Bitmap() {
     //_pixbuf = pixbuf;
     int nc = gdk_pixbuf_get_n_channels(pixbuf);
     int bpc = gdk_pixbuf_get_bits_per_sample(pixbuf);
@@ -33,7 +33,7 @@ Bitmap::Bitmap(GdkPixbuf* pixbuf) : Bitmap() {
     _needsUpload = true;
 
 }
-Bitmap::Bitmap(int width, int height, int format) : BitmapBase(width, height, format) {
+BitmapLinux::BitmapLinux(int width, int height, int format) : Bitmap(width, height, format) {
     cairo_format_t cairo_format;
     switch (format) {
         case BITMAPFORMAT_RGBA32: cairo_format = CAIRO_FORMAT_ARGB32; break;
@@ -45,7 +45,7 @@ Bitmap::Bitmap(int width, int height, int format) : BitmapBase(width, height, fo
     _needsUpload = true;
 }
 
-Bitmap::~Bitmap() {
+BitmapLinux::~BitmapLinux() {
     if (_cairo_surface) {
         cairo_surface_destroy(_cairo_surface);
         _cairo_surface = NULL;
@@ -56,7 +56,7 @@ Bitmap::~Bitmap() {
     }
 }
 
-void Bitmap::lock(PIXELDATA* pixelData, bool forWriting) {
+void BitmapLinux::lock(PIXELDATA* pixelData, bool forWriting) {
     pixelData->data = cairo_image_surface_get_data(_cairo_surface);
     pixelData->stride = cairo_image_surface_get_stride(_cairo_surface);
     pixelData->cb = _height * pixelData->stride;
@@ -71,9 +71,9 @@ void Bitmap::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
     }
 }
 
-void Bitmap::bind() {
+void BitmapLinux::bind() {
     
-    BitmapBase::bind();
+    Bitmap::bind();
 
     // If bitmap data changed we may need to update texture data
     if (!_needsUpload) {
@@ -104,7 +104,7 @@ cairo_t* Bitmap::getCairo() {
 
 static void on_area_prepared(GdkPixbufLoader *loader, gpointer user_data) {
     GdkPixbuf* pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
-    Bitmap* bitmap = new Bitmap(pixbuf);
+    Bitmap* bitmap = new BitmapLinux(pixbuf);
     GError* error = NULL;
     std::function<void(Bitmap*)>* callback = (std::function<void(Bitmap*)>*)user_data;
     (*callback)(bitmap);

@@ -14,7 +14,7 @@
 #define NSUI(x) NS##x
 #endif
 
-Font::Font(const string& fontAssetPath, float size, float weight) : FontBase(fontAssetPath, size, weight) {
+FontApple::FontApple(const string& fontAssetPath, float size, float weight) : Font(fontAssetPath, size, weight) {
     _ctfont = createCTFont();
     _ascent = CTFontGetAscent(_ctfont);
     _descent = -CTFontGetDescent(_ctfont); // as per Freetype convention, this is -ve.
@@ -36,7 +36,7 @@ float UIFontWeightFromStandardWeight(float weight) {
     return NSUI(FontWeightBlack);
 }
 
-CTFontRef Font::createCTFont() {
+CTFontRef FontApple::createCTFont() {
     CTFontRef ctfont = NULL;
     CGFloat size = _size;
     if (_name.length() == 0) {
@@ -55,7 +55,7 @@ CTFontRef Font::createCTFont() {
 #endif
         
     } else {
-        ObjPtr<ByteBuffer> data = app.loadAsset(_name.data());
+        sp<ByteBuffer> data = app.loadAsset(_name.data());
         assert(data->data);
         CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, data->data, data->cb, NULL);
         CGFontRef cgfont = CGFontCreateWithDataProvider(dataProvider);
@@ -68,7 +68,7 @@ CTFontRef Font::createCTFont() {
 }
     
 
-Glyph* Font::createGlyph(char32_t ch, Atlas* atlas) {
+Glyph* FontApple::createGlyph(char32_t ch, Atlas* atlas) {
     //app.log("Creating glyph for char code %d in font %X", ch, this);
     UniChar uch = ch;
     CGGlyph cgglyph = 0;
@@ -114,7 +114,7 @@ Glyph* Font::createGlyph(char32_t ch, Atlas* atlas) {
     glyph->bitmapTop = boundingRect.origin.y;
     
     // Get the atlas bitmap context
-    Bitmap* bitmap = (Bitmap*)glyph->atlasNode->page->_bitmap._obj;
+    BitmapApple* bitmap = (BitmapApple*)glyph->atlasNode->page->_bitmap._obj;
     CGContext* c = bitmap->_context;
     
     POINT origin = glyph->atlasNode->rect.origin;
@@ -138,6 +138,10 @@ Glyph* Font::createGlyph(char32_t ch, Atlas* atlas) {
     bitmap->_needsUpload = true;
     
     return glyph;
+}
+
+Font* Font::create(const oak::string &fontAssetPath, float size, float weight) {
+    return new FontApple(fontAssetPath, size, weight);
 }
 
 #endif

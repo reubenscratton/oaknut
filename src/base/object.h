@@ -46,11 +46,11 @@ extern void* DBGOBJ;
 
 /**
  * @ingroup base_group
- * @class ObjPtr<T>
+ * @class sp<T>
  * @brief A smart pointer class that holds a strong reference to an Object-derived type.
  */
 template<class T>
-class ObjPtr {
+class sp {
 public:
 	T* _obj;
     
@@ -64,21 +64,21 @@ public:
 #define dbgLog(x)
 //#endif
 
-    ObjPtr() : _obj(NULL) {
+    sp() : _obj(NULL) {
     }
-    ObjPtr(T* obj) : _obj(obj) {
+    sp(T* obj) : _obj(obj) {
 		if (obj) {
 			obj->retain();
             dbgLog(true);
 		}
     }
-    ObjPtr(const ObjPtr<T>& sp) : _obj(sp._obj) { // Copy constructor
+    sp(const sp<T>& sp) : _obj(sp._obj) { // Copy constructor
 		if (_obj) {
 			_obj->retain();
             dbgLog(true);
 		}
     }
-    ~ObjPtr() {
+    ~sp() {
 		if (_obj) {
 			_obj->release();
             dbgLog(false);
@@ -111,7 +111,7 @@ public:
 		assign(obj);
         return (T*)_obj;
     }
-    ObjPtr<T>& operator= (const ObjPtr<T>& obj) {
+    sp<T>& operator= (const sp<T>& obj) {
 		assign(obj._obj);
         return *this;
     }

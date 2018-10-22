@@ -21,7 +21,7 @@ public:
     
     void applyCornersToOp(RenderOp* op) {
         float r = app.getStyleFloat("ActionSheet.corner-radius");
-        Vector4 radii = {_isTop?r:0, _isTop?r:0, _isBottom?r:0, _isBottom?r:0};
+        VECTOR4 radii = {_isTop?r:0, _isTop?r:0, _isBottom?r:0, _isBottom?r:0};
         ((RectRenderOp*)op)->setCornerRadii(radii);
         if (!_isTop) {
             if (!_divider) {

@@ -40,12 +40,6 @@ ASSETS:=$(call rwildcard,$(PROJECT_ROOT)/assets/,*)
 
 SOURCES := $(filter %.cpp %.c %.m %.mm,$(SOURCES))
 
-ifdef OAKNUT_WANT_CAMERA
-	CFLAGS+= -DOAKNUT_WANT_CAMERA
-endif
-ifdef OAKNUT_WANT_AUDIOINPUT
-	CFLAGS+= -DOAKNUT_WANT_AUDIOINPUT
-endif
 
 
 

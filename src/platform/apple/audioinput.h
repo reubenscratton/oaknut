@@ -6,7 +6,7 @@
 //
 
 #pragma once
-#if PLATFORM_APPLE && OAKNUT_WANT_AUDIO_INPUT
+#if PLATFORM_APPLE
 #import <AVFoundation/AVFoundation.h>
 #import <AVFoundation/AVCaptureDevice.h>
 #import <AVFoundation/AVCaptureOutput.h>

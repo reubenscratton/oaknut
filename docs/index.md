@@ -60,8 +60,7 @@ which generate project files for several major IDEs:
 Oaknut is extremely lightweight. The whole source code is compiled
 into each app. It may switch to a precompiled library form at
 a later date but at this early stage it's convenient to work with this
-way. Some lesser-used parts are opt-in via preprocessor definitions,
-e.g. `OAKNUT_WANT_CAMERA`.
+way. 
 
 #### Threading
 Oaknut apps are based on a simple event model. The application implements `App::main()`

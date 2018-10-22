@@ -17,7 +17,7 @@ class DiskControls : public Object, public ISerializeToVariant  {
 public:
 
 	bool _usesKeyboard;
-	vector<ObjPtr<Controller>> _controllers;
+	vector<sp<Controller>> _controllers;
 
 	DiskControls();
 	DiskControls(const DiskControls& src);

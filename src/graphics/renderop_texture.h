@@ -22,8 +22,8 @@ private:
 
 class TextureRenderOp : public RenderOp {
 public:
-    ObjPtr<Bitmap> _bitmap;
-    ObjPtr<BitmapProvider> _bitmapProvider;
+    sp<Bitmap> _bitmap;
+    sp<BitmapProvider> _bitmapProvider;
     RECT _rectTex;
     
     TextureRenderOp();

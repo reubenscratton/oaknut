@@ -27,17 +27,17 @@ class Surface : public Object {
 public:
 	SIZE _size;
     REGION _invalidRegion; // unused on primary surface
-    Matrix4 _mvp;
+    MATRIX4 _mvp;
     GLuint _fb;
     GLuint _tex;
     GLint _pixelType;
     GLint _pixelFormat;
     POINT _savedOrigin;
     list<RenderOp*> _opsNeedingValidation;
-    list<ObjPtr<RenderBatch>> _listBatches;
+    list<sp<RenderBatch>> _listBatches;
     bool _isPrivate;
     bool _supportsPartialRedraw;
-    ObjPtr<PrivateSurfaceRenderOp> _op;
+    sp<PrivateSurfaceRenderOp> _op;
     int _mvpNum, _mvpNumPeak;
     bool _renderInProgress;
     

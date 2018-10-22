@@ -4,7 +4,7 @@
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
 //
-#if PLATFORM_ANDROID && OAKNUT_WANT_CAMERA
+#if PLATFORM_ANDROID
 
 #include <oaknut.h>
 
@@ -86,7 +86,7 @@ int TextureConverter::convert(GLuint texId, int width, int height, float* transf
         check_gl(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, indexBufferId);
         check_gl(glBindBuffer, GL_ARRAY_BUFFER, vertexBufferId);
         GLshort indexes[] = {0,1,2,2,1,3};
-        QUAD quad = QUADFromRECT(RECT(-1,1,2,-2),0); // the default GL coordinate space, upside down
+        QUAD quad = QUAD(RECT(-1,1,2,-2),0); // the default GL coordinate space, upside down
         check_gl(glBufferData, GL_ELEMENT_ARRAY_BUFFER, sizeof(GLshort) * 6, indexes, GL_STATIC_DRAW);
         check_gl(glBufferData, GL_ARRAY_BUFFER, sizeof(quad), &quad, GL_DYNAMIC_DRAW);
 
@@ -210,10 +210,10 @@ Camera* Camera::create(const Options& options) {
 
 JAVA_FN(void, Camera, nativeOnFrameAvailable)(JNIEnv *env, jobject obj, jlong cameraPtr, jint textureId, jlong timestamp, jint width, jint height, jfloatArray jtransform) {
     CameraAndroid* camera = (CameraAndroid*)cameraPtr;
-    ObjPtr<CameraFrameAndroid> frame = new CameraFrameAndroid();
+    sp<CameraFrameAndroid> frame = new CameraFrameAndroid();
     env->GetFloatArrayRegion(jtransform, 0, 16, frame->_transform);
     auto texId2 = camera->_converter.convert(textureId, width, height, frame->_transform);
-    frame->_bitmap = new Bitmap(texId2);
+    frame->_bitmap = new BitmapAndroid(texId2);
     frame->_bitmap->_width = width;
     frame->_bitmap->_height = height;
     frame->_textureId = textureId;

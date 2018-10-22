@@ -15,14 +15,14 @@ static const string base64_chars =
 static inline bool is_base64(char c) {
     return (std::isalnum(c) || (c == '+') || (c == '/'));
 }
-string base64_encode(const string& str) {
+string oak::base64_encode(const string& str) {
     return base64_encode((const uint8_t*)str.data(), str.lengthInBytes());
 }
-string base64_encode(const bytearray& array) {
+string oak::base64_encode(const bytearray& array) {
     return base64_encode(array.data(), array.size());
 }
 
-string base64_encode(uint8_t const* buf, unsigned int bufLen) {
+string oak::base64_encode(uint8_t const* buf, unsigned int bufLen) {
     string ret;
     int i = 0;
     int j = 0;
@@ -63,7 +63,7 @@ string base64_encode(uint8_t const* buf, unsigned int bufLen) {
     return ret;
 }
 
-bytearray base64_decode(string const& encoded_string) {
+bytearray oak::base64_decode(string const& encoded_string) {
     int in_len = encoded_string.lengthInBytes();
     int i = 0;
     int j = 0;

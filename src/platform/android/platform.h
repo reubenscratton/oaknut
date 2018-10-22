@@ -36,7 +36,5 @@ typedef float GLfloat;
 #  define LOGV(...)  ((void)0)
 #endif
 
-//using namespace std;
-
 extern JavaVM* g_jvm;
 JNIEnv* getJNIEnv();

@@ -7,14 +7,14 @@
 
 class RenderBatch : public Object {
 public:
-    list<ObjPtr<RenderOp>> _ops;
+    list<sp<RenderOp>> _ops;
     QuadBuffer::Alloc* _alloc;
     int _numQuads;
     int _head;
     bool _dirty;
     bool _log;
     class Surface* _surface;
-    list<ObjPtr<RenderBatch>>::iterator _renderBatchListIterator;
+    list<sp<RenderBatch>>::iterator _renderBatchListIterator;
     
     RenderBatch();
     ~RenderBatch();

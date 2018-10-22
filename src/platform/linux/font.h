@@ -6,13 +6,13 @@
 //
 
 
-class Font : public FontBase {
+class FontLinux : public Font {
 public:
     
     hb_font_t* _hb_font;
     cairo_font_face_t* _cairo_font_face;
     
-    Font(const string& fontAssetPath, float size);
+    FontLinux(const string& fontAssetPath, float size);
     Glyph* createGlyph(char32_t ch, Atlas* atlas);
 };
 

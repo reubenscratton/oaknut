@@ -5,11 +5,11 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-class Font : public FontBase {
+class FontWeb : public Font {
 public:
     val _fontHelper;
     
-    Font(const string& fontAssetPath, float size, float weight);
+    FontWeb(const string& fontAssetPath, float size, float weight);
     
     Glyph* createGlyph(char32_t ch, Atlas* atlas);
 };

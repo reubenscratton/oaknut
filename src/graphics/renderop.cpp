@@ -90,7 +90,7 @@ void RenderOp::rectToSurfaceQuad(RECT rect, QUAD* quad) {
     if (!_view->_ownsPrivateSurface) {
         rect.origin += _view->_surfaceOrigin;
     }
-    *quad = QUADFromRECT(rect, _color);
+    *quad = QUAD(rect, _color);
 }
 
 void RenderOp::asQuads(QUAD* quad) {
@@ -166,7 +166,7 @@ void RenderOp::rebatchIfNecessary() {
         // mergeable into other batches, after a property change. Hence we have to always add+remove
         // after a property change. Alternative is to end up with multiple compatible batches, not wanted.
         //if (_batch->_ops.size() > 1) {
-            ObjPtr<Surface> surface = _batch->_surface;
+            sp<Surface> surface = _batch->_surface;
             surface->removeRenderOp(this);
             surface->addRenderOp(this);
         //}

@@ -46,16 +46,16 @@ static int gltypeForFormat(int format) {
 
 
 
-Bitmap::Bitmap() : BitmapBase(), _img(val::null()), _buff(val::null()) {
+BitmapWeb::BitmapWeb() : Bitmap(), _img(val::null()), _buff(val::null()) {
 }
 
-Bitmap::Bitmap(WebCanvas* canvas) : BitmapBase(), _img(val::null()), _buff(val::null()), _canvas(canvas) {
+BitmapWeb::BitmapWeb(CanvasWeb* canvas) : Bitmap(), _img(val::null()), _buff(val::null()), _canvas(canvas) {
     _format = BITMAPFORMAT_RGBA32;
 }
 
 
 // Writeable bitmap constructor, creates a 2D pixel array accessible to both javascript and C++
-Bitmap::Bitmap(int width, int height, int format) : BitmapBase(width, height, format), _img(val::null()), _buff(val::null()) {
+BitmapWeb::BitmapWeb(int width, int height, int format) : Bitmap(width, height, format), _img(val::null()), _buff(val::null()) {
     _pixelData.stride = width*bytesPerPixelForFormat(format);
     _pixelData.cb = _pixelData.stride*height;
     _pixelData.data = malloc(_pixelData.cb);
@@ -63,19 +63,19 @@ Bitmap::Bitmap(int width, int height, int format) : BitmapBase(width, height, fo
 }
 
 // Read-only bitmap constructor, wraps the Image created by an ImageRequest
-Bitmap::Bitmap(val img, bool isPng)  : _img(img), _isPng(isPng), _buff(val::null()) {
+BitmapWeb::BitmapWeb(val img, bool isPng)  : _img(img), _isPng(isPng), _buff(val::null()) {
     _width = img["width"].as<int>();
     _height = img["height"].as<int>();
     _format = BITMAPFORMAT_RGBA32;
 }
 
-Bitmap::~Bitmap() {
+BitmapWeb::~BitmapWeb() {
     if (_pixelData.data) {
         free(_pixelData.data);
     }
 }
 
-void Bitmap::lock(PIXELDATA* pixelData, bool forWriting) {
+void BitmapWeb::lock(PIXELDATA* pixelData, bool forWriting) {
     // If bitmap wraps an HTMLImageElement (i.e. image has been downloaded) then
     // we have to convert it to a standard bitmap by creating an HTMLImageCanvas
     // and drawing the HTMLImageElement to it, then extracting the ImageData.
@@ -117,7 +117,7 @@ void Bitmap::lock(PIXELDATA* pixelData, bool forWriting) {
     pixelData->cb = _pixelData.cb;
 }
 
-void Bitmap::unlock(PIXELDATA* pixelData, bool pixelsChanged) {
+void BitmapWeb::unlock(PIXELDATA* pixelData, bool pixelsChanged) {
     if (_canvas) {
         if (pixelsChanged) {
             app.warn("TODO: implement canvas bitmap writeback");
@@ -132,8 +132,8 @@ void Bitmap::unlock(PIXELDATA* pixelData, bool pixelsChanged) {
     // buffer hanging around until the object is freed.
 }
 
-void Bitmap::bind() {
-    BitmapBase::bind();
+void BitmapWeb::bind() {
+    Bitmap::bind();
     val gl = val::global("gl");
     int format = _isPng ? GL_RGBA : GL_RGB;
     format = glformatForFormat(_format);
@@ -152,49 +152,9 @@ void Bitmap::bind() {
     }
 }
 
-
-
-
-static const char basis_64[] =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-
-string base64_encode(const char* input, size_t len) {
-    int i;
-    
-    //size_t input_length = data.size();
-    size_t output_length = ((len + 2) / 3 * 4) + 1;
-    
-    char* pp = (char*)malloc(output_length+1);
-    char* p = pp;
-    
-    for (i = 0; i < len - 2; i += 3) {
-        *p++ = basis_64[(input[i] >> 2) & 0x3F];
-        *p++ = basis_64[((input[i] & 0x3) << 4) | ((int) (input[i + 1] & 0xF0) >> 4)];
-        *p++ = basis_64[((input[i + 1] & 0xF) << 2) | ((int) (input[i + 2] & 0xC0) >> 6)];
-        *p++ = basis_64[input[i + 2] & 0x3F];
-    }
-    if (i < len) {
-        *p++ = basis_64[(input[i] >> 2) & 0x3F];
-        if (i == (len - 1)) {
-            *p++ = basis_64[((input[i] & 0x3) << 4)];
-            *p++ = '=';
-        }
-        else {
-            *p++ = basis_64[((input[i] & 0x3) << 4) | ((int) (input[i + 1] & 0xF0) >> 4)];
-            *p++ = basis_64[((input[i + 1] & 0xF) << 2)];
-        }
-        *p++ = '=';
-    }
-    
-    *p++ = '\0';
-    
-    return  string(pp);
-}
-
 // ISerializableToVariant
-void Bitmap::fromVariant(const variant& v) {
-    BitmapBase::fromVariant(v);
+void BitmapWeb::fromVariant(const variant& v) {
+    Bitmap::fromVariant(v);
     _pixelData.stride = _width*bytesPerPixelForFormat(_format);
     _pixelData.cb = _pixelData.stride*_height;
     _pixelData.data = malloc(_pixelData.cb);
@@ -202,8 +162,8 @@ void Bitmap::fromVariant(const variant& v) {
     auto& bb = v.bytearrayVal("bb");
     memcpy(_pixelData.data, bb.data(), _pixelData.cb);
 }
-void Bitmap::toVariant(variant& v) {
-    BitmapBase::toVariant(v);
+void BitmapWeb::toVariant(variant& v) {
+    Bitmap::toVariant(v);
     PIXELDATA pixelData;
     lock(&pixelData, false);
     v.set("bb", bytearray((uint8_t*)pixelData.data, pixelData.cb));
@@ -211,7 +171,7 @@ void Bitmap::toVariant(variant& v) {
 }
 
 // Platform-specific
-static void onImageLoadedFromData(Bitmap* bitmap) {
+static void onImageLoadedFromData(BitmapWeb* bitmap) {
     bitmap->_width = bitmap->_img["width"].as<int>();
     bitmap->_height = bitmap->_img["height"].as<int>();
     bitmap->_format = BITMAPFORMAT_RGBA32;
@@ -221,13 +181,13 @@ static void onImageLoadedFromData(Bitmap* bitmap) {
     }
     bitmap->_tmp(bitmap);
 }
-void BitmapBase::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
-    string str = base64_encode((const char*)data, cb);
+void Bitmap::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
+    string str = base64_encode((const uint8_t*)data, cb);
     string sstr = "data:image/png;base64,";
     sstr.append(str);
     //app.log("bitmap is %s", sstr.data());
 
-    Bitmap* bitmap = new Bitmap();
+    BitmapWeb* bitmap = new BitmapWeb();
     bitmap->_tmp = callback;
     bitmap->_img = val::global("Image").new_();
     int gotIndex = val::global("gotSet")(bitmap->_img).as<int>();
@@ -239,6 +199,10 @@ void BitmapBase::createFromData(const void* data, int cb, std::function<void(Bit
         };
         img.src = Pointer_stringify($1);
     }, bitmap, sstr.data(), onImageLoadedFromData, gotIndex);
+}
+
+Bitmap* Bitmap::create(int width, int height, int format) {
+    return new BitmapWeb(width, height, format);
 }
 
 #endif

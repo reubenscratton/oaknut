@@ -22,7 +22,7 @@ public:
     /**
      When in a NavigationController this object provides title and button information to the nav bar 
      */
-	ObjPtr<NavigationItem> _navigationItem;
+	sp<NavigationItem> _navigationItem;
 	class NavigationController* _navigationController;
 
 
@@ -105,9 +105,9 @@ public:
     virtual void requestScroll(float dx, float dy);
 
 protected:
-    ObjPtr<View> _view;
+    sp<View> _view;
     RECT _safeArea;
-    vector<ObjPtr<ViewController>> _childViewControllers;
+    vector<sp<ViewController>> _childViewControllers;
     bool _viewHasSafeAreaPaddingApplied;
     EDGEINSETS _safeAreaInsets;
 };

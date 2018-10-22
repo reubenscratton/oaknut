@@ -4,15 +4,14 @@
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
 //
-#if PLATFORM_APPLE && OAKNUT_WANT_CAMERA
+#if PLATFORM_APPLE
 
 #include <oaknut.h>
-#include "camera.h"
 #import <AVFoundation/AVFoundation.h>
 
 Bitmap* CameraFrameApple::asBitmap() {
     CVPixelBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
-    return new Bitmap(imageBuffer, true);
+    return new BitmapApple(imageBuffer, true);
 }
 
 @interface CameraHelper : NSObject <AVCaptureVideoDataOutputSampleBufferDelegate> {

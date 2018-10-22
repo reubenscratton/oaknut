@@ -5,11 +5,11 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-class Font : public FontBase {
+class FontApple : public Font {
 public:
     CTFontRef _ctfont;
     
-    Font(const string& fontAssetPath, float size, float weight);
+    FontApple(const string& fontAssetPath, float size, float weight);
     
 protected:
     CTFontRef createCTFont();

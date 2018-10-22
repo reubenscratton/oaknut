@@ -13,7 +13,7 @@ class SnapshotsViewController : public ViewController {
 public:
     ListView* _listView;
     float _minTopScrollInset;
-    vector<ObjPtr<Snapshot>> _snapshots;
+    vector<sp<Snapshot>> _snapshots;
 
     
     SnapshotsViewController(Beeb* beeb, BeebView* beebView, DiskInfo* diskInfo, SnapshotSelectedDelegate delegate);
@@ -29,7 +29,7 @@ protected:
     BeebView* _beebView;
     DiskInfo* _diskInfo;
     string _controllerId;
-    ObjPtr<LocalStore> _snapshotStore;
+    sp<LocalStore> _snapshotStore;
     
     uint32_t saveSnapshot(Snapshot* snapshot);
 };

@@ -15,14 +15,6 @@
   #include <SLES/OpenSLES.h>
   #include <SLES/OpenSLES_Android.h>
  #elif __APPLE__
-  #if TARGET_OS_IOS
-   #import <OpenAl/al.h>
-   #import <OpenAl/alc.h>
-   #define USE_NATIVE_IOS_AUDIO
-   #import <AudioUnit/AudioUnit.h>
-  #else
-    #import <OpenAL/OpenAL.h>
-  #endif
  #endif
 #endif
 

@@ -12,23 +12,6 @@
 static MruCache<string> s_urldataCache(4*1024*1024);
 
 
-string urlEncode(string str) {
-	string rv;
-	while (str.length() > 0) {
-		int span = (int)strcspn(str.data(), " :/?#[]@!$&'()*+,;=");
-		rv += str.substr(0, span);
-		str.erase(0, span);
-		if (str.length() > 0) {
-			char ch = str.charAt(0);
-			str.erase(0,1);
-			char fmt[8];
-			sprintf(fmt, "%%%02X", ch);
-			rv.append(fmt);
-		}
-	}
-	return rv;
-}
-
 URLRequest::URLRequest(const string& url, const string& method, const string& body, int flags) : _url(url) {
 	_method = method;
     _body = body;

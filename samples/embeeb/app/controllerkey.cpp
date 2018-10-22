@@ -27,7 +27,7 @@ ControllerKey::ControllerKey(Controller* controller) {
 }
 
 void ControllerKey::fromVariant(const variant& v) {
-	_rect = RECTfromString(v.stringVal("rect"));
+	_rect = RECT(v.stringVal("rect"));
 }
 
 ControllerKey::ControllerKey(const ControllerKey& src) {

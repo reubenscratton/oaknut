@@ -7,7 +7,7 @@
 
 #include <oaknut.h>
 
-App app;
+App oak::app;
 
 App::App() {
     StringProcessor parser(
@@ -42,7 +42,7 @@ float App::idp(float pix) {
 
 
 void App::loadStyleAsset(const string& assetPath) {
-    ObjPtr<ByteBuffer> data = app.loadAsset(assetPath.data());
+    sp<ByteBuffer> data = app.loadAsset(assetPath.data());
     if (!data) {
         return;
     }
@@ -109,7 +109,7 @@ static View* inflateFromResource(const StyleValue& value, View* parent) {
 
 
 void App::layoutInflateExistingView(View* view, const string& assetPath) {
-    ObjPtr<ByteBuffer> data = loadAsset(assetPath.data());
+    sp<ByteBuffer> data = loadAsset(assetPath.data());
     if (!data) {
         return;
     }
@@ -130,7 +130,7 @@ void App::layoutInflateExistingView(View* view, const string& assetPath) {
 }
 
 View* App::layoutInflate(const string& assetPath) {
-    ObjPtr<ByteBuffer> data = loadAsset(assetPath.data());
+    sp<ByteBuffer> data = loadAsset(assetPath.data());
     if (!data) {
         return NULL;
     }

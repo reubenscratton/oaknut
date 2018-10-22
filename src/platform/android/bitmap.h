@@ -8,15 +8,15 @@
 #include <oaknut.h>
 
 
-class Bitmap : public BitmapBase {
+class BitmapAndroid : public Bitmap {
 public:
     jobject _androidBitmap;
 
-    Bitmap();
-    Bitmap(int width, int height, int format);
-    Bitmap(jobject androidBitmap);
-    Bitmap(GLuint textureId);
-    ~Bitmap();
+    BitmapAndroid();
+    BitmapAndroid(int width, int height, int format);
+    BitmapAndroid(jobject androidBitmap);
+    BitmapAndroid(GLuint textureId);
+    ~BitmapAndroid();
 
     // Overrides
     void lock(PIXELDATA* pixelData, bool forWriting) override;

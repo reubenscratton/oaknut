@@ -35,9 +35,9 @@ public:
 protected:
     string _url;
     string _assetPath;
-    ObjPtr<URLRequest> _request;
-    ObjPtr<TextureRenderOp> _renderOp;
-    ObjPtr<AtlasNode> _atlasNode;
+    sp<URLRequest> _request;
+    sp<TextureRenderOp> _renderOp;
+    sp<AtlasNode> _atlasNode;
     bool _loaded;
     TIMESTAMP _startLoadTime;
     bool _useFadeEffect;

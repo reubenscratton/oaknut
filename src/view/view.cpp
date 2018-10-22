@@ -701,7 +701,7 @@ void View::updatePrivateSurface(bool updateSubviews) {
 
     if (updateSubviews) {
         for (auto it = _subviews.begin(); it!=_subviews.end() ; it++) {
-            ObjPtr<View> subview = *it;
+            sp<View> subview = *it;
             subview->updatePrivateSurface(true);
         }
     }
@@ -732,7 +732,7 @@ void View::attachToWindow(Window *window) {
     }
     
 	for (auto it = _subviews.begin(); it!=_subviews.end() ; it++) {
-		ObjPtr<View> subview = *it;
+		sp<View> subview = *it;
         if (subview->_visibility == Visible) {
             subview->attachToWindow(window);
         }
@@ -755,8 +755,8 @@ void View::detachFromWindow() {
     }
 
     // Recurse through subviews
-    for (vector<ObjPtr<View>>::iterator it = _subviews.begin(); it!=_subviews.end() ; it++) {
-        ObjPtr<View> subview = *it;
+    for (vector<sp<View>>::iterator it = _subviews.begin(); it!=_subviews.end() ; it++) {
+        sp<View> subview = *it;
         subview->detachFromWindow();
     }
 
@@ -854,7 +854,7 @@ void View::insertSubview(View* subview, int index) {
             prev = prev->_subviews.at(prev->_subviews.size()-1);
         }
     }
-    ObjPtr<View> next = prev->_nextView;  // keep a ref to 8
+    sp<View> next = prev->_nextView;  // keep a ref to 8
     subview->_previousView = prev; // link 5 to 4
     prev->_nextView = subview;     // link 4 to 5
     
@@ -1129,7 +1129,7 @@ void View::scrollBy(POINT scrollAmount) {
         POINT d = {a*scrollAmount.x, a*scrollAmount.y};
         POINT newOffset = origContentOffset + d;
         setContentOffset(newOffset);
-    }, linear);
+    }, Animation::linear);
 
 }
 
@@ -1408,7 +1408,7 @@ void View::setTranslate(POINT translation) {
         }
     } else {
         if (!_matrix) {
-            _matrix = new Matrix4();
+            _matrix = new MATRIX4();
         }
         _matrix->identity();
         _matrix->translate(translation.x, translation.y, 0);

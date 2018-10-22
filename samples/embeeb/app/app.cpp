@@ -17,7 +17,7 @@ void App::main() {
 
     /*
     vector<pair<const string&,const Variant&>> foo; // 24 bytes
-    ObjPtr<ByteBuffer> foo2;
+    sp<ByteBuffer> foo2;
     string foo3;
     uint32_t s1 = sizeof(foo3);
     

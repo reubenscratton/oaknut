@@ -13,11 +13,11 @@
 class NavigationController : public ViewController {
 public:
 	
-	ObjPtr<ViewController> _currentViewController;
-	ObjPtr<ViewController> _incomingViewController;
-	vector<ObjPtr<ViewController>> _navStack;
-	ObjPtr<NavigationBar> _navBar;
-	ObjPtr<View> _contentView;
+	sp<ViewController> _currentViewController;
+	sp<ViewController> _incomingViewController;
+	vector<sp<ViewController>> _navStack;
+	sp<NavigationBar> _navBar;
+	sp<View> _contentView;
 	typedef enum {
 		None,
 		Push,

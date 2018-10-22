@@ -298,12 +298,12 @@ string& string::operator=(const char* s) {
     return *this;
 }
 
-string operator+(const string& lhs, const string& rhs) {
+string oak::operator+(const string& lhs, const string& rhs) {
     string r(lhs);
     r.append(rhs);
     return r;
 }
-string operator+(const string& lhs, const char* s) {
+string oak::operator+(const string& lhs, const char* s) {
     string r(lhs);
     r.append(s);
     return r;
@@ -506,6 +506,25 @@ bytearray string::unhex() {
         *p++ = byte;
     }
     return ba;
+}
+
+
+string string::urlEncode() {
+    string rv;
+    string str(*this);
+    while (str.length() > 0) {
+        int span = (int)strcspn(str.data(), " :/?#[]@!$&'()*+,;=");
+        rv += str.substr(0, span);
+        str.erase(0, span);
+        if (str.length() > 0) {
+            char ch = str.charAt(0);
+            str.erase(0,1);
+            char fmt[8];
+            sprintf(fmt, "%%%02X", ch);
+            rv.append(fmt);
+        }
+    }
+    return rv;
 }
 
 vector<string> string::split(const string& delimiter) {

@@ -18,13 +18,13 @@ public:
     Type _type;
     union {
         COLOR _color;
-        ObjPtr<class Font> _font;
+        sp<class Font> _font;
         float _f;
     };
     
     Attribute(Type type, COLOR color) : _type(type), _color(color) {}
     Attribute(Type type, float f) : _type(type), _f(f) {}
-    ~Attribute() { if (_type == Font) { _font.~ObjPtr(); } }
+    ~Attribute() { if (_type == Font) { _font.~sp(); } }
     Attribute(const Attribute& attr) : _type(attr._type) {
         assign(attr);
     }
@@ -39,9 +39,9 @@ public:
     void setType(Type newType) {
         if (_type == newType) return;
         if (_type == Font && newType != Font) {
-            _font.~ObjPtr();
+            _font.~sp();
         } else if (_type != Font && newType == Font) {
-            new (&_font) ObjPtr<class Font>();
+            new (&_font) sp<class Font>();
         }
         _type = newType;
     }

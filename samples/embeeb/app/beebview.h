@@ -16,7 +16,7 @@ public:
     TextureRenderOp* _renderOp;
     RECT _visibleArea;
     bool _paused;
-    ObjPtr<Timer> _timer;
+    sp<Timer> _timer;
     
     
     BeebView();

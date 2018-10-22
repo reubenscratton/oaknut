@@ -4,7 +4,7 @@
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
 //
-#if PLATFORM_WEB && OAKNUT_WANT_CAMERA
+#if PLATFORM_WEB
 
 #include <oaknut.h>
 

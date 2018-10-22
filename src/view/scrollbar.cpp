@@ -55,7 +55,7 @@ public:
         _final = end;
     }
     void update(float timePassedSeconds) {
-        _curr = strongEaseOut(timePassedSeconds, _start, _final-_start, _duration/1000.f);
+        _curr = Animation::strongEaseOut(timePassedSeconds, _start, _final-_start, _duration/1000.f);
     }
 };
 

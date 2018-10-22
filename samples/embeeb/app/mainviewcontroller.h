@@ -25,7 +25,7 @@ public:
 	DiskInfo* _currentDiskInfo;
     ImageView* _controllersButton;
     ImageView* _nextControllerButton;
-    ObjPtr<class Snapshot> _currentSnapshot;
+    sp<class Snapshot> _currentSnapshot;
 //@property (nonatomic) NSValue* pendingControllerToActivate;
 
 	// Overrides

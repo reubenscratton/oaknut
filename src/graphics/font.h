@@ -17,26 +17,26 @@ const float FONT_WEIGHT_BOLD        = 700;     // 0.4000000059604645
 const float FONT_WEIGHT_HEAVY       = 800;     // 0.5600000023841858
 const float FONT_WEIGHT_BLACK       = 900;     // 0.6200000047683716
 
-class Font;
-class FontBase : public Object {
+class Font : public Object {
 public:
     string _name;
     float _size;
     float _weight;
-    map<char32_t, ObjPtr<class Glyph>> _glyphs; // map of character codes to Glyph*
+    map<char32_t, sp<class Glyph>> _glyphs; // map of character codes to Glyph*
     float _height;
     float _ascent;
     float _descent;
     float _leading;
 
-    ~FontBase();
+    ~Font();
 
 protected:
     // Gets a font at a particular size. If asset path is zero-length then
     // system font is used. If size is zero then 12 is the default.
-    FontBase(const string& name, float size, float weight);
+    Font(const string& name, float size, float weight);
     virtual Glyph* createGlyph(char32_t ch, Atlas* atlas) = 0;
-    
+    static Font* create(const string& fontAssetPath, float size, float weight);
+
 public:
     Glyph* getGlyph(char32_t ch);
     

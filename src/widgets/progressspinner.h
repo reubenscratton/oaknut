@@ -17,7 +17,7 @@ public:
     void attachToWindow(Window* window);
     void detachFromWindow();
     
-    ObjPtr<Timer> _animTimer;
+    sp<Timer> _animTimer;
     int _phase;
 };
 

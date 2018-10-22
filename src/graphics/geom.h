@@ -8,72 +8,144 @@
 
 #pragma pack(push)
 #pragma pack(1)
-typedef struct _VERTEX {
+struct VERTEX {
     GLfloat x,y;
     GLfloat s,t; // tried these as int16 but text went wonky
     uint32_t color;
     GLfloat unused[3]; // seems v wasteful. Worth it?
-} VERTEX;
+};
 
 
-typedef struct _QUAD {
-    VERTEX tl;
-    VERTEX tr;
-    VERTEX bl;
-    VERTEX br;
-    bool intersects(const struct _QUAD& r) const;
-} QUAD;
 
 
-typedef struct _POINT {
+
+struct POINT {
 	float x;
 	float y;
-	bool equals(struct _POINT& pt);
-    bool operator==(const struct _POINT& pt);
-    bool operator!=(const struct _POINT& pt);
-    const struct _POINT& operator+=(const struct _POINT& d);
-    const struct _POINT& operator-=(const struct _POINT& d);
-    bool isZero() const { return x==0.0f && y==0.0f; }
-    const struct _POINT operator+(const struct _POINT& rhs) const { return {x+rhs.x, y+rhs.y}; }
-    const struct _POINT operator-(const struct _POINT& rhs) const { return {x-rhs.x, y-rhs.y}; }
-} POINT;
 
-typedef struct _SIZE {
+    bool isZero() const { return x==0.0f && y==0.0f; }
+    const POINT operator+(const POINT& rhs) const { return {x+rhs.x, y+rhs.y}; }
+    const POINT operator-(const POINT& rhs) const { return {x-rhs.x, y-rhs.y}; }
+
+    bool equals(POINT& pt) const {
+        return x==pt.x && y==pt.y;
+    }
+    bool operator==(const POINT& pt) const {
+        return x==pt.x && y==pt.y;
+    }
+    bool operator!=(const POINT& pt) const {
+        return !(x==pt.x && y==pt.y);
+    }
+    const POINT& operator+=(const POINT& d) {
+        x+=d.x;
+        y+=d.y;
+        return *this;
+    }
+    const POINT& operator-=(const POINT& d) {
+        x-=d.x;
+        y-=d.y;
+        return *this;
+    }
+    
+
+};
+
+struct SIZE {
 	float width;
 	float height;
-} SIZE;
+};
 
-typedef struct _SIZEI {
+struct SIZEI {
     int width;
     int height;
-} SIZEI;
+};
 
-typedef struct RECT {
+struct RECT {
 	POINT origin;
 	SIZE size;
-	float midX();
-	float midY();
     
-    RECT();
-    RECT(float x, float y, float width, float height);
 
-	
-	bool contains(const POINT& pt) const;
-	bool contains(const struct RECT& r) const;
-    bool equal(const RECT& r) const;
-	
-	float left() const;
-	float right() const;
-	float top() const;
-	float bottom() const;
-	POINT topLeft() const;
-	POINT topRight() const;
-	POINT bottomLeft() const;
-	POINT bottomRight() const;
-	bool intersectWith(const RECT& r);
-	bool intersects(const RECT& r) const;
-	bool isEmpty();
-	bool operator==(const RECT& r);
+    RECT() {
+        origin.x = 0;
+        origin.y = 0;
+        size.width = 0;
+        size.height = 0;
+    }
+    RECT(float x, float y, float width, float height) {
+        origin.x = x;
+        origin.y = y;
+        size.width = width;
+        size.height = height;
+    }
+    RECT(const string& str);
+
+    float left() const { return origin.x; }
+    float right() const { return origin.x+size.width; }
+    float top() const { return origin.y; }
+    float bottom() const { return origin.y+size.height; }
+    float midX() const { return origin.x + size.width/2; }
+    float midY() const { return origin.y + size.height/2; }
+    POINT topLeft() const { return origin; }
+    POINT topRight() const { return {origin.x+size.width, origin.y}; }
+    POINT bottomLeft() const { return {origin.x, origin.y+size.height}; }
+    POINT bottomRight() const { return {origin.x+size.width, origin.y+size.height}; }
+
+    bool contains(const RECT& r) const {
+        return contains(r.origin) && contains(r.bottomRight());
+    }
+    bool contains(const POINT& p) const {
+        return (p.x>=origin.x && p.x<(origin.x+size.width)) && (p.y>=origin.y && p.y<(origin.y+size.height));
+    }
+    bool equal(const RECT& r2) const {
+        return origin.x==r2.origin.x
+        && origin.y==r2.origin.y
+        && size.width==r2.size.width
+        && size.height==r2.size.height;
+    }
+    bool intersects(const RECT& r) const {
+        return origin.x < r.right() &&
+        r.origin.x < right() &&
+        origin.y < r.bottom() &&
+        r.origin.y < bottom();
+    }
+    bool intersectWith(const RECT& r) {
+        typedef struct RECTA {
+            float left;
+            float top;
+            float right;
+            float bottom;
+            RECTA(const RECT&r) {
+                left = r.origin.x;
+                top = r.origin.y;
+                right = r.right();
+                bottom = r.bottom();
+            }
+        } RECTA;
+        RECTA r1(*this), r2(r);
+        if (r1.left < r2.right && r2.left < r1.right && r1.top < r2.bottom && r2.top < r1.bottom) {
+            if (r1.left < r2.left) r1.left = r2.left;
+            if (r1.top < r2.top) r1.top = r2.top;
+            if (r1.right > r2.right) r1.right = r2.right;
+            if (r1.bottom > r2.bottom) r1.bottom = r2.bottom;
+            origin.x = r1.left;
+            origin.y = r1.top;
+            size.width = r1.right-r1.left;
+            size.height = r1.bottom-r1.top;
+            return true;
+        }
+        return false;
+    }
+
+    bool isEmpty() const {
+        return size.width<=0 || size.height<=0;
+    }
+    bool operator==(const RECT& r) {
+        return origin.x==r.origin.x
+        && origin.y==r.origin.y
+        && size.width==r.size.width
+        && size.height==r.size.height;
+    }
+    
     inline RECT& inset(float dx, float dy) {
         origin.x += dx;
         origin.y += dy;
@@ -81,29 +153,94 @@ typedef struct RECT {
         size.height -= dy*2;
         return *this;
     }
-    void scale(float sx, float sy);
+    RECT unionWith(const RECT& r2) const {
+        RECT r;
+        r.origin.x = fminf(origin.x, r2.origin.x);
+        r.origin.y = fminf(origin.y, r2.origin.y);
+        r.size.width = fmaxf(right(), r2.right()) - r.origin.x;
+        r.size.height = fmaxf(bottom(), r2.bottom()) - r.origin.y;
+        return r;
+    }
+    void scale(float sx, float sy) {
+        origin.x *= sx;
+        origin.y *= sy;
+        size.width *= sx;
+        size.height *= sy;
+    }
 
     string toString() const;
 	
-} RECT;
+    static const RECT zero();
+};
 
-RECT RECTfromString(const string& str);
-RECT RECT_union(const RECT&r1, const RECT& r2);
+struct QUAD {
+    VERTEX tl;
+    VERTEX tr;
+    VERTEX bl;
+    VERTEX br;
+    
+    QUAD(const RECT& rect, uint32_t color) {
+        float l = rect.left(), r=rect.right();
+        float t = rect.top(), b=rect.bottom();
+        uint8_t red = color&255;
+        uint8_t blue = (color&0xff0000)>>16;
+        color = (color & 0xFF00FF00) | blue | (red<<16); // swap red & blue. Might be iOS specific, not sure
+        tl = {l, t, 0, 0, color};
+        tr = {r, t, 1, 0, color};
+        bl = {l, b, 0, 1, color};
+        br = {r, b, 1, 1, color};
+        /* This rotates by 90 deg
+         tl = {r, t, 0, 0, color};
+         tr = {r, b, 1, 0, color};
+         bl = {l, t, 0, 1, color};
+         br = {l, b, 1, 1, color};*/
+    }
 
-#define RECT_Zero RECT(0,0,0,0)
+    
+    bool intersects(const QUAD& r) const {
+        return tl.x < r.tr.x &&
+        r.tl.x < tr.x &&
+        tl.y < r.bl.y &&
+        r.tl.y < bl.y;
+    }
+    bool intersectsRECT(const RECT& r) const {
+        return tl.x < r.right() &&
+        r.origin.x < tr.x &&
+        tl.y < r.bottom() &&
+        r.origin.y < bl.y;
+    }
+    QUAD clip(const RECT& clip) const {
+        QUAD r = *this;
+        if (clip.origin.x > r.tl.x) {
+            r.tl.x = r.bl.x = clip.origin.x;
+        }
+        if (clip.right() < r.tr.x) {
+            r.tr.x = r.br.x = clip.right();
+        }
+        if (clip.origin.y > r.tl.y) {
+            r.tl.y = r.tr.y = clip.origin.y;
+        }
+        if (clip.bottom() < r.bl.y) {
+            r.bl.y = r.br.y = clip.bottom();
+        }
+        return r;
+    }
+    
+
+};
 
 
-bool QUADintersectsRECT(const QUAD& q, const RECT& r);
 
 
-typedef struct _EDGEINSETS {
+
+struct EDGEINSETS {
 	float left;
 	float top;
 	float right;
 	float bottom;
-	inline _EDGEINSETS() {
+	inline EDGEINSETS() {
 	}
-	inline _EDGEINSETS(float left, float top, float right, float bottom) {
+	inline EDGEINSETS(float left, float top, float right, float bottom) {
 		this->left = left;
 		this->top = top;
 		this->right = right;
@@ -115,26 +252,38 @@ typedef struct _EDGEINSETS {
 		rect.size.width -= left+right;
 		rect.size.height -= top+bottom;
 	}
-} EDGEINSETS;
+};
 
-QUAD QUADFromRECT(const RECT& rect, uint32_t color);
-QUAD clipQuad(const QUAD& quad, const RECT& clip);
 
 #define EDGEINSETS_Zero EDGEINSETS(0,0,0,0)
 #pragma pack(pop)
 
 
-class AffineTransform {
+class AFFINE_TRANSFORM {
 public:
     float a, b, c, d;
     float tx, ty;
     
-    AffineTransform();
-    AffineTransform(float a, float b, float c, float d, float tx, float ty);
-    POINT applyToPoint(const POINT& point);
-    
-    static AffineTransform makeScale(float sx, float sy);
-    static AffineTransform makeTranslate(float tx, float ty);
+    AFFINE_TRANSFORM() {
+        AFFINE_TRANSFORM(1,0,0,1,0,0);
+    }
+    AFFINE_TRANSFORM(float a, float b, float c, float d, float tx, float ty) {
+        this->a = a;
+        this->b = b;
+        this->c = c;
+        this->d = d;
+        this->tx = tx;
+        this->ty = ty;
+    }
+    POINT applyToPoint(const POINT& point) const {
+        POINT p;
+        p.x = (float)((double)a * point.x + (double)c * point.y + tx);
+        p.y = (float)((double)b * point.x + (double)d * point.y + ty);
+        return p;
+    }
+
+    static AFFINE_TRANSFORM makeScale(float sx, float sy);
+    static AFFINE_TRANSFORM makeTranslate(float tx, float ty);
 };
 
 

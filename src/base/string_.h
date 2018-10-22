@@ -170,6 +170,7 @@ public:
     static string hex(const void* p, int32_t cb);
     bytearray unhex();
     int32_t asInt();
+    string urlEncode();
     
 protected:
     union {
@@ -185,11 +186,3 @@ protected:
     void countChars();
 };
 
-namespace std {
-    template <>
-    struct hash<::string> {
-        size_t operator()( const ::string& k ) const {
-            return k.hash();
-        }
-    };
-}

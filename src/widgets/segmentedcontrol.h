@@ -33,14 +33,14 @@ public:
     void onEffectiveTintColorChanged() override;
 
 protected:
-    ObjPtr<Font> _font;
+    sp<Font> _font;
     string _fontName;
     float _fontSize;
     bool _fontValid;
     typedef struct {
         RECT rect;
-        ObjPtr<RectRenderOp> rectOp;
-        ObjPtr<TextRenderer> label;
+        sp<RectRenderOp> rectOp;
+        sp<TextRenderer> label;
     } Segment;
     vector<Segment> _segments;
     COLOR _textColor;

@@ -144,10 +144,7 @@ TextureRenderOp::TextureRenderOp(const char* assetPath, int tintColor) : Texture
 }
 
 void TextureRenderOp::validateShader() {
-    if (!_bitmap) {
-        return;
-    }
-    if (_bitmap->_texTarget == GL_TEXTURE_EXTERNAL_OES) {
+    if (_bitmap && _bitmap->_texTarget == GL_TEXTURE_EXTERNAL_OES) {
         _prog = &glprogTexture_OES_EGL;
         assert(_alpha == 1.0f); // don't yet support variants
         assert(_color == 0U); // don't yet support variants

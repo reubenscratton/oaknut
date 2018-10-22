@@ -66,7 +66,7 @@ void NavigationController::popViewController() {
 	if (!_navStack.size()) {
 		return;
 	}
-	ObjPtr<ViewController> vc  = *_navStack.rbegin();
+	sp<ViewController> vc  = *_navStack.rbegin();
     _navStack.pop_back();
 	startNavAnimation(vc, Pop);
 }
@@ -95,7 +95,7 @@ void NavigationController::startNavAnimation(ViewController* incomingVC, Animati
     Animation* anim = Animation::start(_view, 350, [=](float val) {
         onNavTransitionApply(val);
     });
-    anim->_interpolator = regularEaseInOut;
+    anim->_interpolator = Animation::regularEaseInOut;
     anim->_onFinished = [=](Animation* anim) {
 		completeIncoming();
         _animationState = None;

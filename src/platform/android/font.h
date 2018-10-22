@@ -6,11 +6,11 @@
 //
 
 
-class Font : public FontBase {
+class FontAndroid : public Font {
 public:
     jobject _obj;
-    
-    Font(const string& fontAssetPath, float size, float weight);
+
+    FontAndroid(const string& fontAssetPath, float size, float weight);
     Glyph* createGlyph(char32_t ch, Atlas* atlas);
 };
 

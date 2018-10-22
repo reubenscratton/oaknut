@@ -8,12 +8,12 @@
 
 #include <oaknut.h>
 
-extern string base64_encode(const char* input, size_t len);
+//extern string base64_encode(const char* input, size_t len);
 
 static map<string,string> s_customFonts;
 
 
-Font::Font(const string& fontAssetPath, float size, float weight) : FontBase(fontAssetPath, size, weight),
+FontWeb::FontWeb(const string& fontAssetPath, float size, float weight) : Font(fontAssetPath, size, weight),
     _fontHelper(val::null()) {
     string fontFamily = "sans-serif";
     if (fontAssetPath.length()) {
@@ -30,7 +30,7 @@ Font::Font(const string& fontAssetPath, float size, float weight) : FontBase(fon
             string fontDataStr = "@font-face { font-family:\"";
             fontDataStr += fontFamily;
             fontDataStr += "\"; src: url(data:application/font-sfnt;base64,";
-            fontDataStr += base64_encode((const char*)fontData->data, fontData->cb);
+            fontDataStr += base64_encode((const uint8_t*)fontData->data, fontData->cb);
             fontDataStr += "); }";
             EM_ASM_({
                 var style = document.createElement("style");
@@ -45,7 +45,7 @@ Font::Font(const string& fontAssetPath, float size, float weight) : FontBase(fon
     _fontHelper = val::global("FontHelper").new_(val(_name.data()), val(_size), val(_weight), val(fontFamily.data()));
 }
     
-Glyph* Font::createGlyph(char32_t ch, Atlas* atlas) {
+Glyph* FontWeb::createGlyph(char32_t ch, Atlas* atlas) {
     
     // Convert the character code to a Javascript string
     val str = val::global("String").call<val>("fromCharCode", val((int)ch));
@@ -63,7 +63,7 @@ Glyph* Font::createGlyph(char32_t ch, Atlas* atlas) {
     glyph->atlasNode = atlas->reserve(glyph->bitmapWidth, glyph->bitmapHeight, 1);
     
     // Copy the pixels from the helper into the atlas
-    Bitmap* bitmap = (Bitmap*)glyph->atlasNode->page->_bitmap._obj;
+    BitmapWeb* bitmap = (BitmapWeb*)glyph->atlasNode->page->_bitmap._obj;
     val targetBuff = val(typed_memory_view((size_t)bitmap->_pixelData.cb, (unsigned char*)bitmap->_pixelData.data));
     _fontHelper.call<void>("copyPixels",
                            val(glyph->bitmapWidth),
@@ -74,6 +74,10 @@ Glyph* Font::createGlyph(char32_t ch, Atlas* atlas) {
                            val(bitmap->_pixelData.stride));
 
     return glyph;
+}
+
+Font* Font::create(const oak::string &fontAssetPath, float size, float weight) {
+    return new FontWeb(fontAssetPath, size, weight);
 }
 
 #endif

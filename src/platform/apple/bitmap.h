@@ -17,7 +17,7 @@
 #define CVOpenGLESTextureCacheCreate CVOpenGLTextureCacheCreate
 #endif
 
-class Bitmap : public BitmapBase {
+class BitmapApple : public Bitmap {
 public:
     CGContextRef _context; // nil if bitmap is texture-only
     CVImageBufferRef _cvImageBuffer;
@@ -25,19 +25,19 @@ public:
     CVOpenGLESTextureCacheRef _cvTextureCache;
     CFDataRef _cfData;
     
-    Bitmap();
-    Bitmap(int width, int height, int format);
-    Bitmap(int width, int height, int format, void* pixels, int stride);
-    Bitmap(CVPixelBufferRef cvImageBuffer, bool fromCamera);
-    ~Bitmap();
+    BitmapApple();
+    BitmapApple(int width, int height, int format);
+    BitmapApple(int width, int height, int format, void* pixels, int stride);
+    BitmapApple(CVPixelBufferRef cvImageBuffer, bool fromCamera);
+    ~BitmapApple();
     
     // Overrides
-    void lock(PIXELDATA* pixelData, bool forWriting) override;
-    void unlock(PIXELDATA* pixelData, bool pixelDataChanged) override;
+    void lock(oak::PIXELDATA* pixelData, bool forWriting) override;
+    void unlock(oak::PIXELDATA* pixelData, bool pixelDataChanged) override;
     void bind() override;
     
-    void fromVariant(const variant& v) override;
-    void toVariant(variant& v) override;
+    void fromVariant(const oak::variant& v) override;
+    void toVariant(oak::variant& v) override;
     
 private:
     void createBitmapContext();

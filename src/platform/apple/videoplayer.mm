@@ -45,7 +45,7 @@ public:
                 CMTime presentationItemTime = kCMTimeZero;
                 CVPixelBufferRef pixBuff = [_output copyPixelBufferForItemTime:outputItemTime itemTimeForDisplay:&presentationItemTime];
                 
-                ObjPtr<Bitmap> bitmap = new Bitmap(pixBuff, false);
+                sp<Bitmap> bitmap = new BitmapApple(pixBuff, false);
                 onNewFrameReady(bitmap);
                 
                 CVBufferRelease( pixBuff );

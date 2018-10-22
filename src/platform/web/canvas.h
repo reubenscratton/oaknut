@@ -7,19 +7,19 @@
 #if PLATFORM_WEB
 
 
-class WebCanvas : public Canvas {
+class CanvasWeb : public Canvas {
 public:
     val _canvas;
     val _ctxt;
-    ObjPtr<Bitmap> _bitmap;
+    sp<Bitmap> _bitmap;
     float _strokeWidth;
     COLOR _strokeColor;
     COLOR _fillColor;
     bool _hasChanged;
-    AffineTransform _transform;
+    AFFINE_TRANSFORM _transform;
 
     
-    WebCanvas();
+    CanvasWeb();
 
     Bitmap* getBitmap();
 
@@ -28,7 +28,7 @@ public:
     void setStrokeWidth(float strokeWidth);
     void setStrokeColor(COLOR color);
     void setFillColor(COLOR color);
-    void setAffineTransform(AffineTransform* t);
+    void setAffineTransform(AFFINE_TRANSFORM* t);
     void drawRect(RECT rect);
     void drawOval(RECT rect);
     void drawPath(Path* apath);

@@ -371,8 +371,8 @@ COLOR StyleValue::colorVal()  const {
 }
 
 
-Vector4 StyleValue::cornerRadiiVal() const {
-    Vector4 r;
+VECTOR4 StyleValue::cornerRadiiVal() const {
+    VECTOR4 r;
     auto val = select();
     if (val->isNumeric()) {
         r.x = r.y = r.z = r.w = val->floatVal();

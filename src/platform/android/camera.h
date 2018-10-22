@@ -17,7 +17,7 @@ public:
 
 class CameraFrameAndroid : public CameraFrame {
 public:
-    ObjPtr<Bitmap> _bitmap;
+    sp<Bitmap> _bitmap;
     float _transform[16];
 
 

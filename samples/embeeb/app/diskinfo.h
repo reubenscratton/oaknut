@@ -12,7 +12,7 @@
 class DiskInfo : public Object, public ISerializeToVariant
 {
 public:
-	ObjPtr<class Game> _game;
+	sp<class Game> _game;
 	string _title;
 	string _publisher;
 	string _mediaFilename;
@@ -45,7 +45,7 @@ class Game : public Object, public ISerializeToVariant {
 public:
 	string _title;
 	vector<variant> _publishers;
-	vector<ObjPtr<DiskInfo>> _diskInfos;
+	vector<sp<DiskInfo>> _diskInfos;
 	
     // ISerializeToVariant
     void fromVariant(const variant& v) override;

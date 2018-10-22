@@ -97,9 +97,9 @@ public:
     const bytearray& bytearrayVal(const char* name) const;
     const vector<variant>& arrayVal(const char* name) const;
     template <class T>
-    vector<ObjPtr<T>> arrayVal(const char* name) const {
+    vector<sp<T>> arrayVal(const char* name) const {
         static_assert(std::is_base_of<ISerializeToVariant, T>::value, "T must implement ISerializeToVariant");
-        vector<ObjPtr<T>> vec;
+        vector<sp<T>> vec;
         auto a = arrayVal(name);
         for (auto& e : a) {
             T* t = new T();
@@ -195,3 +195,6 @@ public:
 private:
     inline void assign(const variant& src);
 };
+
+template <>
+class Bitmap* variant::getObject<Bitmap>(const char* key) const;

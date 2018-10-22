@@ -17,7 +17,7 @@ typedef struct _TEXTRENDERPARAMS {
         return atlasPage==o.atlasPage && forecolor==o.forecolor;
     }
 
-    ObjPtr<class TextRenderOp> renderOp;
+    sp<class TextRenderOp> renderOp;
 } TEXTRENDERPARAMS;
 
 

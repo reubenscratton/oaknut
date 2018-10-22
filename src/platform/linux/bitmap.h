@@ -7,7 +7,7 @@
 
 #include <oaknut.h>
 
-class Bitmap : public BitmapBase {
+class BitmapLinux : public Bitmap {
 public:
 
     Bitmap(GdkPixbuf* pixbuf);

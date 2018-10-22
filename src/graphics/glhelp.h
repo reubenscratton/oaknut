@@ -12,21 +12,6 @@
 #define VERTEXATTRIBS_CONFIG_NORMAL     1 // float x,y; uint16 s,t; uint32 color = 16 bytes
 #define VERTEXATTRIBS_CONFIG_ROUNDRECT  2 // float x,y; uint16 dist_xy; uint32 fillColor; uint32 strokeColor; strokeWidth; radii
 
-class COLOR {
-public:
-    COLOR() : _val(0) {}
-    COLOR(uint32_t val) : _val(val) {}
-    operator uint32_t() const { return _val; }
-    COLOR operator=(uint32_t val) { _val=val; return *this; }
-    bool operator==(uint32_t val) const { return val==_val;}
-    
-
-    static COLOR interpolate(COLOR start, COLOR end, float val);
-    
-private:
-    uint32_t _val;
-};
-
 
 
 // Gravity
@@ -91,7 +76,7 @@ public:
     GLint _posMvp;
     Uniform<float> _alpha;
     Uniform<int> _sampler;
-    Matrix4 _mvp;
+    MATRIX4 _mvp;
     
 	virtual void load() = 0;
     virtual void unload();
@@ -99,7 +84,7 @@ public:
     virtual void use(class Window* window);
 	virtual void setAlpha(float alpha);
     virtual void lazyLoadUniforms();
-    virtual void setMvp(const Matrix4& mvp);
+    virtual void setMvp(const MATRIX4& mvp);
     
 protected:
 	virtual void loadShaders(const char* vertexShader, const char* fragShader, const char* szPreprocs=NULL);

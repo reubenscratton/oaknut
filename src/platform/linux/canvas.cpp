@@ -28,12 +28,12 @@ public:
 
 class LinuxCanvas : public Canvas {
 public:
-    ObjPtr<Bitmap> _bitmap;
+    sp<Bitmap> _bitmap;
     //CGSize _size;
     //CGColorRef _fillColor;
     //CGColorRef _strokeColor;
     //CGFloat _strokeWidth;
-    //const AffineTransform* _transform;
+    //const AFFINE_TRANSFORM* _transform;
 
     Bitmap* getBitmap() {
         return _bitmap;
@@ -42,7 +42,7 @@ public:
 
     void resize(int width, int height) {
     //    _size = size;
-    //_bitmap = new Bitmap(size.width, size.height, BITMAPFORMAT_RGBA32, NULL, 0);
+    //_bitmap = new BitmapLinux(size.width, size.height, BITMAPFORMAT_RGBA32, NULL, 0);
     }
 
     void clear(COLOR color) {
@@ -68,7 +68,7 @@ public:
         //_strokeWidth = strokeWidth;
         //CGContextSetLineWidth(_bitmap->_context, strokeWidth);
     }
-    void setAffineTransform(AffineTransform* t) {
+    void setAffineTransform(AFFINE_TRANSFORM* t) {
         //_transform = t;
     }
 

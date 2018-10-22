@@ -46,12 +46,12 @@ public:
 
 class AppleCanvas : public Canvas {
 public:
-    ObjPtr<Bitmap> _bitmap;
+    sp<BitmapApple> _bitmap;
     CGSize _size;
     CGColorRef _fillColor;
     CGColorRef _strokeColor;
     CGFloat _strokeWidth;
-    const AffineTransform* _transform;
+    const AFFINE_TRANSFORM* _transform;
 
 
     Bitmap* getBitmap() {
@@ -60,7 +60,7 @@ public:
     void resize(int width, int height) {
         _size.width = width;
         _size.height = height;
-        _bitmap = new Bitmap(width, height, BITMAPFORMAT_RGBA32);
+        _bitmap = new BitmapApple(width, height, BITMAPFORMAT_RGBA32);
         _bitmap->_hasPremultipliedAlpha = true;
     }
     void clear(COLOR color) {
@@ -85,7 +85,7 @@ public:
         _strokeWidth = strokeWidth;
         CGContextSetLineWidth(_bitmap->_context, strokeWidth);
     }
-    void setAffineTransform(AffineTransform* t) {
+    void setAffineTransform(AFFINE_TRANSFORM* t) {
         _transform = t;
     }
 
@@ -143,7 +143,8 @@ public:
         }
     }
     
-    virtual void drawBitmap(Bitmap* bitmap, const RECT& rectSrc, const RECT& rectDst) {
+    virtual void drawBitmap(Bitmap* abitmap, const RECT& rectSrc, const RECT& rectDst) {
+        BitmapApple* bitmap = (BitmapApple*)abitmap;
         CGRect cgrectBmp = CGRectMake(0,0,bitmap->_width,bitmap->_height);
         CGRect cgrectSrc = CGRectMake(rectSrc.origin.x,rectSrc.origin.y,rectSrc.size.width,rectSrc.size.height);
         CGRect cgrectDst = CGRectMake(rectDst.origin.x,rectDst.origin.y,rectDst.size.width,rectDst.size.height);

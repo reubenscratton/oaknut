@@ -5,7 +5,6 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#if OAKNUT_WANT_CAMERA
 
 class CameraView : public View {
 public:
@@ -24,4 +23,3 @@ protected:
     TextureRenderOp* _renderOp;
 };
 
-#endif

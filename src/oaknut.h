@@ -93,7 +93,9 @@ typedef uint64_t TIMESTAMP;
 // Include platform headers
 #include __incstr(platform/PLATFORM/platform.h)
 
+
 // Oaknut types
+namespace oak {
 #include "base/bytearray.h"
 #include "base/hash.h"
 #include "base/string_.h"
@@ -114,6 +116,8 @@ typedef uint64_t TIMESTAMP;
 #include "media/camera.h"
 #include "media/audioinput.h"
 #include "util/facedetector.h"
+#include "graphics/color.h"
+#include "graphics/vectors.h"
 #include "graphics/matrix.h"
 #include "graphics/geom.h"
 #include "graphics/quadbuffer.h"
@@ -166,11 +170,23 @@ typedef uint64_t TIMESTAMP;
 #include "widgets/pincodeview.h"
 #include "widgets/progressspinner.h"
 #include "widgets/textfield.h"
+}
+
 
 // Platform-specific types
+using namespace oak;
 #include __incstr(platform/PLATFORM/bitmap.h)
 #include __incstr(platform/PLATFORM/camera.h)
 #include __incstr(platform/PLATFORM/font.h)
+
+
+template <>
+struct std::hash<oak::string> {
+    size_t operator()( const oak::string& k ) const {
+        return k.hash();
+    }
+};
+
 
 #endif
 

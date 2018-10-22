@@ -7,7 +7,6 @@
 
 #include <oaknut.h>
 
-
 void bytearray::assign(const uint8_t* p, int32_t cb) {
     if (_p) {
         free(_p);

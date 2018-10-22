@@ -84,7 +84,7 @@ protected:
     float _fontSize;
     float _fontWeight;
     bool _fontValid;
-    ObjPtr<Font> _font;
+    sp<Font> _font;
     COLOR _color;
     GRAVITY _gravity;
     bool _measuredSizeValid;

@@ -34,7 +34,7 @@ public:
 protected:
 	ControllerView* _view;		// Weak cos pointing against ownership dir
 public:
-    ObjPtr<RectRenderOp> _bkgndOp;
+    sp<RectRenderOp> _bkgndOp;
 
 	/**
 	 Rect is normalized to a parent size of 320x216, i.e. a standard

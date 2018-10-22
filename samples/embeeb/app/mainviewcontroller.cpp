@@ -59,7 +59,7 @@ MainViewController::MainViewController() {
     _navigationItem->addLeftButton(_nextControllerButton);
 
     _navigationItem->addRightButton(NavigationItem::createIconButton("images/time_machine.png", [=]() {
-        ObjPtr<SnapshotsViewController> vc = new SnapshotsViewController(_beeb, _beebView, _currentDiskInfo, [=](Snapshot* snapshot){
+        sp<SnapshotsViewController> vc = new SnapshotsViewController(_beeb, _beebView, _currentDiskInfo, [=](Snapshot* snapshot){
             _currentSnapshot = snapshot;
             _beeb->serialize(false, (uint8_t*)snapshot->_data.data());
             // TODO: load controller
@@ -67,7 +67,7 @@ MainViewController::MainViewController() {
         _navigationController->pushViewController(vc);
     }));
     _navigationItem->addRightButton(NavigationItem::createIconButton("images/floppy_disk.png", [=]() {
-        ObjPtr<DisksViewController> vc = new DisksViewController([&](Game* game) {
+        sp<DisksViewController> vc = new DisksViewController([&](Game* game) {
             _currentSnapshot = NULL;
             _currentDiskInfo = game->defaultDiskInfo();
             URLRequest::get(_currentDiskInfo->diskUrl())->handleData([&](URLRequest* req) {

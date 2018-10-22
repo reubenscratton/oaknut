@@ -8,19 +8,19 @@
 
 #include <oaknut.h>
 
-BitmapBase::BitmapBase() {
+Bitmap::Bitmap() {
     _texSampleMethod = GL_LINEAR;
     _texTarget = GL_TEXTURE_2D;
     _renderContextIt = app._window->_loadedTextures.end();
 }
 
-BitmapBase::BitmapBase(int awidth, int aheight, int format) : BitmapBase() {
+Bitmap::Bitmap(int awidth, int aheight, int format) : Bitmap() {
     _width = awidth;
     _height = aheight;
     _format = format;
 }
 
-BitmapBase::~BitmapBase() {
+Bitmap::~Bitmap() {
 	//app.log("~Bitmap %d x %d", _width, _height);
     if (_textureId) {
         check_gl(glDeleteTextures, 1, &_textureId);
@@ -31,21 +31,21 @@ BitmapBase::~BitmapBase() {
 }
 
 // ISerializableToVariant
-void BitmapBase::fromVariant(const variant& v) {
+void Bitmap::fromVariant(const variant& v) {
     _width = v.intVal("w");
     _height = v.intVal("h");
     _format = v.intVal("f");
     _needsUpload = true;
 }
 
-void BitmapBase::toVariant(variant& v) {
+void Bitmap::toVariant(variant& v) {
     v.set("w", _width);
     v.set("h", _height);
     v.set("f", _format);
 }
 
 
-GLenum BitmapBase::getGlFormat() {
+GLenum Bitmap::getGlFormat() {
     switch (_format) {
         case BITMAPFORMAT_RGBA32: return GL_RGBA;
         case BITMAPFORMAT_BGRA32: return GL_BGRA;
@@ -60,7 +60,7 @@ GLenum BitmapBase::getGlFormat() {
     }
     assert(0);
 }
-GLenum BitmapBase::getGlInternalFormat() {
+GLenum Bitmap::getGlInternalFormat() {
     switch (_format) {
         case BITMAPFORMAT_RGBA32: return GL_RGBA;
         case BITMAPFORMAT_BGRA32: return GL_RGBA;
@@ -75,7 +75,7 @@ GLenum BitmapBase::getGlInternalFormat() {
     assert(0);
 }
 
-int BitmapBase::getGlPixelType() {
+int Bitmap::getGlPixelType() {
     switch (_format) {
         case BITMAPFORMAT_RGBA32: return GL_UNSIGNED_BYTE;
         case BITMAPFORMAT_BGRA32: return GL_UNSIGNED_BYTE;
@@ -85,14 +85,14 @@ int BitmapBase::getGlPixelType() {
     assert(0);
 }
 
-bool BitmapBase::hasAlpha() {
+bool Bitmap::hasAlpha() {
     return _format!=BITMAPFORMAT_RGB565;
 }
-bool BitmapBase::hasPremultipliedAlpha() {
+bool Bitmap::hasPremultipliedAlpha() {
     return _hasPremultipliedAlpha;
 }
 
-int BitmapBase::getBytesPerPixel() {
+int Bitmap::getBytesPerPixel() {
     switch (_format) {
         case BITMAPFORMAT_RGBA32: return 4;
         case BITMAPFORMAT_BGRA32: return 4;
@@ -102,19 +102,19 @@ int BitmapBase::getBytesPerPixel() {
     assert(0);
 }
 
-int BitmapBase::sizeInBytes() {
+int Bitmap::sizeInBytes() {
     return _width*_height*getBytesPerPixel();
 }
 
 
 
-uint8_t* BitmapBase::pixelAddress(PIXELDATA* pixelData, int x, int y) {
+uint8_t* Bitmap::pixelAddress(PIXELDATA* pixelData, int x, int y) {
 	return ((uint8_t*)pixelData->data) + y*pixelData->stride + x*getBytesPerPixel();
 }
 
 
 
-void BitmapBase::bind() {
+void Bitmap::bind() {
     if (!_textureId) {
         check_gl(glGenTextures, 1, &_textureId);
         _renderContextIt = app._window->_loadedTextures.insert(app._window->_loadedTextures.end(), this);
@@ -129,7 +129,7 @@ void BitmapBase::bind() {
     }
 }
 
-void BitmapBase::onRenderContextDestroyed() {
+void Bitmap::onRenderContextDestroyed() {
     _textureId = 0;
     _allocdTexData = false;
     _paramsValid = false;
@@ -139,10 +139,10 @@ void BitmapBase::onRenderContextDestroyed() {
 
 
 
-Bitmap* BitmapBase::convertToFormat(int newFormat) {
+Bitmap* Bitmap::convertToFormat(int newFormat) {
     PIXELDATA pixeldataSrc;
     lock(&pixeldataSrc, false);
-    Bitmap* bitmap = new Bitmap(_width, _height, newFormat);
+    Bitmap* bitmap = Bitmap::create(_width, _height, newFormat);
     PIXELDATA pixeldataDst;
     bitmap->lock(&pixeldataDst, true);
     if (newFormat == BITMAPFORMAT_A8) {

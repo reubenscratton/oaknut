@@ -4,17 +4,14 @@
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
 //
-#if PLATFORM_APPLE && OAKNUT_WANT_CAMERA
+#if PLATFORM_APPLE
 
-#pragma once
-//#import <CoreImage/CoreImage.h>
-#include <CoreMedia/CoreMedia.h>
 
-class CameraFrameApple : public CameraFrame {
+class CameraFrameApple : public oak::CameraFrame {
 public:
     CMSampleBufferRef sampleBuffer;
     
-    virtual Bitmap* asBitmap() override;
+    virtual oak::Bitmap* asBitmap() override;
 };
 
 #endif

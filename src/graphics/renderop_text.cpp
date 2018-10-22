@@ -51,7 +51,7 @@ void TextRenderOp::addGlyph(Glyph* glyph, const RECT& rect) {
     if (_rects.size()==1) {
         _rect = rect;
     } else {
-        _rect = RECT_union(_rect, rect);
+        _rect.unionWith(rect);
     }
 }
 
@@ -128,7 +128,7 @@ void TextRenderOp::asQuads(QUAD *quad) {
  if (i==0) {
  _rect = rect;
  } else {
- _rect = RECT_union(_rect, rect);
+ _rect.unionWith(rect);
  }
  }
  }

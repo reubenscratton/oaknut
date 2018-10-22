@@ -22,7 +22,7 @@ public:
 
     /** The application window, which is your app's connection to the display
         and input subsystems of the host OS */
-    ObjPtr<class Window> _window;
+    sp<class Window> _window;
 
     /** Load a file from the assets directory, synchronously. Since this does IO it's best to
         limit use to app startup and background threads */

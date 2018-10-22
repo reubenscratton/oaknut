@@ -58,12 +58,12 @@ static int bytesPerPixelForFormat(int format) {
     return 0;
 }
 
-Bitmap::Bitmap() {
+BitmapApple::BitmapApple() {
 }
-Bitmap::Bitmap(int width, int height, int format) : Bitmap(width, height, format, NULL, 0) {
+BitmapApple::BitmapApple(int width, int height, int format) : BitmapApple(width, height, format, NULL, 0) {
 }
 
-Bitmap::Bitmap(int width, int height, int format, void* pixels, int stride) : BitmapBase(width, height, format) {
+BitmapApple::BitmapApple(int width, int height, int format, void* pixels, int stride) : Bitmap(width, height, format) {
     if (stride == 0) {
         stride = width*bytesPerPixelForFormat(format);
     }
@@ -77,7 +77,7 @@ Bitmap::Bitmap(int width, int height, int format, void* pixels, int stride) : Bi
     _needsUpload = true;
 }
 
-Bitmap::Bitmap(CVImageBufferRef cvImageBuffer, bool fromCamera) : BitmapBase((int)CVPixelBufferGetWidth(cvImageBuffer), (int)CVPixelBufferGetHeight(cvImageBuffer), BITMAPFORMAT_RGBA32) {
+BitmapApple::BitmapApple(CVImageBufferRef cvImageBuffer, bool fromCamera) : Bitmap((int)CVPixelBufferGetWidth(cvImageBuffer), (int)CVPixelBufferGetHeight(cvImageBuffer), BITMAPFORMAT_RGBA32) {
     _cvImageBuffer = cvImageBuffer;
     _cvTextureCache = getTextureCache(fromCamera);
     
@@ -141,7 +141,7 @@ Bitmap::Bitmap(CVImageBufferRef cvImageBuffer, bool fromCamera) : BitmapBase((in
     assert(err==0);
 }
 
-Bitmap::~Bitmap() {
+BitmapApple::~BitmapApple() {
     if (_textureId) {
         if (!_cvTextureCache) {
             check_gl(glDeleteTextures, 1, &_textureId);
@@ -168,7 +168,7 @@ Bitmap::~Bitmap() {
     }
 }
 
-void Bitmap::lock(PIXELDATA* pixelData, bool forWriting) {
+void BitmapApple::lock(PIXELDATA* pixelData, bool forWriting) {
 
     // If wanting to write then try to create a Core Video image buffer that will give us direct
     // texture access. Not all pixel formats are supported so this is allowed to fail.
@@ -212,7 +212,7 @@ void Bitmap::lock(PIXELDATA* pixelData, bool forWriting) {
 
 
 
-void Bitmap::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
+void BitmapApple::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
     if (_cvImageBuffer) {
         CVReturn err = CVPixelBufferUnlockBaseAddress(_cvImageBuffer, 0);
         assert(err == kCVReturnSuccess);
@@ -225,7 +225,7 @@ void Bitmap::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
     }
 }
 
-void Bitmap::bind() {
+void BitmapApple::bind() {
 
     // If we have a core video buffer then create a special core video texture than uses the buffer directly
     if (_cvImageBuffer && !_textureId) {
@@ -257,7 +257,7 @@ void Bitmap::bind() {
         _textureId = CVOpenGLESTextureGetName(_cvTexture);
     }
     
-    BitmapBase::bind();
+    Bitmap::bind();
 
     // If bitmap data changed we may need to update texture data
     if (!_needsUpload) {
@@ -282,7 +282,7 @@ void Bitmap::bind() {
 
 
 
-Bitmap* bitmapFromData(const void* data, int cb) {
+BitmapApple* bitmapFromData(const void* data, int cb) {
     CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, data, cb, NULL);
     CGImageRef cgImage = CGImageCreateWithPNGDataProvider(dataProvider, NULL, NO, kCGRenderingIntentDefault);
     if (!cgImage) {
@@ -369,13 +369,13 @@ Bitmap* bitmapFromData(const void* data, int cb) {
     }
 
     // Create the native bitmap
-    Bitmap* bitmap = new Bitmap(width, height, format, pixels, (int)cbUncompressed/height);
+    BitmapApple* bitmap = new BitmapApple(width, height, format, pixels, (int)cbUncompressed/height);
     bitmap->_cfData = dataRef;
     return bitmap;
 }
 
-void Bitmap::fromVariant(const variant& v) {
-    BitmapBase::fromVariant(v);
+void BitmapApple::fromVariant(const variant& v) {
+    Bitmap::fromVariant(v);
     int32_t stride = v.intVal("s");
     auto bb = v.bytearrayVal("bb");
     CGColorSpaceRef colorspace = (_format==BITMAPFORMAT_A8) ? CGColorSpaceCreateDeviceGray() : CGColorSpaceCreateDeviceRGB();
@@ -388,8 +388,8 @@ void Bitmap::fromVariant(const variant& v) {
     CGContextTranslateCTM(_context, 0, -_height);
     assert(_context);
 }
-void Bitmap::toVariant(variant& v) {
-    BitmapBase::toVariant(v);
+void BitmapApple::toVariant(variant& v) {
+    Bitmap::toVariant(v);
     int stride = (int)CGBitmapContextGetBytesPerRow(_context);
     v.set("s", stride);
     uint8_t* data = (uint8_t*)CGBitmapContextGetData(_context);
@@ -397,13 +397,17 @@ void Bitmap::toVariant(variant& v) {
     v["bb"] = bytearray(data, cb);
 }
 
-void BitmapBase::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
-    Bitmap* bitmap = bitmapFromData(data, cb);
+void Bitmap::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
+    BitmapApple* bitmap = bitmapFromData(data, cb);
     bitmap->retain();
     dispatch_async(dispatch_get_main_queue(), ^() {
         callback(bitmap);
         bitmap->release();
     });
+}
+
+Bitmap* Bitmap::create(int width, int height, int format) {
+    return new BitmapApple(width, height, format);
 }
 
 

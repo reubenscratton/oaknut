@@ -8,17 +8,6 @@
 #include <oaknut.h>
 
 
-COLOR COLOR::interpolate(COLOR start, COLOR end, float val) {
-    uint8_t* c1 = (uint8_t*)&start;
-    uint8_t* c2 = (uint8_t*)&end;
-    uint8_t c3[4];
-    c3[0] = c1[0] + (uint8_t)((c2[0]-c1[0]) * val);
-    c3[1] = c1[1] + (uint8_t)((c2[1]-c1[1]) * val);
-    c3[2] = c1[2] + (uint8_t)((c2[2]-c1[2]) * val);
-    c3[3] = c1[3] + (uint8_t)((c2[3]-c1[3]) * val);
-    return *(COLOR*)c3;
-}
-
 template<>
 void Uniform<int>::load() {
     check_gl(glUniform1i, position, val);
@@ -30,7 +19,7 @@ void Uniform<float>::load() {
 };
 
 template<>
-void Uniform<Vector2>::load() {
+void Uniform<VECTOR2>::load() {
     check_gl(glUniform2f, position, val.x, val.y);
 }
 
@@ -45,7 +34,7 @@ void Uniform<COLOR>::load() {
 }
 
 template<>
-void Uniform<Vector4>::load() {
+void Uniform<VECTOR4>::load() {
     check_gl(glUniform4f, position, val.x, val.y, val.z, val.w);
 }
 
@@ -111,7 +100,7 @@ static GLuint loadShader(GLenum shaderType, const char* pSource, const char* pre
  on the iPhone 6S it turns out that unless you specify it you get wonky vertex arithmetic
  and horrible off-by-half-a-pixel rendering errors everywhere. Vertices must always be highp.
  */
-const char* STANDARD_VERTEX_SHADER =
+const char* oak::STANDARD_VERTEX_SHADER =
     "attribute highp vec2 vPosition;\n"     // the 'highp' qualifier is VERY IMPORTANT! See above
     "uniform highp mat4 mvp;\n"
     "attribute lowp vec4 color;\n"
@@ -121,7 +110,7 @@ const char* STANDARD_VERTEX_SHADER =
         "  v_color=color;\n"
 		"}\n";
 
-const char* TEXTURE_VERTEX_SHADER =
+const char* oak::TEXTURE_VERTEX_SHADER =
         "attribute highp vec2 vPosition;\n"
         "uniform highp mat4 mvp;\n"
         "attribute lowp vec4 color;\n"
@@ -204,7 +193,7 @@ void GLProgram::use(Window* window) {
     }
 }
 
-void GLProgram::setMvp(const Matrix4& mvp) {
+void GLProgram::setMvp(const MATRIX4& mvp) {
     if (0!=memcmp(mvp.get(), _mvp.get(), 16*sizeof(float))) {
         _mvp = mvp;
         check_gl(glUniformMatrix4fv, _posMvp, 1, 0, mvp.get());

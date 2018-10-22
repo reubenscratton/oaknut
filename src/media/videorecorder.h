@@ -5,8 +5,6 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#if OAKNUT_WANT_CAMERA
-
 class VideoRecorder : public Object {
 public:
     
@@ -22,6 +20,4 @@ protected:
   
     string _outputPath;
 };
-
-#endif
 

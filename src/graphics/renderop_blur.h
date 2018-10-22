@@ -27,7 +27,7 @@ public:
     SIZEI _fullSizePow2;
 	SIZEI _downsampledSize;
     bool _vertexesValid;
-    Matrix4 _mvp;
+    MATRIX4 _mvp;
 	
     GLuint _textureIds[3];
     GLuint _fb[2];

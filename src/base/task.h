@@ -18,7 +18,7 @@ public:
 protected:
     Task(TASKFUNC func);
 
-    ObjPtr<class TaskQueue> _queue;
+    sp<class TaskQueue> _queue;
     TASKFUNC _func;
 };
 
@@ -33,5 +33,5 @@ protected:
     TaskQueue(const string& name);
 
     string _name;
-    vector<ObjPtr<Task>> _tasks;
+    vector<sp<Task>> _tasks;
 };

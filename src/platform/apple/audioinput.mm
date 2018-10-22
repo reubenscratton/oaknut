@@ -5,7 +5,7 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#if PLATFORM_APPLE && OAKNUT_WANT_AUDIO_INPUT
+#if PLATFORM_APPLE
 
 #include <oaknut.h>
 #include "audioinput.h"
@@ -191,7 +191,7 @@ public:
         assert(inFormat->mChannelsPerFrame == 1);
         //bool isNonInterleaved = inFormat->mFormatFlags & kAudioFormatFlagIsNonInterleaved;
 
-        ObjPtr<AudioInputSamplesApple> samples = new AudioInputSamplesApple();
+        sp<AudioInputSamplesApple> samples = new AudioInputSamplesApple();
         samples->_sampleBuffer = sampleBuffer;
         onNewAudioSamples(samples);
         

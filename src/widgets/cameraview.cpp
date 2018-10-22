@@ -5,8 +5,6 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#if OAKNUT_WANT_CAMERA
-
 #include <oaknut.h>
 
 DECLARE_DYNCREATE(CameraView);
@@ -88,9 +86,6 @@ void CameraView::detachFromWindow() {
 }
 
 RECT CameraView::getDisplayedFrameRect() const {
-    return _renderOp ? _renderOp->_rect : RECT_Zero;
+    return _renderOp ? _renderOp->_rect : RECT::zero();
 }
-
-
-#endif
 

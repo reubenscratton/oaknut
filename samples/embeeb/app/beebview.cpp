@@ -27,10 +27,10 @@ void BeebView::setBeeb(Beeb* beeb) {
     int format = BITMAPFORMAT_RGB565;
     app.log("beebview format is BITMAPFORMAT_RGB565");
 #endif
-    _bitmap = new Bitmap(SURFACE_WIDTH, SURFACE_HEIGHT, format);
+    _bitmap = Bitmap::create(SURFACE_WIDTH, SURFACE_HEIGHT, format);
     _bitmap->lock(&_bitmapData, true);
     beeb->setVideoBitmapParams((uint8_t*)_bitmapData.data, _bitmapData.stride);
-    _renderOp = new TextureRenderOp(RECT_Zero, _bitmap, &_visibleArea, 0);
+    _renderOp = new TextureRenderOp(RECT::zero(), _bitmap, &_visibleArea, 0);
     addRenderOp(_renderOp);
 }
 

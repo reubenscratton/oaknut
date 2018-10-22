@@ -67,27 +67,27 @@ public:
     ~AndroidCanvas() {
         getJNIEnv()->DeleteGlobalRef(_canvas);
     }
-    void resize(int width, int height) {
+    void resize(int width, int height) override {
         //jobject directBuffer = getJNIEnv()->NewDirectByteBuffer(pixelBuffer->data, pixelBuffer->cb);
         getJNIEnv()->CallVoidMethod(_canvas, jmidResize, width, height);
         jobject jbitmap = getJNIEnv()->CallObjectMethod(_canvas, jmidGetBitmap);
-        _bitmap = new Bitmap(jbitmap);
+        _bitmap = new BitmapAndroid(jbitmap);
         _bitmap->_hasPremultipliedAlpha = true;
     }
-    void clear(COLOR color) {
+    void clear(COLOR color) override {
         getJNIEnv()->CallVoidMethod(_canvas, jmidClear, (jint)color);
         _bitmap->_needsUpload = true;
     }
-    void setFillColor(COLOR fillColor) {
+    void setFillColor(COLOR fillColor) override {
         getJNIEnv()->CallVoidMethod(_canvas, jmidSetFillColor, (jint)fillColor);
     }
-    void setStrokeColor(COLOR strokeColor) {
+    void setStrokeColor(COLOR strokeColor) override {
         getJNIEnv()->CallVoidMethod(_canvas, jmidSetStrokeColor, (jint)strokeColor);
     }
-    void setStrokeWidth(float strokeWidth) {
+    void setStrokeWidth(float strokeWidth) override {
         getJNIEnv()->CallVoidMethod(_canvas, jmidSetStrokeWidth, (jfloat)strokeWidth);
     }
-    void setAffineTransform(AffineTransform* t) {
+    void setAffineTransform(AFFINE_TRANSFORM* t) override {
         if (t) {
             getJNIEnv()->CallVoidMethod(_canvas, jmidSetTransform,
                                         (jfloat)t->a, (jfloat)t->b,
@@ -97,7 +97,7 @@ public:
             getJNIEnv()->CallVoidMethod(_canvas, jmidClearTransform);
         }
     }
-    void drawRect(RECT rect) {
+    void drawRect(RECT rect) override {
         getJNIEnv()->CallVoidMethod(_canvas, jmidDrawRect,
                                     (jfloat)rect.origin.x,
                                     (jfloat)rect.origin.y,
@@ -105,7 +105,7 @@ public:
                                     (jfloat)rect.size.height);
         _bitmap->_needsUpload = true;
     }
-    void drawOval(RECT rect) {
+    void drawOval(RECT rect) override {
         getJNIEnv()->CallVoidMethod(_canvas, jmidDrawOval,
                                     (jfloat)rect.origin.x,
                                     (jfloat)rect.origin.y,
@@ -113,25 +113,26 @@ public:
                                     (jfloat)rect.size.height);
         _bitmap->_needsUpload = true;
     }
-    void drawPath(Path* path) {
+    void drawPath(Path* path) override {
         AndroidPath* androidPath = (AndroidPath*)path;
         getJNIEnv()->CallVoidMethod(_canvas, jmidDrawPath, androidPath->_path);
         _bitmap->_needsUpload = true;
     }
-    virtual void drawBitmap(Bitmap* bitmap, const RECT& rectSrc, const RECT& rectDst) {
+    void drawBitmap(Bitmap* abitmap, const RECT& rectSrc, const RECT& rectDst) override {
+        BitmapAndroid* bitmap = (BitmapAndroid*)abitmap;
         getJNIEnv()->CallVoidMethod(_canvas, jmidDrawBitmap, bitmap->_androidBitmap);
         _bitmap->_needsUpload = true;
     }
-    Bitmap* getBitmap() {
+    Bitmap* getBitmap() override {
         return _bitmap;
     }
-    Path* createPath() {
+    Path* createPath() override {
         return new AndroidPath();
     }
 
 
     jobject _canvas;
-    ObjPtr<Bitmap> _bitmap;
+    sp<Bitmap> _bitmap;
 };
 
 // API

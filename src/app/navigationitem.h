@@ -13,9 +13,9 @@
 class NavigationItem : public Object {
 public:
     string _title;
-	ObjPtr<class View> _titleView;
-    ObjPtr<class LinearLayout> _leftButtonsFrame;
-    ObjPtr<LinearLayout> _rightButtonsFrame;
+	sp<class View> _titleView;
+    sp<class LinearLayout> _leftButtonsFrame;
+    sp<LinearLayout> _rightButtonsFrame;
 	
     NavigationItem();
 	static class ImageView* createIconButton(const string& src, std::function<void()> onClick);

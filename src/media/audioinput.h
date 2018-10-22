@@ -5,8 +5,6 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#if OAKNUT_WANT_AUDIO_INPUT
-
 class AudioInputSamples : public Object {
 public:
     bytearray _data;
@@ -30,5 +28,3 @@ protected:
     AudioInput();
 
 };
-
-#endif

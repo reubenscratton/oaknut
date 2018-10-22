@@ -5,8 +5,6 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#ifdef OAKNUT_WANT_CAMERA
-
 class CameraFrame : public Object {
 public:
     GLuint _textureId; // todo: this is android-specific?
@@ -45,6 +43,4 @@ protected:
 
     Options _options;
 };
-
-#endif
 

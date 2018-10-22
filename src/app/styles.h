@@ -56,7 +56,7 @@ public:
     COLOR colorVal() const;
     const vector<StyleValue>& arrayVal() const;
     const map<string, StyleValue>& compoundVal() const;
-    Vector4 cornerRadiiVal() const;
+    VECTOR4 cornerRadiiVal() const;
     EDGEINSETS edgeInsetsVal() const;
     float fontWeightVal() const;
 

@@ -17,7 +17,7 @@ AtlasNode::AtlasNode(AtlasPage* page) {
 
 BitmapProvider* AtlasPage::importAsset(const string& assetPath) {
     BitmapProvider* bitmapProvider = new BitmapProvider();
-    ObjPtr<ByteBuffer> data = app.loadAsset(assetPath.data());
+    sp<ByteBuffer> data = app.loadAsset(assetPath.data());
     assert(data);
     Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
         assert(bitmap);
@@ -99,7 +99,7 @@ AtlasNode* AtlasNode::insertRect(RECT* r) {
 
 
 AtlasPage::AtlasPage(int width, int height, int bitmapFormat) {
-    _bitmap = new Bitmap(width, height, bitmapFormat);
+    _bitmap = Bitmap::create(width, height, bitmapFormat);
     _bitmap->_texSampleMethod = GL_NEAREST;
     start_node = new AtlasNode(this);
     start_node->rect = RECT(0, 0, width, height);

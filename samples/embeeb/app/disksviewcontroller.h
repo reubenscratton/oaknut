@@ -27,10 +27,10 @@ public:
 protected:
     std::function<void(Game*)> _delegate;
 	SegmentedControl* _segctrl;
-    ObjPtr<SearchBox> _searchBox;
+    sp<SearchBox> _searchBox;
 	
-	ObjPtr<DisksListAdapter> _disksListAdapterBest;
-	ObjPtr<DisksListAdapter> _disksListAdapterAll;
+	sp<DisksListAdapter> _disksListAdapterBest;
+	sp<DisksListAdapter> _disksListAdapterAll;
     
     EDGEINSETS _safeAreaInsets;
     void updateInsets();

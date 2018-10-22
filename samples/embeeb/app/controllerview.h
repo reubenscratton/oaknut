@@ -14,7 +14,7 @@ class ControllerView : public View, public IKeyboardInputHandler {
 public:
 
 	DiskControls* _diskControls;
-	ObjPtr<Controller> _controller;
+	sp<Controller> _controller;
 	Beeb* _beeb;
 	bool _hardwareKeyboardAttached;
 	bool _softwareKeyboardVisible;

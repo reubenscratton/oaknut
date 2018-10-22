@@ -8,6 +8,17 @@
 
 #include <oaknut.h>
 
+template <>
+Bitmap* variant::getObject<Bitmap>(const char* key) const {
+    auto val = _map->find(key);
+    if (val == _map->end() || val->second.type != variant::MAP) {
+        return NULL;
+    }
+    Bitmap* obj = Bitmap::create(0,0,0);
+    obj->fromVariant(val->second);
+    return obj;
+}
+
 
 variant::variant() : type(EMPTY) {
 }

@@ -313,7 +313,7 @@ void Window::draw() {
     auto it = _animations.begin();
     _animationsModified = false;
     while (it != _animations.end()) {
-        ObjPtr<Animation> anim = *it++;
+        sp<Animation> anim = *it++;
         if (!anim->_paused) {
             bool stillGoing = anim->tick(now);
             if (!stillGoing) {

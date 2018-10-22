@@ -18,7 +18,7 @@ public:
     pthread_t _pthread;
     pthread_cond_t _cond;
     pthread_mutex_t _mutex;
-    vector<ObjPtr<Task>> _tasks;
+    vector<sp<Task>> _tasks;
 
     PosixTaskQueue(const string& name) : TaskQueue(name) {
         pthread_cond_init(&_cond, NULL);
@@ -67,7 +67,7 @@ public:
             while (_tasks.size()==0) {
                 pthread_cond_wait(&_cond, &_mutex);
             }
-            ObjPtr<Task> task = _tasks.at(0);
+            sp<Task> task = _tasks.at(0);
             _tasks.erase(_tasks.begin());
             pthread_mutex_unlock(&_mutex);
             if (!task) {

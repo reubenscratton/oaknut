@@ -109,9 +109,9 @@ void DiskInfo::toVariant(variant& v) {
 }
 
 string DiskInfo::fileToUrl(string filename) {
-	string url =  urlEncode(_game->_title);
+	string url = _game->_title.urlEncode();
 	url.append("/");
-	url.append(urlEncode(filename));
+	url.append(filename.urlEncode());
 	url.insert(0, "http://www.ibeeb.co.uk/games/");
 	return url;
 }

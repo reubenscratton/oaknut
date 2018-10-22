@@ -15,7 +15,7 @@ class Controller : public Object, public ISerializeToVariant, public IController
 public:
 
 	string _name;
-	vector<ObjPtr<ControllerKey>> _keys;
+	vector<sp<ControllerKey>> _keys;
 	string _trigger;
 
 	Controller();

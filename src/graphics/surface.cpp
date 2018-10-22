@@ -27,8 +27,8 @@
  
  */
 
-Matrix4 setOrthoFrustum(float l, float r, float b, float t, float n, float f) {
-    Matrix4 mat;
+MATRIX4 setOrthoFrustum(float l, float r, float b, float t, float n, float f) {
+    MATRIX4 mat;
     mat[0]  = 2 / (r - l);
     mat[5]  = 2 / (t - b);
     mat[10] = -2 / (f - n);
@@ -298,7 +298,7 @@ void Surface::renderPhase1(View* view, Window* window, POINT origin) {
         
     // Recurse
     for (auto it = view->_subviews.begin(); it!=view->_subviews.end() ; it++) {
-        ObjPtr<View>& subview = *it;
+        sp<View>& subview = *it;
         surface->renderPhase1(subview, window, origin);
     }
  
@@ -330,7 +330,7 @@ void PrivateSurfaceRenderOp::validateShader() {
 }
 void PrivateSurfaceRenderOp::rectToSurfaceQuad(RECT rect, QUAD* quad) {
     rect.origin += _view->_surfaceOrigin;
-    *quad = QUADFromRECT(rect, 0);
+    *quad = QUAD(rect, 0);
 }
 void PrivateSurfaceRenderOp::render(Window* window, Surface* surface) {
     RenderOp::render(window, surface);
@@ -361,7 +361,7 @@ void Surface::renderPhase2(Surface* prevsurf, View* view, Window* window) {
     }
     
 
-    Matrix4 savedMatrix;
+    MATRIX4 savedMatrix;
     bool changesMvp = view->_matrix || !view->_contentOffset.isZero();
     if (changesMvp) {
         savedMatrix = surface->_mvp;
@@ -370,7 +370,7 @@ void Surface::renderPhase2(Surface* prevsurf, View* view, Window* window) {
         surface->_mvp *= *view->_matrix;
     }
     if (!view->_contentOffset.isZero()) {
-        Matrix4 tm;
+        MATRIX4 tm;
         tm.translate(-view->_contentOffset.x, -view->_contentOffset.y, 0);
         surface->_mvp *= tm;
     }

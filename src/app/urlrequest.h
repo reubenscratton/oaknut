@@ -5,7 +5,6 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-class Bitmap;
 
 // TODO: remove this flag and let this decision hinge on whether Bitmap handler set or not
 #define URL_FLAG_BITMAP 1   // use this when requesting images. Exists so web can use Image rather than XHR
@@ -64,7 +63,4 @@ protected:
 
     virtual void dispatchResult(int httpStatus, const map<string, string>& responseHeaders);
 };
-
-
-string urlEncode(string str);
 

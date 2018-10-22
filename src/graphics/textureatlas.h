@@ -24,7 +24,7 @@ public:
  */
 class AtlasPage : public Object {
 public:
-    ObjPtr<Bitmap> _bitmap;
+    sp<Bitmap> _bitmap;
     AtlasNode* start_node;
     
     AtlasPage(int width, int height, int bitmapFormat);
@@ -37,8 +37,8 @@ public:
 
 class Atlas : public Object {
 public:
-    vector<ObjPtr<AtlasPage>> pages;
-    vector<ObjPtr<AtlasNode>> nodes;
+    vector<sp<AtlasPage>> pages;
+    vector<sp<AtlasNode>> nodes;
     int width;
     int height;
     int bitmapFormat;

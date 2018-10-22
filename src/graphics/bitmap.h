@@ -40,7 +40,6 @@
  an associated android.graphics.Bitmap java object.
  
  */
-class Bitmap; // defined in platform layer
 
 /**
  Supported bitmap formats. Bitmaps in other formats must be converted by platform code
@@ -63,7 +62,7 @@ typedef struct {
 #endif
 
 
-class BitmapBase : public Object, public ISerializeToVariant {
+class Bitmap : public Object, public ISerializeToVariant {
 public:
     int32_t _width;
     int32_t _height;
@@ -75,13 +74,13 @@ public:
     bool _paramsValid;
     bool _needsUpload;
     bool _hasPremultipliedAlpha;
-    list<BitmapBase*>::iterator _renderContextIt;
+    list<Bitmap*>::iterator _renderContextIt;
     
-    BitmapBase(int width, int height, int format);
     // Constructor is protected, use Bitmap::createXXX() APIs to instantiate
 protected:
-    BitmapBase();
-    ~BitmapBase();
+    Bitmap(int width, int height, int format);
+    Bitmap();
+    ~Bitmap();
 public:
 
     // Accessing pixel data
@@ -109,6 +108,7 @@ public:
     
 
     // Platform-specific instantiation
+    static Bitmap* create(int width, int height, int format);
     static void createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback);
 
 };

@@ -15,8 +15,8 @@ public:
 protected:
     virtual void redraw();
     
-    ObjPtr<Canvas> _canvas;
-    ObjPtr<TextureRenderOp> _textureRenderOp;
+    sp<Canvas> _canvas;
+    sp<TextureRenderOp> _textureRenderOp;
 };
 
 

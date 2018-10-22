@@ -100,7 +100,7 @@ protected:
     View* _parent;
     
     /**  List of child views, in back-to-front order */
-    vector<ObjPtr<View>> _subviews;
+    vector<sp<View>> _subviews;
     
     /**  \endcond */
     /**@}*/
@@ -133,7 +133,7 @@ protected:
     Window* _window;
     
     /** The rendering surface, i.e. where the view's RenderOps are drawn to */
-    ObjPtr<Surface> _surface;
+    sp<Surface> _surface;
     
     /** This flag is true for the view that owns its private surface. (Subviews will draw to it but they don't own it)*/
     bool _ownsPrivateSurface;
@@ -313,11 +313,11 @@ protected:
     float _alpha; // View's own alpha
     float _effectiveAlpha;
     virtual void updateEffectiveAlpha();
-    ObjPtr<RenderOp> _backgroundOp;
+    sp<RenderOp> _backgroundOp;
     bool _needsFullRedraw;
     bool _updateRenderOpsNeeded;
     bool _opaque;
-    Matrix4* _matrix;
+    MATRIX4* _matrix;
     class ScrollbarsView* _scrollbarsView;
     void addScrollbarOp(RenderOp* renderOp);
     void removeScrollbarOp(RenderOp* renderOp);
@@ -325,11 +325,11 @@ protected:
     
     /** Links to the adjacent views in the render order. All views attached to the window
         form a doubly-linked list used in rendering. */
-    ObjPtr<View> _previousView;
-    ObjPtr<View> _nextView;
+    sp<View> _previousView;
+    sp<View> _nextView;
     
     /** The RenderOps that draw this view */
-    list<ObjPtr<RenderOp>> _renderList;
+    list<sp<RenderOp>> _renderList;
     
     /**  \endcond */
     /**@}*/
@@ -427,8 +427,8 @@ public:
 	// Animation
 	virtual void animateAlpha(float target, float duration);
     virtual void animateTranslate(POINT translation, float duration);
-    virtual Animation* animateInFromBottom(float duration, InterpolateFunc interpolater = strongEaseOut);
-    virtual Animation* animateOutToBottom(float duration, InterpolateFunc interpolater = strongEaseOut);
+    virtual Animation* animateInFromBottom(float duration, InterpolateFunc interpolater = Animation::strongEaseOut);
+    virtual Animation* animateOutToBottom(float duration, InterpolateFunc interpolater = Animation::strongEaseOut);
 	virtual void setTranslate(POINT translation);
     int _animationCount; // number of active animations currently attached to the view
     

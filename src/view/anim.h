@@ -8,7 +8,6 @@
 typedef std::function<void(class Animation*)> OnAnimationFinishedDelegate;
 
 typedef float (*InterpolateFunc)(float t, float b, float c, float d);
-float linear(float t, float b, float c, float d);
 
 
 class Animation : public Object {
@@ -18,7 +17,7 @@ public:
     
     View* _view;
 	Window* _window;
-    list<ObjPtr<Animation>>::iterator _windowAnimationsListIterator;
+    list<sp<Animation>>::iterator _windowAnimationsListIterator;
     OnAnimationFinishedDelegate _onFinished;
     TIMESTAMP _timeStarted;
     TIMESTAMP _elapsedAtPause;
@@ -42,6 +41,22 @@ public:
     virtual void apply(float val) = 0;
     
     static Animation* start(View* view, int duration, std::function<void(float)> callback, InterpolateFunc interpolater = linear);
+    
+    // Interpolators
+    static float linear(float t, float b, float c, float d);
+    static float strongEaseInOut(float t, float b, float c, float d);
+    static float regularEaseIn(float t, float b, float c, float d);
+    static float regularEaseInOut(float t, float b, float c, float d);
+    static float easeOut(float t, float b, float c, float d);
+    static float strongEaseIn(float t, float b, float c, float d);
+    static float strongEaseOut(float t, float b, float c, float d);
+    static float nowhere(float t, float b, float c, float d);
+    static float bounceEaseOut(float t, float b, float c, float d);
+    static float bounceEaseIn (float t, float b, float c, float d);
+    static float bounceEaseInOut(float t, float b, float c, float d);
+    static float elasticEaseIn (float t, float b, float c, float d);
+    static float elasticEaseOut(float t, float b, float c, float d);
+
 };
 
 
@@ -78,16 +93,4 @@ protected:
 };
 
 
-float strongEaseInOut(float t, float b, float c, float d);
-float regularEaseIn(float t, float b, float c, float d);
-float regularEaseInOut(float t, float b, float c, float d);
-float easeOut(float t, float b, float c, float d);
-float strongEaseIn(float t, float b, float c, float d);
-float strongEaseOut(float t, float b, float c, float d);
-float nowhere(float t, float b, float c, float d);
-float bounceEaseOut(float t, float b, float c, float d);
-float bounceEaseIn (float t, float b, float c, float d);
-float bounceEaseInOut(float t, float b, float c, float d);
-float elasticEaseIn (float t, float b, float c, float d);
-float elasticEaseOut(float t, float b, float c, float d);
 

@@ -7,25 +7,25 @@
 
 #include <oaknut.h>
 
-static ObjPtr<Atlas> atlas;
+static sp<Atlas> atlas;
 static bool s_inited;
-static map<string, ObjPtr<Font>> s_loadedFonts;
+static map<string, sp<Font>> s_loadedFonts;
 
 
-FontBase::FontBase(const string& name, float size, float weight) {
+Font::Font(const string& name, float size, float weight) {
     _name = name;
 	_size = size;
     _weight = weight;
 }
 
-FontBase::~FontBase() {
+Font::~Font() {
     // TODO: remove from s_loadedFonts
 }
 
 
 
 
-Font* FontBase::get(const string& name, float size, float weight/*=FONT_WEIGHT_REGULAR*/) {
+Font* Font::get(const string& name, float size, float weight/*=FONT_WEIGHT_REGULAR*/) {
     string fkey = string::format("%f-%f", size, weight);
     if (name.length() > 0) {
         fkey.insert(0, name);
@@ -34,13 +34,13 @@ Font* FontBase::get(const string& name, float size, float weight/*=FONT_WEIGHT_R
     if (it != s_loadedFonts.end()) {
         return it->second;
     }
-    Font* font = new Font(name, size, weight);
+    Font* font = Font::create(name, size, weight);
     s_loadedFonts[fkey] = font;
     return font;
 }
 
 
-Glyph* FontBase::getGlyph(char32_t ch) {
+Glyph* Font::getGlyph(char32_t ch) {
     if (!s_inited) {
         s_inited = true;
 #ifdef PLATFORM_LINUX

@@ -220,7 +220,7 @@ void ListView::ItemView::updateDeleteButton(bool animate) {
         float deleteButtonWidth = 16+45+16; // TODO: styles mofo, have you heard of them??
         _deleteButton = new ImageView();
         _deleteButton->setMeasureSpecs(MEASURESPEC::Abs(deleteButtonWidth), MEASURESPEC::Abs(8+45+8));
-        _deleteButton->setPadding(_EDGEINSETS(16, 8, 16, 8));
+        _deleteButton->setPadding(EDGEINSETS(16, 8, 16, 8));
         _deleteButton->setAlignSpecs(ALIGNSPEC(NULL, 0, animate?-1:0, 0), ALIGNSPEC::Center());
         if (!_listView->_bmpDelete) {
             ByteBuffer* data = app.loadAsset("images/delete.png"); // TODO: need a different way to do platform assets

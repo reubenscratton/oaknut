@@ -68,16 +68,16 @@ static jobject createAndroidBitmap(int width, int height, int format, bytearray*
   return env->NewGlobalRef(androidBitmap);
 }
 
-Bitmap::Bitmap() : BitmapBase(), _androidBitmap(NULL) {
+BitmapAndroid::BitmapAndroid() : Bitmap(), _androidBitmap(NULL) {
 }
 
-Bitmap::Bitmap(int width, int height, int format) : BitmapBase(width,height,format) {
+BitmapAndroid::BitmapAndroid(int width, int height, int format) : Bitmap(width,height,format) {
     _texTarget = GL_TEXTURE_2D;
     _needsUpload = true;
     _androidBitmap = createAndroidBitmap(width, height, format, NULL);
 }
 
-Bitmap::Bitmap(jobject jbitmap) {
+BitmapAndroid::BitmapAndroid(jobject jbitmap) {
     auto env = getBitmapEnv();
     assert(jbitmap);
     _androidBitmap = env->NewGlobalRef(jbitmap);
@@ -95,19 +95,19 @@ Bitmap::Bitmap(jobject jbitmap) {
     }
     _needsUpload = true;
 }
-Bitmap::Bitmap(GLuint textureId) {
+BitmapAndroid::BitmapAndroid(GLuint textureId) {
     _texTarget = GL_TEXTURE_2D;
     _textureId = textureId;
 }
 
-Bitmap::~Bitmap() {
+BitmapAndroid::~BitmapAndroid() {
     if (_androidBitmap) {
         getBitmapEnv()->DeleteGlobalRef(_androidBitmap);
         _androidBitmap = NULL;
     }
 }
 
-void BitmapBase::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
+void Bitmap::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
     auto env = getBitmapEnv();
     if (!jclassBitmapFactory) {
         jclassBitmapFactory = env->FindClass("android/graphics/BitmapFactory");
@@ -119,14 +119,19 @@ void BitmapBase::createFromData(const void* data, int cb, std::function<void(Bit
     env->SetByteArrayRegion(jbuff, 0, cb, (jbyte*)data);
     jobject jbitmap = env->CallStaticObjectMethod(jclassBitmapFactory, jmidDecodeByteArray, jbuff, 0, cb);
     env->DeleteLocalRef(jbuff);
-    Bitmap* bitmap = new Bitmap(jbitmap);
+    BitmapAndroid* bitmap = new BitmapAndroid(jbitmap);
     bitmap->retain();
     callback(bitmap);
     bitmap->release();
 }
 
+Bitmap* Bitmap::create(int width, int height, int format) {
+    return new BitmapAndroid(width, height, format);
+}
 
-void Bitmap::lock(PIXELDATA* pixelData, bool forWriting) {
+
+
+void BitmapAndroid::lock(PIXELDATA* pixelData, bool forWriting) {
     auto env = getBitmapEnv();
     assert(_androidBitmap);
     AndroidBitmapInfo info;
@@ -135,14 +140,14 @@ void Bitmap::lock(PIXELDATA* pixelData, bool forWriting) {
     pixelData->cb = info.stride * info.height;
     AndroidBitmap_lockPixels(env, _androidBitmap, &pixelData->data);
 }
-void Bitmap::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
+void BitmapAndroid::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
     auto env = getBitmapEnv();
     AndroidBitmap_unlockPixels(env, _androidBitmap);
     _needsUpload |= pixelDataChanged;
 }
 
-void Bitmap::bind() {
-    BitmapBase::bind();
+void BitmapAndroid::bind() {
+    Bitmap::bind();
 
     // If bitmap data changed we may need to update texture data
     if (!_needsUpload) {
@@ -163,14 +168,14 @@ void Bitmap::bind() {
     unlock(&pixeldata, false);
 }
 
-void Bitmap::fromVariant(const variant& v) {
-    BitmapBase::fromVariant(v);
+void BitmapAndroid::fromVariant(const variant& v) {
+    Bitmap::fromVariant(v);
     auto bb = v.bytearrayVal("bb");
     _androidBitmap = createAndroidBitmap(_width, _height, _format, &bb);
     _needsUpload = true;
 }
-void Bitmap::toVariant(variant& v) {
-    BitmapBase::toVariant(v);
+void BitmapAndroid::toVariant(variant& v) {
+    Bitmap::toVariant(v);
     auto env = getBitmapEnv();
     int stride = env->CallIntMethod(_androidBitmap, jmidGetRowBytes);
     int cb = stride * _height;

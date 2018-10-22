@@ -29,7 +29,7 @@ public:
         
         // This is a rather special case. Instead of calling dispatchResult() we use
         // a special web-only Bitmap constructor and call the handler manually.
-        ObjPtr<Bitmap> bitmap = new Bitmap(req->_val, isPng);
+        sp<Bitmap> bitmap = new BitmapWeb(req->_val, isPng);
         req->_httpStatus = 200;
         req->_val = val::null();
         if (req->_handlerBitmap) {

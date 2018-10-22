@@ -90,10 +90,5 @@ WARNINGS_OBJC := \
 FRAMEWORKS+=CoreText GLKit SceneKit AudioToolbox \
 			       OpenAL CoreImage CoreVideo QuartzCore
 
-ifdef OAKNUT_WANT_CAMERA
 	FRAMEWORKS+= AVFoundation CoreMedia
-endif
-ifdef OAKNUT_WANT_AUDIOINPUT
-	FRAMEWORKS+= AudioToolbox CoreMedia
-endif
-
+	FRAMEWORKS+= AudioToolbox

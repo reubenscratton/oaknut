@@ -61,10 +61,10 @@ protected:
 public:
     static Window* create();
 
-	ObjPtr<class ViewController> _rootViewController;
-	vector<ObjPtr<ViewController>> _viewControllers;
-    ObjPtr<Surface> _surface;
     RECT _surfaceRect;
+	sp<class ViewController> _rootViewController;
+	vector<sp<ViewController>> _viewControllers;
+    sp<Surface> _surface;
 	float _scale;
     class MotionTracker {
     public:
@@ -72,7 +72,7 @@ public:
         void dispatchInputEvent(INPUTEVENT& event, ViewController* topVC);
 
         int source;
-        ObjPtr<class View>  touchedView;
+        sp<class View>  touchedView;
         TIMESTAMP timeOfDownEvent;
         POINT ptDown;
         int numClicks;
@@ -81,13 +81,13 @@ public:
         POINT pastPts[NUM_PAST];
         TIMESTAMP pastTime[NUM_PAST];
         int pastIndex, pastCount;
-        ObjPtr<Timer> multiclickTimer;
-        ObjPtr<Timer> _longpressTimer;
+        sp<Timer> multiclickTimer;
+        sp<Timer> _longpressTimer;
         bool _didSendLongpressEvent;
     };
 
     // Animations
-    list<ObjPtr<class Animation>> _animations;
+    list<sp<class Animation>> _animations;
     void startAnimation(Animation* animation, int duration);
     void startAnimation(Animation* animation, int duration, int delay);
     void stopAnimation(Animation* animation);
@@ -136,7 +136,7 @@ public:
 	int _doneGlInit;
     GLfloat _backgroundColor[4];
     vector<GLProgram*> _loadedProgs;
-    list<BitmapBase*> _loadedTextures;
+    list<Bitmap*> _loadedTextures;
 	QuadBuffer* _quadBuffer;
     stack<RECT> _clips;
 	void setBlendMode(int blendMode);
