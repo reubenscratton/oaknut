@@ -1,36 +1,20 @@
 package org.oaknut.main;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Matrix;
-import android.graphics.Paint;
-import android.graphics.PixelFormat;
-import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
-import android.media.ImageReader;
 import android.opengl.GLES11Ext;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.util.AttributeSet;
-import android.view.Gravity;
 import android.view.Surface;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.List;
 
 import static android.opengl.GLES20.*;
+import static android.hardware.Camera.CameraInfo.*;
 
 
 
-
-public class Camera extends Object implements SurfaceTexture.OnFrameAvailableListener {
+public class Camera extends Object implements SurfaceTexture.OnFrameAvailableListener, android.hardware.Camera.PreviewCallback {
 
 
     android.hardware.Camera camera;
@@ -48,14 +32,15 @@ public class Camera extends Object implements SurfaceTexture.OnFrameAvailableLis
 
 
 
-    public void open(long cppCamera, int flags) {
+    public void open(long cppCamera, boolean frontFacing, int frameSizeShort, int frameSizeLong, int frameRate) {
         this.cppCamera = cppCamera;
 
-        // Find the front-facing camera
+        // Find the right camera
         android.hardware.Camera.CameraInfo cameraInfo = new android.hardware.Camera.CameraInfo();
+        int desiredFacing = frontFacing ? CAMERA_FACING_FRONT : CAMERA_FACING_BACK;
         for (int i = 0; i < android.hardware.Camera.getNumberOfCameras(); i++) {
             android.hardware.Camera.getCameraInfo(i, cameraInfo);
-            if (cameraInfo.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            if (cameraInfo.facing == desiredFacing) {
                 cameraId = i;
                 cameraOrientation = cameraInfo.orientation;
                 camera = android.hardware.Camera.open(cameraId);
@@ -63,22 +48,36 @@ public class Camera extends Object implements SurfaceTexture.OnFrameAvailableLis
             }
         }
 
-        // Find the closest to CamcorderProfile 480P (which some devices don't support)
+        // Find the closest frame size
         List<android.hardware.Camera.Size> sizes = camera.getParameters().getSupportedPreviewSizes();
-        int smallestWidthDiff = Integer.MAX_VALUE;
+        int smallestDiff = Integer.MAX_VALUE;
         android.hardware.Camera.Size nearestSize = sizes.get(0);
         for (android.hardware.Camera.Size size : sizes) {
-            int width = (cameraOrientation == 0 || cameraOrientation == 180) ?
-                    size.width : size.height;
-            int diff = Math.abs(width - 480);
-            if (diff < smallestWidthDiff) {
+            int diffShort=0, diffLong=0;
+            if (frameSizeShort>0) {
+                int shortMeasure = Math.min(size.width, size.height);
+                diffShort = Math.abs(shortMeasure - frameSizeShort);
+            }
+            if (frameSizeLong>0) {
+                int longMeasure = Math.max(size.width, size.height);
+                diffLong = Math.abs(longMeasure - frameSizeLong);
+            }
+            int diff;
+            if (diffLong>0 && diffShort>0) {
+                diff=Math.min(diffLong,diffShort);
+            } else if (diffLong==0) {
+                diff = diffShort;
+            } else {
+                diff = diffLong;
+            }
+            if (diff < smallestDiff) {
                 nearestSize = size;
-                smallestWidthDiff = diff;
-            } else if (diff == smallestWidthDiff) {
+                smallestDiff = diff;
+            } /*else if (diff == smallestDiff) {
                 if (size.width * size.height > nearestSize.width * nearestSize.height) {
                     nearestSize = size;
                 }
-            }
+            }*/
         }
 
         previewWidthActual = nearestSize.width;
@@ -113,7 +112,7 @@ public class Camera extends Object implements SurfaceTexture.OnFrameAvailableLis
         }
 
         int result;
-        if (cameraInfo.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_FRONT) {
+        if (cameraInfo.facing == CAMERA_FACING_FRONT) {
             result = (cameraInfo.orientation + degrees) % 360;
             result = (360 - result) % 360;  // compensate the mirror
         } else {  // back-facing
@@ -148,6 +147,7 @@ public class Camera extends Object implements SurfaceTexture.OnFrameAvailableLis
         surfaceTexture.setOnFrameAvailableListener(this);
 
         try {
+            camera.setPreviewCallback(this);
             camera.setPreviewTexture(surfaceTexture);
         } catch (IOException ioe) {
             throw new RuntimeException(ioe);
@@ -160,6 +160,7 @@ public class Camera extends Object implements SurfaceTexture.OnFrameAvailableLis
             camera.stopPreview();
             try {
                 camera.setPreviewTexture(null);
+                camera.setPreviewCallback(null);
             } catch (IOException ioe) {
             }
         }
@@ -172,9 +173,21 @@ public class Camera extends Object implements SurfaceTexture.OnFrameAvailableLis
     }
 
 
+    /**
+
+     Android camera insanity, part 94...
+
+     When onFrameAvailable() fires you can only use the surfaceTexture texture before
+     the function returns and the underlying buffer is recycled.
+
+     But onPreviewFrame() fires afterwards,
+
+     */
 
 
-    private native void nativeOnFrameAvailable(long cppCamera, int textureId, long timestamp, int width, int height, float[] transform);
+    private byte[] prevFrameBytes; // this is completely nuts
+
+    private native void nativeOnFrameAvailable(long cppCamera, int textureId, long timestamp, int width, int height, float[] transform, byte[] data);
 
     @Override
     public void onFrameAvailable(SurfaceTexture surfaceTexture) {
@@ -182,8 +195,12 @@ public class Camera extends Object implements SurfaceTexture.OnFrameAvailableLis
             surfaceTexture.updateTexImage();
             surfaceTexture.getTransformMatrix(cameraTextureMatrix);
             long timestamp = surfaceTexture.getTimestamp();
-            nativeOnFrameAvailable(cppCamera, textureId, timestamp, previewWidth, previewHeight, cameraTextureMatrix);
-
+            nativeOnFrameAvailable(cppCamera, textureId, timestamp, previewWidth, previewHeight, cameraTextureMatrix, prevFrameBytes);
         }
+    }
+
+    @Override
+    public void onPreviewFrame(byte[] data, android.hardware.Camera camera) {
+        prevFrameBytes = data;
     }
 }

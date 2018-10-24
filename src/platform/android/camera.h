@@ -17,8 +17,10 @@ public:
 
 class CameraFrameAndroid : public CameraFrame {
 public:
+    ~CameraFrameAndroid();
     sp<Bitmap> _bitmap;
     float _transform[16];
+    jbyteArray _jbytes;
 
 
     virtual Bitmap* asBitmap() override;

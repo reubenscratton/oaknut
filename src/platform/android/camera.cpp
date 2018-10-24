@@ -150,6 +150,11 @@ int TextureConverter::convert(GLuint texId, int width, int height, float* transf
 
 }
 
+CameraFrameAndroid::~CameraFrameAndroid() {
+    if (_jbytes) {
+        getJNIEnv()->DeleteGlobalRef(_jbytes);
+    }
+}
 Bitmap* CameraFrameAndroid::asBitmap() {
     return _bitmap;
 };
@@ -165,7 +170,7 @@ public:
         jclassCamera = env->FindClass(PACKAGE "/Camera");
         jclassCamera = (jclass) env->NewGlobalRef(jclassCamera);
         jmidConstructor = env->GetMethodID(jclassCamera, "<init>", "()V");
-        jmidOpen = env->GetMethodID(jclassCamera, "open", "(JI)V");
+        jmidOpen = env->GetMethodID(jclassCamera, "open", "(JZIII)V");
         jmidStartPreview = env->GetMethodID(jclassCamera, "startPreview", "()V");
         jmidStopPreview = env->GetMethodID(jclassCamera, "stopPreview", "()V");
         jmidClose = env->GetMethodID(jclassCamera, "close", "()V");
@@ -176,8 +181,11 @@ public:
         JNIEnv *env = getJNIEnv();
         camera = env->NewObject(jclassCamera, jmidConstructor);
         camera = env->NewGlobalRef(camera);
-        env->CallVoidMethod(camera, jmidOpen, (jlong)this, (jint)0);
-
+        env->CallVoidMethod(camera, jmidOpen, (jlong)this,
+                            (jboolean)_options.frontFacing,
+                _options.frameSizeShort,
+                _options.frameSizeLong,
+                _options.frameRate);
         _previewWidth = env->GetIntField(camera, env->GetFieldID(jclassCamera, "previewWidth", "I"));
         _previewHeight = env->GetIntField(camera, env->GetFieldID(jclassCamera, "previewHeight", "I"));
     }
@@ -208,7 +216,7 @@ Camera* Camera::create(const Options& options) {
 }
 
 
-JAVA_FN(void, Camera, nativeOnFrameAvailable)(JNIEnv *env, jobject obj, jlong cameraPtr, jint textureId, jlong timestamp, jint width, jint height, jfloatArray jtransform) {
+JAVA_FN(void, Camera, nativeOnFrameAvailable)(JNIEnv *env, jobject obj, jlong cameraPtr, jint textureId, jlong timestamp, jint width, jint height, jfloatArray jtransform, jbyteArray jbytes) {
     CameraAndroid* camera = (CameraAndroid*)cameraPtr;
     sp<CameraFrameAndroid> frame = new CameraFrameAndroid();
     env->GetFloatArrayRegion(jtransform, 0, 16, frame->_transform);
@@ -220,6 +228,7 @@ JAVA_FN(void, Camera, nativeOnFrameAvailable)(JNIEnv *env, jobject obj, jlong ca
     frame->_timestamp = timestamp;
     frame->_width = width;
     frame->_height = height;
+    frame->_jbytes = (jbyteArray)env->NewGlobalRef(jbytes);
     camera->onNewCameraFrame(frame);
 }
 

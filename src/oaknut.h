@@ -89,12 +89,6 @@ typedef double TIMESTAMP;
 #else
 typedef uint64_t TIMESTAMP;
 #endif
-
-// Include platform headers
-#include __incstr(platform/PLATFORM/platform.h)
-
-
-// Oaknut types
 namespace oak {
 #include "base/bytearray.h"
 #include "base/hash.h"
@@ -102,6 +96,14 @@ namespace oak {
 #include "base/object.h"
 #include "base/timer.h"
 #include "base/task.h"
+}
+
+// Include platform headers
+using namespace oak;
+#include __incstr(platform/PLATFORM/platform.h)
+
+// Oaknut types
+namespace oak {
 #include "data/stream.h"
 #include "data/base64.h"
 #include "data/filestream.h"
@@ -174,7 +176,6 @@ namespace oak {
 
 
 // Platform-specific types
-using namespace oak;
 #include __incstr(platform/PLATFORM/bitmap.h)
 #include __incstr(platform/PLATFORM/camera.h)
 #include __incstr(platform/PLATFORM/font.h)

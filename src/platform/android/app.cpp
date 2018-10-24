@@ -38,13 +38,9 @@ static JNIEnv* getAppEnv() {
 }
 
 static string getPath(int i) {
-  JNIEnv* env = getAppEnv();
-  jbyteArray jbytes = (jbyteArray)env->CallStaticObjectMethod(jclassApp, jmidAppGetPath, i);
-  int cb = env->GetArrayLength(jbytes);
-  bytearray data(cb);
-  env->GetByteArrayRegion(jbytes, 0, cb, reinterpret_cast<jbyte*>(data.data()));
-  string path((char*)data.data());
-  return path;
+    JNIEnv* env = getAppEnv();
+    jbyteArray jbytes = (jbyteArray)env->CallStaticObjectMethod(jclassApp, jmidAppGetPath, i);
+    return stringFromJbyteArray(env, jbytes);
 }
 
 string App::getPathForGeneralFiles() {
@@ -63,11 +59,7 @@ string App::getPathForTemporaryFiles() {
 string App::currentCountryCode() const {
     JNIEnv* env = getAppEnv();
     jbyteArray jbytes = (jbyteArray)env->CallStaticObjectMethod(jclassApp, jmidAppGetCurrentCountryCode);
-    int cb = env->GetArrayLength(jbytes);
-    bytearray data(cb);
-    env->GetByteArrayRegion(jbytes, 0, cb, reinterpret_cast<jbyte*>(data.data()));
-    string str((char*)data.data());
-    return str;
+    return stringFromJbyteArray(env, jbytes);
 }
 void App::log(char const* fmt, ...) {
     char ach[512];

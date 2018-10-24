@@ -21,9 +21,9 @@ public class App extends Application {
 
     // TODO: Move all this into MainActivity
 
-    static App app;
+    public static App app;
     static SharedPreferences prefs;
-    static final Charset UTF_8 = Charset.forName("UTF-8");
+    public static final Charset UTF_8 = Charset.forName("UTF-8");
 
     public App() {
         app = this;

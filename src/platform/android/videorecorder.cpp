@@ -9,8 +9,6 @@
 #include <oaknut.h>
 
 
-jbyteArray jbyteArrayFromString(JNIEnv* env, const string& str);
-jstring jstringFromString(JNIEnv* env, const string& str);
 
 class VideoRecorderAndroid : public VideoRecorder {
 public:

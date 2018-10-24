@@ -42,6 +42,13 @@ jbyteArray jbyteArrayFromString(JNIEnv* env, const string& str) {
     }
     return array;
 }
+string stringFromJbyteArray(JNIEnv* env, jbyteArray jbytes) {
+    int cb = env->GetArrayLength(jbytes);
+    bytearray data(cb);
+    env->GetByteArrayRegion(jbytes, 0, cb, reinterpret_cast<jbyte*>(data.data()));
+    return data.toString(false);
+}
+
 
 jstring jstringFromString(JNIEnv* env, const string& str) {
     int cb = str.lengthInBytes();

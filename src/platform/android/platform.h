@@ -38,3 +38,9 @@ typedef float GLfloat;
 
 extern JavaVM* g_jvm;
 JNIEnv* getJNIEnv();
+
+// Utilities for handling Java strings without falling foul of JVM's weird ideas about UTF
+jbyteArray jbyteArrayFromString(JNIEnv* env, const string& str);
+string stringFromJbyteArray(JNIEnv* env, jbyteArray jbytes);
+jstring jstringFromString(JNIEnv* env, const string& str);
+
