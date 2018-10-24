@@ -47,23 +47,13 @@ public class Font {
         nativeSetMetrics(cobj, -ascent, -descent, 0);
     }
 
-    private Rect rect2 = new Rect();
 
     public long createGlyph(long atlas, int charcode) {
         char[] ach = Character.toChars(charcode);
-        float advance = rect.width();
-        if (charcode != ' ') {
-            float width = textPaint.measureText(ach, 0, 1);
-            textPaint.getTextBounds(ach, 0, 1, rect);
-            //textPaint.getTextBounds("L", 0, 1, rect2);
-            //int pipeWidth = rect2.width();
-            //textPaint.getTextBounds(new String(ach) + "L", 0, 2, rect2);
-            //advance = (rect2.width() - pipeWidth);
-            advance = width + 1; // terrible hack but looks ok!
-            //android.util.Log.d("TEXT", ach[0] + " width: " + width + " advance:" +advance);
-        }
-        long foo = nativeCreateGlyph(cobj, atlas, charcode, rect.left, -rect.bottom, rect.width(), rect.height(), advance);
-        return foo;
+        float advance = textPaint.measureText(ach, 0, 1);
+        textPaint.getTextBounds(ach, 0, 1, rect);
+        rect.top--; // textBounds often rounds down the true glyph height, add a pixel in height to compensate
+        return nativeCreateGlyph(cobj, atlas, charcode, rect.left, -rect.bottom, rect.width(), rect.height(), advance);
     }
 
     public void drawGlyph(int charcode, Bitmap atlasBitmap, float x, float y) {
