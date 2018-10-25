@@ -42,7 +42,7 @@ void GameView::setGame(Game* game) {
     }
 }
 
-void GameView::updateContentSize(float parentWidth, float parentHeight) {
+void GameView::updateContentSize(SIZE constrainingSize) {
     _contentSize.width = _cellSize*_game->_cols;
     _contentSize.height = _cellSize*_game->_rows;
     _contentSizeValid = true;

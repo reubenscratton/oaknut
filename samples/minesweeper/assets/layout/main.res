@@ -17,6 +17,7 @@
             class: ImageView
 			id: face
             size: 50dp
+            contentMode: aspectFit
             align: center
 		},{
             class: Label

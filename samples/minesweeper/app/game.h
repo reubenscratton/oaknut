@@ -21,7 +21,7 @@ public:
     CellState _state;
     bool _mine;
     int _minesAround;
-    ObjPtr<TextureRenderOp> _renderOp;
+    sp<TextureRenderOp> _renderOp;
 
     Cell() : _state(Unknown), _mine(false), _minesAround(0) {
     }

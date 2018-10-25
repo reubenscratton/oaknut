@@ -12,10 +12,10 @@
 class GameView : public View {
 public:
     Game* _game;
-    ObjPtr<BitmapProvider> _imgUnknown, _imgMine, _imgFlag, _imgBoom;
-    ObjPtr<BitmapProvider> _imgNumbers[9];
+    sp<BitmapProvider> _imgUnknown, _imgMine, _imgFlag, _imgBoom;
+    sp<BitmapProvider> _imgNumbers[9];
     float _cellSize;
-    ObjPtr<Timer> _timer;
+    sp<Timer> _timer;
     bool _wasLongPress;
 
     GameView();
@@ -23,7 +23,7 @@ public:
     void updateCell(Cell& cell);
 
     // Overrides
-    void updateContentSize(float parentWidth, float parentHeight) override;
+    void updateContentSize(SIZE constrainingSize) override;
     bool handleInputEvent(INPUTEVENT* event) override;
 
 protected:
