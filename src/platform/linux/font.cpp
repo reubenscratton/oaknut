@@ -12,8 +12,8 @@ static FT_Library ft_library;
 static cairo_t* cairo_for_measuring;
 
 
-FontLinux::FontLinux(const string& fontAssetPath, float size) : Font(fontAssetPath, size) {
-    size = dp(_size);
+FontLinux::FontLinux(const string& fontAssetPath, float size, float weight) : Font(fontAssetPath, size, weight) {
+    size = app.dp(_size);
     //PangoFontMap* fm = pango_cairo_font_map_get_default();
     //PangoFontDescription* pfd = pango_font_description_new();
     //pango_font_description_set_family(pfd, "serif");
@@ -22,7 +22,7 @@ FontLinux::FontLinux(const string& fontAssetPath, float size) : Font(fontAssetPa
     //_pangoFont = pango_font_map_load_font (fm, _pangoContext, pfd);
     if (!ft_library) {
         FT_Init_FreeType(&ft_library);
-        Bitmap* bmp2 = new BitmapLinux(1,1,BITMAPFORMAT_RGBA32); // lives forever
+        BitmapLinux* bmp2 = new BitmapLinux(1,1,BITMAPFORMAT_RGBA32); // lives forever
         cairo_for_measuring = bmp2->getCairo();
     }
     
@@ -45,13 +45,13 @@ Glyph* FontLinux::createGlyph(char32_t ch, Atlas* atlas) {
     cairo_glyph_t cairo_glyph;
     cairo_glyph.index = glyphIndex;
     cairo_set_font_face(cairo_for_measuring, _cairo_font_face);
-    cairo_set_font_size(cairo_for_measuring, dp(_size));
+    cairo_set_font_size(cairo_for_measuring, app.dp(_size));
     cairo_text_extents_t cairo_text_extents;
     cairo_glyph_extents(cairo_for_measuring, &cairo_glyph, 1, &cairo_text_extents);
     
     // Reserve a space in the glyph atlas
     Glyph* glyph = new Glyph(this, ch, glyphIndex);
-    glyph->advance = {cairo_text_extents.x_advance, cairo_text_extents.y_advance};
+    glyph->advance = {(float)cairo_text_extents.x_advance, (float)cairo_text_extents.y_advance};
     glyph->bitmapWidth = ceilf(cairo_text_extents.width);
     glyph->bitmapHeight = ceilf(cairo_text_extents.height);
     glyph->atlasNode = atlas->reserve(glyph->bitmapWidth, glyph->bitmapHeight, 1);
@@ -59,18 +59,22 @@ Glyph* FontLinux::createGlyph(char32_t ch, Atlas* atlas) {
     glyph->bitmapTop = glyph->bitmapHeight + floorf(cairo_text_extents.y_bearing);
     
     // Get the atlas bitmap context
-    Bitmap* bitmap = (Bitmap*)glyph->atlasNode->page->_bitmap._obj;
+    BitmapLinux* bitmap = (BitmapLinux*)glyph->atlasNode->page->_bitmap._obj;
     cairo_t* cr = bitmap->getCairo();
     cairo_glyph.x = glyph->atlasNode->rect.origin.x - glyph->bitmapLeft;
     cairo_glyph.y = glyph->atlasNode->rect.origin.y+glyph->atlasNode->rect.size.height-glyph->bitmapTop;
     cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
     cairo_set_font_face(cr, _cairo_font_face);
-    cairo_set_font_size(cr, dp(_size));
+    cairo_set_font_size(cr, app.dp(_size));
     cairo_show_glyphs(cr, &cairo_glyph, 1);
     //cairo_surface_flush(bitmap->_cairo_surface);
     
     bitmap->_needsUpload = true;
     return glyph;
+}
+
+Font* Font::create(const oak::string &fontAssetPath, float size, float weight) {
+    return new FontLinux(fontAssetPath, size, weight);
 }
 
 #endif

@@ -70,8 +70,6 @@ public:
 };
 
 void App::main() {
-    loadStyleAsset("styles.res");
-
     MainViewController* mainVC = new MainViewController();
     _window->setRootViewController(mainVC);
 }

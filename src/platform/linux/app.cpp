@@ -9,7 +9,9 @@
 #include "oaknut.h"
 #include <sys/time.h>
 
-
+string App::getPathForGeneralFiles() {
+    return "~"; // todo: 
+}
 
 ByteBuffer* App::loadAsset(const char* assetPath) {
     

@@ -7,7 +7,7 @@
 
 #include <oaknut.h>
 
-
+namespace oak {
 template<>
 void Uniform<int>::load() {
     check_gl(glUniform1i, position, val);
@@ -44,7 +44,7 @@ void Uniform<POINT>::load() {
     check_gl(glUniform2f, position, val.x, val.y);
 }
 
-
+}
 
 
 static GLuint loadShader(GLenum shaderType, const char* pSource, const char* preprocs=NULL) {

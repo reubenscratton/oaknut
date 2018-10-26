@@ -180,13 +180,14 @@ namespace oak {
 #include __incstr(platform/PLATFORM/camera.h)
 #include __incstr(platform/PLATFORM/font.h)
 
-
+namespace std {
 template <>
-struct std::hash<oak::string> {
+struct hash<oak::string> {
     size_t operator()( const oak::string& k ) const {
         return k.hash();
     }
 };
+}
 
 
 #endif

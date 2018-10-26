@@ -26,7 +26,7 @@ public:
 };
 
 
-class LinuxCanvas : public Canvas {
+class CanvasLinux : public Canvas {
 public:
     sp<Bitmap> _bitmap;
     //CGSize _size;
@@ -35,17 +35,17 @@ public:
     //CGFloat _strokeWidth;
     //const AFFINE_TRANSFORM* _transform;
 
-    Bitmap* getBitmap() {
+
+    void resize(int width, int height) override {
+    //    _size = size;
+        _bitmap = new BitmapLinux(width, height, BITMAPFORMAT_RGBA32);
+    }
+    Bitmap* getBitmap() override {
         return _bitmap;
     }
+    
 
-
-    void resize(int width, int height) {
-    //    _size = size;
-    //_bitmap = new BitmapLinux(size.width, size.height, BITMAPFORMAT_RGBA32, NULL, 0);
-    }
-
-    void clear(COLOR color) {
+    void clear(COLOR color) override {
         //CGContextSetBlendMode(_bitmap->_context, kCGBlendModeCopy);
         //CGContextRef context = _bitmap->_context;
         //CGContextSetFillColorWithColor(context, rgba(color));
@@ -56,23 +56,23 @@ public:
         //CGContextSetBlendMode(_bitmap->_context, kCGBlendModeNormal);
     }
 
-    void setFillColor(COLOR color) {
+    void setFillColor(COLOR color) override {
         //_fillColor = rgba(color);
         //CGContextSetFillColorWithColor(_bitmap->_context, _fillColor);
     }
-    void setStrokeColor(COLOR color) {
+    void setStrokeColor(COLOR color) override {
         //_strokeColor = rgba(color);
         //CGContextSetStrokeColorWithColor(_bitmap->_context, _strokeColor);
     }
-    void setStrokeWidth(float strokeWidth) {
+    void setStrokeWidth(float strokeWidth) override {
         //_strokeWidth = strokeWidth;
         //CGContextSetLineWidth(_bitmap->_context, strokeWidth);
     }
-    void setAffineTransform(AFFINE_TRANSFORM* t) {
+    void setAffineTransform(AFFINE_TRANSFORM* t) override {
         //_transform = t;
     }
 
-    void drawRect(RECT rect) {
+    void drawRect(RECT rect) override {
         /*CGRect cgrect = CGRectMake(rect.origin.x,rect.origin.y,rect.size.width,rect.size.height);
         if (_fillColor) {
             CGContextFillRect(_bitmap->_context, cgrect);
@@ -83,7 +83,7 @@ public:
         _bitmap->_needsUpload = true;*/
     }
 
-    void drawOval(RECT rect) {
+    void drawOval(RECT rect) override {
         /*CGRect cgrect = CGRectMake(rect.origin.x,rect.origin.y,rect.size.width,rect.size.height);
         if (_fillColor) {
             CGContextFillEllipseInRect(_bitmap->_context, cgrect);
@@ -94,7 +94,7 @@ public:
         _bitmap->_needsUpload = true;*/
     }
 
-    void drawPath(Path* ospath) {
+    void drawPath(Path* ospath) override {
         /*CGPathRef path = (CGPathRef)ospath;
         if (_transform) {
             CGAffineTransform cgtransform;
@@ -117,7 +117,11 @@ public:
         }
         _bitmap->_needsUpload = true;*/
     }
-    Path* createPath() {
+    void drawBitmap(Bitmap* bitmap, const RECT& rectSrc, const RECT& rectDst) override {
+        
+    }
+
+    Path* createPath() override {
         //CGMutablePathRef path = CGPathCreateMutable();
         // return path;
         return new LinuxPath();
@@ -129,7 +133,7 @@ public:
 
 
 Canvas* Canvas::create() {
-    return new LinuxCanvas();
+    return new CanvasLinux();
 }
 
 

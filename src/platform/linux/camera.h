@@ -4,15 +4,13 @@
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
 //
+#if PLATFORM_LINUX
 
 
-class FontLinux : public Font {
+class CameraFrameLinux : public oak::CameraFrame {
 public:
     
-    hb_font_t* _hb_font;
-    cairo_font_face_t* _cairo_font_face;
-    
-    FontLinux(const string& fontAssetPath, float size, float weight);
-    Glyph* createGlyph(char32_t ch, Atlas* atlas);
+    virtual oak::Bitmap* asBitmap() override;
 };
 
+#endif

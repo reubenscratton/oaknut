@@ -10,9 +10,9 @@
 class BitmapLinux : public Bitmap {
 public:
 
-    Bitmap(GdkPixbuf* pixbuf);
-    Bitmap(int width, int height, int format);
-    ~Bitmap();
+    BitmapLinux(GdkPixbuf* pixbuf);
+    BitmapLinux(int width, int height, int format);
+    ~BitmapLinux();
     
     // Overrides
     virtual void lock(PIXELDATA* pixelData, bool forWriting);

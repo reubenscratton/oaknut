@@ -6,7 +6,7 @@
 //
 #if PLATFORM_LINUX
 
-#include "bitmap.h"
+#include <oaknut.h>
 
 
 static int bytesPerPixelForFormat(int format) {
@@ -65,7 +65,7 @@ void BitmapLinux::lock(PIXELDATA* pixelData, bool forWriting) {
 
 
 
-void Bitmap::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
+void BitmapLinux::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
     if (pixelDataChanged) {
         _needsUpload = true;
     }
@@ -95,7 +95,7 @@ void BitmapLinux::bind() {
 
 }
 
-cairo_t* Bitmap::getCairo() {
+cairo_t* BitmapLinux::getCairo() {
     if (!_cairo) {
         _cairo = cairo_create(_cairo_surface);
     }
@@ -110,6 +110,11 @@ static void on_area_prepared(GdkPixbufLoader *loader, gpointer user_data) {
     (*callback)(bitmap);
     //g_object_unref(loader);
 }
+
+Bitmap* Bitmap::create(int width, int height, int format) {
+    return new BitmapLinux(width, height, format);
+}
+
 void Bitmap::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
     GError* error = NULL;
     GdkPixbufLoader* loader = gdk_pixbuf_loader_new();

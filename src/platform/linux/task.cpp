@@ -4,21 +4,30 @@
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
 //
+
 #if PLATFORM_LINUX
 
 #include <oaknut.h>
 
-
-static Task* Task::create(TASKFUNC func) {
-    return new Task(func);
-}
 
 class PosixTaskQueue : public TaskQueue {
 public:
     pthread_t _pthread;
     pthread_cond_t _cond;
     pthread_mutex_t _mutex;
-    vector<sp<Task>> _tasks;
+
+    class PosixTask : public Task {
+    public:
+        PosixTask(TASKFUNC func) : Task(func) {
+        }
+        bool cancel() override {
+            PosixTaskQueue* queue = (PosixTaskQueue*)(TaskQueue*)_queue;
+            return queue->cancelTask(this);
+        }
+    };
+    
+    vector<sp<PosixTask>> _tasks;
+
 
     PosixTaskQueue(const string& name) : TaskQueue(name) {
         pthread_cond_init(&_cond, NULL);
@@ -30,17 +39,19 @@ public:
         pthread_mutex_destroy(&_mutex);
     }
     
-    void enqueueTask(Task* task) {
+    Task* enqueueTask(TASKFUNC taskfunc) override {
+        PosixTask* task = new PosixTask(taskfunc);
         pthread_mutex_lock(&_mutex);
         _tasks.push_back(task);
         pthread_mutex_unlock(&_mutex);
         pthread_cond_signal(&_cond);
+        return task;
     }
     bool cancelTask(Task* task) {
         bool found = false;
         pthread_mutex_lock(&_mutex);
         for (auto it = _tasks.begin() ; it!=_tasks.end() ; it++) {
-            if (it == task) {
+            if (*it == task) {
                 _tasks.erase(it);
                 found = true;
                 break;
@@ -67,13 +78,13 @@ public:
             while (_tasks.size()==0) {
                 pthread_cond_wait(&_cond, &_mutex);
             }
-            sp<Task> task = _tasks.at(0);
+            sp<PosixTask> task = _tasks.at(0);
             _tasks.erase(_tasks.begin());
             pthread_mutex_unlock(&_mutex);
             if (!task) {
                 break;
             }
-            task.func();
+            task->exec();
         }
         release();
         printf("exiting threadFunc\n");
@@ -86,24 +97,17 @@ TaskQueue* TaskQueue::create(const string &name) {
 }
 
 
-
-class Foo {
-public:
-    Foo(std::function<void(void)> func) : _func(func) {
-    }
-    
-    std::function<void(void)> _func;
-};
-
-void mainThreadThunk(Foo* foo) {
-    foo->_func();
-    delete foo;
+static int mainThreadThunk(void* data) {
+    Task* task = (Task*)data;
+    task->exec();
+    task->release();
+    return 0;
 }
 
-void oakAsyncRunOnMainThread(std::function<void(void)> func) {
-    void* pv = new Foo(func);
-    app.log("TODO! oakAsyncRunOnMainThread");
-    //emscripten_async_waitable_run_in_main_runtime_thread_(EM_FUNC_SIG_VI, (void*)mainThreadThunk, pv);
+void Task::postToMainThread(std::function<void ()> func, int delay/*=0*/) {
+    Task* task = new PosixTaskQueue::PosixTask(func);
+    task->retain();
+    g_idle_add(mainThreadThunk, task);
 }
 
 #endif
