@@ -13,8 +13,8 @@ public:
 
     // API
 	NavigationBar();
-    virtual void addNavigationItem(NavigationItem* navigationItem);
-    virtual void removeNavigationItem(NavigationItem* navigationItem);
+    virtual void addViewControllerNav(ViewController* viewController);
+    virtual void removeViewControllerNav(ViewController* viewController);
     virtual void setBlurEnabled(bool blurEnabled);
     float getPreferredContentHeight() { return _preferredContentHeight; }
 

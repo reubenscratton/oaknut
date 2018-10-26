@@ -22,9 +22,10 @@ public:
     /**
      When in a NavigationController this object provides title and button information to the nav bar 
      */
-	sp<NavigationItem> _navigationItem;
 	class NavigationController* _navigationController;
-
+    void setTitle(const string& title);
+    void setTitleView(View* titleView);
+    class ToolbarButton* addNavButton(bool rightSide, const string& assetPath, std::function<void()> onClick);
 
 	ViewController();
     ~ViewController();
@@ -88,7 +89,8 @@ public:
      * Called when this controller's view is attached to the window's view tree.
      */
 	virtual void attachToWindow(Window* window);
-
+    virtual void attachChildVCsToWindow(Window* window);
+    
     /**
      * Called when this controller's view is removed from the window's view tree.
      */
@@ -110,5 +112,13 @@ protected:
     vector<sp<ViewController>> _childViewControllers;
     bool _viewHasSafeAreaPaddingApplied;
     EDGEINSETS _safeAreaInsets;
+    
+    // Navigation data
+    string _title;
+    sp<View> _titleView;
+    sp<class LinearLayout> _leftButtonsFrame;
+    sp<LinearLayout> _rightButtonsFrame;
+    friend class NavigationBar;
+    friend class NavigationController;
 };
 

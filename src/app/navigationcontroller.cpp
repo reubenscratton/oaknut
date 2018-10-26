@@ -33,9 +33,9 @@ void NavigationController::updateSafeArea(const RECT& safeArea) {
     if (_incomingViewController) {
         updateChildSafeArea(_incomingViewController, safeArea);
     }
-    for (auto it : _navStack) {
+    /*for (auto it : _navStack) {
         updateChildSafeArea(it, safeArea);
-    }
+    }*/
 }
 
 void NavigationController::updateChildSafeArea(ViewController* childVc, const RECT& safeArea) {
@@ -51,7 +51,7 @@ void NavigationController::pushViewController(ViewController* vc) {
 
     if (!_currentViewController) {
 		vc->_navigationController = this;
-		_navBar->addNavigationItem(vc->_navigationItem);
+		_navBar->addViewControllerNav(vc);
 		_currentViewController = vc;
 		_currentViewController->onWillResume();
 		_contentView->addSubview(vc->getView());
@@ -78,7 +78,7 @@ void NavigationController::startNavAnimation(ViewController* incomingVC, Animati
     
 	_incomingViewController = incomingVC;
 	_incomingViewController->_navigationController = this;
-    _navBar->addNavigationItem(incomingVC->_navigationItem);
+    _navBar->addViewControllerNav(incomingVC);
 	_incomingViewController->onWillResume();
     
 	_contentView->addSubview(_incomingViewController->getView());
@@ -103,9 +103,15 @@ void NavigationController::startNavAnimation(ViewController* incomingVC, Animati
 	_view->setNeedsLayout();
 }
 
+void NavigationController::attachChildVCsToWindow(Window* window) {
+    if (_currentViewController) {
+        _currentViewController->attachToWindow(window);
+    }
+}
+
 void NavigationController::completeIncoming() {
 	_currentViewController->getView()->removeFromParent();
-	_navBar->removeNavigationItem(_currentViewController->_navigationItem);
+	_navBar->removeViewControllerNav(_currentViewController);
 	_currentViewController->onDidPause();
 	_currentViewController = _incomingViewController;
 	_incomingViewController = NULL;
@@ -128,7 +134,25 @@ void NavigationController::applyNavTransitionToViewController(ViewController* vc
 		tx = incoming ? (val-1) : val/2;
 	}
     vc->getView()->setTranslate({tx * _view->getWidth(), 0});
-	vc->_navigationItem->applyTransition(_navBar, val, incoming, _animationState == Pop);
+
+    bool isPop = _animationState == Pop;
+    float alpha = incoming?val:(1-val);
+    if (vc->_leftButtonsFrame) {
+        vc->_leftButtonsFrame->setAlpha(alpha);
+    }
+    if (vc->_titleView) {
+        vc->_titleView->setAlpha(alpha);
+        float tx = incoming ? (1-val) : -val;
+        float titleDistance = vc->_titleView->getWidth()/2 + _navBar->getWidth()/2;
+        if (isPop) {
+            vc->_titleView->setTranslate({-tx * titleDistance,0});
+        } else {
+            vc->_titleView->setTranslate({tx * titleDistance,0});
+        }
+    }
+    if (vc->_rightButtonsFrame) {
+        vc->_rightButtonsFrame->setAlpha(alpha);
+    }
 }
 
 

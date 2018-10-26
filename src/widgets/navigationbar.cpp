@@ -33,27 +33,35 @@ void NavigationBar::updateContentSize(SIZE constrainingSize) {
     _contentSize.height = _preferredContentHeight;
 }
 
-void NavigationBar::addNavigationItem(NavigationItem* navigationItem) {
-    addSubview(navigationItem->_leftButtonsFrame);
-    if (navigationItem->_title.length()) {
+void NavigationBar::addViewControllerNav(ViewController* viewController) {
+    if (viewController->_leftButtonsFrame) {
+        addSubview(viewController->_leftButtonsFrame);
+    }
+    if (viewController->_title.length()) {
         Label* titleLabel = new Label();
         titleLabel->setMeasureSpecs(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
         titleLabel->setAlignSpecs(ALIGNSPEC::Center(), ALIGNSPEC(NULL, 0.5f, -0.5f, 0));
-        titleLabel->setText(navigationItem->_title);
+        titleLabel->setText(viewController->_title);
         titleLabel->applyStyle(_titleStyle);
-        navigationItem->_titleView = titleLabel;
+        viewController->_titleView = titleLabel;
     }
-    if (navigationItem->_titleView) {
-        addSubview(navigationItem->_titleView);
+    if (viewController->_titleView) {
+        addSubview(viewController->_titleView);
     }
-    addSubview(navigationItem->_rightButtonsFrame);
+    if (viewController->_rightButtonsFrame) {
+        addSubview(viewController->_rightButtonsFrame);
+    }
 }
-void NavigationBar::removeNavigationItem(NavigationItem* navigationItem) {
-    navigationItem->_leftButtonsFrame->removeFromParent();
-    if (navigationItem->_titleView) {
-        navigationItem->_titleView->removeFromParent();
+void NavigationBar::removeViewControllerNav(ViewController* viewController) {
+    if (viewController->_leftButtonsFrame) {
+        viewController->_leftButtonsFrame->removeFromParent();
     }
-    navigationItem->_rightButtonsFrame->removeFromParent();
+    if (viewController->_titleView) {
+        viewController->_titleView->removeFromParent();
+    }
+    if (viewController->_rightButtonsFrame) {
+        viewController->_rightButtonsFrame->removeFromParent();
+    }
 }
 
 void NavigationBar::setBackground(RenderOp* renderOp) {

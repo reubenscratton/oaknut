@@ -23,7 +23,6 @@ public:
 	ControllerView* _controllerView;
 	BeebKeyboardController* keyboardController;
 	DiskInfo* _currentDiskInfo;
-    ImageView* _controllersButton;
     ImageView* _nextControllerButton;
     sp<class Snapshot> _currentSnapshot;
 //@property (nonatomic) NSValue* pendingControllerToActivate;

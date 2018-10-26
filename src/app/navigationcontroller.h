@@ -16,7 +16,7 @@ public:
 	sp<ViewController> _currentViewController;
 	sp<ViewController> _incomingViewController;
 	vector<sp<ViewController>> _navStack;
-	sp<NavigationBar> _navBar;
+	sp<class NavigationBar> _navBar;
 	sp<View> _contentView;
 	typedef enum {
 		None,
@@ -29,15 +29,15 @@ public:
 	virtual void pushViewController(ViewController* vc);
 	virtual void popViewController();
 
-    void updateChildSafeArea(ViewController* childVc, const RECT& safeArea) override;
-    
-    void updateSafeArea(const RECT& safeArea) override;
+    void attachChildVCsToWindow(Window* window) override;
     void onWillResume() override;
 	void onDidResume() override;
 	void onWillPause() override;
 	void onDidPause() override;
 	bool navigateBack() override;
     void requestScroll(float dx, float dy) override;
+    void updateChildSafeArea(ViewController* childVc, const RECT& safeArea) override;
+    void updateSafeArea(const RECT& safeArea) override;
 
 
 protected:

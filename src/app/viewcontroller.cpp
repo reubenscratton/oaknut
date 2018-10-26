@@ -9,7 +9,6 @@
 
 
 ViewController::ViewController() : _view(NULL), _window(NULL) {
-	_navigationItem = new NavigationItem();
 }
 ViewController::~ViewController() {
 }
@@ -25,6 +24,10 @@ void ViewController::attachToWindow(Window* window) {
 	detachFromWindow();
 	_window = window;
     _view->attachToWindow(window);
+    attachChildVCsToWindow(window);
+}
+
+void ViewController::attachChildVCsToWindow(Window* window) {
     for (auto it : _childViewControllers) {
         it->attachToWindow(window);
     }
@@ -132,3 +135,41 @@ void ViewController::updateChildSafeArea(ViewController* childVc, const RECT& sa
 void ViewController::requestScroll(float dx, float dy) {
     _view->scrollBy({dx, dy});
 }
+
+ToolbarButton* ViewController::addNavButton(bool rightSide, const string& assetPath, std::function<void()> onClick) {
+    sp<LinearLayout>& frame = rightSide ? _rightButtonsFrame : _leftButtonsFrame;
+    if (!frame) {
+        frame = new LinearLayout();
+        frame->_orientation = LinearLayout::Horizontal;
+        frame->setMeasureSpecs(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
+        frame->setAlignSpecs(rightSide ? ALIGNSPEC::Right() : ALIGNSPEC::Left(), ALIGNSPEC::Center());
+    }
+    ToolbarButton* button = new ToolbarButton();
+    ByteBuffer* data = app.loadAsset(assetPath.data());
+    Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
+        button->setBitmap(bitmap);
+    });
+    button->onClick = onClick;
+    frame->addSubview(button);
+    return button;
+}
+
+void ViewController::setTitle(const string& title) {
+    if (_titleView) {
+        _titleView->removeFromParent();
+        _titleView = NULL;
+    }
+    _title = title;
+}
+
+void ViewController::setTitleView(View* titleView) {
+    if (_titleView) {
+        _titleView->removeFromParent();
+    }
+    titleView->setMeasureSpecs(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
+    titleView->setAlignSpecs(ALIGNSPEC::Center(), ALIGNSPEC(NULL, 0.5f, -0.5f, 0));
+    _titleView = titleView;
+    _title = "";
+}
+
+

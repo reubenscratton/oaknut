@@ -142,7 +142,6 @@ namespace oak {
 #include "graphics/textrenderer.h"
 #include "graphics/canvas.h"
 #include "app/app.h"
-#include "app/navigationitem.h"
 #include "app/urlrequest.h"
 #include "util/cache.h"
 #include "util/circularbuffer.h"
