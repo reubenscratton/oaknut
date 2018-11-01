@@ -58,13 +58,14 @@ void LinearLayout::layoutSubviews(RECT constraint) {
 
     // Reposition subviews linearly, also distributing leftover space according to weights. Subviews
     // that receive extra space will be layout()d a second time.
-    float excess;
+    float excess, origin;
     if (_orientation == Vertical) {
         excess = (constraint.size.height - totalSize) - (_padding.top+_padding.bottom);
+        origin = _padding.top;
     } else {
         excess = (constraint.size.width - totalSize) - (_padding.left+_padding.right);
+        origin = _padding.left;
     }
-    POINT origin = {_padding.left, _padding.top};
     for (int i=0 ; i<_subviews.size() ; i++) {
         View* view = _subviews.at(i);
         if (view == _scrollbarsView) continue;
@@ -78,11 +79,12 @@ void LinearLayout::layoutSubviews(RECT constraint) {
             view->layout(constraint);
             spec.con -= excessForThisSubview;
         }
-        view->setRectOrigin(origin);
         if (_orientation == Vertical) {
-            origin.y += view->getHeight() + _spacing;
+            view->setRectOrigin({view->getLeft(), origin});
+            origin += view->getHeight() + _spacing;
         } else {
-            origin.x += view->getWidth() + _spacing;
+            view->setRectOrigin({origin, view->getTop()});
+            origin += view->getWidth() + _spacing;
         }
     }
 }

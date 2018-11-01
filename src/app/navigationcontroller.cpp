@@ -72,6 +72,7 @@ void NavigationController::popViewController() {
 	}
 	sp<ViewController> vc  = *_navStack.rbegin();
     _navStack.pop_back();
+    addChildViewController(vc);
 	startNavAnimation(vc, Pop);
 }
 

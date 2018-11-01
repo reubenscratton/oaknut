@@ -702,21 +702,12 @@ void View::layout(RECT constraint) {
         
         
         // Handle subview-based width and/or height
-        //if (_widthMeasureSpec.type==MEASURESPEC::TypeContent || _heightMeasureSpec.type==MEASURESPEC::TypeContent) {
-            /*SIZE subviewExtent = {0,0};
-            for (int i=0 ; i<_subviews.size() ; i++) {
-                View* view = _subviews.at(i);
-                if (view == _scrollbarsView) continue;
-                subviewExtent.width = fmaxf(subviewExtent.width, view->getRight());
-                subviewExtent.height = fmaxf(subviewExtent.height, view->getBottom());
-            }*/
-            if (_widthMeasureSpec.type==MEASURESPEC::TypeContent) {
-                refSize.width = _padding.left + _contentSize.width + _padding.right;
-            }
-            if (_heightMeasureSpec.type==MEASURESPEC::TypeContent) {
-                refSize.height = _padding.top + _contentSize.height + _padding.bottom;
-            }
-        //}
+        if (_widthMeasureSpec.type==MEASURESPEC::TypeContent) {
+            refSize.width = _padding.left + _contentSize.width + _padding.right;
+        }
+        if (_heightMeasureSpec.type==MEASURESPEC::TypeContent) {
+            refSize.height = _padding.top + _contentSize.height + _padding.bottom;
+        }
     }
 
     
