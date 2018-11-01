@@ -165,29 +165,31 @@ void SegmentedControl::updateContentSize(SIZE constrainingSize) {
 	}
 	// Adjust cos rects overlap by a line width
 	_contentSize.width -= (_segments.size()-1) * _lineWidth;
+
+    if (1==(((int)_contentSize.height)&1)) {
+        _contentSize.height+=1;
+    }
+
 }
 
-void SegmentedControl::measure(float parentWidth, float parentHeight) {
-	View::measure(parentWidth, parentHeight);
-	if (1==(((int)_rect.size.height)&1)) {
-		_rect.size.height+=1;
-	}
+void SegmentedControl::layout(RECT constraint) {
+
+    View::layout(constraint);
+    
 	
-}
-
-void SegmentedControl::layout() {
-	View::layout();
-	float x=0;
-	for (int i=0 ; i<_segments.size() ; i++) {
-		Segment& segment = _segments.at(i);
-		RECT& rect = segment.rect;
-		rect.origin.x = x;
+    float x=0;
+    for (int i=0 ; i<_segments.size() ; i++) {
+        Segment& segment = _segments.at(i);
+        RECT& rect = segment.rect;
+        rect.origin.x = x;
         rect.origin.y = 0;
         segment.rectOp->setRect(rect);
-		x += rect.size.width - _lineWidth;
-	}
+        x += rect.size.width - _lineWidth;
+    }
     _updateRenderOpsNeeded = true;
+
 }
+
 
 void SegmentedControl::updateRenderOps() {
     for (int i=0 ; i<_segments.size() ; i++) {

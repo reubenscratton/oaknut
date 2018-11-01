@@ -35,7 +35,6 @@ DisksViewController::DisksViewController(std::function<void(Game*)> delegate) {
         updateInsets();
     });
 	setTitleView(_segctrl);
-    addNavButton(false, "images/back.png", [&] () { onBackButtonClicked(); });
 	
 	_disksListAdapterBest = new DisksListAdapter("http://www.ibeeb.co.uk/best.json");
 	_disksListAdapterAll = new DisksListAdapter("http://www.ibeeb.co.uk/all.json");

@@ -8,6 +8,7 @@
 
 #import "NativeView.h"
 
+
 @implementation NativeView
 
 + (Class)layerClass {
@@ -22,10 +23,12 @@
 }
 
 
+
+
 - (void)didMoveToWindow {
     [super didMoveToWindow];
     //dispatch_async(oakQueue, ^{
-    glLayer = (CAEAGLLayer *)self.layer;
+    glLayer = (CAEAGLLayer*)self.layer;
     glLayer.opaque = YES;
     glLayer.contentsScale = [UIScreen mainScreen].scale;//self.contentScaleFactor;
     glLayer.drawableProperties = @{

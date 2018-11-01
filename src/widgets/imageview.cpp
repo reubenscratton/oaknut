@@ -176,8 +176,8 @@ void ImageView::updateRenderOps() {
     _renderOp->setRect(rect);
 }
 
-void ImageView::layout() {
-    View::layout();
+void ImageView::layout(RECT constraint) {
+    View::layout(constraint);
     _updateRenderOpsNeeded = true;
 }
 

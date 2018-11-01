@@ -185,8 +185,8 @@ void EditText::updateRenderOps() {
     updateCursor();
 }
 
-void EditText::layout() {
-    Label::layout();
+void EditText::layout(RECT constraint) {
+    Label::layout(constraint);
     if (_clearButtonOp) {
     }
 }

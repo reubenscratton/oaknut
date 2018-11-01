@@ -15,10 +15,10 @@ public:
     virtual void setSearchTextChangedDelegate(SEARCHTEXTCHANGED delegate);
     
     // Overrides
-    virtual void layout();
-    virtual void onStateChanged(STATESET changes);
-    virtual void setPadding(EDGEINSETS padding);
-    virtual void setText(string text);
+    virtual void layout(RECT constraint) override;
+    virtual void onStateChanged(STATESET changes) override;
+    virtual void setPadding(EDGEINSETS padding) override;
+    virtual void setText(const AttributedString& text) override;
 
 protected:
     float spaceForSearchIcon();

@@ -18,8 +18,8 @@ CanvasView::CanvasView() {
     addRenderOp(_textureRenderOp);
 }
 
-void CanvasView::layout() {
-    View::layout();
+void CanvasView::layout(RECT constraint) {
+    View::layout(constraint);
     RECT bounds = getOwnRect();
     _textureRenderOp->setRect(bounds);
     

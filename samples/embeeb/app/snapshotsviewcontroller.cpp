@@ -74,7 +74,6 @@ SnapshotsViewController::SnapshotsViewController(Beeb* beeb, BeebView* beebView,
 
     // Navbar
     setTitle("Snapshots");
-    addNavButton(false, "images/back.png", [=] () { onBackButtonClicked(); });
     addNavButton(true, "images/add.png", [=] () {
         Snapshot* snapshot = new Snapshot();
         snapshot->_diskInfo = _diskInfo;

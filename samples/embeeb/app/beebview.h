@@ -21,9 +21,11 @@ public:
     
     BeebView();
     void setBeeb(Beeb* beeb);
-    void attachToWindow(Window* window);
-    void detachFromWindow();
-    void layout();
+    
+    // Overrides
+    void attachToWindow(Window* window) override;
+    void detachFromWindow() override;
+    void layout(RECT constraint) override;
     
     // IBeebDisplayCallbacks
     virtual void setVisibleArea(int left, int top, int width, int height);

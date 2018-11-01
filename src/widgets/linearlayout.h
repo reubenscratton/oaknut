@@ -19,8 +19,7 @@ public:
     } _orientation;
     
 	// Overrides
-    void measure(float parentWidth, float parentHeight) override;
-	void layout() override;
+    void layoutSubviews(RECT constraint) override;
 	void addSubview(View* subview) override;
 	void removeSubview(View* subview) override;
     bool applyStyleValue(const string& name, const StyleValue* value) override;
@@ -28,7 +27,6 @@ public:
 protected:
     void setWeight(View* subview, float weight);
 
-    
     vector<float> _weights;
     float _weightsTotal;
     float _spacing;

@@ -26,7 +26,7 @@ public:
 	void attachToWindow(Window* window) override;
 	void detachFromWindow() override;
 	void onEffectiveTintColorChanged() override;
-	void layout() override;
+	void layout(RECT constraint) override;
     bool applyStyleValue(const string& name, const StyleValue* value) override;
     void updateContentSize(SIZE constrainingSize) override;
     void updateRenderOps() override;

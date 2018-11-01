@@ -67,10 +67,10 @@ bool ControllerView::handleInputEvent(INPUTEVENT *event) {
 }
 
 
-void ControllerView::layout() {
+void ControllerView::layout(RECT constraint) {
+    View::layout(constraint);
     if (!_cachedFrameRect.equal(_rect)) {
         _cachedFrameRect = _rect;
-        View::layout();
         for (auto it = _controller->_keys.begin() ; it!=_controller->_keys.end() ; it++) {
             ControllerKey* key = *it;
             key->layout();

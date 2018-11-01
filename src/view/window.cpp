@@ -55,7 +55,7 @@ void Window::resizeSurface(int width, int height, float scale) {
     if (_surface->_size.width==width && _surface->_size.height==height) {
         return;
     }
-	//app.log("Window::resize %d %d %d", width, height, scale);
+	//app.log("Window::resize %d %d %f", width, height, scale);
     _surfaceRect = RECT(0,0,width,height);
 	_scale = scale;
     _surface->setSize({(float)width, (float)height});
@@ -298,8 +298,8 @@ void Window::draw() {
     for (ViewController* vc : _viewControllers) {
 		View* view = vc->getView();
 		if (!view->_layoutValid) {
-			view->measure(_surfaceRect.size.width, _surfaceRect.size.height);
-			view->layout();
+            //app.log("root layout() %f", _surfaceRect.size.height);
+            view->layout(_surfaceRect);
             ensureFocusedViewIsInSafeArea();
 		}
         _surface->render(view, this);
@@ -556,10 +556,16 @@ void Window::bindTexture(Bitmap* texture) {
 }
 
 RECT Window::getSafeArea() {
+    EDGEINSETS insets = {0,0,0,0};
+    for (int i=0 ; i<sizeof(_unsafeInsets)/sizeof(_unsafeInsets[0]) ; i++) {
+        const EDGEINSETS& inset = _unsafeInsets[i];
+        insets.left = MAX(insets.left, inset.left);
+        insets.right = MAX(insets.right, inset.right);
+        insets.top = MAX(insets.top, inset.top);
+        insets.bottom = MAX(insets.bottom, inset.bottom);
+    }
     RECT safeArea = _surfaceRect;
-    EDGEINSETS safeInsets = _safeAreaInsets;
-    safeInsets.bottom += _softKeyboardRect.size.height;
-    safeInsets.applyToRect(safeArea);
+    insets.applyToRect(safeArea);
     return safeArea;
 }
 
@@ -573,9 +579,13 @@ void Window::updateSafeArea() {
     ensureFocusedViewIsInSafeArea();
 }
 
-void Window::setSoftKeyboardRect(const RECT rect) {
-    _softKeyboardRect = rect;
-    updateSafeArea();
+void Window::setUnsafeInsets(UnsafeArea type, const EDGEINSETS& insets) {
+    if (_unsafeInsets[type] != insets) {
+        _unsafeInsets[type] = insets;
+        if (_surface) {
+            updateSafeArea();
+        }
+    }
 }
 
 

@@ -23,7 +23,7 @@ public:
     bool handleInputEvent(INPUTEVENT* event) override;
     void onStateChanged(STATESET changedStates) override;
     void updateRenderOps() override;
-    void layout() override;
+    void layout(RECT constraint) override;
     void detachFromWindow() override;
     void setText(const AttributedString& text) override;
     void updateContentSize(SIZE constrainingSize) override;

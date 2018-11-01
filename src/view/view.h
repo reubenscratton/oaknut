@@ -65,6 +65,9 @@ public:
     /** Inserts a subview at a particular index, z-order ascending */
     virtual void insertSubview(View* subview, int index);
 
+    /** Get the number of subviews. */
+    virtual int getSubviewCount();
+
     /** Get a subview at a particular index, z-order ascending. Returns NULL if no such index. */
     virtual View* getSubview(int index);
 
@@ -159,8 +162,14 @@ public:
     /** Get the X-coordinate of the left edge, in parent coords */
     float getLeft() const;
     
+    /** Get the X-coordinate of the right edge, in parent coords */
+    float getRight() const;
+    
     /** Get the Y-coordinate of the top edge, in parent coords */
     float getTop() const;
+
+    /** Get the Y-coordinate of the bottom edge, in parent coords */
+    float getBottom() const;
 
     /** Get the current view rect, in parent coords */
     virtual RECT getRect() const;
@@ -185,10 +194,10 @@ public:
     
     /** Signal that the view needs to recalculate its size and position */
     virtual void setNeedsLayout();
-    
-    /** Determines the view rect size, given the parent size constraint. The default implementation
-        uses the MEASURESPECs passed to setMeasureSpecs() to calculate the view rect size. */
-    virtual void measure(float parentWidth, float parentHeight);
+
+    /** Recalculate and apply this view's size and position (as well as all subviews). Default
+        implementation uses SIZESPEC and ALIGNSPEC members but derived types may override the default behaviour. */
+    virtual void layout(RECT constraint);
 
     /** Sets the size of the view rect. CAUTION! This API is dumb and will probably be removed. */
     virtual void setRectSize(const SIZE& size);
@@ -197,14 +206,16 @@ public:
         of subviews during layout. Ideally this would not be a `public` API. */
     virtual void setRectOrigin(const POINT& origin);
 
-    /** Updates the view position, i.e. view rect origin. The default implementation uses the
-        ALIGNSPECs passed to setAlignSpecs() to set the view position */
-    virtual void layout();
-
     virtual void setVisibility(Visibility visibility);
 
 protected:
     /**  \cond INTERNAL */
+
+    virtual void layoutSubviews(RECT constraint);
+    /** Determines the view rect size, given the parent size constraint. The default implementation
+     uses the MEASURESPECs passed to setMeasureSpecs() to calculate the view rect size. */
+    //virtual void measure(SIZE constrainingSize);
+    
 
     /** The visible area covered by the view, in parent view coords */
     RECT _rect;
@@ -436,6 +447,7 @@ public:
     virtual string debugDescription();
     virtual string debugViewType();
     void debugDumpTree(int depth);
+    string _debugTag;
 #endif
 
 };
@@ -444,7 +456,6 @@ public:
 class ScrollbarsView : public View {
 public:
     void updateContentSize(SIZE constraint) override;
-    void measure(float parentWidth, float parentHeight) override;
-    void layout() override;
+    void layout(RECT constraint) override;
 };
 

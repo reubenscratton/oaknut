@@ -167,6 +167,8 @@ struct RECT {
         size.width *= sx;
         size.height *= sy;
     }
+    
+    RECT copyWithInsets(const struct EDGEINSETS& insets) const;
 
     string toString() const;
 	
@@ -246,12 +248,24 @@ struct EDGEINSETS {
 		this->right = right;
 		this->bottom = bottom;
 	}
-	inline void applyToRect(RECT& rect) {
+	inline void applyToRect(RECT& rect) const {
 		rect.origin.x += left;
 		rect.origin.y += top;
 		rect.size.width -= left+right;
 		rect.size.height -= top+bottom;
 	}
+    inline bool operator==(const EDGEINSETS& other) const {
+        return left==other.left
+            && top==other.top
+            && right==other.right
+            && bottom==other.bottom;
+    }
+    inline bool operator!=(const EDGEINSETS& other) const {
+        return left!=other.left
+            || top!=other.top
+            || right!=other.right
+            || bottom!=other.bottom;
+    }
 };
 
 

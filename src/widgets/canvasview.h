@@ -10,7 +10,7 @@ public:
     CanvasView();
     
     // Overrides
-    virtual void layout();
+    void layout(RECT constraint) override;
     
 protected:
     virtual void redraw();

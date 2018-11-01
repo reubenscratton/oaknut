@@ -51,8 +51,8 @@ void BeebView::detachFromWindow() {
 
 
 
-void BeebView::layout() {
-    View::layout();
+void BeebView::layout(RECT constraint) {
+    View::layout(constraint);
     _beeb->video.setViewSize(getWidth(), getHeight());
     _renderOp->setRect(getOwnRect());
 }

@@ -108,21 +108,6 @@ float ALIGNSPEC::calc(float measuredSize, float refOrigin, float refSize) const 
               + (multiplierSelf * measuredSize)
               + margin;
     return floorf(val);
-    /*float anchorVal = 0;
-    if (anchor == _parent) {
-        anchorVal = isVertical ? _parent->_padding.top : _parent->_padding.left;
-        anchorSize -= isVertical ? (anchor->_padding.top+anchor->_padding.bottom):  (anchor->_padding.left+anchor->_padding.right);
-    } else {
-        anchorVal = isVertical ? anchor->_rect.origin.y : anchor->_rect.origin.x;
-    }
-    }
-    float val = 0;
-    if (anchor) {
-        val =
-    } else {
-        val = containingOrigin;
-    }
-    return val;*/
     
 }
 

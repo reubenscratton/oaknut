@@ -51,6 +51,14 @@ enum Permission {
     PermissionMic,
 };
 
+enum UnsafeArea {
+    StatusBar=0,
+    BottomNavBar=1,
+    SoftKeyboard=2,
+    LeftDragEdge=3,
+    RightDragEdge=4
+};
+
 /** @class Window
  *  @brief A window is the top level container for app UI. There is usually only one Window instance, accessible through `app.window`.
  *  @ingroup views
@@ -151,9 +159,8 @@ public:
 	void setCurrentSurface(Surface* surface);
 	void setVertexConfig(int vertexConfig);
     
-    EDGEINSETS _safeAreaInsets; // not including keyboard
-    RECT _softKeyboardRect;
-    void setSoftKeyboardRect(const RECT rect);
+    EDGEINSETS _unsafeInsets[5];
+    void setUnsafeInsets(UnsafeArea type, const EDGEINSETS& inset);
     RECT getSafeArea();
     void updateSafeArea();
     

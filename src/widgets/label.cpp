@@ -107,18 +107,27 @@ void Label::onEffectiveTintColorChanged() {
     setNeedsFullRedraw();
 }
 
-void Label::measure(float parentWidth, float parentHeight) {
+void Label::layout(RECT constraint) {
     
     // If the parent width changed and the label size is relative to parent
     // then force a re-evaluation of content size.
-    if (parentWidth != _prevParentWidth) {
+    if (constraint.size.width != _prevParentWidth) {
         if (_widthMeasureSpec.ref==nullptr && _widthMeasureSpec.mul != 0.0f) {
             _textRenderer._measuredSizeValid = false;
             _contentSizeValid = false;
-            _prevParentWidth = parentWidth;
+            _prevParentWidth = constraint.size.width;
         }
     }
-    View::measure(parentWidth, parentHeight);
+    View::layout(constraint);
+    
+    // Automatically set clipsContent based on whether text overflows bounds
+    _clipsContent = (_contentSize.height > _rect.size.height)
+    || (_contentSize.width > _rect.size.width);
+    
+    _textRenderer.layout(getOwnRectPadded());
+    _textRendererMustRelayout = false;
+    _updateRenderOpsNeeded = true;
+
 }
 
 void Label::setContentOffset(POINT contentOffset) {
@@ -165,17 +174,6 @@ void Label::updateRenderOps() {
     //app.log("Eff. alpha %f for label '%s'", _effectiveAlpha, _textRenderer._text.data());
 }
 
-void Label::layout() {
-	View::layout();
-    
-    // Automatically set clipsContent based on whether text overflows bounds
-    _clipsContent = (_contentSize.height > _rect.size.height)
-                 || (_contentSize.width > _rect.size.width);
-
-    _textRenderer.layout(getOwnRectPadded());
-    _textRendererMustRelayout = false;
-    _updateRenderOpsNeeded = true;
-}
 
 void Label::setGravity(GRAVITY gravity) {
     View::setGravity(gravity);

@@ -79,7 +79,7 @@ float ScrollInfo::maxScroll(View* view, bool isVertical) {
     float visibleSize = isVertical ? view->_rect.size.height : view->_rect.size.width;
     float scrollableSize = padPre + content + scrollInset + padPost;
     float m = (scrollableSize) - visibleSize;
-    app.log("padPre:%f padPost:%f inset:%f content:%f vis:%f  max:%f", padPre, padPost, scrollInset, content, visibleSize, m);
+    //app.log("padPre:%f padPost:%f inset:%f content:%f vis:%f  max:%f", padPre, padPost, scrollInset, content, visibleSize, m);
     return (m>0) ? m : 0;
 }
 void ScrollInfo::updateVisibility(View* view, bool isVertical) {

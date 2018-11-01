@@ -10,7 +10,7 @@ typedef struct MEASURESPEC {
     enum Type {
         TypeNone,     // no measuring done via this measurespec, measurement is set in code
         TypeRelative, // measurement is relative to another view (normally the parent)
-        TypeContent,  // measurement is taken from intrinsic content size, plus padding
+        TypeContent,  // measurement is taken from intrinsic content size and/or subviews, plus padding
         TypeAspect    // measurement relative to this view's opposite dimension
     };
     

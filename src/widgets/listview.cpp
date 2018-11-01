@@ -65,12 +65,11 @@ void ListView::reload() {
     setNeedsLayout();
 }
 
-void ListView::measure(float parentWidth, float parentHeight) {
-	
-	invalidateContentSize();
-	View::measure(parentWidth, parentHeight);
+void ListView::layout(RECT constraint) {
+    invalidateContentSize();
+    View::layout(constraint);
 
-	IListAdapter* adapter = _adapter;
+    IListAdapter* adapter = _adapter;
 	if (!adapter) {
 		removeAllItemViews();
 		return;
@@ -107,9 +106,6 @@ void ListView::updateContentSize(SIZE constrainingSize) {
     _contentSize.height += _scrollInsets.bottom;
 }
 
-void ListView::layout() {
-    View::layout();
-}
 
 ListView::ItemView* ListView::indexToView(LISTINDEX index) {
     for (auto it=_itemViews.begin() ; it != _itemViews.end() ; it++) {
@@ -199,7 +195,6 @@ void ListView::setContentOffset(POINT contentOffset) {
 
 
 ListView::ItemView::ItemView(ListView* listView, LISTINDEX listIndex, View* contentView) {
-    setAlignSpecs(ALIGNSPEC::None(), ALIGNSPEC::None());
     _listView = listView;
     _listIndex = listIndex;
     _contentView = contentView;
@@ -307,8 +302,7 @@ pair<LISTINDEX,View*> ListView::createItemView(LISTINDEX index, bool atFront, fl
     ItemView* itemView = new ItemView(this, index, contentView);
     itemView->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Abs(itemHeight));
     insertSubview(itemView, (int)_itemViews.size());
-    itemView->measure(_rect.size.width, itemHeight);
-    itemView->layout();
+    itemView->layout({0,0,_rect.size.width, itemHeight});
     RECT rect = itemView->getRect();
     rect.origin.y = top;
     itemView->setRectOrigin(rect.origin);
@@ -442,9 +436,7 @@ void ListView::updateVisibleItems() {
                 assert(headerView);
                 headerView->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Abs(it->headerHeight));
                 addSubview(headerView);
-                headerView->measure(_rect.size.width, it->headerHeight);
-                headerView->layout();
-                headerView->setRectOrigin({0, headerTop});
+                headerView->layout(RECT(0,headerTop,_rect.size.width, it->headerHeight));
                 pair<int,View*> result(section,headerView);
                 headerViewIt = _headerViews.insert(headerViewIt, result);
             } else {

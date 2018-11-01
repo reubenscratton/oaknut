@@ -3,6 +3,7 @@
  #include <CoreFoundation/CoreFoundation.h>
  #include <Foundation/Foundation.h>
  #include <QuartzCore/QuartzCore.h>
+ #include <AVFoundation/AVFoundation.h>
  #if TARGET_OS_IOS
   #include <UIKit/UIKit.h>
  #else

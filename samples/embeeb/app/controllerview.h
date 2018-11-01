@@ -25,7 +25,7 @@ public:
 	
 	// Overrides
 	bool handleInputEvent(INPUTEVENT* event) override;
-	void layout() override;
+	void layout(RECT constraint) override;
     IKeyboardInputHandler* getKeyboardInputHandler() override;
 
     // API

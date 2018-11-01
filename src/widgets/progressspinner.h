@@ -12,10 +12,10 @@ public:
     ProgressSpinner();
     
     // Overrides
-    virtual void layout();
-    void redraw();
-    void attachToWindow(Window* window);
-    void detachFromWindow();
+    void layout(RECT constraint) override;
+    void redraw() override;
+    void attachToWindow(Window* window) override;
+    void detachFromWindow() override;
     
     sp<Timer> _animTimer;
     int _phase;

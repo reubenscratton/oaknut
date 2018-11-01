@@ -29,8 +29,8 @@ void SearchBox::setPadding(EDGEINSETS padding) {
     EditText::setPadding(padding);
 }
 
-void SearchBox::layout() {
-    EditText::layout();
+void SearchBox::layout(RECT constraint) {
+    EditText::layout(constraint);
     RECT rect = getOwnRect();
     rect.inset(app.dp(12), app.dp(6));
     
@@ -59,7 +59,7 @@ void SearchBox::onStateChanged(STATESET changes) {
 }
 
 
-void SearchBox::setText(string text) {
+void SearchBox::setText(const AttributedString& text) {
     EditText::setText(text);
     if (_searchTextChangedDelegate) {
         _searchTextChangedDelegate(this, text);

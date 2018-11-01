@@ -15,8 +15,8 @@ ProgressSpinner::ProgressSpinner() {
 }
 
 
-void ProgressSpinner::layout() {
-    CanvasView::layout();
+void ProgressSpinner::layout(RECT constraint) {
+    CanvasView::layout(constraint);
     redraw();
 }
 

@@ -46,7 +46,11 @@ void NavigationController::updateChildSafeArea(ViewController* childVc, const RE
 }
 
 void NavigationController::pushViewController(ViewController* vc) {
-    
+    if (_childViewControllers.size()) {
+        if (!vc->_leftButtonsFrame) {
+            vc->addNavButton(false, "images/back.png", [=] () { vc->onBackButtonClicked(); });
+        }
+    }
     addChildViewController(vc);
 
     if (!_currentViewController) {

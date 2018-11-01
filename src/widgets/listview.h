@@ -81,9 +81,8 @@ public:
     
 	// Overrides
     bool applyStyleValue(const string &name, const StyleValue *value) override;
-	void measure(float parentWidth, float parentHeight) override;
+	void layout(RECT constraint) override;
 	void updateContentSize(SIZE constrainingSize) override;
-    void layout() override;
     void setContentOffset(POINT contentOffset) override;
 	bool handleInputEvent(INPUTEVENT* event) override;
     void removeSubview(View* subview) override;

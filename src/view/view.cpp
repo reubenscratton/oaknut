@@ -106,6 +106,12 @@ bool View::applyStyleValue(const string& name, const StyleValue* value) {
         setTintColor(value->colorVal());
         return true;
     }
+#if DEBUG
+    if (name == "debug") {
+        _debugTag = value->stringVal();
+        return true;
+    }
+#endif
     return false;
 }
 
@@ -404,8 +410,14 @@ float View::getHeight() const {
 float View::getLeft() const {
     return _rect.origin.x;
 }
+float View::getRight() const {
+    return _rect.origin.x + _rect.size.width;
+}
 float View::getTop() const {
     return _rect.origin.y;
+}
+float View::getBottom() const {
+    return _rect.origin.y + _rect.size.height;
 }
 
 RECT View::getRect() const {
@@ -486,7 +498,11 @@ void View::setNeedsLayout() {
     _layoutValid = false;
 	if (_parent) {
 		_parent->setNeedsLayout();
-	}
+    } else {
+        if (_window) {
+            _window->requestRedraw();
+        }
+    }
 }
 
 void View::invalidateContentSize() {
@@ -506,9 +522,7 @@ void View::invalidateContentSize() {
 }
 
 void View::updateContentSize(SIZE constrainingSize) {
-	// Default implementation sets content size to invalid values... this is the clue to layout()
-    // to set the content size to enclose any subviews
-    _contentSize.width = _contentSize.height = -1;
+    _contentSize.width = _contentSize.height = 0;
 }
 
 bool View::getClipsContent() const {
@@ -548,76 +562,6 @@ void View::setVisibility(Visibility visibility) {
 
 
 
-//
-//
-void View::measure(float parentWidth, float parentHeight) {
-
-    // Find the constraining size. If aspect-ratio width is used we have to do height first
-    SIZE constraint;
-    if (MEASURESPEC::TypeAspect != _widthMeasureSpec.type) {
-        constraint.width = _widthMeasureSpec.calcConstraint(parentWidth, 0);
-        constraint.height = _heightMeasureSpec.calcConstraint(parentHeight, constraint.width);
-    } else {
-        constraint.height = _heightMeasureSpec.calcConstraint(parentHeight, 0);
-        constraint.width = _widthMeasureSpec.calcConstraint(parentWidth, constraint.height);
-    }
-
-    // If content size is currently invalid, now's the time to update it
-    if (!_contentSizeValid) {
-        updateContentSize(constraint);
-		_contentSizeValid = true;
-	}
-    
-    // Set the measured size, including padding if wrapping content
-    if (_widthMeasureSpec.type == MEASURESPEC::TypeContent) {
-        _rect.size.width = _contentSize.width + _padding.left + _padding.right;
-    } else {
-        _rect.size.width = constraint.width;
-    }
-    if (_heightMeasureSpec.type == MEASURESPEC::TypeContent) {
-        _rect.size.height = _contentSize.height + _padding.top + _padding.bottom;
-    } else {
-        _rect.size.height = constraint.height;
-    }
-
-    // Now to measure subviews, and here we hit a little snafu... if a view's measurespec
-    // is 'wrap', but it has no intrinsic content size of its own AND it contains one or
-    // more subviews, then its size must wrap that of the largest subview.
-    
-    // At this point we've done relative-to-parent sizing. But if a size value depends on
-    // wrapping subview size(s) then pass down the parent size.
-	bool wrapWidth = _contentSize.width<=0 && _widthMeasureSpec.type == MEASURESPEC::TypeContent;
-	bool wrapHeight =  _contentSize.height<=0 && _heightMeasureSpec.type == MEASURESPEC::TypeContent;
-	float widthForSubviewMeasure = wrapWidth ? parentWidth : _rect.size.width;
-	float heightForSubviewMeasure = wrapHeight ? parentHeight : _rect.size.height;
-
-	// Adjust for padding
-	widthForSubviewMeasure -= (_padding.left+_padding.right);
-	heightForSubviewMeasure -= (_padding.top+_padding.bottom);
-
-	// Measure subviews and track largest sizes
-    float largestChildWidth = 0;
-    float largestChildHeight = 0;
-    for (int i=0 ; i<_subviews.size() ; i++) {
-        View* view = _subviews.at(i);
-        view->measure(widthForSubviewMeasure, heightForSubviewMeasure);
-        largestChildWidth = fmaxf(largestChildWidth, view->_rect.size.width);
-        largestChildHeight = fmaxf(largestChildHeight, view->_rect.size.height);
-    }
-    
-    // wrap
-    if (wrapWidth) {
-        _rect.size.width = _padding.left + largestChildWidth + _padding.right;
-    }
-    if (wrapHeight) {
-        _rect.size.height = _padding.bottom + largestChildHeight + _padding.top;
-    }
-	
-	// Align view sizes to pixel grid
-	_rect.size.width = ceilf(_rect.size.width);
-	_rect.size.height = ceilf(_rect.size.height);
-
-}
 
 
 float View::getAlignspecVal(const ALIGNSPEC& spec, bool isVertical) {
@@ -647,44 +591,182 @@ float View::getAlignspecVal(const ALIGNSPEC& spec, bool isVertical) {
     return val;
 }
 
-void View::layout() {
-    //if (!_window) {
-    //    return;
-    //}
+void View::layout(RECT constraint) {
     if (_visibility == Gone) {
         return;
     }
-    POINT pt;
-    pt.x = getAlignspecVal(_alignspecHorz, false);
-    pt.y = getAlignspecVal(_alignspecVert, true);
-    setRectOrigin(pt);
-
-    updateBackgroundRect();
-
-    POINT u = {0,0};
-    for (int i=0 ; i<_subviews.size() ; i++) {
-        View* view = _subviews.at(i);
-        view->layout();
-        u.x = MAX(u.x, view->_rect.right());
-        u.y = MAX(u.y, view->_rect.bottom());
+#if DEBUG
+    if (_debugTag.length()) {
+        app.log("%s: layout(%s)", _debugTag.data(), constraint.toString().data());
+    }
+#endif
+    //assert(!_layoutValid);
+    SIZE refSize = {0,0};
+    
+    // Handle relative width & height early as it may involve laying out a sibling view before this
+    if (_widthMeasureSpec.type==MEASURESPEC::TypeRelative) {
+        if (_widthMeasureSpec.ref) {
+            if (!_widthMeasureSpec.ref->_layoutValid) {
+                RECT constraintForSubviews = constraint;
+                constraintForSubviews.origin = {0,0};
+                _padding.applyToRect(constraintForSubviews);
+                _widthMeasureSpec.ref->layout(constraintForSubviews);
+            }
+            refSize.width = _widthMeasureSpec.ref->getWidth();
+        } else {
+            refSize.width = constraint.size.width;
+        }
+        assert(refSize.width >= 0); // relative-size to content-wrapping parent not allowed!
+    }
+    if (_heightMeasureSpec.type==MEASURESPEC::TypeRelative) {
+        if (_heightMeasureSpec.ref) {
+            if (!_heightMeasureSpec.ref->_layoutValid) {
+                RECT constraintForSubviews = constraint;
+                constraintForSubviews.origin = {0,0};
+                _padding.applyToRect(constraintForSubviews);
+                _heightMeasureSpec.ref->layout(constraintForSubviews);
+            }
+            refSize.height = _heightMeasureSpec.ref->getHeight();
+        } else {
+            refSize.height = constraint.size.height;
+        }
+        assert(refSize.height >= 0); // relative-size to content-wrapping parent not allowed!
     }
     
-    // If content-size is negative, update it to enclose subviews
-    if (_contentSize.width == -1) {
-        _contentSize.width = u.x - _padding.left;
+    // Work out the constraining size. If our sizespec is relative to parent or sibling then the
+    // constraining size is whatever the spec works out to, but if it's content based then the
+    // constraining size is the one passed into this function.
+    SIZE constrainingSize = constraint.size;
+    if (_widthMeasureSpec.type != MEASURESPEC::TypeContent) {
+        constrainingSize.width = ceilf(refSize.width * _widthMeasureSpec.mul + _widthMeasureSpec.con);
     }
-    if (_contentSize.height == -1) {
-        _contentSize.height = u.y - _padding.top;
+    if (_heightMeasureSpec.type != MEASURESPEC::TypeContent) {
+        constrainingSize.height = ceilf(refSize.height * _heightMeasureSpec.mul + _heightMeasureSpec.con);
     }
 
-	
+    // If content size is currently invalid, now's the time to update it
+    if (!_contentSizeValid) {
+        updateContentSize(constrainingSize);
+        _contentSizeValid = true;
+    }
+#if DEBUG
+    if (_debugTag.length()) {
+        app.log("%s: contentSize is %f x %f", _debugTag.data(), _contentSize.width, _contentSize.height);
+    }
+#endif
+
+    // Handle intrinsic content-based width and/or height
+    if (_widthMeasureSpec.type==MEASURESPEC::TypeContent && _contentSize.width>0) {
+        refSize.width = _padding.left + _contentSize.width + _padding.right;
+    }
+    if (_heightMeasureSpec.type==MEASURESPEC::TypeContent && _contentSize.height>0) {
+        refSize.height = _padding.top + _contentSize.height + _padding.bottom;
+    }
+
+
+    // Layout subviews
+    if (_subviews.size() > 0) {
+        
+        // If wrapping content but then use the constraint size and update afterwards
+        if (_widthMeasureSpec.type==MEASURESPEC::TypeContent && _contentSize.width<=0) {
+            refSize.width = constraint.size.width;
+        }
+        if (_heightMeasureSpec.type==MEASURESPEC::TypeContent && _contentSize.height<=0) {
+            refSize.height = constraint.size.height;
+        }
+        
+        RECT constraintForSubviews;
+        constraintForSubviews.origin = {0,0};
+        constraintForSubviews.size.width = ceilf(refSize.width * _widthMeasureSpec.mul + _widthMeasureSpec.con);
+        constraintForSubviews.size.height = ceilf(refSize.height * _heightMeasureSpec.mul + _heightMeasureSpec.con);
+        _padding.applyToRect(constraintForSubviews);
+        
+#if DEBUG
+        if (_debugTag.length()) {
+            app.log("%s: laying out subviews in %s", _debugTag.data(), constraintForSubviews.toString().data());
+        }
+#endif
+
+        layoutSubviews(constraintForSubviews);
+        
+        // Handle subview-based width and/or height
+        if (_widthMeasureSpec.type==MEASURESPEC::TypeContent || _heightMeasureSpec.type==MEASURESPEC::TypeContent) {
+            SIZE subviewExtent = {0,0};
+            for (int i=0 ; i<_subviews.size() ; i++) {
+                View* view = _subviews.at(i);
+                if (view == _scrollbarsView) continue;
+                subviewExtent.width = fmaxf(subviewExtent.width, view->getRight());
+                subviewExtent.height = fmaxf(subviewExtent.height, view->getBottom());
+            }
+            if (_widthMeasureSpec.type==MEASURESPEC::TypeContent) {
+                refSize.width = fmaxf(_padding.left+_contentSize.width+_padding.right, subviewExtent.width);
+            }
+            if (_heightMeasureSpec.type==MEASURESPEC::TypeContent) {
+                refSize.height = fmaxf(_padding.top+_contentSize.height+_padding.bottom, subviewExtent.height);
+            }
+        }
+    }
+
+    
+    
+    // Handle aspect-ratio measuring
+    if (_widthMeasureSpec.type==MEASURESPEC::TypeAspect) {
+        refSize.width = refSize.height;
+    }
+    if (_heightMeasureSpec.type==MEASURESPEC::TypeAspect) {
+        refSize.height = refSize.width;
+    }
+    
+    // Calculate the rect this view is positioning itself within
+    RECT alignRect;
+    if (_alignspecHorz.anchor) {
+        assert(_alignspecHorz.anchor->_layoutValid);
+        alignRect.origin.x = _alignspecHorz.anchor->_rect.origin.x;
+        alignRect.size.width = _alignspecHorz.anchor->_rect.size.width;
+    } else {
+        alignRect.origin.x = constraint.origin.x;
+        alignRect.size.width = constraint.size.width;
+    }
+    if (_alignspecVert.anchor) {
+        assert(_alignspecVert.anchor->_layoutValid);
+        alignRect.origin.y = _alignspecVert.anchor->_rect.origin.y;
+        alignRect.size.height = _alignspecVert.anchor->_rect.size.height;
+    } else {
+        alignRect.origin.y = constraint.origin.y;
+        alignRect.size.height = constraint.size.height;
+    }
+    
+    // Calculate the new rect, aligning to pixel grid
+    RECT rect;
+    rect.size.width = ceilf(refSize.width * _widthMeasureSpec.mul + _widthMeasureSpec.con);
+    rect.size.height = ceilf(refSize.height * _heightMeasureSpec.mul + _heightMeasureSpec.con);
+    rect.origin.x = floorf(_alignspecHorz.calc(rect.size.width, alignRect.origin.x, alignRect.size.width));
+    rect.origin.y = floorf(_alignspecVert.calc(rect.size.height, alignRect.origin.y, alignRect.size.height));
+
+    // Set the view rect
+    setRectOrigin(rect.origin);
+    setRectSize(rect.size);
+
     updateScrollbarVisibility();
-    setNeedsFullRedraw();
     
+#if DEBUG
+    if (_debugTag.length()) {
+        app.log("%s: < layout() _rect is %s", _debugTag.data(), _rect.toString().data());
+    }
+#endif
+
     _layoutValid = true;
 }
 
 
+void View::layoutSubviews(RECT constraint) {
+    for (int i=0 ; i<_subviews.size() ; i++) {
+        View* view = _subviews.at(i);
+        //if (!view->_layoutValid) {
+            view->layout(constraint);
+        //}
+    }
+}
 
 void View::setPadding(EDGEINSETS padding) {
 	this->_padding = padding;
@@ -801,6 +883,15 @@ View* View::getParent() const {
 void View::addSubview(View* subview) {
 	insertSubview(subview, (int)_subviews.size());
 }
+
+int View::getSubviewCount() {
+    int c = (int)_subviews.size();
+    if (_scrollbarsView) {
+        c--;
+    }
+    return c;
+}
+
 View* View::getSubview(int index) {
     if (index>=0 && index<_subviews.size()) {
         return _subviews[index];
@@ -1241,10 +1332,8 @@ void ScrollbarsView::updateContentSize(SIZE constraint) {
     _contentSizeValid = true;
 }
 
-void ScrollbarsView::measure(float parentWidth, float parentHeight) {
-    _rect = {0,0,parentWidth, parentHeight};
-}
-void ScrollbarsView::layout() {
+void ScrollbarsView::layout(RECT constraint) {
+    _rect = constraint;
     _contentSizeValid = true;
 }
 

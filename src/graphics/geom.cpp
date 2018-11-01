@@ -36,6 +36,11 @@ RECT::RECT(const string& str) {
 	size.height = parseFloat(p);
 }
 
+RECT RECT::copyWithInsets(const EDGEINSETS& insets) const {
+    RECT rect = *this;
+    insets.applyToRect(rect);
+    return rect;
+}
 
 string RECT::toString() const {
 	// "{{0, 0}, {100, 100}}"
