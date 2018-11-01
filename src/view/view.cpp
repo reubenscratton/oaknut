@@ -689,22 +689,34 @@ void View::layout(RECT constraint) {
 
         layoutSubviews(constraintForSubviews);
         
+        // Update content size to include subviews
+        SIZE subviewExtent = {0,0};
+        for (int i=0 ; i<_subviews.size() ; i++) {
+            View* view = _subviews.at(i);
+            if (view == _scrollbarsView) continue;
+            subviewExtent.width = fmaxf(subviewExtent.width, view->getRight());
+            subviewExtent.height = fmaxf(subviewExtent.height, view->getBottom());
+        }
+        _contentSize.width = fmaxf(_contentSize.width, subviewExtent.width-_padding.left);
+        _contentSize.height = fmaxf(_contentSize.height, subviewExtent.height-_padding.top);
+        
+        
         // Handle subview-based width and/or height
-        if (_widthMeasureSpec.type==MEASURESPEC::TypeContent || _heightMeasureSpec.type==MEASURESPEC::TypeContent) {
-            SIZE subviewExtent = {0,0};
+        //if (_widthMeasureSpec.type==MEASURESPEC::TypeContent || _heightMeasureSpec.type==MEASURESPEC::TypeContent) {
+            /*SIZE subviewExtent = {0,0};
             for (int i=0 ; i<_subviews.size() ; i++) {
                 View* view = _subviews.at(i);
                 if (view == _scrollbarsView) continue;
                 subviewExtent.width = fmaxf(subviewExtent.width, view->getRight());
                 subviewExtent.height = fmaxf(subviewExtent.height, view->getBottom());
-            }
+            }*/
             if (_widthMeasureSpec.type==MEASURESPEC::TypeContent) {
-                refSize.width = fmaxf(_padding.left+_contentSize.width+_padding.right, subviewExtent.width);
+                refSize.width = _padding.left + _contentSize.width + _padding.right;
             }
             if (_heightMeasureSpec.type==MEASURESPEC::TypeContent) {
-                refSize.height = fmaxf(_padding.top+_contentSize.height+_padding.bottom, subviewExtent.height);
+                refSize.height = _padding.top + _contentSize.height + _padding.bottom;
             }
-        }
+        //}
     }
 
     
