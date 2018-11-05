@@ -16,7 +16,7 @@ public:
     virtual void addCancelButton();
     
     // Overrides
-    void attachToWindow(Window *window) override;
+    void onWindowAttached() override;
     
 protected:
     virtual void dismissWithAction(std::function<void()> action);

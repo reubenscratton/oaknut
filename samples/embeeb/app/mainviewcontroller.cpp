@@ -101,8 +101,8 @@ MainViewController::MainViewController() {
 
 }
 
-void MainViewController::onDidResume() {
-	ViewController::onDidResume();
+void MainViewController::onDidAppear(bool firstTime) {
+	ViewController::onDidAppear(firstTime);
 	_navigationController->_navBar->setBlurEnabled(false);
     _controllerView->setFocused(true);
 	//if (_beebView->_paused) {
@@ -111,13 +111,13 @@ void MainViewController::onDidResume() {
 	//}
 	_beebView->_beeb->_audioOutput->resume();
 }
-void MainViewController::onWillPause() {
-	ViewController::onWillPause();
+void MainViewController::onWillDisappear(bool lastTime) {
+	ViewController::onWillDisappear(lastTime);
 	// Stop beeb going here so it's not running through the nav push anim
 	_beebView->_paused = true;
 }
-void MainViewController::onDidPause() {
-	ViewController::onDidPause();
+void MainViewController::onDidDisappear(bool lastTime) {
+	ViewController::onDidDisappear(lastTime);
     _navigationController->_navBar->setBlurEnabled(true);
 	_beebView->_beeb->_audioOutput->pause();
 }

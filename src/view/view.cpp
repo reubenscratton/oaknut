@@ -495,13 +495,16 @@ void View::setAlignSpecs(ALIGNSPEC alignspecHorz, ALIGNSPEC alignspecVert) {
 
 
 void View::setNeedsLayout() {
-    _layoutValid = false;
-	if (_parent) {
-		_parent->setNeedsLayout();
-    } else {
-        if (_window) {
-            _window->requestRedraw();
-        }
+    if (!_layoutValid) {
+        return;
+    }
+    View* view = this;
+    while (view) {
+        view->_layoutValid = false;
+        view = view->_parent;
+    }
+    if (_window) {
+        _window->requestRedraw();
     }
 }
 
@@ -559,9 +562,6 @@ void View::setVisibility(Visibility visibility) {
         }
     }
 }
-
-
-
 
 
 float View::getAlignspecVal(const ALIGNSPEC& spec, bool isVertical) {
@@ -939,6 +939,9 @@ void View::insertSubview(View* subview, int index) {
 
      To get from 5 to 4 we start with 5's left sibling, in this case 2, and then find rightmost 
      descendent of 2. If 5 had no left sibling then the prevView would be parent (ie 1).
+     
+     Now, consider that each view has TWO lists of renderops... one for its own content, and one
+     to be drawn on top of its content and all of its subviews.
     
      */
     View* prev = this;

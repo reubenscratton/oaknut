@@ -84,8 +84,8 @@ ActionSheet::ActionSheet() {
 }
 
 
-void ActionSheet::attachToWindow(Window *window) {
-    ViewController::attachToWindow(window);
+void ActionSheet::onWindowAttached() {
+    ViewController::onWindowAttached();
 
     // Create the main group
     ActionGroup* group = new ActionGroup();
@@ -107,7 +107,6 @@ void ActionSheet::attachToWindow(Window *window) {
     }
 
     // Animate in
-    ViewController::attachToWindow(window);
     COLOR scrimColor = app.getStyleColor("ActionSheet.scrim");
     Animation::start(_view, 333, [=](float val) {
         _view->setBackgroundColor(COLOR::interpolate(0, scrimColor, val));
@@ -134,7 +133,7 @@ void ActionSheet::dismissWithAction(std::function<void()> action) {
     Animation::start(_view, 333, [=](float val) {
         _view->setBackgroundColor(COLOR::interpolate(scrimColor, 0, val));
         if (val >= 1.0f) {
-            _window->dismissModalViewController(this);
+            getWindow()->dismissModalViewController(this);
             if (action) {
                 action();
             }

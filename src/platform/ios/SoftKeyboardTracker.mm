@@ -44,9 +44,9 @@
     // TODO: reverse engineer the private interpolator iOS uses here
     float keyboardTop = fromRect.origin.y + val * (toRect.origin.y-fromRect.origin.y);
     keyboardTop *= app._window->_scale;
-    float keyboardHeight = app._window->_surface->_size.height - keyboardTop;
+    float keyboardHeight = app._window->_surfaceRect.size.height - keyboardTop;
     
-    app._window->setUnsafeInsets(oak::UnsafeArea::SoftKeyboard, EDGEINSETS(0,0,0,keyboardHeight));
+    app._window->setSafeInsets(oak::SafeInsetsType::SoftKeyboard, EDGEINSETS(0,0,0,keyboardHeight));
     
     if (finished) {
         [displayLink invalidate];

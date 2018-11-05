@@ -29,16 +29,14 @@ public:
 	virtual void pushViewController(ViewController* vc);
 	virtual void popViewController();
 
-    void attachChildVCsToWindow(Window* window) override;
-    void onWillResume() override;
-	void onDidResume() override;
-	void onWillPause() override;
-	void onDidPause() override;
+    void onWindowAttached() override;
+    void onWindowDetached() override;
 	bool navigateBack() override;
     void requestScroll(float dx, float dy) override;
-    void updateChildSafeArea(ViewController* childVc, const RECT& safeArea) override;
-    void updateSafeArea(const RECT& safeArea) override;
-
+    void applySafeInsets(const EDGEINSETS& safeInsets) override;
+    
+    void applySafeInsetsToChild(ViewController* childVC);
+    
 
 protected:
 	virtual void startNavAnimation(ViewController* incomingVC, AnimationState animationState);

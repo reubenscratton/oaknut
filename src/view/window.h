@@ -5,53 +5,13 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#define INPUT_SOURCE_TYPE_KEY 0
-#define INPUT_SOURCE_TYPE_MOUSE 1
-#define INPUT_SOURCE_TYPE_FINGER 2
-#define INPUT_SOURCE_TYPE_SCROLLER 3
-
-#define MAKE_SOURCE(type, id) ((type<<8)|id)
-#define SOURCE_TYPE(source) (source>>8)
-#define SOURCE_ID(source) (source&255)
-
-#define INPUT_EVENT_DOWN 0
-#define INPUT_EVENT_MOVE 1
-#define INPUT_EVENT_UP   2
-#define INPUT_EVENT_CANCEL 3
-#define INPUT_EVENT_DRAG 4
-#define INPUT_EVENT_TAP 6
-#define INPUT_EVENT_TAP_CONFIRMED 7
-#define INPUT_EVENT_FLING 8
-#define INPUT_EVENT_LONG_PRESS 9
-
-#define NUM_PAST 10
-
-// TODO: these constants should be in platform styles
-#define TOUCH_SLOP 10 // DPs
-#define MULTI_CLICK_THRESHOLD 400 // ms
-#define LONG_PRESS_THRESHOLD 800 // ms
-
-typedef struct INPUTEVENT {
-    int type;
-    enum {
-        Mouse,
-        Touch,
-        ScrollWheel //
-    } deviceType;
-    int deviceIndex; 
-    TIMESTAMP time;
-    POINT pt, ptLocal;
-    POINT delta; // specific to ScrollWheel
-    POINT velocity; // specific to flings
-} INPUTEVENT;
-
 
 enum Permission {
     PermissionCamera,
     PermissionMic,
 };
 
-enum UnsafeArea {
+enum SafeInsetsType {
     StatusBar=0,
     BottomNavBar=1,
     SoftKeyboard=2,
@@ -60,10 +20,14 @@ enum UnsafeArea {
 };
 
 /** @class Window
- *  @brief A window is the top level container for app UI. There is usually only one Window instance, accessible through `app.window`.
+ *  @brief A window is the top level container for app UI. There is usually only one Window instance, globally
+   accessible through `app.window`. It usually wraps a native window in some way.
  *  @ingroup views
  */
-class Window : public Object {
+
+// TODO: Can't help but feel that Window should extend View and have two subviews: the root VC view,
+// and the decor view on top of that
+class Window : public View {
 protected:
     Window();
 public:
@@ -72,7 +36,7 @@ public:
     RECT _surfaceRect;
 	sp<class ViewController> _rootViewController;
 	vector<sp<ViewController>> _viewControllers;
-    sp<Surface> _surface;
+    //sp<Surface> _surface;
 	float _scale;
     class MotionTracker {
     public:
@@ -80,7 +44,7 @@ public:
         void dispatchInputEvent(INPUTEVENT& event, ViewController* topVC);
 
         int source;
-        sp<class View>  touchedView;
+        sp<View>  touchedView;
         TIMESTAMP timeOfDownEvent;
         POINT ptDown;
         int numClicks;
@@ -136,7 +100,7 @@ public:
     virtual bool setFocusedView(View* view);
 	void attachViewController(ViewController* vc);
     void detachViewController(ViewController* vc);
-
+    
     void pushClip(RECT clip);
     void popClip();
     
@@ -159,12 +123,15 @@ public:
 	void setCurrentSurface(Surface* surface);
 	void setVertexConfig(int vertexConfig);
     
-    EDGEINSETS _unsafeInsets[5];
-    void setUnsafeInsets(UnsafeArea type, const EDGEINSETS& inset);
-    RECT getSafeArea();
-    void updateSafeArea();
+    void layout(RECT constraint) override;
     
+    EDGEINSETS _safeInsetsTotal;
+    EDGEINSETS _safeInsets[5];
+    void setSafeInsets(SafeInsetsType type, const EDGEINSETS& insets);
     void ensureFocusedViewIsInSafeArea();
+private:
+    
+    View* _decorView;
 };
 
 

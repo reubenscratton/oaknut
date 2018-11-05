@@ -69,23 +69,20 @@ DisksViewController::DisksViewController(std::function<void(Game*)> delegate) {
 */
 
 
-void DisksViewController::onWillResume() {
+void DisksViewController::onWillAppear(bool firstTime) {
 	_segctrl->setSelectedSegment(app.getIntSetting("disksSeg", 0));
     POINT pt;
     pt.x = 0;
     pt.y = app.getIntSetting("disksY", 0);
     //_listView->setContentOffset(pt);
 }
-void DisksViewController::onDidPause() {
+void DisksViewController::onDidDisappear(bool lastTime) {
 	app.setIntSetting("disksSeg", _segctrl->getSelectedIndex());
 	app.setIntSetting("disksY", _listView->getContentOffset().y);
 }
 
-void DisksViewController::updateSafeArea(const RECT &safeArea) {
-    _safeAreaInsets.left = safeArea.left();
-    _safeAreaInsets.top = safeArea.top();
-    _safeAreaInsets.right = _window->_surfaceRect.size.width - safeArea.right();
-    _safeAreaInsets.bottom = _window->_surfaceRect.size.height - safeArea.bottom();
+void DisksViewController::applySafeInsets(const EDGEINSETS &safeInsets) {
+    _safeAreaInsets = safeInsets;
     updateInsets();
 }
 

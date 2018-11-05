@@ -9,6 +9,18 @@
 
 
 Window::Window() : _rootViewController(NULL), _scale(1) {
+    _surface = new Surface();
+    _quadBuffer = new QuadBuffer();
+    _window = this;
+    _effectiveAlpha = 1;
+    
+    /*_decorView = new View();
+    RectRenderOp* testOp = new RectRenderOp();
+    testOp->setFillColor(0xFF00FF00);
+    testOp->setRect(RECT(0,0,350,64));
+    testOp->validateShader();
+    _decorView->addRenderOp(testOp);
+    _decorView->attachToWindow(this);*/
 }
 
 void Window::show() {
@@ -19,39 +31,34 @@ void Window::setRootViewController(ViewController* viewController) {
     if (viewController == _rootViewController) {
         return;
     }
-    ViewController *currentRootVC = _rootViewController;
-    if (currentRootVC) {
-        currentRootVC->onWillPause();
-        currentRootVC->detachFromWindow();
-        currentRootVC->onDidPause();
-        _viewControllers.erase(_viewControllers.begin());
+    if (_rootViewController) {
+        detachViewController(_rootViewController);
     }
     _rootViewController = viewController;
-    _viewControllers.insert(_viewControllers.begin(), viewController);
     attachViewController(_rootViewController);
 }
 
 
-void Window::attachViewController(ViewController *vc) {
-	if (_surface && !vc->_window) {
-        vc->onWillResume();
-		prepareToDraw();
-        vc->attachToWindow(this);
-        updateSafeArea();
-        vc->onDidResume();
-	}
+void Window::attachViewController(ViewController* viewController) {
+    assert(!viewController->getView()->getWindow());
+    _viewControllers.push_back(viewController);
+    addSubview(viewController->getView());
+    viewController->applySafeInsets(_safeInsetsTotal);
+    viewController->onWindowAttached();
+    prepareToDraw(); // ?? why is this here? A relic from early oaknut code?
 }
-void Window::detachViewController(ViewController* vc) {
-    if (vc->_window) {
-        vc->detachFromWindow();
-    }
+void Window::detachViewController(ViewController* viewController) {
+    assert(viewController->getView()->getWindow() == this);
+    removeSubview(viewController->getView());
+    _viewControllers.erase(_viewControllers.begin());
+    viewController->onWindowDetached();
 }
 
+void Window::layout(RECT constraint) {
+    _rect = constraint;
+    layoutSubviews(_rect);
+}
 void Window::resizeSurface(int width, int height, float scale) {
-    if (!_surface) {
-        _surface = new Surface();
-        _quadBuffer = new QuadBuffer();
-    }
     if (_surface->_size.width==width && _surface->_size.height==height) {
         return;
     }
@@ -60,22 +67,19 @@ void Window::resizeSurface(int width, int height, float scale) {
 	_scale = scale;
     _surface->setSize({(float)width, (float)height});
     for (auto vc : _viewControllers) {
-        if (!vc->_window) {
-            attachViewController(vc);
-        }
-        updateSafeArea();
-        vc->getView()->setNeedsLayout();
-	}
+        vc->applySafeInsets(_safeInsetsTotal);
+    }
+    setNeedsLayout();
 }
 void Window::destroySurface() {
-    if (_surface) {
+    /*if (_surface) {
         for (auto vc : _viewControllers) {
             detachViewController(vc);
         }
         _surface = NULL;
-        _doneGlInit = false;
-        //delete _quadBuffer; todo: fix this leak
-    }
+    }*/
+    _doneGlInit = false;
+    //delete _quadBuffer; todo: fix this leak
     for (auto bitmap : _loadedTextures) {
         bitmap->onRenderContextDestroyed();
     }
@@ -294,8 +298,15 @@ void Window::draw() {
 
 	prepareToDraw();
 
+    if (!_layoutValid) {
+        _layoutValid = true;
+        layout(_surfaceRect);
+        ensureFocusedViewIsInSafeArea();
+    }
+    _surface->render(this, this);
+    
 	// Draw view controllers
-    for (ViewController* vc : _viewControllers) {
+    /*for (ViewController* vc : _viewControllers) {
 		View* view = vc->getView();
 		if (!view->_layoutValid) {
             //app.log("root layout() %f", _surfaceRect.size.height);
@@ -304,6 +315,9 @@ void Window::draw() {
 		}
         _surface->render(view, this);
 	}
+    if (_decorView) {
+        _surface->render(_decorView, this);
+    }*/
 
 	
 	incFrames();
@@ -555,36 +569,26 @@ void Window::bindTexture(Bitmap* texture) {
     }
 }
 
-RECT Window::getSafeArea() {
-    EDGEINSETS insets = {0,0,0,0};
-    for (int i=0 ; i<sizeof(_unsafeInsets)/sizeof(_unsafeInsets[0]) ; i++) {
-        const EDGEINSETS& inset = _unsafeInsets[i];
-        insets.left = MAX(insets.left, inset.left);
-        insets.right = MAX(insets.right, inset.right);
-        insets.top = MAX(insets.top, inset.top);
-        insets.bottom = MAX(insets.bottom, inset.bottom);
-    }
-    RECT safeArea = _surfaceRect;
-    insets.applyToRect(safeArea);
-    return safeArea;
-}
 
-void Window::updateSafeArea() {
-    RECT safeArea = getSafeArea();
-    for (auto vc : _viewControllers) {
-        if (vc->_window) {
-            vc->updateSafeArea(safeArea);
-        }
-    }
-    ensureFocusedViewIsInSafeArea();
-}
 
-void Window::setUnsafeInsets(UnsafeArea type, const EDGEINSETS& insets) {
-    if (_unsafeInsets[type] != insets) {
-        _unsafeInsets[type] = insets;
-        if (_surface) {
-            updateSafeArea();
+void Window::setSafeInsets(SafeInsetsType type, const EDGEINSETS& insets) {
+    if (_safeInsets[type] != insets) {
+        _safeInsets[type] = insets;
+        _safeInsetsTotal = {0,0,0,0};
+        for (int i=0 ; i<sizeof(_safeInsets)/sizeof(_safeInsets[0]) ; i++) {
+            const EDGEINSETS& inset = _safeInsets[i];
+            _safeInsetsTotal.left = MAX(_safeInsetsTotal.left, inset.left);
+            _safeInsetsTotal.right = MAX(_safeInsetsTotal.right, inset.right);
+            _safeInsetsTotal.top = MAX(_safeInsetsTotal.top, inset.top);
+            _safeInsetsTotal.bottom = MAX(_safeInsetsTotal.bottom, inset.bottom);
         }
+        for (auto vc : _viewControllers) {
+            vc->applySafeInsets(_safeInsetsTotal);
+        }
+        ensureFocusedViewIsInSafeArea();
+        //_decorView->setRectSize({750,1334});
+        //_decorView->setNeedsFullRedraw();
+        requestRedraw();
     }
 }
 
@@ -609,7 +613,6 @@ void Window::runWithPermissions(vector<Permission> permissions, std::function<vo
 
 
 void Window::presentModalViewController(ViewController *viewController) {
-    _viewControllers.push_back(viewController);
     attachViewController(viewController);
     requestRedraw();
 }
@@ -630,7 +633,8 @@ void Window::ensureFocusedViewIsInSafeArea() {
         
         // Calculate the extent it is below the safe area
         float dx=0,dy=0;
-        RECT safeArea = getSafeArea();
+        RECT safeArea = _surfaceRect;
+        _safeInsetsTotal.applyToRect(safeArea);
         float d = rect.bottom() - safeArea.bottom();
         if (d > 0) {
             dy = -d;

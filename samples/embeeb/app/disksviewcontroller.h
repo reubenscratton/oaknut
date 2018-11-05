@@ -20,9 +20,9 @@ public:
     DisksViewController(std::function<void(Game*)> delegate);	
 	
 	// Overrides
-	void onWillResume() override;
-	void onDidPause() override;
-    void updateSafeArea(const RECT& safeArea) override;
+	void onWillAppear(bool firstTime) override;
+	void onDidDisappear(bool lastTime) override;
+    void applySafeInsets(const EDGEINSETS& safeInsets) override;
 
 protected:
     std::function<void(Game*)> _delegate;

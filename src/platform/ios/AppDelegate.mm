@@ -61,7 +61,7 @@ public:
         _viewController.view = _nativeView;
         _scale = [UIScreen mainScreen].scale;
         CGRect statusBarFrame = [UIApplication sharedApplication].statusBarFrame;
-        setUnsafeInsets(StatusBar, EDGEINSETS(0, statusBarFrame.size.height * _scale, 0, 0));
+        setSafeInsets(StatusBar, EDGEINSETS(0, statusBarFrame.size.height * _scale, 0, 0));
 
     }
     

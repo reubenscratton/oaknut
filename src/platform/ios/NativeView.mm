@@ -18,15 +18,6 @@
 - (id)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
         _renderNeeded = YES;
-    }
-    return self;
-}
-
-
-
-
-- (void)didMoveToWindow {
-    [super didMoveToWindow];
     //dispatch_async(oakQueue, ^{
     glLayer = (CAEAGLLayer*)self.layer;
     glLayer.opaque = YES;
@@ -58,7 +49,16 @@
     displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(render)];
     [displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
     
+    }
+    return self;
 }
+
+
+
+
+/*- (void)didMoveToWindow {
+    [super didMoveToWindow];
+}*/
 
 
 - (void)render {

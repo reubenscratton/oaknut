@@ -14,12 +14,6 @@ class ViewController : public Object {
 public:
 
     /**
-     The window this ViewController is attached to. This is non-null while the ViewController is active
-     and also while it is being animated in and out of place.
-     */
-	class Window* _window;
-    
-    /**
      When in a NavigationController this object provides title and button information to the nav bar 
      */
 	class NavigationController* _navigationController;
@@ -30,19 +24,20 @@ public:
 	ViewController();
     ~ViewController();
     
-    /** @name Root view
-     * @{
-     */
-    
     /**
      * Get the root view
      */
-    virtual View* getView();
+    virtual View* getView() const;
 
     /**
      * Set the root view
      */
     virtual void setView(View* view);
+    
+    /**
+     * Get the Window that the root view is attached to
+     */
+    virtual Window* getWindow() const;
     
     /**@}*/
     
@@ -59,24 +54,19 @@ public:
      */
     
     /**
-     * Called when this view controller is about to become active
+     * Called when this view controller is attached to the window
      */
-    virtual void onWillResume();
+    virtual void onWindowAttached();
+    virtual void onWindowDetached();
 
     /**
-     * Called when this view controller is now active
+     * Navigation events
      */
-    virtual void onDidResume();
-    
-    /**
-     * Called when this view controller is about to become replaced by another
-     */
-    virtual void onWillPause();
-    
-    /**
-     * Called when this view controller has moved into the background
-     */
-    virtual void onDidPause();
+    virtual void onWillAppear(bool firstTime);
+    virtual void onDidAppear(bool firstTime);
+    virtual void onWillDisappear(bool lastTime);
+    virtual void onDidDisappear(bool lastTime);
+
     
     /**
      * Called when the user navigates 'back'
@@ -85,31 +75,14 @@ public:
     /**@}*/
 
 
-    /**
-     * Called when this controller's view is attached to the window's view tree.
-     */
-	virtual void attachToWindow(Window* window);
-    virtual void attachChildVCsToWindow(Window* window);
-    
-    /**
-     * Called when this controller's view is removed from the window's view tree.
-     */
-    virtual void detachFromWindow();
-    
-    virtual void updateSafeArea(const RECT& safeArea);
+    virtual void applySafeInsets(const EDGEINSETS& safeInsets);
 
     virtual bool navigateBack();
-
-    virtual void addChildViewController(ViewController* childVC);
-    
-    virtual void updateChildSafeArea(ViewController* childVC, const RECT& safeArea);
 
     virtual void requestScroll(float dx, float dy);
 
 protected:
     sp<View> _view;
-    RECT _safeArea;
-    vector<sp<ViewController>> _childViewControllers;
     bool _viewHasSafeAreaPaddingApplied;
     EDGEINSETS _safeAreaInsets;
     

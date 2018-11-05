@@ -28,9 +28,9 @@ public:
 //@property (nonatomic) NSValue* pendingControllerToActivate;
 
 	// Overrides
-	virtual void onWillPause();
-	virtual void onDidPause();
-    virtual void onDidResume();
+	void onWillDisappear(bool lastTime) override;
+	void onDidDisappear(bool lastTime) override;
+    void onDidAppear(bool firstTime) override;
                                
     virtual void LEDsChanged();
 		

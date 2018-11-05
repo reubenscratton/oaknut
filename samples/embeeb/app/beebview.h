@@ -28,8 +28,8 @@ public:
     void layout(RECT constraint) override;
     
     // IBeebDisplayCallbacks
-    virtual void setVisibleArea(int left, int top, int width, int height);
-    virtual void drawFrame();
+    void setVisibleArea(int left, int top, int width, int height) override;
+    void drawFrame() override;
 };
 
 

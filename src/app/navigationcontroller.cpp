@@ -23,43 +23,57 @@ NavigationController::NavigationController() {
 
 }
 
-void NavigationController::updateSafeArea(const RECT& safeArea) {
-    _safeArea = safeArea;
-    _navBar->setPadding({0,safeArea.top(),0,0});
-    // don't apply safe area to root view cos we want to extend our navbar under status bar rather than have padding
-    if (_currentViewController) {
-        updateChildSafeArea(_currentViewController, safeArea);
+
+void NavigationController::onWindowAttached() {
+    ViewController::onWindowAttached();
+    for (auto vc : _navStack) {
+        vc->onWindowAttached();
     }
-    if (_incomingViewController) {
-        updateChildSafeArea(_incomingViewController, safeArea);
-    }
-    /*for (auto it : _navStack) {
-        updateChildSafeArea(it, safeArea);
-    }*/
 }
 
-void NavigationController::updateChildSafeArea(ViewController* childVc, const RECT& safeArea) {
-    RECT childSafeArea = safeArea;
-    EDGEINSETS navbarInsets = {0,_navBar->getPreferredContentHeight(),0,0};
-    navbarInsets.applyToRect(childSafeArea);
-    childVc->updateSafeArea(childSafeArea);
+void NavigationController::onWindowDetached() {
+    ViewController::onWindowDetached();
+    for (auto vc : _navStack) {
+        vc->onWindowDetached();
+    }
+}
+
+
+void NavigationController::applySafeInsets(const EDGEINSETS& safeInsets) {
+
+    _safeAreaInsets = safeInsets;
+    _navBar->setPadding({0,safeInsets.top,0,0});
+    
+    if (_currentViewController) {
+        applySafeInsetsToChild(_currentViewController);
+    }
+    if (_incomingViewController) {
+        applySafeInsetsToChild(_incomingViewController);
+    }
+}
+
+void NavigationController::applySafeInsetsToChild(ViewController* childVC) {
+    EDGEINSETS childInsets = _safeAreaInsets;
+    childInsets.top += _navBar->getPreferredContentHeight();
+    app.log("applySafeInsetsToChild %f %f", childInsets.top, childInsets.bottom);
+    childVC->applySafeInsets(childInsets);
 }
 
 void NavigationController::pushViewController(ViewController* vc) {
-    if (_childViewControllers.size()) {
+    if (_navStack.size()) {
         if (!vc->_leftButtonsFrame) {
             vc->addNavButton(false, "images/back.png", [=] () { vc->onBackButtonClicked(); });
         }
     }
-    addChildViewController(vc);
 
     if (!_currentViewController) {
 		vc->_navigationController = this;
 		_navBar->addViewControllerNav(vc);
 		_currentViewController = vc;
-		_currentViewController->onWillResume();
+		_currentViewController->onWillAppear(true);
 		_contentView->addSubview(vc->getView());
-		_currentViewController->onDidResume();
+        applySafeInsetsToChild(_currentViewController);
+		_currentViewController->onDidAppear(true);
 		return;
 	}
     _navStack.push_back(_currentViewController);
@@ -72,23 +86,23 @@ void NavigationController::popViewController() {
 	}
 	sp<ViewController> vc  = *_navStack.rbegin();
     _navStack.pop_back();
-    addChildViewController(vc);
 	startNavAnimation(vc, Pop);
 }
 
 void NavigationController::startNavAnimation(ViewController* incomingVC, AnimationState animationState) {
 
 	_animationState = animationState;
-	_currentViewController->onWillPause();
+	_currentViewController->onWillDisappear(animationState==Pop);
     
 	_incomingViewController = incomingVC;
 	_incomingViewController->_navigationController = this;
+    applySafeInsetsToChild(_incomingViewController);
     _navBar->addViewControllerNav(incomingVC);
-	_incomingViewController->onWillResume();
+	_incomingViewController->onWillAppear(animationState==Push);
     
 	_contentView->addSubview(_incomingViewController->getView());
 
-	if(!_window) {
+	if(!getWindow()) {
 		completeIncoming();
 		return;
 	}
@@ -108,19 +122,14 @@ void NavigationController::startNavAnimation(ViewController* incomingVC, Animati
 	_view->setNeedsLayout();
 }
 
-void NavigationController::attachChildVCsToWindow(Window* window) {
-    if (_currentViewController) {
-        _currentViewController->attachToWindow(window);
-    }
-}
 
 void NavigationController::completeIncoming() {
 	_currentViewController->getView()->removeFromParent();
 	_navBar->removeViewControllerNav(_currentViewController);
-	_currentViewController->onDidPause();
+	_currentViewController->onDidDisappear(_animationState==Pop);
 	_currentViewController = _incomingViewController;
 	_incomingViewController = NULL;
-	_currentViewController->onDidResume();
+	_currentViewController->onDidAppear(_animationState==Push);
 
 }
 
@@ -161,7 +170,7 @@ void NavigationController::applyNavTransitionToViewController(ViewController* vc
 }
 
 
-void NavigationController::onWillResume() {
+/*void NavigationController::onWillResume() {
 	if (_currentViewController) {
 		_currentViewController->onWillResume();
 	}
@@ -180,7 +189,7 @@ void NavigationController::onDidPause() {
 	if (_currentViewController) {
 		_currentViewController->onWillPause();
 	}
-}
+}*/
 
 bool NavigationController::navigateBack() {
 	if (!_navStack.size()) {
