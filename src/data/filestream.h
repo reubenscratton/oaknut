@@ -14,9 +14,10 @@ public:
     bool openForWrite();
     void close();
     
-    virtual bool hasMoreToRead();
-    virtual bool writeBytes(size_t cb, const void* bytes);
-    virtual bool readBytes(size_t cb, void* bytes);
+    bool hasMoreToRead() override;
+    bool writeBytes(size_t cb, const void* bytes) override;
+    bool readBytes(size_t cb, void* bytes) override;
+    void setWriteOffset(size_t offset) override;
     
 protected:
     string _path;

@@ -105,7 +105,10 @@ static bool s_mouseIsDown;
     
     [self setPixelFormat:pf];
     [self setOpenGLContext:context];
-    [self setWantsBestResolutionOpenGLSurface:YES];    
+    [self setWantsBestResolutionOpenGLSurface:YES];
+    
+    [context makeCurrentContext];
+
 }
 
 

@@ -125,22 +125,6 @@ void Surface::attachViewOps(View* view) {
 }
 
 
-/*
- returns  0 if view1==view2;
- returns -1 if view1 renders before view2
- returns +1 if view1 renders after view2
- */
-int Surface::renderOrder(View* view1, View* view2) {
-    if (view1==view2) return 0;
-    for (View* prev=view2->_previousView ; prev ; prev=prev->_previousView) { // surely there's a better/faster way than this?
-        if (view1==prev) return -1;
-    }
-    for (View* next=view2->_nextView ; next ; next=next->_nextView) {
-        if (view1==next) return 1;
-    }
-    return NAN;
-}
-
 void Surface::addRenderOp(RenderOp* op) {
     op->_mustRedraw = true;
     assert(!op->_batch);
@@ -208,11 +192,10 @@ void Surface::batchRenderOp(RenderOp* op) {
     op->_batch = batch;
     batch->_dirty = true;
     for (auto it=batch->_ops.begin() ; it!=batch->_ops.end() ;it++) {
-        if (renderOrder(op->_view, (*it)->_view) <0) {
+        if (op->_view->_renderOrder < (*it)->_view->_renderOrder) {
             op->_batchIterator = batch->_ops.insert(it, op);
             return;
-        }
-        
+        }        
     }
     op->_batchIterator = batch->_ops.insert(batch->_ops.end(), op);
 }
@@ -241,6 +224,7 @@ void Surface::renderPhase1(View* view, Window* window, POINT origin) {
     bool usesPrivateSurface = (view->_surface != surface);
     if (usesPrivateSurface) {
         bool sizeChanged = false;
+        view->_surface->_renderOrder = 0;
         if (view->_surface->_size.width != view->_rect.size.width || view->_surface->_size.height != view->_rect.size.height) {
             view->_surface->setSize(view->_rect.size);
             sizeChanged = true;
@@ -286,6 +270,7 @@ void Surface::renderPhase1(View* view, Window* window, POINT origin) {
     }
         
     // Recurse
+    view->_renderOrder = surface->_renderOrder++;
     for (auto it = view->_subviews.begin(); it!=view->_subviews.end() ; it++) {
         sp<View>& subview = *it;
         surface->renderPhase1(subview, window, origin);
@@ -432,6 +417,7 @@ void Surface::render(View* view, Window* window) {
     _mvpNum = _mvpNumPeak = 0;
     
     /** PHASE 1: ENSURE ALL RENDER LISTS ARE VALID **/
+    _renderOrder = 0;
     renderPhase1(view, window, {0,0});
     
     validateRenderOps();

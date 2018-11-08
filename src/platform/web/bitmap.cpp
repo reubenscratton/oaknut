@@ -108,7 +108,7 @@ void BitmapWeb::lock(PIXELDATA* pixelData, bool forWriting) {
     }
 
     if (!_pixelData.data) {
-        app.warn("lock() called on bitmap with no data or image");
+        //app.warn("lock() called on bitmap with no data or image");
         return;
     }
 
@@ -170,6 +170,30 @@ void BitmapWeb::toVariant(variant& v) {
     unlock(&pixelData, false);
 }
 
+// Compression
+bytearray BitmapWeb::toJpeg(float quality) {
+    
+    PIXELDATA pixelData;
+    lock(&pixelData, false);
+    EM_ASM_({
+        var c = document.createElement('canvas');
+        var ctx = c.getContext("2d");
+        var imgData = ctx.createImageData($0,$1);
+        
+        // todo: copy pixelData to imgData
+        imgData.data.set(HEAPU8.buffer, $2, $3);
+        console.log("TODO: finish this");
+        // todo: create Image around ImageData
+        // todo: draw Image on Canvas
+        // todo: Canvas.toDataURL("jpeg")
+        
+    }, _width, _height, pixelData.data, pixelData.cb);
+    
+    unlock(&pixelData, false);
+
+    return bytearray();
+}
+
 // Platform-specific
 static void onImageLoadedFromData(BitmapWeb* bitmap) {
     bitmap->_width = bitmap->_img["width"].as<int>();
@@ -204,6 +228,7 @@ void Bitmap::createFromData(const void* data, int cb, std::function<void(Bitmap*
 Bitmap* Bitmap::create(int width, int height, int format) {
     return new BitmapWeb(width, height, format);
 }
+
 
 #endif
 

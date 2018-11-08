@@ -17,19 +17,6 @@ public:
     void stop() override;
     void close() override;
     
-    class CameraWebBitmap : public BitmapWeb {
-    public:
-        
-        CameraWebBitmap();
-
-        void create();
-        void bind() override;
-        
-        val _texture;
-    };
-    
-    
-    CameraWebBitmap _bitmap;
 };
 
 #endif

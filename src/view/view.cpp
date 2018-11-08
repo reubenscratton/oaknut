@@ -646,7 +646,10 @@ void View::layout(RECT constraint) {
 
     // If content size is currently invalid, now's the time to update it
     if (!_contentSizeValid) {
-        updateContentSize(constrainingSize);
+        SIZE constrainingSizeMinusPadding = constrainingSize;
+        constrainingSizeMinusPadding.width -= _padding.left+_padding.right;
+        constrainingSizeMinusPadding.height -= _padding.top+_padding.bottom;
+        updateContentSize(constrainingSizeMinusPadding);
         _contentSizeValid = true;
     }
 #if DEBUG

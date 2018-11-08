@@ -37,6 +37,11 @@ bool FileStream::openForWrite() {
     return true;
 }
 
+void FileStream::setWriteOffset(size_t offset) {
+    fseek(_file, offset, SEEK_SET);
+}
+
+
 void FileStream::close() {
     if (_file) {
         fclose(_file);

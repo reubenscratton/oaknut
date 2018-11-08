@@ -12,6 +12,12 @@ Stream::Stream() {
     offsetWrite = 0;
 }
 
+bool Stream::readInt16(int16_t* val) {
+    return readBytes(sizeof(*val), val);
+}
+bool Stream::writeInt16(int16_t val) {
+    return writeBytes(sizeof(val), &val);
+}
 bool Stream::readInt32(int32_t* val) {
     return readBytes(sizeof(*val), val);
 }

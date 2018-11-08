@@ -31,8 +31,6 @@ $(PCH).dep : $(OAKNUT_DIR)/src/oaknut.h
 #DEPS := $(PCH).dep $(DEPS)
 
 
-#$(OBJ_DIR)%.bc : %
-
 $(OBJ_DIR)%.bc : % $(OBJ_DIR)%.dep
 	@echo $(PLATFORM): Compiling $(notdir $<)
 	@mkdir -p $(dir $@)
@@ -45,11 +43,10 @@ $(OBJ_DIR)%.bc : % $(OBJ_DIR)%.dep
 	@mv -f $(@:.bc=.Td) $(@:.bc=.dep) && touch $@
 
 
-EXECUTABLE=$(OUTPUT_DIR)/xx.html
-
 ASSET_DIRS = $(shell find $(PROJECT_ROOT)/assets/ -type d)
 ASSET_FILES = $(shell find $(PROJECT_ROOT)/assets -type f -name '*')
 
+EXECUTABLE=$(OUTPUT_DIR)/xx.html
 $(EXECUTABLE): $(PCH).dep $(PCH) $(OBJS) $(HTML_FILE) $(ASSET_DIRS) $(ASSET_FILES)
 	@echo $(PLATFORM): Linking app
 	@mkdir -p $(dir $(EXECUTABLE))

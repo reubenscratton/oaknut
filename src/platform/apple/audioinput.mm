@@ -11,6 +11,14 @@
 #include "audioinput.h"
 
 
+bytearray AudioInputSamplesApple::getData() {
+    CMBlockBufferRef buf = CMSampleBufferGetDataBuffer(_sampleBuffer);
+    auto cb = CMBlockBufferGetDataLength(buf);
+    bytearray bytes(cb);
+    CMBlockBufferCopyDataBytes(buf, 0, cb, bytes.data());
+    return bytes;
+}
+
 @interface AudioInputHelper : NSObject <AVCaptureAudioDataOutputSampleBufferDelegate>
 
 @property (nonatomic) AudioInput* audioInput;

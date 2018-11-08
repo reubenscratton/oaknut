@@ -14,6 +14,9 @@
 class AudioInputSamplesApple : public AudioInputSamples {
 public:
     CMSampleBufferRef _sampleBuffer;
+    
+    bytearray getData() override;
+
 };
 
 #endif

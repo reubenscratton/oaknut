@@ -91,6 +91,9 @@ public:
     // Rendering
     virtual void bind();
     virtual void onRenderContextDestroyed();
+    
+    // Compression
+    virtual bytearray toJpeg(float quality)=0;
 
     int getBytesPerPixel();
     GLenum getGlFormat();

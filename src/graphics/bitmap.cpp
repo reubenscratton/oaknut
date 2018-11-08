@@ -117,6 +117,7 @@ uint8_t* Bitmap::pixelAddress(PIXELDATA* pixelData, int x, int y) {
 void Bitmap::bind() {
     if (!_textureId) {
         check_gl(glGenTextures, 1, &_textureId);
+        assert(_textureId>0);
         _renderContextIt = app._window->_loadedTextures.insert(app._window->_loadedTextures.end(), this);
     }
     check_gl(glBindTexture, _texTarget, _textureId);

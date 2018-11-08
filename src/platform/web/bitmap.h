@@ -35,6 +35,9 @@ public:
     void unlock(PIXELDATA* pixelData, bool pixelsChanged) override;
     void bind() override;
     
+    // Compression
+    bytearray toJpeg(float quality) override;
+
     // ISerializeToVariant
     void fromVariant(const variant& v) override;
     void toVariant(variant& v) override;

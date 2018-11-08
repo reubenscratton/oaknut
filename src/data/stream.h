@@ -18,7 +18,10 @@ public:
     virtual bool hasMoreToRead() = 0;
     virtual bool writeBytes(size_t cb, const void* bytes) = 0;
     virtual bool readBytes(size_t cb, void* bytes) = 0;
+    virtual void setWriteOffset(size_t offset) = 0;
     
+    bool readInt16(int16_t* val);
+    bool writeInt16(int16_t val);
     bool readInt32(int32_t* val);
     bool writeInt32(int32_t val);
     bool readUint32(uint32_t* val);

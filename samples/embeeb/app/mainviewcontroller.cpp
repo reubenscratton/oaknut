@@ -25,11 +25,10 @@ void MainViewController::LEDsChanged() {
 MainViewController::MainViewController() {
     
     // Inflate layout
-    View* view = app.layoutInflate("layout/main.res");
-    _beebView = (BeebView*)view->findViewById("beebView");
-    _controllerView = (ControllerView*)view->findViewById("controllerView");
-    setView(view);
-    
+    inflate("layout/main.res");
+    bind(_beebView, "beebView");
+    bind(_controllerView, "controllerView");
+
     // Create our Beeb instance
     _beeb = new Beeb();
     _beeb->keyboardCallbacks = this;

@@ -338,6 +338,7 @@ protected:
         form a doubly-linked list used in rendering. */
     sp<View> _previousView;
     sp<View> _nextView;
+    uint32_t _renderOrder; // set by Surface::renderPass1, read in Surface::renderPass2.
     
     /** The RenderOps that draw this view */
     list<sp<RenderOp>> _renderList;

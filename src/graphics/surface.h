@@ -63,8 +63,9 @@ public:
 private:
     void renderPhase1(View* view, Window* window, POINT origin);
     void renderPhase2(Surface* prevsurf, View* view, Window* window);
-    static int renderOrder(View* view1, View* view2);
+    //static int renderOrder(View* view1, View* view2);
     
+    int _renderOrder;
 #ifdef DEBUG
     string _renderLog;
 #endif

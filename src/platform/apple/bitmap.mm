@@ -136,6 +136,8 @@ BitmapApple::BitmapApple(CVImageBufferRef cvImageBuffer, bool fromCamera) : Bitm
         CVOpenGLTextureCacheFlush(_cvTextureCache, 0);
         _cvTextureCache = NULL;
         
+        
+        
     }
 #endif
     assert(err==0);
@@ -281,6 +283,34 @@ void BitmapApple::bind() {
 }
 
 
+bytearray BitmapApple::toJpeg(float quality) {
+
+    NSBitmapImageRep* bitmapRep = nil;
+    if (_context) {
+        CGImageRef imgRef = CGBitmapContextCreateImage(_context);
+        bitmapRep = [[NSBitmapImageRep alloc] initWithCGImage:imgRef];
+    }
+    else if (_cvImageBuffer) {
+        CIImage* imgRef = [CIImage imageWithCVImageBuffer:_cvImageBuffer];
+        bitmapRep = [[NSBitmapImageRep alloc] initWithCIImage:imgRef];
+    }
+    else {
+        assert(0); // oops! todo: support other kinds of image (gl texture, probably)
+    }
+    NSData* data = [bitmapRep representationUsingType:NSJPEGFileType properties:@{NSImageCompressionFactor:@(quality)}];
+
+    /*UIImage* image = nil;
+    if (_context) {
+        CGImageRef imgRef = CGBitmapContextCreateImage(_context);
+        image = [UIImage imageWithCGImage:imgRef];
+        CGImageRelease(imgRef);
+    } else {
+        
+    }
+    NSData* data = UIImageJPEGRepresentation(image, quality);*/
+    
+    return bytearray((uint8_t*)data.bytes, (int)data.length);
+}
 
 BitmapApple* bitmapFromData(const void* data, int cb) {
     CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, data, cb, NULL);
@@ -409,6 +439,7 @@ void Bitmap::createFromData(const void* data, int cb, std::function<void(Bitmap*
 Bitmap* Bitmap::create(int width, int height, int format) {
     return new BitmapApple(width, height, format);
 }
+
 
 
 /*

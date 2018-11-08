@@ -35,6 +35,7 @@ public:
     void lock(oak::PIXELDATA* pixelData, bool forWriting) override;
     void unlock(oak::PIXELDATA* pixelData, bool pixelDataChanged) override;
     void bind() override;
+    bytearray toJpeg(float quality) override;
     
     void fromVariant(const oak::variant& v) override;
     void toVariant(oak::variant& v) override;

@@ -4,6 +4,10 @@ font-size: 17dp
 window: {
     default-width:200dp
     default-height:200dp
+    safeInsetBackgrounds: {
+        bottom@android: black
+        top: green
+    }
 }
 
 colors: {

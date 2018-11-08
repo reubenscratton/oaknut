@@ -7,7 +7,7 @@
 
 class AudioInputSamples : public Object {
 public:
-    bytearray _data;
+    virtual bytearray getData()=0;
 };
 
 class AudioInput : public Object {

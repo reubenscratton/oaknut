@@ -28,7 +28,7 @@ default: $(PLATFORM)
 # Gather information about project files
 PROJECT_ROOT := $(abspath .)
 
-rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst *,%,$2),$d))
+rwildcard=$(foreach d,$(filter-out %/webworkers,$(wildcard $1*)),$(call rwildcard,$d/,$2) $(filter $(subst *,%,$2),$d))
 
 ifndef SOURCES
 SOURCES := $(call rwildcard,$(PROJECT_ROOT)/app/,*)
@@ -39,7 +39,6 @@ endif
 ASSETS:=$(call rwildcard,$(PROJECT_ROOT)/assets/,*)
 
 SOURCES := $(filter %.cpp %.c %.m %.mm,$(SOURCES))
-
 
 
 
