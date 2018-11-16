@@ -23,6 +23,8 @@ public:
     ByteBuffer(const string& str);
     ~ByteBuffer();
     void set(const void* rawData, size_t len);
+    void attach(uint8_t* data, size_t cb);
+    void detach();
     
     static ByteBuffer* createFromFile(const string& path);
     void saveToFile(const string& path);

@@ -285,6 +285,23 @@ void BitmapApple::bind() {
 
 bytearray BitmapApple::toJpeg(float quality) {
 
+#if TARGET_OS_IOS
+    UIImage* image = nil;
+    if (_context) {
+        CGImageRef imgRef = CGBitmapContextCreateImage(_context);
+        image = [UIImage imageWithCGImage:imgRef];
+        CGImageRelease(imgRef);
+    }
+    else if (_cvImageBuffer) {
+        CIImage* imgRef = [CIImage imageWithCVImageBuffer:_cvImageBuffer];
+        CGImageRef cgImage = [[CIContext contextWithOptions:nil] createCGImage:imgRef fromRect:CGRectMake(0,0,_width,_height)];
+        image = [UIImage imageWithCGImage:cgImage];
+    }
+    else {
+        assert(0); // oops! todo: support other kinds of image (gl texture, probably)
+     }
+     NSData* data = UIImageJPEGRepresentation(image, quality);
+#else
     NSBitmapImageRep* bitmapRep = nil;
     if (_context) {
         CGImageRef imgRef = CGBitmapContextCreateImage(_context);
@@ -298,17 +315,7 @@ bytearray BitmapApple::toJpeg(float quality) {
         assert(0); // oops! todo: support other kinds of image (gl texture, probably)
     }
     NSData* data = [bitmapRep representationUsingType:NSJPEGFileType properties:@{NSImageCompressionFactor:@(quality)}];
-
-    /*UIImage* image = nil;
-    if (_context) {
-        CGImageRef imgRef = CGBitmapContextCreateImage(_context);
-        image = [UIImage imageWithCGImage:imgRef];
-        CGImageRelease(imgRef);
-    } else {
-        
-    }
-    NSData* data = UIImageJPEGRepresentation(image, quality);*/
-    
+#endif
     return bytearray((uint8_t*)data.bytes, (int)data.length);
 }
 

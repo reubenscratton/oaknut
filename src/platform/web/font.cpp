@@ -43,6 +43,10 @@ FontWeb::FontWeb(const string& fontAssetPath, float size, float weight) : Font(f
     }
     
     _fontHelper = val::global("FontHelper").new_(val(_name.data()), val(_size), val(_weight), val(fontFamily.data()));
+    val metrics = _fontHelper.call<val>("measure", val("Mg"));
+    _ascent = metrics["a"].as<float>();
+    _descent = -metrics["d"].as<float>();
+    _height = metrics["h"].as<float>();
 }
     
 Glyph* FontWeb::createGlyph(char32_t ch, Atlas* atlas) {
@@ -57,6 +61,7 @@ Glyph* FontWeb::createGlyph(char32_t ch, Atlas* atlas) {
     Glyph* glyph = new Glyph(this, ch, 0);
     glyph->bitmapWidth = metrics["w"].as<int>();
     glyph->bitmapHeight = metrics["h"].as<int>();
+    glyph->bitmapTop = -metrics["d"].as<int>();
     glyph->advance.width = glyph->bitmapWidth+1; // todo: fix this terrible hack
     
     // Reserve a space in the atlas

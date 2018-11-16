@@ -159,9 +159,6 @@ function updateFps(fps) {
 	fpsDiv.innerHTML = '' + fps + ' fps';
 }
 
-function debugBreak() {
-    log("debugBreak!");
-}
 /*************************************
  * Module object and app entry point *
  *************************************/
@@ -195,9 +192,6 @@ function lsGetInt(key, defaultValue) {
 }
 
 
-canvas2D = document.createElement('canvas').getContext("2d");
-
-
 var Module = {
     preRun: [],
     postRun: [
@@ -217,25 +211,30 @@ var Module = {
     }
 };
 
+var keynameBuff;
+
 function keyEvent(e, down) {
-    Module.oak_keyEvent(down, e.keyCode, (e.key.length>=1) ? e.key.charCodeAt(0) : 0);
+    if (!keynameBuff) {
+         keynameBuff = _malloc(32); // enough to easily hold longest key name, 'MicrophoneVolumeDown' afaics, ref. https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values
+    }
+    var cb=lengthBytesUTF8(e.key) + 1;
+    stringToUTF8(e.key, keynameBuff, cb);
+    Module.oak_keyEvent(down, e.keyCode, keynameBuff);
 }
 document.addEventListener('keydown', (e) => {
-    //log("keydown! " + e);
     keyEvent(e, true);
 });
 document.addEventListener('keyup', (e) => {
-    //log("keyup! " + e);
     keyEvent(e, false);
 });
 
-      window.onerror = function(message, source, lineno, colno, error) {
-          var s="Exception: "  + message + " error:" + error + " line:" + lineno + " col:" + colno;
-          log(s);
-          alert(s);
-      };
-      window.onunload = function() {
-      }
+window.onerror = function(message, source, lineno, colno, error) {
+  var s="Exception: "  + message + " error:" + error + " line:" + lineno + " col:" + colno;
+  log(s);
+  alert(s);
+};
+window.onunload = function() {
+}
 
 
 /** Text measuring **/

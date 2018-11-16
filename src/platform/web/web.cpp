@@ -98,9 +98,41 @@ static void oak_userEvent(int eventType, int eventSourceId, int x, int y) {
     app._window->dispatchInputEvent(inputEvent);
 }
 
-static void oak_keyEvent(int keyDown, int keyCode, int charCode) {
+static map<string,KeyboardInputSpecialKeyCode> s_specialKeys = {
+    {"Alt", SpecialKeyAlt},
+    {"ArrowLeft", SpecialKeyCursorLeft},
+    {"ArrowRight", SpecialKeyCursorRight},
+    {"ArrowUp", SpecialKeyCursorUp},
+    {"ArrowDown", SpecialKeyCursorDown},
+    {"Backspace", SpecialKeyDelete},
+    {"Delete", SpecialKeyDelete},
+    {"AltGraph", SpecialKeyAlt},
+    {"CapsLock", SpecialKeyCapsLock},
+    {"Control", SpecialKeyControl},
+    {"Escape", SpecialKeyEscape},
+    {"Fn", SpecialKeyFunction},
+    {"Meta", SpecialKeyCommand},
+    {"Shift", SpecialKeyShift}
+};
+
+static void oak_keyEvent(int keyDown, int keyCode, int keynameBuffPtr) {
     if (app._window->_keyboardHandler) {
-        app._window->_keyboardHandler->keyInputEvent(keyDown? KeyDown:KeyUp, SpecialKeyNone, keyCode, charCode);
+        string keyname((char*)keynameBuffPtr);
+        //app.log("key: %s", keyname.data());
+        char32_t charCode = 0;
+        KeyboardInputSpecialKeyCode specialKey = SpecialKeyNone;
+        if (keyname.length()==1) {
+            charCode = keyname.charAt(0);
+        } else {
+            const auto& it = s_specialKeys.find(keyname);
+            if (it != s_specialKeys.end()) {
+                specialKey = it->second;
+            } else {
+                if (keyname=="Tab") charCode='\t';
+                if (keyname=="Enter") charCode='\n';
+            }
+        }
+        app._window->_keyboardHandler->keyInputEvent(keyDown? KeyDown:KeyUp, specialKey, keyCode, charCode);
     }
 }
 
@@ -117,7 +149,7 @@ static void oak_main() {
 EMSCRIPTEN_BINDINGS(oaknut) {
     emscripten::function("oak_setWindowSize", &oak_setWindowSize);
     emscripten::function("oak_userEvent", &oak_userEvent);
-    emscripten::function("oak_keyEvent", &oak_keyEvent);
+    emscripten::function<void,int,int,int>("oak_keyEvent", &oak_keyEvent);
     emscripten::function("oak_main", &oak_main);
 }
 

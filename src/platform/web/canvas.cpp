@@ -91,8 +91,8 @@ void CanvasWeb::resize(int width, int height) {
     _hasChanged = true;
 }
 void CanvasWeb::clear(COLOR color) {
+    _ctxt.call<void>("clearRect", 0,0,_bitmap->_width,_bitmap->_height);
     _hasChanged = true;
-
 }
 void CanvasWeb::setStrokeWidth(float strokeWidth) {
     _strokeWidth = strokeWidth;
@@ -130,9 +130,15 @@ void CanvasWeb::drawOval(RECT rect) {
     _ctxt.call<void>("save");
     _ctxt.call<void>("beginPath");
     _ctxt.call<void>("ellipse", val(rect.midX()), val(rect.midY()), val(rect.size.width/2), val(rect.size.height/2), val(0), val(0),val(2*M_PI));
-    _ctxt.set("lineWidth", val(_strokeWidth));
-    _ctxt.set("strokeStyle", val(cssColorStr(_strokeColor).data()));
-    _ctxt.call<void>("stroke");
+    if (_fillColor != 0) {
+        _ctxt.set("fillStyle", val(cssColorStr(_fillColor).data()));
+        _ctxt.call<void>("fill");
+    }
+    if (_strokeWidth > 0  && _strokeColor != 0) {
+        _ctxt.set("lineWidth", val(_strokeWidth));
+        _ctxt.set("strokeStyle", val(cssColorStr(_strokeColor).data()));
+        _ctxt.call<void>("stroke");
+    }
     _ctxt.call<void>("restore");
     _hasChanged = true;
 }

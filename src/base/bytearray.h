@@ -60,6 +60,7 @@ public:
     void erase(int32_t offset);
     void erase(int32_t offsetStart, int32_t cb);
     void resize(int32_t newSize);
+    void detach();
     
     class string toString(bool copy);
     

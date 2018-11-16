@@ -14,7 +14,7 @@ class URLRequestWeb : public URLRequest {
 public:
     val _val;
 
-    URLRequestWeb(const string& url, const string& method, const string& body, int flags) : URLRequest(url, method, body, flags), _val(val::null()) {
+    URLRequestWeb(const string& url, const string& method, const bytearray& body, int flags) : URLRequest(url, method, body, flags), _val(val::null()) {
     }
     
     static void OnProgress(URLRequestWeb* req, int done, int total, int timestamp) {
@@ -81,6 +81,17 @@ public:
     
             // Create an XMLHttpRequest
             _val = val::global("XMLHttpRequest").new_();
+            
+            // Open it
+            _val.call<void>("open", val(_method.data()), val(_url.data()), val(true));
+
+            // Set headers
+            for (auto& header : _headers) {
+                const string& headerName = header.first;
+                const string& headerValue = header.second;
+                _val.call<void>("setRequestHeader", val(headerName.data()), val(headerValue.data()));
+            }
+
             int gotIndex = val::global("gotSet")(_val).as<int>();
             EM_ASM_ ({
                 var req=$0;
@@ -89,7 +100,6 @@ public:
                 var onload=$3;
                 var onerror=$4;
                 var xhr = gotGet($5);
-                xhr.open("GET", url, true);
                 xhr.responseType='arraybuffer';
                 
                 // progress
@@ -112,6 +122,8 @@ public:
                 xhr.onload=function http_onload(e) {
                     switch(xhr.status) {
                         case 200:
+                        case 201:
+                        case 202:
                         case 206:
                         case 300:
                         case 301:
@@ -144,9 +156,18 @@ public:
                 // limit the number of redirections
                 try{if(xhr.channel instanceof Ci.nsIHttpChannel)xhr.channel.redirectionLimit=0;}catch(ex){}
                 
-                // send
-                xhr.send(null);
             }, this, _url.data(), OnProgress, OnNonImageLoad, OnError, gotIndex);
+
+            // Send
+            val body = val::null();
+            if (_body.size()) {
+                int gotIndex = EM_ASM_INT({
+                    return gotSet(new Uint8Array(HEAPU8.buffer, $0, $1));
+                }, _body.data(), _body.size());
+                body = val::global("gotGet")(gotIndex);
+            }
+            _val.call<void>("send", body);
+
         }
     }
         
@@ -169,7 +190,7 @@ public:
 };
 
 
-URLRequest* URLRequest::create(const string& url, const string& method, const string& body, int flags) {
+URLRequest* URLRequest::create(const string& url, const string& method, const bytearray& body, int flags) {
     return new URLRequestWeb(url, method, body, flags);
 }
 

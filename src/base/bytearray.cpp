@@ -92,3 +92,8 @@ string bytearray::toString(bool copy) {
     
 }
 
+void bytearray::detach() {
+    _p = NULL;
+    _cb = 0;
+}
+

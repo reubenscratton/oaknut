@@ -11,7 +11,7 @@
 
 class URLRequestApple : public URLRequest {
 public:
-    URLRequestApple(const string& url, const string& method, const string& body, int flags)
+    URLRequestApple(const string& url, const string& method, const bytearray& body, int flags)
         : URLRequest(url, method, body, flags) {
     }
     ~URLRequestApple() {
@@ -23,7 +23,7 @@ public:
         NSMutableURLRequest* req = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:urlstr] cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:15];
         req.HTTPMethod = [NSString stringWithUTF8String:_method.data()];
         if (_body.length() > 0) {
-            req.HTTPBody = [NSData dataWithBytes:_body.data() length:_body.lengthInBytes()];
+            req.HTTPBody = [NSData dataWithBytes:_body.data() length:_body.size()];
         }
         for (auto& header : _headers) {
             NSString* headerName = [NSString stringWithUTF8String:header.first.data()];
@@ -64,7 +64,7 @@ public:
     NSURLSessionDataTask* _dataTask;
 };
 
-URLRequest* URLRequest::create(const string& url, const string& method, const string& body, int flags) {
+URLRequest* URLRequest::create(const string& url, const string& method, const bytearray& body, int flags) {
     return new URLRequestApple(url, method, body, flags);
 }
 

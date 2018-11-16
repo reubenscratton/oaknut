@@ -109,3 +109,11 @@ string ByteBuffer::toString(bool copy) {
 
 }
 
+void ByteBuffer::attach(uint8_t* data, size_t cb) {
+    this->data = data;
+    this->cb = cb;
+}
+void ByteBuffer::detach() {
+    this->data = NULL;
+    this->cb = 0;
+}

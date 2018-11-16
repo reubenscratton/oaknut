@@ -13,14 +13,14 @@ OBJS:=$(filter-out %.mm.bc,$(OBJS))
 
 #OPTS+=$(if $(DEBUG),-O0 --profiling -s DEMANGLE_SUPPORT=1,-O3)
 OPTS+= -O0 --profiling -s DEMANGLE_SUPPORT=1
-OPTS+= -s USE_PTHREADS=1
+
 #PThreads is broken on WASM cos there's no Atomics support (it exists but is disabled cos of Spectre)
 #OPTS+= -s USE_PTHREADS=1
 
 ALLOPTS:= $(CFLAGS) -DPLATFORM_WEB=1 -DEMSCRIPTEN $(OPTS) \
          -I$(OAKNUT_DIR)/src \
          -isystem $(EMSCRIPTEN_ROOT)/system/include \
-         -s USE_PTHREADS=1 -s TOTAL_MEMORY=33554432
+         -s TOTAL_MEMORY=33554432
 
 $(PCH).dep : $(OAKNUT_DIR)/src/oaknut.h
 	@mkdir -p $(dir $@)

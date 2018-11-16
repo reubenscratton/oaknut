@@ -7,6 +7,17 @@
 
 #include <oaknut.h>
 
+static char encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+    'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+    'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+    'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+    'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+    'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+    'w', 'x', 'y', 'z', '0', '1', '2', '3',
+    '4', '5', '6', '7', '8', '9', '+', '/'};
+static char *decoding_table = NULL;
+static int mod_table[] = {0, 2, 1};
+
 static const string base64_chars =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
@@ -22,44 +33,29 @@ string oak::base64_encode(const bytearray& array) {
     return base64_encode(array.data(), array.size());
 }
 
-string oak::base64_encode(uint8_t const* buf, unsigned int bufLen) {
+string oak::base64_encode(uint8_t const* data, unsigned int input_length) {
+    uint32_t output_length = 4 * ((input_length + 2) / 3);
+    char* encoded_data = (char*)malloc(output_length);
+    
+    for (int i = 0, j = 0; i < input_length;) {
+        
+        uint32_t octet_a = i < input_length ? (unsigned char)data[i++] : 0;
+        uint32_t octet_b = i < input_length ? (unsigned char)data[i++] : 0;
+        uint32_t octet_c = i < input_length ? (unsigned char)data[i++] : 0;
+        
+        uint32_t triple = (octet_a << 0x10) + (octet_b << 0x08) + octet_c;
+        
+        encoded_data[j++] = encoding_table[(triple >> 3 * 6) & 0x3F];
+        encoded_data[j++] = encoding_table[(triple >> 2 * 6) & 0x3F];
+        encoded_data[j++] = encoding_table[(triple >> 1 * 6) & 0x3F];
+        encoded_data[j++] = encoding_table[(triple >> 0 * 6) & 0x3F];
+    }
+    
+    for (int i = 0; i < mod_table[input_length % 3]; i++)
+        encoded_data[output_length - 1 - i] = '=';
+    
     string ret;
-    int i = 0;
-    int j = 0;
-    uint8_t char_array_3[3];
-    uint8_t char_array_4[4];
-    
-    while (bufLen--) {
-        char_array_3[i++] = *(buf++);
-        if (i == 3) {
-            char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-            char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-            char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-            char_array_4[3] = char_array_3[2] & 0x3f;
-            
-            for(i = 0; (i <4) ; i++)
-                ret.append(base64_chars[char_array_4[i]]);
-            i = 0;
-        }
-    }
-    
-    if (i)
-    {
-        for(j = i; j < 3; j++)
-            char_array_3[j] = '\0';
-        
-        char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-        char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-        char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-        char_array_4[3] = char_array_3[2] & 0x3f;
-        
-        for (j = 0; (j < i + 1); j++)
-            ret.append(base64_chars[char_array_4[j]]);
-        
-        while((i++ < 3))
-            ret.append('=');
-    }
-    
+    ret.assign(encoded_data, output_length);
     return ret;
 }
 

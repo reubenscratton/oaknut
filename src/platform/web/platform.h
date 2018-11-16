@@ -2,6 +2,7 @@
 #define EGL_EGLEXT_PROTOTYPES
 #include <emscripten.h>
 #include <emscripten/bind.h>
+#include <emscripten/emscripten.h>
 #include <emscripten/val.h>
 #include <emscripten/threading.h>
 #include <emscripten/html5.h>

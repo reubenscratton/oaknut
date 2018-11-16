@@ -26,9 +26,9 @@
 class URLRequest : public Object {
 public:
     static URLRequest* get(const string& url, int flags=0);
-    static URLRequest* post(const string& url, const string& body);
-    static URLRequest* patch(const string& url, const string& body);
-    static URLRequest* createAndStart(const string& url, const string& method, const string& body, int flags);
+    static URLRequest* post(const string& url, const bytearray& body);
+    static URLRequest* patch(const string& url, const bytearray& body);
+    static URLRequest* createAndStart(const string& url, const string& method, const bytearray& body, int flags);
     
     void setHeader(const string& headerName, const string& headerValue);
 
@@ -45,12 +45,12 @@ public:
     const bytearray& getResponseData() const { return _responseData; }
     
 protected:
-    URLRequest(const string& url, const string& method, const string& body, int flags);
+    URLRequest(const string& url, const string& method, const bytearray& body, int flags);
     ~URLRequest();
     string _url;
     string _method;
     map<string,string> _headers;
-    string _body;
+    bytearray _body;
     int _httpStatus;
     bytearray _responseData;
     int _flags;
@@ -59,7 +59,7 @@ protected:
     std::function<void(URLRequest* req, const variant&)> _handlerJson;
     std::function<void(URLRequest* req, Bitmap*)> _handlerBitmap;
     
-    static URLRequest* create(const string& url, const string& method, const string& body, int flags);
+    static URLRequest* create(const string& url, const string& method, const bytearray& body, int flags);
 
     virtual void dispatchResult(int httpStatus, const map<string, string>& responseHeaders);
 };

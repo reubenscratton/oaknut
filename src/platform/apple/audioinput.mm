@@ -142,25 +142,25 @@ class AudioInputApple : public AudioInput {
 public:
     
     AudioInputHelper* _helper;
-    int _sampleRateIn, _sampleRateOut;
+    int _sampleRateOut;
     AVCaptureSession* _session;
     AVCaptureDeviceInput* _audioCaptureDeviceInput;
     AVCaptureAudioDataOutput* _audioDataOutput;
     dispatch_queue_t _queue;
+    AudioFormat _preferredFormat;
     
     AudioInputApple() {
         _helper = [AudioInputHelper new];
         _helper.audioInput = this;
     }
 
-    void open(int sampleRate) override {
-        _sampleRateIn = 22050; // supported on all iOS+macOS
-        _sampleRateOut = sampleRate;
+    void open(AudioFormat& preferredFormat) override {
+        _preferredFormat = preferredFormat;
     }
     void start() override {
         _session = [[AVCaptureSession alloc] init];
         assert(_session);
-        [_session setSessionPreset:AVCaptureSessionPreset640x480]; // ??? why is video here? is this copy paste error or does this do something useful?
+        //[_session setSessionPreset:AVCaptureSessionPreset640x480]; // ??? why is video here? is this copy paste error or does this do something useful?
         [_session beginConfiguration];
         AVCaptureDevice* audioCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
         NSError* error = nil;
@@ -169,19 +169,22 @@ public:
         _audioDataOutput = [AVCaptureAudioDataOutput new];
         
 #if TARGET_OS_OSX
+        NSMutableDictionary* settings = _audioDataOutput.audioSettings.mutableCopy;
+        [settings setObject:@(_preferredFormat.numChannels) forKey:AVNumberOfChannelsKey];
+        [settings setObject:@(_preferredFormat.sampleRate) forKey:AVSampleRateKey];
+
         // CAVEAT! OSX 10.12 provides stereo *non-interleaved* buffers by default!
         // In 20+ years of software dev I've never seen non-interleaved stereo data, didn't
         // know it was a thing, and working out what the hell was going on cost me AN
         // ENTIRE DAY OF DEV. So to avoid the bloody pointless horror of it all we simply
         // force mono recording here.
         // TODO: Come back to this some day and figure out how to handle stereo formats.
-        NSMutableDictionary * d = _audioDataOutput.audioSettings.mutableCopy;
-        [d setObject:@(1) forKey:AVNumberOfChannelsKey];
+        [settings setObject:@(1) forKey:AVNumberOfChannelsKey];
         // Similarly OSX provides float data by default and the AudioConverter just
         // turns it into garbage! WTAF? Force it to record int16 here too...
-        [d setObject:@(0) forKey:AVLinearPCMIsFloatKey];
-        [d setObject:@(16) forKey:AVLinearPCMBitDepthKey];
-        _audioDataOutput.audioSettings = d;
+        [settings setObject:@(0) forKey:AVLinearPCMIsFloatKey];
+        [settings setObject:@(16) forKey:AVLinearPCMBitDepthKey];
+        _audioDataOutput.audioSettings = settings;
 #endif
         _queue = dispatch_queue_create("AudioInput", DISPATCH_QUEUE_SERIAL);
         [_audioDataOutput setSampleBufferDelegate:_helper queue:_queue];

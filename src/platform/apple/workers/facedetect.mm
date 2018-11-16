@@ -9,11 +9,11 @@
 #include "oaknut.h"
 #import <CoreImage/CoreImage.h>
 
-class FaceDetectorApple : public FaceDetector {
+class FaceDetectorWorker : public WorkerApple {
 public:
     CIDetector* _detector;
     
-    FaceDetectorApple() {
+    FaceDetectorWorker() {
     
         CIContext* context =
 #if TARGET_OS_IPHONE
@@ -31,22 +31,22 @@ public:
     }
     
 
-    int detectFaces(Bitmap* bitmap) override {
-        PIXELDATA pixeldata;
-        bitmap->lock(&pixeldata, false);
-        NSData* data = [NSData dataWithBytesNoCopy:pixeldata.data length:pixeldata.cb freeWhenDone:NO];
-        CIImage* image = [CIImage imageWithBitmapData:data bytesPerRow:pixeldata.stride size:CGSizeMake(bitmap->_width,bitmap->_height) format:kCIFormatRGBA8 colorSpace:nil];
+    const variant process_(const variant& data_in) override {
+        int width = data_in.intVal("width");
+        int height = data_in.intVal("height");
+        const bytearray& bytes = data_in.bytearrayVal("data");
+        NSData* data = [NSData dataWithBytesNoCopy:bytes.data() length:bytes.length() freeWhenDone:NO];
+        CIImage* image = [CIImage imageWithBitmapData:data bytesPerRow:width*4 size:CGSizeMake(width,height) format:kCIFormatRGBA8 colorSpace:nil];
         //[CIImage imageWithTexture:tex->_textureId size: flipped:NO colorSpace:nil];
         NSArray *features = [_detector featuresInImage:image options:@{}];
-        bitmap->unlock(&pixeldata, false);
         //app.log("faces: %d", features.count);
-        return (int)features.count;
+        variant retval;
+        retval.set("numFaces", (int)features.count);
+        return retval;
     }
 };
 
+DECLARE_DYNCREATE(FaceDetectorWorker);
 
-FaceDetector* FaceDetector::create() {
-    return new FaceDetectorApple();
-}
 
 #endif

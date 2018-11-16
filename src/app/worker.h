@@ -19,10 +19,9 @@
 
 class Worker : public Object {
 public:
-    static Worker* create(const string& name);
-    
     virtual void start(const variant& config)=0;
-    virtual void process(const bytearray& data_in, std::function<void(const bytearray&)> callback)=0;
+    virtual void process(const variant& data_in,
+                         std::function<void(const variant&)> callback)=0;
     virtual void stop(std::function<void()> onStop)=0;
     
 protected:

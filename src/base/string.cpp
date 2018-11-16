@@ -549,6 +549,18 @@ int32_t string::asInt() {
     return atoi(_p);
 }
 
+bytearray string::toByteArray(bool copy) {
+    bytearray b;
+    if (copy) {
+        b.assign((uint8_t*)_p, _cb);
+    } else {
+        b.assignNoCopy((uint8_t*)_p, _cb);
+        _p = NULL;
+        _cb = _cc = 0;
+    }
+    return b;
+}
+
 
 
 

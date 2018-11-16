@@ -172,6 +172,8 @@ public:
     int32_t asInt();
     string urlEncode();
     
+    bytearray toByteArray(bool copy);
+    
 protected:
     union {
         char* _p;

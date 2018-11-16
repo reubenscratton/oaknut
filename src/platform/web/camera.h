@@ -17,6 +17,11 @@ public:
     void stop() override;
     void close() override;
     
+    val _video;
+    int _intervalId;
+    bool _started;
+    
+    void timerCallbackCPP(int textureGotId);
 };
 
 #endif

@@ -12,13 +12,13 @@
 static MruCache<string> s_urldataCache(4*1024*1024);
 
 
-URLRequest::URLRequest(const string& url, const string& method, const string& body, int flags) : _url(url) {
+URLRequest::URLRequest(const string& url, const string& method, const bytearray& body, int flags) : _url(url) {
 	_method = method;
     _body = body;
     _flags = flags;
 }
 
-URLRequest* URLRequest::createAndStart(const string& url, const string& method, const string& body, int flags) {
+URLRequest* URLRequest::createAndStart(const string& url, const string& method, const bytearray& body, int flags) {
     auto req = create(url, method, body, flags);
     req->retain(); // keep request alive until run() completes async
     Task::postToMainThread([=]() {
@@ -27,12 +27,12 @@ URLRequest* URLRequest::createAndStart(const string& url, const string& method, 
     return req;
 }
 URLRequest* URLRequest::get(const string& url, int flags/*=0*/) {
-    return createAndStart(url, "GET", "", flags);
+    return createAndStart(url, "GET", bytearray(), flags);
 }
-URLRequest* URLRequest::post(const string& url, const string& body) {
+URLRequest* URLRequest::post(const string& url, const bytearray& body) {
     return createAndStart(url, "POST", body, 0);
 }
-URLRequest* URLRequest::patch(const string& url, const string& body) {
+URLRequest* URLRequest::patch(const string& url, const bytearray& body) {
     return createAndStart(url, "PATCH", body, 0);
 }
 

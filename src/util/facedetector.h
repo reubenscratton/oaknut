@@ -9,12 +9,13 @@
 class FaceDetector : public Object {
 public:
 
-    static FaceDetector* create();
-    
-    virtual int detectFaces(class Bitmap* bitmap) = 0;
+    FaceDetector();
+
+    virtual void detectFaces(class Bitmap* bitmap, std::function<void(int)> result);
+    virtual bool isBusy();
 
 protected:
-    FaceDetector();
-    
+    Worker* _worker;
+    bool _isBusy;
 };
 

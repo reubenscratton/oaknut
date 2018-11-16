@@ -108,7 +108,7 @@ void BitmapWeb::lock(PIXELDATA* pixelData, bool forWriting) {
     }
 
     if (!_pixelData.data) {
-        //app.warn("lock() called on bitmap with no data or image");
+        app.warn("lock() called on bitmap with no data or image");
         return;
     }
 
