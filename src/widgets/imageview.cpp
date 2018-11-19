@@ -176,6 +176,11 @@ void ImageView::updateRenderOps() {
     _renderOp->setRect(rect);
 }
 
+RECT ImageView::getImageRect() const {
+    assert(_contentSizeValid);
+    return _renderOp->_rect;
+}
+
 void ImageView::layout(RECT constraint) {
     View::layout(constraint);
     _updateRenderOpsNeeded = true;

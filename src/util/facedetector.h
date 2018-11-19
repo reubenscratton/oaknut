@@ -11,7 +11,7 @@ public:
 
     FaceDetector();
 
-    virtual void detectFaces(class Bitmap* bitmap, std::function<void(int)> result);
+    virtual void detectFaces(class Bitmap* bitmap, const RECT& roiRect, std::function<void(int)> result);
     virtual bool isBusy();
 
 protected:

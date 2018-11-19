@@ -17,11 +17,15 @@ bool FaceDetector::isBusy() {
     return _isBusy;
 }
 
-void FaceDetector::detectFaces(class Bitmap* bitmap, std::function<void(int)> result) {
+void FaceDetector::detectFaces(class Bitmap* bitmap, const RECT& roiRect, std::function<void(int)> result) {
     _isBusy = true;
     variant data_in;
     data_in.set("width", bitmap->_width);
     data_in.set("height", bitmap->_height);
+    data_in.set("roiLeft", roiRect.origin.x);
+    data_in.set("roiTop", roiRect.origin.y);
+    data_in.set("roiWidth", roiRect.size.width);
+    data_in.set("roiHeight", roiRect.size.height);
     PIXELDATA pixelData;
     bitmap->lock(&pixelData, false);
     bytearray bytes((uint8_t*)pixelData.data, pixelData.cb);

@@ -21,6 +21,7 @@ public:
     void setImageNode(AtlasNode* node);
     ContentMode getContentMode() const;
     void setContentMode(ContentMode contentMode);
+    RECT getImageRect() const;
 	
 	// Overrides
 	void attachToWindow(Window* window) override;

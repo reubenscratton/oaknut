@@ -7,6 +7,8 @@ id: cameraView
 class: CameraView
 size: fill
 background: black
+contentMode:aspectFill
+gravity:center
 },
 {
 id: maskView

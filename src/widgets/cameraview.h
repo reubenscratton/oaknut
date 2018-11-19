@@ -6,7 +6,7 @@
 //
 
 
-class CameraView : public View {
+class CameraView : public ImageView {
 public:
     
     // API
@@ -16,10 +16,10 @@ public:
     
     // Overrides
     virtual void attachToWindow(Window* window);
-    virtual void detachFromWindow();
+    //virtual void detachFromWindow();
 
     
 protected:
-    TextureRenderOp* _renderOp;
+    //TextureRenderOp* _renderOp;
 };
 

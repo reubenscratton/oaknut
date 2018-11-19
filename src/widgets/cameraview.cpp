@@ -15,7 +15,7 @@ public:
 };
 
 // TODO: Desaturation should be an optional shader attribute once we have shader cache done
-void GLProgramTextureDesaturated::load()  {
+/*void GLProgramTextureDesaturated::load()  {
     loadShaders(TEXTURE_VERTEX_SHADER,
         "varying vec2 v_texcoord;\n"
         "uniform sampler2D texture;\n"
@@ -28,7 +28,7 @@ void GLProgramTextureDesaturated::load()  {
 }
 
 static GLProgramTextureDesaturated s_prog;
-
+*/
 void CameraView::attachToWindow(Window* window) {
     View::attachToWindow(window);
     show();
@@ -38,15 +38,15 @@ void CameraView::show() {
     if (!_window) {
         return;
     }
-    if (_renderOp) {
+    /*if (_renderOp) {
         return;
-    }
+    }*/
     if (!_window->hasPermission(PermissionCamera)) {
         return;
     }
-    _renderOp = new TextureRenderOp();
-    addRenderOp(_renderOp);
-    _renderOp->_prog = &s_prog;
+    //_renderOp = new TextureRenderOp();
+    //addRenderOp(_renderOp);
+    //_renderOp->_prog = &s_prog;
 }
 
 void CameraView::handleNewCameraFrame(Bitmap* bitmap) {
@@ -57,7 +57,9 @@ void CameraView::handleNewCameraFrame(Bitmap* bitmap) {
         setBackground(NULL);
     }
     _renderOp->setBitmap(bitmap);
-    float scaleWidth = _rect.size.width / (float)bitmap->_width;
+    invalidateContentSize();
+    setNeedsFullRedraw();
+    /*float scaleWidth = _rect.size.width / (float)bitmap->_width;
     float scaleHeight = _rect.size.height / (float)bitmap->_height;
     RECT bounds = getOwnRect();
     RECT rect = bounds;
@@ -72,18 +74,18 @@ void CameraView::handleNewCameraFrame(Bitmap* bitmap) {
     rect.origin.y = bounds.midY() - rect.size.height/2;
     
     _renderOp->setRect(rect);
-    setNeedsFullRedraw();
+    setNeedsFullRedraw();*/
 }
 
 
 
-void CameraView::detachFromWindow() {
+/*void CameraView::detachFromWindow() {
     View::detachFromWindow();
     if (_renderOp) {
         removeRenderOp(_renderOp);
         _renderOp = NULL;
     }
-}
+}*/
 
 RECT CameraView::getDisplayedFrameRect() const {
     return _renderOp ? _renderOp->_rect : RECT::zero();
