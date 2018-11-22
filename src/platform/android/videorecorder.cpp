@@ -45,7 +45,7 @@ public:
         env->CallVoidMethod(_jobject, jmid, aframe->_textureId, aframe->_timestamp, jtransform);
     }
 
-    void handleNewAudioSamples(AudioInputSamples* samples) override {
+    void handleNewAudioSamples(AudioSamples* samples) override {
         JNIEnv* env = getJNIEnv();
         jmethodID jmid = env->GetMethodID(_jclass, "handleNewAudioSamples", "([B)V");
         jbyteArray jsamples = env->NewByteArray(samples->_data.size());

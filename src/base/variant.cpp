@@ -653,6 +653,16 @@ static void setVariantCompoundField(variant* v, char* szFieldName, int fieldGOTi
 static void setVariantToNumber(variant* v, double d) {
     v->setDouble(d);
 }
+static void setVariantToArray(variant* v, int gotIndexArray) {
+    v->setType(variant::ARRAY);
+    val jsarray = val::global("gotGet")(gotIndexArray).as<val>();
+    for (int i=0 ; i<jsarray["length"].as<int>() ; i++) {
+        val jselem = jsarray[val(i)];
+        variant elem;
+        elem.fromJavascriptVal(val::global("gotSet")(jselem).as<int>());
+        v->appendVal(elem);
+    }
+}
 
 void variant::fromJavascriptVal(int valGOTindex) {
     EM_ASM({
@@ -660,7 +670,10 @@ void variant::fromJavascriptVal(int valGOTindex) {
         var jsval = gotGet($1);
         var t = typeof(jsval);
         if (t == "object") {
-            if (jsval instanceof Uint8Array) {
+            if (jsval.constructor === Array) {
+                Runtime.dynCall("vii", $6, [variantPtr, gotSet(jsval)]);
+            }
+            else if (jsval instanceof Uint8Array) {
                 var ptr = _malloc(jsval.length);
                 (new Uint8Array(HEAPU8.buffer, ptr, jsval.length)).set(jsval);
                 Runtime.dynCall("viii", $2, [variantPtr, ptr, jsval.length]);
@@ -688,7 +701,7 @@ void variant::fromJavascriptVal(int valGOTindex) {
         } else {
             console.log("unsupported JS type " + typeof(jsval));
         }
-    }, this, valGOTindex, setVariantToByteArray, setVariantToString, setVariantCompoundField, setVariantToNumber);
+    }, this, valGOTindex, setVariantToByteArray, setVariantToString, setVariantCompoundField, setVariantToNumber, setVariantToArray);
 }
 
 #endif

@@ -96,12 +96,12 @@ public:
         }
     }
     
-    void handleNewAudioSamples(AudioInputSamples* audioSamples) override {
+    void handleNewAudioSamples(AudioSamples* audioSamples) override {
         //- (void)onAudioNewData:(CMSampleBufferRef)sampleBuffer {
         if (!assetWriter) {
             return;
         }
-        CMSampleBufferRef sampleBuffer = ((AudioInputSamplesApple*)audioSamples)->_sampleBuffer;
+        CMSampleBufferRef sampleBuffer = ((AudioSamplesApple*)audioSamples)->_sampleBuffer;
         CFRetain(sampleBuffer);
         dispatch_async(recordingQueue, ^{
             ensureSessionStarted(sampleBuffer);

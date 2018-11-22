@@ -9,13 +9,14 @@
 #import <oaknut.h>
 
 
-class Mp3Encoder : public WorkerApple {
+class Mp3Encoder : public WorkerImpl {
 public:
     int _sampleRate;
     AudioConverterRef _converter;
     AudioStreamBasicDescription _inFormat;
     AudioStreamBasicDescription _outFormat;
     bytearray _inbuf;
+    
     
     void start_(const variant& config) override {
         _sampleRate = config.intVal("sampleRate");
@@ -34,7 +35,7 @@ public:
         OSStatus status = AudioConverterNew(&_inFormat, &_outFormat, &_converter);
         assert(status == 0);
     }
-    const variant process_(const variant& data_in) override {
+    variant process_(const variant& data_in) override {
         const bytearray& bytes = data_in.bytearrayVal();
         _inbuf.append(bytes);
         bytearray output;

@@ -7,7 +7,7 @@
 
 #include <oaknut.h>
 
-typedef AVIWriter::FOURCC FOURCC;
+typedef RIFFWriter::FOURCC FOURCC;
 
 FOURCC::FOURCC() {
 }
@@ -32,7 +32,7 @@ const FOURCC STRL_CC("strl");
 const FOURCC STRH_CC("strh");
 const FOURCC STRF_CC("strf");
 const FOURCC VIDS_CC("vids");
-const FOURCC AVIWriter::MJPG_CC = {'M','J','P','G'};
+const FOURCC RIFFWriter::MJPG_CC = {'M','J','P','G'};
 const FOURCC MOVI_CC("movi");
 const FOURCC IDX1_CC("idx1");
 const FOURCC AVI_CC("AVI ");
@@ -41,6 +41,7 @@ const FOURCC JUNK_CC("JUNK");
 const FOURCC INFO_CC("INFO");
 const FOURCC ODML_CC("odml");
 const FOURCC DMLH_CC("dmlh");
+const FOURCC WAVE_CC("WAVE");
 
 
     /*
@@ -177,29 +178,26 @@ static const int SUG_BUFFER_SIZE = 1048576;
 
 
 
-AVIWriter::AVIWriter(Stream* stream, int width, int height, double fps) : strm(stream) {
-    outfps = round(fps);
-    _width = width;
-    _height = height;
+RIFFWriter::RIFFWriter(Stream* stream) : strm(stream) {
     channels = 3; //iscolor ? 3 : 1;
     moviPointer = 0;
     channels = 0;
     moviPointer = 0;
 }
 
-AVIWriter::~AVIWriter() {
+RIFFWriter::~RIFFWriter() {
     frameOffset.clear();
     frameSize.clear();
     chunkSizeIndex.clear();
     frameNumIndexes.clear();
 }
 
-void AVIWriter::close() {
+void RIFFWriter::close() {
     if(isEmptyFrameOffset()) {
         return;
     }
     endWriteChunk(); // end LIST 'movi'
-    writeIndex(0, AVIWriter::dc);
+    writeIndex(0, RIFFWriter::dc);
     uint32_t nframes = (uint32_t)frameOffset.size();
     
     // Record frames numbers to AVI Header
@@ -211,11 +209,14 @@ void AVIWriter::close() {
     endWriteChunk(); // end RIFF
 }
 
-void AVIWriter::writeFourCC(FOURCC cc) {
+void RIFFWriter::writeFourCC(FOURCC cc) {
     strm->writeBytes(4, &cc);
 }
 
-void AVIWriter::startWriteAVI(int stream_count) {
+void RIFFWriter::startWriteAVI(int stream_count, int width, int height, double fps) {
+    outfps = round(fps);
+    _width = width;
+    _height = height;
     startWriteChunk(RIFF_CC);
     writeFourCC(AVI_CC);
     startWriteChunk(LIST_CC);
@@ -237,9 +238,36 @@ void AVIWriter::startWriteAVI(int stream_count) {
     endWriteChunk();
 }
 
+void RIFFWriter::writeWavFile(const AudioFormat& audioFormat, const bytearray& wavdata) {
+    startWriteChunk(RIFF_CC);
+    writeFourCC(WAVE_CC);
+    writeFourCC(FOURCC("fmt "));
+    strm->writeInt32(0x10); // sizeof(fmt chunk)
+    int16_t formatTag;
+    int16_t bitsPerSample;
+    if (audioFormat.sampleType == AudioFormat::Float32) {
+        formatTag = 0x0003; // WAVE_FORMAT_IEEE_FLOAT;
+        bitsPerSample = 32;
+    } else {
+        formatTag = 0x0001; // WAVE_FORMAT_PCM
+        bitsPerSample = 16;
+    }
+    strm->writeInt16(formatTag);
+    strm->writeInt16(audioFormat.numChannels);
+    strm->writeInt32(audioFormat.sampleRate);
+    strm->writeInt32(audioFormat.numChannels * audioFormat.sampleRate * bitsPerSample/8);
+    strm->writeInt16(audioFormat.numChannels * bitsPerSample/8);
+    strm->writeInt16(bitsPerSample);
+    
+    writeFourCC(FOURCC("data"));
+    strm->writeInt32(wavdata.size());
+    strm->writeBytes(wavdata.size(), wavdata.data());
+    endWriteChunk();
+}
+
 //static const int AVIH_STRH_SIZE = 56;
 
-void AVIWriter::writeStreamHeader(FOURCC cc) {
+void RIFFWriter::writeStreamHeader(FOURCC cc) {
     // strh
     startWriteChunk(LIST_CC);
     
@@ -322,16 +350,16 @@ void AVIWriter::writeStreamHeader(FOURCC cc) {
     writeFourCC(MOVI_CC);
 }
 
-void AVIWriter::startWriteChunk(FOURCC fourcc) {
+void RIFFWriter::startWriteChunk(FOURCC fourcc) {
     writeFourCC(fourcc);
     chunkSizeIndex.push_back(strm->offsetWrite);
     strm->writeInt32(0);
 }
 
-void AVIWriter::writeChunk(const bytearray& bytes) {
+void RIFFWriter::writeChunk(const bytearray& bytes) {
     size_t chunkPointer = strm->offsetWrite;
     
-    FOURCC avi_index = getAVIIndex(0, AVIWriter::dc);
+    FOURCC avi_index = getAVIIndex(0, RIFFWriter::dc);
     startWriteChunk(avi_index);
     
     strm->writeBytes(bytes.size(), bytes.data());
@@ -351,7 +379,7 @@ void AVIWriter::writeChunk(const bytearray& bytes) {
     endWriteChunk();
 }
 
-void AVIWriter::endWriteChunk() {
+void RIFFWriter::endWriteChunk() {
     if (!chunkSizeIndex.empty()) {
         size_t currpos = strm->offsetWrite;
         assert(currpos > 4);
@@ -364,7 +392,7 @@ void AVIWriter::endWriteChunk() {
     }
 }
 
-FOURCC AVIWriter::getAVIIndex(int stream_number, StreamType strm_type) {
+FOURCC RIFFWriter::getAVIIndex(int stream_number, StreamType strm_type) {
     char strm_indx[2];
     strm_indx[0] = '0' + static_cast<char>(stream_number / 10);
     strm_indx[1] = '0' + static_cast<char>(stream_number % 10);
@@ -378,7 +406,7 @@ FOURCC AVIWriter::getAVIIndex(int stream_number, StreamType strm_type) {
     return FOURCC(strm_indx[0], strm_indx[1], 'd', 'b');
 }
 
-void AVIWriter::writeIndex(int stream_number, StreamType strm_type) {
+void RIFFWriter::writeIndex(int stream_number, StreamType strm_type) {
     // old style AVI index. Must be Open-DML index
     startWriteChunk(IDX1_CC);
     int nframes = (int)frameOffset.size();
@@ -391,7 +419,7 @@ void AVIWriter::writeIndex(int stream_number, StreamType strm_type) {
     endWriteChunk(); // End idx1
 }
 
-void AVIWriter::patchInt(uint32_t val, size_t pos) {
+void RIFFWriter::patchInt(uint32_t val, size_t pos) {
     auto saved_pos = strm->offsetWrite;
     strm->setWriteOffset(pos);
     strm->writeInt32(val);

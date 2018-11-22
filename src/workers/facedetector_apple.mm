@@ -4,12 +4,12 @@
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
 //
-#if PLATFORM_APPLE
+#if PLATFORM_APPLE && 0
 
 #include "oaknut.h"
 #import <CoreImage/CoreImage.h>
 
-class FaceDetectorWorker : public WorkerApple {
+class FaceDetectorWorker : public WorkerImpl {
 public:
     CIDetector* _detector;
     
@@ -31,7 +31,7 @@ public:
     }
     
 
-    const variant process_(const variant& data_in) override {
+    variant process_(const variant& data_in) override {
         int width = data_in.intVal("width");
         int height = data_in.intVal("height");
         const bytearray& bytes = data_in.bytearrayVal("data");
@@ -41,12 +41,21 @@ public:
         NSArray *features = [_detector featuresInImage:image options:@{}];
         //app.log("faces: %d", features.count);
         variant retval;
-        retval.set("numFaces", (int)features.count);
+        retval.setType(variant::ARRAY);
+        for (int i=0 ; i<features.count ; i++) {
+            CIFeature* feature = features[i];
+            variant rect;
+            rect.set("x", feature.bounds.origin.x);
+            rect.set("y", feature.bounds.origin.y);
+            rect.set("width", feature.bounds.size.width);
+            rect.set("height", feature.bounds.size.height);
+            retval.appendVal(rect);
+        }
         return retval;
     }
 };
 
-DECLARE_DYNCREATE(FaceDetectorWorker);
+DECLARE_WORKER_IMPL(FaceDetectorWorker);
 
 
 #endif

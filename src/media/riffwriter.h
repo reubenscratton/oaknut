@@ -6,10 +6,10 @@
 //
 
 
-class AVIWriter {
+class RIFFWriter {
 public:
-    AVIWriter(Stream* stream, int width, int height, double fps);
-    ~AVIWriter();
+    RIFFWriter(Stream* stream);
+    ~RIFFWriter();
 
     enum StreamType { db, dc, pc, wb };
     
@@ -20,7 +20,8 @@ public:
         char _ch[4];
     };
 
-    void startWriteAVI(int stream_count);
+    void startWriteAVI(int stream_count, int width, int height, double fps);
+    void writeWavFile(const AudioFormat& audioFormat, const bytearray& wavdata);
     void writeStreamHeader(FOURCC cc);
     void writeChunk(const bytearray& bytes);
     void startWriteChunk(FOURCC fourcc);

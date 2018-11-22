@@ -11,12 +11,15 @@
 #import <AVFoundation/AVCaptureDevice.h>
 #import <AVFoundation/AVCaptureOutput.h>
 
-class AudioInputSamplesApple : public AudioInputSamples {
+class AudioSamplesApple : public AudioSamples {
 public:
-    CMSampleBufferRef _sampleBuffer;
+    AudioSamplesApple(CMSampleBufferRef samples);
+    ~AudioSamplesApple();
     
     bytearray getData() override;
+    
 
+    CMSampleBufferRef _sampleBuffer;
 };
 
 #endif

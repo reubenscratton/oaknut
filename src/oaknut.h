@@ -115,8 +115,10 @@ namespace oak {
 #include "base/variant.h"
 #include "data/localstorage.h"
 #include "graphics/bitmap.h"
+#include "app/worker.h"
 #include "media/camera.h"
 #include "media/audioinput.h"
+#include "media/audioresampler.h"
 #include "graphics/color.h"
 #include "graphics/vectors.h"
 #include "graphics/matrix.h"
@@ -136,7 +138,6 @@ namespace oak {
 #include "media/videorecorder.h"
 #include "media/videoplayer.h"
 #include "text/attributedstring.h"
-#include "app/worker.h"
 #include "app/styles.h"
 #include "graphics/textrenderer.h"
 #include "graphics/canvas.h"
@@ -146,7 +147,7 @@ namespace oak {
 #include "util/circularbuffer.h"
 #include "util/facedetector.h"
 #include "media/audiooutput.h"
-#include "media/aviwriter.h"
+#include "media/riffwriter.h"
 #include "view/inputevent.h"
 #include "view/scrollbar.h"
 #include "view/alignspec.h"
@@ -181,7 +182,6 @@ namespace oak {
 #include __incstr(platform/PLATFORM/bitmap.h)
 #include __incstr(platform/PLATFORM/camera.h)
 #include __incstr(platform/PLATFORM/font.h)
-#include __incstr(platform/PLATFORM/worker.h)
 
 namespace std {
 template <>

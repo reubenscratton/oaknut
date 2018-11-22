@@ -6,13 +6,12 @@
 
 
 #if !BUILD_AS_WORKER
-class Mp3Encoder : public WorkerWeb {
+class Mp3Encoder : public Worker {
 public:
-    Mp3Encoder() : WorkerWeb("lame") {
+    Mp3Encoder() : Worker("Mp3Encoder") {
     }
 };
 
-DECLARE_DYNCREATE(Mp3Encoder);
 
 #else
 
@@ -24,7 +23,7 @@ extern "C" {
 static lame_global_flags* _lame;
 static unsigned char outbuf[256*1024];
 
-    void EMSCRIPTEN_KEEPALIVE ww_start(char* data, int size) {
+    void  ww_start(char* data, int size) {
         _lame = lame_init();
         lame_set_num_channels(_lame, 1);
         lame_set_in_samplerate(_lame, 44100);
@@ -33,7 +32,7 @@ static unsigned char outbuf[256*1024];
         lame_init_params(_lame);
         emscripten_worker_respond(0, 0);
     }
-    void EMSCRIPTEN_KEEPALIVE ww_process(char* data, int size) {
+    void ww_process(char* data, int size) {
         //int cbEncoded = lame_encode_buffer(_lame, (short*)data, NULL, size/2, outbuf, sizeof(outbuf));
         int cbEncoded = lame_encode_buffer_ieee_float(_lame,
                                                 (float*)data, NULL, size/4,
@@ -49,11 +48,13 @@ static unsigned char outbuf[256*1024];
         }
 
     }
-    void EMSCRIPTEN_KEEPALIVE ww_stop(char* data, int size) {
+    void ww_stop(char* data, int size) {
         emscripten_worker_respond(0, 0);
     }
 
 }
+
+DECLARE_DYNCREATE(Mp3Encoder);
 
 #endif
 

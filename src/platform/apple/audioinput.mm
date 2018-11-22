@@ -10,8 +10,18 @@
 #include <oaknut.h>
 #include "audioinput.h"
 
+AudioSamplesApple::AudioSamplesApple(CMSampleBufferRef samples) {
+    CFRetain(samples);
+    _sampleBuffer = samples;
+}
 
-bytearray AudioInputSamplesApple::getData() {
+AudioSamplesApple::~AudioSamplesApple() {
+    if (_sampleBuffer) {
+        CFRelease(_sampleBuffer);
+    }
+}
+
+bytearray AudioSamplesApple::getData() {
     CMBlockBufferRef buf = CMSampleBufferGetDataBuffer(_sampleBuffer);
     auto cb = CMBlockBufferGetDataLength(buf);
     bytearray bytes(cb);
@@ -142,12 +152,10 @@ class AudioInputApple : public AudioInput {
 public:
     
     AudioInputHelper* _helper;
-    int _sampleRateOut;
     AVCaptureSession* _session;
     AVCaptureDeviceInput* _audioCaptureDeviceInput;
     AVCaptureAudioDataOutput* _audioDataOutput;
     dispatch_queue_t _queue;
-    AudioFormat _preferredFormat;
     
     AudioInputApple() {
         _helper = [AudioInputHelper new];
@@ -155,12 +163,8 @@ public:
     }
 
     void open(AudioFormat& preferredFormat) override {
-        _preferredFormat = preferredFormat;
-    }
-    void start() override {
         _session = [[AVCaptureSession alloc] init];
         assert(_session);
-        //[_session setSessionPreset:AVCaptureSessionPreset640x480]; // ??? why is video here? is this copy paste error or does this do something useful?
         [_session beginConfiguration];
         AVCaptureDevice* audioCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
         NSError* error = nil;
@@ -170,9 +174,9 @@ public:
         
 #if TARGET_OS_OSX
         NSMutableDictionary* settings = _audioDataOutput.audioSettings.mutableCopy;
-        [settings setObject:@(_preferredFormat.numChannels) forKey:AVNumberOfChannelsKey];
-        [settings setObject:@(_preferredFormat.sampleRate) forKey:AVSampleRateKey];
-
+        [settings setObject:@(preferredFormat.numChannels) forKey:AVNumberOfChannelsKey];
+        [settings setObject:@(preferredFormat.sampleRate) forKey:AVSampleRateKey];
+        
         // CAVEAT! OSX 10.12 provides stereo *non-interleaved* buffers by default!
         // In 20+ years of software dev I've never seen non-interleaved stereo data, didn't
         // know it was a thing, and working out what the hell was going on cost me AN
@@ -190,23 +194,34 @@ public:
         [_audioDataOutput setSampleBufferDelegate:_helper queue:_queue];
         [_session addOutput:_audioDataOutput];
         [_session commitConfiguration];
+        
+        // Update the audioformat struct with the settings the OS actually applied
+        // which may not be the ones that were wanted. It is up to client code to apply
+        // resampling and/or conversion logic if it can't handle the chosen settings.
+        preferredFormat.sampleRate = (int)[_audioDataOutput.audioSettings[AVSampleRateKey] integerValue];
+        BOOL isFloat = [_audioDataOutput.audioSettings[AVLinearPCMIsFloatKey] boolValue];
+        int bitDepth = (int)[_audioDataOutput.audioSettings[AVLinearPCMBitDepthKey] integerValue];
+        if (isFloat && bitDepth==32) {
+            preferredFormat.sampleType = AudioFormat::Float32;
+        } else if (!isFloat && bitDepth==16) {
+            preferredFormat.sampleType = AudioFormat::Int16;
+        } else {
+            assert(0); // unsupported sample type!
+        }
+    }
+    void start() override {
         dispatch_async(_queue, ^() {
             [_session startRunning];
         });
     }
     
-    void handleNewSampleBuffer(CMSampleBufferRef sampleBuffer) {
-        CMFormatDescriptionRef formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer);
+    //void handleNewSampleBuffer(CMSampleBufferRef sampleBuffer) {
+        /*CMFormatDescriptionRef formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer);
         const AudioStreamBasicDescription *inFormat = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription);
         assert(inFormat->mFramesPerPacket == 1);
-        assert(inFormat->mChannelsPerFrame == 1);
+        assert(inFormat->mChannelsPerFrame == 1);*/
         //bool isNonInterleaved = inFormat->mFormatFlags & kAudioFormatFlagIsNonInterleaved;
-
-        sp<AudioInputSamplesApple> samples = new AudioInputSamplesApple();
-        samples->_sampleBuffer = sampleBuffer;
-        onNewAudioSamples(samples);
-        
-    }
+    //}
     
     void stop() override {
         [_session stopRunning];
@@ -235,7 +250,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        fromConnection:(AVCaptureConnection *)connection
 {
     AudioInputApple* audioInput = (AudioInputApple*)_audioInput;
-    audioInput->handleNewSampleBuffer(sampleBuffer);
+    sp<AudioSamplesApple> samples = new AudioSamplesApple(sampleBuffer);
+    dispatch_async(dispatch_get_main_queue(), ^{
+        audioInput->onNewAudioSamples(samples);
+    });
 }
 
 @end

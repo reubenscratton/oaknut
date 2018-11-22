@@ -5,4 +5,7 @@
    	default-height:800dp
    }
 
+    colorError: #FFF75856
+    colorSuccess: #ff29ca92
+
 }

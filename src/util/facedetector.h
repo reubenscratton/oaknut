@@ -6,16 +6,15 @@
 //
 
 
-class FaceDetector : public Object {
+class FaceDetector : public Worker {
 public:
 
     FaceDetector();
 
-    virtual void detectFaces(class Bitmap* bitmap, const RECT& roiRect, std::function<void(int)> result);
+    virtual void detectFaces(class Bitmap* bitmap, const RECT& roiRect, std::function<void(vector<RECT>)> result);
     virtual bool isBusy();
 
 protected:
-    Worker* _worker;
     bool _isBusy;
 };
 

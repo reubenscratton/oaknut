@@ -8,24 +8,38 @@
 
 #import <oaknut.h>
 
-void WorkerApple::start(const variant& config) {
+void Worker::start(const variant& config) {
+    assert(!_queue); // already started!
     _queue = dispatch_queue_create("OakWorker", DISPATCH_QUEUE_SERIAL);
+    auto config_copy = config;
     dispatch_async(_queue, ^{
-        start_(config);
+        _impl->start_(config_copy);
     });
 }
-void WorkerApple::process(const variant& data_in, std::function<void(const variant&)> callback) {
+
+void Worker::dispatchProcessResult(const variant& data_out) {
+    // not used
+}
+
+void Worker::process(const variant& data_in, std::function<void(const variant&)> callback) {
+    assert(_queue); // not started!
     auto data_copy = data_in;
     dispatch_async(_queue, ^{
-        variant data_out = process_(data_copy);
+        variant data_out = _impl->process_(data_copy);
         dispatch_async(dispatch_get_main_queue(), ^() {
             callback(data_out);
         });
     });
 }
-void WorkerApple::stop(std::function<void()> onStop) {
+
+void Worker::dispatchStopped() {
+    // not used
+}
+
+void Worker::stop(std::function<void()> onStop) {
+    assert(_queue); // not started!
     dispatch_async(_queue, ^{
-        stop_();
+        _impl->stop_();
         dispatch_async(dispatch_get_main_queue(), ^() {
             _queue = NULL; // allegedly releases the queue too
             onStop();

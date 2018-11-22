@@ -7,17 +7,16 @@
 
 #include <oaknut.h>
 
-FaceDetector::FaceDetector() {
-    _worker = (Worker*)Object::createByName("FaceDetectorWorker");
-    assert(_worker);
-    _worker->start(variant());
+FaceDetector::FaceDetector() : Worker("FaceDetectorWorker")
+{
+    start(variant());
 }
 
 bool FaceDetector::isBusy() {
     return _isBusy;
 }
 
-void FaceDetector::detectFaces(class Bitmap* bitmap, const RECT& roiRect, std::function<void(int)> result) {
+void FaceDetector::detectFaces(class Bitmap* bitmap, const RECT& roiRect, std::function<void(vector<RECT>)> resultCallback) {
     _isBusy = true;
     variant data_in;
     data_in.set("width", bitmap->_width);
@@ -32,12 +31,19 @@ void FaceDetector::detectFaces(class Bitmap* bitmap, const RECT& roiRect, std::f
     
     data_in.set("data", bytes);
     bitmap->unlock(&pixelData, false);
-    _worker->process(data_in, [=](const variant& data_out) {
-        int numFaces = data_out.intVal("numFaces");
-        result(numFaces);
+    process(data_in, [=](const variant& data_out) {
+        vector<RECT> results;
+        auto& vresults = data_out.arrayVal();
+        for (auto& vrect : vresults) {
+            RECT rect;
+            rect.origin.x = vrect.floatVal("x");
+            rect.origin.y = vrect.floatVal("y");
+            rect.size.width = vrect.floatVal("width");
+            rect.size.height = vrect.floatVal("height");
+            results.push_back(rect);
+        }
+        //app.log("Found %d faces!", results.size());
+        resultCallback(results);
         _isBusy = false;
     });
 }
-
-DECLARE_DYNCREATE(FaceDetector);
-

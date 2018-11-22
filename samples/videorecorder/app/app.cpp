@@ -25,13 +25,17 @@ public:
     Label* _phrase;
     ImageView* _recordButton;
     FaceDetector* _faceDetector;
+    //View* _facesOverlayView;
     AudioInput* _audioInput;
-    Worker* _audioEncoder;
+    //Worker* _audioEncoder;
     bytearray _encodedAudio;
     Timer* _frameCaptureTimer;
     bool _frameCaptureNeeded;
-    AVIWriter* _aviWriter;
+    RIFFWriter* _riffWriter;
     ByteBufferStream* _aviData;
+    RectRenderOp* _faceRectOp;
+    AudioFormat _audioFormat;
+    AudioResampler* _audioResampler;
 
     MainViewController() {
         inflate("layout/main.res");
@@ -46,7 +50,6 @@ public:
         _maskView->setHoleStrokeColour(app.getStyleColor("colorError"));
         _recordButton->onInputEvent = [=](View* view, INPUTEVENT* event) -> bool {
             if (event->type == INPUT_EVENT_DOWN) {
-                //SIZE size =  {(float)_camera->_previewWidth, (float)_camera->_previewHeight};
                 startRecording();
             }
             if (event->type == INPUT_EVENT_UP) {
@@ -56,6 +59,15 @@ public:
         };
         
         _faceDetector = new FaceDetector();
+        //_facesOverlayView = new View();
+        //_facesOverlayView->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Fill());
+        //_view->addSubview(_facesOverlayView);
+        
+        // Expected audio format
+        _audioFormat.sampleRate = 16000;
+        _audioFormat.numChannels = 1;
+        _audioFormat.sampleType = AudioFormat::Int16;
+
     }
     
     void onWindowAttached() override {
@@ -89,24 +101,46 @@ public:
             _frameCaptureNeeded = true;
         }, 500, true);
 
-        AudioFormat audioFormat;
-        audioFormat.sampleRate = 22050;
-        audioFormat.numChannels = 1;
-        audioFormat.sampleType = AudioFormat::Int16;
         _audioInput = AudioInput::create();
-        _audioInput->open(audioFormat);
-        _audioEncoder = (Worker*)Object::createByName("Mp3Encoder");
+        AudioFormat inputAudioFormat = _audioFormat;
+#if PLATFORM_APPLE
+        inputAudioFormat.sampleRate = 44100; // force the resampler to be used
+#endif
+        _audioInput->open(inputAudioFormat);
+        
+        // Resampling 44100 to 16000 takes a LONG time to set up the multistage
+        // FIR filters - several seconds on a desktop. Shame it can't be precalculated
+        // To avoid this crazy delay, just switch to 22050 as the output rate if input
+        // is 44100. Maybe we need a better resampler lib.
+        if (inputAudioFormat.sampleRate == 44100) {
+            _audioFormat.sampleRate = 22050;
+        }
+        
+        if (inputAudioFormat.sampleRate != _audioFormat.sampleRate) {
+            _audioResampler = new AudioResampler();
+            _audioResampler->onNewAudioSamples = [=](AudioSamples* samples) {
+                variant indata = samples->getData();
+                _encodedAudio.append(indata.bytearrayVal());
+            };
+            _audioResampler->open(inputAudioFormat, _audioFormat);
+        }
+        /*_audioEncoder = (Worker*)Object::createByName("Mp3Encoder");
         variant config;
-        config.set("sampleRate", audioFormat.sampleRate);
-        _audioEncoder->start(config);
-        _audioInput->onNewAudioSamples = [=](AudioInputSamples* samples) {
-            variant indata = samples->getData();
-            _audioEncoder->process(indata, [=](const variant& outdata) {
+        config.set("sampleRate", _audioFormat.sampleRate);
+        _audioEncoder->start(config);*/
+        _audioInput->onNewAudioSamples = [=](AudioSamples* samples) {
+            if (_audioResampler) {
+                _audioResampler->process(samples);
+            } else {
+                variant indata = samples->getData();
+                _encodedAudio.append(indata.bytearrayVal());
+            }
+            /*_audioEncoder->process(indata, [=](const variant& outdata) {
                 const bytearray& outbytes = outdata.bytearrayVal();
                 if (outbytes.size() > 0) {
                     _encodedAudio.append(outbytes);
                 }
-            });
+            });*/
         };
         _audioInput->start();
 
@@ -116,110 +150,15 @@ public:
         _frameCaptureTimer->stop();
         _audioInput->stop();
         _audioInput->close();
-        _audioEncoder->stop([=]() {
-
-            if (!_aviWriter) {
-                return;
-            }
-
-            _aviWriter->close();
-            
-            app.log("total avi : %d", _aviData->_data.cb);
-            app.log("total encoded: %d", _encodedAudio.size());
-            
-            string url = string::format("%s/auth/admin/tokens/%s", BASEURL.data(), ORGANIZATION.data());
-            auto req = URLRequest::get(url);
-            string userPasswordData = string::format("%s:%s", USERNAME.data(), PASSWORD.data());
-            req->setHeader("Authorization", string::format("Basic %s", base64_encode(userPasswordData).data()));
-            req->setHeader("Accept", "application/vnd.net.postquantum.idaas.api.access.token.v1+json");
-            req->handleJson([=](URLRequest* req, const variant& json) {
-                if (req->error()) {
-                    app.log("Error: %d, %s", req->getHttpStatus(), json.stringVal("message").data());
-                    return;
-                }
-                string access_token = json.stringVal("access_token");
-
-                // Create user
-                variant data;
-                data.setType(variant::MAP);
-                string url = string::format("%s/users", BASEURL.data());
-                req = URLRequest::post(url, data.toJson().toByteArray(false));
-                req->setHeader("Authorization", string::format("Bearer %s", access_token.data()));
-                req->setHeader("Content-Type", "application/vnd.net.postquantum.check.api.user.token.v0.1+json");
-                req->handleJson([=](URLRequest* req, const variant& v) {
-                    if (req->error()) {
-                        app.log("Error: %d, %s", req->getHttpStatus(), v.stringVal("message").data());
-                        return;
-                    }
-                    const variant* admin_token = v.get("token");
-                    string user_token = admin_token->stringVal("access_token");
-                    
-                    // Post the AVI
-                    string body = "--X-INSOMNIA-BOUNDARY\r\n"
-                                  "Content-Disposition: form-data; name=\"type\"\r\n"
-                                  "Content-Type: text/plain\r\n"
-                                  "\r\n"
-                                  "face\r\n";
-                    body +=       "--X-INSOMNIA-BOUNDARY\r\n"
-                                  "Content-Disposition: form-data; name=\"sample\"; filename=\"foo.avi\"\r\n"
-                                  //"Content-Type: application/octet-stream\r\n"
-                                  "Content-Transfer-Encoding: binary\r\n"
-                                  "Content-Type: video/x-msvideo\r\n"
-                                  //"Content-Transfer-Encoding: base64\r\n"
-                                  "\r\n";
-                    bytearray bb = body.toByteArray(false);
-                    bb.append(_aviData->_data.data, (int)_aviData->_data.cb);
-                    bb.append(string("\r\n--X-INSOMNIA-BOUNDARY--\r\n").toByteArray(false));
-                    //body.append(base64_encode(_aviData->_data.data, (int)_aviData->_data.cb));
-                    //body.append("--X-INSOMNIA-BOUNDARY--\r\n");
-                    //bytearray bb = body.toByteArray(false);
-                    
-                    string url = string::format("%s/register", BASEURL.data());
-                    req = URLRequest::post(url, bb);
-                    req->setHeader("Authorization", string::format("Bearer %s", user_token.data()));
-                    req->setHeader("Content-Type", "multipart/form-data; boundary=X-INSOMNIA-BOUNDARY");
-                    //req->setHeader("Content-Length", string::format("%d", bb.size() -15));
-                    req->setHeader("Accept", "*/*");
-                    req->handleJson([](URLRequest* req, const variant& v) {
-                        app.log("I POSTed a sample! %d", req->getHttpStatus());
-                        if (req->error()) {
-                            app.log("Error: %d, %s", req->getHttpStatus(), v.stringVal("message").data());
-                            return;
-                        }
-                    });
-                });
-
-                
+        if (_audioResampler) {
+            _audioResampler->stop([=]() {
+                uploadRecording();
             });
- 
-/*
-#if PLATFORM_WEB
-            //auto str = base64_encode(_encodedAudio);
-            auto str = base64_encode(_aviData->_data.data, _aviData->offsetWrite);
+        } else {
+            uploadRecording();
+        }
+        //_audioEncoder->stop([=]() {
 
-            EM_ASM({
-                var data = Pointer_stringify($0);
-                var element = document.createElement('a');
-                element.setAttribute('href', 'data:video/avi;base64,' + data);
-                element.setAttribute('download', 'foo_yilin.avi');
-                //element.setAttribute('href', 'data:audio/mp3;base64,' + data);
-                //element.setAttribute('download', 'foo.mp3');
-                //element.style.display = 'none';
-                element.innerHtml = 'CLICK ME!';
-                document.body.appendChild(element);
-                element.click();
-                //document.body.removeChild(element);
-            }, str.data());
-            
-#else
-            FILE* tmp = fopen("foo.avi", "wb");
-            fwrite(_aviData->_data.data, _aviData->offsetWrite, 1, tmp );
-            //FILE* tmp = fopen("foo.aac", "wb");
-            //fwrite(_encodedAudio.data(), _encodedAudio.size(), 1, tmp );
-            fclose(tmp);
-#endif
- */
-        });
     }
     
 
@@ -232,8 +171,45 @@ public:
         _cameraView->handleNewCameraFrame(frameBitmap);
         
         if (!_faceDetector->isBusy()) {
-            _faceDetector->detectFaces(frameBitmap, [=](int numFaces) {
-                app.log("Detected %d faces", numFaces);
+            
+            // Determine the region of interest (ROI). It's the intersection of the mask hole rect with the
+            // image frame (which may exceed the view bounds cos its aspect-fill), then scaled down
+            // to the original camera frame size.
+            RECT upscaledImageRect = _cameraView->getDisplayedFrameRect(); 
+            if (upscaledImageRect.size.width<=0 || upscaledImageRect.size.height<=0) {
+                return; // nothing rendered yet so don't know what size things are
+            }
+            POINT o = upscaledImageRect.origin;
+            RECT roiRect = _maskView->getHoleRect();
+            roiRect.intersectWith(upscaledImageRect);
+            roiRect.origin -= o;
+            roiRect.inset(-app.dp(32),-app.dp(32)); // a small amount of inset cos the haar face cascade cant see faces at the very edges.
+            float scaleX = upscaledImageRect.size.width / frameBitmap->_width;
+            float scaleY = upscaledImageRect.size.height / frameBitmap->_height;
+            roiRect.scale(1/scaleX, 1/scaleY);
+            
+            _faceDetector->detectFaces(frameBitmap, roiRect, [=](vector<RECT> faces) {
+                //app.log("Faces: %d", faces.size());
+                if (faces.size() == 0) {
+                    _maskView->setHoleStrokeColour(app.getStyleColor("colorError"));
+                    /*if (_faceRectOp) {
+                        _facesOverlayView->removeRenderOp(_faceRectOp);
+                        _faceRectOp = NULL;
+                    }*/
+                    return;
+                }
+                _maskView->setHoleStrokeColour(app.getStyleColor("colorSuccess"));
+
+                /*if (!_faceRectOp) {
+                    _faceRectOp = new RectRenderOp();
+                    _faceRectOp->setFillColor(0x4000ff00);
+                    _facesOverlayView->addRenderOp(_faceRectOp);
+                }
+                RECT rect = faces[0];
+                rect.scale(scaleX, scaleY);
+                rect.origin += o;
+                _faceRectOp->setRect(rect);
+                _facesOverlayView->setNeedsFullRedraw();*/
             });
         }
         
@@ -241,20 +217,128 @@ public:
         if (_frameCaptureNeeded) {
             
             // Can only instantiate the AVI writer once the frame size is known
-            if (!_aviWriter) {
+            if (!_riffWriter) {
                 _aviData = new ByteBufferStream(256*1024);
-                _aviWriter = new AVIWriter(_aviData, frameBitmap->_width, frameBitmap->_height, 1);
-                _aviWriter->startWriteAVI(1);
-                _aviWriter->writeStreamHeader(AVIWriter::MJPG_CC);
+                _riffWriter = new RIFFWriter(_aviData);
+                _riffWriter->startWriteAVI(1, frameBitmap->_width, frameBitmap->_height, 1);
+                _riffWriter->writeStreamHeader(RIFFWriter::MJPG_CC);
             }
 
             bytearray jpeg = frameBitmap->toJpeg(0.9);
             app.log("Result of toJpeg() : %d", jpeg.size());
-            _aviWriter->writeChunk(jpeg);
+            _riffWriter->writeChunk(jpeg);
             _frameCaptureNeeded = false;
         }
         
     }
+    
+    
+    
+    void uploadRecording() {
+        //if (!_riffWriter) {
+        //    return;
+        //}
+        //_riffWriter->close();
+        
+        app.log("total avi : %d", _aviData->_data.cb);
+        app.log("total audio: %d", _encodedAudio.size());
+        
+        _aviData->offsetWrite = 0;
+        _riffWriter->writeWavFile(_audioFormat, _encodedAudio);
+
+        
+        /*
+        string url = string::format("%s/auth/admin/tokens/%s", BASEURL.data(), ORGANIZATION.data());
+        auto req = URLRequest::get(url);
+        string userPasswordData = string::format("%s:%s", USERNAME.data(), PASSWORD.data());
+        req->setHeader("Authorization", string::format("Basic %s", base64_encode(userPasswordData).data()));
+        req->setHeader("Accept", "application/vnd.net.postquantum.idaas.api.access.token.v1+json");
+        req->handleJson([=](URLRequest* req, const variant& json) {
+            if (req->error()) {
+                app.log("Error: %d, %s", req->getHttpStatus(), json.stringVal("message").data());
+                return;
+            }
+            string access_token = json.stringVal("access_token");
+            
+            // Create user
+            variant data;
+            data.setType(variant::MAP);
+            string url = string::format("%s/users", BASEURL.data());
+            req = URLRequest::post(url, data.toJson().toByteArray(false));
+            req->setHeader("Authorization", string::format("Bearer %s", access_token.data()));
+            req->setHeader("Content-Type", "application/vnd.net.postquantum.check.api.user.token.v0.1+json");
+            req->handleJson([=](URLRequest* req, const variant& v) {
+                if (req->error()) {
+                    app.log("Error: %d, %s", req->getHttpStatus(), v.stringVal("message").data());
+                    return;
+                }
+                const variant* admin_token = v.get("token");
+                string user_token = admin_token->stringVal("access_token");
+                app.log("user_token is %s", user_token.data());
+                
+                // Generate a multipart http boday containing the binary .avi
+                string body = "--X-BOUNDARY\r\n"
+                              "Content-Disposition: form-data; name=\"type\"\r\n"
+                              "Content-Type: text/plain\r\n"
+                              "\r\n"
+                              "face\r\n"
+                              "--X-BOUNDARY\r\n"
+                              "Content-Disposition: form-data; name=\"sample\"; filename=\"sample.avi\"\r\n"
+                              "Content-Transfer-Encoding: binary\r\n"
+                              "Content-Type: video/x-msvideo\r\n"
+                              "\r\n";
+                bytearray bb = body.toByteArray(false);
+                bb.append(_aviData->_data.data, (int)_aviData->_data.cb);
+                bb.append(string("\r\n--X-BOUNDARY--\r\n").toByteArray(false));
+                
+                // Post the AVI
+                string url = string::format("%s/register", BASEURL.data());
+                req = URLRequest::post(url, bb);
+                req->setHeader("Authorization", string::format("Bearer %s", user_token.data()));
+                req->setHeader("Content-Type", "multipart/form-data; boundary=X-BOUNDARY");
+                req->setHeader("Accept", "*\/*");
+                req->handleJson([](URLRequest* req, const variant& v) {
+                    app.log("I POSTed a sample! %d", req->getHttpStatus());
+                    if (req->error()) {
+                        app.log("Error: %d, %s", req->getHttpStatus(), v.stringVal("message").data());
+                        return;
+                    }
+                });
+            });
+        });*/
+        
+
+#if PLATFORM_WEB
+         //auto str = base64_encode(_encodedAudio);
+         auto str = base64_encode(_aviData->_data.data, _aviData->offsetWrite);
+         
+         EM_ASM({
+         var data = Pointer_stringify($0);
+         var element = document.createElement('a');
+         //element.setAttribute('href', 'data:video/avi;base64,' + data);
+         //element.setAttribute('download', 'foo.avi');
+         element.setAttribute('href', 'data:audio/wav;base64,' + data);
+         element.setAttribute('download', 'foo.wav');
+         //element.setAttribute('href', 'data:audio/mp3;base64,' + data);
+         //element.setAttribute('download', 'foo.mp3');
+         //element.style.display = 'none';
+         element.innerHtml = 'CLICK ME!';
+         document.body.appendChild(element);
+         element.click();
+         //document.body.removeChild(element);
+         }, str.data());
+         
+#else
+         FILE* tmp = fopen("foo2.wav", "wb");
+         fwrite(_aviData->_data.data, _aviData->offsetWrite, 1, tmp );
+         //FILE* tmp = fopen("foo.aac", "wb");
+         //fwrite(_encodedAudio.data(), _encodedAudio.size(), 1, tmp );
+         fclose(tmp);
+#endif
+
+
+    }
+    
     /*
     void encodeFrame(Bitmap* frameBitmap, PIXELDATA pixdata) {
         

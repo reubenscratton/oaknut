@@ -10,9 +10,9 @@
 #include <oaknut.h>
 
 
-class AudioInputWebSamples : public AudioInputSamples {
+class AudioWebSamples : public AudioSamples {
 public:
-    AudioInputWebSamples(void* data, int cb, AudioFormat& format) {
+    AudioWebSamples(void* data, int cb, AudioFormat& format) {
         _bytes.assignNoCopy((uint8_t*)data, cb);
         _format = format;
     }
@@ -32,20 +32,19 @@ public:
     }
     
     static void thunk(AudioInputWeb* audioInput, void* ptr, int cb) {
-        sp<AudioInputSamples> samples = new AudioInputWebSamples(ptr, cb, audioInput->_audioFormat);
+        sp<AudioSamples> samples = new AudioWebSamples(ptr, cb, audioInput->_audioFormat);
         audioInput->onNewAudioSamples(samples);
     }
     void open(AudioFormat& preferredFormat) override {
         
-        // NB: Web Audio samples are always float32 and always mono (afaik)
-        _audioFormat = preferredFormat;
-        _audioFormat.sampleType = AudioFormat::Float32;
-        _audioFormat.numChannels = 1;
-        _audioFormat.sampleRate = EM_ASM_INT({
+        // There is zero flexibility in web audio. Always float32, always mono, always 44100.
+        preferredFormat.sampleType = AudioFormat::Float32;
+        preferredFormat.numChannels = 1;
+        preferredFormat.sampleRate = EM_ASM_INT({
             var AudioContext = window.AudioContext || window.webkitAudioContext;
             return new AudioContext().sampleRate;
         });
-        app.log("The sample rate is %d", _audioFormat.sampleRate);
+        _audioFormat = preferredFormat;
 
         EM_ASM_({
             
