@@ -283,42 +283,6 @@ void BitmapApple::bind() {
 }
 
 
-bytearray BitmapApple::toJpeg(float quality) {
-
-#if TARGET_OS_IOS
-    UIImage* image = nil;
-    if (_context) {
-        CGImageRef imgRef = CGBitmapContextCreateImage(_context);
-        image = [UIImage imageWithCGImage:imgRef];
-        CGImageRelease(imgRef);
-    }
-    else if (_cvImageBuffer) {
-        CIImage* imgRef = [CIImage imageWithCVImageBuffer:_cvImageBuffer];
-        CGImageRef cgImage = [[CIContext contextWithOptions:nil] createCGImage:imgRef fromRect:CGRectMake(0,0,_width,_height)];
-        image = [UIImage imageWithCGImage:cgImage];
-    }
-    else {
-        assert(0); // oops! todo: support other kinds of image (gl texture, probably)
-     }
-     NSData* data = UIImageJPEGRepresentation(image, quality);
-#else
-    NSBitmapImageRep* bitmapRep = nil;
-    if (_context) {
-        CGImageRef imgRef = CGBitmapContextCreateImage(_context);
-        bitmapRep = [[NSBitmapImageRep alloc] initWithCGImage:imgRef];
-    }
-    else if (_cvImageBuffer) {
-        CIImage* imgRef = [CIImage imageWithCVImageBuffer:_cvImageBuffer];
-        bitmapRep = [[NSBitmapImageRep alloc] initWithCIImage:imgRef];
-    }
-    else {
-        assert(0); // oops! todo: support other kinds of image (gl texture, probably)
-    }
-    NSData* data = [bitmapRep representationUsingType:NSJPEGFileType properties:@{NSImageCompressionFactor:@(quality)}];
-#endif
-    return bytearray((uint8_t*)data.bytes, (int)data.length);
-}
-
 BitmapApple* bitmapFromData(const void* data, int cb) {
     CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, data, cb, NULL);
     CGImageRef cgImage = CGImageCreateWithPNGDataProvider(dataProvider, NULL, NO, kCGRenderingIntentDefault);
@@ -427,11 +391,12 @@ void BitmapApple::fromVariant(const variant& v) {
 }
 void BitmapApple::toVariant(variant& v) {
     Bitmap::toVariant(v);
-    int stride = (int)CGBitmapContextGetBytesPerRow(_context);
-    v.set("s", stride);
-    uint8_t* data = (uint8_t*)CGBitmapContextGetData(_context);
-    uint32_t cb = stride * (uint32_t)CGBitmapContextGetHeight(_context);
-    v["bb"] = bytearray(data, cb);
+    
+    PIXELDATA pixelData;
+    lock(&pixelData, false);
+    v.set("s", pixelData.stride);
+    v["bb"] = bytearray((uint8_t*)pixelData.data, pixelData.cb);
+    unlock(&pixelData, false);
 }
 
 void Bitmap::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {

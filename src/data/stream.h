@@ -20,6 +20,8 @@ public:
     virtual bool readBytes(size_t cb, void* bytes) = 0;
     virtual void setWriteOffset(size_t offset) = 0;
     
+    bool readInt8(int8_t* val);
+    bool writeInt8(int8_t val);
     bool readInt16(int16_t* val);
     bool writeInt16(int16_t val);
     bool readInt32(int32_t* val);

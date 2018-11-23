@@ -4,7 +4,7 @@
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
 //
-#if PLATFORM_ANDROID
+#if PLATFORM_ANDROID && 0 // code not ready yet
 
 #include <oaknut.h>
 
@@ -14,12 +14,12 @@ static jmethodID jmidUpdate;
 
 static JNIEnv* s_env;
 
-class FaceDetectorAndroid : public FaceDetector {
+class FaceDetectorWorker : public WorkerImpl {
 public:
-    
+
     jobject _faceDetector;
     
-    FaceDetectorAndroid() {
+    FaceDetectorWorker() {
         int getEnvStat = g_jvm->GetEnv((void **)&s_env, JNI_VERSION_1_6);
         if (getEnvStat == JNI_EDETACHED) {
             if (g_jvm->AttachCurrentThread(&s_env, NULL) != 0) {
@@ -38,20 +38,26 @@ public:
         s_env->DeleteGlobalRef(_faceDetector);
     }
 
-    int detectFaces(Bitmap* bitmap) {
+    variant process_(const variant& data_in) override {
+        int width = data_in.intVal("width");
+        int height = data_in.intVal("height");
+        const bytearray& bytes = data_in.bytearrayVal("data");
         PIXELDATA pixeldata;
         bitmap->lock(&pixeldata, false);
         jobject directBuffer = s_env->NewDirectByteBuffer(pixeldata.data, pixeldata.cb);
-        int numFaces = s_env->CallIntMethod(_faceDetector, jmidUpdate, bitmap->_width, bitmap->_height, pixeldata.stride, directBuffer);
+        int numFaces = s_env->CallIntMethod(_faceDetector, jmidUpdate, width, height, pixeldata.stride, directBuffer);
         bitmap->unlock(&pixeldata, false);
-        return numFaces;
+        variant result;
+        result.setType(variant::ARRAY);
+        for (int i=0 ; i<numFaces; i++) {
+            result.appendVal(i); // todo: should be the face rect
+        }
+        return result;
     }
 
 };
 
-FaceDetector* FaceDetector::create() {
-    return new FaceDetectorAndroid();
-}
+DECLARE_WORKER_IMPL(FaceDetectorWorker);
 
 #endif
 

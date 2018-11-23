@@ -21,16 +21,16 @@ public:
         JNIEnv* env = getJNIEnv();
         jclassAudioInput = env->FindClass(PACKAGE "/AudioInput");
         jclassAudioInput = (jclass)env->NewGlobalRef(jclassAudioInput);
-        jmidConstructor = env->GetMethodID(jclassAudioInput, "<init>", "(JI)V");
+        jmidConstructor = env->GetMethodID(jclassAudioInput, "<init>", "(JIII)V");
         jmidStart = env->GetMethodID(jclassAudioInput, "start", "()V");
         jmidStop = env->GetMethodID(jclassAudioInput, "stop", "()V");
     }
     ~AudioInputAndroid() {
     }
 
-    void open(int sampleRate) override {
+    void open(AudioFormat& preferredFormat) override {
         JNIEnv* env = getJNIEnv();
-        javaobj = env->NewObject(jclassAudioInput, jmidConstructor, (jlong)this, (jint)sampleRate);
+        javaobj = env->NewObject(jclassAudioInput, jmidConstructor, (jlong)this, preferredFormat.sampleType, preferredFormat.numChannels, (jint)preferredFormat.sampleRate);
         javaobj = env->NewGlobalRef(javaobj);
     }
     void start() override {
@@ -54,8 +54,7 @@ AudioInput* AudioInput::create() {
 JAVA_FN(void, AudioInput, nativeOnGotData)(JNIEnv *env, jobject javaobj, jlong nativeObj, jobject byteBuffer, jint cb) {
     AudioInputAndroid* audioInput = (AudioInputAndroid*)nativeObj;
     void* bytes = env->GetDirectBufferAddress(byteBuffer);
-    sp<AudioSamples> samples = new AudioSamples();
-    samples->_data = bytearray((uint8_t*)bytes, cb);
+    sp<AudioSamples> samples = new AudioSamples(bytearray((uint8_t*)bytes, cb));
     audioInput->onNewAudioSamples(samples);
 }
 

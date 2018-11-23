@@ -29,6 +29,8 @@ public:
 
 #if PLATFORM_APPLE
     dispatch_queue_t _queue;
+#elif PLATFORM_ANDROID || PLATFORM_LINUX
+    sp<PosixTaskQueue> _queue;
 #endif
 #if PLATFORM_WEB
     worker_handle _worker;
@@ -43,6 +45,8 @@ public:
     
 protected:
     Worker(); // for special types of worker only
+    bool _started;
+
 };
 
 

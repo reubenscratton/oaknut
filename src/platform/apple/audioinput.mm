@@ -189,15 +189,19 @@ public:
         [settings setObject:@(0) forKey:AVLinearPCMIsFloatKey];
         [settings setObject:@(16) forKey:AVLinearPCMBitDepthKey];
         _audioDataOutput.audioSettings = settings;
+#else
+        [[AVAudioSession sharedInstance] setPreferredSampleRate:preferredFormat.sampleRate error:nil];
 #endif
         _queue = dispatch_queue_create("AudioInput", DISPATCH_QUEUE_SERIAL);
         [_audioDataOutput setSampleBufferDelegate:_helper queue:_queue];
         [_session addOutput:_audioDataOutput];
         [_session commitConfiguration];
         
+        
         // Update the audioformat struct with the settings the OS actually applied
         // which may not be the ones that were wanted. It is up to client code to apply
         // resampling and/or conversion logic if it can't handle the chosen settings.
+#if TARGET_OS_OSX
         preferredFormat.sampleRate = (int)[_audioDataOutput.audioSettings[AVSampleRateKey] integerValue];
         BOOL isFloat = [_audioDataOutput.audioSettings[AVLinearPCMIsFloatKey] boolValue];
         int bitDepth = (int)[_audioDataOutput.audioSettings[AVLinearPCMBitDepthKey] integerValue];
@@ -208,6 +212,9 @@ public:
         } else {
             assert(0); // unsupported sample type!
         }
+#else
+        preferredFormat.sampleRate = (int)[AVAudioSession sharedInstance].sampleRate;
+#endif
     }
     void start() override {
         dispatch_async(_queue, ^() {

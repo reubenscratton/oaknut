@@ -53,7 +53,7 @@ public:
         free(pixelData->data);
     }
     
-    
+    /*
     bytearray toJpeg(float quality) override {
         
         int gotIndex_tuple = EM_ASM_INT({
@@ -109,7 +109,7 @@ public:
         jpeg_bytes.assignNoCopy((uint8_t*)tuple["data"].as<int>(), tuple["cb"].as<int>());
         
         return jpeg_bytes;
-    }
+    }*/
 
     val _texture;
 };

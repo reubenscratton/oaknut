@@ -48,8 +48,9 @@ public:
     void handleNewAudioSamples(AudioSamples* samples) override {
         JNIEnv* env = getJNIEnv();
         jmethodID jmid = env->GetMethodID(_jclass, "handleNewAudioSamples", "([B)V");
-        jbyteArray jsamples = env->NewByteArray(samples->_data.size());
-        env->SetByteArrayRegion(jsamples, 0, samples->_data.size(), (jbyte*)samples->_data.data());
+        auto bytes = samples->getData();
+        jbyteArray jsamples = env->NewByteArray(bytes.size());
+        env->SetByteArrayRegion(jsamples, 0, bytes.size(), (jbyte*)bytes.data());
         env->CallVoidMethod(_jobject, jmid, jsamples);
     }
 

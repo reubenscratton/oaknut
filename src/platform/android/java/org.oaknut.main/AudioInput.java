@@ -10,12 +10,17 @@ import java.nio.ByteBuffer;
 public class AudioInput {
 
     long nativeObj;
+    int numChannels;
     int sampleRate;
     boolean started;
     Thread thread;
 
-    public AudioInput(long nativeObj, int sampleRate) {
+    private static final int SAMPLE_TYPE_INT16 = 0;
+    private static final int SAMPLE_TYPE_FLOAT32 = 1;
+
+    public AudioInput(long nativeObj, int sampleType, int numChannels, int sampleRate) {
         this.nativeObj = nativeObj;
+        this.numChannels = numChannels;
         this.sampleRate = sampleRate;
     }
 

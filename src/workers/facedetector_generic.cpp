@@ -233,11 +233,12 @@ static Stage stageData[] = {
 
 /**
  * Runs a HAAR cascade on a block of image.
- * @param {number} i Left edge of block within image
- * @param {number} j Top edge of block within image
- * @param {number} width The image width.
- * @param {number} blockSize The block size.
- * @param {number} scale The scale factor between base block size and block size
+ * @param i Left edge of block within image
+ * @param j Top edge of block within image
+ * @param width The image width.
+ * @param blockWidth The block width.
+ * @param blockHeight The block height.
+ * @param scale The scale factor between base block size and block size
  * @return {boolean} Whether the region passes all the stage tests.
  */
 static bool evalStages(const int32_t* integralImage, const int32_t* integralImageSquare, int i, int j, int width, int blockWidth, int blockHeight, float scale) {

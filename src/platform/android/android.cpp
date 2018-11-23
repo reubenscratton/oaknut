@@ -194,8 +194,8 @@ JAVA_FN(jlong, MainActivity, onCreateNative)(JNIEnv *env, jobject obj,
     WindowAndroid* window = (WindowAndroid*)Window::create();
     window->retain();
     window->activity = env->NewGlobalRef(obj);
-    window->setUnsafeInsets(StatusBar, EDGEINSETS(0, statusBarHeight, 0, 0));
-    window->setUnsafeInsets(BottomNavBar, EDGEINSETS(0,0,0,navigationBarHeight));
+    window->setSafeInsets(oak::SafeInsetsType::StatusBar, EDGEINSETS(0, statusBarHeight, 0, 0));
+    window->setSafeInsets(oak::SafeInsetsType::BottomNavBar, EDGEINSETS(0,0,0,navigationBarHeight));
     window->_scale = screenScale;
     window->assetManager = AAssetManager_fromJava(env, jassetManager);
 

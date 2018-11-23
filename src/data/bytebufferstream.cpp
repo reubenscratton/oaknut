@@ -19,6 +19,11 @@ void ByteBufferStream::setWriteOffset(size_t offset) {
     offsetWrite = offset;
 }
 
+bytearray ByteBufferStream::getWrittenBytes() {
+    return bytearray(_data.data, (int)offsetWrite);
+}
+
+
 bool ByteBufferStream::hasMoreToRead() {
     return offsetRead < _data.cb;
 }

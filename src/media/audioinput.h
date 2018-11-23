@@ -31,7 +31,13 @@ class AudioSamples : public Object {
 public:
     AudioFormat _format;
     
-    virtual bytearray getData()=0;
+    AudioSamples();
+    AudioSamples(const bytearray& data);
+    virtual bytearray getData();
+
+protected:
+
+    bytearray _data;
 };
 
 class AudioInput : public Object {

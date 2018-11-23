@@ -24,9 +24,9 @@ public:
     Label* _instruction;
     Label* _phrase;
     ImageView* _recordButton;
-    FaceDetector* _faceDetector;
+    sp<FaceDetector> _faceDetector;
     //View* _facesOverlayView;
-    AudioInput* _audioInput;
+    sp<AudioInput> _audioInput;
     //Worker* _audioEncoder;
     bytearray _encodedAudio;
     Timer* _frameCaptureTimer;
@@ -35,7 +35,8 @@ public:
     ByteBufferStream* _aviData;
     RectRenderOp* _faceRectOp;
     AudioFormat _audioFormat;
-    AudioResampler* _audioResampler;
+    sp<AudioResampler> _audioResampler;
+    sp<JpegEncoder> _jpegEncoder;
 
     MainViewController() {
         inflate("layout/main.res");
@@ -58,6 +59,7 @@ public:
             return true;
         };
         
+        _jpegEncoder = new JpegEncoder();
         _faceDetector = new FaceDetector();
         //_facesOverlayView = new View();
         //_facesOverlayView->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Fill());
@@ -224,9 +226,12 @@ public:
                 _riffWriter->writeStreamHeader(RIFFWriter::MJPG_CC);
             }
 
-            bytearray jpeg = frameBitmap->toJpeg(0.9);
-            app.log("Result of toJpeg() : %d", jpeg.size());
-            _riffWriter->writeChunk(jpeg);
+            _jpegEncoder->encode(frameBitmap, [=](const bytearray& jpeg) {
+                app.log("jpeg size : %d", jpeg.size());
+                _riffWriter->writeChunk(jpeg);
+
+            });
+            
             _frameCaptureNeeded = false;
         }
         
@@ -236,15 +241,13 @@ public:
     
     void uploadRecording() {
         //if (!_riffWriter) {
-        //    return;
+        //    return;s
         //}
-        //_riffWriter->close();
+        _riffWriter->close();
         
         app.log("total avi : %d", _aviData->_data.cb);
         app.log("total audio: %d", _encodedAudio.size());
         
-        _aviData->offsetWrite = 0;
-        _riffWriter->writeWavFile(_audioFormat, _encodedAudio);
 
         
         /*
@@ -315,10 +318,10 @@ public:
          EM_ASM({
          var data = Pointer_stringify($0);
          var element = document.createElement('a');
-         //element.setAttribute('href', 'data:video/avi;base64,' + data);
-         //element.setAttribute('download', 'foo.avi');
-         element.setAttribute('href', 'data:audio/wav;base64,' + data);
-         element.setAttribute('download', 'foo.wav');
+         element.setAttribute('href', 'data:video/avi;base64,' + data);
+         element.setAttribute('download', 'foo.avi');
+         //element.setAttribute('href', 'data:audio/wav;base64,' + data);
+         //element.setAttribute('download', 'foo3.wav');
          //element.setAttribute('href', 'data:audio/mp3;base64,' + data);
          //element.setAttribute('download', 'foo.mp3');
          //element.style.display = 'none';
@@ -329,12 +332,15 @@ public:
          }, str.data());
          
 #else
-         FILE* tmp = fopen("foo2.wav", "wb");
+         FILE* tmp = fopen("foo.avi", "wb");
          fwrite(_aviData->_data.data, _aviData->offsetWrite, 1, tmp );
          //FILE* tmp = fopen("foo.aac", "wb");
          //fwrite(_encodedAudio.data(), _encodedAudio.size(), 1, tmp );
          fclose(tmp);
 #endif
+
+        //_aviData->offsetWrite = 0;
+        //_riffWriter->writeWavFile(_audioFormat, _encodedAudio);
 
 
     }

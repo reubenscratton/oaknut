@@ -445,7 +445,7 @@ public:
     int _animationCount; // number of active animations currently attached to the view
     
 #ifdef DEBUG
-    virtual string debugDescription();
+    string debugDescription() override;
     virtual string debugViewType();
     void debugDumpTree(int depth);
     string _debugTag;

@@ -15,7 +15,7 @@ static jmethodID s_jmidCancel;
 
 class URLRequestAndroid : public URLRequest {
 public:
-    URLRequestAndroid(const string& url, const string& method, const string& body, int flags)
+    URLRequestAndroid(const string& url, const string& method, const bytearray& body, int flags)
         : URLRequest(url, method, body, flags) {
     }
     ~URLRequestAndroid() {
@@ -53,7 +53,7 @@ public:
 
         // Body bytes
         jbyteArray bodyBytes = NULL;
-        cb = _body.lengthInBytes();
+        cb = _body.size();
         if (cb) {
             bodyBytes = env->NewByteArray(cb);
             jbyte *buf = env->GetByteArrayElements(bodyBytes, NULL);
@@ -82,7 +82,7 @@ protected:
   jobject _osobj;
 };
 
-URLRequest* URLRequest::create(const string& url, const string& method, const string& body, int flags) {
+URLRequest* URLRequest::create(const string& url, const string& method, const bytearray& body, int flags) {
     return new URLRequestAndroid(url, method, body, flags);
 }
 

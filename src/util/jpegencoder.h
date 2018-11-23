@@ -5,19 +5,12 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#include <oaknut.h>
 
-
-AudioInput::AudioInput() {
-}
-
-
-AudioSamples::AudioSamples() {
-}
-AudioSamples::AudioSamples(const bytearray& data) : _data(data) {
-}
-
-bytearray AudioSamples::getData() {
-    return _data;
-}
-
+class JpegEncoder : public Worker {
+public:
+    
+    JpegEncoder();
+    
+    virtual void encode(class Bitmap* bitmap, std::function<void(const bytearray&)> result);
+    
+};

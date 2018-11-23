@@ -13,6 +13,8 @@ public:
     ByteBufferStream(int cb);
     ByteBufferStream(ByteBuffer* data);
     
+    bytearray getWrittenBytes();
+    
     bool hasMoreToRead() override;
     bool writeBytes(size_t cb, const void* bytes) override;
     bool readBytes(size_t cb, void* bytes) override;
