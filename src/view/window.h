@@ -25,18 +25,14 @@ enum SafeInsetsType {
  *  @ingroup views
  */
 
-// TODO: Can't help but feel that Window should extend View and have two subviews: the root VC view,
-// and the decor view on top of that
 class Window : public View {
 protected:
     Window();
 public:
     static Window* create();
 
-    RECT _surfaceRect;
 	sp<class ViewController> _rootViewController;
 	vector<sp<ViewController>> _viewControllers;
-    //sp<Surface> _surface;
 	float _scale;
     class MotionTracker {
     public:
@@ -129,9 +125,10 @@ public:
     EDGEINSETS _safeInsets[5];
     void setSafeInsets(SafeInsetsType type, const EDGEINSETS& insets);
     void ensureFocusedViewIsInSafeArea();
-private:
     
-    View* _decorView;
+    RectRenderOp* _renderOpDecorTop;
+	RectRenderOp* _renderOpDecorBottom;
+	void updateDecorOp(bool bottom, float height);
 };
 
 

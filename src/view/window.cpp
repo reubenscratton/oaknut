@@ -13,14 +13,6 @@ Window::Window() : _rootViewController(NULL), _scale(1) {
     _quadBuffer = new QuadBuffer();
     _window = this;
     _effectiveAlpha = 1;
-    
-    /*_decorView = new View();
-    RectRenderOp* testOp = new RectRenderOp();
-    testOp->setFillColor(0xFF00FF00);
-    testOp->setRect(RECT(0,0,350,64));
-    testOp->validateShader();
-    _decorView->addRenderOp(testOp);
-    _decorView->attachToWindow(this);*/
 }
 
 void Window::show() {
@@ -63,9 +55,11 @@ void Window::resizeSurface(int width, int height, float scale) {
         return;
     }
 	//app.log("Window::resize %d %d %f", width, height, scale);
-    _surfaceRect = RECT(0,0,width,height);
+    _rect = RECT(0,0,width,height);
 	_scale = scale;
     _surface->setSize({(float)width, (float)height});
+    updateDecorOp(false, _safeInsetsTotal.top);
+    updateDecorOp(true, _safeInsetsTotal.bottom);
     for (auto vc : _viewControllers) {
         vc->applySafeInsets(_safeInsetsTotal);
     }
@@ -300,24 +294,10 @@ void Window::draw() {
 
     if (!_layoutValid) {
         _layoutValid = true;
-        layout(_surfaceRect);
+        layout(_rect);
         ensureFocusedViewIsInSafeArea();
     }
     _surface->render(this, this);
-    
-	// Draw view controllers
-    /*for (ViewController* vc : _viewControllers) {
-		View* view = vc->getView();
-		if (!view->_layoutValid) {
-            //app.log("root layout() %f", _surfaceRect.size.height);
-            view->layout(_surfaceRect);
-            ensureFocusedViewIsInSafeArea();
-		}
-        _surface->render(view, this);
-	}
-    if (_decorView) {
-        _surface->render(_decorView, this);
-    }*/
 
 	
 	incFrames();
@@ -582,15 +562,44 @@ void Window::setSafeInsets(SafeInsetsType type, const EDGEINSETS& insets) {
             _safeInsetsTotal.top = MAX(_safeInsetsTotal.top, inset.top);
             _safeInsetsTotal.bottom = MAX(_safeInsetsTotal.bottom, inset.bottom);
         }
+        
+        // Window decor
+        if (type==SafeInsetsType::BottomNavBar) {
+            updateDecorOp(true, insets.bottom);
+        }
+        if (type==SafeInsetsType::StatusBar) {
+            updateDecorOp(false, insets.top);
+        }
+
+        
+        
         for (auto vc : _viewControllers) {
             vc->applySafeInsets(_safeInsetsTotal);
         }
         ensureFocusedViewIsInSafeArea();
-        //_decorView->setRectSize({750,1334});
-        //_decorView->setNeedsFullRedraw();
         requestRedraw();
     }
 }
+
+void Window::updateDecorOp(bool bottom, float height) {
+    RectRenderOp*& op = bottom?_renderOpDecorBottom:_renderOpDecorTop;
+    COLOR color = app.getStyleColor(bottom ? "window.safeInsetBackgrounds.bottom" : "window.safeInsetBackgrounds.top");
+    if (color!=0 && height>0) {
+        if (!op) {
+            op = new RectRenderOp();
+            op->setFillColor(color);
+            addScrollbarOp(op);
+        }
+        RECT rect = {0,bottom?(_rect.size.height-height):0,_rect.size.width, height};
+        op->setRect(rect);
+    } else  {
+        if (op) {
+            removeScrollbarOp(op);
+            op = NULL;
+        }
+    }
+}
+
 
 
 // Permissions. By default there is no runtime permissions system.
@@ -633,7 +642,7 @@ void Window::ensureFocusedViewIsInSafeArea() {
         
         // Calculate the extent it is below the safe area
         float dx=0,dy=0;
-        RECT safeArea = _surfaceRect;
+        RECT safeArea = _rect;
         _safeInsetsTotal.applyToRect(safeArea);
         float d = rect.bottom() - safeArea.bottom();
         if (d > 0) {

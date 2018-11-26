@@ -584,7 +584,7 @@ float View::getAlignspecVal(const ALIGNSPEC& spec, bool isVertical) {
 
     View* anchor = (spec.anchor == NO_ANCHOR) ? NULL : (spec.anchor?spec.anchor:_parent);
     float anchorVal = 0;
-    RECT& refRect = anchor ? anchor->_rect : _window->_surfaceRect;
+    RECT& refRect = anchor ? anchor->_rect : _window->_rect;
     float anchorSize = isVertical ? refRect.size.height : refRect.size.width;
     float ownSize = isVertical ? _rect.size.height : _rect.size.width;
     if (anchor) {

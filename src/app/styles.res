@@ -6,7 +6,7 @@ window: {
     default-height:200dp
     safeInsetBackgrounds: {
         bottom@android: black
-        top: green
+        top:0
     }
 }
 
