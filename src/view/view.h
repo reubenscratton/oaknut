@@ -31,6 +31,7 @@ typedef struct _STATESET {
 } STATESET;
 
 
+
 /**
  *  @brief Fundamental UI building block
  *  @ingroup views
@@ -329,19 +330,15 @@ protected:
     bool _updateRenderOpsNeeded;
     bool _opaque;
     MATRIX4* _matrix;
-    class ScrollbarsView* _scrollbarsView;
     void addScrollbarOp(RenderOp* renderOp);
     void removeScrollbarOp(RenderOp* renderOp);
     void updateBackgroundRect();
-    
-    /** Links to the adjacent views in the render order. All views attached to the window
-        form a doubly-linked list used in rendering. */
-    sp<View> _previousView;
-    sp<View> _nextView;
-    uint32_t _renderOrder; // set by Surface::renderPass1, read in Surface::renderPass2.
+    void addRenderOpToList(RenderOp* renderOp, bool atFront, sp<RenderList>& list);
+    void removeRenderOpFromList(RenderOp* renderOp, sp<RenderList>& list);
     
     /** The RenderOps that draw this view */
-    list<sp<RenderOp>> _renderList;
+    sp<RenderList> _renderList;
+    sp<RenderList> _renderListDecor;
     
     /**  \endcond */
     /**@}*/
@@ -454,9 +451,4 @@ public:
 };
 
 
-class ScrollbarsView : public View {
-public:
-    void updateContentSize(SIZE constraint) override;
-    void layout(RECT constraint) override;
-};
 

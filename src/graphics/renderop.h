@@ -15,7 +15,8 @@ public:
     RECT _rect;
     EDGEINSETS _inset;
     GLProgram* _prog;
-    list<sp<RenderOp>>::iterator _viewListIterator; // view.renderList linked list entry
+    class RenderList* _list;
+    list<sp<RenderOp>>::iterator _listIterator; 
     int _mvpNum;
     sp<class RenderBatch> _batch; // non-NULL when attached to surface
     list<sp<RenderOp>>::iterator _batchIterator; // batch's linked list entry, valid when attached to surface

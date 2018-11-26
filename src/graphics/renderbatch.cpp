@@ -105,18 +105,19 @@ void RenderBatch::render(Window* window, Surface* surface, RenderOp* firstOp) {
         }
         
         // Move to next op in render order
-        View* currentOpView = currentOp->_view;
-        auto jt = currentOp->_viewListIterator;
+        auto jt = currentOp->_listIterator;
+        auto prevOp = currentOp;
         jt++;
-        while (currentOpView && jt == currentOpView->_renderList.end()) {
-            currentOpView = currentOpView->_nextView;
-            if (currentOpView)
-                jt = currentOpView->_renderList.begin();
-        }
-        if (!currentOpView) {
-            break;
+        if (jt == currentOp->_list->_ops.end()) {
+            auto kt = currentOp->_list->_surfaceIt;
+            kt++;
+            if (kt == surface->_renderListsList.end()) {
+                break;
+            }
+            jt = (*kt)->_ops.begin();
         }
         currentOp = *jt;
+        assert(currentOp);
         
     }
 

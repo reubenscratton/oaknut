@@ -330,8 +330,15 @@ void View::setNeedsFullRedraw() {
 	}
 	if (!_needsFullRedraw) {
 		_needsFullRedraw = true;
-        for (auto it=_renderList.begin() ; it!=_renderList.end() ; it++) {
-            (*it)->_mustRedraw = true;
+        if (_renderList) {
+            for (auto& op : _renderList->_ops) {
+                op->_mustRedraw = true;
+            }
+        }
+        if (_renderListDecor) {
+            for (auto& op : _renderListDecor->_ops) {
+                op->_mustRedraw = true;
+            }
         }
 		for (int i=0 ; i<_subviews.size() ; i++) {
 			View* view = _subviews.at(i);
@@ -374,10 +381,12 @@ void View::invalidateRect(const RECT& rect) {
         _surface->_invalidRegion.addRect(surfaceRect);
         
         // Find the intersecting ops and mark them as needing a redraw
-        for (auto it=_renderList.begin() ; it!=_renderList.end() ; it++) {
-            RenderOp* op = *it;
-            if (surfaceRect.intersects(op->_rect)) {
-                op->_mustRedraw = true;
+        if (_renderList) {
+            for (auto it : _renderList->_ops) {
+                RenderOp* op = it;
+                if (surfaceRect.intersects(op->_rect)) {
+                    op->_mustRedraw = true;
+                }
             }
         }
         
@@ -448,8 +457,15 @@ void View::adjustSurfaceOrigin(const POINT& d) {
     // If the view is 'live' - ie part of a window and visible - then the
     // render order might be affected and the batch quads must be updated
     if (_window) {
-        for (auto it : _renderList) {
-            it->rebatchIfNecessary();
+        if (_renderList) {
+            for (auto it : _renderList->_ops) {
+                it->rebatchIfNecessary();
+            }
+        }
+        if (_renderListDecor) {
+            for (auto it : _renderListDecor->_ops) {
+                it->rebatchIfNecessary();
+            }
         }
         _window->requestRedraw();
     }
@@ -696,7 +712,6 @@ void View::layout(RECT constraint) {
         SIZE subviewExtent = {0,0};
         for (int i=0 ; i<_subviews.size() ; i++) {
             View* view = _subviews.at(i);
-            if (view == _scrollbarsView) continue;
             subviewExtent.width = fmaxf(subviewExtent.width, view->getRight());
             subviewExtent.height = fmaxf(subviewExtent.height, view->getBottom());
         }
@@ -816,7 +831,12 @@ void View::attachToWindow(Window *window) {
     updateEffectiveTint();
     
     if (_surface) {
-        _surface->attachViewOps(this);
+        if (_renderList) {
+            _surface->attachRenderList(_renderList);
+        }
+        if (_renderListDecor) {
+            _surface->attachRenderList(_renderListDecor);
+        }
     }
     
 	for (auto it = _subviews.begin(); it!=_subviews.end() ; it++) {
@@ -839,7 +859,12 @@ void View::detachFromWindow() {
     
     // Unbatch our ops
     if (_surface) {
-        _surface->detachViewOps(this);
+        if (_renderList) {
+            _surface->detachRenderList(_renderList);
+        }
+        if (_renderListDecor) {
+            _surface->detachRenderList(_renderListDecor);
+        }
     }
 
     // Recurse through subviews
@@ -892,9 +917,6 @@ void View::addSubview(View* subview) {
 
 int View::getSubviewCount() {
     int c = (int)_subviews.size();
-    if (_scrollbarsView) {
-        c--;
-    }
     return c;
 }
 
@@ -914,63 +936,8 @@ View* View::getRootView() {
 }
 
 void View::insertSubview(View* subview, int index) {
-    
-    // If adding to end of list, make sure we don't draw on top of scrollbars view
-    if (_scrollbarsView && (index >= _subviews.size())) {
-        index = (int)_subviews.size() - 1;
-    }
-    
-    /*
-     
-     This is a view tree with node labels indicating render order:
 
-          __1__
-         /  |  \
-        2   5   8
-       / \ / \  | \
-      3  4 6  7 9  10
-
-     
-     Imagine 5 has no parent and is then added as a subview of 1. To implement render order we
-     must determine that 4 and 5 are linked, as are 7 and 8.
-     
-         ______1______
-        /             \
-       2       5       8
-      / \     / \     / \
-     3  4    6   7   9  10
-
-     To get from 5 to 4 we start with 5's left sibling, in this case 2, and then find rightmost 
-     descendent of 2. If 5 had no left sibling then the prevView would be parent (ie 1).
-     
-     Now, consider that each view has TWO lists of renderops... one for its own content, and one
-     to be drawn on top of its content and all of its subviews.
-    
-     */
-    View* prev = this;
-    if (index > 0) {
-        prev = _subviews.at(index-1); // left sibling
-        while (prev->_subviews.size() > 0) {
-            prev = prev->_subviews.at(prev->_subviews.size()-1);
-        }
-    }
-    sp<View> next = prev->_nextView;  // keep a ref to 8
-    subview->_previousView = prev; // link 5 to 4
-    prev->_nextView = subview;     // link 4 to 5
-    
-    // Find rightmost descendent of the subview (7)
-    View* rightmost = subview;
-    while (rightmost->_subviews.size() > 0) {
-        rightmost = rightmost->_subviews.at(rightmost->_subviews.size()-1);
-    }
-    //assert(!rightmost->_nextView);
-    rightmost->_nextView = next;     // link 7 to 8
-    if (next) {
-        next->_previousView = rightmost; // link 8 to 7
-    }
-
-    
-	_subviews.insert(_subviews.begin()+index, subview);
+    _subviews.insert(_subviews.begin()+index, subview);
 	subview->_parent = this;
 	if (_window) {
 		subview->attachToWindow(_window);
@@ -994,28 +961,10 @@ void View::removeSubview(View* subview) {
 	int i=indexOfSubview(subview);
 	assert(i>=0);
 	if (i>=0) {
-        if (i==0) {
-            assert(subview->_previousView == this);
-        }
-        
-        // Find rightmost view
-        View* rightmost = subview;
-        while (rightmost->_subviews.size() > 0) {
-            rightmost = rightmost->_subviews.at(rightmost->_subviews.size()-1);
-        }
-
-        if (subview->_previousView) {
-            subview->_previousView->_nextView = rightmost->_nextView;
-        }
-        if (rightmost->_nextView) {
-            rightmost->_nextView->_previousView = subview->_previousView;
-        }
-        
 		if (_window) {
 			subview->detachFromWindow();
 		}
 		_subviews.erase(_subviews.begin() + i);
-        
 	}
 }
 void View::removeFromParent() {
@@ -1030,7 +979,6 @@ void View::removeSubviewsNotInVisibleArea() {
     for (int i=0 ; i<_subviews.size() ; i++) {
         auto it = _subviews.at(i);
         View* subview = it;
-        if (subview == _scrollbarsView) continue;
         if (subview->_rect.bottom() < _contentOffset.y
             || subview->_rect.top() >= _rect.size.height+_contentOffset.y) {
             i--;
@@ -1122,29 +1070,11 @@ void View::onStateChanged(STATESET changedStates) {
 }
 
 void View::addScrollbarOp(RenderOp* renderOp) {
-    bool layoutValid = _layoutValid; // we preserve this flag to avoid scrollbars triggering layout
-    if (!_scrollbarsView) {
-        ScrollbarsView* scrollbarsView = new ScrollbarsView();
-        //scrollbarsView->setMeasureSpecs(MEASURESPEC::FillParent(), MEASURESPEC::FillParent());
-        //scrollbarsView->setAlignSpecs(ALIGNSPEC::Top(), ALIGNSPEC::Left());
-        addSubview(scrollbarsView);
-        scrollbarsView->_rect = getOwnRect();
-        _scrollbarsView = scrollbarsView;
-    }
-    //renderOp->_view = _scrollbarsView;
-    _scrollbarsView->addRenderOp(renderOp);
-    _layoutValid = layoutValid;
+    addRenderOpToList(renderOp, false, _renderListDecor);
 }
 
 void View::removeScrollbarOp(RenderOp* renderOp) {
-    bool layoutValid = _layoutValid; // we preserve this flag to avoid scrollbars triggering layout
-    assert(_scrollbarsView);
-    _scrollbarsView->removeRenderOp(renderOp);
-    if (_scrollbarsView->_renderList.size() == 0) {
-        removeSubview(_scrollbarsView);
-        _scrollbarsView = NULL;
-    }
-    _layoutValid = layoutValid;
+    removeRenderOpFromList(renderOp, _renderListDecor);
 }
 
 
@@ -1152,6 +1082,13 @@ void View::addRenderOp(RenderOp* renderOp) {
     addRenderOp(renderOp, false);
 }
 void View::addRenderOp(RenderOp* renderOp, bool atFront) {
+    addRenderOpToList(renderOp, atFront, _renderList);
+}
+void View::removeRenderOp(RenderOp* renderOp) {
+    removeRenderOpFromList(renderOp, _renderList);
+}
+
+void View::addRenderOpToList(RenderOp* renderOp, bool atFront, sp<RenderList>& list) {
     if (renderOp->_view) {
         assert(renderOp->_view == this);
         return;
@@ -1159,19 +1096,29 @@ void View::addRenderOp(RenderOp* renderOp, bool atFront) {
     assert(!renderOp->_view);
     renderOp->_view = this;
     renderOp->setAlpha(_effectiveAlpha);
-    renderOp->_viewListIterator = _renderList.insert(atFront ? _renderList.begin() : _renderList.end(), renderOp);
+
+    if (!list) {
+        list = new RenderList();
+        if (_surface) {
+            _surface->attachRenderList(list);
+        }
+    }
+    list->addRenderOp(renderOp, atFront);
     if (_surface) {
         _surface->addRenderOp(renderOp);
     }
 }
-void View::removeRenderOp(RenderOp* renderOp) {
+
+void View::removeRenderOpFromList(RenderOp* renderOp, sp<RenderList>& list) {
+
     assert(renderOp->_view);
-    if (renderOp->_viewListIterator != _renderList.end()) {
-         if (_surface) {
-             _surface->removeRenderOp(renderOp);
-         }
-         _renderList.erase(renderOp->_viewListIterator);
-        renderOp->_viewListIterator = _renderList.end();
+    if (_surface) {
+        _surface->removeRenderOp(renderOp);
+    }
+    list->removeRenderOp(renderOp);
+    if (!list->_ops.size()) {
+        _surface->detachRenderList(list);
+        list = NULL;
     }
     renderOp->_view = NULL;
 }
@@ -1293,7 +1240,7 @@ View* View::hitTest(POINT& pt) {
 	if (_visibility==Visible && _rect.contains(pt)) {
         pt += _contentOffset;
         pt -= _rect.origin;
-        for (long i=_subviews.size()-(_scrollbarsView?2:1) ; i>=0 ; i--) {
+        for (long i=_subviews.size()-1 ; i>=0 ; i--) {
 			View* subview = _subviews.at(i);
 			auto hitTestSub = subview->hitTest(pt);
 			if (hitTestSub) {
@@ -1336,15 +1283,6 @@ View* View::dispatchInputEvent(INPUTEVENT* event) {
 	return handleInputEvent(event) ? this : NULL;
 }
 
-void ScrollbarsView::updateContentSize(SIZE constraint) {
-    _contentSize = {0,0};
-    _contentSizeValid = true;
-}
-
-void ScrollbarsView::layout(RECT constraint) {
-    _rect = constraint;
-    _contentSizeValid = true;
-}
 
 bool View::handleInputEvent(INPUTEVENT* event) {
 
@@ -1441,8 +1379,15 @@ void View::setTintColor(COLOR tintColor) {
 void View::updateEffectiveAlpha() {
     float parentAlpha = _parent ? _parent->_effectiveAlpha : 1.0f;
     _effectiveAlpha = parentAlpha * _alpha;
-    for (auto it= _renderList.begin() ; it!=_renderList.end() ; it++) {
-        (*it)->setAlpha(_effectiveAlpha);
+    if (_renderList) {
+        for (auto it : _renderList->_ops) {
+            it->setAlpha(_effectiveAlpha);
+        }
+    }
+    if (_renderListDecor) {
+        for (auto it : _renderListDecor->_ops) {
+            it->setAlpha(_effectiveAlpha);
+        }
     }
     for (auto it = _subviews.begin() ; it!=_subviews.end() ; it++) {
         (*it)->updateEffectiveAlpha();
@@ -1527,7 +1472,7 @@ string View::debugViewType() {
 }
 string View::debugDescription() {
     char ach[256];
-    sprintf(ach, "%lX:%s (p:%lX n:%lX)", (long)this, debugViewType().data(), (long)_previousView._obj, (long)_nextView._obj);
+    sprintf(ach, "%lX:%s", (long)this, debugViewType().data());
     return string(ach);
 }
 void View::debugDumpTree(int depth) {
@@ -1538,11 +1483,11 @@ void View::debugDumpTree(int depth) {
     line.append(debugDescription());
     app.log(line.data());
 
-    for (auto it=_renderList.begin() ; it!=_renderList.end() ; it++) {
-        RenderOp* op = *it;
-        if (op->_batch) {
-            assert(op->_batch->_surface == _surface);
-            //assert(op->_batch->_renderBatchList->_list.)
+    if (_renderList) {
+        for (auto op : _renderList->_ops) {
+            if (op->_batch) {
+                assert(op->_batch->_surface == _surface);
+            }
         }
     }
 

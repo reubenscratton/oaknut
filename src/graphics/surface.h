@@ -19,6 +19,16 @@ public:
     void validateShader() override;
 };
 
+class RenderList : public Object {
+public:
+    uint32_t _renderOrder; // set by Surface::renderPass1, read in Surface::renderPass2.
+    list<sp<RenderOp>> _ops;
+    list<RenderList*>::iterator _surfaceIt;
+    
+    void addRenderOp(RenderOp* renderOp, bool atFront=false);
+    void removeRenderOp(RenderOp* renderOp);
+};
+
 /*
  * @ingroup graphics_group
  * \class Surface
@@ -33,6 +43,8 @@ public:
     GLint _pixelType;
     GLint _pixelFormat;
     POINT _savedOrigin;
+    list<RenderList*> _renderListsList;
+    list<RenderList*>::iterator _renderListsInsertionPos;
     list<RenderOp*> _opsNeedingValidation;
     list<sp<RenderBatch>> _listBatches;
     bool _isPrivate;
@@ -50,8 +62,8 @@ public:
 	void use();
     void cleanup();
   
-    void detachViewOps(View* view);
-    void attachViewOps(View* view);
+    void detachRenderList(RenderList* list);
+    void attachRenderList(RenderList* list);
 
     void addRenderOp(RenderOp* op);
     void removeRenderOp(RenderOp* op);

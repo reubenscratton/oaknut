@@ -68,7 +68,6 @@ void LinearLayout::layoutSubviews(RECT constraint) {
     }
     for (int i=0 ; i<_subviews.size() ; i++) {
         View* view = _subviews.at(i);
-        if (view == _scrollbarsView) continue;
         float excessForThisSubview = (_weights[i]/_weightsTotal)*excess;
         if (excessForThisSubview > 0) {
             MEASURESPEC& spec = (_orientation == Vertical) ? view->_heightMeasureSpec : view->_widthMeasureSpec;

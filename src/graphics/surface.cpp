@@ -112,20 +112,25 @@ void Surface::use() {
     check_gl(glViewport, 0, 0, _size.width, _size.height);
 }
 
-void Surface::detachViewOps(View* view) {
-    for (auto it=view->_renderList.begin() ; it!= view->_renderList.end() ; it++) {
+void Surface::detachRenderList(RenderList *list) {
+    for (auto it=list->_ops.begin() ; it!= list->_ops.end() ; it++) {
         removeRenderOp(*it);
+    }
+    if (list->_renderOrder > 0) {
+        _renderListsList.erase(list->_surfaceIt);
     }
 }
 
-void Surface::attachViewOps(View* view) {
-    for (auto it=view->_renderList.begin() ; it!= view->_renderList.end() ; it++) {
+void Surface::attachRenderList(RenderList* list) {
+    list->_renderOrder = 0; // indicates list needs insertion into _renderListsList during renderPhase1.
+    for (auto it=list->_ops.begin() ; it!= list->_ops.end() ; it++) {
         addRenderOp(*it);
     }
 }
 
 
 void Surface::addRenderOp(RenderOp* op) {
+    assert(op->_view);
     op->_mustRedraw = true;
     assert(!op->_batch);
     _opsNeedingValidation.push_back(op);
@@ -172,10 +177,10 @@ void Surface::batchRenderOp(RenderOp* op) {
 
     // Find a compatible batch
     RenderBatch* batch = NULL;
-    for (auto it=_listBatches.begin() ; it!=_listBatches.end() ; it++) {
-        RenderOp* existingBatchedOp = *((*it)->_ops.begin());
+    for (auto it : _listBatches) {
+        RenderOp* existingBatchedOp = *(it->_ops.begin());
         if (existingBatchedOp->canMergeWith(op)) {
-            batch = *it;
+            batch = it;
             break;
         }
     }
@@ -187,12 +192,12 @@ void Surface::batchRenderOp(RenderOp* op) {
         batch->_renderBatchListIterator = _listBatches.insert(_listBatches.end(), batch);
     }
     
-    // Find the insertion point in the batch so we respect view order
+    // Find the insertion point in the batch so we respect render order
     assert(!op->_batch);
     op->_batch = batch;
     batch->_dirty = true;
     for (auto it=batch->_ops.begin() ; it!=batch->_ops.end() ;it++) {
-        if (op->_view->_renderOrder < (*it)->_view->_renderOrder) {
+        if (op->_list->_renderOrder < (*it)->_list->_renderOrder) {
             op->_batchIterator = batch->_ops.insert(it, op);
             return;
         }        
@@ -211,6 +216,16 @@ void Surface::unbatchRenderOp(RenderOp* op) {
     }
 }
 
+void RenderList::addRenderOp(RenderOp* renderOp, bool atFront/*=false*/) {
+    assert(!renderOp->_list);
+    renderOp->_list = this;
+    renderOp->_listIterator = _ops.insert(atFront ? _ops.begin() : _ops.end(), renderOp);
+}
+void RenderList::removeRenderOp(RenderOp* renderOp) {
+    assert(renderOp->_list == this);
+    renderOp->_list = NULL;
+    _ops.erase(renderOp->_listIterator);
+}
 
 
 void Surface::renderPhase1(View* view, Window* window, POINT origin) {
@@ -224,7 +239,8 @@ void Surface::renderPhase1(View* view, Window* window, POINT origin) {
     bool usesPrivateSurface = (view->_surface != surface);
     if (usesPrivateSurface) {
         bool sizeChanged = false;
-        view->_surface->_renderOrder = 0;
+        view->_surface->_renderOrder = 1;
+        view->_surface->_renderListsInsertionPos = view->_surface->_renderListsList.end();
         if (view->_surface->_size.width != view->_rect.size.width || view->_surface->_size.height != view->_rect.size.height) {
             view->_surface->setSize(view->_rect.size);
             sizeChanged = true;
@@ -259,9 +275,6 @@ void Surface::renderPhase1(View* view, Window* window, POINT origin) {
         _mvpNumPeak++;
         _mvpNum = _mvpNumPeak;
     }
-    for (auto r:view->_renderList) {
-        r->_mvpNum = _mvpNum;
-    }
     
     // Give the view a chance to update its renderOps now that layout is complete
     if (view->_updateRenderOpsNeeded) {
@@ -269,13 +282,36 @@ void Surface::renderPhase1(View* view, Window* window, POINT origin) {
         view->_updateRenderOpsNeeded = false;
     }
         
-    // Recurse
-    view->_renderOrder = surface->_renderOrder++;
+    // Draw content renderlist
+    if (view->_renderList) {
+        if (!view->_renderList->_renderOrder) {
+            view->_renderList->_surfaceIt = surface->_renderListsList.insert(surface->_renderListsInsertionPos, view->_renderList);
+        }
+        view->_renderList->_renderOrder = surface->_renderOrder++;
+        surface->_renderListsInsertionPos = view->_renderList->_surfaceIt;
+        for (auto r:view->_renderList->_ops) {
+            r->_mvpNum = _mvpNum;
+        }
+    }
+    
+    // Recurse subviews
     for (auto it = view->_subviews.begin(); it!=view->_subviews.end() ; it++) {
         sp<View>& subview = *it;
         surface->renderPhase1(subview, window, origin);
     }
- 
+    
+    // Draw decor renderlist
+    if (view->_renderListDecor) {
+        if (!view->_renderListDecor->_renderOrder) {
+            view->_renderListDecor->_surfaceIt = surface->_renderListsList.insert(surface->_renderListsInsertionPos, view->_renderListDecor);
+        }
+        view->_renderListDecor->_renderOrder = surface->_renderOrder++;
+        for (auto r:view->_renderListDecor->_ops) {
+            r->_mvpNum = _mvpNum;
+        }
+        surface->_renderListsInsertionPos = view->_renderListDecor->_surfaceIt;
+    }
+
     if (usesPrivateSurface) {
         surface->validateRenderOps();
     }
@@ -322,7 +358,27 @@ void PrivateSurfaceRenderOp::render(Window* window, Surface* surface) {
     check_gl(glDrawElements, GL_TRIANGLES, 6 * 1, GL_UNSIGNED_SHORT, (void*)((_alloc->offset)*6*sizeof(GLshort)));
 }
 
+static inline void renderRenderList(RenderList* renderList, Surface* surface, Window* window) {
+    for (auto it=renderList->_ops.begin() ; it!=renderList->_ops.end() ; it++) {
+        RenderOp* op = *it;
+        if (!op->_shaderValid) {
+            continue;
+        }
+        
+        // If private surface then we only draw those ops that need it
+        if (surface->_supportsPartialRedraw && !op->_mustRedraw) {
+            continue;
+        }
+        
+        // If op not drawn yet, draw it (and as many others in the batch as can be done now)
+        if (op->_renderCounter != window->_renderCounter) {
+            window->setCurrentSurface(surface);
+            RenderBatch* batch = op->_batch;
+            batch->render(window, surface, op);
+        }
+    }
 
+}
 void Surface::renderPhase2(Surface* prevsurf, View* view, Window* window) {
     if (view->_visibility != Visible) {
         return;
@@ -356,31 +412,21 @@ void Surface::renderPhase2(Surface* prevsurf, View* view, Window* window) {
         window->pushClip(clip);
     }
     
-    // Walk the ops for the current view
-    for (auto it=view->_renderList.begin() ; it!=view->_renderList.end() ; it++) {
-        RenderOp* op = *it;
-        if (!op->_shaderValid) {
-            continue;
-        }
-        
-        // If private surface then we only draw those ops that need it
-        if (surface->_supportsPartialRedraw && !op->_mustRedraw) {
-            continue;
-        }
-        
-        // If op not drawn yet, draw it (and as many others in the batch as can be done now)
-        if (op->_renderCounter != window->_renderCounter) {
-            window->setCurrentSurface(surface);
-            RenderBatch* batch = op->_batch;
-            batch->render(window, surface, op);
-        }
+    // Draw view content, if there is any
+    if (view->_renderList) {
+        renderRenderList(view->_renderList, surface, window);
     }
     
     // Recurse subviews
     for (auto it=view->_subviews.begin() ; it != view->_subviews.end() ; it++) {
         surface->renderPhase2(surface, *it, window);
     }
-    
+
+    // Draw view decor content, if there is any
+    if (view->_renderListDecor) {
+        renderRenderList(view->_renderListDecor, surface, window);
+    }
+
     // Pop draw state
     if (view->_clipsContent) {
         window->popClip();
@@ -417,7 +463,8 @@ void Surface::render(View* view, Window* window) {
     _mvpNum = _mvpNumPeak = 0;
     
     /** PHASE 1: ENSURE ALL RENDER LISTS ARE VALID **/
-    _renderOrder = 0;
+    _renderListsInsertionPos = _renderListsList.end();
+    _renderOrder = 1;
     renderPhase1(view, window, {0,0});
     
     validateRenderOps();

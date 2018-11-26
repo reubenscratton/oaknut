@@ -24,6 +24,9 @@ Object::~Object() {
 }
 void Object::retain() {
     _refs++; // TODO: Should be atomic to cover rare cases where retain/release from worker thread
+             // Since we don't have shared access to memory from workers then we shouldn't need it...
+             // the only situation where we need to lock is shared access with in a background
+             // non-web thread, e.g. URLRequest processing.
 }
 void Object::release() {
 	if (--_refs == 0) {
