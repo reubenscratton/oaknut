@@ -34,6 +34,7 @@ public:
     AudioSamples();
     AudioSamples(const bytearray& data);
     virtual bytearray getData();
+    virtual vector<float> getDataFloat32();
 
 protected:
 

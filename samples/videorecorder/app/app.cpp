@@ -14,6 +14,242 @@ static string ORGANIZATION = "idaas";
 static string USERNAME = "idaas";
 static string PASSWORD = "password";
 
+const int PEAK_FAST_HZ=120;
+const int PEAK_SLOW_HZ=20;
+
+class WavView : public View {
+public:
+    float _barWidth;
+    float _barSpacing;
+    
+    enum RecordingState {
+        NotStarted,
+        Recording,
+        Complete
+    } _state;
+    
+    class BarRenderOp : public RectRenderOp {
+    public:
+        float _peak;
+        bool _inRecording;
+        bool _addedToBigOps;
+        int _acc;
+        
+        BarRenderOp(float peak, bool inRecording) : _peak(peak), _inRecording(inRecording) {
+            
+        }
+        
+        void update(WavView* view, float dx) {
+            setFillColor(_addedToBigOps ? 0xFFCc0000 : 0xFF800000);
+            float barHeight = _peak * view->_rect.size.height;
+            barHeight = fmax(barHeight, app.dp(1));
+            setRect({_rect.origin.x + dx, (view->_rect.size.height-barHeight)/2, view->_barWidth, barHeight});
+            invalidateBatchGeometry();
+        }
+    };
+
+    vector<BarRenderOp*> _barOps;
+    vector<BarRenderOp*> _barOpsRec;
+    BarRenderOp* _accumulatorOp;
+
+    WavView() {
+        _barWidth = app.dp(2);
+        _barSpacing = app.dp(3);
+        _state = NotStarted;
+    }
+    void layout(RECT constraint) override {
+        View::layout(constraint);
+    }
+    
+    
+    
+    void update(float peak, bool isRecording) {
+        /*if (!isRecording && _isRecording && _recStarted !=0) {
+            _recEnded = (int)_wavPeaks.size();
+            _isRecording = false;
+        }*/
+        peak = fminf(peak, 0.75) * (1/0.75f);
+
+        if (isRecording && _state==NotStarted) {
+            _state = Recording;
+        }
+        else if (!isRecording && _state==Recording) {
+            _state = Complete;
+        }
+
+
+        // Add the new bar op to the right edge (unless complete)
+        if (_state != Complete) {
+            BarRenderOp* op = new BarRenderOp(peak, _state==Recording);
+            op->update(this, _rect.size.width);
+            addRenderOp(op);
+            _barOps.push_back(op);
+        }
+        
+        float midX = _rect.size.width/2;
+        float recWidth = _barSpacing * _barOpsRec.size();
+        float recRightEdge = midX + recWidth/2;
+        
+        // Move ops from right to left.
+        for (int i=0 ; i<_barOps.size() ; i++) {
+            BarRenderOp* op = _barOps[i];
+
+            // Fast move from right -> left unless it's been added to the recorded op area
+            if (!op->_addedToBigOps) {
+                op->_rect.origin.x -= _barSpacing;
+                op->invalidateBatchGeometry();
+            }
+            
+            // If it's a recording op that has moved into the big-op area
+            if (op->_inRecording && !op->_addedToBigOps) {
+                if (op->_rect.origin.x < recRightEdge) {
+                    op->_addedToBigOps = true;
+                    BarRenderOp* rightmostBigOp = NULL;
+                    if (_barOpsRec.size() > 0) {
+                        rightmostBigOp = *_barOpsRec.rbegin();
+                        if (rightmostBigOp->_acc>=(PEAK_FAST_HZ/PEAK_SLOW_HZ)) {
+                            rightmostBigOp = NULL;
+                        }
+                    }
+                    if (rightmostBigOp) {
+                        rightmostBigOp->_peak = fmaxf(rightmostBigOp->_peak, op->_peak);
+                        rightmostBigOp->_acc++;
+                        rightmostBigOp->update(this, 0);
+                        _barOps.erase(_barOps.begin()+i);
+                        removeRenderOp(op);
+                        i--;
+                        continue;
+
+                    } else {
+                        // Move existing bigops left by half a bar
+                        for (auto bigOp : _barOpsRec) {
+                            bigOp->update(this, -_barSpacing/2);
+                        }
+                        op->update(this, (recRightEdge + _barSpacing/2) - op->_rect.origin.x);
+                        _barOpsRec.push_back(op);
+
+                    }
+                    
+                }
+            }
+            
+            // Remove if flew off the left edge
+            if (op->_rect.right()<0) {
+                _barOps.erase(_barOps.begin()+i);
+                removeRenderOp(op);
+                i--;
+                continue;
+            }
+
+            
+            
+        }
+
+
+
+        //_updateRenderOpsNeeded=true;
+        setNeedsFullRedraw();
+        //redraw();
+    }
+};
+DECLARE_DYNCREATE(WavView);
+
+class AudioRecordingViewController : public ViewController {
+public:
+    Label* _instruction;
+    Label* _phrase;
+    ImageView* _recordButton;
+    Label* _recordButtonLabel;
+    sp<AudioInput> _audioInput;
+    bool _isRecording;
+    WavView* _wav;
+
+    AudioRecordingViewController() {
+        inflate("layout/audio.res");
+        bind(_instruction, "instruction");
+        bind(_phrase, "phrase");
+        bind(_recordButton, "record");
+        bind(_recordButtonLabel, "recordLabel");
+        bind(_wav, "wav");
+
+        _recordButton->onInputEvent = [=](View* view, INPUTEVENT* event) -> bool {
+            if (event->type == INPUT_EVENT_DOWN) {
+                startRecording();
+            }
+            if (event->type == INPUT_EVENT_UP) {
+                stopRecording();
+            }
+            return true;
+        };
+
+    }
+    
+    float _nextTargetPeak;
+    int _numSamplesRead;
+
+    void onWindowAttached() override {
+        ViewController::onWindowAttached();
+        _recordButton->setEnabled(false);
+        _numSamplesRead = 0;
+        _nextTargetPeak = 0;
+        
+        // Do permissions check
+        getWindow()->runWithPermissions({PermissionMic}, [=](vector<bool> granted) {
+            if (granted[0]) {
+                _recordButton->setEnabled(true);
+                
+                // Open the mic
+                _audioInput = AudioInput::create();
+                AudioFormat audioFormat;
+                audioFormat.sampleRate = 16000;
+                audioFormat.numChannels = 1;
+                audioFormat.sampleType = AudioFormat::Int16;
+                _audioInput->open(audioFormat);
+                _audioInput->onNewAudioSamples = [=](AudioSamples* samples) {
+
+                    // Process a new batch of audio samples. We capture peaks at a fast rate
+                    // so they whizz across the screen
+                    vector<float> floats = samples->getDataFloat32();
+                    float samplesPerFrame = samples->_format.sampleRate / PEAK_FAST_HZ;
+                    for (int i=0 ; i<floats.size() ; i++) {
+                        float val = fabsf(floats[i]);
+                        _nextTargetPeak = fmaxf(_nextTargetPeak, val);
+                        if (++_numSamplesRead>= samplesPerFrame) {
+                            _wav->update(_nextTargetPeak, _isRecording);
+                            _nextTargetPeak = 0;
+                            _numSamplesRead = 0;
+                        }
+                    }
+
+                };
+                _audioInput->start();
+
+            }
+        });
+    }
+    void onWindowDetached() override {
+        ViewController::onWindowDetached();
+        if (_audioInput) {
+            _audioInput->stop();
+            _audioInput->close();
+            _audioInput = NULL;
+        }
+    }
+    
+    void startRecording() {
+        //_instruction->setVisibility(Visibility::Invisible);
+        //_recordButtonLabel->setVisibility(Visibility::Invisible);
+        _phrase->setTextColor(0xFF29ca92);
+        _isRecording = true;
+    }
+    
+    void stopRecording() {
+        _isRecording = false;
+    }
+    
+
+};
+
 class MainViewController : public ViewController {
 public:
 
@@ -404,7 +640,10 @@ public:
 
 void App::main() {
     
-    _window->setRootViewController(new MainViewController());
+    _window->setRootViewController(new AudioRecordingViewController());
+    
+    //_window->setRootViewController(new MainViewController());
+    
 }
 
 

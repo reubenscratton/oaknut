@@ -118,7 +118,10 @@ void CanvasWeb::setAffineTransform(AFFINE_TRANSFORM* t) {
     _hasChanged = true;
 }
 void CanvasWeb::drawRect(RECT rect) {
-    _ctxt.call<void>("fillRect", val(rect.left()), val(rect.top()), val(rect.size.width), val(rect.size.height));
+    if (_fillColor != 0) {
+        _ctxt.set("fillStyle", val(cssColorStr(_fillColor).data()));
+        _ctxt.call<void>("fillRect", val(rect.left()), val(rect.top()), val(rect.size.width), val(rect.size.height));
+    }
     if (_strokeWidth > 0) {
         _ctxt.set("lineWidth", val(_strokeWidth));
         _ctxt.set("strokeStyle", val(cssColorStr(_strokeColor).data()));

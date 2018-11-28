@@ -8,7 +8,7 @@ Oaknut app can be built to run natively on any major OS, and can also run in
 a web browser. The 'Minesweeper' sample app is
 running in an iframe to the right of this text.
 
-Oaknut is currently at the "proof of concept" stage, almost no part of it is fully-featured. However all the main problems are solved and all work from the current point lies in building out the many APIs and UI widgetry that modern app developers have come to expect.
+Oaknut is currently at the "proof of concept" stage, almost no part of it is fully-featured. However all the main problems are solved and all work from the current point lies in building out the many APIs and UI widgetry that modern app developers need.
 
 ## Getting started
 1. Clone the Oaknut repository:
@@ -19,13 +19,22 @@ Oaknut is currently at the "proof of concept" stage, almost no part of it is ful
 
     `export set OAKNUT_DIR=/path/to/oaknut`
 
-3. Select and build one of the samples in `oaknut/samples`
+3. Select one of the samples in `oaknut/samples`
 
 	`cd oaknut/samples/xxx`
 
-    `make`
+4. If you would like to use an IDE, run a make command to build an appropriate project file:
 
-## Compiling
+   - XCode `make xcode`
+   - CLion `make cmake`
+   - Android Studio `make androidstudio`
+   - (more coming soon)
+
+Alternatively, if your IDE is not yet supported or if you prefer to not use any IDE, then just run `make` on its own:
+
+  `make`
+
+### Notes on building with `make`
 By default `make` without arguments will build the app version native to your
 operating system. To build an app for the web or a mobile OS you specify it
 with the `PLATFORM` variable, e.g.:
@@ -35,7 +44,7 @@ with the `PLATFORM` variable, e.g.:
 Supported platforms are `macos`, `linux`, `web`, `ios`, `android`,
 with `windows` coming soon.
 
-Note that Oaknut's build system expects platform-specific information to be
+Oaknut's make system expects platform-specific information to be
 passed by variable, for example `make PLATFORM=android` will expect to find
 the location of the Android SDK in the `ANDROID_SDK_DIR` variable.
 
@@ -46,36 +55,29 @@ The built app will be found along with all intermediate build files in the
 projects `.build/<platform>/<config>` subdirectory.
 
 
-## IDE support
-Oaknut is not tied to any particular IDE, instead there are special make commands
-which generate project files for several major IDEs:
-
-- XCode `make xcode`
-- CLion `make cmake`
-- (more coming soon)
 
 
 ## Design notes
 
 Oaknut is extremely lightweight. The whole source code is compiled
 into each app. It may switch to a precompiled library form at
-a later date but at this early stage it's convenient to work with this
-way. 
+a later date but at this early stage it's convenient to work with
+in source form.
 
 #### Threading
-Oaknut apps are based on a simple event model. The application implements `App::main()`
-whose job is to set a root ViewController on the global Window object. After that
-everything happens in event handlers or on background threads. All drawing is done
-via OpenGL on the primary/main thread.
+Oaknut apps have a simple thread model. The application implements `App::main()`
+whose job is to set a root `ViewController` on the application `Window` object.
+All UI rendering is done through OpenGL on the primary/main thread.
 
-Oaknut offers no way to directly create background threads. Downloading is performed
-by background system threads (see `URLRequest`) but you may add code to process
-that data on the background thread as it is downloaded.
+Owing to the limitation of current web standards there is no general purpose
+threading API such as pthreads, but instead we've borrowed the web's `Worker`
+concept. So we do have background processing, just no shared memory. Workers
+are conceptually similar to out-of-process services, you send them work to
+do and results are received back.
 
-Instead of threads Oaknut offers 'queues', one of which may execute on one or many
-background threads, or none at all (i.e. on the main thread!) Obviously that last
-thing is less than desirable and is only likely to happen on the web if
-web workers are disabled.
+NB: On non-web platforms any custom downloading code, e.g. JSON processing etc,
+runs on the background OS threads performing the HTTP request (see `URLRequest`).
+
 
 
 
@@ -107,17 +109,15 @@ Therefore Oaknut has little use of templates beyond a few indispensable STL cont
 (`map`, `set`, and so on), it avoids multiple inheritance, operator overloading, RTTI,
 'friend', 'mutable', traits, metaprogramming, etc. Without wishing to generate controversy
 I personally dislike source code that is harder to read than the machine code it
-compiles to, hence no use of Boost.
+compiles to.
 
 (One newish C++ feature Oaknut enthusiastically embraces is lambdas,
 an indispensible and long overdue language feature.)
 
 
-
-#### Layout
-Oaknut supports declarative layout that is broadly similar to Android's
-except that the syntax is a "light" form of JSON instead of XML, with fewer
-redundant declarations. Unlike Android resource qualifiers are
+#### Writing UI
+Oaknut supports declarative layout files whose syntax is a "light" form of JSON,
+with far fewer redundant declarations. Unlike Android resource qualifiers are
 allowed on individual attributes as well as files, e.g.
 
 ```
@@ -137,9 +137,11 @@ In a layout file each object declaration must be the name of a View-derived
 class, and each non-object attribute is some property supported by that class.
 
 
-Oaknut has also borrowed from Android's view layout system in that
-the layout process is split into a measuring pass and a positioning
-pass. Each view is asked (in `View::measure()`) to update it's own
+#### Layout
+
+Oaknut has also borrowed from Android's layout system in that
+each View contains size and positioning 'specs' that control
+the rect it occupies on the screen. to update it's own
 intrinsic content size (if necessary), and then to set the size it
 would like to be given that content size, the parent size,
 and the view's sizing rules in the `_widthMeasureSpec` and

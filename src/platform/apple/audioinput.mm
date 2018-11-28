@@ -150,7 +150,7 @@ self.delegate->onNewAudioSamples(appBuffer.mutableBytes, numBytes);
 
 class AudioInputApple : public AudioInput {
 public:
-    
+    AudioFormat _audioFormat;
     AudioInputHelper* _helper;
     AVCaptureSession* _session;
     AVCaptureDeviceInput* _audioCaptureDeviceInput;
@@ -215,6 +215,7 @@ public:
 #else
         preferredFormat.sampleRate = (int)[AVAudioSession sharedInstance].sampleRate;
 #endif
+        _audioFormat = preferredFormat;
     }
     void start() override {
         dispatch_async(_queue, ^() {
@@ -258,6 +259,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 {
     AudioInputApple* audioInput = (AudioInputApple*)_audioInput;
     sp<AudioSamplesApple> samples = new AudioSamplesApple(sampleBuffer);
+    samples->_format = audioInput->_audioFormat;
     dispatch_async(dispatch_get_main_queue(), ^{
         audioInput->onNewAudioSamples(samples);
     });

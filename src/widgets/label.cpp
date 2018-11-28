@@ -104,7 +104,11 @@ void Label::setTextColor(COLOR color) {
 
 void Label::onEffectiveTintColorChanged() {
     _textRenderer.setColor(_effectiveTintColor ? _effectiveTintColor : _defaultColor);
-    setNeedsFullRedraw();
+    
+    // TODO: Changing color should not trigger a layout! The bug is that TextRenderer only
+    // reconsiders color as part of the layout process.
+    //_updateRenderOpsNeeded = true;
+    invalidateContentSize();
 }
 
 void Label::layout(RECT constraint) {

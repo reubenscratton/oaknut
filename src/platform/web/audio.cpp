@@ -50,11 +50,11 @@ public:
             
             var self=$0;
             var AudioContext = window.AudioContext || window.webkitAudioContext;
+            var context = new AudioContext();
             var stream = navigator.mediaDevices.getUserMedia({audio: true}).then(function(stream) {
 
-                var context = new AudioContext();
                 var input = context.createMediaStreamSource(stream);
-                var processor = context.createScriptProcessor(2048, 1, 1);
+                var processor = context.createScriptProcessor(0, 1, 1);
                 processor.onaudioprocess = function (e) {
                     var data = e.inputBuffer.getChannelData(0);
                     var cb = data.length * 4;
