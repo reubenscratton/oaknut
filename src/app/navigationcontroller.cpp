@@ -29,12 +29,18 @@ void NavigationController::onWindowAttached() {
     for (auto vc : _navStack) {
         vc->onWindowAttached();
     }
+    if (_currentViewController) {
+        _currentViewController->onWindowAttached();
+    }
 }
 
 void NavigationController::onWindowDetached() {
     ViewController::onWindowDetached();
     for (auto vc : _navStack) {
         vc->onWindowDetached();
+    }
+    if (_currentViewController) {
+        _currentViewController->onWindowDetached();
     }
 }
 
@@ -72,6 +78,9 @@ void NavigationController::pushViewController(ViewController* vc) {
 		_currentViewController = vc;
 		_currentViewController->onWillAppear(true);
 		_contentView->addSubview(vc->getView());
+        if(getWindow()) {
+            vc->onWindowAttached();
+        }
         applySafeInsetsToChild(_currentViewController);
 		_currentViewController->onDidAppear(true);
 		return;
@@ -101,8 +110,9 @@ void NavigationController::startNavAnimation(ViewController* incomingVC, Animati
 	_incomingViewController->onWillAppear(animationState==Push);
     
 	_contentView->addSubview(_incomingViewController->getView());
-
-	if(!getWindow()) {
+    if(getWindow()) {
+        _incomingViewController->onWindowAttached();
+    } else {
 		completeIncoming();
 		return;
 	}
@@ -125,6 +135,7 @@ void NavigationController::startNavAnimation(ViewController* incomingVC, Animati
 
 void NavigationController::completeIncoming() {
 	_currentViewController->getView()->removeFromParent();
+    _currentViewController->onWindowDetached();
 	_navBar->removeViewControllerNav(_currentViewController);
 	_currentViewController->onDidDisappear(_animationState==Pop);
 	_currentViewController = _incomingViewController;

@@ -7,6 +7,7 @@
 #if PLATFORM_ANDROID
 
 #include <oaknut.h>
+#include <graphics/bitmap.h>
 
 
 static jclass jclassBitmap;
@@ -174,18 +175,36 @@ Bitmap* Bitmap::create(int width, int height, int format) {
 
 
 void BitmapAndroid::lock(PIXELDATA* pixelData, bool forWriting) {
-    auto env = getBitmapEnv();
-    assert(_androidBitmap);
-    AndroidBitmapInfo info;
-    AndroidBitmap_getInfo(env, _androidBitmap, &info);
-    pixelData->stride = info.stride;
-    pixelData->cb = info.stride * info.height;
-    AndroidBitmap_lockPixels(env, _androidBitmap, &pixelData->data);
+
+    if (!_androidBitmap) {
+        assert(_textureId);
+        GLint oldTex;
+        glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTex);
+        glBindTexture(GL_TEXTURE_2D, _textureId);
+        pixelData->stride = _width * 4;
+        pixelData->cb = pixelData->stride * _height;
+        pixelData->data = malloc(pixelData->cb);
+        check_gl(glReadPixels, 0, 0, _width, _height, GL_RGBA, GL_UNSIGNED_BYTE, pixelData->data);
+        glBindTexture(GL_TEXTURE_2D, oldTex);
+    } else {
+        auto env = getBitmapEnv();
+        AndroidBitmapInfo info;
+        AndroidBitmap_getInfo(env, _androidBitmap, &info);
+        pixelData->stride = info.stride;
+        pixelData->cb = info.stride * info.height;
+        AndroidBitmap_lockPixels(env, _androidBitmap, &pixelData->data);
+    }
+
 }
 void BitmapAndroid::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
-    auto env = getBitmapEnv();
-    AndroidBitmap_unlockPixels(env, _androidBitmap);
-    _needsUpload |= pixelDataChanged;
+    if (!_androidBitmap) {
+        assert(!pixelDataChanged); // todo: implement texture upload
+        free(pixelData->data);
+    } else {
+        auto env = getBitmapEnv();
+        AndroidBitmap_unlockPixels(env, _androidBitmap);
+        _needsUpload |= pixelDataChanged;
+    }
 }
 
 void BitmapAndroid::bind() {

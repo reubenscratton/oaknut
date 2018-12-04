@@ -10,6 +10,7 @@ import java.nio.ByteBuffer;
 public class AudioInput {
 
     long nativeObj;
+    int sampleType;
     int numChannels;
     int sampleRate;
     boolean started;
@@ -20,6 +21,7 @@ public class AudioInput {
 
     public AudioInput(long nativeObj, int sampleType, int numChannels, int sampleRate) {
         this.nativeObj = nativeObj;
+        this.sampleType = sampleType;
         this.numChannels = numChannels;
         this.sampleRate = sampleRate;
     }
@@ -48,7 +50,9 @@ public class AudioInput {
         public void run() {
             ByteBuffer buff = ByteBuffer.allocateDirect(16384);
             AudioRecord audioRecord;
-            audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, buff.capacity());
+            audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate, AudioFormat.CHANNEL_IN_MONO,
+                    (sampleType==SAMPLE_TYPE_INT16) ? AudioFormat.ENCODING_PCM_16BIT : AudioFormat.ENCODING_PCM_FLOAT,
+                    buff.capacity());
             audioRecord.startRecording();
             while (started) {
                 int cbRead = audioRecord.read(buff, buff.capacity());

@@ -106,12 +106,6 @@ void ActionSheet::onWindowAttached() {
         _outerGroup->addSubview(cancelGroup);
     }
 
-    // Animate in
-    COLOR scrimColor = app.getStyleColor("ActionSheet.scrim");
-    Animation::start(_view, 333, [=](float val) {
-        _view->setBackgroundColor(COLOR::interpolate(0, scrimColor, val));
-    });
-    _outerGroup->animateInFromBottom(333);
 }
 
 void ActionSheet::setTitle(const string& title) {
@@ -127,18 +121,5 @@ void ActionSheet::addCancelButton() {
 }
 
 void ActionSheet::dismissWithAction(std::function<void()> action) {
-    
-    // Animate out
-    COLOR scrimColor = app.getStyleColor("ActionSheet.scrim");
-    Animation::start(_view, 333, [=](float val) {
-        _view->setBackgroundColor(COLOR::interpolate(scrimColor, 0, val));
-        if (val >= 1.0f) {
-            getWindow()->dismissModalViewController(this);
-            if (action) {
-                action();
-            }
-        }
-    });
-    _outerGroup->animateOutToBottom(333);
-
+    getWindow()->dismissModalViewController(this, action);
 }

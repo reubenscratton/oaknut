@@ -16,6 +16,7 @@ static jmethodID jmidStop;
 class AudioInputAndroid : public AudioInput {
 public:
     jobject javaobj;
+    AudioFormat _format;
 
     AudioInputAndroid() {
         JNIEnv* env = getJNIEnv();
@@ -32,6 +33,7 @@ public:
         JNIEnv* env = getJNIEnv();
         javaobj = env->NewObject(jclassAudioInput, jmidConstructor, (jlong)this, preferredFormat.sampleType, preferredFormat.numChannels, (jint)preferredFormat.sampleRate);
         javaobj = env->NewGlobalRef(javaobj);
+        _format = preferredFormat;
     }
     void start() override {
         getJNIEnv()->CallVoidMethod(javaobj, jmidStart);
@@ -55,6 +57,7 @@ JAVA_FN(void, AudioInput, nativeOnGotData)(JNIEnv *env, jobject javaobj, jlong n
     AudioInputAndroid* audioInput = (AudioInputAndroid*)nativeObj;
     void* bytes = env->GetDirectBufferAddress(byteBuffer);
     sp<AudioSamples> samples = new AudioSamples(bytearray((uint8_t*)bytes, cb));
+    samples->_format = audioInput->_format;
     audioInput->onNewAudioSamples(samples);
 }
 

@@ -180,7 +180,8 @@ public class Camera extends Object implements SurfaceTexture.OnFrameAvailableLis
      When onFrameAvailable() fires you can only use the surfaceTexture texture before
      the function returns and the underlying buffer is recycled.
 
-     But onPreviewFrame() fires afterwards,
+     But onPreviewFrame() fires *afterwards*. Hence the byte array passed to the app
+     actually belongs to the frame before the current one.
 
      */
 

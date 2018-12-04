@@ -8,12 +8,6 @@
 
 #import <oaknut.h>
 
-class WorkerQueueItem : public Object {
-public:
-    
-    variant _data_in;
-    variant _data_out;
-};
 
 void Worker::start(const variant& config) {
     assert(!_queue); // already started!
@@ -23,12 +17,6 @@ void Worker::start(const variant& config) {
     _queue->enqueueTask([=]() {
         _impl->start_(config_copy);
     });
-
-    /*dispatch_async(_queue, ^{
-        dispatch_async(dispatch_get_main_queue(), ^() {
-            release();
-        });
-    });*/
     _started = true;
 }
 
@@ -42,15 +30,15 @@ void Worker::process(const variant& data_in, std::function<void(const variant&)>
         return;
     }
     assert(_queue); // not started!
-    /*auto data_copy = data_in;
+    variant data_copy = data_in;
     retain();
-    dispatch_async(_queue, ^{
+    _queue->enqueueTask([=]() {
         variant data_out = _impl->process_(data_copy);
-        dispatch_async(dispatch_get_main_queue(), ^() {
+        Task::postToMainThread([=]() {
             callback(data_out);
             release();
         });
-    });*/
+    });
 }
 
 void Worker::dispatchStopped() {
@@ -61,14 +49,13 @@ void Worker::stop(std::function<void()> onStop) {
     _started = false;
     assert(_queue); // not started!
     retain();
-    /*dispatch_async(_queue, ^{
+    _queue->enqueueTask([=]() {
         _impl->stop_();
-        dispatch_async(dispatch_get_main_queue(), ^() {
-            _queue = NULL; // allegedly releases the queue too
+        Task::postToMainThread([=]() {
             onStop();
             release();
         });
-    });*/
+    });
 
 }
 

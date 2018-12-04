@@ -69,7 +69,7 @@ public:
 
     // Show modal VCs
     virtual void presentModalViewController(ViewController* viewController);
-    virtual void dismissModalViewController(ViewController* viewController);
+    virtual void dismissModalViewController(ViewController* viewController, std::function<void()> onComplete);
 
     vector<MotionTracker*> _motionTrackers;
 	bool _redrawNeeded;

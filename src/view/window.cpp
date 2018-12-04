@@ -37,12 +37,16 @@ void Window::attachViewController(ViewController* viewController) {
     addSubview(viewController->getView());
     viewController->applySafeInsets(_safeInsetsTotal);
     viewController->onWindowAttached();
-    prepareToDraw(); // ?? why is this here? A relic from early oaknut code?
 }
 void Window::detachViewController(ViewController* viewController) {
     assert(viewController->getView()->getWindow() == this);
     removeSubview(viewController->getView());
-    _viewControllers.erase(_viewControllers.begin());
+    for (int i=0 ; i<_viewControllers.size() ; i++) {
+        if (_viewControllers[i] == viewController) {
+            _viewControllers.erase(_viewControllers.begin()+i);
+            break;
+        }
+    }
     viewController->onWindowDetached();
 }
 
@@ -622,15 +626,44 @@ void Window::runWithPermissions(vector<Permission> permissions, std::function<vo
 
 
 void Window::presentModalViewController(ViewController *viewController) {
+    
+    // Fade in a 'scrim' view that also prevents the UI underneath being touchable
+    View* scrimView = new View();
+    scrimView->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Fill());
+    addSubview(scrimView);
+    setNeedsLayout();
+    COLOR scrimColor = app.getStyleColor("window.scrim");
+    Animation::start(scrimView, 333, [=](float val) {
+        scrimView->setBackgroundColor(COLOR::interpolate(0, scrimColor, val));
+    });
+
+    // Attach the new VC and animate it in from below
     attachViewController(viewController);
-    requestRedraw();
+    viewController->getView()->setTranslate({0, _rect.size.height}); // i.e. start off below screen
+    viewController->getView()->animateInFromBottom(333);
 }
-void Window::dismissModalViewController(ViewController* viewController) {
+
+void Window::dismissModalViewController(ViewController* viewController, std::function<void()> onComplete) {
     auto currentTop = _viewControllers.rbegin();
     assert(*currentTop == viewController);
-    detachViewController(viewController);
-    _viewControllers.pop_back();
-    requestRedraw();
+    View* view = viewController->getView();
+    View* scrimView = getSubview(indexOfSubview(view)-1);
+    
+    // Animate out
+    COLOR scrimColor = app.getStyleColor("window.scrim");
+    Animation::start(view, 333, [=](float val) {
+        scrimView->setBackgroundColor(COLOR::interpolate(scrimColor, 0, val));
+        if (val >= 1.0f) {
+            if (onComplete) {
+                onComplete();
+            }
+            detachViewController(viewController);
+            scrimView->removeFromParent();
+            requestRedraw();
+        }
+    });
+    view->animateOutToBottom(333);
+    
 }
 
 void Window::ensureFocusedViewIsInSafeArea() {

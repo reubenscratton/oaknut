@@ -8,6 +8,7 @@ window: {
         bottom@android: black
         top:0
     }
+    scrim: #80000000
 }
 
 colors: {
@@ -99,7 +100,6 @@ SegmentedControl: {
 
 ActionSheet: {
     corner-radius: 12dp
-    scrim: #80000000
     divider-color: #ccc
     OuterGroup: {
         orientation: vertical
