@@ -7,31 +7,37 @@
 
 typedef std::function<void(void)> TASKFUNC;
 
+/**
+ Task represents a cancelable operation that performs a callback
+ on the main thread when finished (unless cancelled).
+
+ NB: Task is *not* an API for scheduling background app work, see Worker for that.
+
+ Task is not intended for instantiation in app code, they are
+ typically created and returned by platform APIs. For example
+ Bitmap::createFromData() returns a Task representing a background
+ operation that decodes a bitmap.
+ 
+ The Task returned by Task::postToMainThread() does not do any
+ background work.
+ 
+ */
+
 class Task : public Object {
 public:
-    void exec();
-    virtual bool cancel()=0;
+    
+    // API
+    Task(TASKFUNC oncomplete);
+    bool isCancelled() const;
+    virtual void complete();
+    virtual void cancel();
+    
 
-    static void ensureSharedGLContext(); // use this if you need to use GL from a background thread (i.e. image processing)
-    static void postToMainThread(TASKFUNC func, int delay=0);
-
-protected:
-    Task(TASKFUNC func);
-
-    sp<class TaskQueue> _queue;
-    TASKFUNC _func;
-};
-
-class TaskQueue : public Object {
-public:
-
-    static TaskQueue* create(const string& name);
-
-    virtual Task* enqueueTask(TASKFUNC task)=0;
+    static Task* postToMainThread(TASKFUNC func, int delay=0);
 
 protected:
-    TaskQueue(const string& name);
 
-    string _name;
-    vector<sp<Task>> _tasks;
+    TASKFUNC _oncomplete;
+    bool _cancelled;
 };
+

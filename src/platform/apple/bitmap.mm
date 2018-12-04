@@ -91,6 +91,7 @@ BitmapApple::BitmapApple(CVImageBufferRef cvImageBuffer, bool fromCamera) : Bitm
     _texTarget = CVOpenGLESTextureGetTarget(_cvTexture);
     if (_texTarget != GL_TEXTURE_2D) {
         
+        // TODO: glGets are BAD IDEA and kill performance. Need a GLContext structure that caches all GL properties
         GLint oldFBO, oldFBOread, oldTex;
         check_gl(glGetIntegerv, GL_FRAMEBUFFER_BINDING, &oldFBO);
         check_gl(glGetIntegerv, GL_READ_FRAMEBUFFER_BINDING, &oldFBOread);
@@ -399,13 +400,31 @@ void BitmapApple::toVariant(variant& v) {
     unlock(&pixelData, false);
 }
 
-void Bitmap::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
-    BitmapApple* bitmap = bitmapFromData(data, cb);
-    bitmap->retain();
-    dispatch_async(dispatch_get_main_queue(), ^() {
-        callback(bitmap);
-        bitmap->release();
-    });
+class BitmapDecodeTask : public Task {
+public:
+    BitmapDecodeTask(const void* data, int cb, std::function<void(Bitmap*)> callback) : Task([=]() {
+        callback(_bitmap);
+    }) {
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
+            if (isCancelled()) {
+                return;
+            }
+            _bitmap = bitmapFromData(data, cb);
+            _bitmap->retain();
+            dispatch_async(dispatch_get_main_queue(), ^() {
+                Bitmap* bitmap = _bitmap;
+                complete(); // calls release(), could destroy this
+                bitmap->release();
+            });
+        });
+
+    }
+    
+    Bitmap* _bitmap;
+};
+
+Task* Bitmap::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
+    return new BitmapDecodeTask(data, cb, callback);
 }
 
 Bitmap* Bitmap::create(int width, int height, int format) {

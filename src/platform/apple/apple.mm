@@ -61,7 +61,7 @@ string App::getPathForTemporaryFiles() {
 }
 
 
-#if TARGET_OS_IOS
+/*#if TARGET_OS_IOS
 static EAGLSharegroup* s_mainEAGLSharegroup;
 #else
 static CGLContextObj s_mainContext;
@@ -82,20 +82,23 @@ void Task::ensureSharedGLContext() {
     }
 #endif
 }
-
-void Task::postToMainThread(TASKFUNC func, int delay) {
+*/
+Task* Task::postToMainThread(TASKFUNC func, int delay) {
+    Task* task = new Task(func);
     if (delay <= 0) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            func();
+            task->complete();
         });
     } else {
         float delayInSeconds = (float)delay / 1000.f;
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            func();
+            task->complete();
         });
     }
+    return task;
 }
 
+/*
 class AppleTask : public Task {
 public:
     NSBlockOperation* _op;
@@ -115,7 +118,6 @@ public:
     }
 
 };
-
 
 class AppleTaskQueue : public TaskQueue {
 public:
@@ -150,7 +152,7 @@ public:
 TaskQueue* TaskQueue::create(const string& name) {
     return new AppleTaskQueue(name);
 }
-
+*/
 
 
 

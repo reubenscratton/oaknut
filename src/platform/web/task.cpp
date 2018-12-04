@@ -9,40 +9,23 @@
 #include <oaknut.h>
 
 
-
-
-
-TaskQueue* TaskQueue::create(const string &name) {
-    return NULL;
+static void mainThreadThunk(Task* task) {
+    task->complete();
 }
 
 
 
-
-class Foo {
-public:
-    Foo(std::function<void(void)> func) : _func(func) {
-    }
-    
-    std::function<void(void)> _func;
-};
-
-static void mainThreadThunk(Foo* foo) {
-    foo->_func();
-    delete foo;
-}
-
-
-
-void Task::postToMainThread(TASKFUNC func, int delay) {
-    void* foo = new Foo(func);
+Task* Task::postToMainThread(TASKFUNC func, int delay) {
+    Task* task = new Task(func);
     if (emscripten_is_main_runtime_thread()) {
         EM_ASM({
             window.setTimeout(function() { Runtime.dynCall('vi', $0, [$1]); }, $2);
-        }, mainThreadThunk, foo, delay);
+        }, mainThreadThunk, task, delay);
     } else {
-        emscripten_async_run_in_main_runtime_thread(EM_FUNC_SIG_VI, mainThreadThunk, foo);
+        emscripten_async_run_in_main_runtime_thread(EM_FUNC_SIG_VI, mainThreadThunk, task);
     }
+    return task;
 }
+
 #endif
 

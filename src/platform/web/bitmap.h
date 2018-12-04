@@ -23,7 +23,6 @@ public:
     PIXELDATA _pixelData;
     class CanvasWeb* _canvas;
     bool _isPng; // TODO: remove, now we have _format
-    std::function<void(Bitmap*)> _tmp;
     
     BitmapWeb();
     BitmapWeb(int width, int height, int format);

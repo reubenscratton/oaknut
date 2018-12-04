@@ -213,11 +213,11 @@ void GLProgram::setAlpha(float alpha) {
 	}
 }
 
-void oak::checkGlErr(const char* file, int line, const char* cmd) {
+/*void oak::checkGlErr(const char* file, int line, const char* cmd) {
     for (GLint error = glGetError(); error; error = glGetError()) {
         app.log("GL ERROR: %s(%d) %s() err=0x%x", file, line, cmd, error);
     }
-}
+}*/
 
 
 // Drop shadows? Refer to http://madebyevan.com/shaders/fast-rounded-rectangle-shadows/

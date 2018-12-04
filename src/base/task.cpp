@@ -7,14 +7,23 @@
 
 #include <oaknut.h>
 
-Task::Task(TASKFUNC func) : _func(func) {
+Task::Task(TASKFUNC oncomplete) : _oncomplete(oncomplete) {
+    retain();
 }
 
-void Task::exec() {
-    _func();
+void Task::cancel() {
+    _cancelled = true;
 }
 
-TaskQueue::TaskQueue(const string& name) : _name(name) {
+void Task::complete() {
+    if (!_cancelled) {
+        _oncomplete();
+    }
+    release();
+}
+
+bool Task::isCancelled() const {
+    return _cancelled;
 }
 
 

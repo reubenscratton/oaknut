@@ -37,7 +37,7 @@ subviews: [
     gravityX: center
     padding: 16dp,0
     font-weight: bold
-    font-size: 20dp
+    font-size: 18dp
     forecolor: white
 },
 {
@@ -48,7 +48,7 @@ subviews: [
     gravityX: center
     padding: 16dp,0
     font-weight: bold
-    font-size: 34dp
+    font-size: 32dp
     forecolor: #0096FF
     visibility: hidden
 },

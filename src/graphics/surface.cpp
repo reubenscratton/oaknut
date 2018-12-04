@@ -82,8 +82,8 @@ void Surface::setupPrivateFbo() {
     check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _tex, 0);
     check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
     check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
-    GLenum x = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    assert(x==GL_FRAMEBUFFER_COMPLETE);
+    //GLenum x = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    //assert(x==GL_FRAMEBUFFER_COMPLETE);
     check_gl(glBindFramebuffer, GL_FRAMEBUFFER, oldFBO);
 }
 

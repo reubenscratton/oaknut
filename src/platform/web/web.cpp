@@ -155,7 +155,6 @@ EMSCRIPTEN_BINDINGS(oaknut) {
 
 
 int main(int argc, char *argv[]) {
-    app.log("main()\n");
     
     EmscriptenWebGLContextAttributes attr;
     emscripten_webgl_init_context_attributes(&attr);

@@ -36,6 +36,7 @@ public:
 protected:
     string _url;
     string _assetPath;
+    sp<Task> _imageLoadTask;
     sp<URLRequest> _request;
     sp<TextureRenderOp> _renderOp;
     sp<AtlasNode> _atlasNode;

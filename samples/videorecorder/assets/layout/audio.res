@@ -10,29 +10,39 @@ subviews: [
     size: wrap
     align: center, top
     gravityX: center
-    padding: 16dp,0
     font-weight: bold
     font-size: 18dp
     forecolor: white
-    text: "Press and hold the record button whilst saying the phrase below to capture your voice recording"
+    text: "Press and hold the record button to record yourself saying this phrase:"
 },
 {
     id: phrase
     class: Label
     size: wrap
-    align: center, below(instruction 40dp)
+    align: center, below(32dp)
     gravityX: center
-    padding: 16dp,0
     font-weight: bold
     font-size: 32dp
     forecolor: #666
     text:"\"My voice is my password and it proves my identity\""
 },
 {
-    id: wav
-    class: WavView
-    align: left, below(phrase 20dp)
-    size: fill, 140dp
+    id: rec1
+    class: RecordingView
+    label: "1."
+    align: left, below(16dp)
+},
+{
+    id: rec2
+    class: RecordingView
+    label: "2."
+    align: left, below(16dp)
+},
+{
+    id: rec3
+    class: RecordingView
+    label: "3."
+    align: left, below(16dp)
 },
 {
     id: record
@@ -40,8 +50,8 @@ subviews: [
     size: 72dp
     align: center, bottom(-16dp)
     image: {
-    enabled: images/record_enabled.png
-    disabled: images/record_disabled.png
+        enabled: images/record_enabled.png
+        disabled: images/record_disabled.png
     }
 },
 {

@@ -29,7 +29,7 @@ static JNIEnv* getTaskEnv() {
   }
   return env;
 }
-
+/*
 class TaskAndroid : public Task {
 public:
     TaskAndroid(TASKFUNC func) : Task(func) {
@@ -42,6 +42,7 @@ public:
 
     jobject _obj;
 };
+
 
 class TaskQueueAndroid : public TaskQueue {
 public:
@@ -66,25 +67,20 @@ public:
         return task;
     }
 
-};
-
-TaskQueue* TaskQueue::create(const string& name) {
-    return new TaskQueueAndroid(name);
-}
+};*/
 
 
 
-void Task::postToMainThread(std::function<void ()> func, int delay/*=0*/) {
-    Task* task = new TaskAndroid(func);
-    task->retain();
+Task* Task::postToMainThread(std::function<void ()> func, int delay/*=0*/) {
+    Task* task = new Task(func);
     getTaskEnv()->CallStaticVoidMethod(jclassTaskQueue, jmidRunOnMainThread, (jint)delay, (jlong)task);
+    return task;
 }
 
 
 JAVA_FN(void, Task, nativeRun)(JNIEnv *env, jobject obj, jlong nativeObj) {
-    TaskAndroid* task = (TaskAndroid*)nativeObj;
-    task->exec();
-    task->release();
+    Task* task = (Task*)nativeObj;
+    task->complete();
 }
 
 

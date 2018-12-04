@@ -22,10 +22,7 @@ bool ImageView::applyStyleValue(const string& name, const StyleValue* value) {
             return true;
         }
         // TODO: leverage drawable code
-        ByteBuffer* data = app.loadAsset(value->stringVal().data());
-        Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
-            setBitmap(bitmap);
-        });
+        setImageAsset(value->stringVal());
         return true;
     }
     if (name=="contentMode") {
@@ -54,6 +51,10 @@ void ImageView::setImageAsset(const string& assetPath) {
 }
 
 void ImageView::cancelLoad() {
+    if (_imageLoadTask) {
+        _imageLoadTask->cancel();
+        _imageLoadTask = NULL;
+    }
     // Cancel any extant HTTP request.
     if (_request) {
         _request->cancel();
@@ -106,10 +107,11 @@ void ImageView::loadImage() {
         auto hashVal = _assetPath.hash();
         ByteBuffer* data = app.loadAsset(_assetPath.data());
         assert(data);
-        Bitmap::createFromData(data->data, (int) data->cb, [=](Bitmap *bitmap) {
+        _imageLoadTask = Bitmap::createFromData(data->data, (int) data->cb, [=](Bitmap *bitmap) {
             if (hashVal == _assetPath.hash()) {
                 setBitmap(bitmap);
             }
+            _imageLoadTask = NULL;
         });
     } else if (_url.length() > 0) {
         _request = URLRequest::get(_url, URL_FLAG_BITMAP);

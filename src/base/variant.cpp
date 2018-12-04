@@ -610,7 +610,7 @@ val variant::toJavascriptVal() const {
 }
 
 
-#include <string>
+//#include <string>
 
 /*template <>
 inline string const *emscripten::val::as<string const *>(void) const {

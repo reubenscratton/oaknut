@@ -170,35 +170,55 @@ void BitmapWeb::toVariant(variant& v) {
     unlock(&pixelData, false);
 }
 
-// Platform-specific
-static void onImageLoadedFromData(BitmapWeb* bitmap) {
-    bitmap->_width = bitmap->_img["width"].as<int>();
-    bitmap->_height = bitmap->_img["height"].as<int>();
-    bitmap->_format = BITMAPFORMAT_RGBA32;
-    if (bitmap->_width<=0) { // image failed to decode
-        app.warn("Bitmap failed to decode");
-        bitmap->_img = val::null();
+class BitmapDecodeTask : public Task {
+public:
+    BitmapDecodeTask(const void* data, int cb, std::function<void(Bitmap*)> callback) : Task([=]() {
+        callback(_bitmap);
+    }) {
+        string str = base64_encode((const uint8_t*)data, cb);
+        string sstr = "data:image/png;base64,"; // TODO: this API needs a MIMEtype
+        sstr.append(str);
+        
+        // TODO: If Safari ever supports it, switch to createImageBitmap().
+        
+        EM_ASM_({
+            var task=$0;
+            var img = new Image();
+            img.onload = function() {
+                Runtime.dynCall('vii', $1, [task, gotSet(img)]);
+            };
+            img.src = Pointer_stringify($2);
+        }, this, onImageLoad, sstr.data());
     }
-    bitmap->_tmp(bitmap);
-}
-void Bitmap::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
-    string str = base64_encode((const uint8_t*)data, cb);
-    string sstr = "data:image/png;base64,";
-    sstr.append(str);
-    //app.log("bitmap is %s", sstr.data());
 
-    BitmapWeb* bitmap = new BitmapWeb();
-    bitmap->_tmp = callback;
-    bitmap->_img = val::global("Image").new_();
-    int gotIndex = val::global("gotSet")(bitmap->_img).as<int>();
-    EM_ASM_({
-        var bitmap=$0;
-        var img = gotGet($3);
-        img.onload = function() {
-            Runtime.dynCall('vi', $2, [bitmap]);
-        };
-        img.src = Pointer_stringify($1);
-    }, bitmap, sstr.data(), onImageLoadedFromData, gotIndex);
+    static void onImageLoad(BitmapDecodeTask* task, int imgGotIndex) {
+        val img = val::global("gotGet")(imgGotIndex);
+        if (!task->isCancelled()) {
+            task->_bitmap = new BitmapWeb();
+            task->_bitmap->retain(); // release() is after Task::complete().
+            task->_bitmap->_width = img["width"].as<int>();
+            task->_bitmap->_height = img["height"].as<int>();
+            task->_bitmap->_format = BITMAPFORMAT_RGBA32;
+            if (task->_bitmap->_width<=0) { // image failed to decode
+                app.warn("Bitmap failed to decode");
+                task->_bitmap->_img = val::null();
+            } else {
+                task->_bitmap->_img = img;
+            }
+            task->complete();
+            task->_bitmap->release();
+            task->_bitmap = NULL;
+        } else {
+            task->complete();
+        }
+    }
+
+    BitmapWeb* _bitmap;
+};
+
+
+Task* Bitmap::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
+    return new BitmapDecodeTask(data, cb, callback);
 }
 
 Bitmap* Bitmap::create(int width, int height, int format) {

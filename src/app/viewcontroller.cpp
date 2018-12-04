@@ -113,10 +113,7 @@ ToolbarButton* ViewController::addNavButton(bool rightSide, const string& assetP
         frame->setAlignSpecs(rightSide ? ALIGNSPEC::Right() : ALIGNSPEC::Left(), ALIGNSPEC::Center());
     }
     ToolbarButton* button = new ToolbarButton();
-    ByteBuffer* data = app.loadAsset(assetPath.data());
-    Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
-        button->setBitmap(bitmap);
-    });
+    button->setImageAsset(assetPath);
     button->onClick = onClick;
     frame->addSubview(button);
     return button;
