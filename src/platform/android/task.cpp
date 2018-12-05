@@ -32,7 +32,7 @@ static JNIEnv* getTaskEnv() {
 /*
 class TaskAndroid : public Task {
 public:
-    TaskAndroid(TASKFUNC func) : Task(func) {
+    TaskAndroid(std::function<void(void)> func) : Task(func) {
     }
 
     bool cancel() override {
@@ -59,7 +59,7 @@ public:
         env->DeleteGlobalRef(_obj);
     }
     
-    Task* enqueueTask(TASKFUNC func) override {
+    Task* enqueueTask(std::function<void(void)> func) override {
         JNIEnv* env = getTaskEnv();
         TaskAndroid* task = new TaskAndroid(func);
         task->retain();
@@ -71,7 +71,7 @@ public:
 
 
 
-Task* Task::postToMainThread(std::function<void ()> func, int delay/*=0*/) {
+Task* App::postToMainThread(std::function<void ()> func, int delay/*=0*/) {
     Task* task = new Task(func);
     getTaskEnv()->CallStaticVoidMethod(jclassTaskQueue, jmidRunOnMainThread, (jint)delay, (jlong)task);
     return task;

@@ -15,7 +15,7 @@ static void mainThreadThunk(Task* task) {
 
 
 
-Task* Task::postToMainThread(TASKFUNC func, int delay) {
+Task* App::postToMainThread(std::function<void(void)> func, int delay) {
     Task* task = new Task(func);
     if (emscripten_is_main_runtime_thread()) {
         EM_ASM({

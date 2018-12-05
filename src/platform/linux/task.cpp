@@ -17,7 +17,7 @@ static int mainThreadThunk(void* data) {
     return 0;
 }
 
-void Task::postToMainThread(std::function<void ()> func, int delay/*=0*/) {
+void App::postToMainThread(std::function<void ()> func, int delay/*=0*/) {
     Task* task = new PosixTaskQueue::PosixTask(func);
     task->retain();
     g_idle_add(mainThreadThunk, task);

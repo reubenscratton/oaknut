@@ -83,7 +83,7 @@ void Task::ensureSharedGLContext() {
 #endif
 }
 */
-Task* Task::postToMainThread(TASKFUNC func, int delay) {
+Task* App::postToMainThread(std::function<void(void)> func, int delay) {
     Task* task = new Task(func);
     if (delay <= 0) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -103,7 +103,7 @@ class AppleTask : public Task {
 public:
     NSBlockOperation* _op;
 
-    AppleTask(TASKFUNC func) : Task(func) {
+    AppleTask(std::function<void(void)> func) : Task(func) {
         _op = [NSBlockOperation blockOperationWithBlock:^() {
             _func();
         }];
@@ -141,7 +141,7 @@ public:
         _queue = nil;
     }
 
-    Task* enqueueTask(TASKFUNC func) {
+    Task* enqueueTask(std::function<void(void)> func) {
         AppleTask* task = new AppleTask(func);
         [_queue addOperation:task->_op];
         return task;

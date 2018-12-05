@@ -5,8 +5,6 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-typedef std::function<void(void)> TASKFUNC;
-
 /**
  Task represents a cancelable operation that performs a callback
  on the main thread when finished (unless cancelled).
@@ -18,26 +16,21 @@ typedef std::function<void(void)> TASKFUNC;
  Bitmap::createFromData() returns a Task representing a background
  operation that decodes a bitmap.
  
- The Task returned by Task::postToMainThread() does not do any
- background work.
- 
  */
 
 class Task : public Object {
 public:
     
     // API
-    Task(TASKFUNC oncomplete);
+    Task(std::function<void(void)> oncomplete);
     bool isCancelled() const;
     virtual void complete();
     virtual void cancel();
     
 
-    static Task* postToMainThread(TASKFUNC func, int delay=0);
-
 protected:
 
-    TASKFUNC _oncomplete;
+    std::function<void(void)> _oncomplete;
     bool _cancelled;
 };
 

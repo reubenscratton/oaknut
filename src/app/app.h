@@ -43,6 +43,9 @@ public:
 
     /**@}*/
 
+    static Task* postToMainThread(std::function<void(void)> func, int delay=0);
+    
+
     /** @name Keyboard
      * @{
      */

@@ -3,25 +3,34 @@ layout: default
 ---
 # Principles
 
-Oaknut was originally conceived in 2012 as a mobile app framework that would
+Oaknut was conceived in 2012 as a mobile app framework that would
 bridge the gap between iOS and Android without any runtime performance cost
 and without any Javascript. The goal was for an Oaknut app to be absolutely
 indistinguishable from one built against a native SDK, every native widget
 from both platforms would be faithfully recreated down to the last pixel. Write
 once, run not quite everywhere but at least on every smartphone.
 
-We're still some way from reaching that ambitious goal, mainly because
+It's still some way from reaching that lofty goal, mainly because
 the original scope became even more crazily ambitious with the
 discovery of [Mozilla's Emscripten project](http://kripken.github.io/emscripten-site/). Suddenly it seemed possible that one could write a C++ app that would run not just on
 mobile but on the web as well. All that was missing was the framework ...
 
+
+## Design notes
+
+Oaknut is extremely lightweight. The whole source code is compiled
+into each app. It may switch to a precompiled library form at
+a later date but at this early stage it's more convenient to work with
+in source form.
+
+
 ## Application architecture
 
-Oaknut tries to be unopinionated about app architecture but broadly follows the MVC pattern used in iOS: everything visual is a View, Views are grouped together and coordinated by ViewControllers. There is no formal definition of a Model type but there is support for serialization and persistance.
+Oaknut aims to be unopinionated about app architecture but broadly follows the MVC pattern used in iOS: everything visual is a View, Views are grouped together and coordinated by ViewControllers. There is no formal definition of a Model type but there is support for serialization and persistance.
 
-An Oaknut project may either be a standalone application, in which case you must implement App::main(), or it may be a component of a larger application in which case you will need to invoke your Oaknut code by instantiating a Window via Window::create(), setting it's rootViewController property and then calling window->show().
+An Oaknut project may either be a standalone application, in which case you must implement `App::main()`, or it may be a component of a larger application in which case you will need to invoke your Oaknut code by instantiating a `Window` via `Window::create()`, setting it's `rootViewController` property and then calling `window->show()`.
 
-The top-level directory structure of a project is important because the build system makes some assumptions about it:
+The top-level directory structure of a project is important because the build system has some assumptions about it:
 
 	Makefile - contains the project definitions
 	/app - the source code
@@ -30,11 +39,21 @@ The top-level directory structure of a project is important because the build sy
 
 Project files live in the project root, run "make xcode" or "make androidstudio" to generate these. Project files are optional, you can build with plain old `make` if you prefer.
 
+#### Use of underlying OS
+Oaknut aims to minimise wheel reinvention by leveraging those parts of the underlying
+OS that are more or less identical to corresponding parts of other OSes. For example,
+most of the 2D graphics APIs are a thin wrapper around OS APIs. Drawing rectangles,
+lines, circles, decompressing JPEGs and PNGs, is all done by the OS since there's so
+little variance in how these things are done.
+
+Glyph rasterization is another job given to the OS, however glyph and text layout
+is done by Oaknut (currently with custom logic but soon to be replaced by Pango).
+
 
 ## Hello World
 
 This is the simplest possible Oaknut program:
-
+````
     #include <oaknut.h>
 
     void App::main() {
@@ -44,7 +63,7 @@ This is the simplest possible Oaknut program:
         vc->setView(label);
         _window->setRootViewController(vc);
     }
-
+````
 
 ## Why C++?
 
@@ -53,7 +72,7 @@ less - much less - than having good and powerful APIs available. Oaknut is
 implemented in C++ because that was the only language I knew that was common to
 all the platforms I care about. It may be that Rust works equally well or better
 and future research effort will explore implementing in other languages (there
-may also be an argument for a new language that translates to C++...).  
+is a strong case for a new language that translates to C++...).  
 
 
 ## Conventions and departures from 'standard' C++
@@ -72,19 +91,27 @@ value type names are either all lowercase (`string`, `vector`, etc) or all
 uppercase (e.g. `POINT`, `RECT`), whereas reference type names are always
 camel-case.
 
+
+### Object lifetimes
+
 The Object root class implements a standard retain/release reference counting
-scheme and has a companion smart pointer value type named 'sp' to hold
-references. Oaknut does not use the standard C++ smart pointer classes at all,
+scheme and has a companion smart pointer value type named `sp` to hold
+strong references. Oaknut does not use the standard C++ smart pointer classes at all,
 but that doesn't mean you can't use them if you want to.
 
-Oaknut also has it's own 'string' value type which is likely a better fit for
-programmers used to other environments. It differs from C++'s `std::string` in
-that it is a string of *characters*, not bytes, which may be internally encoded
-as UTF-8 (the default) or UTF-32. It also has many useful methods familiar to
-iOS and Java developers.
+Released objects (i.e. those whose refcount has decremented to zero)
+are `free()`d between frames.
+
+### Strings and the STL
+
+Oaknut has it's own 'string' value type which is likely a better fit for
+programmers coming from conventional dev environments. It differs from C++'s
+`std::string` in that it is a string of *characters*, not bytes, which may be
+internally encoded as UTF-8 (the default) or UTF-32. It also has many useful
+methods familiar to iOS and Java developers.
 
 Oaknut does however use std::vector and std::map and a few other STL offerings.
-It also adds a 'bytearray' type.
+It also adds a `bytearray` type.
 
 
 ### Multiple inheritance

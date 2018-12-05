@@ -7,7 +7,7 @@
 
 #include <oaknut.h>
 
-Task::Task(TASKFUNC oncomplete) : _oncomplete(oncomplete) {
+Task::Task(std::function<void(void)> oncomplete) : _oncomplete(oncomplete) {
     retain();
 }
 

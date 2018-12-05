@@ -10,7 +10,9 @@ using a list of RenderOps maintained via `View::addRenderOp()` and
 
 At present all shaders are OpenGL but plans are afoot to implement
 a Metal renderer - necessary since Apple recently deprecated OpenGL -
-and DirectX.
+and DirectX. An important goal is for app level code to seldom need
+to care about which rendering technology is being used (without losing
+the ability to write custom shaders when needed)
 
 RenderOps are rendered to a `Surface`. The application `Window`
 owns the principal Surface but any View can also have a private
@@ -27,10 +29,10 @@ over drawing each op with a different command.
 ## When rendering occurs
 
 Rendering is always done on the main thread. Application code signals
-the need for a redraw by View::setNeedsFullRedraw() or View::invalidateRect().
+the need for a redraw by `View::setNeedsFullRedraw()` or `View::invalidateRect()`.
 This in turn asks the `Window` to which the View is attached to schedule a redraw
 at the next opportunity, the details of which are OS-specific. The OS calls
-Window::draw() which in turn invokes Surface::render() to draw itself - the Window
+`Window::draw()` which in turn invokes `Surface::render()` to draw itself - the Window
 itself being the root of the view hierarchy - to the window's principal surface.
 Surface::render() then recurses through the view tree to draw each view's
 render list at the right position.
@@ -62,10 +64,11 @@ to render first.
 
 The Window object owns the vertex and index buffers (see the `QuadBuffer` type).
 Almost all shaders use a generic VERTEX structure containing 8 floats:
-
+````
     struct VERTEX {
         GLfloat x,y;
         GLfloat s,t;
         uint32_t color;
         GLfloat unused[3];
     }
+````

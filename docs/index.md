@@ -8,7 +8,10 @@ Oaknut app can be built to run natively on any major OS, and can also run in
 a web browser. The 'Minesweeper' sample app is
 running in an iframe to the right of this text.
 
-Oaknut is currently at the "proof of concept" stage, almost no part of it is fully-featured. However all the main problems are solved and all work from the current point lies in building out the many APIs and UI widgetry that modern app developers need.
+Oaknut is currently at the "proof of concept" stage, few parts are fully-featured
+and no API is frozen. However all the main problems are solved and all work from
+the current point lies in building out the many APIs and UI widgetry that modern
+developers need.
 
 ## Getting started
 1. Clone the Oaknut repository:
@@ -34,85 +37,15 @@ Alternatively, if your IDE is not yet supported or if you prefer to not use any 
 
   `make`
 
-### Notes on building with `make`
-By default `make` without arguments will build the app version native to your
-operating system. To build an app for the web or a mobile OS you specify it
-with the `PLATFORM` variable, e.g.:
-
-    make PLATFORM=web
-
-Supported platforms are `macos`, `linux`, `web`, `ios`, `android`,
-with `windows` coming soon.
-
-Oaknut's make system expects platform-specific information to be
-passed by variable, for example `make PLATFORM=android` will expect to find
-the location of the Android SDK in the `ANDROID_SDK_DIR` variable.
-
-Another optional variable is `CONFIG` which may be either `debug` or `release`. The
-default is `debug`.
-
-The built app will be found along with all intermediate build files in the
-projects `.build/<platform>/<config>` subdirectory.
+The compiled binary will be under the generated `.build` folder in the project
+root (see [Building](guides/building.md) for details).
 
 
 
 
-## Design notes
-
-Oaknut is extremely lightweight. The whole source code is compiled
-into each app. It may switch to a precompiled library form at
-a later date but at this early stage it's convenient to work with
-in source form.
-
-#### Threading
-Oaknut apps have a simple thread model. The application implements `App::main()`
-whose job is to set a root `ViewController` on the application `Window` object.
-All UI rendering is done through OpenGL on the primary/main thread.
-
-Owing to the limitation of current web standards there is no general purpose
-threading API such as pthreads, but instead we've borrowed the web's `Worker`
-concept. So we do have background processing, just no shared memory. Workers
-are conceptually similar to out-of-process services, you send them work to
-do and results are received back.
-
-NB: On non-web platforms any custom downloading code, e.g. JSON processing etc,
-runs on the background OS threads performing the HTTP request (see `URLRequest`).
 
 
 
-
-#### Use of underlying OS
-Oaknut aims to minimise wheel reinvention by leveraging those parts of the underlying
-OS that are more or less identical to corresponding parts of other OSes. For example,
-most of the 2D graphics APIs are a thin wrapper around OS APIs. Drawing rectangles,
-lines, circles, decompressing JPEGs and PNGs, is all done by the OS since there's so
-little variance in how these things are done.
-
-Glyph rasterization is another job given to the OS, however glyph and text layout
-is done by Oaknut (currently with custom logic but soon to be replaced by Pango).
-
-
-#### Object lifetimes
-Oaknut objects are reference-counted via the APIs `Object::retain()` and
-`Object::release()`. Released objects (i.e. those whose refcount has decremented to zero)
-are `free()`d between frames.
-
-
-#### C++ usage
-Oaknut uses a subset of C++11 in order to minimise the learning curve for those coming
-from other languages and platforms. If you don't know a vtable from a r-value reference,
-`it doesn't matter`. The general aim is for application code to look reasonably
-close to what the equivalent code would have been in Java or Obj-C or Swift, rather
-than be impenetrable blobs of pure C++.
-
-Therefore Oaknut has little use of templates beyond a few indispensable STL containers
-(`map`, `set`, and so on), it avoids multiple inheritance, operator overloading, RTTI,
-'friend', 'mutable', traits, metaprogramming, etc. Without wishing to generate controversy
-I personally dislike source code that is harder to read than the machine code it
-compiles to.
-
-(One newish C++ feature Oaknut enthusiastically embraces is lambdas,
-an indispensible and long overdue language feature.)
 
 
 #### Writing UI
@@ -136,23 +69,6 @@ text.  There is also no need for commas to separate fields.
 In a layout file each object declaration must be the name of a View-derived
 class, and each non-object attribute is some property supported by that class.
 
-
-#### Layout
-
-Oaknut has also borrowed from Android's layout system in that
-each View contains size and positioning 'specs' that control
-the rect it occupies on the screen. to update it's own
-intrinsic content size (if necessary), and then to set the size it
-would like to be given that content size, the parent size,
-and the view's sizing rules in the `_widthMeasureSpec` and
-`_heightMeasureSpec` members. After all views have decided what size
-they are, they are all positioned via calls to their `layout()` methods,
-the default implementation of which uses the `_alignspecX` and
-`_alignspecY` members to determine position.
-
-#### Styles
-As well as declarative layout Oaknut also supports declarative styling
-in the same sorta-JSON text files. Style
 
 #### Debugging
 

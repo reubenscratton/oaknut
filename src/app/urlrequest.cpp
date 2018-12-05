@@ -9,7 +9,7 @@
 
 
 
-static MruCache<string> s_urldataCache(4*1024*1024);
+//static MruCache<string> s_urldataCache(4*1024*1024);
 
 
 URLRequest::URLRequest(const string& url, const string& method, const bytearray& body, int flags) : _url(url) {
@@ -21,7 +21,7 @@ URLRequest::URLRequest(const string& url, const string& method, const bytearray&
 URLRequest* URLRequest::createAndStart(const string& url, const string& method, const bytearray& body, int flags) {
     auto req = create(url, method, body, flags);
     req->retain(); // keep request alive until run() completes async
-    Task::postToMainThread([=]() {
+    App::postToMainThread([=]() {
         req->run();
     });
     return req;
@@ -58,6 +58,13 @@ void URLRequest::handleBitmap(std::function<void (URLRequest*, Bitmap *)> handle
 void URLRequest::dispatchResult(int httpStatus, const map<string, string>& responseHeaders) {
     _httpStatus = httpStatus;
     // NB: we are on a background thread here. The handlers must be called on main thread.
+    
+    // Give app code a chance to process the data in the background
+    if (onGotResponseInBackground) {
+        if (onGotResponseInBackground(httpStatus, responseHeaders)) {
+            return;
+        }
+    }
     string contentType;
     const auto& contentTypeIt = responseHeaders.find("content-type");
     if (contentTypeIt != responseHeaders.end()) {
@@ -66,7 +73,7 @@ void URLRequest::dispatchResult(int httpStatus, const map<string, string>& respo
     if (_handlerBitmap) {
         if (error()) {
             retain();
-            Task::postToMainThread([=]() {
+            App::postToMainThread([=]() {
                 if (!_cancelled) {
                     _handlerBitmap(this, NULL);
                 }
@@ -94,7 +101,7 @@ void URLRequest::dispatchResult(int httpStatus, const map<string, string>& respo
             json = variant::parse(it, 0);
         }
         retain();
-        Task::postToMainThread([=]() {
+        App::postToMainThread([=]() {
             if (!_cancelled) {
                 _handlerJson(this, json);
             }
@@ -106,7 +113,7 @@ void URLRequest::dispatchResult(int httpStatus, const map<string, string>& respo
         if (error()) {
             if (!_cancelled) {
                 retain();
-                Task::postToMainThread([=]() {
+                App::postToMainThread([=]() {
                     _handlerData(this);
                     release();
                 });
@@ -114,7 +121,7 @@ void URLRequest::dispatchResult(int httpStatus, const map<string, string>& respo
             }
         } else {
             retain();
-            Task::postToMainThread([=]() {
+            App::postToMainThread([=]() {
                 if (!_cancelled) {
                     _handlerData(this);
                 }

@@ -44,6 +44,8 @@ public:
     int getHttpStatus() const { return _httpStatus; }
     const bytearray& getResponseData() const { return _responseData; }
     
+    std::function<bool(int,const map<string, string>&)> onGotResponseInBackground;
+    
 protected:
     URLRequest(const string& url, const string& method, const bytearray& body, int flags);
     ~URLRequest();
