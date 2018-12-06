@@ -15,11 +15,14 @@ class View
 <table>
 <tr><td>void <a href="todo">addSubview</a>(<a href="class_view.html">View</a> * subview)</td><td>Adds a subview to the end of the subviews list, i.e.</td></tr>
 <tr><td>void <a href="todo">insertSubview</a>(<a href="class_view.html">View</a> * subview, int index)</td><td>Inserts a subview at a particular index, z-order ascending.</td></tr>
+<tr><td>int <a href="todo">getSubviewCount</a>()</td><td>Get the number of subviews.</td></tr>
+<tr><td><a href="class_view.html">View</a> * <a href="todo">getSubview</a>(int index)</td><td>Get a subview at a particular index, z-order ascending.</td></tr>
 <tr><td>void <a href="todo">removeSubview</a>(<a href="class_view.html">View</a> * subview)</td><td>Removes a subview.</td></tr>
 <tr><td><a href="class_view.html">View</a> * <a href="todo">getParent</a>()</td><td>Return the parent view of this view.</td></tr>
 <tr><td>void <a href="todo">removeFromParent</a>()</td><td>Removes this view from its parent view.</td></tr>
 <tr><td>int <a href="todo">indexOfSubview</a>(<a href="class_view.html">View</a> * subview)</td><td>Find the index of the given subview, returns -1 if given view is not a subview.</td></tr>
-<tr><td><a href="class_view.html">View</a> * <a href="todo">findViewById</a>(const string & id)</td><td>Find a view among the subviews (and all descendent views) given a string id.</td></tr>
+<tr><td><a href="class_view.html">View</a> * <a href="todo">findViewById</a>(const <a href="classstring.html">string</a> & id)</td><td>Find a view among the subviews (and all descendent views) given a string id.</td></tr>
+<tr><td><a href="class_view.html">View</a> * <a href="todo">getRootView</a>()</td><td>Return the view at the root of the view tree.</td></tr>
 <tr><td>void <a href="todo">removeSubviewsNotInVisibleArea</a>()</td><td>Helper to remove any subviews currently scrolled out of sight.</td></tr>
 <table>
 
@@ -37,6 +40,10 @@ class View
 <table>
 <tr><td>float <a href="todo">getWidth</a>()</td><td>Get the width of the view.</td></tr>
 <tr><td>float <a href="todo">getHeight</a>()</td><td>Get the height of the view.</td></tr>
+<tr><td>float <a href="todo">getLeft</a>()</td><td>Get the X-coordinate of the left edge, in parent coords.</td></tr>
+<tr><td>float <a href="todo">getRight</a>()</td><td>Get the X-coordinate of the right edge, in parent coords.</td></tr>
+<tr><td>float <a href="todo">getTop</a>()</td><td>Get the Y-coordinate of the top edge, in parent coords.</td></tr>
+<tr><td>float <a href="todo">getBottom</a>()</td><td>Get the Y-coordinate of the bottom edge, in parent coords.</td></tr>
 <tr><td>RECT <a href="todo">getRect</a>()</td><td>Get the current view rect, in parent coords.</td></tr>
 <tr><td>RECT <a href="todo">getOwnRect</a>()</td><td>Get the view rect in it's own coordinate system, i.e.</td></tr>
 <tr><td>RECT <a href="todo">getOwnRectPadded</a>()</td><td>Same as getOwnRect() but with current padding insets applied.</td></tr>
@@ -45,10 +52,9 @@ class View
 <tr><td>void <a href="todo">setMeasureSpecs</a>(MEASURESPEC widthMeasureSpec, MEASURESPEC heightMeasureSpec)</td><td>Set the size this view would like to have, given various constraints (see MEASURESPEC and measure()).</td></tr>
 <tr><td>void <a href="todo">setAlignSpecs</a>(ALIGNSPEC alignspecHorz, ALIGNSPEC alignspecVert)</td><td>Set the preferred alignment within the parent view.</td></tr>
 <tr><td>void <a href="todo">setNeedsLayout</a>()</td><td>Signal that the view needs to recalculate its size and position.</td></tr>
-<tr><td>void <a href="todo">measure</a>(float parentWidth, float parentHeight)</td><td>Determines the view rect size, given the parent size constraint.</td></tr>
+<tr><td>void <a href="todo">layout</a>(RECT constraint)</td><td>Recalculate and apply this view's size and position (as well as all subviews).</td></tr>
 <tr><td>void <a href="todo">setRectSize</a>(const SIZE & size)</td><td>Sets the size of the view rect.</td></tr>
 <tr><td>void <a href="todo">setRectOrigin</a>(const POINT & origin)</td><td>Sets the position of the view.</td></tr>
-<tr><td>void <a href="todo">layout</a>()</td><td>Updates the view position, i.e.</td></tr>
 <tr><td>void <a href="todo">setVisibility</a>(Visibility visibility)</td><td></td></tr>
 <table>
 
@@ -57,28 +63,32 @@ class View
 <table>
 <tr><td>SIZE <a href="todo">getContentSize</a>()</td><td>Returns the current content size, as calculated by updateContentSize() during layout.</td></tr>
 <tr><td>void <a href="todo">invalidateContentSize</a>()</td><td>Mark the view's contentSize as invalid and call setNeedsLayout()</td></tr>
-<tr><td>void <a href="todo">updateContentSize</a>(float parentWidth, float parentHeight)</td><td>Called during measure() views should set the _contentSize property here.</td></tr>
+<tr><td>void <a href="todo">updateContentSize</a>(SIZE constrainingSize)</td><td>Called during measure() views should set the _contentSize property here.</td></tr>
 <tr><td>void <a href="todo">setGravity</a>(GRAVITY gravity)</td><td>Set the gravity flags.</td></tr>
 <tr><td>POINT <a href="todo">getContentOffset</a>()</td><td></td></tr>
 <tr><td>void <a href="todo">setContentOffset</a>(POINT contentOffset)</td><td></td></tr>
 <tr><td>void <a href="todo">setScrollInsets</a>(EDGEINSETS scrollInsets)</td><td></td></tr>
 <tr><td>bool <a href="todo">canScrollHorizontally</a>()</td><td></td></tr>
 <tr><td>bool <a href="todo">canScrollVertically</a>()</td><td></td></tr>
+<tr><td>float <a href="todo">getMaxScrollY</a>()</td><td></td></tr>
+<tr><td>bool <a href="todo">getClipsContent</a>()</td><td></td></tr>
+<tr><td>void <a href="todo">setClipsContent</a>(bool clipsContent)</td><td></td></tr>
+<tr><td>void <a href="todo">scrollBy</a>(POINT scrollAmount)</td><td></td></tr>
 <table>
 
 <h2>Drawing</h2>
 
 <table>
-<tr><td>void <a href="todo">setBackground</a>(RenderOp * drawableOp)</td><td></td></tr>
-<tr><td>void <a href="todo">setBackground</a>(RenderOp * drawableOp, STATESET stateset)</td><td></td></tr>
-<tr><td>void <a href="todo">setBackgroundColour</a>(COLOUR colour)</td><td></td></tr>
+<tr><td>void <a href="todo">setBackground</a>(RenderOp * renderOp)</td><td></td></tr>
+<tr><td>RenderOp * <a href="todo">getBackgroundOp</a>()</td><td></td></tr>
+<tr><td>void <a href="todo">setBackgroundColor</a>(COLOR color)</td><td></td></tr>
 <tr><td>void <a href="todo">addRenderOp</a>(RenderOp * renderOp)</td><td></td></tr>
 <tr><td>void <a href="todo">addRenderOp</a>(RenderOp * renderOp, bool atFront)</td><td></td></tr>
 <tr><td>void <a href="todo">removeRenderOp</a>(RenderOp * renderOp)</td><td></td></tr>
 <tr><td>void <a href="todo">setNeedsFullRedraw</a>()</td><td></td></tr>
 <tr><td>void <a href="todo">invalidateRect</a>(const RECT & rect)</td><td></td></tr>
-<tr><td>COLOUR <a href="todo">getTintColour</a>()</td><td></td></tr>
-<tr><td>void <a href="todo">setTintColour</a>(COLOUR tintColour)</td><td>Sets tint colour.</td></tr>
+<tr><td>COLOR <a href="todo">getTintColor</a>()</td><td></td></tr>
+<tr><td>void <a href="todo">setTintColor</a>(COLOR tintColor)</td><td>Sets tint color.</td></tr>
 <tr><td>float <a href="todo">getAlpha</a>()</td><td>Get the current alpha.</td></tr>
 <tr><td>void <a href="todo">setAlpha</a>(float alpha)</td><td>Sets alpha.</td></tr>
 <table>
@@ -86,26 +96,32 @@ class View
 <h2>State</h2>
 
 <table>
-<tr><td>void <a href="todo">setState</a>(STATESET stateset)</td><td>Set one or more state bits at once.</td></tr>
+<tr><td>void <a href="todo">setState</a>(STATE mask, STATE value)</td><td>Set one or more state bits at once.</td></tr>
 <tr><td>bool <a href="todo">isPressed</a>()</td><td></td></tr>
 <tr><td>void <a href="todo">setPressed</a>(bool isPressed)</td><td></td></tr>
 <tr><td>bool <a href="todo">isEnabled</a>()</td><td></td></tr>
 <tr><td>void <a href="todo">setEnabled</a>(bool enabled)</td><td></td></tr>
+<tr><td>bool <a href="todo">isChecked</a>()</td><td></td></tr>
+<tr><td>void <a href="todo">setChecked</a>(bool checked)</td><td></td></tr>
+<tr><td>bool <a href="todo">isSelected</a>()</td><td></td></tr>
+<tr><td>void <a href="todo">setSelected</a>(bool checked)</td><td></td></tr>
+<tr><td>bool <a href="todo">isFocused</a>()</td><td></td></tr>
+<tr><td>void <a href="todo">setFocused</a>(bool focused)</td><td></td></tr>
+<tr><td>bool <a href="todo">isErrored</a>()</td><td></td></tr>
+<tr><td>void <a href="todo">setErrored</a>(bool errored)</td><td></td></tr>
 <tr><td>void <a href="todo">onStateChanged</a>(STATESET changes)</td><td>Called whenever state changes.</td></tr>
 <table>
 
 <h2>Styles</h2>
 
 <table>
-<tr><td>void <a href="todo">applyStyleValues</a>(const StyleValueList & values)</td><td>Applies a set of styles to the view.</td></tr>
-<tr><td>bool <a href="todo">applyStyleValue</a>(const string & name, StyleValue * value)</td><td>Applies a single style value for the given attribute name.</td></tr>
+<tr><td>bool <a href="todo">applyStyleValue</a>(const <a href="classstring.html">string</a> & name, const StyleValue * value)</td><td>Applies a single style value for the given attribute name.</td></tr>
 <table>
 
 <h2>Touch</h2>
 
 <table>
-<tr><td>bool <a href="todo">isTouchable</a>()</td><td>Convenience function returning true if the view is both visible and enabled.</td></tr>
-<tr><td><a href="class_view.html">View</a> * <a href="todo">hitTest</a>(POINT pt, POINT * ptRel)</td><td></td></tr>
+<tr><td><a href="class_view.html">View</a> * <a href="todo">hitTest</a>(POINT & pt)</td><td></td></tr>
 <tr><td><a href="class_view.html">View</a> * <a href="todo">subviewContainingPoint</a>(POINT pt)</td><td></td></tr>
 <tr><td>int <a href="todo">indexOfSubviewContainingPoint</a>(POINT pt)</td><td></td></tr>
 <table>
@@ -121,11 +137,20 @@ class View
 <tr><td> <a href="todo">View</a>()</td><td></td></tr>
 <tr><td> <a href="todo">~View</a>()</td><td></td></tr>
 <tr><td><a href="class_i_keyboard_input_handler.html">IKeyboardInputHandler</a> * <a href="todo">getKeyboardInputHandler</a>()</td><td></td></tr>
-<tr><td>bool <a href="todo">setFocused</a>(bool focused)</td><td></td></tr>
-<tr><td>bool <a href="todo">isFocused</a>()</td><td></td></tr>
+<tr><td><a href="class_i_text_input_receiver.html">ITextInputReceiver</a> * <a href="todo">getTextInputReceiver</a>()</td><td></td></tr>
+<tr><td>bool <a href="todo">requestFocus</a>()</td><td></td></tr>
 <tr><td>void <a href="todo">animateAlpha</a>(float target, float duration)</td><td></td></tr>
 <tr><td>void <a href="todo">animateTranslate</a>(POINT translation, float duration)</td><td></td></tr>
+<tr><td>Animation * <a href="todo">animateInFromBottom</a>(float duration, InterpolateFunc interpolater)</td><td></td></tr>
+<tr><td>Animation * <a href="todo">animateOutToBottom</a>(float duration, InterpolateFunc interpolater)</td><td></td></tr>
 <tr><td>void <a href="todo">setTranslate</a>(POINT translation)</td><td></td></tr>
+<table>
+
+<h2></h2>
+
+<table>
+<tr><td>void <a href="todo">inflate</a>(const <a href="classstring.html">string</a> & layoutFile)</td><td></td></tr>
+<tr><td>void <a href="todo">bind</a>(T *& rview, const <a href="classstring.html">string</a> & id)</td><td></td></tr>
 <table>
 
 <h1>Methods</h1>
@@ -135,6 +160,12 @@ class View
 
 <h3>insertSubview</h3>
 <code>void <a href="todo">insertSubview</a>(<a href="class_view.html">View</a> * subview, int index)</code><p></p>
+
+<h3>getSubviewCount</h3>
+<code>int <a href="todo">getSubviewCount</a>()</code><p></p>
+
+<h3>getSubview</h3>
+<code><a href="class_view.html">View</a> * <a href="todo">getSubview</a>(int index)</code><p>Returns NULL if no such index.</p>
 
 <h3>removeSubview</h3>
 <code>void <a href="todo">removeSubview</a>(<a href="class_view.html">View</a> * subview)</code><p></p>
@@ -149,7 +180,10 @@ class View
 <code>int <a href="todo">indexOfSubview</a>(<a href="class_view.html">View</a> * subview)</code><p></p>
 
 <h3>findViewById</h3>
-<code><a href="class_view.html">View</a> * <a href="todo">findViewById</a>(const string & id)</code><p></p>
+<code><a href="class_view.html">View</a> * <a href="todo">findViewById</a>(const <a href="classstring.html">string</a> & id)</code><p></p>
+
+<h3>getRootView</h3>
+<code><a href="class_view.html">View</a> * <a href="todo">getRootView</a>()</code><p></p>
 
 <h3>removeSubviewsNotInVisibleArea</h3>
 <code>void <a href="todo">removeSubviewsNotInVisibleArea</a>()</code><p></p>
@@ -171,6 +205,18 @@ class View
 
 <h3>getHeight</h3>
 <code>float <a href="todo">getHeight</a>()</code><p></p>
+
+<h3>getLeft</h3>
+<code>float <a href="todo">getLeft</a>()</code><p></p>
+
+<h3>getRight</h3>
+<code>float <a href="todo">getRight</a>()</code><p></p>
+
+<h3>getTop</h3>
+<code>float <a href="todo">getTop</a>()</code><p></p>
+
+<h3>getBottom</h3>
+<code>float <a href="todo">getBottom</a>()</code><p></p>
 
 <h3>getRect</h3>
 <code>RECT <a href="todo">getRect</a>()</code><p></p>
@@ -196,17 +242,14 @@ class View
 <h3>setNeedsLayout</h3>
 <code>void <a href="todo">setNeedsLayout</a>()</code><p></p>
 
-<h3>measure</h3>
-<code>void <a href="todo">measure</a>(float parentWidth, float parentHeight)</code><p>The default implementation uses the MEASURESPECs passed to setMeasureSpecs() to calculate the view rect size.</p>
+<h3>layout</h3>
+<code>void <a href="todo">layout</a>(RECT constraint)</code><p>Default implementation uses SIZESPEC and ALIGNSPEC members but derived types may override the default behaviour.</p>
 
 <h3>setRectSize</h3>
-<code>void <a href="todo">setRectSize</a>(const SIZE & size)</code><p>CAUTION! This API exists so Views may override the size of their subviews during layout. Ideally it would not be a public API.</p>
+<code>void <a href="todo">setRectSize</a>(const SIZE & size)</code><p>CAUTION! This API is dumb and will probably be removed.</p>
 
 <h3>setRectOrigin</h3>
 <code>void <a href="todo">setRectOrigin</a>(const POINT & origin)</code><p>CAUTION! This API exists so Views may override the positioning of subviews during layout. Ideally this would not be a public API.</p>
-
-<h3>layout</h3>
-<code>void <a href="todo">layout</a>()</code><p>view rect origin. The default implementation uses the ALIGNSPECs passed to setAlignSpecs() to set the view position</p>
 
 <h3>setVisibility</h3>
 <code>void <a href="todo">setVisibility</a>(Visibility visibility)</code><p></p>
@@ -218,7 +261,7 @@ class View
 <code>void <a href="todo">invalidateContentSize</a>()</code><p></p>
 
 <h3>updateContentSize</h3>
-<code>void <a href="todo">updateContentSize</a>(float parentWidth, float parentHeight)</code><p>The defaut implementation does nothing.</p>
+<code>void <a href="todo">updateContentSize</a>(SIZE constrainingSize)</code><p>The defaut implementation does nothing.</p>
 
 <h3>setGravity</h3>
 <code>void <a href="todo">setGravity</a>(GRAVITY gravity)</code><p>Gravity affects how the content is aligned within the view rect when the view rect size exceeds the content size.</p>
@@ -238,14 +281,26 @@ class View
 <h3>canScrollVertically</h3>
 <code>bool <a href="todo">canScrollVertically</a>()</code><p></p>
 
-<h3>setBackground</h3>
-<code>void <a href="todo">setBackground</a>(RenderOp * drawableOp)</code><p></p>
+<h3>getMaxScrollY</h3>
+<code>float <a href="todo">getMaxScrollY</a>()</code><p></p>
+
+<h3>getClipsContent</h3>
+<code>bool <a href="todo">getClipsContent</a>()</code><p></p>
+
+<h3>setClipsContent</h3>
+<code>void <a href="todo">setClipsContent</a>(bool clipsContent)</code><p></p>
+
+<h3>scrollBy</h3>
+<code>void <a href="todo">scrollBy</a>(POINT scrollAmount)</code><p></p>
 
 <h3>setBackground</h3>
-<code>void <a href="todo">setBackground</a>(RenderOp * drawableOp, STATESET stateset)</code><p></p>
+<code>void <a href="todo">setBackground</a>(RenderOp * renderOp)</code><p></p>
 
-<h3>setBackgroundColour</h3>
-<code>void <a href="todo">setBackgroundColour</a>(COLOUR colour)</code><p></p>
+<h3>getBackgroundOp</h3>
+<code>RenderOp * <a href="todo">getBackgroundOp</a>()</code><p></p>
+
+<h3>setBackgroundColor</h3>
+<code>void <a href="todo">setBackgroundColor</a>(COLOR color)</code><p></p>
 
 <h3>addRenderOp</h3>
 <code>void <a href="todo">addRenderOp</a>(RenderOp * renderOp)</code><p></p>
@@ -262,11 +317,11 @@ class View
 <h3>invalidateRect</h3>
 <code>void <a href="todo">invalidateRect</a>(const RECT & rect)</code><p></p>
 
-<h3>getTintColour</h3>
-<code>COLOUR <a href="todo">getTintColour</a>()</code><p></p>
+<h3>getTintColor</h3>
+<code>COLOR <a href="todo">getTintColor</a>()</code><p></p>
 
-<h3>setTintColour</h3>
-<code>void <a href="todo">setTintColour</a>(COLOUR tintColour)</code><p></p>
+<h3>setTintColor</h3>
+<code>void <a href="todo">setTintColor</a>(COLOR tintColor)</code><p></p>
 
 <h3>getAlpha</h3>
 <code>float <a href="todo">getAlpha</a>()</code><p>Defaults to 1.0. Note that the actual alpha value used in rendering inherits (i.e. is effectively multiplied by) all ancestor alpha values.</p>
@@ -275,7 +330,7 @@ class View
 <code>void <a href="todo">setAlpha</a>(float alpha)</code><p></p>
 
 <h3>setState</h3>
-<code>void <a href="todo">setState</a>(STATESET stateset)</code><p>The STATESET parameter has a 'mask' member which determines the state bits that get updated.</p>
+<code>void <a href="todo">setState</a>(STATE mask, STATE value)</code><p>The STATESET parameter has a 'mask' member which determines the state bits that get updated.</p>
 
 <h3>isPressed</h3>
 <code>bool <a href="todo">isPressed</a>()</code><p></p>
@@ -289,20 +344,38 @@ class View
 <h3>setEnabled</h3>
 <code>void <a href="todo">setEnabled</a>(bool enabled)</code><p></p>
 
+<h3>isChecked</h3>
+<code>bool <a href="todo">isChecked</a>()</code><p></p>
+
+<h3>setChecked</h3>
+<code>void <a href="todo">setChecked</a>(bool checked)</code><p></p>
+
+<h3>isSelected</h3>
+<code>bool <a href="todo">isSelected</a>()</code><p></p>
+
+<h3>setSelected</h3>
+<code>void <a href="todo">setSelected</a>(bool checked)</code><p></p>
+
+<h3>isFocused</h3>
+<code>bool <a href="todo">isFocused</a>()</code><p></p>
+
+<h3>setFocused</h3>
+<code>void <a href="todo">setFocused</a>(bool focused)</code><p></p>
+
+<h3>isErrored</h3>
+<code>bool <a href="todo">isErrored</a>()</code><p></p>
+
+<h3>setErrored</h3>
+<code>void <a href="todo">setErrored</a>(bool errored)</code><p></p>
+
 <h3>onStateChanged</h3>
 <code>void <a href="todo">onStateChanged</a>(STATESET changes)</code><p></p>
 
-<h3>applyStyleValues</h3>
-<code>void <a href="todo">applyStyleValues</a>(const StyleValueList & values)</code><p></p>
-
 <h3>applyStyleValue</h3>
-<code>bool <a href="todo">applyStyleValue</a>(const string & name, StyleValue * value)</code><p>Custom views should override this method to add support for custom attributes.</p>
-
-<h3>isTouchable</h3>
-<code>bool <a href="todo">isTouchable</a>()</code><p></p>
+<code>bool <a href="todo">applyStyleValue</a>(const <a href="classstring.html">string</a> & name, const StyleValue * value)</code><p>Custom views should override this method to add support for custom attributes.</p>
 
 <h3>hitTest</h3>
-<code><a href="class_view.html">View</a> * <a href="todo">hitTest</a>(POINT pt, POINT * ptRel)</code><p></p>
+<code><a href="class_view.html">View</a> * <a href="todo">hitTest</a>(POINT & pt)</code><p></p>
 
 <h3>subviewContainingPoint</h3>
 <code><a href="class_view.html">View</a> * <a href="todo">subviewContainingPoint</a>(POINT pt)</code><p></p>
@@ -319,11 +392,11 @@ class View
 <h3>getKeyboardInputHandler</h3>
 <code><a href="class_i_keyboard_input_handler.html">IKeyboardInputHandler</a> * <a href="todo">getKeyboardInputHandler</a>()</code><p></p>
 
-<h3>setFocused</h3>
-<code>bool <a href="todo">setFocused</a>(bool focused)</code><p></p>
+<h3>getTextInputReceiver</h3>
+<code><a href="class_i_text_input_receiver.html">ITextInputReceiver</a> * <a href="todo">getTextInputReceiver</a>()</code><p></p>
 
-<h3>isFocused</h3>
-<code>bool <a href="todo">isFocused</a>()</code><p></p>
+<h3>requestFocus</h3>
+<code>bool <a href="todo">requestFocus</a>()</code><p></p>
 
 <h3>animateAlpha</h3>
 <code>void <a href="todo">animateAlpha</a>(float target, float duration)</code><p></p>
@@ -331,6 +404,18 @@ class View
 <h3>animateTranslate</h3>
 <code>void <a href="todo">animateTranslate</a>(POINT translation, float duration)</code><p></p>
 
+<h3>animateInFromBottom</h3>
+<code>Animation * <a href="todo">animateInFromBottom</a>(float duration, InterpolateFunc interpolater)</code><p></p>
+
+<h3>animateOutToBottom</h3>
+<code>Animation * <a href="todo">animateOutToBottom</a>(float duration, InterpolateFunc interpolater)</code><p></p>
+
 <h3>setTranslate</h3>
 <code>void <a href="todo">setTranslate</a>(POINT translation)</code><p></p>
+
+<h3>inflate</h3>
+<code>void <a href="todo">inflate</a>(const <a href="classstring.html">string</a> & layoutFile)</code><p></p>
+
+<h3>bind</h3>
+<code>void <a href="todo">bind</a>(T *& rview, const <a href="classstring.html">string</a> & id)</code><p></p>
 

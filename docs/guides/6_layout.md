@@ -122,7 +122,7 @@ Alignment values are expressed in one of the following forms:
 The keywords and how they map to
 the multipliers in the `ALIGNSPEC` are:
 
-| Keyword         | ref    | ref<br>mult | self<br>mult |
+| <br>Keyword         | <br>ref    | ref<br>mult | self<br>mult |
 |---------------|--------|------|------|
 | `left`          | parent |   0  |   0  |
 | `top`          | parent |   0  |   0  |

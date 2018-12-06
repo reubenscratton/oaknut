@@ -14,8 +14,8 @@ import java.util.Comparator;
 
 public class Doxy {
 	
-	static String inputPath = "../doxygen/xml/";
-	static String outputPath = "../jekyll/ref/";
+	static String inputPath = "../_doxygen/xml/";
+	static String outputPath = "../ref/";
 
 	
 	static void writeTextFile(String path, String markdown) throws IOException {

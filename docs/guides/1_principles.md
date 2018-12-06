@@ -75,6 +75,21 @@ and future research effort will explore implementing in other languages (there
 is a strong case for a new language that translates to C++...).  
 
 
+
+#### C++ usage
+Oaknut uses a subset of C++11 in order to minimise the learning curve for those coming
+from other languages and platforms. If you don't know a vtable from a r-value reference,
+`it doesn't matter`. The general aim is for application code to look reasonably
+close to what the equivalent code would have been in Java or Obj-C or Swift, rather
+than be impenetrable blobs of pure C++.
+
+Therefore Oaknut has little use of templates beyond a few indispensable STL containers
+(`map`, `set`, and so on), it avoids multiple inheritance, operator overloading, RTTI,
+'friend', 'mutable', traits, metaprogramming, etc. Without wishing to generate controversy
+I personally dislike source code that is harder to read than the machine code it
+compiles to.
+
+
 ## Conventions and departures from 'standard' C++
 
 NB: These notes are purely explanatory. Oaknut does not seek to mandate
