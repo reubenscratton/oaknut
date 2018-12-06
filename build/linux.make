@@ -22,9 +22,9 @@ SYSINCS+= -isystem /usr/include/gdk-pixbuf-2.0
 SYSINCS+= -isystem /usr/include/atk-1.0
 
 LIBS:= \
-    -lGLU -lGL -lglib-2.0 -lgobject-2.0 -latk-1.0 \
+    -lGLU -lGL -lgobject-2.0 -latk-1.0 \
     -lgtk-3 -lgdk-3 -lpango-1.0 -lpangocairo-1.0 -lgdk_pixbuf-2.0 -lcairo -lfreetype -lharfbuzz \
-    -lopenal -lpthread -lrt -lcurl
+    -lopenal -lpthread -lrt -lcurl -lglib-2.0 -lgio-2.0
 
 # Use clang! If you really must use GCC then remove the .pch stuff since
 # GCC (a) does it differently, and (b) the .gch produced is so vast (132MB)
