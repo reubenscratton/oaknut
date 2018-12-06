@@ -21,7 +21,8 @@ static int bytesPerPixelForFormat(int format) {
 }
 
 BitmapLinux::BitmapLinux(GdkPixbuf* pixbuf) : Bitmap() {
-    //_pixbuf = pixbuf;
+    _pixbuf = pixbuf;
+    g_object_ref(_pixbuf);
     int nc = gdk_pixbuf_get_n_channels(pixbuf);
     int bpc = gdk_pixbuf_get_bits_per_sample(pixbuf);
     if (nc==4 && bpc==8) _format = BITMAPFORMAT_RGBA32;
@@ -54,6 +55,7 @@ BitmapLinux::~BitmapLinux() {
          check_gl(glDeleteTextures, 1, &_textureId);
         _textureId = 0;
     }
+    g_object_unref(_pixbuf);
 }
 
 void BitmapLinux::lock(PIXELDATA* pixelData, bool forWriting) {
@@ -102,26 +104,63 @@ cairo_t* BitmapLinux::getCairo() {
     return _cairo;
 }
 
-static void on_area_prepared(GdkPixbufLoader *loader, gpointer user_data) {
-    GdkPixbuf* pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
-    Bitmap* bitmap = new BitmapLinux(pixbuf);
-    GError* error = NULL;
-    std::function<void(Bitmap*)>* callback = (std::function<void(Bitmap*)>*)user_data;
-    (*callback)(bitmap);
-    //g_object_unref(loader);
-}
 
 Bitmap* Bitmap::create(int width, int height, int format) {
     return new BitmapLinux(width, height, format);
 }
 
-void Bitmap::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
-    GError* error = NULL;
-    GdkPixbufLoader* loader = gdk_pixbuf_loader_new();
-    g_signal_connect(loader, "area_prepared", G_CALLBACK(on_area_prepared), &callback);
-    gdk_pixbuf_loader_write(loader, (const guint8*)data, cb, &error);
-    gdk_pixbuf_loader_close(loader, &error);
+class BitmapDecodeTask : public Task {
+public:
+    GTask* _gtask;
+    std::function<void(Bitmap*)> _callback;
+    Bitmap* _bitmap;
+    void* _data;
+    int _cb;
 
+    BitmapDecodeTask(const void* data, int cb, std::function<void(Bitmap*)> callback) : Task([=]() {
+        _callback(_bitmap);
+    }) {
+        _callback = callback;
+        _gtask = g_task_new(NULL, NULL, asyncReadyCallback, this);
+        _data = malloc(cb);
+        memcpy(_data, data, cb);
+        _cb = cb;
+        g_task_set_task_data (_gtask, this, NULL);
+        g_task_run_in_thread(_gtask, do_work);
+    }
+
+    static void do_work(GTask* gtask,
+                   gpointer source_obj,
+                   gpointer task_data,
+                   GCancellable *cancellable)
+    {
+        BitmapDecodeTask* task = (BitmapDecodeTask*)task_data;
+        GError* error = NULL;
+        GdkPixbufLoader* loader = gdk_pixbuf_loader_new();
+        //g_signal_connect(loader, "area_prepared", G_CALLBACK(on_area_prepared), task);
+        gdk_pixbuf_loader_write(loader, (const guint8*)task->_data, task->_cb, &error);
+        gdk_pixbuf_loader_close(loader, &error);
+        GdkPixbuf* pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
+        task->_bitmap = new BitmapLinux(pixbuf);
+        //g_task_return_pointer(task->_gtask, NULL, NULL);
+        g_object_unref(loader);
+        free(task->_data);
+    }
+    static void asyncReadyCallback(GObject *source_object, GAsyncResult *res,  gpointer user_data) {
+        BitmapDecodeTask* task = (BitmapDecodeTask*)user_data;
+        task->complete();
+    }
+    /*static void on_area_prepared(GdkPixbufLoader *loader, gpointer user_data) {
+        BitmapDecodeTask* task = (BitmapDecodeTask*)user_data;
+        GdkPixbuf* pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
+        task->_bitmap = new BitmapLinux(pixbuf);
+        g_task_return_pointer(task->_gtask, NULL, NULL);
+    }*/
+
+};
+
+Task* Bitmap::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
+    return new BitmapDecodeTask(data, cb, callback);
 }
 
 

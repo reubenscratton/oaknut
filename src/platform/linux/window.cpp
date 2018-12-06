@@ -69,12 +69,10 @@ public:
     // Static callbacks
     static void glarea_size_allocate(GtkWidget *widget, GdkRectangle *allocation, gpointer callback_data) {
         WindowLinux* window = (WindowLinux*)callback_data;
-        window->resizeSurface(allocation->width, allocation->height, 2);
+        window->resizeSurface(allocation->width, allocation->height, 1);
     }
     static gboolean render(GtkGLArea *area, GdkGLContext *context, gpointer callback_data)  {
         WindowLinux* window = (WindowLinux*)callback_data;
-        if (false) {
-        }
         glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         window->draw();
         glFlush();

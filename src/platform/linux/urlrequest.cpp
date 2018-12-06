@@ -10,7 +10,7 @@
 
 class URLRequestLinux : public URLRequest {
 public:
-    URLRequestLinux(const string& url, const string& method, const string& body, int flags)
+    URLRequestLinux(const string& url, const string& method, const bytearray& body, int flags)
     : URLRequest(url, method, body, flags) {
     }
     
@@ -38,7 +38,7 @@ public:
 };
 
 
-URLRequest* URLRequest::create(const string& url, const string& method, const string& body, int flags) {
+URLRequest* URLRequest::create(const string& url, const string& method, const bytearray& body, int flags) {
     return new URLRequestLinux(url, method, body, flags);
 }
 

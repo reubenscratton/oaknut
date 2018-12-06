@@ -24,6 +24,7 @@ public:
 private:
     cairo_surface_t* _cairo_surface;
     cairo_t* _cairo;
+    GdkPixbuf* _pixbuf;
 
 };
 
