@@ -7,8 +7,8 @@
 
 /**
  * @ingroup app_group
- * \class ActionSheet
- * \brief A simple port of the iOS ActionSheet
+ * @class ActionSheet
+ * @brief A simple port of the iOS ActionSheet
  */
 class ActionSheet : public ViewController {
 public:
