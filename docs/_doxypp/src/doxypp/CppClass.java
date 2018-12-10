@@ -13,6 +13,8 @@ class CppClass {
 
 	String name;
 	String brief = "";
+	String detailedDesc = "";
+	List<String> baseclasses = new ArrayList<>();
 	List<CppClassSection> sections = new ArrayList<>();
 	
 	
@@ -20,22 +22,42 @@ class CppClass {
 		Xml xml = new Xml(path);		
 		Node compounddef = Xml.n(xml.root, "compounddef");
 		name = Xml.nt(compounddef, "compoundname");
+		List<Node> basecompoundRefs = Xml.ns(compounddef, "basecompoundref");
 		List<Node> sectionDefs = Xml.ns(compounddef, "sectiondef");
+		for (Node basecompoundRef : basecompoundRefs) {
+			baseclasses.add(basecompoundRef.getTextContent());
+		}
 		for (Node sectionDef : sectionDefs) {
 			CppClassSection section = new CppClassSection(sectionDef);
 			if (section.kind.equals("friend")) continue; // not interesting
 			sections.add(section);
+		}
+		Node briefNode = Xml.n(compounddef, "briefdescription");
+		if (briefNode != null) {
+			brief = briefNode.getTextContent();
+		}
+		Node detailedDescNode = Xml.n(compounddef, "detaileddescription");
+		if (detailedDescNode != null) {
+			detailedDesc = detailedDescNode.getTextContent();
 		}
 	}
 	
 	String toMarkdown() {
 		String s = "# " + name + "\n\n";
 		s += "```\n"
-		  +  "class " + name + "\n"
-		  +  "    : public Todo\n"
-		  +	 "```\n\n";
+		  +  "class " + name + "\n";
+		if (baseclasses.size() > 0) {
+			s += "    : ";
+			for (int i=0 ; i<baseclasses.size() ; i++) {
+				s += "public " + baseclasses.get(i) + ((i==(baseclasses.size()-1)) ? "" : ", ") + "\n";
+			}
+			s += "```\n\n";
+		}
 		if (brief.length() > 0) {
 			s += brief + "\n";
+		}
+		if (detailedDesc.length() > 0) {
+			s += detailedDesc + "\n";
 		}
 		for (CppClassSection section : sections) {
 			s += section.toMarkdown();
@@ -45,11 +67,19 @@ class CppClass {
 	String toHtml() {
 		String s = "<h1>" + name + "</h1>\n\n";
 		s += "<code>\n"
-		  +  "class " + name + "\n"
-		  +  "    : public Todo\n"
-		  +	 "</code>\n\n";
+		  +  "class " + name + "\n";
+		if (baseclasses.size() > 0) {
+			s += "    : ";
+			for (int i=0 ; i<baseclasses.size() ; i++) {
+				s += "public " + baseclasses.get(i) + ((i==(baseclasses.size()-1)) ? "" : ", ");
+			}
+		}
+		s += "</code>\n\n";
 		if (brief.length() > 0) {
 			s += "<p>" + brief + "</p>\n";
+		}
+		if (detailedDesc.length() > 0) {
+			s += "<p>" + detailedDesc + "</p>\n";
 		}
 		for (CppClassSection section : sections) {
 			s += section.toHtml();

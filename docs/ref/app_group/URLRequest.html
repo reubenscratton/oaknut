@@ -7,9 +7,12 @@ layout: default
 
 <code>
 class URLRequest
-    : public Todo
-</code>
+    : public Object</code>
 
+<p>
+General purpose async networking support.     </p>
+<p>
+Simple example: ```` URLRequest::get("http://www.foo.com/bar.json") ->handleJson([=](Variant* json) { // handle the json here }); ```` When you create a URLRequest it will begin, at the earliest, in the next event loop.     </p>
 <h2>Static creators</h2>
 
 <table>

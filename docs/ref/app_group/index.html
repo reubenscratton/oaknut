@@ -5,18 +5,25 @@ layout: default
 
 <h1>App</h1>
 
-<p>An Oaknut application has a single instance of the 'App' class, accessed through the global app variable.</p>
+<p>An Oaknut application has a single instance of the 'App' class, accessed through the global `app` variable.</p>
 
 <p>The app object controls access to resources and styling information.The application has one or more ViewControllers that represent the screens users interact with.</p>
 
 <h2>Classes</h2>
 
 <table>
-<tr><td>class <a href="NavigationController.html">NavigationController</a></td><td></td></tr>
-<tr><td>class <a href="StyleValue.html">StyleValue</a></td><td></td></tr>
-<tr><td>class <a href="Styleable.html">Styleable</a></td><td></td></tr>
-<tr><td>class <a href="URLRequest.html">URLRequest</a></td><td></td></tr>
-<tr><td>class <a href="ViewController.html">ViewController</a></td><td></td></tr>
-<tr><td>class <a href="ActionSheet.html">ActionSheet</a></td><td></td></tr>
-<tr><td>class <a href="App.html">App</a></td><td></td></tr>
+<tr><td>class <a href="NavigationController.html">NavigationController</a></td><td>
+Root view controller for typical mobile UX where there is a bar at the top of the screen and pages are pushed and popped in and out of view.     </td></tr>
+<tr><td>class <a href="StyleValue.html">StyleValue</a></td><td>
+Represents a value in the global style namespace.     </td></tr>
+<tr><td>class <a href="Styleable.html">Styleable</a></td><td>
+Abstract base class for objects that can have style values applied.     </td></tr>
+<tr><td>class <a href="URLRequest.html">URLRequest</a></td><td>
+General purpose async networking support.     </td></tr>
+<tr><td>class <a href="ViewController.html">ViewController</a></td><td>
+Owner of a set of views that collectively make up a discrete piece of user-facing behaviour.     </td></tr>
+<tr><td>class <a href="ActionSheet.html">ActionSheet</a></td><td>
+A simple port of the iOS ActionSheet.     </td></tr>
+<tr><td>class <a href="App.html">App</a></td><td>
+The single instance of this class is accessed through the global 'app' variable.     </td></tr>
 </table>

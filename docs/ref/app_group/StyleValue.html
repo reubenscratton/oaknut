@@ -7,9 +7,12 @@ layout: default
 
 <code>
 class StyleValue
-    : public Todo
 </code>
 
+<p>
+Represents a value in the global style namespace.     </p>
+<p>
+Not instantiated directly, use `App::getStyleValue()` and friends to get one, then use one of the accessors `intVal()`, `stringVal()` to get to the raw value.Is alarmingly similar to the 'variant' type with which it should probably be unified.     </p>
 <h2></h2>
 
 <table>

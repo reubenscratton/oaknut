@@ -7,9 +7,12 @@ layout: default
 
 <code>
 class LocalStore
-    : public Todo
-</code>
+    : public Object</code>
 
+<p>
+Extremely simple data storage concept.     </p>
+<p>
+As always, supporting the Web means making some non-obvious choices.IndexedDB is currently the standard web storage API, so Oaknut takes the basic idea and applies it to all platforms. The web implementation of LocalStore *is* IndexedDB, the non-web implementations are a tiny and very limited simulacrum that will be beefed up into something performant at some future date.Expected use is to have one LocalStore per persistable type, i.e. a class that implements `ISerializeToVariant`.NB: For simplicity's sake a primary key is mandatory, the key name must correspond to a variant field.     </p>
 <h2></h2>
 
 <table>

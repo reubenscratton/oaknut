@@ -7,9 +7,12 @@ layout: default
 
 <code>
 class App
-    : public Todo
-</code>
+    : public Object</code>
 
+<p>
+The single instance of this class is accessed through the global 'app' variable.     </p>
+<p>
+Base class for the background thread of a Worker.A 'worker' is a background thread that processes serialized input and produces serialized output.It is based on the Javascript API of the same name. Every worker has two components, the client (in-app) side and the background thread side. The `Worker` class is the client side that application code uses to instantiate and send and receive work from the background thread.Worker exists to provide a common abstraction of background processing that will work on web as well as it does natively. If the W3C and/or browser makers ever restore SharedArrayBuffer to the WebWorker context then we can revisit this cos pthreads will be usable everywhere then.Application code should not use this class directly, it is solely for implementing Workers.     </p>
 <h2>Time</h2>
 
 <table>

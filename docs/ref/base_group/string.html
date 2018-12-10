@@ -7,9 +7,12 @@ layout: default
 
 <code>
 class string
-    : public Todo
 </code>
 
+<p>
+An alternative to `stdstring`.     </p>
+<p>
+This is not quite a drop-in replacement. It is the same old byte buffer under the hood but this one treats the bytes as a UTF-8 encoded string and indexing is done by character offset rather than byte offset.Why? Because UTF-8 is by far the most popular way to encode text and I don't like the memory wasted by wide characters. In my experience the vast majority of strings are short and the runtime cost of finding character boundaries is acceptably small. The code is optimised for when byte count and char count are the same, i.e. the string contains no multibyte characters.NB: The allocated buffer is always one char larger than _cb and _cc indicate, to contain a terminating null character.Future: Support UTF-32 as well via pointer-tagging. Let the encoding be a settable property of the string which just defaults to UTF-8.     </p>
 <h2></h2>
 
 <table>
