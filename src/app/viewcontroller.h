@@ -17,9 +17,10 @@ public:
      When in a NavigationController this object provides title and button information to the nav bar 
      */
 	class NavigationController* _navigationController;
-    void setTitle(const string& title);
-    void setTitleView(View* titleView);
-    class ToolbarButton* addNavButton(bool rightSide, const string& assetPath, std::function<void()> onClick);
+    virtual string getTitle() const;
+    virtual void setTitle(const string& title);
+    virtual void setTitleView(View* titleView);
+    virtual class ToolbarButton* addNavButton(bool rightSide, const string& assetPath, std::function<void()> onClick);
 
 	ViewController();
     ~ViewController();

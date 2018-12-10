@@ -8,7 +8,7 @@
 			freeglut3-dev \
 			libcurl3-dev \
 			libopenal-dev \
-			clang
+			clang gobjc++
 
 # TODO: WTF Linux? These should all be completely unnecessary...
 SYSINCS:= -isystem /usr/include/gtk-3.0

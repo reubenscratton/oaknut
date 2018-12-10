@@ -13,10 +13,6 @@
 #include	<GL/gl.h>
 #include	<GL/glext.h>
 #include	<GL/glu.h>
-//#include <cairo/cairo.h>
-#include <hb.h>
-#include <hb-ft.h>
-#include <cairo-ft.h>
 #include <cairo.h>
 #include <curl/curl.h>
 

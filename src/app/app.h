@@ -114,13 +114,13 @@ public:
     /** Gets a named integer setting */
     int getIntSetting(const char* key, const int defaultValue);
 
-    /** Sets a named integer setting. NB: call saveSettings() when finished updating settings */
+    /** Sets a named integer setting. */
     void setIntSetting(const char* key, int value);
     
     /** Gets a named string setting */
     string getStringSetting(const char* key, const char* defaultValue);
 
-    /** Sets a named string setting. NB: call saveSettings() when finished updating settings. */
+    /** Sets a named string setting. */
     void setStringSetting(const char* key, const char* value);
     
     /**@}*/

@@ -31,7 +31,7 @@ protected:
 public:
     static Window* create();
 
-	sp<class ViewController> _rootViewController;
+    sp<class ViewController> _rootViewController;
 	vector<sp<ViewController>> _viewControllers;
 	float _scale;
     class MotionTracker {

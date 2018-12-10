@@ -77,7 +77,8 @@ using std::function;
 #ifdef PLATFORM_APPLE
 #define PLATFORM apple
 #endif
-#ifdef PLATFORM_LINUX
+#if PLATFORM_LINUX
+#undef linux
 #define PLATFORM linux
 #endif
 #define __xincstr(x) #x

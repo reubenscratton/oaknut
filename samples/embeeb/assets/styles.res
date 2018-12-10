@@ -22,11 +22,11 @@ keyboard: {
     }
     labels-small: {
         forecolor: white
-        font-size: 12dp
+        font-size: 14dp
     }
     labels-tiny: {
         forecolor: white
-        font-size: 10dp
+        font-size: 14dp
     }
 }
 

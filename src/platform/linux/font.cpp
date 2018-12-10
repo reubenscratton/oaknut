@@ -8,49 +8,58 @@
 
 #include <oaknut.h>
 
-static FT_Library ft_library;
 static cairo_t* cairo_for_measuring;
 
 
 FontLinux::FontLinux(const string& fontAssetPath, float size, float weight) : Font(fontAssetPath, size, weight) {
-    size = app.dp(_size);
-    //PangoFontMap* fm = pango_cairo_font_map_get_default();
-    //PangoFontDescription* pfd = pango_font_description_new();
-    //pango_font_description_set_family(pfd, "serif");
-    //pango_font_description_set_size(pfd, (int)size);
-    //_pangoContext = pango_context_new();
-    //_pangoFont = pango_font_map_load_font (fm, _pangoContext, pfd);
-    if (!ft_library) {
-        FT_Init_FreeType(&ft_library);
+    PangoFontDescription* desc = pango_font_description_new();
+    pango_font_description_set_family(desc, "sans-serif");
+    pango_font_description_set_size(desc, (int)size);
+    pango_font_description_set_weight(desc, (PangoWeight)(int)weight);
+
+    auto context = gdk_pango_context_get_for_screen(gdk_screen_get_default ());
+
+    PangoFontMap* fontMap = pango_cairo_font_map_get_default();
+    PangoFont* pango_font = pango_font_map_load_font(fontMap, context, desc);
+    _scaled_font = pango_cairo_font_get_scaled_font ((PangoCairoFont *)pango_font);
+
+    if (!cairo_for_measuring) {
         BitmapLinux* bmp2 = new BitmapLinux(1,1,BITMAPFORMAT_RGBA32); // lives forever
         cairo_for_measuring = bmp2->getCairo();
     }
-    
-    FT_Face face;
-    FT_New_Face(ft_library, "/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-R.ttf", 0, &face);
-    FT_Set_Char_Size(face, 0, (int)size<<6,0,0);
-    _hb_font = hb_ft_font_create(face, NULL);
-    _cairo_font_face = cairo_ft_font_face_create_for_ft_face(face, 0);
+
+    /*PangoFontFamily **families;
+    int fontCount = 0;
+    pango_context_list_families(context, &families, &fontCount);
+
+    printf("%d fonts found\n", fontCount);
+    for(int i=0; i<fontCount; i++)
+    {
+        printf("[%s]\n", pango_font_family_get_name (families[i]));
+    }
+    */
+
+
 }
     
 Glyph* FontLinux::createGlyph(char32_t ch, Atlas* atlas) {
-    app.log("Creating glyph for char code %d in font %X", ch, this);
-    //UniChar uch = ch;
-    
-    hb_codepoint_t glyphIndex = 0;
-    hb_bool_t r = hb_font_get_glyph (_hb_font, (hb_codepoint_t)ch, 0, &glyphIndex);
-    
-    
+
+    cairo_set_scaled_font (cairo_for_measuring, _scaled_font);
+
+    cairo_glyph_t cairo_glyph[1];
+    cairo_glyph_t* pp = &cairo_glyph[0];
+    int num_glyphs = 1;
+    cairo_scaled_font_text_to_glyphs(_scaled_font, 0,0, (const char*)&ch, 1, &pp, &num_glyphs, NULL, NULL, NULL);
+
+
     // Measure the glyph
-    cairo_glyph_t cairo_glyph;
-    cairo_glyph.index = glyphIndex;
-    cairo_set_font_face(cairo_for_measuring, _cairo_font_face);
-    cairo_set_font_size(cairo_for_measuring, app.dp(_size));
+    cairo_set_font_size(cairo_for_measuring, _size);
     cairo_text_extents_t cairo_text_extents;
-    cairo_glyph_extents(cairo_for_measuring, &cairo_glyph, 1, &cairo_text_extents);
-    
+    cairo_glyph_extents(cairo_for_measuring, cairo_glyph, 1, &cairo_text_extents);
+
+
     // Reserve a space in the glyph atlas
-    Glyph* glyph = new Glyph(this, ch, glyphIndex);
+    Glyph* glyph = new Glyph(this, ch, cairo_glyph->index);
     glyph->advance = {(float)cairo_text_extents.x_advance, (float)cairo_text_extents.y_advance};
     glyph->bitmapWidth = ceilf(cairo_text_extents.width);
     glyph->bitmapHeight = ceilf(cairo_text_extents.height);
@@ -61,14 +70,15 @@ Glyph* FontLinux::createGlyph(char32_t ch, Atlas* atlas) {
     // Get the atlas bitmap context
     BitmapLinux* bitmap = (BitmapLinux*)glyph->atlasNode->page->_bitmap._obj;
     cairo_t* cr = bitmap->getCairo();
-    cairo_glyph.x = glyph->atlasNode->rect.origin.x - glyph->bitmapLeft;
-    cairo_glyph.y = glyph->atlasNode->rect.origin.y
+    cairo_glyph->x = glyph->atlasNode->rect.origin.x - glyph->bitmapLeft;
+    cairo_glyph->y = glyph->atlasNode->rect.origin.y
             + glyph->atlasNode->rect.size.height
             + glyph->bitmapTop;
     cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
-    cairo_set_font_face(cr, _cairo_font_face);
-    cairo_set_font_size(cr, app.dp(_size));
-    cairo_show_glyphs(cr, &cairo_glyph, 1);
+
+    cairo_set_scaled_font (cr, _scaled_font);
+    cairo_set_font_size(cr, _size);
+    cairo_show_glyphs(cr, cairo_glyph, 1);
     //cairo_surface_flush(bitmap->_cairo_surface);
     
     bitmap->_needsUpload = true;

@@ -119,6 +119,9 @@ ToolbarButton* ViewController::addNavButton(bool rightSide, const string& assetP
     return button;
 }
 
+string ViewController::getTitle() const {
+    return _title;
+}
 void ViewController::setTitle(const string& title) {
     if (_titleView) {
         _titleView->removeFromParent();

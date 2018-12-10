@@ -9,8 +9,7 @@
 class FontLinux : public Font {
 public:
     
-    hb_font_t* _hb_font;
-    cairo_font_face_t* _cairo_font_face;
+    cairo_scaled_font_t* _scaled_font;
     
     FontLinux(const string& fontAssetPath, float size, float weight);
     Glyph* createGlyph(char32_t ch, Atlas* atlas);

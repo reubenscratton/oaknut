@@ -33,7 +33,6 @@ add_custom_target(${PROJECT_NAME}_android COMMAND make -C ${PROJECT_SOURCE_DIR}
 # Linux
 if(UNIX AND NOT APPLE)
 add_custom_target(${PROJECT_NAME}_linux COMMAND make -C ${PROJECT_SOURCE_DIR}
-        PLATFORM=linux
         PROJECT_NAME=${PROJECT_NAME}
         CONFIG=$ENV{CONFIG}
         SOURCES ${SOURCES})

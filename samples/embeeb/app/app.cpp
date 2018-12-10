@@ -12,6 +12,7 @@
 
 void App::main() {
 	NavigationController* rootVC = new NavigationController();
+	rootVC->setTitle("emBeeb");
     rootVC->pushViewController(new MainViewController());
     _window->setRootViewController(rootVC);
 

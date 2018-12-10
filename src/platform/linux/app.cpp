@@ -36,5 +36,43 @@ ByteBuffer* App::loadAsset(const char* assetPath) {
 }
 
 
+static variant g_settings;
+static bool g_settingsLoaded;
+
+static void ensureSettingsLoaded() {
+    if (!g_settingsLoaded) {
+        g_settingsLoaded = true;
+
+    }
+
+}
+
+/** Gets a named integer setting */
+int App::getIntSetting(const char* key, const int defaultValue) {
+    ensureSettingsLoaded();
+    auto val = g_settings.get(key);
+    return val ? val->intVal() : defaultValue;
+}
+
+/** Sets a named integer setting. */
+void App::setIntSetting(const char* key, int value) {
+    ensureSettingsLoaded();
+    g_settings.set(key, value);
+}
+
+/** Gets a named string setting */
+string App::getStringSetting(const char* key, const char* defaultValue) {
+    ensureSettingsLoaded();
+    auto val = g_settings.get(key);
+    return val ? val->stringVal() : defaultValue;
+}
+
+/** Sets a named string setting. NB: call saveSettings() when finished updating settings. */
+void App::setStringSetting(const char* key, const char* value) {
+    ensureSettingsLoaded();
+    g_settings.set(key, value);
+}
+
+
 
 #endif

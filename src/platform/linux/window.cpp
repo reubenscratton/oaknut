@@ -14,11 +14,11 @@ public:
     
     GtkWidget* glarea;
     GtkWidget* glwindow;
+    float _scale;
 
     WindowLinux() {
         glwindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-        gtk_window_set_title(GTK_WINDOW(glwindow), "Scene"); // todo!
-        
+
         glarea = gtk_gl_area_new();
         gtk_gl_area_set_required_version(GTK_GL_AREA(glarea), 3, 2);
         g_signal_connect (glarea, "render", G_CALLBACK (render), this);
@@ -31,6 +31,7 @@ public:
                               GDK_KEY_RELEASE_MASK|
                               GDK_POINTER_MOTION_MASK|
                               GDK_POINTER_MOTION_HINT_MASK);
+        g_signal_connect(glarea, "realize", G_CALLBACK(glarea_realize), this);
         g_signal_connect(glarea, "size_allocate", G_CALLBACK(glarea_size_allocate), this);
         g_signal_connect(glarea, "motion_notify_event", G_CALLBACK(glarea_mouse_event), this);
         g_signal_connect(glarea, "button_press_event", G_CALLBACK(glarea_mouse_event), this);
@@ -47,6 +48,10 @@ public:
         
         gtk_widget_grab_focus(GTK_WIDGET(glarea));
 
+    }
+    void setRootViewController(ViewController* viewController) override {
+        Window::setRootViewController(viewController);
+        gtk_window_set_title(GTK_WINDOW(glwindow), viewController->getTitle().data());
     }
     void show() override {
         gtk_widget_set_size_request(glarea,
@@ -67,9 +72,17 @@ public:
 
     
     // Static callbacks
+    static void glarea_realize(GtkWidget *widget, gpointer callback_data) {
+        WindowLinux* window = (WindowLinux*)callback_data;
+        gtk_gl_area_make_current (GTK_GL_AREA(window->glarea));
+
+    }
     static void glarea_size_allocate(GtkWidget *widget, GdkRectangle *allocation, gpointer callback_data) {
         WindowLinux* window = (WindowLinux*)callback_data;
-        window->resizeSurface(allocation->width, allocation->height, 1);
+        GdkScreen* screen = gdk_screen_get_default();
+        window->_scale = gdk_screen_get_monitor_scale_factor(screen, 0);
+        double res = gdk_screen_get_resolution(screen);
+        window->resizeSurface(allocation->width*window->_scale, allocation->height*window->_scale, 160.0/res);
     }
     static gboolean render(GtkGLArea *area, GdkGLContext *context, gpointer callback_data)  {
         WindowLinux* window = (WindowLinux*)callback_data;
@@ -130,9 +143,10 @@ public:
         //app.log("x=%d y=%d", x, y);
         INPUTEVENT inputEvent;
         inputEvent.deviceType = INPUTEVENT::Mouse;
+        inputEvent.deviceIndex = 0;
         inputEvent.type = eventType;
-        inputEvent.pt.x = x;
-        inputEvent.pt.y = y;
+        inputEvent.pt.x = x * window->_scale;
+        inputEvent.pt.y = y * window->_scale;
         inputEvent.time = app.currentMillis();
         window->dispatchInputEvent(inputEvent);
         
