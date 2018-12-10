@@ -16,7 +16,7 @@ static jmethodID jmidUnschedule;
 
 class OSTimer : public Timer {
 public:
-    OSTimer(const TimerDelegate& del, int intervalMillis, bool repeats) : Timer(del, intervalMillis, repeats) {
+    OSTimer(const std::function<void()>& del, int intervalMillis, bool repeats) : Timer(del, intervalMillis, repeats) {
         JNIEnv *env = getJNIEnv();
         if (!jclassTimer) {
             jclassTimer = env->FindClass(PACKAGE "/Timer");
@@ -48,7 +48,7 @@ protected:
 };
 
 
-Timer* Timer::start(const TimerDelegate& del, int intervalMillis, bool repeats) {
+Timer* Timer::start(const std::function<void()>& del, int intervalMillis, bool repeats) {
     return new OSTimer(del, intervalMillis, repeats);
 }
 

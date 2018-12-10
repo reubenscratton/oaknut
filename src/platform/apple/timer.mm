@@ -18,7 +18,7 @@ static TimerTarget* s_timerTarget;
 
 class OSTimer : public Timer {
 public:
-    OSTimer(const TimerDelegate& del, int intervalMillis, bool repeats) : Timer(del, intervalMillis, repeats) {
+    OSTimer(const std::function<void()>& del, int intervalMillis, bool repeats) : Timer(del, intervalMillis, repeats) {
         _timer = [NSTimer scheduledTimerWithTimeInterval:intervalMillis/1000.0 target:s_timerTarget selector:@selector(timerEvent:) userInfo:[NSValue valueWithPointer:this] repeats:repeats];
         //del->_osobj = (void*)CFBridgingRetain(timer);
     }
@@ -51,7 +51,7 @@ protected:
 
 @end
 
-Timer* Timer::start(const TimerDelegate& del, int intervalMillis, bool repeats) {
+Timer* Timer::start(const std::function<void()>& del, int intervalMillis, bool repeats) {
     return new OSTimer(del, intervalMillis, repeats);
 }
 

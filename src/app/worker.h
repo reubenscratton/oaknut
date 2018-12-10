@@ -6,8 +6,13 @@
 //
 
 /**
- A 'worker' can be regarded as a distinct process that consumes and produces binary data.
- Like a thread but without shared memory, the inputs and outputs are serialized.
+ * @ingroup app_group
+ * \class App
+ * \brief A 'worker' is a background thread that processes serialized input and produces
+ serialized output. It is based on the Javascript API of the same name. Every worker
+ has two components, the client (in-app) side and the background thread side. The
+ `Worker` class is the client side that application code uses to instantiate and send
+ and receive work from the background thread.
  
  Worker exists to provide a common abstraction of background processing that will work on web
  as well as it does natively. If the W3C and/or browser makers ever restore SharedArrayBuffer
@@ -18,12 +23,18 @@
 class Worker : public Object {
 public:
     
-    // The client (app) API
+    /** Constructor. The string parameter is registered name of the background component*/
     Worker(const string& implName);
     ~Worker();
+    
+    /** Start the background thread, passing it some configuration */
     virtual void start(const variant& config);
+    
+    /** Send some work to the background thread, with a callback once the work completes */
     virtual void process(const variant& data_in,
                          std::function<void(const variant&)> callback);
+    
+    /** Stop the background thread */
     virtual void stop(std::function<void()> onStop);
     
 
@@ -50,13 +61,23 @@ protected:
 };
 
 
-// The worker API. App code must not try to call these.
+/**
+ * @ingroup app_group
+ * \class App
+ * \brief Base class for the background thread of a Worker. Application code should not
+ use this class directly, it is solely for implementing Workers.
+*/
 
 class WorkerImpl : public Object {
 public:
     
+    /** Corresponds to Worker::start() */
     virtual void start_(const variant& config);
+
+    /** Corresponds to Worker::process() */
     virtual variant process_(const variant& data_in)=0;
+
+    /** Corresponds to Worker::stop() */
     virtual void stop_();
 
 };

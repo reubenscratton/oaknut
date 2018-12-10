@@ -6,7 +6,9 @@
 //
 
 /**
- Abstract base class for a thing that can read and write elementary data
+ * @ingroup data_group
+ * @class Stream
+ * @brief Abstract base class for a thing that can read and write elementary data
  */
 class Stream : public Object {
 public:

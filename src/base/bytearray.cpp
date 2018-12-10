@@ -78,18 +78,8 @@ void bytearray::resize(int32_t newSize) {
     _p = (uint8_t*)realloc(_p, _cb);
 }
 
-string bytearray::toString(bool copy) {
-    if (copy) {
-        return string((char*)_p, _cb);
-    }
-    // Move the data to ownership of the string without making a copy
-    string str;
-    str._p = (char*)_p;
-    str._cb = _cb;
-    _p = NULL;
-    _cb = 0;
-    return str;
-    
+string bytearray::toString() {
+    return string((char*)_p, _cb);
 }
 
 void bytearray::detach() {

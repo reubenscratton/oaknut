@@ -10,6 +10,13 @@ class App
     : public Todo
 </code>
 
+<h2>Time</h2>
+
+<table>
+<tr><td>TIMESTAMP <a href="todo">currentMillis</a>()</td><td>Gets the current system time, in milliseconds.</td></tr>
+<tr><td><a href="classstring.html">string</a> <a href="todo">friendlyTimeString</a>(TIMESTAMP timestamp)</td><td></td></tr>
+<table>
+
 <h2>Logging</h2>
 
 <table>
@@ -17,14 +24,23 @@ class App
 <tr><td>void <a href="todo">warn</a>(char const * fmt, ... )</td><td>Log a warning message prefixed with "Warning: ".</td></tr>
 <table>
 
+<h2>File paths</h2>
+
+<table>
+<tr><td><a href="classstring.html">string</a> <a href="todo">getPathForGeneralFiles</a>()</td><td></td></tr>
+<tr><td><a href="classstring.html">string</a> <a href="todo">getPathForUserDocuments</a>()</td><td></td></tr>
+<tr><td><a href="classstring.html">string</a> <a href="todo">getPathForCacheFiles</a>()</td><td></td></tr>
+<tr><td><a href="classstring.html">string</a> <a href="todo">getPathForTemporaryFiles</a>()</td><td></td></tr>
+<table>
+
 <h2>Styles</h2>
 
 <table>
 <tr><td>void <a href="todo">loadStyleAsset</a>(const <a href="classstring.html">string</a> & assetPath)</td><td>Load a style asset from the assets directory.</td></tr>
-<tr><td>const StyleValue * <a href="todo">getStyleValue</a>(const <a href="classstring.html">string</a> & keypath)</td><td>Get a named style value.</td></tr>
+<tr><td>const <a href="class_style_value.html">StyleValue</a> * <a href="todo">getStyleValue</a>(const <a href="classstring.html">string</a> & keypath)</td><td>Get a named style value.</td></tr>
 <tr><td><a href="classstring.html">string</a> <a href="todo">getStyleString</a>(const <a href="classstring.html">string</a> & key, const char * defaultString)</td><td>Get a named style value and coerce to a string.</td></tr>
 <tr><td>float <a href="todo">getStyleFloat</a>(const <a href="classstring.html">string</a> & key)</td><td>Get a named style value and coerce to a float.</td></tr>
-<tr><td>COLOR <a href="todo">getStyleColor</a>(const <a href="classstring.html">string</a> & key)</td><td>Get a named style value and coerce to a COLOR.</td></tr>
+<tr><td><a href="class_c_o_l_o_r.html">COLOR</a> <a href="todo">getStyleColor</a>(const <a href="classstring.html">string</a> & key)</td><td>Get a named style value and coerce to a COLOR.</td></tr>
 <table>
 
 <h2>Layout</h2>
@@ -67,12 +83,6 @@ class App
 <tr><td> <a href="todo">App</a>()</td><td></td></tr>
 <tr><td>void <a href="todo">main</a>()</td><td>Application entry point.</td></tr>
 <tr><td>class <a href="class_byte_buffer.html">ByteBuffer</a> * <a href="todo">loadAsset</a>(const char * assetPath)</td><td>Load a file from the assets directory, synchronously.</td></tr>
-<tr><td>TIMESTAMP <a href="todo">currentMillis</a>()</td><td>Gets the current system time, in milliseconds.</td></tr>
-<tr><td><a href="classstring.html">string</a> <a href="todo">getPathForGeneralFiles</a>()</td><td></td></tr>
-<tr><td><a href="classstring.html">string</a> <a href="todo">getPathForUserDocuments</a>()</td><td></td></tr>
-<tr><td><a href="classstring.html">string</a> <a href="todo">getPathForCacheFiles</a>()</td><td></td></tr>
-<tr><td><a href="classstring.html">string</a> <a href="todo">getPathForTemporaryFiles</a>()</td><td></td></tr>
-<tr><td><a href="classstring.html">string</a> <a href="todo">friendlyTimeString</a>(TIMESTAMP timestamp)</td><td></td></tr>
 <table>
 
 <h2></h2>
@@ -83,17 +93,35 @@ class App
 
 <h1>Methods</h1>
 
+<h3>currentMillis</h3>
+<code>TIMESTAMP <a href="todo">currentMillis</a>()</code><p></p>
+
+<h3>friendlyTimeString</h3>
+<code><a href="classstring.html">string</a> <a href="todo">friendlyTimeString</a>(TIMESTAMP timestamp)</code><p></p>
+
 <h3>log</h3>
 <code>void <a href="todo">log</a>(char const * fmt, ... )</code><p></p>
 
 <h3>warn</h3>
 <code>void <a href="todo">warn</a>(char const * fmt, ... )</code><p></p>
 
+<h3>getPathForGeneralFiles</h3>
+<code><a href="classstring.html">string</a> <a href="todo">getPathForGeneralFiles</a>()</code><p></p>
+
+<h3>getPathForUserDocuments</h3>
+<code><a href="classstring.html">string</a> <a href="todo">getPathForUserDocuments</a>()</code><p></p>
+
+<h3>getPathForCacheFiles</h3>
+<code><a href="classstring.html">string</a> <a href="todo">getPathForCacheFiles</a>()</code><p></p>
+
+<h3>getPathForTemporaryFiles</h3>
+<code><a href="classstring.html">string</a> <a href="todo">getPathForTemporaryFiles</a>()</code><p></p>
+
 <h3>loadStyleAsset</h3>
 <code>void <a href="todo">loadStyleAsset</a>(const <a href="classstring.html">string</a> & assetPath)</code><p>Generally used in App::main()</p>
 
 <h3>getStyleValue</h3>
-<code>const StyleValue * <a href="todo">getStyleValue</a>(const <a href="classstring.html">string</a> & keypath)</code><p></p>
+<code>const <a href="class_style_value.html">StyleValue</a> * <a href="todo">getStyleValue</a>(const <a href="classstring.html">string</a> & keypath)</code><p></p>
 
 <h3>getStyleString</h3>
 <code><a href="classstring.html">string</a> <a href="todo">getStyleString</a>(const <a href="classstring.html">string</a> & key, const char * defaultString)</code><p></p>
@@ -102,7 +130,7 @@ class App
 <code>float <a href="todo">getStyleFloat</a>(const <a href="classstring.html">string</a> & key)</code><p></p>
 
 <h3>getStyleColor</h3>
-<code>COLOR <a href="todo">getStyleColor</a>(const <a href="classstring.html">string</a> & key)</code><p></p>
+<code><a href="class_c_o_l_o_r.html">COLOR</a> <a href="todo">getStyleColor</a>(const <a href="classstring.html">string</a> & key)</code><p></p>
 
 <h3>layoutInflate</h3>
 <code>class <a href="class_view.html">View</a> * <a href="todo">layoutInflate</a>(const <a href="classstring.html">string</a> & assetPath)</code><p>See the Layout Guide for details</p>
@@ -123,13 +151,13 @@ class App
 <code>int <a href="todo">getIntSetting</a>(const char * key, const int defaultValue)</code><p></p>
 
 <h3>setIntSetting</h3>
-<code>void <a href="todo">setIntSetting</a>(const char * key, int value)</code><p>NB: call saveSettings() when finished updating settings</p>
+<code>void <a href="todo">setIntSetting</a>(const char * key, int value)</code><p></p>
 
 <h3>getStringSetting</h3>
 <code><a href="classstring.html">string</a> <a href="todo">getStringSetting</a>(const char * key, const char * defaultValue)</code><p></p>
 
 <h3>setStringSetting</h3>
-<code>void <a href="todo">setStringSetting</a>(const char * key, const char * value)</code><p>NB: call saveSettings() when finished updating settings.</p>
+<code>void <a href="todo">setStringSetting</a>(const char * key, const char * value)</code><p></p>
 
 <h3>App</h3>
 <code> <a href="todo">App</a>()</code><p></p>
@@ -139,24 +167,6 @@ class App
 
 <h3>loadAsset</h3>
 <code>class <a href="class_byte_buffer.html">ByteBuffer</a> * <a href="todo">loadAsset</a>(const char * assetPath)</code><p>Since this does IO it's best to limit use to app startup and background threads</p>
-
-<h3>currentMillis</h3>
-<code>TIMESTAMP <a href="todo">currentMillis</a>()</code><p></p>
-
-<h3>getPathForGeneralFiles</h3>
-<code><a href="classstring.html">string</a> <a href="todo">getPathForGeneralFiles</a>()</code><p></p>
-
-<h3>getPathForUserDocuments</h3>
-<code><a href="classstring.html">string</a> <a href="todo">getPathForUserDocuments</a>()</code><p></p>
-
-<h3>getPathForCacheFiles</h3>
-<code><a href="classstring.html">string</a> <a href="todo">getPathForCacheFiles</a>()</code><p></p>
-
-<h3>getPathForTemporaryFiles</h3>
-<code><a href="classstring.html">string</a> <a href="todo">getPathForTemporaryFiles</a>()</code><p></p>
-
-<h3>friendlyTimeString</h3>
-<code><a href="classstring.html">string</a> <a href="todo">friendlyTimeString</a>(TIMESTAMP timestamp)</code><p></p>
 
 <h3>postToMainThread</h3>
 <code><a href="class_task.html">Task</a> * <a href="todo">postToMainThread</a>(std::function< void(void)> func, int delay)</code><p></p>

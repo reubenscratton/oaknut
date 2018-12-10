@@ -10,33 +10,32 @@ class URLRequest
     : public Todo
 </code>
 
+<h2>Static creators</h2>
+
+<table>
+<tr><td><a href="class_u_r_l_request.html">URLRequest</a> * <a href="todo">get</a>(const <a href="classstring.html">string</a> & url, int flags)</td><td>Create and return a GET request.</td></tr>
+<tr><td><a href="class_u_r_l_request.html">URLRequest</a> * <a href="todo">post</a>(const <a href="classstring.html">string</a> & url, const <a href="classbytearray.html">bytearray</a> & body)</td><td>Create and return a POST request.</td></tr>
+<tr><td><a href="class_u_r_l_request.html">URLRequest</a> * <a href="todo">patch</a>(const <a href="classstring.html">string</a> & url, const <a href="classbytearray.html">bytearray</a> & body)</td><td>Create and return a PATCH request.</td></tr>
+<tr><td><a href="class_u_r_l_request.html">URLRequest</a> * <a href="todo">createAndStart</a>(const <a href="classstring.html">string</a> & url, const <a href="classstring.html">string</a> & method, const <a href="classbytearray.html">bytearray</a> & body, int flags)</td><td>Create and return a request.</td></tr>
+<table>
+
+<h2>Handling response data</h2>
+
+<table>
+<tr><td>void <a href="todo">handleData</a>(std::function< void(<a href="class_u_r_l_request.html">URLRequest</a> *req)> handler)</td><td></td></tr>
+<tr><td>void <a href="todo">handleJson</a>(std::function< void(<a href="class_u_r_l_request.html">URLRequest</a> *req, const <a href="classvariant.html">variant</a> &)> handler)</td><td></td></tr>
+<tr><td>void <a href="todo">handleBitmap</a>(std::function< void(<a href="class_u_r_l_request.html">URLRequest</a> *req, <a href="class_bitmap.html">Bitmap</a> *)> handler)</td><td></td></tr>
+<table>
+
 <h2></h2>
 
 <table>
-<table>
-
-<h2></h2>
-
-<table>
-<table>
-
-<h2></h2>
-
-<table>
-<tr><td><a href="class_u_r_l_request.html">URLRequest</a> * <a href="todo">get</a>(const <a href="classstring.html">string</a> & url, int flags)</td><td></td></tr>
-<tr><td><a href="class_u_r_l_request.html">URLRequest</a> * <a href="todo">post</a>(const <a href="classstring.html">string</a> & url, const <a href="classbytearray.html">bytearray</a> & body)</td><td></td></tr>
-<tr><td><a href="class_u_r_l_request.html">URLRequest</a> * <a href="todo">patch</a>(const <a href="classstring.html">string</a> & url, const <a href="classbytearray.html">bytearray</a> & body)</td><td></td></tr>
-<tr><td><a href="class_u_r_l_request.html">URLRequest</a> * <a href="todo">createAndStart</a>(const <a href="classstring.html">string</a> & url, const <a href="classstring.html">string</a> & method, const <a href="classbytearray.html">bytearray</a> & body, int flags)</td><td></td></tr>
 <table>
 
 <h2></h2>
 
 <table>
 <tr><td>void <a href="todo">setHeader</a>(const <a href="classstring.html">string</a> & headerName, const <a href="classstring.html">string</a> & headerValue)</td><td></td></tr>
-<tr><td>void <a href="todo">handleData</a>(std::function< void(<a href="class_u_r_l_request.html">URLRequest</a> *req)> handler)</td><td></td></tr>
-<tr><td>void <a href="todo">handleJson</a>(std::function< void(<a href="class_u_r_l_request.html">URLRequest</a> *req, const <a href="classvariant.html">variant</a> &)> handler)</td><td></td></tr>
-<tr><td>void <a href="todo">handleBitmap</a>(std::function< void(<a href="class_u_r_l_request.html">URLRequest</a> *req, Bitmap *)> handler)</td><td></td></tr>
-<tr><td>void <a href="todo">run</a>()</td><td></td></tr>
 <tr><td>void <a href="todo">cancel</a>()</td><td></td></tr>
 <tr><td>bool <a href="todo">error</a>()</td><td></td></tr>
 <tr><td>int <a href="todo">getHttpStatus</a>()</td><td></td></tr>
@@ -46,6 +45,7 @@ class URLRequest
 <h2></h2>
 
 <table>
+<tr><td>void <a href="todo">run</a>()</td><td></td></tr>
 <tr><td> <a href="todo">URLRequest</a>(const <a href="classstring.html">string</a> & url, const <a href="classstring.html">string</a> & method, const <a href="classbytearray.html">bytearray</a> & body, int flags)</td><td></td></tr>
 <tr><td> <a href="todo">~URLRequest</a>()</td><td></td></tr>
 <tr><td>void <a href="todo">dispatchResult</a>(int httpStatus, const map< <a href="classstring.html">string</a>, <a href="classstring.html">string</a> > & responseHeaders)</td><td></td></tr>
@@ -71,9 +71,6 @@ class URLRequest
 <h3>createAndStart</h3>
 <code><a href="class_u_r_l_request.html">URLRequest</a> * <a href="todo">createAndStart</a>(const <a href="classstring.html">string</a> & url, const <a href="classstring.html">string</a> & method, const <a href="classbytearray.html">bytearray</a> & body, int flags)</code><p></p>
 
-<h3>setHeader</h3>
-<code>void <a href="todo">setHeader</a>(const <a href="classstring.html">string</a> & headerName, const <a href="classstring.html">string</a> & headerValue)</code><p></p>
-
 <h3>handleData</h3>
 <code>void <a href="todo">handleData</a>(std::function< void(<a href="class_u_r_l_request.html">URLRequest</a> *req)> handler)</code><p></p>
 
@@ -81,10 +78,10 @@ class URLRequest
 <code>void <a href="todo">handleJson</a>(std::function< void(<a href="class_u_r_l_request.html">URLRequest</a> *req, const <a href="classvariant.html">variant</a> &)> handler)</code><p></p>
 
 <h3>handleBitmap</h3>
-<code>void <a href="todo">handleBitmap</a>(std::function< void(<a href="class_u_r_l_request.html">URLRequest</a> *req, Bitmap *)> handler)</code><p></p>
+<code>void <a href="todo">handleBitmap</a>(std::function< void(<a href="class_u_r_l_request.html">URLRequest</a> *req, <a href="class_bitmap.html">Bitmap</a> *)> handler)</code><p></p>
 
-<h3>run</h3>
-<code>void <a href="todo">run</a>()</code><p></p>
+<h3>setHeader</h3>
+<code>void <a href="todo">setHeader</a>(const <a href="classstring.html">string</a> & headerName, const <a href="classstring.html">string</a> & headerValue)</code><p></p>
 
 <h3>cancel</h3>
 <code>void <a href="todo">cancel</a>()</code><p></p>
@@ -97,6 +94,9 @@ class URLRequest
 
 <h3>getResponseData</h3>
 <code>const <a href="classbytearray.html">bytearray</a> & <a href="todo">getResponseData</a>()</code><p></p>
+
+<h3>run</h3>
+<code>void <a href="todo">run</a>()</code><p></p>
 
 <h3>URLRequest</h3>
 <code> <a href="todo">URLRequest</a>(const <a href="classstring.html">string</a> & url, const <a href="classstring.html">string</a> & method, const <a href="classbytearray.html">bytearray</a> & body, int flags)</code><p></p>

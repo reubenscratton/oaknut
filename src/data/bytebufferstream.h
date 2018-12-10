@@ -5,6 +5,13 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+
+/**
+ * @ingroup data_group
+ * @class ByteBufferStream
+ * @brief A `Stream` that acts on a `ByteBuffer`.
+ */
+
 class ByteBufferStream : public Stream {
 public:
     ByteBuffer _data;

@@ -8,7 +8,7 @@
 /**
  * @ingroup app_group
  * @brief Root view controller for typical mobile UX where there is a bar at the top of the screen
- * and pages are pushed and popped into view.
+ * and pages are pushed and popped in and out of view.
  */
 class NavigationController : public ViewController {
 public:

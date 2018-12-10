@@ -19,6 +19,7 @@ Worker::Worker(const string& name) {
 Worker::Worker() {
 }
 Worker::~Worker() {
+    assert(!_started); // should we stop() implicitly on destruction...?
 #if PLATFORM_WEB
     emscripten_destroy_worker(_worker);
 #endif

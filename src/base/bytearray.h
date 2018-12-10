@@ -10,7 +10,7 @@
  * @class bytearray
  * @brief An alternative to std::vector<uint8_t>
  *
- * A simple array of bytes as distinct from a string.
+ * A simple array of bytes as distinct from a string. Exists because I felt it ought to.
  */
 
 class bytearray {
@@ -62,7 +62,7 @@ public:
     void resize(int32_t newSize);
     void detach();
     
-    class string toString(bool copy);
+    class string toString();
     
 protected:
     uint8_t* _p;

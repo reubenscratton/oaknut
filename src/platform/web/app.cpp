@@ -20,6 +20,30 @@ string App::currentCountryCode() const {
     return "GB"; // todo
 }
 
+
+ByteBuffer* App::loadAsset(const char* assetPath) {
+    
+    string str = "/assets/";
+    str.append(assetPath);
+    FILE* asset = fopen(str.data(), "rb");
+    if (!asset) {
+        app.log("Failed to open asset: %s", assetPath);
+        return NULL;
+    }
+    
+    ByteBuffer* data = new ByteBuffer();
+    fseek (asset, 0, SEEK_END);
+    data->cb = ftell(asset);
+    data->data = (uint8_t*) malloc (sizeof(char)*data->cb);
+    fseek ((FILE*)asset, 0, SEEK_SET);
+    size_t read = fread(data->data, 1, data->cb, (FILE*)asset);
+    assert(read == data->cb);
+    fclose(asset);
+    return data;
+}
+
+
+
 int App::getIntSetting(const char *key, const int defaultValue) {
     val value = lsGetInt(val(key), val(defaultValue));
     return value.as<int>();

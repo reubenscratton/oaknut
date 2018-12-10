@@ -8,4 +8,6 @@
 #include <emscripten/html5.h>
 #include <GLES2/gl2.h>
 #include <libc/pthread.h>
+#include <AL/al.h>
+#include <AL/alc.h>
 using namespace emscripten;

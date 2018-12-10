@@ -81,14 +81,14 @@ class View
 <table>
 <tr><td>void <a href="todo">setBackground</a>(RenderOp * renderOp)</td><td></td></tr>
 <tr><td>RenderOp * <a href="todo">getBackgroundOp</a>()</td><td></td></tr>
-<tr><td>void <a href="todo">setBackgroundColor</a>(COLOR color)</td><td></td></tr>
+<tr><td>void <a href="todo">setBackgroundColor</a>(<a href="class_c_o_l_o_r.html">COLOR</a> color)</td><td></td></tr>
 <tr><td>void <a href="todo">addRenderOp</a>(RenderOp * renderOp)</td><td></td></tr>
 <tr><td>void <a href="todo">addRenderOp</a>(RenderOp * renderOp, bool atFront)</td><td></td></tr>
 <tr><td>void <a href="todo">removeRenderOp</a>(RenderOp * renderOp)</td><td></td></tr>
 <tr><td>void <a href="todo">setNeedsFullRedraw</a>()</td><td></td></tr>
 <tr><td>void <a href="todo">invalidateRect</a>(const RECT & rect)</td><td></td></tr>
-<tr><td>COLOR <a href="todo">getTintColor</a>()</td><td></td></tr>
-<tr><td>void <a href="todo">setTintColor</a>(COLOR tintColor)</td><td>Sets tint color.</td></tr>
+<tr><td><a href="class_c_o_l_o_r.html">COLOR</a> <a href="todo">getTintColor</a>()</td><td></td></tr>
+<tr><td>void <a href="todo">setTintColor</a>(<a href="class_c_o_l_o_r.html">COLOR</a> tintColor)</td><td>Sets tint color.</td></tr>
 <tr><td>float <a href="todo">getAlpha</a>()</td><td>Get the current alpha.</td></tr>
 <tr><td>void <a href="todo">setAlpha</a>(float alpha)</td><td>Sets alpha.</td></tr>
 <table>
@@ -115,7 +115,7 @@ class View
 <h2>Styles</h2>
 
 <table>
-<tr><td>bool <a href="todo">applyStyleValue</a>(const <a href="classstring.html">string</a> & name, const StyleValue * value)</td><td>Applies a single style value for the given attribute name.</td></tr>
+<tr><td>bool <a href="todo">applyStyleValue</a>(const <a href="classstring.html">string</a> & name, const <a href="class_style_value.html">StyleValue</a> * value)</td><td>Applies a single style value for the given attribute name.</td></tr>
 <table>
 
 <h2>Touch</h2>
@@ -300,7 +300,7 @@ class View
 <code>RenderOp * <a href="todo">getBackgroundOp</a>()</code><p></p>
 
 <h3>setBackgroundColor</h3>
-<code>void <a href="todo">setBackgroundColor</a>(COLOR color)</code><p></p>
+<code>void <a href="todo">setBackgroundColor</a>(<a href="class_c_o_l_o_r.html">COLOR</a> color)</code><p></p>
 
 <h3>addRenderOp</h3>
 <code>void <a href="todo">addRenderOp</a>(RenderOp * renderOp)</code><p></p>
@@ -318,10 +318,10 @@ class View
 <code>void <a href="todo">invalidateRect</a>(const RECT & rect)</code><p></p>
 
 <h3>getTintColor</h3>
-<code>COLOR <a href="todo">getTintColor</a>()</code><p></p>
+<code><a href="class_c_o_l_o_r.html">COLOR</a> <a href="todo">getTintColor</a>()</code><p></p>
 
 <h3>setTintColor</h3>
-<code>void <a href="todo">setTintColor</a>(COLOR tintColor)</code><p></p>
+<code>void <a href="todo">setTintColor</a>(<a href="class_c_o_l_o_r.html">COLOR</a> tintColor)</code><p></p>
 
 <h3>getAlpha</h3>
 <code>float <a href="todo">getAlpha</a>()</code><p>Defaults to 1.0. Note that the actual alpha value used in rendering inherits (i.e. is effectively multiplied by) all ancestor alpha values.</p>
@@ -372,7 +372,7 @@ class View
 <code>void <a href="todo">onStateChanged</a>(STATESET changes)</code><p></p>
 
 <h3>applyStyleValue</h3>
-<code>bool <a href="todo">applyStyleValue</a>(const <a href="classstring.html">string</a> & name, const StyleValue * value)</code><p>Custom views should override this method to add support for custom attributes.</p>
+<code>bool <a href="todo">applyStyleValue</a>(const <a href="classstring.html">string</a> & name, const <a href="class_style_value.html">StyleValue</a> * value)</code><p>Custom views should override this method to add support for custom attributes.</p>
 
 <h3>hitTest</h3>
 <code><a href="class_view.html">View</a> * <a href="todo">hitTest</a>(POINT & pt)</code><p></p>

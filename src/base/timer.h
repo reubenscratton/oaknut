@@ -6,8 +6,6 @@
 //
 
 
-typedef std::function<void ()> TimerDelegate;
-
 /**
  * @ingroup base_group
  * @class Timer
@@ -15,14 +13,14 @@ typedef std::function<void ()> TimerDelegate;
  */
 class Timer : public Object {
 public:
-    static Timer* start(const TimerDelegate& del, int intervalMillis, bool repeats);
+    static Timer* start(const std::function<void()>& del, int intervalMillis, bool repeats);
     virtual void stop();
     
 protected:
-    Timer(const TimerDelegate& del, int intervalMillis, bool repeats);
+    Timer(const std::function<void()>& del, int intervalMillis, bool repeats);
     ~Timer();
 
-    TimerDelegate _del;
+    std::function<void()> _del;
     bool _repeats;
     bool _active;
 };

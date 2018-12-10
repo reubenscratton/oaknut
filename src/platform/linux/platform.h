@@ -15,5 +15,7 @@
 #include	<GL/glu.h>
 #include <cairo.h>
 #include <curl/curl.h>
+#include <AL/al.h>
+#include <AL/alc.h>
 
 #define HAS_VAO

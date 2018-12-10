@@ -6,27 +6,29 @@
 //
 
 
-/**
- The traditional free filesystem expected by many apps is not fully supported
- on Web and there's not a lot of reason to polyfill it. A NoSQL database
- such as IndexedDB a much better fit, AFAICS, for most app storage requirements.
- Presumably this reasoning lies behind W3C's deprecation of FileSystem.
- 
- Using IndexedDB effectively is tricky for Oaknut. Any C++ object is merely a
- collection of one or more byte ranges within the global heap buffer, there is no corresponding
- Javascript object and so the serialization that underpins IndexedDB cannot be
- directly used. So what we do instead (on web) is construct ad-hoc Javascript objects
- that encapsulate the Variants at the point they are read and written to IndexedDB.
- For this to work the Variant type must be convertible to and from
- a native Javascript type.
 
- And of course for non-web platforms we need a tiny file-based NoSQL implementation :-)
+/**
+ * @ingroup data_group
+ * @class LocalStore
+ * @brief Extremely simple data storage concept.
+
+ As always, supporting the Web means making some non-obvious choices.
+ 
+ IndexedDB is currently the standard web storage API, so Oaknut takes the
+ basic idea and applies it to all platforms. The web implementation of
+ LocalStore *is* IndexedDB, the non-web implementations are a tiny and very limited
+ simulacrum that will be beefed up into something performant at some future date.
+ 
+ Expected use is to have one LocalStore per persistable type, i.e. a class
+ that implements `ISerializeToVariant`.
+ 
+ NB: For simplicity's sake a primary key is mandatory, the key name must correspond
+ to a variant field.
+
  */
 
 
 /**
- Persistant storage of same-structure Variants. Expected use is to have one LocalStore
- per persisted type, similar to IndexedDB. For simplicity's sake a primary key is mandatory.
  */
 class LocalStore : public Object {
 public:

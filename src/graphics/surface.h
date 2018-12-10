@@ -29,10 +29,14 @@ public:
     void removeRenderOp(RenderOp* renderOp);
 };
 
-/*
+/**
  * @ingroup graphics_group
- * \class Surface
-*/
+ * @class Surface
+ * @brief Rendering target, currently backed by a GL texture.
+ 
+ Surfaces are owned by Views, all visible Views in the owning view's hierarchy
+ will be rendered to the surface.*/
+
 class Surface : public Object {
 public:
 	SIZE _size;

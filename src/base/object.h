@@ -18,7 +18,7 @@ public:
 	virtual ~Object();
     
     /**
-     Increments the internal reference counter. NB: Not threadsafe.
+     Increments the internal reference counter. NB: Not threadsafe, cos we don't have threads.
      */
 	void retain();
     

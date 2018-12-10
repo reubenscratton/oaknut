@@ -13,6 +13,15 @@ public:
     virtual void curveTo(POINT ctrl1, POINT ctrl2, POINT pt)=0;
 };
 
+/**
+ * @ingroup graphics_group
+ * @class Canvas
+ * @brief Basic 2D Canvas API.
+ 
+ Canvas is a platform type, instantiate via `Canvas::create()`.
+ 
+ NB: This is VERY limited at present, features get added as they become needed.
+ */
 class Canvas : public Object {
 public:
     static Canvas* create();

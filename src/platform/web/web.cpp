@@ -45,7 +45,7 @@ extern "C" void dispatchMainWindowDraw() {
 
 class OSTimer : public Timer {
 public:
-    OSTimer(const TimerDelegate& del, int intervalMillis, bool repeats) : Timer(del, intervalMillis, repeats) {
+    OSTimer(const std::function<void()>& del, int intervalMillis, bool repeats) : Timer(del, intervalMillis, repeats) {
         _timerId = EM_ASM_INT ({
             return setInterval(function() { Runtime.dynCall('vi', $2, [$0]); }, $1);
         }, this, intervalMillis, dispatch);
@@ -73,7 +73,7 @@ protected:
 };
 
 
-Timer* Timer::start(const TimerDelegate& del, int intervalMillis, bool repeats) {
+Timer* Timer::start(const std::function<void()>& del, int intervalMillis, bool repeats) {
     return new OSTimer(del, intervalMillis, repeats);
 }
 
@@ -182,27 +182,6 @@ int main(int argc, char *argv[]) {
     emscripten_set_main_loop(oakMessageLoop, 1, 1);
     
     return 0;
-}
-
-ByteBuffer* App::loadAsset(const char* assetPath) {
-    
-    string str = "/assets/";
-    str.append(assetPath);
-    FILE* asset = fopen(str.data(), "rb");
-    if (!asset) {
-        app.log("Failed to open asset: %s", assetPath);
-        return NULL;
-    }
-    
-    ByteBuffer* data = new ByteBuffer();
-    fseek (asset, 0, SEEK_END);
-    data->cb = ftell(asset);
-    data->data = (uint8_t*) malloc (sizeof(char)*data->cb);
-    fseek ((FILE*)asset, 0, SEEK_SET);
-    size_t read = fread(data->data, 1, data->cb, (FILE*)asset);
-    assert(read == data->cb);
-    fclose(asset);
-    return data;    
 }
 
 

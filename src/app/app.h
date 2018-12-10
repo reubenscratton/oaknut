@@ -28,9 +28,19 @@ public:
         limit use to app startup and background threads */
     class ByteBuffer* loadAsset(const char* assetPath);
 
+    
+    /** @name Time
+     * @{
+     */
+    
     /** Gets the current system time, in milliseconds */
     TIMESTAMP currentMillis(); // millis
 
+    string friendlyTimeString(TIMESTAMP timestamp);
+
+    /**@}*/
+
+    
     /** @name Logging
      * @{
      */
@@ -46,17 +56,18 @@ public:
     static Task* postToMainThread(std::function<void(void)> func, int delay=0);
     
 
-    /** @name Keyboard
+    /** @name File paths
      * @{
      */
-    
-    /**@}*/
     
     string getPathForGeneralFiles();
     string getPathForUserDocuments();
     string getPathForCacheFiles();
     string getPathForTemporaryFiles();
+
+    /**@}*/
     
+
     /** @name Styles
      * @{
      */
@@ -126,7 +137,6 @@ public:
     /**@}*/
 
     
-    string friendlyTimeString(TIMESTAMP timestamp);
     
 protected:
     StyleValue _styles;

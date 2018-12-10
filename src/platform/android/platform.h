@@ -27,6 +27,9 @@ typedef float GLfloat;
 #include <android/asset_manager_jni.h>
 #include <android/bitmap.h>
 
+#include <SLES/OpenSLES.h>
+#include <SLES/OpenSLES_Android.h>
+
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "oaknut-app", __VA_ARGS__))
 #define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "oaknut-app", __VA_ARGS__))
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "oaknut-app", __VA_ARGS__))

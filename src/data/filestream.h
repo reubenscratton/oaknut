@@ -6,6 +6,12 @@
 //
 
 
+/**
+ * @ingroup data_group
+ * @class FileStream
+ * @brief A `Stream` backed by a `FILE*`.
+ */
+
 class FileStream : public Stream {
 public:
     FileStream(string path);

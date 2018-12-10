@@ -19,7 +19,7 @@ TIMESTAMP App::currentMillis() {
 
 class OSTimer : public Timer {
 public:
-    OSTimer(const TimerDelegate& del, int intervalMillis, bool repeats) : Timer(del, intervalMillis, repeats) {
+    OSTimer(const std::function<void()>& del, int intervalMillis, bool repeats) : Timer(del, intervalMillis, repeats) {
         _timer = gdk_threads_add_timeout(intervalMillis, TimerFunc, this);
     }
     ~OSTimer() {
@@ -51,7 +51,7 @@ protected:
 };
 
 
-Timer* Timer::start(const TimerDelegate& del, int intervalMillis, bool repeats) {
+Timer* Timer::start(const std::function<void()>& del, int intervalMillis, bool repeats) {
     return new OSTimer(del, intervalMillis, repeats);
 }
 

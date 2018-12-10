@@ -6,6 +6,12 @@
 //
 
 
+/**
+ * @ingroup graphics_group
+ * @class COLOR
+ * @brief Basic encapsulation of a 32-bit color RGBA value. Should probably
+ add some useful methods at some point.*/
+
 class COLOR {
 public:
     COLOR() : _val(0) {}

@@ -5,17 +5,21 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-
+/**
+ * @ingroup app_group
+ * \class ActionSheet
+ * \brief A simple port of the iOS ActionSheet
+ */
 class ActionSheet : public ViewController {
 public:
 
     // API
     ActionSheet();
-    virtual void setTitle(const string& title);
     virtual void addAction(const string& action, std::function<void()> onClick);
     virtual void addCancelButton();
     
     // Overrides
+    void setTitle(const string& title) override;
     void onWindowAttached() override;
     
 protected:

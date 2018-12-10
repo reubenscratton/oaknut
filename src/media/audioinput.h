@@ -41,6 +41,16 @@ protected:
     bytearray _data;
 };
 
+/**
+ * @ingroup media_group
+ * @class AudioInput
+ * @brief Provides access to the microphone.
+ *
+ * Note that the `AudioFormat` passed to `open()` is interpreted as a preference rather
+ * than a mandatory requirement and open() will update it with the closest format
+ * it could provide. On Web in particular there is very little flexibility in format.
+ */
+
 class AudioInput : public Object {
 public:
     

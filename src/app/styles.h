@@ -20,6 +20,15 @@ private:
     float _val;
 };
 
+/**
+ * @ingroup app_group
+ * @brief Represents a value in the global style namespace. Not instantiated directly,
+ * use `App::getStyleValue()` and friends to get one, then use one of the accessors
+ * `intVal()`, `stringVal()` to get to the raw value.
+ *
+ * Is alarmingly similar to the 'variant' type with which it should probably be unified.
+ */
+
 class StyleValue {
 public:
     enum Type {
@@ -91,8 +100,11 @@ private:
 };
 
 /**
- Abstract base class for objects that can have style values applied.
- In practice this means Views, but also TextRenderer.
+ * @ingroup app_group
+ * @brief  Abstract base class for objects that can have style
+ * values applied.
+ *
+ * In practice this means Views, but also TextRenderer.
  */
 class Styleable : public Object {
 public:

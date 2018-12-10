@@ -96,7 +96,7 @@ void URLRequest::dispatchResult(int httpStatus, const map<string, string>& respo
     if (_handlerJson) {
         variant json;
         if (contentType.contains("json")) {
-            string str = _responseData.toString(true);
+            string str = _responseData.toString();
             StringProcessor it(str);
             json = variant::parse(it, 0);
         }

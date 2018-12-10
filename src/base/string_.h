@@ -9,7 +9,7 @@
 /**
  * @ingroup base_group
  * @class string
- * @brief An alternative to std::string
+ * @brief An alternative to `std::string`.
  *
  * This is not quite a drop-in replacement. It is the same old byte buffer under the hood
  * but this one treats the bytes as a UTF-8 encoded string and indexing is done by

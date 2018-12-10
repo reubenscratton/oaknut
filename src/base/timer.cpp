@@ -8,7 +8,7 @@
 #include <oaknut.h>
 
 
-Timer::Timer(const TimerDelegate& del, int intervalMillis, bool repeats) : _del(del), _repeats(repeats) {
+Timer::Timer(const std::function<void()>& del, int intervalMillis, bool repeats) : _del(del), _repeats(repeats) {
     _active = true; //
     retain(); // always keep a ref
 }

@@ -12,41 +12,60 @@
 /**
  * @ingroup app_group
  * @brief General purpose async networking support.
- 
- Example:
- 
- URLRequest::get("http://www.foo.com/bar")
-    .handleJson([=](Variant* json) {
+ Simple example:
+ ````
+ URLRequest::get("http://www.foo.com/bar.json")
+    ->handleJson([=](Variant* json) {
         // handle the json here
     });
- 
+ ````
  When you create a URLRequest it will begin, at the earliest, in the next event loop.
- 
  */
 class URLRequest : public Object {
 public:
+    
+    /** @name Static creators
+     * @{
+     */
+    
+    /** Create and return a GET request */
     static URLRequest* get(const string& url, int flags=0);
+
+    /** Create and return a POST request */
     static URLRequest* post(const string& url, const bytearray& body);
+
+    /** Create and return a PATCH request */
     static URLRequest* patch(const string& url, const bytearray& body);
+    
+    /** Create and return a request */
     static URLRequest* createAndStart(const string& url, const string& method, const bytearray& body, int flags);
     
+    /**@}*/
+
     void setHeader(const string& headerName, const string& headerValue);
 
+
+    /** @name Handling response data
+     * @{
+     */
     void handleData(std::function<void(URLRequest* req)> handler);
     void handleJson(std::function<void(URLRequest* req, const variant&)> handler);
     void handleBitmap(std::function<void(URLRequest* req, Bitmap*)> handler);
     
-    virtual void run() =0;
+    /** Process the response on the downloading thread and maybe dispatch some other kind of handler */
+    std::function<bool(int,const map<string, string>&)> onGotResponseInBackground;
+    /**@}*/
+
     virtual void cancel() =0;
-    
+
     bool error();
-    
     int getHttpStatus() const { return _httpStatus; }
     const bytearray& getResponseData() const { return _responseData; }
-    
-    std::function<bool(int,const map<string, string>&)> onGotResponseInBackground;
+
     
 protected:
+    virtual void run() =0;
+
     URLRequest(const string& url, const string& method, const bytearray& body, int flags);
     ~URLRequest();
     string _url;

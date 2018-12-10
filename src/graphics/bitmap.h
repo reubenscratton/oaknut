@@ -8,38 +8,6 @@
 
 
 
-/*
- * @ingroup graphics_group
- * \class Bitmap
- * Bitmap is a platform type, i.e. apps always instantiate them via one of the
- * Bitmap::createXXX() APIs, never with operator new().
- *
- * The Bitmap class does not directly own a block of RAM for its pixels, the
- * storage of pixel data is left to the platform layer. When application or
- * Oaknut code needs to access the pixel data it has to lock() and unlock() the
- * bitmap. This may or may not cause an expensive blit, it's up to the platform.
- * Only access pixel data when you really need to.
- *
- * Bitmap formats
- * ==============
- * Oaknut bitmaps have three core formats: RGBA32, RGB16, and A8. Apple platform
- * allows a fourth format, BGRA32, in order to avoid needless conversion.
- *
- * On the web the only format supported is RGBA32 so bitmap data in other formats
- * will be converted.
- *
- * Platform notes
- * ==============
- iOS: Two types of Bitmap: there is the CoreGraphics CGBitmapContext
- we all know and love, and then there is CoreVideo's CVImageBufferRef which
- has the amazingly useful property of being usable as texture data, i.e. we can
- directly write texture without having to glTexSubImage2D etc.
- 
- Android: Only one type of bitmap, ye olde android.graphics.Bitmap which is
- generally speaking a pain to work with. Every Bitmap on android always has
- an associated android.graphics.Bitmap java object.
- 
- */
 
 /**
  Supported bitmap formats. Bitmaps in other formats must be converted by platform code
@@ -62,6 +30,29 @@ typedef struct {
 #endif
 
 
+/**
+ * @ingroup graphics_group
+ * @class Bitmap
+ * @brief The standard 2D array of color values.
+ *
+ * Bitmap is a platform type, i.e. apps must instantiate them via one of the
+ * Bitmap::createXXX() APIs, never with operator new().
+ *
+ * The Bitmap class does not directly own a block of RAM for pixel data, the
+ * storage of pixel data is left to the platform layer. When application or
+ * Oaknut code needs to access the pixel data it has to lock() and unlock() the
+ * bitmap. This may or may not cause an expensive blit, it's up to the platform.
+ * Only access pixel data when you really need to.
+ *
+ * Bitmap formats
+ * ==============
+ * Oaknut bitmaps have three core formats: RGBA32, RGB16, and A8. Apple platforms
+ * allows a fourth format, BGRA32, in order to avoid needless conversion.
+ *
+ * On the web the only format supported is RGBA32 so bitmap data in other formats
+ * will be converted.
+ *
+ */
 class Bitmap : public Object, public ISerializeToVariant {
 public:
     int32_t _width;

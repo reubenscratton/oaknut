@@ -7,23 +7,6 @@
 
 // TODO: this is a mess, fix it
 
-#if EMSCRIPTEN
- #import <AL/al.h>
- #import <AL/alc.h>
-#else
- #ifdef ANDROID
-  #include <SLES/OpenSLES.h>
-  #include <SLES/OpenSLES_Android.h>
- #elif __APPLE__
- #endif
-#endif
-
-#if PLATFORM_LINUX
-#include <AL/al.h>
-#include <AL/alc.h>
-#endif
-
-
 class AudioOutput : public Object {
 public:
 #ifdef USE_NATIVE_IOS_AUDIO
