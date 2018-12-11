@@ -9,11 +9,26 @@ class CppClassSection {
 
 	String title;
 	String kind;
+	String anchor;
 	ArrayList<CppMethod> methods = new ArrayList<>();
 	
 	CppClassSection(Node node) {
 		title = Xml.nt(node,  "header");
 		kind = Xml.a(node, "kind");
+		Node description = Xml.n(node, "description");
+		if (description != null) {
+			Node para = Xml.n(description, "para");
+			if (para != null) {
+				Node anchor = Xml.n(para, "anchor");
+				if (anchor != null) {
+					this.anchor = Xml.a(anchor, "id");
+					int offset = this.anchor.indexOf("_1");
+					if (offset > 0) {
+						this.anchor = this.anchor.substring(offset+2);
+					}
+				}
+			}
+		}
 		List<Node> memberDefs = Xml.ns(node, "memberdef");
 		for (Node memberDef : memberDefs) {
 			String memberKind = Xml.a(memberDef, "kind");

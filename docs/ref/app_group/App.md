@@ -12,6 +12,15 @@ class App
 
 Global object accessible through the global `app` variable that provides essential top-level services such as loading resources, persisting configuration settings and many more.     
 
+
+* [Entry point](#entry-point)
+* [Time](#time)
+* [Logging](#logging)
+* [File paths](#file-paths)
+* [Assets](#assets)
+* [Styles](#styles)
+* [Layout](#layout)
+
     
 ### Entry point
 
@@ -36,9 +45,13 @@ Your implementation of this must instantiate a ViewController and set it as _win
 ### File paths
 
 [`string`](/oaknut/ref/base_group/string)` getPathForGeneralFiles()`<br>
+
 [`string`](/oaknut/ref/base_group/string)` getPathForUserDocuments()`<br>
+
 [`string`](/oaknut/ref/base_group/string)` getPathForCacheFiles()`<br>
+
 [`string`](/oaknut/ref/base_group/string)` getPathForTemporaryFiles()`<br>
+
 
 ### Assets
 
@@ -66,6 +79,7 @@ Generally used in App::main()
 See the Layout Guide for details
 
 `void layoutInflateExistingView(`[`View`](/oaknut/ref/views/View)`* view, const `[`string`](/oaknut/ref/base_group/string)` & assetPath)`<br>
+
 `float dp(float dp)`<br>Converts a 'dp' measurement into physical pixels.
 Dp is a device-independent pixel and is based on 320dpi
 
