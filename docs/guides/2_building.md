@@ -11,7 +11,7 @@ A very simple project makefile:
 ````
 PROJECT_NAME:=HelloWorld
 
-include $(OAKNUT_DIR)/oaknut.make
+include $(OAKNUT_DIR)/build/oaknut.make
 ````
 
 

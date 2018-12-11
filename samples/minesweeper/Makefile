@@ -24,4 +24,4 @@ OAKNUT_DIR:=$(wildcard $(OAKNUT_DIR))
 ifndef OAKNUT_DIR
 $(error OAKNUT_DIR must point to the Oaknut root)
 endif
-include $(OAKNUT_DIR)/oaknut.make
+include $(OAKNUT_DIR)/build/oaknut.make

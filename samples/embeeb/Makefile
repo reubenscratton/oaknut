@@ -20,4 +20,4 @@ IOS_PROVISIONING_PROFILE=/Users/reuben/Library/MobileDevice/Provisioning\ Profil
 MACOS_SDK=MacOSX10.13.sdk
 
 
-include $(OAKNUT_DIR)/oaknut.make
+include $(OAKNUT_DIR)/build/oaknut.make

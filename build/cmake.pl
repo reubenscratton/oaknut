@@ -90,6 +90,6 @@ if (NOT IS_DIRECTORY \$ENV{OAKNUT_DIR})
 message(FATAL_ERROR "Environment variable OAKNUT_DIR must point to the Oaknut repo")
 endif()
 
-include(\$ENV{OAKNUT_DIR}/CMakeLists.txt)
+include(\$ENV{OAKNUT_DIR}/build/CMakeLists.txt)
 
 );
