@@ -11,6 +11,15 @@
  * @class App
  * @brief Global object accessible through the global `app` variable that provides essential
  * top-level services such as loading resources, persisting configuration settings and many more.
+ * \n
+ * * [Entry point](#entry-point)\n
+ * * [Time](#time)\n
+ * * [Logging](#logging)\n
+ * * [File paths](#file-paths)\n
+ * * [Assets](#assets)\n
+ * * [Styles](#styles)\n
+ * * [Layout](#layout)\n
+ * \n
  */
 class App : public Object {
 public:
