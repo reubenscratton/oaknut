@@ -2,6 +2,7 @@ package doxypp;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -63,10 +64,14 @@ class CppClass {
 		ArrayList<doxypp.CppMethod> allMethods = new ArrayList<>();
 		for (CppClassSection section : sections) {
 			s += section.toMarkdown();
-			allMethods.addAll(s.methods);
+			allMethods.addAll(section.methods);
 		}
 		Collections.sort(allMethods, new Comparator<CppMethod>() {
 
+			@Override
+			public int compare(CppMethod o1, CppMethod o2) {
+				return o1.name.compareTo(o2.name);
+			}
 		});
 		s += "## Methods\n\n";
 		s+="| | |\n|-|-|\n";

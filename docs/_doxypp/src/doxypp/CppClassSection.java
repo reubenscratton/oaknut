@@ -31,15 +31,12 @@ class CppClassSection {
 			s += "### " + title + "\n\n";
 		}
 		if (methods.size() > 0) {
-			s += "| | |\n|-|-|\n";
 			for (CppMethod method : methods) {
-				s += "|" + method.getSignature() + "|";
+				s += method.getSignature() + "<br>";
 				if (method.brief.length() > 0) {
 					s += method.brief;
-				} else {
-					s += " ";
 				}
-				s += "|\n";
+				s += "\n\n";
 			}
 			s += "\n\n";
 		}

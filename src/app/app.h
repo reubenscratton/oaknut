@@ -9,26 +9,31 @@
 /**
  * @ingroup app_group
  * @class App
- * @brief The single instance of this class is accessed through the global 'app' variable.
+ * @brief Global object accessible through the global `app` variable that provides essential
+ * top-level services such as loading resources, persisting configuration settings and many more.
  */
 class App : public Object {
 public:
 
+    /**  @cond INTERNAL */
     App();
+    /**  @endcond */
+
+    /** @name Entry point
+     * @{
+     */
     
     /** Application entry point. Your implementation of this must instantiate a ViewController
         and set it as _window.rootViewController before returning */
     void main();
 
+    /**@}*/
+
+    
     /** The application window, which is your app's connection to the display
         and input subsystems of the host OS */
     sp<class Window> _window;
 
-    /** Load a file from the assets directory, synchronously. Since this does IO it's best to
-        limit use to app startup and background threads */
-    class ByteBuffer* loadAsset(const char* assetPath);
-
-    
     /** @name Time
      * @{
      */
@@ -36,6 +41,7 @@ public:
     /** Gets the current system time, in milliseconds */
     TIMESTAMP currentMillis(); // millis
 
+    /** Returns a 'friendly' text representation of a timestamp */
     string friendlyTimeString(TIMESTAMP timestamp);
 
     /**@}*/
@@ -52,8 +58,6 @@ public:
     void warn(char const* fmt, ...);
 
     /**@}*/
-
-    static Task* postToMainThread(std::function<void(void)> func, int delay=0);
     
 
     /** @name File paths
@@ -67,6 +71,18 @@ public:
 
     /**@}*/
     
+    
+    /** @name Assets
+     * @{
+     */
+
+    /** Load a file from the assets directory, synchronously. Since this does IO it's best to
+     limit use to app startup and background threads */
+    class ByteBuffer* loadAsset(const char* assetPath);
+    
+    /**@}*/
+
+
 
     /** @name Styles
      * @{
@@ -137,7 +153,13 @@ public:
     /**@}*/
 
     
-    
+    /** @name Scheduling Callbacks
+     * @{
+     */
+    /** Schedule a function to run on the main thread loop, optionally after a delay (in milliseconds). */
+    static Task* postToMainThread(std::function<void(void)> func, int delay=0);
+    /**@}*/
+
 protected:
     StyleValue _styles;
 

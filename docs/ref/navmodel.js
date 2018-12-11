@@ -1,7 +1,3 @@
----
-layout: default
----
-
 var navmodelRef = [
 { t:"App", i: [  { t:"ActionSheet", u:"/ref/app_group/ActionSheet"}, 
   { t:"App", u:"/ref/app_group/App"}, 

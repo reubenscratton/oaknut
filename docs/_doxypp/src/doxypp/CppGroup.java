@@ -43,7 +43,7 @@ public class CppGroup {
 			Node classRef = classNode.getAttributes().getNamedItem("refid");
 			CppClass cppNode = new CppClass(Doxy.inputPath + classRef.getTextContent() + ".xml");
 			classes.add(cppNode);
-			doxypp.CppType.refMap.put(classRef.getNodeValue(), "/ref/" + name + "/" + cppNode.name);
+			doxypp.CppType.refMap.put(classRef.getNodeValue(), "/oaknut/ref/" + name + "/" + cppNode.name);
 		}
 		
 	}
