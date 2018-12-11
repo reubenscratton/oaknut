@@ -7,8 +7,8 @@
 
 /**
  * @ingroup app_group
- * \class App
- * \brief A 'worker' is a background thread that processes serialized input and produces
+ * @class Worker
+ * @brief A 'worker' is a background thread that processes serialized input and produces
  serialized output. It is based on the Javascript API of the same name. Every worker
  has two components, the client (in-app) side and the background thread side. The
  `Worker` class is the client side that application code uses to instantiate and send
@@ -63,8 +63,8 @@ protected:
 
 /**
  * @ingroup app_group
- * \class App
- * \brief Base class for the background thread of a Worker. Application code should not
+ * @class WorkerImpl
+ * @brief Base class for the background thread of a Worker. Application code should not
  use this class directly, it is solely for implementing Workers.
 */
 

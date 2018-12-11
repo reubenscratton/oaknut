@@ -28,11 +28,11 @@ class CppClassSection {
 	String toMarkdown() {
 		String s = "## " + title + "\n\n";
 		for (CppMethod method : methods) {
-			s += method.getSignature() + " | ";
+			s += "| " + method.getSignature() + " | ";
 			if (method.brief.length() > 0) {
 				s += method.brief;
 			}
-			s += "\n";
+			s += " |\n";
 		}
 		s += "\n\n";
 		return s;

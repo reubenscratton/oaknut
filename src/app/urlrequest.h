@@ -12,13 +12,13 @@
 /**
  * @ingroup app_group
  * @brief General purpose async networking support.
- * Simple example: \n
- * ```` \n 
- * URLRequest::get("http://www.foo.com/bar.json") \n
- *    ->handleJson([=](Variant* json) { \n
- *        // handle the json here \n
- *    }); \n
- * ````
+ * Simple example:
+ * <code>
+ * URLRequest::get("http://www.foo.com/bar.json")
+ *    ->handleJson([=](Variant* json) {
+ *        // handle the json here
+ *    });
+ * </code>
  * When you create a URLRequest it will begin, at the earliest, in the next event loop.
  */
 class URLRequest : public Object {

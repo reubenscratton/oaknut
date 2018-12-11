@@ -8,8 +8,8 @@
 
 /**
  * @ingroup app_group
- * \class App
- * \brief The single instance of this class is accessed through the global 'app' variable.
+ * @class App
+ * @brief The single instance of this class is accessed through the global 'app' variable.
  */
 class App : public Object {
 public:

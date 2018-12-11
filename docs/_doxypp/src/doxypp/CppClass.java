@@ -62,6 +62,14 @@ class CppClass {
 		for (CppClassSection section : sections) {
 			s += section.toMarkdown();
 		}
+		s += "# Methods\n\n";
+		for (CppClassSection section : sections) {
+			for (CppMethod method : section.methods) {
+				s += "| *" + method.name + "* | ";
+				s += " `" + method.getSignatureHtml() + "` | ";
+				s += "" + method.detailed + " |\n";
+			}
+		}
 		return s;
 	}
 	String toHtml() {

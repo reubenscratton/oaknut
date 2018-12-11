@@ -19,7 +19,11 @@ public class Doxy {
 
 	
 	static void writeTextFile(String path, String markdown) throws IOException {
-		FileOutputStream o = new FileOutputStream(path);		
+		markdown = "---\n" +
+				"layout: default\n" +
+				"---\n\n"
+				+ markdown;
+		FileOutputStream o = new FileOutputStream(path);
 		o.write(markdown.getBytes());
 		o.close();		
 	}
@@ -50,11 +54,11 @@ public class Doxy {
 			CppGroup group = new CppGroup(xml.root);
 			groups.add(group);
 			new File(outputPath + group.name).mkdirs();
-			writeHtmlFile(group.title, outputPath + group.name + "/index.html", group.toHtml());
-			//writeTextFile(outputPath + group.name + "/index.md", group.toMarkdown());
+			//writeHtmlFile(group.title, outputPath + group.name + "/index.html", group.toHtml());
+			writeTextFile(outputPath + group.name + "/index.md", group.toMarkdown());
 			for (CppClass clazz : group.classes) {
-				writeHtmlFile(clazz.name, outputPath + group.name + "/" + clazz.name + ".html", clazz.toHtml());
-				//writeTextFile(outputPath + group.name + "/" + clazz.name + ".md", clazz.toMarkdown());				
+				//writeHtmlFile(clazz.name, outputPath + group.name + "/" + clazz.name + ".html", clazz.toHtml());
+				writeTextFile(outputPath + group.name + "/" + clazz.name + ".md", clazz.toMarkdown());
 			}
 		}
 		
