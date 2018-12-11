@@ -13,29 +13,42 @@ class Surface
 Rendering target, currently backed by a GL texture.     
 
 Surfaces are owned by Views, all visible Views in the owning view's hierarchy will be rendered to the surface.     
-| | |
-|-|-|
-|` Surface()`||
-|` Surface(`[`View`](/ref/views/View)` * owningView)`||
-|` ~Surface()`||
-|`void render(`[`View`](/ref/views/View)` * view, `[`Window`](/ref/views/Window)` * window)`||
-|`void setSize(SIZE size)`||
-|`void setupPrivateFbo()`||
-|`void use()`||
-|`void cleanup()`||
-|`void detachRenderList(RenderList * list)`||
-|`void attachRenderList(RenderList * list)`||
-|`void addRenderOp(RenderOp * op)`||
-|`void removeRenderOp(RenderOp * op)`||
-|`void validateRenderOps()`||
-|`void batchRenderOp(RenderOp * op)`||
-|`void unbatchRenderOp(RenderOp * op)`||
+` Surface()`<br>
+
+` Surface(`[`View`](/oaknut/ref/views/View)` * owningView)`<br>
+
+` ~Surface()`<br>
+
+`void render(`[`View`](/oaknut/ref/views/View)` * view, `[`Window`](/oaknut/ref/views/Window)` * window)`<br>
+
+`void setSize(SIZE size)`<br>
+
+`void setupPrivateFbo()`<br>
+
+`void use()`<br>
+
+`void cleanup()`<br>
+
+`void detachRenderList(RenderList * list)`<br>
+
+`void attachRenderList(RenderList * list)`<br>
+
+`void addRenderOp(RenderOp * op)`<br>
+
+`void removeRenderOp(RenderOp * op)`<br>
+
+`void validateRenderOps()`<br>
+
+`void batchRenderOp(RenderOp * op)`<br>
+
+`void unbatchRenderOp(RenderOp * op)`<br>
 
 
-| | |
-|-|-|
-|`void renderPhase1(`[`View`](/ref/views/View)` * view, `[`Window`](/ref/views/Window)` * window, POINT origin)`||
-|`void renderPhase2(`[`Surface`](/ref/graphics_group/Surface)` * prevsurf, `[`View`](/ref/views/View)` * view, `[`Window`](/ref/views/Window)` * window)`||
+
+`void renderPhase1(`[`View`](/oaknut/ref/views/View)` * view, `[`Window`](/oaknut/ref/views/Window)` * window, POINT origin)`<br>
+
+`void renderPhase2(`[`Surface`](/oaknut/ref/graphics_group/Surface)` * prevsurf, `[`View`](/oaknut/ref/views/View)` * view, `[`Window`](/oaknut/ref/views/Window)` * window)`<br>
+
 
 
 ## Methods
@@ -43,19 +56,19 @@ Surfaces are owned by Views, all visible Views in the owning view's hierarchy wi
 | | |
 |-|-|
 | *Surface* | ` Surface()` |  |
-| *Surface* | ` Surface(`[`View`](/ref/views/View)` * owningView)` |  |
-| *~Surface* | ` ~Surface()` |  |
-| *render* | `void render(`[`View`](/ref/views/View)` * view, `[`Window`](/ref/views/Window)` * window)` |  |
-| *setSize* | `void setSize(SIZE size)` |  |
-| *setupPrivateFbo* | `void setupPrivateFbo()` |  |
-| *use* | `void use()` |  |
+| *Surface* | ` Surface(`[`View`](/oaknut/ref/views/View)` * owningView)` |  |
+| *addRenderOp* | `void addRenderOp(RenderOp * op)` |  |
+| *attachRenderList* | `void attachRenderList(RenderList * list)` |  |
+| *batchRenderOp* | `void batchRenderOp(RenderOp * op)` |  |
 | *cleanup* | `void cleanup()` |  |
 | *detachRenderList* | `void detachRenderList(RenderList * list)` |  |
-| *attachRenderList* | `void attachRenderList(RenderList * list)` |  |
-| *addRenderOp* | `void addRenderOp(RenderOp * op)` |  |
 | *removeRenderOp* | `void removeRenderOp(RenderOp * op)` |  |
-| *validateRenderOps* | `void validateRenderOps()` |  |
-| *batchRenderOp* | `void batchRenderOp(RenderOp * op)` |  |
+| *render* | `void render(`[`View`](/oaknut/ref/views/View)` * view, `[`Window`](/oaknut/ref/views/Window)` * window)` |  |
+| *renderPhase1* | `void renderPhase1(`[`View`](/oaknut/ref/views/View)` * view, `[`Window`](/oaknut/ref/views/Window)` * window, POINT origin)` |  |
+| *renderPhase2* | `void renderPhase2(`[`Surface`](/oaknut/ref/graphics_group/Surface)` * prevsurf, `[`View`](/oaknut/ref/views/View)` * view, `[`Window`](/oaknut/ref/views/Window)` * window)` |  |
+| *setSize* | `void setSize(SIZE size)` |  |
+| *setupPrivateFbo* | `void setupPrivateFbo()` |  |
 | *unbatchRenderOp* | `void unbatchRenderOp(RenderOp * op)` |  |
-| *renderPhase1* | `void renderPhase1(`[`View`](/ref/views/View)` * view, `[`Window`](/ref/views/Window)` * window, POINT origin)` |  |
-| *renderPhase2* | `void renderPhase2(`[`Surface`](/ref/graphics_group/Surface)` * prevsurf, `[`View`](/ref/views/View)` * view, `[`Window`](/ref/views/Window)` * window)` |  |
+| *use* | `void use()` |  |
+| *validateRenderOps* | `void validateRenderOps()` |  |
+| *~Surface* | ` ~Surface()` |  |

@@ -29,20 +29,20 @@ class CppMethod extends CppMember {
 	}
 	
 	String getSignature() {
-		String s = /*prot + " " +*/ "`" + type.html + " " + name + "(";
+		String s = /*prot + " " +*/ "`" + type.toText() + " " + name + "(";
 		for (Parameter param : parameters) {
-			s += param.type.html + " " + param.name;
+			s += param.type.toText() + " " + param.name;
 			if (param != parameters.get(parameters.size()-1)) {
 				s += ", ";
 			}
 		}
 		s += ")`";
-		return s;
+		return s.replace("``", "");
 	}
 	String getSignatureHtml() {
-		String s = type.html() + " <a href=\"todo\">" + name + "</a>(";
+		String s = type.toText() + " <a href=\"todo\">" + name + "</a>(";
 		for (Parameter param : parameters) {
-			s += param.type.html() + " " + param.name;
+			s += param.type.toText() + " " + param.name;
 			if (param != parameters.get(parameters.size()-1)) {
 				s += ", ";
 			}

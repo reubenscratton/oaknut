@@ -10,18 +10,20 @@ class COLOR
 Basic encapsulation of a 32-bit color RGBA value.     
 
 Should probably add some useful methods at some point.     
-| | |
-|-|-|
-|` COLOR()`||
-|` COLOR(uint32_t val)`||
-|` operator uint32_t()`||
-|[`COLOR`](/ref/graphics_group/COLOR)` operator=(uint32_t val)`||
-|`bool operator==(uint32_t val)`||
+` COLOR()`<br>
+
+` COLOR(uint32_t val)`<br>
+
+` operator uint32_t()`<br>
+
+[`COLOR`](/oaknut/ref/graphics_group/COLOR)` operator=(uint32_t val)`<br>
+
+`bool operator==(uint32_t val)`<br>
 
 
-| | |
-|-|-|
-|[`COLOR`](/ref/graphics_group/COLOR)` interpolate(`[`COLOR`](/ref/graphics_group/COLOR)` start, `[`COLOR`](/ref/graphics_group/COLOR)` end, float val)`||
+
+[`COLOR`](/oaknut/ref/graphics_group/COLOR)` interpolate(`[`COLOR`](/oaknut/ref/graphics_group/COLOR)` start, `[`COLOR`](/oaknut/ref/graphics_group/COLOR)` end, float val)`<br>
+
 
 
 ## Methods
@@ -30,7 +32,7 @@ Should probably add some useful methods at some point.
 |-|-|
 | *COLOR* | ` COLOR()` |  |
 | *COLOR* | ` COLOR(uint32_t val)` |  |
+| *interpolate* | [`COLOR`](/oaknut/ref/graphics_group/COLOR)` interpolate(`[`COLOR`](/oaknut/ref/graphics_group/COLOR)` start, `[`COLOR`](/oaknut/ref/graphics_group/COLOR)` end, float val)` |  |
 | *operator uint32_t* | ` operator uint32_t()` |  |
-| *operator=* | [`COLOR`](/ref/graphics_group/COLOR)` operator=(uint32_t val)` |  |
+| *operator=* | [`COLOR`](/oaknut/ref/graphics_group/COLOR)` operator=(uint32_t val)` |  |
 | *operator==* | `bool operator==(uint32_t val)` |  |
-| *interpolate* | [`COLOR`](/ref/graphics_group/COLOR)` interpolate(`[`COLOR`](/ref/graphics_group/COLOR)` start, `[`COLOR`](/ref/graphics_group/COLOR)` end, float val)` |  |

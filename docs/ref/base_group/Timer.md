@@ -13,27 +13,25 @@ class Timer
 A simple timer class.     
 
     
-| | |
-|-|-|
-|[`Timer`](/ref/base_group/Timer)` * start(const std::function< void()> & del, int intervalMillis, bool repeats)`||
+[`Timer`](/oaknut/ref/base_group/Timer)` * start(const std::function< void()> & del, int intervalMillis, bool repeats)`<br>
 
 
-| | |
-|-|-|
-|`void stop()`||
+
+`void stop()`<br>
 
 
-| | |
-|-|-|
-|` Timer(const std::function< void()> & del, int intervalMillis, bool repeats)`||
-|` ~Timer()`||
+
+` Timer(const std::function< void()> & del, int intervalMillis, bool repeats)`<br>
+
+` ~Timer()`<br>
+
 
 
 ## Methods
 
 | | |
 |-|-|
-| *start* | [`Timer`](/ref/base_group/Timer)` * start(const std::function< void()> & del, int intervalMillis, bool repeats)` |  |
-| *stop* | `void stop()` |  |
 | *Timer* | ` Timer(const std::function< void()> & del, int intervalMillis, bool repeats)` |  |
+| *start* | [`Timer`](/oaknut/ref/base_group/Timer)` * start(const std::function< void()> & del, int intervalMillis, bool repeats)` |  |
+| *stop* | `void stop()` |  |
 | *~Timer* | ` ~Timer()` |  |

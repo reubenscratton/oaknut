@@ -50,9 +50,11 @@ public class Doxy {
 		// Iterate the group files, convert each one to intermediate representation, and then emit markdown
 		ArrayList<CppGroup> groups = new ArrayList<>();
 		for (int i=0 ; i<groupFiles.length ; i++) {
-			Xml xml = new Xml(inputPath + groupFiles[i]);			
+			Xml xml = new Xml(inputPath + groupFiles[i]);
 			CppGroup group = new CppGroup(xml.root);
 			groups.add(group);
+		}
+		for (CppGroup group : groups) {
 			new File(outputPath + group.name).mkdirs();
 			//writeHtmlFile(group.title, outputPath + group.name + "/index.html", group.toHtml());
 			writeTextFile(outputPath + group.name + "/index.md", group.toMarkdown());

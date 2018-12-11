@@ -23,7 +23,7 @@ Owner of a set of views that collectively make up a discrete piece of user-facin
 `class ` [ActionSheet](todo) | 
 A simple port of the iOS ActionSheet.     
 `class ` [App](todo) | 
-The single instance of this class is accessed through the global 'app' variable.     
+Global object accessible through the global `app` variable that provides essential top-level services such as loading resources, persisting configuration settings and many more.     
 `class ` [Worker](todo) | 
 A 'worker' is a background thread that processes serialized input and produces serialized output.     
 `class ` [WorkerImpl](todo) | 

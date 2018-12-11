@@ -26,15 +26,23 @@ class CppClassSection {
 	}
 
 	String toMarkdown() {
-		String s = "## " + title + "\n\n";
-		for (CppMethod method : methods) {
-			s += "| " + method.getSignature() + " | ";
-			if (method.brief.length() > 0) {
-				s += method.brief;
-			}
-			s += " |\n";
+		String s = "";
+		if (title != null && title.length()>0) {
+			s += "### " + title + "\n\n";
 		}
-		s += "\n\n";
+		if (methods.size() > 0) {
+			s += "| | |\n|-|-|\n";
+			for (CppMethod method : methods) {
+				s += "|" + method.getSignature() + "|";
+				if (method.brief.length() > 0) {
+					s += method.brief;
+				} else {
+					s += " ";
+				}
+				s += "|\n";
+			}
+			s += "\n\n";
+		}
 		return s;
 	}
 	String toHtml() {

@@ -10,44 +10,72 @@ class StyleValue
 Represents a value in the global style namespace.     
 
 Not instantiated directly, use `App::getStyleValue()` and friends to get one, then use one of the accessors `intVal()`, `stringVal()` to get to the raw value.Is alarmingly similar to the 'variant' type with which it should probably be unified.     
-| | |
-|-|-|
-|` StyleValue()`||
-|` StyleValue(const `[`StyleValue`](/ref/app_group/StyleValue)` & )`||
-|` StyleValue(`[`StyleValue`](/ref/app_group/StyleValue)` && )`||
-|` ~StyleValue()`||
-|[`StyleValue`](/ref/app_group/StyleValue)` & operator=(const `[`StyleValue`](/ref/app_group/StyleValue)` & other)`||
-|`bool isEmpty()`||
-|`bool isNumeric()`||
-|`bool isString()`||
-|`bool isMeasurement()`||
-|`bool isArray()`||
-|`int intVal()`||
-|`bool boolVal()`||
-|`float floatVal()`||
-|[`string`](/ref/base_group/string)` stringVal()`||
-|`measurement measurementVal()`||
-|[`COLOR`](/ref/graphics_group/COLOR)` colorVal()`||
-|`const vector< `[`StyleValue`](/ref/app_group/StyleValue)` > & arrayVal()`||
-|`const map< `[`string`](/ref/base_group/string)`, `[`StyleValue`](/ref/app_group/StyleValue)` > & compoundVal()`||
-|`VECTOR4 cornerRadiiVal()`||
-|`EDGEINSETS edgeInsetsVal()`||
-|`float fontWeightVal()`||
-|`const `[`StyleValue`](/ref/app_group/StyleValue)` * get(const `[`string`](/ref/base_group/string)` & keypath)`||
-|`int intVal(const `[`string`](/ref/base_group/string)` & name)`||
-|`float floatVal(const `[`string`](/ref/base_group/string)` & name)`||
-|[`string`](/ref/base_group/string)` stringVal(const `[`string`](/ref/base_group/string)` & name)`||
-|`const vector< `[`StyleValue`](/ref/app_group/StyleValue)` > & arrayVal(const `[`string`](/ref/base_group/string)` & name)`||
-|`void importValues(const map< `[`string`](/ref/base_group/string)`, `[`StyleValue`](/ref/app_group/StyleValue)` > & values)`||
-|`bool parse(class StringProcessor & it, int flags)`||
+` StyleValue()`<br>
+
+` StyleValue(const `[`StyleValue`](/oaknut/ref/app_group/StyleValue)` & )`<br>
+
+` StyleValue(`[`StyleValue`](/oaknut/ref/app_group/StyleValue)` && )`<br>
+
+` ~StyleValue()`<br>
+
+[`StyleValue`](/oaknut/ref/app_group/StyleValue)` & operator=(const `[`StyleValue`](/oaknut/ref/app_group/StyleValue)` & other)`<br>
+
+`bool isEmpty()`<br>
+
+`bool isNumeric()`<br>
+
+`bool isString()`<br>
+
+`bool isMeasurement()`<br>
+
+`bool isArray()`<br>
+
+`int intVal()`<br>
+
+`bool boolVal()`<br>
+
+`float floatVal()`<br>
+
+[`string`](/oaknut/ref/base_group/string)` stringVal()`<br>
+
+`measurement measurementVal()`<br>
+
+[`COLOR`](/oaknut/ref/graphics_group/COLOR)` colorVal()`<br>
+
+`const vector< `[`StyleValue`](/oaknut/ref/app_group/StyleValue)` > & arrayVal()`<br>
+
+`const map< `[`string`](/oaknut/ref/base_group/string)`, `[`StyleValue`](/oaknut/ref/app_group/StyleValue)` > & compoundVal()`<br>
+
+`VECTOR4 cornerRadiiVal()`<br>
+
+`EDGEINSETS edgeInsetsVal()`<br>
+
+`float fontWeightVal()`<br>
+
+`const `[`StyleValue`](/oaknut/ref/app_group/StyleValue)` * get(const `[`string`](/oaknut/ref/base_group/string)` & keypath)`<br>
+
+`int intVal(const `[`string`](/oaknut/ref/base_group/string)` & name)`<br>
+
+`float floatVal(const `[`string`](/oaknut/ref/base_group/string)` & name)`<br>
+
+[`string`](/oaknut/ref/base_group/string)` stringVal(const `[`string`](/oaknut/ref/base_group/string)` & name)`<br>
+
+`const vector< `[`StyleValue`](/oaknut/ref/app_group/StyleValue)` > & arrayVal(const `[`string`](/oaknut/ref/base_group/string)` & name)`<br>
+
+`void importValues(const map< `[`string`](/oaknut/ref/base_group/string)`, `[`StyleValue`](/oaknut/ref/app_group/StyleValue)` > & values)`<br>
+
+`bool parse(class StringProcessor & it, int flags)`<br>
 
 
-| | |
-|-|-|
-|`void setType(Type newType)`||
-|`void copyFrom(const `[`StyleValue`](/ref/app_group/StyleValue)` * other)`||
-|`const `[`StyleValue`](/ref/app_group/StyleValue)` * select()`||
-|`bool parseNumberOrMeasurement(StringProcessor & it)`||
+
+`void setType(Type newType)`<br>
+
+`void copyFrom(const `[`StyleValue`](/oaknut/ref/app_group/StyleValue)` * other)`<br>
+
+`const `[`StyleValue`](/oaknut/ref/app_group/StyleValue)` * select()`<br>
+
+`bool parseNumberOrMeasurement(StringProcessor & it)`<br>
+
 
 
 ## Methods
@@ -55,34 +83,34 @@ Not instantiated directly, use `App::getStyleValue()` and friends to get one, th
 | | |
 |-|-|
 | *StyleValue* | ` StyleValue()` |  |
-| *StyleValue* | ` StyleValue(const `[`StyleValue`](/ref/app_group/StyleValue)` & )` |  |
-| *StyleValue* | ` StyleValue(`[`StyleValue`](/ref/app_group/StyleValue)` && )` |  |
-| *~StyleValue* | ` ~StyleValue()` |  |
-| *operator=* | [`StyleValue`](/ref/app_group/StyleValue)` & operator=(const `[`StyleValue`](/ref/app_group/StyleValue)` & other)` |  |
-| *isEmpty* | `bool isEmpty()` |  |
-| *isNumeric* | `bool isNumeric()` |  |
-| *isString* | `bool isString()` |  |
-| *isMeasurement* | `bool isMeasurement()` |  |
-| *isArray* | `bool isArray()` |  |
-| *intVal* | `int intVal()` |  |
+| *StyleValue* | ` StyleValue(const `[`StyleValue`](/oaknut/ref/app_group/StyleValue)` & )` |  |
+| *StyleValue* | ` StyleValue(`[`StyleValue`](/oaknut/ref/app_group/StyleValue)` && )` |  |
+| *arrayVal* | `const vector< `[`StyleValue`](/oaknut/ref/app_group/StyleValue)` > & arrayVal()` |  |
+| *arrayVal* | `const vector< `[`StyleValue`](/oaknut/ref/app_group/StyleValue)` > & arrayVal(const `[`string`](/oaknut/ref/base_group/string)` & name)` |  |
 | *boolVal* | `bool boolVal()` |  |
-| *floatVal* | `float floatVal()` |  |
-| *stringVal* | [`string`](/ref/base_group/string)` stringVal()` |  |
-| *measurementVal* | `measurement measurementVal()` |  |
-| *colorVal* | [`COLOR`](/ref/graphics_group/COLOR)` colorVal()` |  |
-| *arrayVal* | `const vector< `[`StyleValue`](/ref/app_group/StyleValue)` > & arrayVal()` |  |
-| *compoundVal* | `const map< `[`string`](/ref/base_group/string)`, `[`StyleValue`](/ref/app_group/StyleValue)` > & compoundVal()` |  |
+| *colorVal* | [`COLOR`](/oaknut/ref/graphics_group/COLOR)` colorVal()` |  |
+| *compoundVal* | `const map< `[`string`](/oaknut/ref/base_group/string)`, `[`StyleValue`](/oaknut/ref/app_group/StyleValue)` > & compoundVal()` |  |
+| *copyFrom* | `void copyFrom(const `[`StyleValue`](/oaknut/ref/app_group/StyleValue)` * other)` |  |
 | *cornerRadiiVal* | `VECTOR4 cornerRadiiVal()` |  |
 | *edgeInsetsVal* | `EDGEINSETS edgeInsetsVal()` |  |
+| *floatVal* | `float floatVal()` |  |
+| *floatVal* | `float floatVal(const `[`string`](/oaknut/ref/base_group/string)` & name)` |  |
 | *fontWeightVal* | `float fontWeightVal()` |  |
-| *get* | `const `[`StyleValue`](/ref/app_group/StyleValue)` * get(const `[`string`](/ref/base_group/string)` & keypath)` |  |
-| *intVal* | `int intVal(const `[`string`](/ref/base_group/string)` & name)` |  |
-| *floatVal* | `float floatVal(const `[`string`](/ref/base_group/string)` & name)` |  |
-| *stringVal* | [`string`](/ref/base_group/string)` stringVal(const `[`string`](/ref/base_group/string)` & name)` |  |
-| *arrayVal* | `const vector< `[`StyleValue`](/ref/app_group/StyleValue)` > & arrayVal(const `[`string`](/ref/base_group/string)` & name)` |  |
-| *importValues* | `void importValues(const map< `[`string`](/ref/base_group/string)`, `[`StyleValue`](/ref/app_group/StyleValue)` > & values)` |  |
+| *get* | `const `[`StyleValue`](/oaknut/ref/app_group/StyleValue)` * get(const `[`string`](/oaknut/ref/base_group/string)` & keypath)` |  |
+| *importValues* | `void importValues(const map< `[`string`](/oaknut/ref/base_group/string)`, `[`StyleValue`](/oaknut/ref/app_group/StyleValue)` > & values)` |  |
+| *intVal* | `int intVal()` |  |
+| *intVal* | `int intVal(const `[`string`](/oaknut/ref/base_group/string)` & name)` |  |
+| *isArray* | `bool isArray()` |  |
+| *isEmpty* | `bool isEmpty()` |  |
+| *isMeasurement* | `bool isMeasurement()` |  |
+| *isNumeric* | `bool isNumeric()` |  |
+| *isString* | `bool isString()` |  |
+| *measurementVal* | `measurement measurementVal()` |  |
+| *operator=* | [`StyleValue`](/oaknut/ref/app_group/StyleValue)` & operator=(const `[`StyleValue`](/oaknut/ref/app_group/StyleValue)` & other)` |  |
 | *parse* | `bool parse(class StringProcessor & it, int flags)` |  |
-| *setType* | `void setType(Type newType)` |  |
-| *copyFrom* | `void copyFrom(const `[`StyleValue`](/ref/app_group/StyleValue)` * other)` |  |
-| *select* | `const `[`StyleValue`](/ref/app_group/StyleValue)` * select()` |  |
 | *parseNumberOrMeasurement* | `bool parseNumberOrMeasurement(StringProcessor & it)` |  |
+| *select* | `const `[`StyleValue`](/oaknut/ref/app_group/StyleValue)` * select()` |  |
+| *setType* | `void setType(Type newType)` |  |
+| *stringVal* | [`string`](/oaknut/ref/base_group/string)` stringVal()` |  |
+| *stringVal* | [`string`](/oaknut/ref/base_group/string)` stringVal(const `[`string`](/oaknut/ref/base_group/string)` & name)` |  |
+| *~StyleValue* | ` ~StyleValue()` |  |

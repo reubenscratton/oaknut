@@ -13,47 +13,55 @@ class Canvas
 Basic 2D Canvas API.     
 
 Canvas is a platform type, instantiate via `Canvas::create()`.NB: This is VERY limited at present, features get added as they become needed.     
-| | |
-|-|-|
-|[`Canvas`](/ref/graphics_group/Canvas)` * create()`||
+[`Canvas`](/oaknut/ref/graphics_group/Canvas)` * create()`<br>
 
 
-| | |
-|-|-|
-|`void resize(int width, int height)`||
-|[`Bitmap`](/ref/graphics_group/Bitmap)` * getBitmap()`||
-|`void clear(`[`COLOR`](/ref/graphics_group/COLOR)` color)`||
-|`void setFillColor(`[`COLOR`](/ref/graphics_group/COLOR)` color)`||
-|`void setStrokeColor(`[`COLOR`](/ref/graphics_group/COLOR)` color)`||
-|`void setStrokeWidth(float strokeWidth)`||
-|`void setAffineTransform(AFFINE_TRANSFORM * t)`||
-|`void drawRect(RECT rect)`||
-|`void drawOval(RECT rect)`||
-|`void drawPath(Path * path)`||
-|`void drawBitmap(`[`Bitmap`](/ref/graphics_group/Bitmap)` * bitmap, const RECT & rectSrc, const RECT & rectDst)`||
-|`Path * createPath()`||
+
+`void resize(int width, int height)`<br>
+
+[`Bitmap`](/oaknut/ref/graphics_group/Bitmap)` * getBitmap()`<br>
+
+`void clear(`[`COLOR`](/oaknut/ref/graphics_group/COLOR)` color)`<br>
+
+`void setFillColor(`[`COLOR`](/oaknut/ref/graphics_group/COLOR)` color)`<br>
+
+`void setStrokeColor(`[`COLOR`](/oaknut/ref/graphics_group/COLOR)` color)`<br>
+
+`void setStrokeWidth(float strokeWidth)`<br>
+
+`void setAffineTransform(AFFINE_TRANSFORM * t)`<br>
+
+`void drawRect(RECT rect)`<br>
+
+`void drawOval(RECT rect)`<br>
+
+`void drawPath(Path * path)`<br>
+
+`void drawBitmap(`[`Bitmap`](/oaknut/ref/graphics_group/Bitmap)` * bitmap, const RECT & rectSrc, const RECT & rectDst)`<br>
+
+`Path * createPath()`<br>
 
 
-| | |
-|-|-|
-|` Canvas()`||
+
+` Canvas()`<br>
+
 
 
 ## Methods
 
 | | |
 |-|-|
-| *create* | [`Canvas`](/ref/graphics_group/Canvas)` * create()` |  |
-| *resize* | `void resize(int width, int height)` |  |
-| *getBitmap* | [`Bitmap`](/ref/graphics_group/Bitmap)` * getBitmap()` |  |
-| *clear* | `void clear(`[`COLOR`](/ref/graphics_group/COLOR)` color)` |  |
-| *setFillColor* | `void setFillColor(`[`COLOR`](/ref/graphics_group/COLOR)` color)` |  |
-| *setStrokeColor* | `void setStrokeColor(`[`COLOR`](/ref/graphics_group/COLOR)` color)` |  |
-| *setStrokeWidth* | `void setStrokeWidth(float strokeWidth)` |  |
-| *setAffineTransform* | `void setAffineTransform(AFFINE_TRANSFORM * t)` |  |
-| *drawRect* | `void drawRect(RECT rect)` |  |
+| *Canvas* | ` Canvas()` |  |
+| *clear* | `void clear(`[`COLOR`](/oaknut/ref/graphics_group/COLOR)` color)` |  |
+| *create* | [`Canvas`](/oaknut/ref/graphics_group/Canvas)` * create()` |  |
+| *createPath* | `Path * createPath()` |  |
+| *drawBitmap* | `void drawBitmap(`[`Bitmap`](/oaknut/ref/graphics_group/Bitmap)` * bitmap, const RECT & rectSrc, const RECT & rectDst)` |  |
 | *drawOval* | `void drawOval(RECT rect)` |  |
 | *drawPath* | `void drawPath(Path * path)` |  |
-| *drawBitmap* | `void drawBitmap(`[`Bitmap`](/ref/graphics_group/Bitmap)` * bitmap, const RECT & rectSrc, const RECT & rectDst)` |  |
-| *createPath* | `Path * createPath()` |  |
-| *Canvas* | ` Canvas()` |  |
+| *drawRect* | `void drawRect(RECT rect)` |  |
+| *getBitmap* | [`Bitmap`](/oaknut/ref/graphics_group/Bitmap)` * getBitmap()` |  |
+| *resize* | `void resize(int width, int height)` |  |
+| *setAffineTransform* | `void setAffineTransform(AFFINE_TRANSFORM * t)` |  |
+| *setFillColor* | `void setFillColor(`[`COLOR`](/oaknut/ref/graphics_group/COLOR)` color)` |  |
+| *setStrokeColor* | `void setStrokeColor(`[`COLOR`](/oaknut/ref/graphics_group/COLOR)` color)` |  |
+| *setStrokeWidth* | `void setStrokeWidth(float strokeWidth)` |  |

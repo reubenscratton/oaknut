@@ -2,6 +2,7 @@ package doxypp;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -59,16 +60,20 @@ class CppClass {
 		if (detailedDesc.length() > 0) {
 			s += detailedDesc + "\n";
 		}
+		ArrayList<doxypp.CppMethod> allMethods = new ArrayList<>();
 		for (CppClassSection section : sections) {
 			s += section.toMarkdown();
+			allMethods.addAll(s.methods);
 		}
-		s += "# Methods\n\n";
-		for (CppClassSection section : sections) {
-			for (CppMethod method : section.methods) {
-				s += "| *" + method.name + "* | ";
-				s += " `" + method.getSignatureHtml() + "` | ";
-				s += "" + method.detailed + " |\n";
-			}
+		Collections.sort(allMethods, new Comparator<CppMethod>() {
+
+		});
+		s += "## Methods\n\n";
+		s+="| | |\n|-|-|\n";
+		for (CppMethod method : allMethods) {
+			s += "| *" + method.name + "* | ";
+			s += method.getSignature() + " | ";
+			s += "" + method.detailed + " |\n";
 		}
 		return s;
 	}

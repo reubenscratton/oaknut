@@ -13,53 +13,84 @@ class Window
 A window is the top level container for app UI.     
 
 There is usually only one Window instance, globally accessible through `app.window`. It usually wraps a native window in some way.     
-| | |
-|-|-|
-|` Window()`||
+` Window()`<br>
 
 
-| | |
-|-|-|
-|[`Window`](/ref/views/Window)` * create()`||
+
+[`Window`](/oaknut/ref/views/Window)` * create()`<br>
 
 
-| | |
-|-|-|
-|`void startAnimation(Animation * animation, int duration)`||
-|`void startAnimation(Animation * animation, int duration, int delay)`||
-|`void stopAnimation(Animation * animation)`||
-|`void detachView(`[`View`](/ref/views/View)` * view)`||
-|`bool hasPermission(Permission permission)`||
-|`void runWithPermission(Permission permission, std::function< void(bool)> callback)`||
-|`void runWithPermissions(vector< Permission > permission, std::function< void(vector< bool >)> callback)`||
-|`void presentModalViewController(`[`ViewController`](/ref/app_group/ViewController)` * viewController)`||
-|`void dismissModalViewController(`[`ViewController`](/ref/app_group/ViewController)` * viewController, std::function< void()> onComplete)`||
-|`void setRootViewController(`[`ViewController`](/ref/app_group/ViewController)` * viewController)`||
-|`void resizeSurface(int width, int height, float scale)`||
-|`void destroySurface()`||
-|`void draw()`||
-|`void requestRedraw()`||
-|`void requestRedrawNative()`||
-|`void show()`||
-|`void keyboardShow(bool show)`|Show or hide the system soft keyboard, if there is one.|
-|`void keyboardNotifyTextChanged()`||
-|`void keyboardNotifyTextSelectionChanged()`||
-|`void dispatchInputEvent(INPUTEVENT event)`||
-|`POINT offsetToView(`[`View`](/ref/views/View)` * view)`||
-|`bool setFocusedView(`[`View`](/ref/views/View)` * view)`||
-|`void attachViewController(`[`ViewController`](/ref/app_group/ViewController)` * vc)`||
-|`void detachViewController(`[`ViewController`](/ref/app_group/ViewController)` * vc)`||
-|`void pushClip(RECT clip)`||
-|`void popClip()`||
-|`void setBlendMode(int blendMode)`||
-|`void bindTexture(`[`Bitmap`](/ref/graphics_group/Bitmap)` * texture)`||
-|`void prepareToDraw()`||
-|`void setCurrentSurface(`[`Surface`](/ref/graphics_group/Surface)` * surface)`||
-|`void setVertexConfig(int vertexConfig)`||
-|`void layout(RECT constraint)`|Recalculate and apply this view's size and position (as well as all subviews).|
-|`void setSafeInsets(SafeInsetsType type, const EDGEINSETS & insets)`||
-|`void ensureFocusedViewIsInSafeArea()`||
-|`void updateDecorOp(bool bottom, float height)`||
+
+`void startAnimation(Animation * animation, int duration)`<br>
+
+`void startAnimation(Animation * animation, int duration, int delay)`<br>
+
+`void stopAnimation(Animation * animation)`<br>
+
+`void detachView(`[`View`](/oaknut/ref/views/View)` * view)`<br>
+
+`bool hasPermission(Permission permission)`<br>
+
+`void runWithPermission(Permission permission, std::function< void(bool)> callback)`<br>
+
+`void runWithPermissions(vector< Permission > permission, std::function< void(vector< bool >)> callback)`<br>
+
+`void presentModalViewController(`[`ViewController`](/oaknut/ref/app_group/ViewController)` * viewController)`<br>
+
+`void dismissModalViewController(`[`ViewController`](/oaknut/ref/app_group/ViewController)` * viewController, std::function< void()> onComplete)`<br>
+
+`void setRootViewController(`[`ViewController`](/oaknut/ref/app_group/ViewController)` * viewController)`<br>
+
+`void resizeSurface(int width, int height, float scale)`<br>
+
+`void destroySurface()`<br>
+
+`void draw()`<br>
+
+`void requestRedraw()`<br>
+
+`void requestRedrawNative()`<br>
+
+`void show()`<br>
+
+`void keyboardShow(bool show)`<br>Show or hide the system soft keyboard, if there is one.
+
+`void keyboardNotifyTextChanged()`<br>
+
+`void keyboardNotifyTextSelectionChanged()`<br>
+
+`void dispatchInputEvent(INPUTEVENT event)`<br>
+
+`POINT offsetToView(`[`View`](/oaknut/ref/views/View)` * view)`<br>
+
+`bool setFocusedView(`[`View`](/oaknut/ref/views/View)` * view)`<br>
+
+`void attachViewController(`[`ViewController`](/oaknut/ref/app_group/ViewController)` * vc)`<br>
+
+`void detachViewController(`[`ViewController`](/oaknut/ref/app_group/ViewController)` * vc)`<br>
+
+`void pushClip(RECT clip)`<br>
+
+`void popClip()`<br>
+
+`void setBlendMode(int blendMode)`<br>
+
+`void bindTexture(`[`Bitmap`](/oaknut/ref/graphics_group/Bitmap)` * texture)`<br>
+
+`void prepareToDraw()`<br>
+
+`void setCurrentSurface(`[`Surface`](/oaknut/ref/graphics_group/Surface)` * surface)`<br>
+
+`void setVertexConfig(int vertexConfig)`<br>
+
+`void layout(RECT constraint)`<br>Recalculate and apply this view's size and position (as well as all subviews).
+
+`void setSafeInsets(SafeInsetsType type, const EDGEINSETS & insets)`<br>
+
+`void ensureFocusedViewIsInSafeArea()`<br>
+
+`void updateDecorOp(bool bottom, float height)`<br>
+
 
 
 ## Methods
@@ -67,39 +98,39 @@ There is usually only one Window instance, globally accessible through `app.wind
 | | |
 |-|-|
 | *Window* | ` Window()` |  |
-| *create* | [`Window`](/ref/views/Window)` * create()` |  |
+| *attachViewController* | `void attachViewController(`[`ViewController`](/oaknut/ref/app_group/ViewController)` * vc)` |  |
+| *bindTexture* | `void bindTexture(`[`Bitmap`](/oaknut/ref/graphics_group/Bitmap)` * texture)` |  |
+| *create* | [`Window`](/oaknut/ref/views/Window)` * create()` |  |
+| *destroySurface* | `void destroySurface()` |  |
+| *detachView* | `void detachView(`[`View`](/oaknut/ref/views/View)` * view)` |  |
+| *detachViewController* | `void detachViewController(`[`ViewController`](/oaknut/ref/app_group/ViewController)` * vc)` |  |
+| *dismissModalViewController* | `void dismissModalViewController(`[`ViewController`](/oaknut/ref/app_group/ViewController)` * viewController, std::function< void()> onComplete)` |  |
+| *dispatchInputEvent* | `void dispatchInputEvent(INPUTEVENT event)` |  |
+| *draw* | `void draw()` |  |
+| *ensureFocusedViewIsInSafeArea* | `void ensureFocusedViewIsInSafeArea()` |  |
+| *hasPermission* | `bool hasPermission(Permission permission)` |  |
+| *keyboardNotifyTextChanged* | `void keyboardNotifyTextChanged()` |  |
+| *keyboardNotifyTextSelectionChanged* | `void keyboardNotifyTextSelectionChanged()` |  |
+| *keyboardShow* | `void keyboardShow(bool show)` |  |
+| *layout* | `void layout(RECT constraint)` | Default implementation uses SIZESPEC and ALIGNSPEC members but derived types may override the default behaviour. |
+| *offsetToView* | `POINT offsetToView(`[`View`](/oaknut/ref/views/View)` * view)` |  |
+| *popClip* | `void popClip()` |  |
+| *prepareToDraw* | `void prepareToDraw()` |  |
+| *presentModalViewController* | `void presentModalViewController(`[`ViewController`](/oaknut/ref/app_group/ViewController)` * viewController)` |  |
+| *pushClip* | `void pushClip(RECT clip)` |  |
+| *requestRedraw* | `void requestRedraw()` |  |
+| *requestRedrawNative* | `void requestRedrawNative()` |  |
+| *resizeSurface* | `void resizeSurface(int width, int height, float scale)` |  |
+| *runWithPermission* | `void runWithPermission(Permission permission, std::function< void(bool)> callback)` |  |
+| *runWithPermissions* | `void runWithPermissions(vector< Permission > permission, std::function< void(vector< bool >)> callback)` |  |
+| *setBlendMode* | `void setBlendMode(int blendMode)` |  |
+| *setCurrentSurface* | `void setCurrentSurface(`[`Surface`](/oaknut/ref/graphics_group/Surface)` * surface)` |  |
+| *setFocusedView* | `bool setFocusedView(`[`View`](/oaknut/ref/views/View)` * view)` |  |
+| *setRootViewController* | `void setRootViewController(`[`ViewController`](/oaknut/ref/app_group/ViewController)` * viewController)` |  |
+| *setSafeInsets* | `void setSafeInsets(SafeInsetsType type, const EDGEINSETS & insets)` |  |
+| *setVertexConfig* | `void setVertexConfig(int vertexConfig)` |  |
+| *show* | `void show()` |  |
 | *startAnimation* | `void startAnimation(Animation * animation, int duration)` |  |
 | *startAnimation* | `void startAnimation(Animation * animation, int duration, int delay)` |  |
 | *stopAnimation* | `void stopAnimation(Animation * animation)` |  |
-| *detachView* | `void detachView(`[`View`](/ref/views/View)` * view)` |  |
-| *hasPermission* | `bool hasPermission(Permission permission)` |  |
-| *runWithPermission* | `void runWithPermission(Permission permission, std::function< void(bool)> callback)` |  |
-| *runWithPermissions* | `void runWithPermissions(vector< Permission > permission, std::function< void(vector< bool >)> callback)` |  |
-| *presentModalViewController* | `void presentModalViewController(`[`ViewController`](/ref/app_group/ViewController)` * viewController)` |  |
-| *dismissModalViewController* | `void dismissModalViewController(`[`ViewController`](/ref/app_group/ViewController)` * viewController, std::function< void()> onComplete)` |  |
-| *setRootViewController* | `void setRootViewController(`[`ViewController`](/ref/app_group/ViewController)` * viewController)` |  |
-| *resizeSurface* | `void resizeSurface(int width, int height, float scale)` |  |
-| *destroySurface* | `void destroySurface()` |  |
-| *draw* | `void draw()` |  |
-| *requestRedraw* | `void requestRedraw()` |  |
-| *requestRedrawNative* | `void requestRedrawNative()` |  |
-| *show* | `void show()` |  |
-| *keyboardShow* | `void keyboardShow(bool show)` |  |
-| *keyboardNotifyTextChanged* | `void keyboardNotifyTextChanged()` |  |
-| *keyboardNotifyTextSelectionChanged* | `void keyboardNotifyTextSelectionChanged()` |  |
-| *dispatchInputEvent* | `void dispatchInputEvent(INPUTEVENT event)` |  |
-| *offsetToView* | `POINT offsetToView(`[`View`](/ref/views/View)` * view)` |  |
-| *setFocusedView* | `bool setFocusedView(`[`View`](/ref/views/View)` * view)` |  |
-| *attachViewController* | `void attachViewController(`[`ViewController`](/ref/app_group/ViewController)` * vc)` |  |
-| *detachViewController* | `void detachViewController(`[`ViewController`](/ref/app_group/ViewController)` * vc)` |  |
-| *pushClip* | `void pushClip(RECT clip)` |  |
-| *popClip* | `void popClip()` |  |
-| *setBlendMode* | `void setBlendMode(int blendMode)` |  |
-| *bindTexture* | `void bindTexture(`[`Bitmap`](/ref/graphics_group/Bitmap)` * texture)` |  |
-| *prepareToDraw* | `void prepareToDraw()` |  |
-| *setCurrentSurface* | `void setCurrentSurface(`[`Surface`](/ref/graphics_group/Surface)` * surface)` |  |
-| *setVertexConfig* | `void setVertexConfig(int vertexConfig)` |  |
-| *layout* | `void layout(RECT constraint)` | Default implementation uses SIZESPEC and ALIGNSPEC members but derived types may override the default behaviour. |
-| *setSafeInsets* | `void setSafeInsets(SafeInsetsType type, const EDGEINSETS & insets)` |  |
-| *ensureFocusedViewIsInSafeArea* | `void ensureFocusedViewIsInSafeArea()` |  |
 | *updateDecorOp* | `void updateDecorOp(bool bottom, float height)` |  |

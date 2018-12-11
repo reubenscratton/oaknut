@@ -13,25 +13,34 @@ class NavigationController
 Root view controller for typical mobile UX where there is a bar at the top of the screen and pages are pushed and popped in and out of view.     
 
     
-| | |
-|-|-|
-|` NavigationController()`||
-|`void pushViewController(`[`ViewController`](/ref/app_group/ViewController)` * vc)`||
-|`void popViewController()`||
-|`void onWindowAttached()`|Called when this view controller is attached to the window.|
-|`void onWindowDetached()`||
-|`bool navigateBack()`||
-|`void requestScroll(float dx, float dy)`||
-|`void applySafeInsets(const EDGEINSETS & safeInsets)`||
-|`void applySafeInsetsToChild(`[`ViewController`](/ref/app_group/ViewController)` * childVC)`||
+` NavigationController()`<br>
+
+`void pushViewController(`[`ViewController`](/oaknut/ref/app_group/ViewController)` * vc)`<br>
+
+`void popViewController()`<br>
+
+`void onWindowAttached()`<br>Called when this view controller is attached to the window.
+
+`void onWindowDetached()`<br>
+
+`bool navigateBack()`<br>
+
+`void requestScroll(float dx, float dy)`<br>
+
+`void applySafeInsets(const EDGEINSETS & safeInsets)`<br>
+
+`void applySafeInsetsToChild(`[`ViewController`](/oaknut/ref/app_group/ViewController)` * childVC)`<br>
 
 
-| | |
-|-|-|
-|`void startNavAnimation(`[`ViewController`](/ref/app_group/ViewController)` * incomingVC, AnimationState animationState)`||
-|`void applyNavTransitionToViewController(`[`ViewController`](/ref/app_group/ViewController)` * vc, float val, bool incoming)`||
-|`void onNavTransitionApply(float val)`||
-|`void completeIncoming()`||
+
+`void startNavAnimation(`[`ViewController`](/oaknut/ref/app_group/ViewController)` * incomingVC, AnimationState animationState)`<br>
+
+`void applyNavTransitionToViewController(`[`ViewController`](/oaknut/ref/app_group/ViewController)` * vc, float val, bool incoming)`<br>
+
+`void onNavTransitionApply(float val)`<br>
+
+`void completeIncoming()`<br>
+
 
 
 ## Methods
@@ -39,15 +48,15 @@ Root view controller for typical mobile UX where there is a bar at the top of th
 | | |
 |-|-|
 | *NavigationController* | ` NavigationController()` |  |
-| *pushViewController* | `void pushViewController(`[`ViewController`](/ref/app_group/ViewController)` * vc)` |  |
-| *popViewController* | `void popViewController()` |  |
+| *applyNavTransitionToViewController* | `void applyNavTransitionToViewController(`[`ViewController`](/oaknut/ref/app_group/ViewController)` * vc, float val, bool incoming)` |  |
+| *applySafeInsets* | `void applySafeInsets(const EDGEINSETS & safeInsets)` |  |
+| *applySafeInsetsToChild* | `void applySafeInsetsToChild(`[`ViewController`](/oaknut/ref/app_group/ViewController)` * childVC)` |  |
+| *completeIncoming* | `void completeIncoming()` |  |
+| *navigateBack* | `bool navigateBack()` |  |
+| *onNavTransitionApply* | `void onNavTransitionApply(float val)` |  |
 | *onWindowAttached* | `void onWindowAttached()` |  |
 | *onWindowDetached* | `void onWindowDetached()` |  |
-| *navigateBack* | `bool navigateBack()` |  |
+| *popViewController* | `void popViewController()` |  |
+| *pushViewController* | `void pushViewController(`[`ViewController`](/oaknut/ref/app_group/ViewController)` * vc)` |  |
 | *requestScroll* | `void requestScroll(float dx, float dy)` |  |
-| *applySafeInsets* | `void applySafeInsets(const EDGEINSETS & safeInsets)` |  |
-| *applySafeInsetsToChild* | `void applySafeInsetsToChild(`[`ViewController`](/ref/app_group/ViewController)` * childVC)` |  |
-| *startNavAnimation* | `void startNavAnimation(`[`ViewController`](/ref/app_group/ViewController)` * incomingVC, AnimationState animationState)` |  |
-| *applyNavTransitionToViewController* | `void applyNavTransitionToViewController(`[`ViewController`](/ref/app_group/ViewController)` * vc, float val, bool incoming)` |  |
-| *onNavTransitionApply* | `void onNavTransitionApply(float val)` |  |
-| *completeIncoming* | `void completeIncoming()` |  |
+| *startNavAnimation* | `void startNavAnimation(`[`ViewController`](/oaknut/ref/app_group/ViewController)` * incomingVC, AnimationState animationState)` |  |

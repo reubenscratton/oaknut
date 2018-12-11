@@ -10,19 +10,22 @@ class Object
 Base class for all reference-counted types.     
 
     
-| | |
-|-|-|
-|` Object()`||
-|` ~Object()`||
-|`void retain()`|Increments the internal reference counter.|
-|`void release()`|Decrements the internal reference counter.|
-|`void * operator new(size_t sz)`||
+` Object()`<br>
+
+` ~Object()`<br>
+
+`void retain()`<br>Increments the internal reference counter.
+
+`void release()`<br>Decrements the internal reference counter.
+
+`void * operator new(size_t sz)`<br>
 
 
-| | |
-|-|-|
-|`void flushAutodeletePool()`||
-|[`Object`](/ref/base_group/Object)` * createByName(const `[`string`](/ref/base_group/string)` & className)`||
+
+`void flushAutodeletePool()`<br>
+
+[`Object`](/oaknut/ref/base_group/Object)` * createByName(const `[`string`](/oaknut/ref/base_group/string)` & className)`<br>
+
 
 
 ## Methods
@@ -30,9 +33,9 @@ Base class for all reference-counted types.
 | | |
 |-|-|
 | *Object* | ` Object()` |  |
-| *~Object* | ` ~Object()` |  |
-| *retain* | `void retain()` | NB: Not threadsafe, cos we don't have threads. |
-| *release* | `void release()` | If the counter reaches zero the object is moved to a queue of objects that will be free()d between frames. NB: Not threadsafe. |
-| *operator new* | `void * operator new(size_t sz)` |  |
+| *createByName* | [`Object`](/oaknut/ref/base_group/Object)` * createByName(const `[`string`](/oaknut/ref/base_group/string)` & className)` |  |
 | *flushAutodeletePool* | `void flushAutodeletePool()` |  |
-| *createByName* | [`Object`](/ref/base_group/Object)` * createByName(const `[`string`](/ref/base_group/string)` & className)` |  |
+| *operator new* | `void * operator new(size_t sz)` |  |
+| *release* | `void release()` | If the counter reaches zero the object is moved to a queue of objects that will be free()d between frames. NB: Not threadsafe. |
+| *retain* | `void retain()` | NB: Not threadsafe, cos we don't have threads. |
+| *~Object* | ` ~Object()` |  |
