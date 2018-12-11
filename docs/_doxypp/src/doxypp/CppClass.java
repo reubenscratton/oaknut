@@ -66,7 +66,7 @@ class CppClass {
 			s += section.toMarkdown();
 			allMethods.addAll(section.methods);
 		}
-		Collections.sort(allMethods, new Comparator<CppMethod>() {
+		/*Collections.sort(allMethods, new Comparator<CppMethod>() {
 
 			@Override
 			public int compare(CppMethod o1, CppMethod o2) {
@@ -79,7 +79,7 @@ class CppClass {
 			s += "| *" + method.name + "* | ";
 			s += method.getSignature() + " | ";
 			s += "" + method.detailed + " |\n";
-		}
+		}*/
 		return s;
 	}
 	String toHtml() {
@@ -102,7 +102,7 @@ class CppClass {
 		for (CppClassSection section : sections) {
 			s += section.toHtml();
 		}
-		s += "<h1>Methods</h1>\n\n";
+		/*s += "<h1>Methods</h1>\n\n";
 		for (CppClassSection section : sections) {
 			for (CppMethod method : section.methods) {
 				s += "<h3>" + method.name + "</h3>\n";
@@ -110,7 +110,7 @@ class CppClass {
 				s += "<p>" + method.detailed + "</p>";
 				s += "\n\n";
 			}
-		}
+		}*/
 		return s;
 	}
 }

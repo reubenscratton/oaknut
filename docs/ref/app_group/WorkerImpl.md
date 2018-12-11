@@ -20,11 +20,3 @@ Application code should not use this class directly, it is solely for implementi
 `void stop_()`<br>Corresponds to Worker::stop()
 
 
-
-## Methods
-
-| | |
-|-|-|
-| *process_* | `variant process_(const variant & data_in)` |  |
-| *start_* | `void start_(const variant & config)` |  |
-| *stop_* | `void stop_()` |  |

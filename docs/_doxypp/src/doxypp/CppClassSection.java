@@ -36,9 +36,14 @@ class CppClassSection {
 				if (method.brief.length() > 0) {
 					s += method.brief;
 				}
-				s += "\n\n";
+				s += "\n";
+				if (method.detailed.length() > 0) {
+					s += method.detailed;
+					s += "\n";
+				}
+				s += "\n";
 			}
-			s += "\n\n";
+			s += "\n";
 		}
 		return s;
 	}

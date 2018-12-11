@@ -18,11 +18,14 @@ public class Doxy {
 	static String outputPath = "../ref/";
 
 	
-	static void writeTextFile(String path, String markdown) throws IOException {
-		markdown = "---\n" +
-				"layout: default\n" +
-				"---\n\n"
-				+ markdown;
+	static void writeTextFile(String path, String markdown, boolean withLayoutPrefix) throws IOException {
+
+		if (withLayoutPrefix) {
+			markdown = "---\n" +
+					"layout: default\n" +
+					"---\n\n"
+					+ markdown;
+		}
 		FileOutputStream o = new FileOutputStream(path);
 		o.write(markdown.getBytes());
 		o.close();		
@@ -33,7 +36,7 @@ public class Doxy {
 			   "layout: default\n" + 
 			   "---\n\n"
 			   + html;
-		writeTextFile(path, html);		
+		writeTextFile(path, html, false);
 	}
 
 	public static void main(String[] args) throws ParserConfigurationException, SAXException, IOException {
@@ -57,10 +60,10 @@ public class Doxy {
 		for (CppGroup group : groups) {
 			new File(outputPath + group.name).mkdirs();
 			//writeHtmlFile(group.title, outputPath + group.name + "/index.html", group.toHtml());
-			writeTextFile(outputPath + group.name + "/index.md", group.toMarkdown());
+			writeTextFile(outputPath + group.name + "/index.md", group.toMarkdown(), true);
 			for (CppClass clazz : group.classes) {
 				//writeHtmlFile(clazz.name, outputPath + group.name + "/" + clazz.name + ".html", clazz.toHtml());
-				writeTextFile(outputPath + group.name + "/" + clazz.name + ".md", clazz.toMarkdown());
+				writeTextFile(outputPath + group.name + "/" + clazz.name + ".md", clazz.toMarkdown(), true);
 			}
 		}
 		
@@ -93,7 +96,7 @@ public class Doxy {
 			}
 		}
 		navModel += "]";
-		writeTextFile(outputPath + "navmodel.js", navModel);
+		writeTextFile(outputPath + "navmodel.js", navModel, false);
 	
 	
 	}

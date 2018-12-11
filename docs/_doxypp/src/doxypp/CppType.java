@@ -38,6 +38,7 @@ class CppType {
 				}
 			}
 		}
+		text = text.replace(" *", "*");
 		return text;
 	}
 	
