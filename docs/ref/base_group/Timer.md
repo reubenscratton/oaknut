@@ -13,29 +13,27 @@ class Timer
 A simple timer class.     
 
     
-## 
+| | |
+|-|-|
+|[`Timer`](/ref/base_group/Timer)` * start(const std::function< void()> & del, int intervalMillis, bool repeats)`||
 
 
-
-## 
-
-| `<a href="class_timer.html">Timer</a> * start(const std::function< void()> & del, int intervalMillis, bool repeats)` |  |
-
-
-## 
-
-| `void stop()` |  |
+| | |
+|-|-|
+|`void stop()`||
 
 
-## 
+| | |
+|-|-|
+|` Timer(const std::function< void()> & del, int intervalMillis, bool repeats)`||
+|` ~Timer()`||
 
-| ` Timer(const std::function< void()> & del, int intervalMillis, bool repeats)` |  |
-| ` ~Timer()` |  |
 
+## Methods
 
-# Methods
-
-| *start* |  `<a href="class_timer.html">Timer</a> * <a href="todo">start</a>(const std::function< void()> & del, int intervalMillis, bool repeats)` |  |
-| *stop* |  `void <a href="todo">stop</a>()` |  |
-| *Timer* |  ` <a href="todo">Timer</a>(const std::function< void()> & del, int intervalMillis, bool repeats)` |  |
-| *~Timer* |  ` <a href="todo">~Timer</a>()` |  |
+| | |
+|-|-|
+| *start* | [`Timer`](/ref/base_group/Timer)` * start(const std::function< void()> & del, int intervalMillis, bool repeats)` |  |
+| *stop* | `void stop()` |  |
+| *Timer* | ` Timer(const std::function< void()> & del, int intervalMillis, bool repeats)` |  |
+| *~Timer* | ` ~Timer()` |  |

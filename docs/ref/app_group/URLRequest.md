@@ -13,63 +13,65 @@ class URLRequest
 General purpose async networking support.     
 
 Simple example:  URLRequest::get("http://www.foo.com/bar.json") ->handleJson([=](Variant* json) { // handle the json here });  When you create a URLRequest it will begin, at the earliest, in the next event loop.     
-## Static creators
+### Static creators
 
-| `<a href="class_u_r_l_request.html">URLRequest</a> * get(const <a href="classstring.html">string</a> & url, int flags)` | Create and return a GET request. |
-| `<a href="class_u_r_l_request.html">URLRequest</a> * post(const <a href="classstring.html">string</a> & url, const <a href="classbytearray.html">bytearray</a> & body)` | Create and return a POST request. |
-| `<a href="class_u_r_l_request.html">URLRequest</a> * patch(const <a href="classstring.html">string</a> & url, const <a href="classbytearray.html">bytearray</a> & body)` | Create and return a PATCH request. |
-| `<a href="class_u_r_l_request.html">URLRequest</a> * createAndStart(const <a href="classstring.html">string</a> & url, const <a href="classstring.html">string</a> & method, const <a href="classbytearray.html">bytearray</a> & body, int flags)` | Create and return a request. |
-
-
-## Handling response data
-
-| `void handleData(std::function< void(<a href="class_u_r_l_request.html">URLRequest</a> *req)> handler)` |  |
-| `void handleJson(std::function< void(<a href="class_u_r_l_request.html">URLRequest</a> *req, const <a href="classvariant.html">variant</a> &)> handler)` |  |
-| `void handleBitmap(std::function< void(<a href="class_u_r_l_request.html">URLRequest</a> *req, <a href="class_bitmap.html">Bitmap</a> *)> handler)` |  |
+| | |
+|-|-|
+|[`URLRequest`](/ref/app_group/URLRequest)` * get(const `[`string`](/ref/base_group/string)` & url, int flags)`|Create and return a GET request.|
+|[`URLRequest`](/ref/app_group/URLRequest)` * post(const `[`string`](/ref/base_group/string)` & url, const `[`bytearray`](/ref/base_group/bytearray)` & body)`|Create and return a POST request.|
+|[`URLRequest`](/ref/app_group/URLRequest)` * patch(const `[`string`](/ref/base_group/string)` & url, const `[`bytearray`](/ref/base_group/bytearray)` & body)`|Create and return a PATCH request.|
+|[`URLRequest`](/ref/app_group/URLRequest)` * createAndStart(const `[`string`](/ref/base_group/string)` & url, const `[`string`](/ref/base_group/string)` & method, const `[`bytearray`](/ref/base_group/bytearray)` & body, int flags)`|Create and return a request.|
 
 
-## 
+### Handling response data
+
+| | |
+|-|-|
+|`void handleData(std::function< void(`[`URLRequest`](/ref/app_group/URLRequest)` *req)> handler)`||
+|`void handleJson(std::function< void(`[`URLRequest`](/ref/app_group/URLRequest)` *req, const variant &)> handler)`||
+|`void handleBitmap(std::function< void(`[`URLRequest`](/ref/app_group/URLRequest)` *req, `[`Bitmap`](/ref/graphics_group/Bitmap)` *)> handler)`||
 
 
-
-## 
-
-| `void setHeader(const <a href="classstring.html">string</a> & headerName, const <a href="classstring.html">string</a> & headerValue)` |  |
-| `void cancel()` |  |
-| `bool error()` |  |
-| `int getHttpStatus()` |  |
-| `const <a href="classbytearray.html">bytearray</a> & getResponseData()` |  |
-
-
-## 
-
-| `void run()` |  |
-| ` URLRequest(const <a href="classstring.html">string</a> & url, const <a href="classstring.html">string</a> & method, const <a href="classbytearray.html">bytearray</a> & body, int flags)` |  |
-| ` ~URLRequest()` |  |
-| `void dispatchResult(int httpStatus, const map< <a href="classstring.html">string</a>, <a href="classstring.html">string</a> > & responseHeaders)` |  |
+| | |
+|-|-|
+|`void setHeader(const `[`string`](/ref/base_group/string)` & headerName, const `[`string`](/ref/base_group/string)` & headerValue)`||
+|`void cancel()`||
+|`bool error()`||
+|`int getHttpStatus()`||
+|`const `[`bytearray`](/ref/base_group/bytearray)` & getResponseData()`||
 
 
-## 
+| | |
+|-|-|
+|`void run()`||
+|` URLRequest(const `[`string`](/ref/base_group/string)` & url, const `[`string`](/ref/base_group/string)` & method, const `[`bytearray`](/ref/base_group/bytearray)` & body, int flags)`||
+|` ~URLRequest()`||
+|`void dispatchResult(int httpStatus, const map< `[`string`](/ref/base_group/string)`, `[`string`](/ref/base_group/string)` > & responseHeaders)`||
 
-| `<a href="class_u_r_l_request.html">URLRequest</a> * create(const <a href="classstring.html">string</a> & url, const <a href="classstring.html">string</a> & method, const <a href="classbytearray.html">bytearray</a> & body, int flags)` |  |
+
+| | |
+|-|-|
+|[`URLRequest`](/ref/app_group/URLRequest)` * create(const `[`string`](/ref/base_group/string)` & url, const `[`string`](/ref/base_group/string)` & method, const `[`bytearray`](/ref/base_group/bytearray)` & body, int flags)`||
 
 
-# Methods
+## Methods
 
-| *get* |  `<a href="class_u_r_l_request.html">URLRequest</a> * <a href="todo">get</a>(const <a href="classstring.html">string</a> & url, int flags)` |  |
-| *post* |  `<a href="class_u_r_l_request.html">URLRequest</a> * <a href="todo">post</a>(const <a href="classstring.html">string</a> & url, const <a href="classbytearray.html">bytearray</a> & body)` |  |
-| *patch* |  `<a href="class_u_r_l_request.html">URLRequest</a> * <a href="todo">patch</a>(const <a href="classstring.html">string</a> & url, const <a href="classbytearray.html">bytearray</a> & body)` |  |
-| *createAndStart* |  `<a href="class_u_r_l_request.html">URLRequest</a> * <a href="todo">createAndStart</a>(const <a href="classstring.html">string</a> & url, const <a href="classstring.html">string</a> & method, const <a href="classbytearray.html">bytearray</a> & body, int flags)` |  |
-| *handleData* |  `void <a href="todo">handleData</a>(std::function< void(<a href="class_u_r_l_request.html">URLRequest</a> *req)> handler)` |  |
-| *handleJson* |  `void <a href="todo">handleJson</a>(std::function< void(<a href="class_u_r_l_request.html">URLRequest</a> *req, const <a href="classvariant.html">variant</a> &)> handler)` |  |
-| *handleBitmap* |  `void <a href="todo">handleBitmap</a>(std::function< void(<a href="class_u_r_l_request.html">URLRequest</a> *req, <a href="class_bitmap.html">Bitmap</a> *)> handler)` |  |
-| *setHeader* |  `void <a href="todo">setHeader</a>(const <a href="classstring.html">string</a> & headerName, const <a href="classstring.html">string</a> & headerValue)` |  |
-| *cancel* |  `void <a href="todo">cancel</a>()` |  |
-| *error* |  `bool <a href="todo">error</a>()` |  |
-| *getHttpStatus* |  `int <a href="todo">getHttpStatus</a>()` |  |
-| *getResponseData* |  `const <a href="classbytearray.html">bytearray</a> & <a href="todo">getResponseData</a>()` |  |
-| *run* |  `void <a href="todo">run</a>()` |  |
-| *URLRequest* |  ` <a href="todo">URLRequest</a>(const <a href="classstring.html">string</a> & url, const <a href="classstring.html">string</a> & method, const <a href="classbytearray.html">bytearray</a> & body, int flags)` |  |
-| *~URLRequest* |  ` <a href="todo">~URLRequest</a>()` |  |
-| *dispatchResult* |  `void <a href="todo">dispatchResult</a>(int httpStatus, const map< <a href="classstring.html">string</a>, <a href="classstring.html">string</a> > & responseHeaders)` |  |
-| *create* |  `<a href="class_u_r_l_request.html">URLRequest</a> * <a href="todo">create</a>(const <a href="classstring.html">string</a> & url, const <a href="classstring.html">string</a> & method, const <a href="classbytearray.html">bytearray</a> & body, int flags)` |  |
+| | |
+|-|-|
+| *get* | [`URLRequest`](/ref/app_group/URLRequest)` * get(const `[`string`](/ref/base_group/string)` & url, int flags)` |  |
+| *post* | [`URLRequest`](/ref/app_group/URLRequest)` * post(const `[`string`](/ref/base_group/string)` & url, const `[`bytearray`](/ref/base_group/bytearray)` & body)` |  |
+| *patch* | [`URLRequest`](/ref/app_group/URLRequest)` * patch(const `[`string`](/ref/base_group/string)` & url, const `[`bytearray`](/ref/base_group/bytearray)` & body)` |  |
+| *createAndStart* | [`URLRequest`](/ref/app_group/URLRequest)` * createAndStart(const `[`string`](/ref/base_group/string)` & url, const `[`string`](/ref/base_group/string)` & method, const `[`bytearray`](/ref/base_group/bytearray)` & body, int flags)` |  |
+| *handleData* | `void handleData(std::function< void(`[`URLRequest`](/ref/app_group/URLRequest)` *req)> handler)` |  |
+| *handleJson* | `void handleJson(std::function< void(`[`URLRequest`](/ref/app_group/URLRequest)` *req, const variant &)> handler)` |  |
+| *handleBitmap* | `void handleBitmap(std::function< void(`[`URLRequest`](/ref/app_group/URLRequest)` *req, `[`Bitmap`](/ref/graphics_group/Bitmap)` *)> handler)` |  |
+| *setHeader* | `void setHeader(const `[`string`](/ref/base_group/string)` & headerName, const `[`string`](/ref/base_group/string)` & headerValue)` |  |
+| *cancel* | `void cancel()` |  |
+| *error* | `bool error()` |  |
+| *getHttpStatus* | `int getHttpStatus()` |  |
+| *getResponseData* | `const `[`bytearray`](/ref/base_group/bytearray)` & getResponseData()` |  |
+| *run* | `void run()` |  |
+| *URLRequest* | ` URLRequest(const `[`string`](/ref/base_group/string)` & url, const `[`string`](/ref/base_group/string)` & method, const `[`bytearray`](/ref/base_group/bytearray)` & body, int flags)` |  |
+| *~URLRequest* | ` ~URLRequest()` |  |
+| *dispatchResult* | `void dispatchResult(int httpStatus, const map< `[`string`](/ref/base_group/string)`, `[`string`](/ref/base_group/string)` > & responseHeaders)` |  |
+| *create* | [`URLRequest`](/ref/app_group/URLRequest)` * create(const `[`string`](/ref/base_group/string)` & url, const `[`string`](/ref/base_group/string)` & method, const `[`bytearray`](/ref/base_group/bytearray)` & body, int flags)` |  |

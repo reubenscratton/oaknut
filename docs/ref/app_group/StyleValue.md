@@ -10,89 +10,79 @@ class StyleValue
 Represents a value in the global style namespace.     
 
 Not instantiated directly, use `App::getStyleValue()` and friends to get one, then use one of the accessors `intVal()`, `stringVal()` to get to the raw value.Is alarmingly similar to the 'variant' type with which it should probably be unified.     
-## 
+| | |
+|-|-|
+|` StyleValue()`||
+|` StyleValue(const `[`StyleValue`](/ref/app_group/StyleValue)` & )`||
+|` StyleValue(`[`StyleValue`](/ref/app_group/StyleValue)` && )`||
+|` ~StyleValue()`||
+|[`StyleValue`](/ref/app_group/StyleValue)` & operator=(const `[`StyleValue`](/ref/app_group/StyleValue)` & other)`||
+|`bool isEmpty()`||
+|`bool isNumeric()`||
+|`bool isString()`||
+|`bool isMeasurement()`||
+|`bool isArray()`||
+|`int intVal()`||
+|`bool boolVal()`||
+|`float floatVal()`||
+|[`string`](/ref/base_group/string)` stringVal()`||
+|`measurement measurementVal()`||
+|[`COLOR`](/ref/graphics_group/COLOR)` colorVal()`||
+|`const vector< `[`StyleValue`](/ref/app_group/StyleValue)` > & arrayVal()`||
+|`const map< `[`string`](/ref/base_group/string)`, `[`StyleValue`](/ref/app_group/StyleValue)` > & compoundVal()`||
+|`VECTOR4 cornerRadiiVal()`||
+|`EDGEINSETS edgeInsetsVal()`||
+|`float fontWeightVal()`||
+|`const `[`StyleValue`](/ref/app_group/StyleValue)` * get(const `[`string`](/ref/base_group/string)` & keypath)`||
+|`int intVal(const `[`string`](/ref/base_group/string)` & name)`||
+|`float floatVal(const `[`string`](/ref/base_group/string)` & name)`||
+|[`string`](/ref/base_group/string)` stringVal(const `[`string`](/ref/base_group/string)` & name)`||
+|`const vector< `[`StyleValue`](/ref/app_group/StyleValue)` > & arrayVal(const `[`string`](/ref/base_group/string)` & name)`||
+|`void importValues(const map< `[`string`](/ref/base_group/string)`, `[`StyleValue`](/ref/app_group/StyleValue)` > & values)`||
+|`bool parse(class StringProcessor & it, int flags)`||
 
 
-
-## 
-
-
-
-## 
-
-
-
-## 
-
-| ` StyleValue()` |  |
-| ` StyleValue(const <a href="class_style_value.html">StyleValue</a> & )` |  |
-| ` StyleValue(<a href="class_style_value.html">StyleValue</a> && )` |  |
-| ` ~StyleValue()` |  |
-| `<a href="class_style_value.html">StyleValue</a> & operator=(const <a href="class_style_value.html">StyleValue</a> & other)` |  |
-| `bool isEmpty()` |  |
-| `bool isNumeric()` |  |
-| `bool isString()` |  |
-| `bool isMeasurement()` |  |
-| `bool isArray()` |  |
-| `int intVal()` |  |
-| `bool boolVal()` |  |
-| `float floatVal()` |  |
-| `<a href="classstring.html">string</a> stringVal()` |  |
-| `measurement measurementVal()` |  |
-| `<a href="class_c_o_l_o_r.html">COLOR</a> colorVal()` |  |
-| `const vector< <a href="class_style_value.html">StyleValue</a> > & arrayVal()` |  |
-| `const map< <a href="classstring.html">string</a>, <a href="class_style_value.html">StyleValue</a> > & compoundVal()` |  |
-| `VECTOR4 cornerRadiiVal()` |  |
-| `EDGEINSETS edgeInsetsVal()` |  |
-| `float fontWeightVal()` |  |
-| `const <a href="class_style_value.html">StyleValue</a> * get(const <a href="classstring.html">string</a> & keypath)` |  |
-| `int intVal(const <a href="classstring.html">string</a> & name)` |  |
-| `float floatVal(const <a href="classstring.html">string</a> & name)` |  |
-| `<a href="classstring.html">string</a> stringVal(const <a href="classstring.html">string</a> & name)` |  |
-| `const vector< <a href="class_style_value.html">StyleValue</a> > & arrayVal(const <a href="classstring.html">string</a> & name)` |  |
-| `void importValues(const map< <a href="classstring.html">string</a>, <a href="class_style_value.html">StyleValue</a> > & values)` |  |
-| `bool parse(class StringProcessor & it, int flags)` |  |
+| | |
+|-|-|
+|`void setType(Type newType)`||
+|`void copyFrom(const `[`StyleValue`](/ref/app_group/StyleValue)` * other)`||
+|`const `[`StyleValue`](/ref/app_group/StyleValue)` * select()`||
+|`bool parseNumberOrMeasurement(StringProcessor & it)`||
 
 
-## 
+## Methods
 
-| `void setType(Type newType)` |  |
-| `void copyFrom(const <a href="class_style_value.html">StyleValue</a> * other)` |  |
-| `const <a href="class_style_value.html">StyleValue</a> * select()` |  |
-| `bool parseNumberOrMeasurement(StringProcessor & it)` |  |
-
-
-# Methods
-
-| *StyleValue* |  ` <a href="todo">StyleValue</a>()` |  |
-| *StyleValue* |  ` <a href="todo">StyleValue</a>(const <a href="class_style_value.html">StyleValue</a> & )` |  |
-| *StyleValue* |  ` <a href="todo">StyleValue</a>(<a href="class_style_value.html">StyleValue</a> && )` |  |
-| *~StyleValue* |  ` <a href="todo">~StyleValue</a>()` |  |
-| *operator=* |  `<a href="class_style_value.html">StyleValue</a> & <a href="todo">operator=</a>(const <a href="class_style_value.html">StyleValue</a> & other)` |  |
-| *isEmpty* |  `bool <a href="todo">isEmpty</a>()` |  |
-| *isNumeric* |  `bool <a href="todo">isNumeric</a>()` |  |
-| *isString* |  `bool <a href="todo">isString</a>()` |  |
-| *isMeasurement* |  `bool <a href="todo">isMeasurement</a>()` |  |
-| *isArray* |  `bool <a href="todo">isArray</a>()` |  |
-| *intVal* |  `int <a href="todo">intVal</a>()` |  |
-| *boolVal* |  `bool <a href="todo">boolVal</a>()` |  |
-| *floatVal* |  `float <a href="todo">floatVal</a>()` |  |
-| *stringVal* |  `<a href="classstring.html">string</a> <a href="todo">stringVal</a>()` |  |
-| *measurementVal* |  `measurement <a href="todo">measurementVal</a>()` |  |
-| *colorVal* |  `<a href="class_c_o_l_o_r.html">COLOR</a> <a href="todo">colorVal</a>()` |  |
-| *arrayVal* |  `const vector< <a href="class_style_value.html">StyleValue</a> > & <a href="todo">arrayVal</a>()` |  |
-| *compoundVal* |  `const map< <a href="classstring.html">string</a>, <a href="class_style_value.html">StyleValue</a> > & <a href="todo">compoundVal</a>()` |  |
-| *cornerRadiiVal* |  `VECTOR4 <a href="todo">cornerRadiiVal</a>()` |  |
-| *edgeInsetsVal* |  `EDGEINSETS <a href="todo">edgeInsetsVal</a>()` |  |
-| *fontWeightVal* |  `float <a href="todo">fontWeightVal</a>()` |  |
-| *get* |  `const <a href="class_style_value.html">StyleValue</a> * <a href="todo">get</a>(const <a href="classstring.html">string</a> & keypath)` |  |
-| *intVal* |  `int <a href="todo">intVal</a>(const <a href="classstring.html">string</a> & name)` |  |
-| *floatVal* |  `float <a href="todo">floatVal</a>(const <a href="classstring.html">string</a> & name)` |  |
-| *stringVal* |  `<a href="classstring.html">string</a> <a href="todo">stringVal</a>(const <a href="classstring.html">string</a> & name)` |  |
-| *arrayVal* |  `const vector< <a href="class_style_value.html">StyleValue</a> > & <a href="todo">arrayVal</a>(const <a href="classstring.html">string</a> & name)` |  |
-| *importValues* |  `void <a href="todo">importValues</a>(const map< <a href="classstring.html">string</a>, <a href="class_style_value.html">StyleValue</a> > & values)` |  |
-| *parse* |  `bool <a href="todo">parse</a>(class StringProcessor & it, int flags)` |  |
-| *setType* |  `void <a href="todo">setType</a>(Type newType)` |  |
-| *copyFrom* |  `void <a href="todo">copyFrom</a>(const <a href="class_style_value.html">StyleValue</a> * other)` |  |
-| *select* |  `const <a href="class_style_value.html">StyleValue</a> * <a href="todo">select</a>()` |  |
-| *parseNumberOrMeasurement* |  `bool <a href="todo">parseNumberOrMeasurement</a>(StringProcessor & it)` |  |
+| | |
+|-|-|
+| *StyleValue* | ` StyleValue()` |  |
+| *StyleValue* | ` StyleValue(const `[`StyleValue`](/ref/app_group/StyleValue)` & )` |  |
+| *StyleValue* | ` StyleValue(`[`StyleValue`](/ref/app_group/StyleValue)` && )` |  |
+| *~StyleValue* | ` ~StyleValue()` |  |
+| *operator=* | [`StyleValue`](/ref/app_group/StyleValue)` & operator=(const `[`StyleValue`](/ref/app_group/StyleValue)` & other)` |  |
+| *isEmpty* | `bool isEmpty()` |  |
+| *isNumeric* | `bool isNumeric()` |  |
+| *isString* | `bool isString()` |  |
+| *isMeasurement* | `bool isMeasurement()` |  |
+| *isArray* | `bool isArray()` |  |
+| *intVal* | `int intVal()` |  |
+| *boolVal* | `bool boolVal()` |  |
+| *floatVal* | `float floatVal()` |  |
+| *stringVal* | [`string`](/ref/base_group/string)` stringVal()` |  |
+| *measurementVal* | `measurement measurementVal()` |  |
+| *colorVal* | [`COLOR`](/ref/graphics_group/COLOR)` colorVal()` |  |
+| *arrayVal* | `const vector< `[`StyleValue`](/ref/app_group/StyleValue)` > & arrayVal()` |  |
+| *compoundVal* | `const map< `[`string`](/ref/base_group/string)`, `[`StyleValue`](/ref/app_group/StyleValue)` > & compoundVal()` |  |
+| *cornerRadiiVal* | `VECTOR4 cornerRadiiVal()` |  |
+| *edgeInsetsVal* | `EDGEINSETS edgeInsetsVal()` |  |
+| *fontWeightVal* | `float fontWeightVal()` |  |
+| *get* | `const `[`StyleValue`](/ref/app_group/StyleValue)` * get(const `[`string`](/ref/base_group/string)` & keypath)` |  |
+| *intVal* | `int intVal(const `[`string`](/ref/base_group/string)` & name)` |  |
+| *floatVal* | `float floatVal(const `[`string`](/ref/base_group/string)` & name)` |  |
+| *stringVal* | [`string`](/ref/base_group/string)` stringVal(const `[`string`](/ref/base_group/string)` & name)` |  |
+| *arrayVal* | `const vector< `[`StyleValue`](/ref/app_group/StyleValue)` > & arrayVal(const `[`string`](/ref/base_group/string)` & name)` |  |
+| *importValues* | `void importValues(const map< `[`string`](/ref/base_group/string)`, `[`StyleValue`](/ref/app_group/StyleValue)` > & values)` |  |
+| *parse* | `bool parse(class StringProcessor & it, int flags)` |  |
+| *setType* | `void setType(Type newType)` |  |
+| *copyFrom* | `void copyFrom(const `[`StyleValue`](/ref/app_group/StyleValue)` * other)` |  |
+| *select* | `const `[`StyleValue`](/ref/app_group/StyleValue)` * select()` |  |
+| *parseNumberOrMeasurement* | `bool parseNumberOrMeasurement(StringProcessor & it)` |  |
