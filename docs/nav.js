@@ -14,7 +14,7 @@ var navmodel = [
     },
     { t: "Samples",
       i: [
-        { t: "Todo List" },
+        { t: "Hello World", u:"/samples/helloworld/"  },
         { t: "Minesweeper", u:"/samples/minesweeper/" },
         { t: "BBC Micro", u:"/samples/embeeb/" },
       ],

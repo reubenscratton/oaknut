@@ -1,11 +1,11 @@
 ---
 layout: default
 ---
-<iframe src="xx.html" style="margin-top:24px; margin-left:16px;" width="320" height="380" align="right">
+<iframe src="xx.html" style="margin-top:24px; margin-left:16px;" width="320" height="360" align="right">
 </iframe>
 # Minesweeper
 
-A simple port of the classic game. Press a cell to open it, long-press to mark
+A simple port of the classic game. Tap a cell to open it, long-press to mark
 it as a mine. The complete source code is reproduced below to
 encourage casual browsing.
 
@@ -14,6 +14,7 @@ encourage casual browsing.
 * [game.cpp](#game-cpp)
 * [gameview.h](#gameview-h)
 * [gameview.cpp](#gameview-cpp)
+
 
 
 **main.cpp**
