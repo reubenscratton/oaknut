@@ -1,11 +1,12 @@
 ---
 layout: default
 ---
-<iframe src="xx.html" style="margin-top:24px; margin-left:16px;" width="320" height="560" align="right">
+<iframe src="xx.html" style="margin-top:24px; margin-left:16px;" width="320" height="460" align="right">
 </iframe>
 # Minesweeper
 
-A simple port of the classic game. Complete source code is reproduced below to
+A simple port of the classic game. Press a cell to open it, long-press to mark
+it as a mine. The complete source code is reproduced below to
 encourage casual browsing.
 
 * [main.cpp](#main-cpp)
@@ -18,7 +19,6 @@ encourage casual browsing.
 **main.cpp**
 ```cpp
 #include <oaknut.h>
-#include "game.h"
 #include "gameview.h"
 
 
@@ -54,7 +54,7 @@ public:
     }
 
     // Game callbacks
-    virtual void onGameStateChanged() {
+    void onGameStateChanged() override {
         switch (_game->_state) {
             case InProgress:
                 _imageViewFace->setImageAsset("images/face_normal.png");
@@ -67,13 +67,13 @@ public:
                 break;
         }
     }
-    virtual void onGameNumFlagsChanged() {
+    void onGameNumFlagsChanged() override {
         _labelNumFlags->setText(string::format("Mines: %d", _game->_flags));
     }
-    virtual void onGameNumRemainingChanged() {
+    void onGameNumRemainingChanged() override {
         _labelNumRemaining->setText(string::format("Closed: %d", _game->_unknown));
     }
-    virtual void onCellStateChanged(Cell& cell) {
+    void onCellStateChanged(Cell& cell) override {
         _gameView->updateCell(cell);
     }
 
@@ -88,7 +88,6 @@ void App::main() {
 
 **game.h**
 ```cpp
-#pragma once
 #include <oaknut.h>
 
 enum CellState {
