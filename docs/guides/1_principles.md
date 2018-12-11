@@ -5,28 +5,56 @@ layout: default
 
 Oaknut was conceived in 2012 as a mobile app framework that would
 bridge the gap between iOS and Android without any runtime performance cost
-and without any Javascript. The goal was for an Oaknut app to be absolutely
-indistinguishable from one built against a native SDK, every native widget
+and without any Javascript. The goal was for an Oaknut app to be
+indistinguishable from one built against a platform SDK, every native widget
 from both platforms would be faithfully recreated down to the last pixel. Write
 once, run not quite everywhere but at least on every smartphone.
 
 It's still some way from reaching that lofty goal, mainly because
-the original scope became even more crazily ambitious with the
+the original scope became considerably more ambitious with the
 discovery of [Mozilla's Emscripten project](http://kripken.github.io/emscripten-site/). Suddenly it seemed possible that one could write a C++ app that would run not just on
 mobile but on the web as well. All that was missing was the framework ...
 
 
-## Design notes
+#### Debug natively
 
-Oaknut is extremely lightweight. The whole source code is compiled
-into each app. It may switch to a precompiled library form at
-a later date but at this early stage it's more convenient to work with
+One of the more attractive features of Oaknut is the ability
+to debug code on the native platform (Mac, Linux, Windows) and then
+later deploy to another (Android, iOS, Web). The fast build system
+and not having to deploy to another machine or virtual machine make
+incremental rebuild times a fraction of what is normal for mobile development.
+
+You also get the benefit of native platform analysis tools, such as XCode
+Instruments.
+
+
+#### Extremely lightweight
+
+At present the whole Oaknut source tree is compiled
+into each app. This may switch to a precompiled library form at
+a later date but at this stage it's more convenient to work with
 in source form.
+
+This approach also produces the smallest and fastest binaries, thanks
+to dead code elimination.
+
+
+#### Use of underlying OS
+
+Oaknut aims to minimise wheel reinvention by leveraging those parts of the underlying
+OS that are more or less identical to corresponding parts of other OSes. For example,
+most of the 2D graphics APIs are a thin wrapper around OS APIs. Drawing rectangles,
+lines, circles, decompressing JPEGs and PNGs, these things all done by the OS
+since there's so little variance in how they are done.
+
+Glyph rasterization is another job given to the OS, however glyph and text layout
+is done by Oaknut (currently with custom logic but soon to be replaced by Pango).
+
 
 
 ## Application architecture
 
-Oaknut aims to be unopinionated about app architecture but broadly follows the MVC pattern used in iOS: everything visual is a View, Views are grouped together and coordinated by ViewControllers. There is no formal definition of a Model type but there is support for serialization and persistance.
+Oaknut aims to be unopinionated about app architecture but broadly follows the MVC pattern used in iOS: everything visual is a `View`, Views are grouped together and coordinated by `ViewController`s. There is no formal definition of a Model type but there is support for serialization and persistance.
 
 An Oaknut project may either be a standalone application, in which case you must implement `App::main()`, or it may be a component of a larger application in which case you will need to invoke your Oaknut code by instantiating a `Window` via `Window::create()`, setting it's `rootViewController` property and then calling `window->show()`.
 
@@ -39,31 +67,8 @@ The top-level directory structure of a project is important because the build sy
 
 Project files live in the project root, run "make xcode" or "make androidstudio" to generate these. Project files are optional, you can build with plain old `make` if you prefer.
 
-#### Use of underlying OS
-Oaknut aims to minimise wheel reinvention by leveraging those parts of the underlying
-OS that are more or less identical to corresponding parts of other OSes. For example,
-most of the 2D graphics APIs are a thin wrapper around OS APIs. Drawing rectangles,
-lines, circles, decompressing JPEGs and PNGs, is all done by the OS since there's so
-little variance in how these things are done.
-
-Glyph rasterization is another job given to the OS, however glyph and text layout
-is done by Oaknut (currently with custom logic but soon to be replaced by Pango).
 
 
-## Hello World
-
-This is the simplest possible Oaknut program:
-````
-    #include <oaknut.h>
-
-    void App::main() {
-        Label* label = new Label();
-        label->setText("Hello World!");
-        ViewController* vc = new ViewController();
-        vc->setView(label);
-        _window->setRootViewController(vc);
-    }
-````
 
 ## Why C++?
 
@@ -120,7 +125,7 @@ are `free()`d between frames.
 ### Strings and the STL
 
 Oaknut has it's own 'string' value type which is likely a better fit for
-programmers coming from conventional dev environments. It differs from C++'s
+programmers coming from conventional application dev environments. It differs from C++'s
 `std::string` in that it is a string of *characters*, not bytes, which may be
 internally encoded as UTF-8 (the default) or UTF-32. It also has many useful
 methods familiar to iOS and Java developers.

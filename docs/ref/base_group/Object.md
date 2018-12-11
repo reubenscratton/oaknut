@@ -11,7 +11,9 @@ Base class for all reference-counted types.
 
     
 ` Object()`<br>
+
 ` ~Object()`<br>
+
 `void retain()`<br>Increments the internal reference counter.
 NB: Not threadsafe, cos we don't have threads.
 
@@ -20,6 +22,9 @@ If the counter reaches zero the object is moved to a queue of objects that will 
 
 `void* operator new(size_t sz)`<br>
 
+
 `void flushAutodeletePool()`<br>
-[`Object`](/oaknut/ref/base_group/Object)`* createByName(const `[`string`](/oaknut/ref/base_group/string)` & className)`<br>
+
+[`Object`](/ref/base_group/Object)`* createByName(const `[`string`](/ref/base_group/string)` & className)`<br>
+
 

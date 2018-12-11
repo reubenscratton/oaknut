@@ -6,7 +6,6 @@
 //
 
 #pragma once
-#include <oaknut.h>
 #include "game.h"
 
 class GameView : public View {

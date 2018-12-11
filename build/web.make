@@ -44,8 +44,8 @@ $(OBJ_DIR)%.bc : % $(OBJ_DIR)%.dep
 	@mv -f $(@:.bc=.Td) $(@:.bc=.dep) && touch $@
 
 
-ASSET_DIRS = $(shell find $(PROJECT_ROOT)/assets/ -type d)
-ASSET_FILES = $(shell find $(PROJECT_ROOT)/assets -type f -name '*')
+ASSET_DIRS = $(shell find $(PROJECT_ROOT)/assets/ -type d 2>/dev/null)
+ASSET_FILES = $(shell find $(PROJECT_ROOT)/assets -type f -name '*' 2>/dev/null)
 
 EXECUTABLE=$(OUTPUT_DIR)/xx.html
 $(EXECUTABLE): $(PCH).dep $(PCH) $(OBJS) $(HTML_FILE) $(ASSET_DIRS) $(ASSET_FILES)

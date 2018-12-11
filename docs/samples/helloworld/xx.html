@@ -1,0 +1,321 @@
+<!doctype html>
+<html style="height:100%;" lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width,height=device-height,user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
+    <title>Oaknut App</title>
+    <style>
+
+html, body {
+    position:fixed;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none; 
+    -ms-user-select: none; 
+    user-select: none;
+    width: 100%;
+    height: 100%;
+}
+
+html, body {
+	margin: 0;
+	padding: 0;
+    border: 0;
+    outline: 0;
+    cursor: default;
+    overflow: auto;
+    vertical-align: baseline;
+}
+
+#screenContainer {
+    position:fixed;
+    top:0px;
+    bottom:0px;
+    left:0px; right:0px;
+}
+
+#screen {
+    position:absolute;
+    width:100%;
+    height:100%;
+    left:0px; right:0px;
+    z-index:1;
+}
+
+
+#fps {
+    position:absolute;
+	left:0; top:20px;
+	color: #fff;
+	background:#080;
+	font-size: 15px;
+    padding:4px;
+    z-index:10;
+}
+
+  </style>
+  </head>
+
+  <body style="margin:0;height:100%;">
+
+   <div id="screenContainer">
+    <canvas id="screen" width="100" height="100" oncontextmenu="event.preventDefault()" />
+   </div>
+   
+  <div id="fps">0 fps</div>
+
+<script>
+
+
+
+function log(text) {
+    if (window.webkit) window.webkit.messageHandlers.buttonClicked.postMessage(text);
+    else console.log(text);
+}
+
+
+function onresize() {
+    var sc = document.getElementById('screenContainer');
+    var s = document.getElementById('screen');
+    var scale = window.devicePixelRatio || 1;
+	//if (scale == 3) scale=2; // 6+ has too many pixels
+    s.width = sc.clientWidth * scale;
+    s.height = sc.clientHeight * scale;
+    Module.oak_setWindowSize(s.width, s.height, scale);
+}
+
+window.addEventListener('resize', onresize);
+
+
+
+/*********
+ * Touch *
+ *********/
+
+var touchState = [];
+function touchIdToIndex(id) {
+	for (var i=0 ; i<touchState.length ; i++) {
+		if (touchState[i] == id) {
+			return i;
+		}
+	}
+	for (var i=0 ; i<touchState.length ; i++) {
+		if (touchState[i] == null) {
+			touchState[i] = id;
+			return i;
+		}
+	}
+	touchState.push(id);
+	return touchState.length-1;
+}
+
+var leftButtonDown = false;
+
+window.onmousedown = function(e) {
+	if(e.which === 1) leftButtonDown = true;
+	Module.oak_userEvent(0, e.which, e.pageX, e.pageY);
+};
+window.ontouchstart = function(e) {
+	e.preventDefault();
+	for (var i=0; i < e.changedTouches.length; i++) {
+		var touch = e.changedTouches[i];
+		Module.oak_userEvent(0, touchIdToIndex(touch.identifier), touch.pageX, touch.pageY);
+	}
+};
+window.onmousemove = function(e) {
+	if(e.which === 1 && !leftButtonDown) {
+		return;
+	}
+	if (e.which > 0) {
+		Module.oak_userEvent(1, e.which, e.pageX, e.pageY);
+	}
+};
+window.ontouchmove = function(e) {
+	e.preventDefault();
+	for (var i=0; i < e.changedTouches.length; i++) {
+		var touch = e.changedTouches[i];
+		Module.oak_userEvent(1, touchIdToIndex(touch.identifier), touch.pageX, touch.pageY);
+	}
+};
+window.onmouseup = function(e) {
+	if(e.which === 1) leftButtonDown = false;
+	Module.oak_userEvent(2, e.which, e.pageX, e.pageY);
+};
+window.ontouchend = window.ontouchcancel = function(e) {
+	e.preventDefault();
+	for (var i=0; i < e.changedTouches.length; i++) {
+		var touch = e.changedTouches[i];
+		var index = touchIdToIndex(touch.identifier);
+		Module.oak_userEvent(2, index, touch.pageX, touch.pageY);
+		touchState[index] = null;
+	}
+};
+
+
+function updateFps(fps) {
+	var fpsDiv = document.getElementById('fps');
+	fpsDiv.innerHTML = '' + fps + ' fps';
+}
+
+/*************************************
+ * Module object and app entry point *
+ *************************************/
+
+function getTimestamp() {
+    return new Date().getTime();
+};
+
+// Global Object Table (GOT) is used to pass Javascript objects to and from C++
+var g_got = new Object();
+var g_gotIndex = 0
+function gotSet(obj) {
+    var i = g_gotIndex;
+    g_gotIndex++;
+    //log("gotSet " + i + " : " + obj)
+    g_got[i] = obj;
+    return i;
+}
+function gotGet(index) {
+    var obj = g_got[index];
+    //log("gotGet " + index + " : " + obj)
+    delete g_got[index];
+    return obj;
+}
+
+// Local storage
+function lsGetInt(key, defaultValue) {
+    var val = localStorage.getItem(key);
+    if (!val) return defaultValue;
+    return Number(val);
+}
+
+
+var Module = {
+    preRun: [],
+    postRun: [
+        function () {
+            Module.oak_main();
+        },
+        onresize],
+    print: function(text) {log(text);},
+    printErr: function(text) {log(text);},
+    canvas: (function() {
+      var canvas = document.getElementById('screen');
+      return canvas;
+    })(),
+    totalDependencies: 0,
+    monitorRunDependencies: function(left) {
+      this.totalDependencies = Math.max(this.totalDependencies, left);
+    }
+};
+
+var keynameBuff;
+
+function keyEvent(e, down) {
+    if (!keynameBuff) {
+         keynameBuff = _malloc(32); // enough to easily hold longest key name, 'MicrophoneVolumeDown' afaics, ref. https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values
+    }
+    var cb=lengthBytesUTF8(e.key) + 1;
+    stringToUTF8(e.key, keynameBuff, cb);
+    Module.oak_keyEvent(down, e.keyCode, keynameBuff);
+}
+document.addEventListener('keydown', (e) => {
+    keyEvent(e, true);
+});
+document.addEventListener('keyup', (e) => {
+    keyEvent(e, false);
+});
+
+window.onerror = function(message, source, lineno, colno, error) {
+  var s="Exception: "  + message + " error:" + error + " line:" + lineno + " col:" + colno;
+  log(s);
+  alert(s);
+};
+window.onunload = function() {
+}
+
+
+/** Text measuring **/
+function FontHelper(name, size, weight, fontFamily) {
+    this.name = name;
+    this.size = size;
+    
+    this.canvas = document.createElement("canvas");
+    this.canvas.width = size * 2;
+    this.canvas.height = size * 2;
+    this.ctxt = this.canvas.getContext("2d");
+    this.ctxt.font = weight + " " + size + "px " + fontFamily;
+    this.ctxt.textBaseline = "top";
+
+    // Clever ascent/descent calc is from https://stackoverflow.com/a/25355178/440602
+    this.text = document.createElement("span");
+    this.text.style.fontFamily = fontFamily;
+    this.text.style.fontSize = size + "px";
+    this.text.style.fontWeight = weight;
+    this.block = document.createElement("div");
+    this.block.style.display = "inline-block";
+    this.block.style.width = "1px";
+    this.block.style.height = "0px";
+    this.div = document.createElement("div");
+    this.div.appendChild(this.text);
+    this.div.appendChild(this.block);
+    this.div.style.height = "0px";
+    this.div.style.overflow = "hidden";
+}
+
+function objOff(obj) {
+    var currleft = 0;
+    var currtop = 0;
+    if( obj.offsetParent )
+    { do { currleft += obj.offsetLeft; currtop += obj.offsetTop; }
+        while( obj = obj.offsetParent ); }
+    else { currleft += obj.offsetLeft; currtop += obj.offsetTop; }
+    return [currleft,currtop];
+}
+
+
+FontHelper.prototype.measure = function(str) {
+    this.text.innerHTML = str;
+    document.body.appendChild(this.div);
+    this.block.style.verticalAlign = "baseline";
+    var bp = objOff(this.block);
+    var tp = objOff(this.text);
+    var tascent = bp[1] - tp[1];
+    this.block.style.verticalAlign = "bottom";
+    bp = objOff(this.block);
+    tp = objOff(this.text);
+    var height = bp[1] - tp[1];
+    var tdescent = height - tascent;
+    document.body.removeChild(this.div);
+    
+    var width = this.ctxt.measureText(str).width;
+    this.ctxt.clearRect(0, 0, width, height);
+    this.ctxt.fillText(str, 0,0);
+
+    return {
+        w: width,
+        h: height,
+        a: tascent,
+        d: tdescent
+    };
+}
+
+FontHelper.prototype.copyPixels = function(width, height, oX, oY, targetBuff, stride) {
+    var imgdata = this.ctxt.getImageData(0, 0, width, height);
+    var o = 0;
+    for (y=0 ; y<height ; y++) {
+        for (x=0 ; x<width ; x++) {
+            targetBuff[(y+oY)* stride + oX+x] = imgdata.data[o+3]; // i.e. only copy alpha channel bytes
+            o+=4;
+        }
+    }
+}
+
+
+
+    </script>
+    <script async type="text/javascript" src="xx.js"></script>
+  </body>
+</html>

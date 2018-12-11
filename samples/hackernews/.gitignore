@@ -1,6 +1,0 @@
-.build/
-.idea/
-CMakeLists.txt
-cmake-build-*/
-*.xcodeproj/
-*.androidstudio/

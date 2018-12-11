@@ -10,7 +10,7 @@
 DECLARE_DYNCREATE(GameView);
 
 GameView::GameView() {
-    
+
     AtlasPage* atlas = new AtlasPage(512, 512, BITMAPFORMAT_RGBA32);
     _imgUnknown = atlas->importAsset("images/unknown.png");
     _imgMine = atlas->importAsset("images/mine.png");
@@ -30,7 +30,7 @@ GameView::GameView() {
 
 void GameView::setGame(Game* game) {
     _game = game;
-    
+
     for (int y=0 ; y<_game->_rows ; y++) {
         for (int x=0 ; x<_game->_cols ; x++) {
             Cell &cell = _game->cellAt(x, y);
@@ -107,4 +107,3 @@ void GameView::processCellTouch(const POINT& pt, bool longPress) {
         }
     }
 }
-

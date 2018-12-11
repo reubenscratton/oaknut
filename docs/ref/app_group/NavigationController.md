@@ -14,18 +14,30 @@ Root view controller for typical mobile UX where there is a bar at the top of th
 
     
 ` NavigationController()`<br>
-`void pushViewController(`[`ViewController`](/oaknut/ref/app_group/ViewController)`* vc)`<br>
+
+`void pushViewController(`[`ViewController`](/ref/app_group/ViewController)`* vc)`<br>
+
 `void popViewController()`<br>
+
 `void onWindowAttached()`<br>Called when this view controller is attached to the window.
 
 `void onWindowDetached()`<br>
-`bool navigateBack()`<br>
-`void requestScroll(float dx, float dy)`<br>
-`void applySafeInsets(const EDGEINSETS & safeInsets)`<br>
-`void applySafeInsetsToChild(`[`ViewController`](/oaknut/ref/app_group/ViewController)`* childVC)`<br>
 
-`void startNavAnimation(`[`ViewController`](/oaknut/ref/app_group/ViewController)`* incomingVC, AnimationState animationState)`<br>
-`void applyNavTransitionToViewController(`[`ViewController`](/oaknut/ref/app_group/ViewController)`* vc, float val, bool incoming)`<br>
+`bool navigateBack()`<br>
+
+`void requestScroll(float dx, float dy)`<br>
+
+`void applySafeInsets(const EDGEINSETS & safeInsets)`<br>
+
+`void applySafeInsetsToChild(`[`ViewController`](/ref/app_group/ViewController)`* childVC)`<br>
+
+
+`void startNavAnimation(`[`ViewController`](/ref/app_group/ViewController)`* incomingVC, AnimationState animationState)`<br>
+
+`void applyNavTransitionToViewController(`[`ViewController`](/ref/app_group/ViewController)`* vc, float val, bool incoming)`<br>
+
 `void onNavTransitionApply(float val)`<br>
+
 `void completeIncoming()`<br>
+
 

@@ -39,8 +39,6 @@ public:
         _game = new Game(this, 10, 10);
         _gameView->setGame(_game);
         _game->restart();
-        
-        
     }
 
     // Game callbacks
@@ -73,5 +71,3 @@ void App::main() {
     MainViewController* mainVC = new MainViewController();
     _window->setRootViewController(mainVC);
 }
-
-

@@ -1,7 +1,7 @@
 ---
 layout: default
 ---
-<iframe src="xx.html" style="margin-top:24px; margin-left:16px;" width="320" height="460" align="right">
+<iframe src="xx.html" style="margin-top:24px; margin-left:16px;" width="320" height="380" align="right">
 </iframe>
 # Minesweeper
 
