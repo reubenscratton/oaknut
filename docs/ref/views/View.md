@@ -12,10 +12,10 @@ class View
 
 Fundamental UI building block.     
 
-* [Identity & Hierarchy](#identity-hierarchy)
-* [Window & Surface](#window-surface)
-* [Size & Position](#size-position)
-* [Content & Scrolling](#content-scrolling)
+* [Identity & Hierarchy](#identity--hierarchy)
+* [Window & Surface](#window--surface)
+* [Size & Position](#size--position)
+* [Content & Scrolling](#content--scrolling)
 * [Rendering](#rendering)
 * [State](#state)
 * [Styles](#styles)
@@ -24,6 +24,7 @@ Fundamental UI building block.
 * [Animation](#animation)
 
 #### Style reference
+
 Name         | Type                   | Default
 ------------ | ---------------------- | -------
 `align`      | alignspec[1 or 2]      |
