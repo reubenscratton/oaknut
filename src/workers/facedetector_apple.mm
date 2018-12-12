@@ -4,6 +4,7 @@
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
 //
+#if USE_WORKER_FaceDetectorWorker
 #if PLATFORM_APPLE && 0
 
 #include "oaknut.h"
@@ -55,7 +56,8 @@ public:
     }
 };
 
-DECLARE_WORKER_IMPL(FaceDetectorWorker);
+DECLARE_WORKER_IMPL(FaceDetectorWorker, "FaceDetector");
 
 
+#endif
 #endif

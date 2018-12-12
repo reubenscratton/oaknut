@@ -66,7 +66,7 @@ public:
     }
 };
 
-DECLARE_WORKER_IMPL(JpegEncoderWorker);
+DECLARE_WORKER_IMPL(JpegEncoderWorker, "JpegEncoder");
 
 #endif
 

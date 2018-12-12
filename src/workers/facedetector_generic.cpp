@@ -5,6 +5,8 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+#if USE_WORKER_FaceDetector
+
 // Workers are built separately for web, they shouldn't be compiled into the main .js
 #if !(PLATFORM_WEB && !BUILD_AS_WORKER)
 
@@ -75,7 +77,7 @@ public:
 
 };
 
-DECLARE_WORKER_IMPL(FaceDetectorWorker);
+DECLARE_WORKER_IMPL(FaceDetectorWorker, "FaceDetector");
 
 
 
@@ -401,10 +403,6 @@ static void init_nodes_data() {
             nodeData[i+2] = -nodeRight;
         }
         nodesNumRectsData[n++] = numRects;
-        
-        if (i<10)
-            app.log("%f,%f,%f", nodeData[i], nodeData[i+1], nodeData[i+2]);
-        
     }
 }
 
@@ -477,41 +475,6 @@ static void init_rects_data() {
         rectData[o++] = rectWeight;
     }
 }
-/*
-#else
-extern "C" void ww_start(char* data, int size) {
-    
-    EM_ASM_({
-        self.importScripts("face_detector.js");
-    });
-    emscripten_worker_respond(0, 0);
-}
-extern "C" void ww_process(char* bytes, int size) {
-    ByteBufferStream bb(new ByteBuffer((uint8_t*)bytes,size));
-    variant data;
-    bb.readVariant(&data);
-    int width = data.intVal("width");
-    int height = data.intVal("height");
-    const bytearray& pixels = data.bytearrayVal("data");
-    
-    
-    int numFaces = EM_ASM_INT({
-        var pixelsPtr = new Uint8Array(HEAPU8.buffer, $0, $1);
-        var nf = face_detector.detect(pixelsPtr, $2, $3, 4.0, 1.5, 2.0, 0.05);
-        //var nf = face_detector.detect(pixelsPtr, $2, $3, 1.0, 1.25, 1.5, 0.2);
-        return nf ? nf.length : 0;
-    }, pixels.data(), pixels.size(), width, height);
-    
-    variant data_out;
-    data_out.setType(variant::MAP);
-    data_out.set("numFaces", numFaces);
-    ByteBufferStream bbOut;
-    bbOut.writeVariant(data_out);
-    emscripten_worker_respond((char*)bbOut._data.data, bbOut._data.cb);
-}
-extern "C" void ww_stop(char* data, int size) {
-    emscripten_worker_respond(0, 0);
-}*/
 
 #endif
-
+#endif

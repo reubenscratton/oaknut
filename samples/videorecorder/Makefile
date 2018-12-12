@@ -1,5 +1,7 @@
 PROJECT_NAME:=videorecorder
 
+WORKERS=FaceDetector JpegEncoder AudioResampler
+
 # Android
 ANDROID_PACKAGE_NAME:=net.oaknut.videorecorder
 ANDROID_ABIS=x86 arm64-v8a

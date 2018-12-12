@@ -128,7 +128,9 @@ public:
 /**
  Declare a type as being dynamically creatable. The type must have a public constructor that takes no arguments.
  */
-#define DECLARE_DYNCREATE(X) static ClassRegistrar<X> s_classReg##X(#X)
+
+#define DECLARE_DYNCREATE2(X,NAME) static ClassRegistrar<X> s_classReg##X(NAME)
+#define DECLARE_DYNCREATE(X) DECLARE_DYNCREATE2(X,#X)
 
 extern std::map<string, Object* (*)()>* s_classRegister;
 

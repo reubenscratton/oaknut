@@ -21,6 +21,9 @@ ifneq (,$(findstring debug,$(CONFIG)))
 DEBUG:=1
 endif
 
+# Add worker definitions to prevent unused workers being built in
+CFLAGS+=$(patsubst %, -DUSE_WORKER_%=1, $(WORKERS))
+
 # Default target
 default: $(PLATFORM)
 
@@ -55,16 +58,22 @@ include $(OAKNUT_DIR)/build/$(PLATFORM).make
 
 
 # Project file generators
-XCODE_PROJECT_FILE=$(PROJECT_NAME).xcodeproj/project.pbxproj
+XCODE_PROJECT_DIR=$(PROJECT_NAME).xcodeproj
 
-$(XCODE_PROJECT_FILE):
-	@mkdir -p $(dir $@)
-
-xcode: $(XCODE_PROJECT_FILE)
-	@perl $(OAKNUT_DIR)/build/xcode.pl -projectname $(PROJECT_NAME) $(addprefix -framework ,$(FRAMEWORKS)) $(addprefix -framework_macos ,$(FRAMEWORKS_MACOS)) $(addprefix -framework_ios ,$(FRAMEWORKS_IOS)) > $<
+xcode:
+	@mkdir -p $(XCODE_PROJECT_DIR)/xcshareddata/xcschemes
+	@perl $(OAKNUT_DIR)/build/xcode.pl \
+		-projectname $(PROJECT_NAME) \
+		$(addprefix -framework ,$(FRAMEWORKS)) \
+		$(addprefix -framework_macos ,$(FRAMEWORKS_MACOS)) \
+		$(addprefix -framework_ios ,$(FRAMEWORKS_IOS)) \
+		$(addprefix -worker ,$(WORKERS)) \
+		-projectdir $(XCODE_PROJECT_DIR)
 
 cmake:
 	@perl $(OAKNUT_DIR)/build/cmake.pl -projectname $(PROJECT_NAME) > CMakeLists.txt
+
+clion: cmake
 
 androidstudio:
 	@mkdir -p  $(PROJECT_NAME).androidstudio/app

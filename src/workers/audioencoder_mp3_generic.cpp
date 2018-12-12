@@ -5,6 +5,8 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+#if USE_WORKER_Mp3Encoder
+
 // Workers are built separately for web, they shouldn't be compiled into the main .js
 #if !(PLATFORM_WEB && !BUILD_AS_WORKER)
 
@@ -50,7 +52,7 @@ public:
 
 
 
-DECLARE_WORKER_IMPL(Mp3Encoder);
+DECLARE_WORKER_IMPL(Mp3Encoder, "Mp3Encoder");
 
 #include "../thirdparty/libmp3lame/bitstream.c"
 #include "../thirdparty/libmp3lame/encoder.c"
@@ -72,5 +74,5 @@ DECLARE_WORKER_IMPL(Mp3Encoder);
 #include "../thirdparty/libmp3lame/version.c"
 
 #endif
-
+#endif
 

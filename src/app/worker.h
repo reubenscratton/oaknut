@@ -84,11 +84,11 @@ public:
 
 #if PLATFORM_WEB
 # if BUILD_AS_WORKER
-#  define DECLARE_WORKER_IMPL(x) x* g_worker=new x();
+#  define DECLARE_WORKER_IMPL(clazz, name) clazz* g_worker=new clazz();
 # else
-#  define DECLARE_WORKER_IMPL(x)
+#  define DECLARE_WORKER_IMPL(clazz, name)
 # endif
 #else
-#define DECLARE_WORKER_IMPL(x) DECLARE_DYNCREATE(x)
+#define DECLARE_WORKER_IMPL(clazz, name) DECLARE_DYNCREATE2(clazz, name)
 #endif
 

@@ -4,6 +4,8 @@
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
 //
+#if USE_WORKER_FaceDetector
+
 #if PLATFORM_ANDROID && 0 // code not ready yet
 
 #include <oaknut.h>
@@ -57,7 +59,7 @@ public:
 
 };
 
-DECLARE_WORKER_IMPL(FaceDetectorWorker);
+DECLARE_WORKER_IMPL(FaceDetectorWorker, "FaceDetector");
 
 #endif
-
+#endif

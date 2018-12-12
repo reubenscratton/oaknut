@@ -144,6 +144,7 @@ static void oak_main() {
     app.loadStyleAsset("styles.res");
     app.main();
     app._window->show();
+    app._window->requestRedraw();
 }
 
 EMSCRIPTEN_BINDINGS(oaknut) {

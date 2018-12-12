@@ -5,6 +5,7 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+#if USE_WORKER_AudioResamplerWorker
 // Workers are built separately for web, they shouldn't be compiled into the main .js
 #if !(PLATFORM_WEB && !BUILD_AS_WORKER)
 
@@ -106,7 +107,7 @@ public:
     }
 };
 
-DECLARE_WORKER_IMPL(AudioResamplerWorker);
+DECLARE_WORKER_IMPL(AudioResamplerWorker, "AudioResampler");
 
 
 
@@ -118,5 +119,6 @@ DECLARE_WORKER_IMPL(AudioResamplerWorker);
 #include "../../thirdparty/smarc/smarc.cpp"
 #include "../../thirdparty/smarc/stage_impl.cpp"
 
+#endif
 #endif
 

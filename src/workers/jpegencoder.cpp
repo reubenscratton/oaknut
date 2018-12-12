@@ -4,6 +4,7 @@
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
 //
+#if USE_WORKER_JpegEncoder
 
 // Workers are built separately for web, they shouldn't be compiled into the main .js
 #if !(PLATFORM_WEB && !BUILD_AS_WORKER)
@@ -344,7 +345,7 @@ public:
     }
 };
 
-DECLARE_WORKER_IMPL(JpegEncoderWorker);
+DECLARE_WORKER_IMPL(JpegEncoderWorker, "JpegEncoder");
 
 #endif
-
+#endif

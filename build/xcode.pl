@@ -27,14 +27,19 @@ use strict;
 use File::Basename;
 use Getopt::Long;
 
+my $projectdir="app.xcodeproj";
 my $projectname="app";
 my @frameworks=();
 my @frameworks_macos=();
 my @frameworks_ios=();
-GetOptions ("projectname=s" => \$projectname,
+my @workers=();
+GetOptions (
+			"projectdir=s" => \$projectdir,
+			"projectname=s" => \$projectname,
 			"framework=s" => \@frameworks,
-            "framework_macos=s" => \@frameworks_macos,
-            "framework_ios=s" => \@frameworks_ios);
+      "framework_macos=s" => \@frameworks_macos,
+      "framework_ios=s" => \@frameworks_ios,
+			"worker=s" => \@workers);
 
 my $ref_prefix=sprintf("%08X%08X", int(rand(0xFFFFFFFF)), int(rand(0xFFFFFFFF)));
 my $current_ref=1;
@@ -383,9 +388,12 @@ sub gen_web_target {
 my ($web_asmjs_target_ref, $web_asmjs_target_decls)=gen_web_target("web_asmjs");
 my ($web_wasm_target_ref, $web_wasm_target_decls)=gen_web_target("web_wasm");
 
+my $use_workers = join ", ", map { '"USE_WORKER_' . $_ . '=1"'} @workers;
 
 
-print qq(// !\$*UTF8*\$!
+my $proj_fh;
+open($proj_fh, '>', $projectdir.'/project.pbxproj');
+print $proj_fh qq(// !\$*UTF8*\$!
 {
 archiveVersion = 1;
 classes = {
@@ -448,6 +456,7 @@ objects = {
 			GCC_PREPROCESSOR_DEFINITIONS = (
 				"PLATFORM_APPLE=1",
 				"DEBUG=1",
+				$use_workers
 			);
 		};
 		name = debug;
@@ -458,7 +467,10 @@ objects = {
 			$common_project_build_settings
 			DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 			ENABLE_NS_ASSERTIONS = NO;
-			GCC_PREPROCESSOR_DEFINITIONS = "PLATFORM_APPLE=1";
+			GCC_PREPROCESSOR_DEFINITIONS = (
+				"PLATFORM_APPLE=1",
+				$use_workers
+			);
 		};
 		name = release;
 	};
@@ -504,3 +516,106 @@ objects = {
     rootObject = $proj_ref;
 }
 );
+close $proj_fh;
+
+sub write_shared_scheme {
+	my ($scheme_name, $target_ref) = @_;
+
+my $scheme_fh;
+open($scheme_fh, '>', $projectdir.'/xcshareddata/xcschemes/'.$scheme_name.'.xcscheme');
+print $scheme_fh qq(<?xml version="1.0" encoding="UTF-8"?>
+<Scheme
+   LastUpgradeVersion = "0940"
+   version = "1.3">
+   <BuildAction
+      parallelizeBuildables = "YES"
+      buildImplicitDependencies = "YES">
+      <BuildActionEntries>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "$target_ref"
+               BuildableName = "$scheme_name"
+               BlueprintName = "$scheme_name"
+               ReferencedContainer = "container:$projectdir">
+            </BuildableReference>
+         </BuildActionEntry>
+      </BuildActionEntries>
+   </BuildAction>
+   <TestAction
+      buildConfiguration = "debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      shouldUseLaunchSchemeArgsEnv = "YES">
+      <Testables>
+      </Testables>
+      <AdditionalOptions>
+      </AdditionalOptions>
+   </TestAction>
+   <LaunchAction
+      buildConfiguration = "debug"
+      selectedDebuggerIdentifier = ""
+      selectedLauncherIdentifier = "Xcode.IDEFoundation.Launcher.PosixSpawn"
+      launchStyle = "0"
+      useCustomWorkingDirectory = "NO"
+      ignoresPersistentStateOnLaunch = "NO"
+      debugDocumentVersioning = "YES"
+      debugServiceExtension = "internal"
+      allowLocationSimulation = "YES">
+      <PathRunnable
+         runnableDebuggingMode = "0"
+         FilePath = "/usr/bin/python">
+      </PathRunnable>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "$target_ref"
+            BuildableName = "$scheme_name"
+            BlueprintName = "$scheme_name"
+            ReferencedContainer = "container:$projectdir">
+         </BuildableReference>
+      </MacroExpansion>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "\$(EMSCRIPTEN_ROOT)/emrun.py --port 8080 --browser chrome \$(SRCROOT)/.build/\$(TARGET_NAME)/\$(CONFIGURATION)/webroot/xx.html"
+            isEnabled = "YES">
+         </CommandLineArgument>
+      </CommandLineArguments>
+      <AdditionalOptions>
+      </AdditionalOptions>
+   </LaunchAction>
+   <ProfileAction
+      buildConfiguration = "debug"
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      savedToolIdentifier = ""
+      useCustomWorkingDirectory = "NO"
+      debugDocumentVersioning = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "$target_ref"
+            BuildableName = "$scheme_name"
+            BlueprintName = "$scheme_name"
+            ReferencedContainer = "container:$projectdir">
+         </BuildableReference>
+      </MacroExpansion>
+   </ProfileAction>
+   <AnalyzeAction
+      buildConfiguration = "debug">
+   </AnalyzeAction>
+   <ArchiveAction
+      buildConfiguration = "debug"
+      revealArchiveInOrganizer = "YES">
+   </ArchiveAction>
+</Scheme>
+);
+close $scheme_fh;
+}
+
+write_shared_scheme("web_asmjs", $web_asmjs_target_ref);
+write_shared_scheme("web_wasm", $web_wasm_target_ref);
