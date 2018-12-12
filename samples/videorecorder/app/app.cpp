@@ -262,7 +262,7 @@ public:
         req->setHeader("Authorization", string::format("Basic %s", base64_encode(userPasswordData).data()));
         req->setHeader("Accept", "application/vnd.net.postquantum.idaas.api.access.token.v1+json");
         req->handleJson([=](URLRequest* req, const variant& json) {
-            if (req->error()) {
+            if (req->didError()) {
                 app.log("Error: %d, %s", req->getHttpStatus(), json.stringVal("message").data());
                 return;
             }
@@ -276,7 +276,7 @@ public:
             req->setHeader("Authorization", string::format("Bearer %s", access_token.data()));
             req->setHeader("Content-Type", "application/vnd.net.postquantum.check.api.user.token.v0.1+json");
             req->handleJson([=](URLRequest* req, const variant& v) {
-                if (req->error()) {
+                if (req->didError()) {
                     app.log("Error: %d, %s", req->getHttpStatus(), v.stringVal("message").data());
                     return;
                 }
@@ -307,7 +307,7 @@ public:
                 req->setHeader("Accept", "*\/*");
                 req->handleJson([](URLRequest* req, const variant& v) {
                     app.log("I POSTed a sample! %d", req->getHttpStatus());
-                    if (req->error()) {
+                    if (req->didError()) {
                         app.log("Error: %d, %s", req->getHttpStatus(), v.stringVal("message").data());
                         return;
                     }

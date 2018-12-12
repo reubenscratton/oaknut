@@ -19,11 +19,11 @@ There is usually only one Window instance, globally accessible through `app.wind
 [`Window`](/ref/views/Window)`* create()`<br>
 
 
-`void startAnimation(Animation* animation, int duration)`<br>
+`void startAnimation(`[`Animation`](/ref/views/Animation)`* animation, int duration)`<br>
 
-`void startAnimation(Animation* animation, int duration, int delay)`<br>
+`void startAnimation(`[`Animation`](/ref/views/Animation)`* animation, int duration, int delay)`<br>
 
-`void stopAnimation(Animation* animation)`<br>
+`void stopAnimation(`[`Animation`](/ref/views/Animation)`* animation)`<br>
 
 `void detachView(`[`View`](/ref/views/View)`* view)`<br>
 

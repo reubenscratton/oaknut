@@ -8,7 +8,9 @@
 #define FLAG_ALLOW_JSONLITE 1
 
 /**
- Interface for objects that serialize to and from Variant.
+ * @ingroup base
+ * @interface ISerializeToVariant
+ * @brief Interface for objects that serialize to and from Variant.
  */
 class ISerializeToVariant {
 public:
@@ -21,7 +23,7 @@ public:
  * @class variant
  * A discriminated union of all elementary numeric types, a string, a blob,
  * an array of variants, and a compound map of string-variant pairs.
- * Mainly used for serializing data and parsing JSON and layout/style files.
+ * Mainly used for serializing data and JSON.
  *
  * variant is a value type, i.e. it does not extend Object and
  * constructors and operator=() all make copies rather than share references.

@@ -219,9 +219,9 @@ Custom views should override this method to add support for custom attributes.
 
 `void animateTranslate(POINT translation, float duration)`<br>
 
-`Animation* animateInFromBottom(float duration, InterpolateFunc interpolater)`<br>
+[`Animation`](/ref/views/Animation)`* animateInFromBottom(float duration, InterpolateFunc interpolater)`<br>
 
-`Animation* animateOutToBottom(float duration, InterpolateFunc interpolater)`<br>
+[`Animation`](/ref/views/Animation)`* animateOutToBottom(float duration, InterpolateFunc interpolater)`<br>
 
 `void setTranslate(POINT translation)`<br>
 

@@ -12,12 +12,14 @@ The app object controls access to resources and styling information.The applicat
 
 `class ` [NavigationController](todo) | 
 Root view controller for typical mobile UX where there is a bar at the top of the screen and pages are pushed and popped in and out of view.     
+`class ` [measurement](todo) | 
+Represents a measurement in one of the following units:     
 `class ` [StyleValue](todo) | 
 Represents a value in the global style namespace.     
 `class ` [Styleable](todo) | 
 Abstract base class for objects that can have style values applied.     
 `class ` [URLRequest](todo) | 
-General purpose async networking support.     
+General purpose async HTTP networking support.     
 `class ` [ViewController](todo) | 
 Owner of a set of views that collectively make up a discrete piece of user-facing behaviour.     
 `class ` [ActionSheet](todo) | 

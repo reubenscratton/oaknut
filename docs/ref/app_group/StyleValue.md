@@ -9,16 +9,17 @@ class StyleValue
 
 Represents a value in the global style namespace.     
 
-Not instantiated directly, use `App::getStyleValue()` and friends to get one, then use one of the accessors `intVal()`, `stringVal()` to get to the raw value.Is alarmingly similar to the 'variant' type with which it should probably be unified.     
+Typical usage is to use `App::getStyleValue()` and friends to get one and then use one of the accessors `intVal()`, `stringVal()` to get the raw value.Is alarmingly similar to the 'variant' type with which it should probably be unified.     
+### Constructors
+
 ` StyleValue()`<br>
 
 ` StyleValue(const `[`StyleValue`](/ref/app_group/StyleValue)` & )`<br>
 
 ` StyleValue(`[`StyleValue`](/ref/app_group/StyleValue)` && )`<br>
 
-` ~StyleValue()`<br>
 
-[`StyleValue`](/ref/app_group/StyleValue)` & operator=(const `[`StyleValue`](/ref/app_group/StyleValue)` & other)`<br>
+### Type tests
 
 `bool isEmpty()`<br>
 
@@ -30,6 +31,9 @@ Not instantiated directly, use `App::getStyleValue()` and friends to get one, th
 
 `bool isArray()`<br>
 
+
+### Accessors
+
 `int intVal()`<br>
 
 `bool boolVal()`<br>
@@ -38,7 +42,7 @@ Not instantiated directly, use `App::getStyleValue()` and friends to get one, th
 
 [`string`](/ref/base_group/string)` stringVal()`<br>
 
-`measurement measurementVal()`<br>
+[`measurement`](/ref/app_group/measurement)` measurementVal()`<br>
 
 [`COLOR`](/ref/graphics_group/COLOR)` colorVal()`<br>
 
@@ -52,6 +56,9 @@ Not instantiated directly, use `App::getStyleValue()` and friends to get one, th
 
 `float fontWeightVal()`<br>
 
+
+### Compound accessors
+
 `const `[`StyleValue`](/ref/app_group/StyleValue)`* get(const `[`string`](/ref/base_group/string)` & keypath)`<br>
 
 `int intVal(const `[`string`](/ref/base_group/string)` & name)`<br>
@@ -63,6 +70,9 @@ Not instantiated directly, use `App::getStyleValue()` and friends to get one, th
 `const vector< `[`StyleValue`](/ref/app_group/StyleValue)` > & arrayVal(const `[`string`](/ref/base_group/string)` & name)`<br>
 
 `void importValues(const map< `[`string`](/ref/base_group/string)`, `[`StyleValue`](/ref/app_group/StyleValue)` > & values)`<br>
+
+
+### Parsing
 
 `bool parse(class StringProcessor & it, int flags)`<br>
 

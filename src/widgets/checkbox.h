@@ -6,7 +6,8 @@
 //
 
 /**
- A checkbox is an ImageView that toggles it's STATE_CHECKED bit when it's tapped.
+ * @ingroup widgets
+ * @brief A checkbox is an ImageView that toggles it's `STATE_CHECKED` bit when tapped.
  */
 class Checkbox : public ImageView {
 public:

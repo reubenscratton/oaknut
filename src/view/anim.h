@@ -9,40 +9,48 @@ typedef std::function<void(class Animation*)> OnAnimationFinishedDelegate;
 
 typedef float (*InterpolateFunc)(float t, float b, float c, float d);
 
-
+/**
+ *  @ingroup views
+ *  @brief Animation base class. Animations are associated with a View and
+ * are owned and updated by the Window attached to the View.
+ */
 class Animation : public Object {
 public:
     
-    friend class Window;
-    
-    View* _view;
-	Window* _window;
-    list<sp<Animation>>::iterator _windowAnimationsListIterator;
-    OnAnimationFinishedDelegate _onFinished;
-    TIMESTAMP _timeStarted;
-    TIMESTAMP _elapsedAtPause;
-    int _duration;
-    int _delay;
-    int _flags;
-    bool _paused;
-	InterpolateFunc _interpolator;
-	float _fromVal;
-	float _toVal;
-    
+    /** @name Construction
+     * @{
+     */
     Animation(View* view);
     Animation(View* view, float fromVal, float toVal);
+    /** @} */
+    
+    /**  @cond INTERNAL */
     ~Animation();
+    /**  @endcond */
+    
+    /** @name Starting & Stopping
+     * @{
+     */
     virtual void start(int duration);
     virtual void start(int duration, int delay);
     virtual void stop();
     virtual void pause();
     virtual void unpause();
-	virtual bool tick(TIMESTAMP now);
-    virtual void apply(float val) = 0;
+    /** @} */
+
     
     static Animation* start(View* view, int duration, std::function<void(float)> callback, InterpolateFunc interpolater = linear);
-    
-    // Interpolators
+
+    /** @name Interpolater
+     * @{
+     */
+    virtual void setInterpolater(InterpolateFunc interpolator);
+    virtual InterpolateFunc getInterpolater() const;
+    /** @} */
+
+    /** @name Interpolation functions
+     * @{
+     */
     static float linear(float t, float b, float c, float d);
     static float strongEaseInOut(float t, float b, float c, float d);
     static float regularEaseIn(float t, float b, float c, float d);
@@ -56,17 +64,54 @@ public:
     static float bounceEaseInOut(float t, float b, float c, float d);
     static float elasticEaseIn (float t, float b, float c, float d);
     static float elasticEaseOut(float t, float b, float c, float d);
+    /** @} */
 
+    /** @name Handlers
+     * @{
+     */
+    OnAnimationFinishedDelegate onFinished;
+    /** @} */
+
+protected:
+    virtual bool tick(TIMESTAMP now);
+    virtual void apply(float val) = 0;
+
+    friend class Window;
+    friend class ScrollInfo;
+    
+    View* _view;
+    Window* _window;
+    list<sp<Animation>>::iterator _windowAnimationsListIterator;
+    TIMESTAMP _timeStarted;
+    TIMESTAMP _elapsedAtPause;
+    int _duration;
+    int _delay;
+    int _flags;
+    bool _paused;
+    InterpolateFunc _interpolator;
+    float _fromVal;
+    float _toVal;
+    
 };
 
 
+/**
+ *  @ingroup views
+ *  @brief Animation that works on the `alpha` property of a View.
+ */
 class AlphaAnimation : public Animation {
 public:
 	
 	AlphaAnimation(View* view, float target);
-    virtual void apply(float val);
+    void apply(float val) override;
 };
 
+
+/**
+ *  @ingroup views
+ *  @brief Animation that works on a View's position and updates the View's layout properties at the end,
+ * i.e. it is for persistent animations.
+ */
 class LayoutAnimation : public Animation {
 public:
     
@@ -88,7 +133,7 @@ protected:
     float _originVertEnd;
     bool _valid;
     
-    void apply(float val);
+    void apply(float val) override;
     
 };
 

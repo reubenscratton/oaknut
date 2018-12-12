@@ -27,6 +27,13 @@ void Animation::start(int duration, int delay) {
     _view->_window->startAnimation(this, duration, delay);
 }
 
+void Animation::setInterpolater(InterpolateFunc interpolator) {
+    _interpolator = interpolator;
+}
+InterpolateFunc Animation::getInterpolater() const {
+    return _interpolator;
+}
+
 class SimpleAnimation : public Animation {
 public:
     SimpleAnimation(View* view, std::function<void(float)> callback) : Animation(view), _callback(callback) {
@@ -94,8 +101,8 @@ bool Animation::tick(TIMESTAMP now) {
         
 	// If animation has finished
 	if (finished) {
-		if (_onFinished) {
-			_onFinished(this);
+		if (onFinished) {
+			onFinished(this);
         }
     }
     return !finished;

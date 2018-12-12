@@ -13,35 +13,48 @@
 class NavigationController : public ViewController {
 public:
 	
-	sp<ViewController> _currentViewController;
-	sp<ViewController> _incomingViewController;
-	vector<sp<ViewController>> _navStack;
-	sp<class NavigationBar> _navBar;
-	sp<View> _contentView;
-	typedef enum {
-		None,
-		Push,
-		Pop
-	} AnimationState;
-	AnimationState _animationState;
-	
+    /**  @cond INTERNAL */
 	NavigationController();
+    /**  @endcond */
+    
+    /** Push a new child `ViewController` on top of the stack */
 	virtual void pushViewController(ViewController* vc);
-	virtual void popViewController();
 
+    /** Pop the current topmost child `ViewController` off the stack */
+    virtual void popViewController();
+
+    /** @name Overrides
+     * @{
+     */
     void onWindowAttached() override;
     void onWindowDetached() override;
 	bool navigateBack() override;
     void requestScroll(float dx, float dy) override;
     void applySafeInsets(const EDGEINSETS& safeInsets) override;
-    
-    void applySafeInsetsToChild(ViewController* childVC);
-    
+    /**@}*/
+
 
 protected:
+    enum AnimationState {
+        None,
+        Push,
+        Pop
+    };
+    
 	virtual void startNavAnimation(ViewController* incomingVC, AnimationState animationState);
 	virtual void applyNavTransitionToViewController(ViewController* vc, float val, bool incoming);
 	virtual void onNavTransitionApply(float val);
 	virtual void completeIncoming();
+    virtual void applySafeInsetsToChild(ViewController* childVC);
+    
+
+    sp<ViewController> _currentViewController;
+    sp<ViewController> _incomingViewController;
+    vector<sp<ViewController>> _navStack;
+    sp<class NavigationBar> _navBar;
+    sp<View> _contentView;
+    AnimationState _animationState;
+    
+
 };
 

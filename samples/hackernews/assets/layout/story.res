@@ -1,26 +1,23 @@
 {
     class: StoryItemView
-    width: fill_parent
-    height: 64dp
-    paddingHorz: 16dp
-    paddingVert: 8dp
-    subviews: [{
+    size: fill, 64dp
+    padding: 16dp, 8dp
+    subviews: [
+    {
         class: Label
         id: title
         style: $listview.item-title
-        width: fill_parent
-        height: wrap_content
+        size: fill, wrap
         maxLines: 2
-alignX: left
-        alignY: top
-    },{
+        align: left, top
+    },
+    {
         class: Label
         id: subtitle
         style: $listview.item-subtitle
-        width: fill_parent
-        height: wrap_content
-alignX: left
-        alignY: bottom
-    }]
+        size: fill, wrap
+        align: left, bottom
+    }
+    ]
 
 }

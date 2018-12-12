@@ -10,10 +10,17 @@ class URLRequest
 ```
 
 
-General purpose async networking support.     
+General purpose async HTTP networking support.     
 
-Simple example:  URLRequest::get("http://www.foo.com/bar.json") ->handleJson([=](Variant* json) { // handle the json here });  When you create a URLRequest it will begin, at the earliest, in the next event loop.     
-### Static creators
+Simple example:
+````
+URLRequest::get("http://www.foo.com/bar.json")
+ ->handleJson([=](const variant& json) {
+ // handle the json here
+ });
+````
+When you create a URLRequest it will start automatically on the next tick of the event loop.     
+### Instantiation
 
 [`URLRequest`](/ref/app_group/URLRequest)`* get(const `[`string`](/ref/base_group/string)` & url, int flags)`<br>Create and return a GET request.
 
@@ -24,24 +31,33 @@ Simple example:  URLRequest::get("http://www.foo.com/bar.json") ->handleJson([=]
 [`URLRequest`](/ref/app_group/URLRequest)`* createAndStart(const `[`string`](/ref/base_group/string)` & url, const `[`string`](/ref/base_group/string)` & method, const `[`bytearray`](/ref/base_group/bytearray)` & body, int flags)`<br>Create and return a request.
 
 
+### Configuration
+
+`void setHeader(const `[`string`](/ref/base_group/string)` & headerName, const `[`string`](/ref/base_group/string)` & headerValue)`<br>Set an HTTP header.
+Will overwrite existing value.
+
+
 ### Handling response data
 
-`void handleData(std::function< void(`[`URLRequest`](/ref/app_group/URLRequest)`*req)> handler)`<br>
+`void handleData(std::function< void(`[`URLRequest`](/ref/app_group/URLRequest)`*req, const `[`bytearray`](/ref/base_group/bytearray)` &)> handler)`<br>
 
 `void handleJson(std::function< void(`[`URLRequest`](/ref/app_group/URLRequest)`*req, const variant &)> handler)`<br>
 
 `void handleBitmap(std::function< void(`[`URLRequest`](/ref/app_group/URLRequest)`*req, `[`Bitmap`](/ref/graphics_group/Bitmap)`*)> handler)`<br>
 
 
-`void setHeader(const `[`string`](/ref/base_group/string)` & headerName, const `[`string`](/ref/base_group/string)` & headerValue)`<br>
+### Response status
 
-`void cancel()`<br>
-
-`bool error()`<br>
+`bool didError()`<br>
 
 `int getHttpStatus()`<br>
 
 `const `[`bytearray`](/ref/base_group/bytearray)` & getResponseData()`<br>
+
+
+### Cancellation
+
+`void cancel()`<br>Cancels the request, ensuring that response handlers won't run.
 
 
 `void run()`<br>

@@ -124,8 +124,8 @@ void NavigationController::startNavAnimation(ViewController* incomingVC, Animati
     Animation* anim = Animation::start(_view, 350, [=](float val) {
         onNavTransitionApply(val);
     });
-    anim->_interpolator = Animation::regularEaseInOut;
-    anim->_onFinished = [=](Animation* anim) {
+    anim->setInterpolater(Animation::regularEaseInOut);
+    anim->onFinished = [=](Animation* anim) {
 		completeIncoming();
         _animationState = None;
     };

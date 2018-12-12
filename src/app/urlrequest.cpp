@@ -43,7 +43,7 @@ void URLRequest::setHeader(const string &headerName, const string &headerValue) 
     _headers[headerName] = headerValue;
 }
 
-void URLRequest::handleData(std::function<void (URLRequest*)> handler) {
+void URLRequest::handleData(std::function<void (URLRequest*, const bytearray&)> handler) {
     _handlerData = handler;
 }
 
@@ -71,7 +71,7 @@ void URLRequest::dispatchResult(int httpStatus, const map<string, string>& respo
         contentType = contentTypeIt->second;
     }
     if (_handlerBitmap) {
-        if (error()) {
+        if (didError()) {
             retain();
             App::postToMainThread([=]() {
                 if (!_cancelled) {
@@ -110,11 +110,11 @@ void URLRequest::dispatchResult(int httpStatus, const map<string, string>& respo
     }
 
     if (_handlerData) {
-        if (error()) {
+        if (didError()) {
             if (!_cancelled) {
                 retain();
                 App::postToMainThread([=]() {
-                    _handlerData(this);
+                    _handlerData(this, _responseData);
                     release();
                 });
                 return;
@@ -123,7 +123,7 @@ void URLRequest::dispatchResult(int httpStatus, const map<string, string>& respo
             retain();
             App::postToMainThread([=]() {
                 if (!_cancelled) {
-                    _handlerData(this);
+                    _handlerData(this, _responseData);
                 }
                 release();
             });
@@ -132,6 +132,6 @@ void URLRequest::dispatchResult(int httpStatus, const map<string, string>& respo
     release();
 }
 
-bool URLRequest::error() {
+bool URLRequest::didError() {
     return _httpStatus==0 || _httpStatus>=400;
 }

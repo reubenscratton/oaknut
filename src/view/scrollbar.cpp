@@ -91,7 +91,7 @@ void ScrollInfo::updateVisibility(View* view, bool isVertical) {
             view->addScrollbarOp(_renderOp);
         }
         
-        // If there's no fade-in animation and the alpha isn't yet one, run the
+        // If there's no fade-in animation and the alpha isn't yet one, do the fade-in animation
         if (_alpha<1 && (!_fadeAnim || _fadeAnim->_toVal != 1.0f)) {
             if (_fadeTimer) {
                 _fadeTimer->stop();

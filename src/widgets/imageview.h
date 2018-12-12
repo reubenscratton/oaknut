@@ -5,6 +5,10 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+/**
+ * @ingroup widgets
+ * @brief Displays a bitmap.
+ */
 class ImageView : public View {
 public:
     

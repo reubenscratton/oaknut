@@ -5,8 +5,19 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+/**
+ * @ingroup app_group
+ * @brief Represents a measurement in one of the following units:
+ *
+ * * `PX`  Pixels
+ * * `DP`  Device-independent Pixels
+ * * `SP`  Scaled Pixels
+ * * `PC`  Percent
+ */
 class measurement {
 public:
+    
+    /** Returns the measurement value in pixels */
     float val() const;
     enum {
         PX,
@@ -22,9 +33,9 @@ private:
 
 /**
  * @ingroup app_group
- * @brief Represents a value in the global style namespace. Not instantiated directly,
- * use `App::getStyleValue()` and friends to get one, then use one of the accessors
- * `intVal()`, `stringVal()` to get to the raw value.
+ * @brief Represents a value in the global style namespace. Typical usage is to
+ * use `App::getStyleValue()` and friends to get one and then use one of the accessors
+ * `intVal()`, `stringVal()` to get the raw value.
  *
  * Is alarmingly similar to the 'variant' type with which it should probably be unified.
  */
@@ -44,19 +55,32 @@ public:
         QualifiedCompound // value is compound where they keys are qualifiers. Zero-length key maps to default value.
     } type;
 
+    /** @name Constructors
+     * @{
+     */
     StyleValue();
     StyleValue(const StyleValue&);
     StyleValue(StyleValue&&) noexcept;
+    /** @} */
+    
+    /**  @cond INTERNAL */
     ~StyleValue();
     StyleValue& operator=(const StyleValue& other);
+    /**  @endcond */
 
+    /** @name Type tests
+     * @{
+     */
     bool isEmpty() const;
     bool isNumeric() const;
     bool isString() const;
     bool isMeasurement() const;
     bool isArray() const;
+    /** @} */
 
-    // Accessors. Use these instead of accessing the private data to benefit from some implicit conversions.
+    /** @name Accessors
+     * @{
+     */
     int intVal() const;
     bool boolVal() const;
     float floatVal() const;
@@ -68,19 +92,28 @@ public:
     VECTOR4 cornerRadiiVal() const;
     EDGEINSETS edgeInsetsVal() const;
     float fontWeightVal() const;
+    /** @} */
 
-    // Compound accessors
+    /** @name Compound accessors
+     * @{
+     */
     const StyleValue* get(const string& keypath) const;
     int intVal(const string& name) const;
     float floatVal(const string& name) const;
     string stringVal(const string& name) const;
     const vector<StyleValue>& arrayVal(const string& name) const;
     void importValues(const map<string, StyleValue>& values);
+    /** @} */
+
 
 #define PARSEFLAG_IN_ARRAY 1
 #define PARSEFLAG_IS_ARGUMENT 2
-
+    
+    /** @name Parsing
+     * @{
+     */
     bool parse(class StringProcessor& it, int flags=0);
+    /** @} */
 
 private:
     void setType(Type newType);
@@ -95,6 +128,7 @@ private:
     };
 
     const StyleValue* select() const;
+
 
     bool parseNumberOrMeasurement(StringProcessor& it);
 };

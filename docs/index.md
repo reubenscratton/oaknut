@@ -1,7 +1,7 @@
 ---
 layout: default
 ---
-<iframe src="samples/minesweeper/xx.html" style="margin-top:24px; margin-left:16px;" width="320" height="400" align="right">
+<iframe src="samples/minesweeper/xx.html" style="margin-top:24px; margin-left:16px;" width="320" height="360" align="right">
 </iframe>
 Oaknut is an experimental GUI framework for truly cross-platform C++ apps. An
 Oaknut app can be built to run natively on any major OS, and can also run in
@@ -35,4 +35,4 @@ to build the appropriate project files:
 Alternatively, if your IDE is not yet supported or if you prefer to not use any IDE, then just run `make` on its own with no arguments.
 
 The compiled binary will be under the generated `.build` folder in the project
-root (see [Building](guides/building.md) for details).
+root (see [Building](guides/building) for details).

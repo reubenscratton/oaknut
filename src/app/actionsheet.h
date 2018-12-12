@@ -13,9 +13,14 @@
 class ActionSheet : public ViewController {
 public:
 
-    // API
+    /**  @cond INTERNAL */
     ActionSheet();
+    /**  @endcond */
+    
+    /** Add a text button with a click handler function */
     virtual void addAction(const string& action, std::function<void()> onClick);
+
+    /** Add the standard 'Cancel' button */
     virtual void addCancelButton();
     
     // Overrides

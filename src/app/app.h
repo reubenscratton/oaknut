@@ -13,12 +13,15 @@
  * top-level services such as loading resources, persisting configuration settings and many more.
  * \n
  * * [Entry point](#entry-point)\n
- * * [Time](#time)\n
- * * [Logging](#logging)\n
- * * [File paths](#file-paths)\n
  * * [Assets](#assets)\n
  * * [Styles](#styles)\n
  * * [Layout](#layout)\n
+ * * [Scheduling](#scheduling)\n
+ * * [Time](#time)\n
+ * * [Locale](#time)\n
+ * * [Settings](#settings)\n
+ * * [File paths](#file-paths)\n
+ * * [Logging](#logging)\n
  * \n
  */
 class App : public Object {
@@ -39,81 +42,38 @@ public:
     /**@}*/
 
     
-    /** The application window, which is your app's connection to the display
-        and input subsystems of the host OS */
-    sp<class Window> _window;
-
-    /** @name Time
-     * @{
-     */
-    
-    /** Gets the current system time, in milliseconds */
-    TIMESTAMP currentMillis(); // millis
-
-    /** Returns a 'friendly' text representation of a timestamp */
-    string friendlyTimeString(TIMESTAMP timestamp);
-
-    /**@}*/
-
-    
-    /** @name Logging
-     * @{
-     */
-
-    /** Log an informational message */
-    void log(char const* fmt, ...);
-
-    /** Log a warning message prefixed with "Warning: " */
-    void warn(char const* fmt, ...);
-
-    /**@}*/
-    
-
-    /** @name File paths
-     * @{
-     */
-    
-    string getPathForGeneralFiles();
-    string getPathForUserDocuments();
-    string getPathForCacheFiles();
-    string getPathForTemporaryFiles();
-
-    /**@}*/
-    
-    
     /** @name Assets
      * @{
      */
-
+    
     /** Load a file from the assets directory, synchronously. Since this does IO it's best to
      limit use to app startup and background threads */
     class ByteBuffer* loadAsset(const char* assetPath);
     
     /**@}*/
-
-
-
+    
+    
+    
     /** @name Styles
      * @{
      */
     
     /** Load a style asset from the assets directory. Generally used in App::main() */
     void loadStyleAsset(const string& assetPath);
-
+    
     /** Get a named style value */
     const StyleValue* getStyleValue(const string& keypath);
     
     /** Get a named style value and coerce to a string */
     string getStyleString(const string& key, const char* defaultString = NULL);
-
+    
     /** Get a named style value and coerce to a float */
     float getStyleFloat(const string& key);
-
+    
     /** Get a named style value and coerce to a COLOR */
     COLOR getStyleColor(const string& key);
     
     /**@}*/
-    
     
     
     /** @name Layout
@@ -129,6 +89,27 @@ public:
     
     /** Converts a 'dp' measurement into physical pixels and floor()s the result to an integer */
     float idp(float pix);
+    
+    /**@}*/
+
+    
+    /** @name Scheduling
+     * @{
+     */
+    /** Schedule a function to run on the main thread loop, optionally after a delay (in milliseconds). */
+    static Task* postToMainThread(std::function<void(void)> func, int delay=0);
+    /**@}*/
+    
+    
+    /** @name Time
+     * @{
+     */
+    
+    /** Gets the current system time, in milliseconds */
+    TIMESTAMP currentMillis(); // millis
+
+    /** Returns a 'friendly' text representation of a timestamp */
+    string friendlyTimeString(TIMESTAMP timestamp);
 
     /**@}*/
 
@@ -161,13 +142,35 @@ public:
     
     /**@}*/
 
-    
-    /** @name Scheduling Callbacks
+    /** @name Logging
      * @{
      */
-    /** Schedule a function to run on the main thread loop, optionally after a delay (in milliseconds). */
-    static Task* postToMainThread(std::function<void(void)> func, int delay=0);
+    
+    /** Log an informational message */
+    void log(char const* fmt, ...);
+    
+    /** Log a warning message prefixed with "Warning: " */
+    void warn(char const* fmt, ...);
+    
     /**@}*/
+    
+    
+    /** @name File paths
+     * @{
+     */
+    
+    string getPathForGeneralFiles();
+    string getPathForUserDocuments();
+    string getPathForCacheFiles();
+    string getPathForTemporaryFiles();
+    
+    /**@}*/
+    
+    
+    /** The application window, which is your app's connection to the display
+     and input subsystems of the host OS */
+    sp<class Window> _window;
+    
 
 protected:
     StyleValue _styles;

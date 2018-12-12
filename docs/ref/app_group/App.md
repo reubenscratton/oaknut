@@ -14,43 +14,21 @@ Global object accessible through the global `app` variable that provides essenti
 
 
 * [Entry point](#entry-point)
-* [Time](#time)
-* [Logging](#logging)
-* [File paths](#file-paths)
 * [Assets](#assets)
 * [Styles](#styles)
 * [Layout](#layout)
+* [Scheduling](#scheduling)
+* [Time](#time)
+* [Locale](#time)
+* [Settings](#settings)
+* [File paths](#file-paths)
+* [Logging](#logging)
 
     
 ### Entry point
 
 `void main()`<br>Application entry point.
 Your implementation of this must instantiate a ViewController and set it as _window.rootViewController before returning
-
-
-### Time
-
-`TIMESTAMP currentMillis()`<br>Gets the current system time, in milliseconds.
-
-[`string`](/ref/base_group/string)` friendlyTimeString(TIMESTAMP timestamp)`<br>Returns a 'friendly' text representation of a timestamp.
-
-
-### Logging
-
-`void log(char const* fmt, ... )`<br>Log an informational message.
-
-`void warn(char const* fmt, ... )`<br>Log a warning message prefixed with "Warning: ".
-
-
-### File paths
-
-[`string`](/ref/base_group/string)` getPathForGeneralFiles()`<br>
-
-[`string`](/ref/base_group/string)` getPathForUserDocuments()`<br>
-
-[`string`](/ref/base_group/string)` getPathForCacheFiles()`<br>
-
-[`string`](/ref/base_group/string)` getPathForTemporaryFiles()`<br>
 
 
 ### Assets
@@ -86,6 +64,18 @@ Dp is a device-independent pixel and is based on 320dpi
 `float idp(float pix)`<br>Converts a 'dp' measurement into physical pixels and floor()s the result to an integer.
 
 
+### Scheduling
+
+[`Task`](/ref/base_group/Task)`* postToMainThread(std::function< void(void)> func, int delay)`<br>Schedule a function to run on the main thread loop, optionally after a delay (in milliseconds).
+
+
+### Time
+
+`TIMESTAMP currentMillis()`<br>Gets the current system time, in milliseconds.
+
+[`string`](/ref/base_group/string)` friendlyTimeString(TIMESTAMP timestamp)`<br>Returns a 'friendly' text representation of a timestamp.
+
+
 ### Locale
 
 [`string`](/ref/base_group/string)` currentCountryCode()`<br>Returns ISO-3166 two-letter country code the device is configured for, which is not necessarily the country the device is currently in.
@@ -102,8 +92,21 @@ Dp is a device-independent pixel and is based on 320dpi
 `void setStringSetting(const char* key, const char* value)`<br>Sets a named string setting.
 
 
-### Scheduling Callbacks
+### Logging
 
-[`Task`](/ref/base_group/Task)`* postToMainThread(std::function< void(void)> func, int delay)`<br>Schedule a function to run on the main thread loop, optionally after a delay (in milliseconds).
+`void log(char const* fmt, ... )`<br>Log an informational message.
+
+`void warn(char const* fmt, ... )`<br>Log a warning message prefixed with "Warning: ".
+
+
+### File paths
+
+[`string`](/ref/base_group/string)` getPathForGeneralFiles()`<br>
+
+[`string`](/ref/base_group/string)` getPathForUserDocuments()`<br>
+
+[`string`](/ref/base_group/string)` getPathForCacheFiles()`<br>
+
+[`string`](/ref/base_group/string)` getPathForTemporaryFiles()`<br>
 
 

@@ -11,20 +11,20 @@
 
 /**
  * @ingroup app_group
- * @brief General purpose async networking support.
- * Simple example:
- * <code>
- * URLRequest::get("http://www.foo.com/bar.json")
- *    ->handleJson([=](Variant* json) {
- *        // handle the json here
- *    });
- * </code>
- * When you create a URLRequest it will begin, at the earliest, in the next event loop.
+ * @brief General purpose async HTTP networking support.
+ * Simple example:\n
+ * ````\n
+ * URLRequest::get("http://www.foo.com/bar.json")\n
+ *    ->handleJson([=](const variant& json) {\n
+ *        // handle the json here\n
+ *    });\n
+ * ````\n
+ * When you create a URLRequest it will start automatically on the next tick of the event loop.
  */
 class URLRequest : public Object {
 public:
     
-    /** @name Static creators
+    /** @name Instantiation
      * @{
      */
     
@@ -42,13 +42,19 @@ public:
     
     /**@}*/
 
+    
+    /** @name Configuration
+     * @{
+     */
+    /** Set an HTTP header. Will overwrite existing value. */
     void setHeader(const string& headerName, const string& headerValue);
+    /**@}*/
 
 
     /** @name Handling response data
      * @{
      */
-    void handleData(std::function<void(URLRequest* req)> handler);
+    void handleData(std::function<void(URLRequest* req, const bytearray&)> handler);
     void handleJson(std::function<void(URLRequest* req, const variant&)> handler);
     void handleBitmap(std::function<void(URLRequest* req, Bitmap*)> handler);
     
@@ -56,12 +62,22 @@ public:
     std::function<bool(int,const map<string, string>&)> onGotResponseInBackground;
     /**@}*/
 
-    virtual void cancel() =0;
-
-    bool error();
+    
+    /** @name Response status
+     * @{
+     */
+    bool didError();
     int getHttpStatus() const { return _httpStatus; }
     const bytearray& getResponseData() const { return _responseData; }
+    /**@}*/
 
+    
+    /** @name Cancellation
+     * @{
+     */
+    /** Cancels the request, ensuring that response handlers won't run. */
+    virtual void cancel() =0;
+    /**@}*/
     
 protected:
     virtual void run() =0;
@@ -76,7 +92,7 @@ protected:
     bytearray _responseData;
     int _flags;
     bool _cancelled;
-    std::function<void(URLRequest* req)> _handlerData;
+    std::function<void(URLRequest* req, const bytearray&)> _handlerData;
     std::function<void(URLRequest* req, const variant&)> _handlerJson;
     std::function<void(URLRequest* req, Bitmap*)> _handlerBitmap;
     

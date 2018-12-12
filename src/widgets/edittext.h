@@ -6,16 +6,39 @@
 //
 
 
+/**
+ * @ingroup widgets
+ * @brief A user-editable piece of text.
+ */
 class EditText : public Label, IKeyboardInputHandler, ITextInputReceiver {
 public:
 
-    // API
+    /**  @cond INTERNAL */
     EditText();
+    /**  @endcond */
+    
+    
+    /** @name Properties
+     * @{
+     */
     virtual void setInsertionPoint(int32_t newInsertionPoint);
     virtual void setMaxLength(int32_t maxLength);
     virtual void setActionType(ActionType actionType);
+    /** @} */
     
-    // Overrides
+    
+    /** @name Events
+     * @{
+     */
+    std::function<void(const AttributedString& before, AttributedString& after)> onTextChange;
+    std::function<void(int32_t insertionPointBefore, int32_t& insertionPointAfter)> onInsertionPointChanged;
+    std::function<void()> onKeyboardAction;
+    /** @} */
+    
+
+    /** @name Overrides
+     * @{
+     */
     bool applyStyleValue(const string& name, const StyleValue* value) override;
     void setPadding(EDGEINSETS padding) override;
     IKeyboardInputHandler* getKeyboardInputHandler() override;
@@ -27,7 +50,8 @@ public:
     void detachFromWindow() override;
     void setText(const AttributedString& text) override;
     void updateContentSize(SIZE constrainingSize) override;
-    
+    /** @} */
+
     // IKeyboardInputHandler
     void keyInputEvent(KeyboardInputEventType keyboardInputEventType, KeyboardInputSpecialKeyCode specialKeyCode, int osKeyCode, char32_t charCode) override;
 
@@ -44,11 +68,6 @@ public:
     void handleActionPressed() override;
 
 
-    std::function<void(const AttributedString& before, AttributedString& after)> onTextChange;
-    std::function<void(int32_t insertionPointBefore, int32_t& insertionPointAfter)> onInsertionPointChanged;
-    std::function<void()> onKeyboardAction;
-
-    
 protected:
     int32_t _selectionStart;    // Text index, not character index
     int32_t _insertionPoint;    // Text index, not character index

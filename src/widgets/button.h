@@ -5,7 +5,10 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-
+/**
+ * @ingroup widgets
+ * @brief A button with a text label. Really it's a label with a styled background.
+ */
 class Button : public Label {
 public:
     
@@ -13,6 +16,10 @@ public:
 
 };
 
+/**
+ * @ingroup widgets
+ * @brief A button with an image.
+ */
 class ToolbarButton : public ImageView {
 public:
     
