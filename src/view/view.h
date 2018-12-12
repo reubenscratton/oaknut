@@ -33,9 +33,43 @@ typedef struct _STATESET {
 
 
 /**
- *  @brief Fundamental UI building block
- *  @ingroup views
- */
+@ingroup views
+@brief Fundamental UI building block
+@verbatim
+* [Identity & Hierarchy](#identity-hierarchy)
+* [Window & Surface](#window-surface)
+* [Size & Position](#size-position)
+* [Content & Scrolling](#content-scrolling)
+* [Rendering](#rendering)
+* [State](#state)
+* [Styles](#styles)
+* [Touch](#touch)
+* [User Input](#user-input)
+* [Animation](#animation)
+
+#### Style reference
+Name         | Type                   | Default
+------------ | ---------------------- | -------
+`align`      | alignspec[1 or 2]      |
+`alignX`     | alignspec              |
+`alignY`     | alignspec              |
+`background` | drawable               |
+`enabled`    | boolean                | true
+`gravity`    | gravity[1 or 2]    |
+`gravityX`   | gravity    |
+`gravityY`   | gravity    |
+`height`     | measurement            |
+`id`         | text                   |
+`padding`    | measurement[1,2,or 4]  |
+`paddingX`   | measurement  |
+`paddingY`   | measurement  |
+`size`       | measurement[1 or 2]    |
+`tint`       | color  |
+`visibility` | `visible`&#124;`hidden`&#124;`gone`  | visible
+`width`      | measurement            |
+
+@endverbatim
+*/
 class View : public Styleable {
 public:
     
@@ -52,9 +86,10 @@ public:
     friend class LayoutAnimation;
     friend class LinearLayout;
     
-    // Construction
+    /**  @cond INTERNAL */
     View();
     virtual ~View();
+    /**  @endcond */
 
     /** @name Identity & Hierarchy
      * @{
@@ -286,9 +321,9 @@ protected:
 
 
 
-    /** @name Drawing
+    /** @name Rendering
      * @{
-     * Views draw themselves through RenderOps. You instantiate the RenderOps you need
+     * Views render their content with RenderOps. You instantiate the RenderOps you need
      * and pass them to addRenderOp(). The background op is always drawn first and is
      * allowed to vary with state. The Surface the View is attached to will ensure the ops are
      * drawn in the correct order and at the correct location but will also attempt to
@@ -428,19 +463,26 @@ protected:
     
 public:
 
-    // Keyboard and text handling
+    /** @name User Input
+     * @{
+     */
     virtual IKeyboardInputHandler* getKeyboardInputHandler();
     virtual ITextInputReceiver* getTextInputReceiver();
     virtual bool requestFocus();
+    /**@}*/
 
-	// Animation
-	virtual void animateAlpha(float target, float duration);
+
+    /** @name Animation
+     * @{
+     */
+    virtual void animateAlpha(float target, float duration);
     virtual void animateTranslate(POINT translation, float duration);
     virtual Animation* animateInFromBottom(float duration, InterpolateFunc interpolater = Animation::strongEaseOut);
     virtual Animation* animateOutToBottom(float duration, InterpolateFunc interpolater = Animation::strongEaseOut);
 	virtual void setTranslate(POINT translation);
     int _animationCount; // number of active animations currently attached to the view
-    
+    /**@}*/
+
 #ifdef DEBUG
     string debugDescription() override;
     virtual string debugViewType();

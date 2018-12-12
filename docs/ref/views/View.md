@@ -12,7 +12,37 @@ class View
 
 Fundamental UI building block.     
 
-    
+* [Identity & Hierarchy](#identity-hierarchy)
+* [Window & Surface](#window-surface)
+* [Size & Position](#size-position)
+* [Content & Scrolling](#content-scrolling)
+* [Rendering](#rendering)
+* [State](#state)
+* [Styles](#styles)
+* [Touch](#touch)
+* [User Input](#user-input)
+* [Animation](#animation)
+
+#### Style reference
+Name         | Type                   | Default
+------------ | ---------------------- | -------
+`align`      | alignspec[1 or 2]      |
+`alignX`     | alignspec              |
+`alignY`     | alignspec              |
+`background` | drawable               |
+`enabled`    | boolean                | true
+`gravity`    | gravity[1 or 2]    |
+`gravityX`   | gravity    |
+`gravityY`   | gravity    |
+`height`     | measurement            |
+`id`         | text                   |
+`padding`    | measurement[1,2,or 4]  |
+`paddingX`   | measurement  |
+`paddingY`   | measurement  |
+`size`       | measurement[1 or 2]    |
+`tint`       | color  |
+`visibility` | `visible`&#124;`hidden`&#124;`gone`  | visible
+`width`      | measurement            |     
 ### Identity & Hierarchy
 
 `void addSubview(`[`View`](/ref/views/View)`* subview)`<br>Adds a subview to the end of the subviews list, i.e.
@@ -130,7 +160,7 @@ Gravity affects how the content is aligned within the view rect when the view re
 `void scrollBy(POINT scrollAmount)`<br>
 
 
-### Drawing
+### Rendering
 
 `void setBackground(RenderOp* renderOp)`<br>
 
@@ -205,15 +235,16 @@ Custom views should override this method to add support for custom attributes.
 `int indexOfSubviewContainingPoint(POINT pt)`<br>
 
 
-` View()`<br>
-
-` ~View()`<br>
+### User Input
 
 `IKeyboardInputHandler* getKeyboardInputHandler()`<br>
 
 `ITextInputReceiver* getTextInputReceiver()`<br>
 
 `bool requestFocus()`<br>
+
+
+### Animation
 
 `void animateAlpha(float target, float duration)`<br>
 
