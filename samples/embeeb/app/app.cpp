@@ -5,9 +5,9 @@
 //
 
 #include "app.h"
-#include "mainviewcontroller.h"
-#include "disksviewcontroller.h"
-#include "snapshotsviewcontroller.h"
+#include "ux.main/mainviewcontroller.h"
+#include "ux.games/gamesviewcontroller.h"
+#include "ux.snapshots/snapshotsviewcontroller.h"
 
 
 void App::main() {
@@ -16,30 +16,7 @@ void App::main() {
     rootVC->pushViewController(new MainViewController());
     _window->setRootViewController(rootVC);
 
-    /*
-    vector<pair<const string&,const Variant&>> foo; // 24 bytes
-    sp<ByteBuffer> foo2;
-    string foo3;
-    uint32_t s1 = sizeof(foo3);
-    
-    
-    Variant vm1({
-        {"name1", 10},
-        {"name2", 20},
-        {"stringVal","flibbertiflooberts"},
-        {"mapVal", Variant({
-            {"name3", "froo"}
-        })}
-    });
-    
-    ByteBufferStream bb;
-    vm1.writeSelfToStream(&bb);
-    
-    Variant vm2;
-    vm2.readSelfFromStream(&bb);
-    */
-    
-    //DisksViewController* mainVC = new DisksViewController(NULL);
+    //GamesViewController* mainVC = new GamesViewController(NULL);
     //SnapshotsViewController* mainVC = new SnapshotsViewController(NULL, NULL, NULL, NULL);
 }
 

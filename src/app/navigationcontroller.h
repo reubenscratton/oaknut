@@ -23,6 +23,9 @@ public:
     /** Pop the current topmost child `ViewController` off the stack */
     virtual void popViewController();
 
+    /** Returns the NavigationBar at the top of the layout */
+    virtual class NavigationBar* getNavBar() const;
+    
     /** @name Overrides
      * @{
      */
@@ -51,7 +54,7 @@ protected:
     sp<ViewController> _currentViewController;
     sp<ViewController> _incomingViewController;
     vector<sp<ViewController>> _navStack;
-    sp<class NavigationBar> _navBar;
+    sp<NavigationBar> _navBar;
     sp<View> _contentView;
     AnimationState _animationState;
     

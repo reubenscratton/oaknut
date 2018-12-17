@@ -79,13 +79,13 @@ public:
     string substr(int32_t charIndexStart, int32_t charIndexEnd) const;
     
     // Search
-    int32_t find(const string& str) const;
-    int32_t find(const string& str, int32_t start) const;
-    int32_t find(const char* s) const;
-    int32_t find(char32_t ch) const;
-    bool contains(const string& str) const;
-    bool contains(const char* s) const;
-    bool contains(char32_t ch) const;
+    int32_t find(const string& str, bool caseSensitive=true) const;
+    int32_t find(const string& str, int32_t start, bool caseSensitive=true) const;
+    int32_t find(const char* s, bool caseSensitive=true) const;
+    int32_t find(char32_t ch, bool caseSensitive=true) const;
+    bool contains(const string& str, bool caseSensitive=true) const;
+    bool contains(const char* s, bool caseSensitive=true) const;
+    bool contains(char32_t ch, bool caseSensitive=true) const;
     
     static string format(const char* fmt, ...);
 
@@ -107,10 +107,10 @@ public:
     void erase(int32_t charIndex);
     void erase(int32_t charIndexStart, int32_t charIndexEnd);
     void trim();
-    bool hasPrefix(const string& prefix) const;
-    bool hadPrefix(const string& prefix);
-    bool hasSuffix(const string& suffix) const;
-    bool hadSuffix(const string& suffix);
+    bool hasPrefix(const string& prefix, bool caseSensitive=true) const;
+    bool hadPrefix(const string& prefix, bool caseSensitive=true);
+    bool hasSuffix(const string& suffix, bool caseSensitive=true) const;
+    bool hadSuffix(const string& suffix, bool caseSensitive=true);
 
     // Character iteration
     class iterator: public std::iterator<

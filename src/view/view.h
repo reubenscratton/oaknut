@@ -36,10 +36,10 @@ typedef struct _STATESET {
 @ingroup views
 @brief Fundamental UI building block
 @verbatim
-* [Identity & Hierarchy](#identity-hierarchy)
-* [Window & Surface](#window-surface)
-* [Size & Position](#size-position)
-* [Content & Scrolling](#content-scrolling)
+* [Identity & Hierarchy](#identity--hierarchy)
+* [Window & Surface](#window--surface)
+* [Size & Position](#size--position)
+* [Content & Scrolling](#content--scrolling)
 * [Rendering](#rendering)
 * [State](#state)
 * [Styles](#styles)
@@ -48,6 +48,7 @@ typedef struct _STATESET {
 * [Animation](#animation)
 
 #### Style reference
+
 Name         | Type                   | Default
 ------------ | ---------------------- | -------
 `align`      | alignspec[1 or 2]      |

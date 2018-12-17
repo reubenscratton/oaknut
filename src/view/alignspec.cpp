@@ -25,13 +25,13 @@ ALIGNSPEC ALIGNSPEC::Top()    { return ALIGNSPEC(NULL, 0.0f, 0.0f, 0); }
 ALIGNSPEC ALIGNSPEC::Bottom() { return ALIGNSPEC(NULL, 1.0f,-1.0f, 0); }
 
 ALIGNSPEC ALIGNSPEC::ToLeftOf(View* view, float margin) {
-    return ALIGNSPEC(view, 1.0f,  -1.0f, -margin);
+    return ALIGNSPEC(view, 0.0f,  -1.0f, -margin);
 }
 ALIGNSPEC ALIGNSPEC::ToRightOf(View* view, float margin) {
     return ALIGNSPEC(view, 1.0f,  0.0f, margin);
 }
 ALIGNSPEC ALIGNSPEC::Above(View* view, float margin) {
-    return ALIGNSPEC(view, 1.0f,  -1.0f, -margin);
+    return ALIGNSPEC(view, 0.0f,  -1.0f, -margin);
 }
 ALIGNSPEC ALIGNSPEC::Below(View* view, float margin) {
     return ALIGNSPEC(view, 1.0f,  0.0f, margin);
@@ -56,9 +56,9 @@ ALIGNSPEC::ALIGNSPEC(const StyleValue* value, View* view) {
     else if (type=="right") *this=Right();
     else if (type=="top") *this=Top();
     else if (type=="bottom") *this=Bottom();
-    else if (type=="toLeftOf") {multiplierAnchor=1.0f; multiplierSelf=-1.0f; anchorMandatory=true; }
+    else if (type=="toLeftOf") {multiplierAnchor=0.0f; multiplierSelf=-1.0f; anchorMandatory=true; }
     else if (type=="toRightOf") {multiplierAnchor=1.0f; multiplierSelf=0.0f; anchorMandatory=true; }
-    else if (type=="above") {multiplierAnchor=1.0f; multiplierSelf=-1.0f; anchorMandatory=true; }
+    else if (type=="above") {multiplierAnchor=0.0f; multiplierSelf=-1.0f; anchorMandatory=true; }
     else if (type=="below") {multiplierAnchor=1.0f; multiplierSelf=0.0f; anchorMandatory=true; }
     else assert(false); // unknown alignspec type
 

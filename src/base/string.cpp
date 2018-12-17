@@ -15,6 +15,17 @@ const unsigned char kFourthBitMask = 16; // 0001000
 //const unsigned char kFifthBitMask = 8; // 0000100
 
 
+char32_t lower(char32_t c) {
+    if (c>=0x0041 && c<=0x5a) return c+0x20;
+    else if (c>=0xC0 && c<=0xDE) return c+0x20;
+    else if (c==0x0178) return 0x00FF;
+    else if (!(c&1) && (c>=0x0100 && c<=0x0136)) return c+1;
+    else if ((c&1) && (c>=0x0139 && c<=0x0147)) return c+1;
+    else if (!(c&1) && (c>=0x014A && c<=0x0176)) return c+1;
+    // TODO: finish this https://www.ibm.com/support/knowledgecenter/en/ssw_ibm_i_72/nls/rbagslowtoupmaptable.htm
+    return c;
+}
+
 int string::compare(const string& str) const noexcept {
     int cb = MIN(_cb, str._cb);
     int r = memcmp(_p, str._p, cb);
@@ -138,25 +149,41 @@ char32_t string::readUtf8(int32_t& byteOffset) const {
     return codePoint;
 }
 
-int32_t string::find(const string& str) const {
-    char* p = strstr(_p, str._p);
-    return p ? int32_t(p-_p) : -1;
+int32_t string::find(const string& str, bool caseSensitive/*=true*/) const {
+    return find(str, 0, caseSensitive);
 }
-int32_t string::find(const string& str, int32_t start) const {
-    auto o = charIndexToByteIndex(start);
-    if (o >= _cb) {
+int32_t string::find(const string& str, int32_t start, bool caseSensitive/*=true*/) const {
+    auto oc = start;
+    auto ob = start ? charIndexToByteIndex(start) : 0;
+    if (ob >= _cb) {
         return -1;
     }
-    char* p = strstr(_p + o, str._p);
-    return p ? int32_t(p-_p) : -1;
-
+    if (!str.length()) {
+        return 0;
+    }
+    
+    int matchCount = 0;
+    while (ob>=0) {
+        char32_t ch = readUtf8(ob); oc++;
+        char32_t compareChar = str.charAt(matchCount);
+        bool match = caseSensitive ? (ch==compareChar) : (lower(ch)==lower(compareChar));
+        if (match) {
+            matchCount++;
+            if (matchCount >= str.length()) {
+                return oc - str.length();
+            }
+        } else {
+            matchCount =0;
+        }
+    }
+    return -1;
 }
-int32_t string::find(const char* s) const {
+int32_t string::find(const char* s, bool caseSensitive/*=true*/) const {
     if (!_p) return -1;
     char* p = strstr(_p, s);
     return p ? int32_t(p-_p) : -1;
 }
-int32_t string::find(char32_t ch) const {
+int32_t string::find(char32_t ch, bool caseSensitive/*=true*/) const {
     int32_t byteIndex = 0;
     int32_t charIndex = 0;
     while (byteIndex >= 0) {
@@ -167,14 +194,14 @@ int32_t string::find(char32_t ch) const {
     }
     return -1;
 }
-bool string::contains(const string& str) const {
-    return find(str) >=0;
+bool string::contains(const string& str, bool caseSensitive/*=true*/) const {
+    return find(str, caseSensitive) >=0;
 }
-bool string::contains(const char* s) const {
-    return find(s) >=0;
+bool string::contains(const char* s, bool caseSensitive/*=true*/) const {
+    return find(s, caseSensitive) >=0;
 }
-bool string::contains(char32_t ch) const {
-    return find(ch) >=0;
+bool string::contains(char32_t ch, bool caseSensitive/*=true*/) const {
+    return find(ch, caseSensitive) >=0;
 }
 
 int32_t countUtf8Chars(const char* p, int32_t cb) {
@@ -354,42 +381,59 @@ void string::trim() {
     if (cLead) erase(0, cLead);
 }
 
-bool string::hasPrefix(const string& prefix) const {
+
+bool string::hasPrefix(const string& prefix, bool caseSensitive/*=true*/) const {
     if (prefix.length()>length()) {
         return false;
     }
     auto s = begin();
     auto p = prefix.begin();
     size_t l = prefix.length();
-    while (l-- > 0) {
-        if (*s++ != *p++) {
-            return false;
+    if (caseSensitive) {
+        while (l-- > 0) {
+            if (*s++ != *p++) {
+                return false;
+            }
+        }
+    } else {
+        while (l-- > 0) {
+            if (lower(*s++) != lower(*p++)) {
+                return false;
+            }
         }
     }
     return true;
 }
-bool string::hadPrefix(const string& prefix) {
+bool string::hadPrefix(const string& prefix, bool caseSensitive/*=true*/) {
     if (hasPrefix(prefix)) {
         erase(0, prefix.length());
         return true;
     }
     return false;
 }
-bool string::hasSuffix(const string& suffix) const {
+bool string::hasSuffix(const string& suffix, bool caseSensitive/*=true*/) const {
     int32_t ci = _cc - suffix._cc;
     if (ci<0) {
         return false;
     }
     int32_t cs = 0;
-    while (cs < suffix.length()) {
-        if (charAt(ci++) != suffix.charAt(cs++)) {
-            return false;
+    if (caseSensitive) {
+        while (cs < suffix.length()) {
+            if (charAt(ci++) != suffix.charAt(cs++)) {
+                return false;
+            }
+        }
+    } else {
+        while (cs < suffix.length()) {
+            if (lower(charAt(ci++)) != lower(suffix.charAt(cs++))) {
+                return false;
+            }
         }
     }
     return true;
 
 }
-bool string::hadSuffix(const string& suffix) {
+bool string::hadSuffix(const string& suffix, bool caseSensitive/*=true*/) {
     if (hasSuffix(suffix)) {
         erase(_cc-suffix.length(), _cc);
         return true;

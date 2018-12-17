@@ -1,16 +1,15 @@
 //
-//  MainViewController.cpp
 //  emBeeb
 //
-//  Copyright © 2016 Sandcastle Software Ltd. All rights reserved.
+//  Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 
 #include "mainviewcontroller.h"
 #include "beebview.h"
 #include "controllerview.h"
-#include "disksviewcontroller.h"
-#include "diskcontrols.h"
-#include "snapshotsviewcontroller.h"
+#include "../ux.games/gamesviewcontroller.h"
+#include "../model/diskcontrols.h"
+#include "../ux.snapshots/snapshotsviewcontroller.h"
 //#import "DiskImageRequest.h"
 //#import "RecentDisks.h"
 
@@ -64,11 +63,11 @@ MainViewController::MainViewController() {
         _navigationController->pushViewController(vc);
     });
     addNavButton(true, "images/floppy_disk.png", [=]() {
-        sp<DisksViewController> vc = new DisksViewController([&](Game* game) {
+        sp<GamesViewController> vc = new GamesViewController([&](Game* game) {
             _currentSnapshot = NULL;
             _currentDiskInfo = game->defaultDiskInfo();
-            URLRequest::get(_currentDiskInfo->diskUrl())->handleData([&](URLRequest* req) {
-                if (req->error()) {
+            URLRequest::get(_currentDiskInfo->diskUrl())->handleData([=](URLRequest* req, const bytearray& data) {
+                if (req->didError()) {
                     // TODO: show user error
                     return;
                 }
@@ -77,7 +76,7 @@ MainViewController::MainViewController() {
                 Timer::start([=]() {
                     _beeb->postKeyboardEvent(ScanCode_Shift, false);
                 }, 2000, false);
-                auto data = req->getResponseData();
+                //auto data = req->getResponseData();
                 _beeb->loadDisc(data.data(), data.size(), 1);
             });
         });
@@ -102,7 +101,7 @@ MainViewController::MainViewController() {
 
 void MainViewController::onDidAppear(bool firstTime) {
 	ViewController::onDidAppear(firstTime);
-	_navigationController->_navBar->setBlurEnabled(false);
+	_navigationController->getNavBar()->setBlurEnabled(false);
     _controllerView->setFocused(true);
 	//if (_beebView->_paused) {
 		_beebView->_paused = false;
@@ -117,7 +116,7 @@ void MainViewController::onWillDisappear(bool lastTime) {
 }
 void MainViewController::onDidDisappear(bool lastTime) {
 	ViewController::onDidDisappear(lastTime);
-    _navigationController->_navBar->setBlurEnabled(true);
+    _navigationController->getNavBar()->setBlurEnabled(true);
 	_beebView->_beeb->_audioOutput->pause();
 }
 
@@ -188,7 +187,7 @@ void MainViewController::onDidDisappear(bool lastTime) {
 	[self.navigationController pushViewController:vc animated:YES];
 }
 - (void)onDiskButtonPressed:(id)sender {
-	DisksViewController* vc = [DisksViewController new];
+	GamesViewController* vc = [GamesViewController new];
 	//vc.delegate = self;
 	[self.navigationController pushViewController:vc animated:YES];
 }

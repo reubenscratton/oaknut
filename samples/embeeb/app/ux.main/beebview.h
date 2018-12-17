@@ -2,9 +2,7 @@
 //  Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 
-#ifndef beebview_hpp
-#define beebview_hpp
-
+#pragma once
 #include "app.h"
 
 class BeebView : public View, public IBeebDisplayCallbacks {
@@ -32,5 +30,3 @@ public:
     void drawFrame() override;
 };
 
-
-#endif /* beebview_hpp */

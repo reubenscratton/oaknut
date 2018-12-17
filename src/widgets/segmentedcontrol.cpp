@@ -29,6 +29,10 @@ bool SegmentedControl::applyStyleValue(const string &name, const StyleValue *val
         setFontSize(value->floatVal());
         return true;
     }
+    if (name=="font-weight") {
+        setFontWeight(value->fontWeightVal());
+        return true;
+    }
     if (name=="corner-radius") {
         _cornerRadius = value->floatVal();
         updateBorders();
@@ -51,6 +55,13 @@ void SegmentedControl::setFontSize(float fontSize) {
         invalidateContentSize();
     }
 }
+void SegmentedControl::setFontWeight(float fontWeight) {
+    if (_fontWeight != fontWeight) {
+        _fontWeight = fontWeight;
+        _fontValid = false;
+        invalidateContentSize();
+    }
+}
 
 void SegmentedControl::onEffectiveTintColorChanged() {
     View::onEffectiveTintColorChanged();
@@ -68,7 +79,6 @@ void SegmentedControl::addSegment(const string& label) {
     segment.label->setGravity({GRAVITY_CENTER,GRAVITY_CENTER});
     COLOR actualColor = _textColor ? _textColor : _effectiveTintColor;
     segment.label->setColor(actualColor);
-    float r = _cornerRadius;
     segment.rectOp = new RectRenderOp();
     segment.rectOp->setFillColor(0);
     addRenderOp(segment.rectOp);
@@ -113,7 +123,7 @@ void SegmentedControl::setSelectedTextColor(COLOR color) {
     }
 }
 
-void SegmentedControl::setSelectedSegment(int segmentIndex) {
+void SegmentedControl::setSelectedIndex(int segmentIndex) {
 	if (segmentIndex != _selectedIndex) {
         if (_selectedIndex >= 0) {
             Segment& selectedSegment = _segments.at(_selectedIndex);
@@ -137,9 +147,6 @@ void SegmentedControl::setSelectedSegment(int segmentIndex) {
     invalidateContentSize(); // todo: This is lazy. Size isn't changing.
 }
 
-void SegmentedControl::setSegmentSelectedDelegate(SegmentSelectedDelegate delegate) {
-	_segmentSelectedDelegate = delegate;
-}
 
 void SegmentedControl::updateContentSize(SIZE constrainingSize) {
     
@@ -232,7 +239,7 @@ bool SegmentedControl::handleInputEvent(INPUTEVENT* event) {
 					if (_selectedIndex >= 0) {
 						invalidateRect(_segments.at(_selectedIndex).rect);
 					}
-                    setSelectedSegment(_pressedIndex);
+                    setSelectedIndex(_pressedIndex);
 				}
 			}
 			setPressedIndex(-1);
@@ -242,7 +249,7 @@ bool SegmentedControl::handleInputEvent(INPUTEVENT* event) {
 }
 
 void SegmentedControl::onSegmentTap(int segmentIndex) {
-	if (_segmentSelectedDelegate) {
-		_segmentSelectedDelegate(segmentIndex);
+	if (onSegmentSelected) {
+		onSegmentSelected(segmentIndex);
 	}
 }

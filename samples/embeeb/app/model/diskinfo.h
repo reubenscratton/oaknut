@@ -2,9 +2,7 @@
 //  Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 
-#ifndef diskinfo_hpp
-#define diskinfo_hpp
-
+#pragma once
 #include "app.h"
 
 
@@ -56,5 +54,3 @@ public:
     
 
 };
-
-#endif

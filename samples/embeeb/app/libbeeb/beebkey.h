@@ -2,7 +2,7 @@
 //  BeebKey.h
 //  libbeeb
 //
-//  Copyright © 2016 Sandcastle Software Ltd. All rights reserved.
+//  Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 
 #ifndef BEEBKEY_H_INCLUDED

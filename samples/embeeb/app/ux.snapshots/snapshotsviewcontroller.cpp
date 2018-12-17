@@ -22,12 +22,16 @@ public:
     Label* subtitleLabel;
 };
 
-class SnapshotsAdapter : public SimpleListAdapter<Snapshot, SnapshotView> {
+class SnapshotsAdapter : public SimpleListAdapter<Snapshot> {
 public:
     SnapshotsAdapter(LocalStore* snapshotStore) : SimpleListAdapter() {
         _store = snapshotStore;
     }
-    
+
+    View* createItemView(LISTINDEX index) override {
+        return new SnapshotView();
+    }
+
     void bindItemView(View* itemview, LISTINDEX index) override {
         Snapshot& snapshot = _items[LISTINDEX_ITEM(index)];
         ((SnapshotView*)itemview)->bind(snapshot);

@@ -168,7 +168,7 @@ namespace oak {
 #include "widgets/button.h"
 #include "widgets/edittext.h"
 #include "widgets/listview.h"
-#include "widgets/simplelistadapter.h"
+#include "util/simplelistadapter.h"
 #include "widgets/navigationbar.h"
 #include "widgets/linearlayout.h"
 #include "widgets/segmentedcontrol.h"

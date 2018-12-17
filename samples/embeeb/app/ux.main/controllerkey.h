@@ -1,13 +1,10 @@
 //
-//  controllerkey.h
 //  emBeeb
 //
-//  Copyright © 2016 Sandcastle Software Ltd. All rights reserved.
+//  Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 
-#ifndef _CONTROLLERKEY_H_
-#define _CONTROLLERKEY_H_
-
+#pragma once
 #include "app.h"
 
 class Controller;
@@ -92,4 +89,3 @@ public:
 };
 
 
-#endif

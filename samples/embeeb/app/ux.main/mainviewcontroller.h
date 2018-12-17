@@ -1,13 +1,10 @@
 //
 //  emBeeb
 //
-//  Copyright © 2016 Sandcastle Software Ltd. All rights reserved.
+//  Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 
-
-#ifndef _MAINVIEWCONTROLLER_H_
-#define _MAINVIEWCONTROLLER_H_
-
+#pragma once
 #include "app.h"
 #include "beebkeyboardcontroller.h"
 #include "diskinfo.h"
@@ -36,4 +33,3 @@ public:
 		
 };
 
-#endif

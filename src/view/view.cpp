@@ -619,6 +619,26 @@ void View::layout(RECT constraint) {
     //assert(!_layoutValid);
     SIZE refSize = {0,0};
     
+    // Calculate the rect this view is positioning itself within
+    RECT alignRect;
+    if (_alignspecHorz.anchor) {
+        assert(_alignspecHorz.anchor->_layoutValid);
+        alignRect.origin.x = _alignspecHorz.anchor->_rect.origin.x;
+        alignRect.size.width = _alignspecHorz.anchor->_rect.size.width;
+    } else {
+        alignRect.origin.x = constraint.origin.x;
+        alignRect.size.width = constraint.size.width;
+    }
+    if (_alignspecVert.anchor) {
+        assert(_alignspecVert.anchor->_layoutValid);
+        alignRect.origin.y = _alignspecVert.anchor->_rect.origin.y;
+        alignRect.size.height = _alignspecVert.anchor->_rect.size.height;
+    } else {
+        alignRect.origin.y = constraint.origin.y;
+        alignRect.size.height = constraint.size.height;
+    }
+    
+
     // Handle relative width & height early as it may involve laying out a sibling view before this
     if (_widthMeasureSpec.type==MEASURESPEC::TypeRelative) {
         if (_widthMeasureSpec.ref) {
@@ -634,6 +654,12 @@ void View::layout(RECT constraint) {
         }
         assert(refSize.width >= 0); // relative-size to content-wrapping parent not allowed!
     }
+    else if (_widthMeasureSpec.type==MEASURESPEC::TypeFill) {
+        if (_alignspecHorz.anchor) assert(_alignspecHorz.anchor->_layoutValid);
+        float aa = _alignspecHorz.anchor ? alignRect.origin.x : 0;
+        float x = floorf(_alignspecHorz.calc(constraint.size.width, aa, alignRect.size.width));
+        refSize.width = constraint.size.width - fabs(x);
+    }
     if (_heightMeasureSpec.type==MEASURESPEC::TypeRelative) {
         if (_heightMeasureSpec.ref) {
             if (!_heightMeasureSpec.ref->_layoutValid) {
@@ -648,7 +674,13 @@ void View::layout(RECT constraint) {
         }
         assert(refSize.height >= 0); // relative-size to content-wrapping parent not allowed!
     }
-    
+    else if (_heightMeasureSpec.type==MEASURESPEC::TypeFill) {
+        if (_alignspecVert.anchor) assert(_alignspecVert.anchor->_layoutValid);
+        float aa = _alignspecVert.anchor ? alignRect.origin.y : 0;
+        float y = floorf(_alignspecVert.calc(constraint.size.height, aa, alignRect.size.height));
+        refSize.height = constraint.size.height - fabs(y);
+    }
+
     // Work out the constraining size. If our sizespec is relative to parent or sibling then the
     // constraining size is whatever the spec works out to, but if it's content based then the
     // constraining size is the one passed into this function.
@@ -736,25 +768,6 @@ void View::layout(RECT constraint) {
     }
     if (_heightMeasureSpec.type==MEASURESPEC::TypeAspect) {
         refSize.height = refSize.width;
-    }
-    
-    // Calculate the rect this view is positioning itself within
-    RECT alignRect;
-    if (_alignspecHorz.anchor) {
-        assert(_alignspecHorz.anchor->_layoutValid);
-        alignRect.origin.x = _alignspecHorz.anchor->_rect.origin.x;
-        alignRect.size.width = _alignspecHorz.anchor->_rect.size.width;
-    } else {
-        alignRect.origin.x = constraint.origin.x;
-        alignRect.size.width = constraint.size.width;
-    }
-    if (_alignspecVert.anchor) {
-        assert(_alignspecVert.anchor->_layoutValid);
-        alignRect.origin.y = _alignspecVert.anchor->_rect.origin.y;
-        alignRect.size.height = _alignspecVert.anchor->_rect.size.height;
-    } else {
-        alignRect.origin.y = constraint.origin.y;
-        alignRect.size.height = constraint.size.height;
     }
     
     // Calculate the new rect, aligning to pixel grid
@@ -1267,10 +1280,11 @@ View* View::dispatchInputEvent(INPUTEVENT* event) {
 	// Offer the event to the leaf view and if it doesn't handle it pass
 	// it up the view tree until a view handles it.
 	while (hitView) {
-        event->ptLocal = hitPoint;
+        event->ptLocal = hitPoint + hitView->_contentOffset;
 		if (hitView->handleInputEvent(event)) {
 			return hitView;
 		}
+        event->ptLocal -= hitView->_contentOffset;
         hitPoint.x += hitView->_rect.origin.x;
         hitPoint.y += hitView->_rect.origin.y;
 		hitView = hitView->_parent;

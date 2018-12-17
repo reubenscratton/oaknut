@@ -1,8 +1,7 @@
 //
-//  beebkeyboardcontroller.h
 //  emBeeb
 //
-//  Copyright © 2016 Sandcastle Software Ltd. All rights reserved.
+//  Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 
 #include "app.h"

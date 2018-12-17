@@ -411,9 +411,9 @@ public:
 
 void App::main() {
     
-    _window->setRootViewController(new AudioRecordingViewController());
+    //_window->setRootViewController(new AudioRecordingViewController());
     
-    //_window->setRootViewController(new MainViewController());
+    _window->setRootViewController(new MainViewController());
     
 }
 

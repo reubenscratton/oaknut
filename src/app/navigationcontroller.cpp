@@ -23,6 +23,9 @@ NavigationController::NavigationController() {
 
 }
 
+NavigationBar* NavigationController::getNavBar() const {
+    return _navBar;
+}
 
 void NavigationController::onWindowAttached() {
     ViewController::onWindowAttached();

@@ -2,12 +2,10 @@
 //  controller.h
 //  emBeeb
 //
-//  Copyright © 2016 Sandcastle Software Ltd. All rights reserved.
+//  Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 
-#ifndef _CONTROLLER_H_
-#define _CONTROLLER_H_
-
+#pragma once
 #include "app.h"
 #include "controllerkey.h"
 
@@ -32,5 +30,3 @@ public:
 	void handleTouchEndInKey(ControllerKey* key, ControllerView* controllerView) override;
 
 };
-
-#endif

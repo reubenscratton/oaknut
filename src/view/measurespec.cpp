@@ -18,7 +18,7 @@ MEASURESPEC::MEASURESPEC(Type type, View* ref, float mul, float con) {
 
 MEASURESPEC MEASURESPEC::None() { return MEASURESPEC(TypeNone, NULL, 0, 0); }
 MEASURESPEC MEASURESPEC::Abs(float x) { return MEASURESPEC(TypeRelative, NULL, 0, x); }
-MEASURESPEC MEASURESPEC::Fill() { return MEASURESPEC(TypeRelative, NULL, 1, 0); }
+MEASURESPEC MEASURESPEC::Fill() { return MEASURESPEC(TypeFill, NULL, 1, 0); }
 MEASURESPEC MEASURESPEC::Wrap() { return MEASURESPEC(TypeContent, NULL, 1, 0); }
 MEASURESPEC MEASURESPEC::Aspect(float x) { return MEASURESPEC(TypeAspect, NULL,  x, 0); }
 
@@ -93,7 +93,7 @@ MEASURESPEC::MEASURESPEC(const StyleValue* value, View* view) {
 float MEASURESPEC::calcConstraint(float parentSize, float otherSize) const {
     if (TypeContent == type) {
         return parentSize;
-    } else if (TypeRelative == type) {
+    } else if (TypeRelative == type || TypeFill == type) {
         float retval = con;
         if (mul != 0.0f) {
             float refWidth = (ref == NULL) ? parentSize : ref->_rect.size.width;
