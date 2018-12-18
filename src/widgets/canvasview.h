@@ -5,9 +5,17 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+
+/**
+ * @ingroup widgets
+ * @brief A view that draws a `Canvas`. Implement the canvas drawing code in the `redraw` method.
+ */
 class CanvasView : public View {
 public:
+
+    /**  @cond INTERNAL */
     CanvasView();
+    /**  @endcond */
     
     // Overrides
     void layout(RECT constraint) override;
