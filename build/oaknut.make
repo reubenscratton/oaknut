@@ -81,6 +81,10 @@ androidstudio:
 		-android_ver $(ANDROID_VER) \
 		-package_name $(ANDROID_PACKAGE_NAME)
 
+vscode:
+	@mkdir -p  .vscode
+	@perl $(OAKNUT_DIR)/build/vscode.pl -projectname $(PROJECT_NAME)
+
 
 # This prevents make from automatically deleting .dep files cos it regards them as intermediate
 .PRECIOUS: $(DEPS)

@@ -99,10 +99,15 @@ MainViewController::MainViewController() {
 
 }
 
+void MainViewController::onWindowAttached() {
+    _controllerView->requestFocus(); // TODO: should be unnecessary, need onDidAppear to only run when window attached
+}
+
 void MainViewController::onDidAppear(bool firstTime) {
 	ViewController::onDidAppear(firstTime);
 	_navigationController->getNavBar()->setBlurEnabled(false);
-    _controllerView->setFocused(true);
+    //_controllerView->setFocused(true);
+    _controllerView->requestFocus();
 	//if (_beebView->_paused) {
 		_beebView->_paused = false;
 		//_beebView->tick();

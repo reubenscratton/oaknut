@@ -1,5 +1,4 @@
 //
-//  controllerkey.cpp
 //  emBeeb
 //
 //  Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
@@ -7,7 +6,7 @@
 
 
 #include "controllerkey.h"
-#include "controller.h"
+#include "../model/controller.h"
 #include "controllerview.h"
 
 

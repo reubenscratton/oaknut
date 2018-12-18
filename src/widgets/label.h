@@ -7,7 +7,7 @@
 
 /**
  * @ingroup widgets
- * @brief Displays a piece of text, potentially with attributes.
+ * @brief Displays a piece of text, potentially with attributes (bold, color, etc).
  */
 class Label : public View {
 public:

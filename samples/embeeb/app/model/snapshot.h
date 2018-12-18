@@ -2,8 +2,8 @@
 //  Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 
-#include "app.h"
-#include "diskinfo.h"
+#include "../app.h"
+#include "../model/diskinfo.h"
 
 
 class Snapshot : public Object, public ISerializeToVariant {

@@ -12,6 +12,12 @@ typedef int64_t LISTINDEX;
 #define LISTINDEX_ITEM(i) ((int32_t)((i)&0xFFFFFFFF))
 #define LISTINDEX_MAKE(s,i) ((((int64_t)s)<<32)|(i))
 
+/**
+ * @ingroup widgets
+ * @brief Raw interface to be implemented by anything that provides items to a ListView. 99% of the time
+ * you will be better off using the far easier `SimpleListAdapter` instead of this.
+ */
+
 class IListAdapter {
 public:
     virtual void setListView(class ListView* listView) =0;
@@ -26,9 +32,13 @@ public:
     virtual void deleteItem(LISTINDEX index) = 0;
 };
 
+/**
+ * @ingroup widgets
+ * @brief A vertical list of items, conceptually similar to the Android widget of the same name.
+ */
+
 class ListView : public View {
 public:
-	IListAdapter* _adapter;
     
     class ItemView : public View {
     public:
@@ -69,14 +79,17 @@ public:
     
 	// Public API
     ListView();
-	virtual void setAdapter(IListAdapter* adapter);
 	virtual void removeAllItemViews();
 	virtual void onItemTap(View* itemView, LISTINDEX index);
     virtual void reload();
     virtual void setHeaderView(View* headerView);
     virtual void startEditing(ViewController* editingViewController);
     virtual void deleteRow(LISTINDEX index);
-    
+
+    // Properties
+    virtual IListAdapter* getAdapter() const;
+    virtual void setAdapter(IListAdapter* adapter);
+
 	// Overrides
     bool applyStyleValue(const string &name, const StyleValue *value) override;
 	void layout(RECT constraint) override;
@@ -93,6 +106,9 @@ protected:
     virtual pair<LISTINDEX,View*> createItemView(LISTINDEX index, bool atFront, float itemHeight, float top);
     LISTINDEX offsetIndex(LISTINDEX index, int offset);
     virtual void showDeleteConfirmButton(ItemView* itemView);
+    
+    IListAdapter* _adapter;
+
 };
 
 

@@ -152,7 +152,7 @@ uint32_t SnapshotsViewController::saveSnapshot(Snapshot* snapshot) {
 
     _snapshotStore->put(snapshot, [=]() {
         _snapshotStore->flush();
-        SnapshotsAdapter* adapter = (SnapshotsAdapter*)(_listView->_adapter);
+        SnapshotsAdapter* adapter = (SnapshotsAdapter*)(_listView->getAdapter());
         adapter->reload();
     });
     //updateEmptyUx();

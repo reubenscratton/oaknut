@@ -34,7 +34,7 @@ void Worker::process(const variant& data_in, std::function<void(const variant&)>
     retain();
     _queue->enqueueTask([=]() {
         variant data_out = _impl->process_(data_copy);
-        Task::postToMainThread([=]() {
+        App::postToMainThread([=]() {
             callback(data_out);
             release();
         });
@@ -51,7 +51,7 @@ void Worker::stop(std::function<void()> onStop) {
     retain();
     _queue->enqueueTask([=]() {
         _impl->stop_();
-        Task::postToMainThread([=]() {
+        App::postToMainThread([=]() {
             onStop();
             release();
         });

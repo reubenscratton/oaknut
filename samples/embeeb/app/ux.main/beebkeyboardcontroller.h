@@ -4,8 +4,8 @@
 //  Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 
-#include "app.h"
-#include "controller.h"
+#include "../app.h"
+#include "../model/controller.h"
 
 
 class BeebKeyboardKey : public ControllerKey {

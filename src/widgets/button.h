@@ -7,7 +7,7 @@
 
 /**
  * @ingroup widgets
- * @brief A button with a text label. Really it's a label with a styled background.
+ * @brief A button with a text label. Or, more accurately, a `Label` with a button-style background.
  */
 class Button : public Label {
 public:

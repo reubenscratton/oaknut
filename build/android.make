@@ -16,7 +16,6 @@ JAVA_FILES:=$(wildcard $(OAKNUT_DIR)/src/platform/android/java/org.oaknut.main/*
 RESOURCES_DIR:=$(PROJECT_ROOT)/platform/android/res
 MANIFEST_FILE:=$(PROJECT_ROOT)/platform/android/AndroidManifest.xml
 ANDROID_NDK_DIR:=$(ANDROID_SDK_DIR)/ndk-bundle
-ANDROID_NDK_TOOLCHAIN:=$(ANDROID_NDK_DIR)/toolchains/llvm/prebuilt/darwin-x86_64
 ANDROID_JAR:=$(ANDROID_SDK_DIR)/platforms/android-$(ANDROID_VER)/android.jar
 ANDROID_BUILDTOOLS:=$(ANDROID_SDK_DIR)/build-tools/$(ANDROID_BUILDTOOLS)
 DEX := $(BUILD_DIR)/bin/classes.dex
@@ -69,7 +68,7 @@ $(1)_LIB := $(BUILD_DIR)/bin/lib/$(1)/liboaknutapp.so
 LIBS+=$$($(1)_LIB)
 DEPS+=$$($(1)_OBJS:.o=.dep)
 
-$(1)_CC := $(ANDROID_NDK_TOOLCHAIN)/bin/clang++
+$(1)_CC := $(ANDROID_NDK_DIR)/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++
 $(1)_CFLAGS_COMMON := \
     --target=$$($(1)_TARGET_ABI)-none-linux-android \
     --gcc-toolchain=$(ANDROID_NDK_DIR)/toolchains/$$($(1)_TOOLCHAIN_ABI)-4.9/prebuilt/darwin-x86_64 \
@@ -87,9 +86,8 @@ $$($(1)_OBJ_DIR)%.o : % $$($(1)_OBJ_DIR)%.dep
 	@$$($(1)_CC) $$($(1)_CFLAGS_COMMON) \
 		  -MT $$@ -MD -MP -MF $$(@:.o=.Td) \
 		  $(if $(DEBUG),-g -O0,-O3) \
-		  -isystem $(ANDROID_NDK_DIR)/sources/cxx-stl/gnu-libstdc++/4.9/include \
-		  -isystem $(ANDROID_NDK_DIR)/sources/cxx-stl/gnu-libstdc++/4.9/libs/$(1)/include \
-		  -isystem $(ANDROID_NDK_DIR)/sources/cxx-stl/gnu-libstdc++/4.9/include/backward \
+		  -isystem $(ANDROID_NDK_DIR)/sources/cxx-stl/llvm-libc++/include \
+		  -isystem $(ANDROID_NDK_DIR)/sources/cxx-stl/llvm-libc++/libs/$(1)/include \
 		  -isystem $(OAKNUT_DIR)/src \
 		  -o $$@ -c $$<
 	@mv -f $$(@:.o=.Td) $$(@:.o=.dep) && touch $$@
@@ -98,8 +96,11 @@ $$($(1)_LIB) : $$($(1)_OBJS)
 	@echo android\($(1)\): Linking .so
 	@mkdir -p $$(dir $$@)
 	@$$($(1)_CC) $$($(1)_CFLAGS_COMMON) -o $$($(1)_LIB) $$($(1)_OBJS) $(CFLAGS_LINK) \
-	    -lm "$(ANDROID_NDK_DIR)/sources/cxx-stl/gnu-libstdc++/4.9/libs/$(1)/libgnustl_static.a" \
 	    --sysroot $(ANDROID_NDK_DIR)/platforms/android-$(ANDROID_VER)/arch-$$($(1)_SYSROOT_ABI) \
+			-lm "$(ANDROID_NDK_DIR)/sources/cxx-stl/llvm-libc++/libs/$(1)/libc++_static.a" \
+			-lm "$(ANDROID_NDK_DIR)/sources/cxx-stl/llvm-libc++/libs/$(1)/libc++abi.a"
+
+
 
 endef
 

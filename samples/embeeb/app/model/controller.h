@@ -1,13 +1,12 @@
 //
-//  controller.h
 //  emBeeb
 //
 //  Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 
 #pragma once
-#include "app.h"
-#include "controllerkey.h"
+#include "../app.h"
+#include "../ux.main/controllerkey.h"
 
 class Controller : public Object, public ISerializeToVariant, public IControllerKeyDelegate {
 public:

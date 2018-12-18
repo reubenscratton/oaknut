@@ -28,8 +28,9 @@ and no API is frozen.
 to build the appropriate project files:
 
    - XCode `make xcode`
-   - CLion `make cmake`
    - Android Studio `make androidstudio`
+   - CLion `make clion`
+   - Visual Studio Code `make vscode`
    - (more coming soon)
 
 Alternatively, if your IDE is not yet supported or if you prefer to not use any IDE, then just run `make` on its own with no arguments.

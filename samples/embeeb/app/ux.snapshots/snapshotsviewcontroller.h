@@ -3,9 +3,9 @@
 //
 
 #pragma once
-#include "app.h"
-#include "snapshot.h"
-#include "beebview.h"
+#include "../app.h"
+#include "../model/snapshot.h"
+#include "../ux.main/beebview.h"
 
 typedef std::function<void(Snapshot*)> SnapshotSelectedDelegate;
 

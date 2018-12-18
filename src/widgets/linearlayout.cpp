@@ -60,10 +60,10 @@ void LinearLayout::layoutSubviews(RECT constraint) {
     // that receive extra space will be layout()d a second time.
     float excess, origin;
     if (_orientation == Vertical) {
-        excess = (constraint.size.height - totalSize) - (_padding.top+_padding.bottom);
+        excess = (constraint.size.height - totalSize);// - (_padding.top+_padding.bottom);
         origin = _padding.top;
     } else {
-        excess = (constraint.size.width - totalSize) - (_padding.left+_padding.right);
+        excess = (constraint.size.width - totalSize); // - (_padding.left+_padding.right);
         origin = _padding.left;
     }
     for (int i=0 ; i<_subviews.size() ; i++) {

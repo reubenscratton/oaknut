@@ -380,6 +380,8 @@ void Window::stopAnimation(Animation* animation) {
 void Window::detachView(View* view) {
     if (_textInputReceiver && _textInputReceiver==view->getTextInputReceiver()) {
         setFocusedView(NULL);
+        _textInputReceiver = NULL;
+        _keyboardHandler = NULL;
     }
     if (view->_animationCount > 0) {
         for (auto it=_animations.begin() ; it!=_animations.end(); ) {
@@ -445,6 +447,7 @@ bool Window::setFocusedView(View* view) {
         keyboardShow(_textInputReceiver != NULL);
     } else {
         keyboardShow(false);
+        _keyboardHandler = NULL;
     }
     return true;
 }

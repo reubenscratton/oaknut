@@ -1,6 +1,5 @@
 package org.oaknut.main;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -8,12 +7,11 @@ import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+import android.os.Looper;
+import android.os.Process;
 import android.util.DisplayMetrics;
 import android.view.Choreographer;
 import android.view.Display;
@@ -35,7 +33,7 @@ import android.view.inputmethod.InputContentInfo;
 import android.view.inputmethod.InputMethodManager;
 
 import java.util.ArrayList;
-import java.util.Stack;
+
 
 
 public class MainActivity extends Activity implements InputConnection, SurfaceHolder.Callback2, ViewTreeObserver.OnGlobalLayoutListener, Choreographer.FrameCallback {
@@ -104,16 +102,39 @@ public class MainActivity extends Activity implements InputConnection, SurfaceHo
 
     boolean hasPermission(byte[] permissionBytes) {
         String permission = new String(permissionBytes, App.UTF_8);
-        return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED;
+        return checkPermission(permission, Process.myPid(), Process.myUid()) == PackageManager.PERMISSION_GRANTED;
     }
     void requestPermission(long nativeRequestPtr, String[] permissionNames) {
         permissionRequests.add(new AsyncPermissionRequest(permissionNames, nativeRequestPtr));
         drainPermissionRequests();
     }
+
+    void requestPermissionsHelper(final String[] permissions, final int requestCode) {
+            if (Build.VERSION.SDK_INT >= 23) {
+                requestPermissions(permissions, requestCode);
+            } else {
+                Handler handler = new Handler(Looper.getMainLooper());
+                handler.post(new Runnable() {
+                    public void run() {
+                        int[] grantResults = new int[permissions.length];
+                        PackageManager packageManager = getPackageManager();
+                        String packageName = getPackageName();
+                        int permissionCount = permissions.length;
+
+                        for(int i = 0; i < permissionCount; ++i) {
+                            grantResults[i] = packageManager.checkPermission(permissions[i], packageName);
+                        }
+
+                        onRequestPermissionsResult(requestCode, permissions, grantResults);
+                    }
+                });
+            }
+    }
+
     void drainPermissionRequests() {
         if (permissionRequests.size() > 0 && currentPermissionReq==null) {
             currentPermissionReq = permissionRequests.remove(0);
-            ActivityCompat.requestPermissions(this, currentPermissionReq.permissionNames, PERMISSIONS_REQUEST);
+            requestPermissionsHelper(currentPermissionReq.permissionNames, PERMISSIONS_REQUEST);
         }
 
     }
@@ -339,7 +360,7 @@ public class MainActivity extends Activity implements InputConnection, SurfaceHo
         }
 
         @Override
-        public boolean commitContent(@NonNull InputContentInfo inputContentInfo, int flags, @Nullable Bundle opts) {
+        public boolean commitContent(InputContentInfo inputContentInfo, int flags, Bundle opts) {
             log("commitContent");
             return false;
         }

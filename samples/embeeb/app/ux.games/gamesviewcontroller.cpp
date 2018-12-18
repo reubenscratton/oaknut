@@ -77,7 +77,8 @@ GamesViewController::GamesViewController(std::function<void(Game*)> delegate) {
     };
 	
     _listView->_onItemTapDelegate = [=](View* itemView, LISTINDEX index) {
-        GameItem& gameItem = _disksListAdapterBest->getItem(index);
+        auto adapter = (SimpleListAdapter<GameItem>*)_listView->getAdapter();
+        GameItem& gameItem = adapter->getItem(index);
         _delegate(gameItem._game);
         _navigationController->popViewController();
     };

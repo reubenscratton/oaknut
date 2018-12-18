@@ -5,9 +5,9 @@
 //
 
 #pragma once
-#include "app.h"
+#include "../app.h"
 #include "beebkeyboardcontroller.h"
-#include "diskinfo.h"
+#include "../model/diskinfo.h"
 
 class MainViewController : public ViewController,
 						   public IBeebKeyboardCallbacks {
@@ -28,8 +28,9 @@ public:
 	void onWillDisappear(bool lastTime) override;
 	void onDidDisappear(bool lastTime) override;
     void onDidAppear(bool firstTime) override;
+    void onWindowAttached() override;
                                
-    virtual void LEDsChanged();
+    void LEDsChanged() override;
 		
 };
 

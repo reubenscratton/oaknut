@@ -7,7 +7,7 @@
 
 /**
  * @ingroup widgets
- * @brief Displays a bitmap.
+ * @brief Displays a bitmap image.
  */
 class ImageView : public View {
 public:

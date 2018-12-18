@@ -189,7 +189,7 @@ public class VideoPlayer {
         public void run() {
             MediaExtractor extractor;
 
-            Track video = new Track() {
+            final Track video = new Track() {
                 @Override
                 boolean handleOutputBuffer(int outputBufferIndex, int bufferOffset, int bufferSize) {
                     // Nothing to do here. When the output buffer is released it will automatically

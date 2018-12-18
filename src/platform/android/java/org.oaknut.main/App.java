@@ -2,17 +2,12 @@ package org.oaknut.main;
 
 import android.app.Application;
 import android.content.SharedPreferences;
-import android.os.Handler;
-import android.os.Looper;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.ref.WeakReference;
 import java.nio.charset.Charset;
-import java.util.Base64;
 import java.util.UUID;
 
 

@@ -81,10 +81,10 @@ void NavigationController::pushViewController(ViewController* vc) {
 		_currentViewController = vc;
 		_currentViewController->onWillAppear(true);
 		_contentView->addSubview(vc->getView());
+        applySafeInsetsToChild(_currentViewController);
         if(getWindow()) {
             vc->onWindowAttached();
         }
-        applySafeInsetsToChild(_currentViewController);
 		_currentViewController->onDidAppear(true);
 		return;
 	}

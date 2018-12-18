@@ -36,7 +36,7 @@ public class BitmapDecodeTask implements Runnable {
         if (_cancelled) {
             return;
         }
-        Bitmap bitmap = BitmapFactory.decodeByteArray(_bytes, 0, _bytes.length);
+        final Bitmap bitmap = BitmapFactory.decodeByteArray(_bytes, 0, _bytes.length);
         if (_cancelled) {
             return;
         }

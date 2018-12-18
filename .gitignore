@@ -4,3 +4,5 @@ CMakeLists.txt
 cmake-build-*/
 *.xcodeproj/
 *.androidstudio/
+.vscode/
+*.code-workspace

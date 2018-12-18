@@ -4,9 +4,9 @@
 //  Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
 //
 
-#include "app.h"
-#include "diskcontrols.h"
-#include "controller.h"
+#include "../app.h"
+#include "../model/diskcontrols.h"
+#include "../model/controller.h"
 
 
 class ControllerView : public View, public IKeyboardInputHandler {

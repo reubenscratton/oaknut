@@ -5,7 +5,7 @@
 //
 
 #pragma once
-#include "app.h"
+#include "../app.h"
 
 class Controller;
 class ControllerView;

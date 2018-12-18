@@ -89,8 +89,8 @@ public:
          }
         struct {
             bool operator() (const pair<int,int>& i, const pair<int,int>& j) {
-                if (i.first < j.first) return 1;
-                if (i.first > j.first) return -1;
+                if (i.first > j.first) return true;
+                if (i.first < j.first) return false;
                 return i.second < j.second;
             }
         } comparator;

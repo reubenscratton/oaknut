@@ -5,8 +5,8 @@
 //
 
 #pragma once
-#include "app.h"
-#include "controller.h"
+#include "../app.h"
+#include "../model/controller.h"
 
 
 class DiskControls : public Object, public ISerializeToVariant  {

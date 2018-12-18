@@ -28,6 +28,10 @@ bool ListView::applyStyleValue(const string &name, const StyleValue *value) {
     return View::applyStyleValue(name, value);
 }
 
+IListAdapter* ListView::getAdapter() const {
+    return _adapter;
+}
+
 void ListView::setAdapter(IListAdapter* adapter) {
 	_adapter = adapter;
     adapter->setListView(this);

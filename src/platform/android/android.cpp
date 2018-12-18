@@ -46,7 +46,7 @@ string stringFromJbyteArray(JNIEnv* env, jbyteArray jbytes) {
     int cb = env->GetArrayLength(jbytes);
     bytearray data(cb);
     env->GetByteArrayRegion(jbytes, 0, cb, reinterpret_cast<jbyte*>(data.data()));
-    return data.toString(false);
+    return data.toString();
 }
 
 
@@ -66,7 +66,6 @@ public:
     ANativeWindow* window;
     AAssetManager* assetManager;
     ARect contentRect;
-    int activityState;
     int animating;
     EGLDisplay display;
     EGLSurface surface;
@@ -202,15 +201,13 @@ JAVA_FN(jlong, MainActivity, onCreateNative)(JNIEnv *env, jobject obj,
     app.loadStyleAsset("styles.res");
 
     // If no VC created then this is app startup
+    app._window = window; // this sucks. I'd like to lose app._window completely...
     if (!rootVCcreator) {
-        app._window = window;
-        app.main();
     } else {
-        app._window = window; // this sucks. I'd like to lose app._window completely...
         ViewController* rootVC = ((ViewController* (*)(void*))rootVCcreator)(NULL);
         window->setRootViewController((ViewController*)rootVC);
     }
-    window->show();
+    //window->show();
     return (jlong)window;
 }
 
@@ -311,6 +308,10 @@ JAVA_FN(void, MainActivity, onSurfaceCreatedNative)(JNIEnv* env, jobject obj, jl
     window->surface = surface;
     window->width = w;
     window->height = h;
+
+    if (window == app._window) {
+        app.main();
+    }
 
     // Initialize GL state.
     glDisable(GL_CULL_FACE);
@@ -443,7 +444,7 @@ JAVA_FN(void, MainActivity, textInputSetText)(JNIEnv* env, jobject obj, jlong na
     int cb = env->GetArrayLength(textBytes);
     bytearray data(cb);
     env->GetByteArrayRegion(textBytes, 0, cb, reinterpret_cast<jbyte*>(data.data()));
-    string text = data.toString(true);
+    string text = data.toString();
 
     // Perform the insert/replace
     int32_t s = window->_textInputReceiver->getSelectionStart();

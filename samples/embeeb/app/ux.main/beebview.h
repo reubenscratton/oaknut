@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "app.h"
+#include "../app.h"
 
 class BeebView : public View, public IBeebDisplayCallbacks {
 public:
