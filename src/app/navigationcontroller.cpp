@@ -69,7 +69,7 @@ void NavigationController::applySafeInsetsToChild(ViewController* childVC) {
 }
 
 void NavigationController::pushViewController(ViewController* vc) {
-    if (_navStack.size()) {
+    if (_currentViewController) {
         if (!vc->_leftButtonsFrame) {
             vc->addNavButton(false, "images/back.png", [=] () { vc->onBackButtonClicked(); });
         }

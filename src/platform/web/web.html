@@ -8,18 +8,18 @@
     <title>Oaknut App</title>
     <style>
 
-html, body {
+    html, body {
     position:fixed;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
-    -moz-user-select: none; 
-    -ms-user-select: none; 
+    -moz-user-select: none;
+    -ms-user-select: none;
     user-select: none;
     width: 100%;
     height: 100%;
-}
+  }
 
-html, body {
+  html, body {
 	margin: 0;
 	padding: 0;
     border: 0;
@@ -29,23 +29,23 @@ html, body {
     vertical-align: baseline;
 }
 
-#screenContainer {
+  #screenContainer {
     position:fixed;
     top:0px;
     bottom:0px;
     left:0px; right:0px;
-}
+  }
 
-#screen {
+  #screen {
     position:absolute;
     width:100%;
     height:100%;
     left:0px; right:0px;
     z-index:1;
-}
+  }
 
 
-#fps {
+  #fps {
     position:absolute;
 	left:0; top:20px;
 	color: #fff;
@@ -53,7 +53,7 @@ html, body {
 	font-size: 15px;
     padding:4px;
     z-index:10;
-}
+  }
 
   </style>
   </head>
@@ -63,7 +63,7 @@ html, body {
    <div id="screenContainer">
     <canvas id="screen" width="100" height="100" oncontextmenu="event.preventDefault()" />
    </div>
-   
+
   <div id="fps">0 fps</div>
 
 <script>
@@ -241,7 +241,7 @@ window.onunload = function() {
 function FontHelper(name, size, weight, fontFamily) {
     this.name = name;
     this.size = size;
-    
+
     this.canvas = document.createElement("canvas");
     this.canvas.width = size * 2;
     this.canvas.height = size * 2;
@@ -289,7 +289,7 @@ FontHelper.prototype.measure = function(str) {
     var height = bp[1] - tp[1];
     var tdescent = height - tascent;
     document.body.removeChild(this.div);
-    
+
     var width = this.ctxt.measureText(str).width;
     this.ctxt.clearRect(0, 0, width, height);
     this.ctxt.fillText(str, 0,0);
