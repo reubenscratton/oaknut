@@ -14,7 +14,7 @@ public:
     class View* _view;
     RECT _rect;
     EDGEINSETS _inset;
-    GLProgram* _prog;
+    Shader* _shader;
     class RenderList* _list;
     list<sp<RenderOp>>::iterator _listIterator; 
     int _mvpNum;
@@ -35,7 +35,7 @@ public:
     virtual int numQuads();
     virtual bool canMergeWith(const RenderOp* op);
     virtual void setRect(const RECT& rect);
-    virtual void render(class Window* window, class Surface* surface);
+    virtual void render(Renderer* renderer, class Surface* surface);
     virtual bool intersects(RenderOp* op);
     virtual void asQuads(QUAD* quad);
     virtual void rectToSurfaceQuad(RECT rect, QUAD* quad);
@@ -46,7 +46,7 @@ public:
     // render params change then the shader needs to be validated and possibly generated on demand
     bool _shaderValid;
     void invalidate();
-    virtual void validateShader()=0;
+    virtual void validateShader(Renderer* renderer)=0;
     void rebatchIfNecessary();
 
     // Property setters that trigger rebatch

@@ -5,25 +5,12 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-class GLProgramBlur : public GLProgram {
-public:
-    GLuint _posTexOffset;
-    int _blurRadius;
-    float _sigma;
-    
-    GLProgramBlur(int blurRadius, int sigma);
-
-    void load() override;
-    void unload() override;
-    virtual void setTexOffset(POINT texOffset);
-};
-
 
 class BlurRenderOp : public RenderOp {
 public:
 	BlurRenderOp();
     ~BlurRenderOp();
-    
+    /*
     SIZEI _fullSizePow2;
 	SIZEI _downsampledSize;
     bool _vertexesValid;
@@ -36,7 +23,7 @@ public:
     // Overrides
     void setRect(const RECT& rect) override;
     void asQuads(QUAD *quad) override;
-    void render(Window* window, Surface* surface) override;
-    void validateShader() override;
-
+    void render(Renderer* renderer, Surface* surface) override;
+*/
+    void validateShader(Renderer* renderer) override;
 };

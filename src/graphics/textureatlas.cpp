@@ -100,7 +100,7 @@ AtlasNode* AtlasNode::insertRect(RECT* r) {
 
 AtlasPage::AtlasPage(int width, int height, int bitmapFormat) {
     _bitmap = Bitmap::create(width, height, bitmapFormat);
-    _bitmap->_texSampleMethod = GL_NEAREST;
+    _bitmap->_sampleNearest = true;
     start_node = new AtlasNode(this);
     start_node->rect = RECT(0, 0, width, height);
 }

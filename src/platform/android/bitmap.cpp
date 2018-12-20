@@ -207,27 +207,6 @@ void BitmapAndroid::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
     }
 }
 
-void BitmapAndroid::bind() {
-    Bitmap::bind();
-
-    // If bitmap data changed we may need to update texture data
-    if (!_needsUpload) {
-        return;
-    }
-    _needsUpload = false;
-
-    // Slow path
-    PIXELDATA pixeldata;
-    lock(&pixeldata, false);
-    if (!_allocdTexData) {
-        _allocdTexData = true;
-        check_gl(glTexImage2D, _texTarget, 0, getGlInternalFormat(),
-                 _width, _height, 0, getGlFormat(), getGlPixelType(), pixeldata.data);
-    } else {
-        check_gl(glTexSubImage2D, _texTarget, 0, 0, 0, _width, _height, getGlFormat(), getGlPixelType(), pixeldata.data);
-    }
-    unlock(&pixeldata, false);
-}
 
 void BitmapAndroid::fromVariant(const variant& v) {
     Bitmap::fromVariant(v);

@@ -22,96 +22,6 @@ void BitmapProvider::dispatch(AtlasNode* node) {
     _ops.clear();
 }
 
-#ifndef GL_TEXTURE_EXTERNAL_OES
-#define GL_TEXTURE_EXTERNAL_OES 0x8D65
-#endif
-
-class GLProgramTexture : public GLProgram {
-public:
-    virtual void load();
-};
-
-void GLProgramTexture::load()  {
-    loadShaders(TEXTURE_VERTEX_SHADER,
-        "varying vec2 v_texcoord;\n"
-        "uniform sampler2D texture;\n"
-        "void main() {\n"
-        "    gl_FragColor = texture2D(texture, v_texcoord);\n"
-        "}\n"
-    );
-}
-
-class GLProgramTexture_OES_EGL : public GLProgram {
-    void load() override {
-        loadShaders(TEXTURE_VERTEX_SHADER,
-            "varying vec2 v_texcoord;\n"
-            "uniform samplerExternalOES sampler;\n"
-            "void main() {\n"
-            "    gl_FragColor = texture2D(sampler, v_texcoord);\n"
-            "}\n",
-                    "#extension GL_OES_EGL_image_external : require\n"
-        );
-    }
-};
-
-class GLProgramTextureTint : public GLProgram {
-public:
-    
-    virtual void load() {
-        loadShaders(
-            TEXTURE_VERTEX_SHADER,
-            "varying vec2 v_texcoord;\n"
-            "varying lowp vec4 v_color;\n"
-            "uniform sampler2D texture;\n"
-            "void main() {\n"
-            "    gl_FragColor = vec4(v_color.rgb, texture2D(texture, v_texcoord).a);\n"
-            "}\n"
-        );
-    }
-};
-
-class GLProgramTextureAlpha : public GLProgramTexture {
-public:
-    
-    virtual void load() {
-        loadShaders(
-            TEXTURE_VERTEX_SHADER,
-            "varying vec2 v_texcoord;\n"
-            "uniform sampler2D texture;\n"
-            "uniform mediump float alpha;\n"
-            "void main() {\n"
-            "    gl_FragColor = texture2D(texture, v_texcoord);\n"
-            "    gl_FragColor.a *= alpha;\n"
-            "}\n"
-        );
-    }
-};
-
-class GLProgramTextureTintAlpha : public GLProgramTextureTint {
-public:
-    
-    virtual void load() {
-        loadShaders(
-            TEXTURE_VERTEX_SHADER,
-            "varying vec2 v_texcoord;\n"
-            "varying lowp vec4 v_color;\n"
-            "uniform sampler2D texture;\n"
-            "uniform mediump float alpha;\n"
-            "void main() {\n"
-            "    gl_FragColor = vec4(v_color.rgb, texture2D(texture, v_texcoord).a);\n"
-            "    gl_FragColor.a *= alpha;\n"
-            "}\n"
-        );
-    }
-};
-
-
-GLProgramTexture glprogTexture;
-static GLProgramTexture_OES_EGL glprogTexture_OES_EGL;
-static GLProgramTextureAlpha glprogTextureAlpha;
-static GLProgramTextureTint glprogTextureTint;
-static GLProgramTextureTintAlpha glprogTextureTintAlpha;
-
 
 TextureRenderOp::TextureRenderOp() : RenderOp() {
     _alpha = 1.0f;
@@ -143,27 +53,19 @@ TextureRenderOp::TextureRenderOp(const char* assetPath, int tintColor) : Texture
     setBlendMode(BLENDMODE_NORMAL);
 }
 
-void TextureRenderOp::validateShader() {
-    if (_bitmap && _bitmap->_texTarget == GL_TEXTURE_EXTERNAL_OES) {
-        _prog = &glprogTexture_OES_EGL;
-        assert(_alpha == 1.0f); // don't yet support variants
-        assert(_color == 0U); // don't yet support variants
-    } else {
-        if (_alpha<1.0f) {
-            if (_color) {
-                _prog = &glprogTextureTintAlpha;
-            } else {
-                _prog = &glprogTextureAlpha;
-            }
-        } else {
-            if (_color) {
-                _prog = &glprogTextureTint;
-            } else {
-                _prog = &glprogTexture;
-            }
+void TextureRenderOp::validateShader(Renderer* renderer) {
+    if (_bitmap) {
+        if (!_bitmap->_texture) {
+            renderer->createTexture(_bitmap);
+            assert(_bitmap->_texture);
         }
+        ShaderFeatures features;
+        features.sampler0 = _bitmap->_texture->getSampler();
+        features.alpha = (_alpha<1.0f);
+        features.tint = (_color!=0);
+        _shader = renderer->getShader(features);
+        _shaderValid = true;
     }
-    _shaderValid = true;
 }
 void TextureRenderOp::setAlpha(float alpha) {
     if (alpha != _alpha) {
@@ -189,13 +91,10 @@ bool TextureRenderOp::canMergeWith(const RenderOp* op) {
         && _bitmap==((const TextureRenderOp*)op)->_bitmap;
 }
 
-void TextureRenderOp::render(Window* window, Surface* surface) {
+void TextureRenderOp::render(Renderer* renderer, Surface* surface) {
     if (_bitmap) {
-        if (_prog == &glprogTexture_OES_EGL) {
-            app.log("glprogTexture_OES_EGL render!");
-        }
-        RenderOp::render(window, surface);
-        window->bindTexture(_bitmap);
+        RenderOp::render(renderer, surface);
+        renderer->bindBitmap(_bitmap);
     }
 }
 

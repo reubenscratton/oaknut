@@ -9,8 +9,8 @@
 
 
 Window::Window() : _rootViewController(NULL), _scale(1) {
-    _surface = new Surface();
-    _quadBuffer = new QuadBuffer();
+    _renderer = Renderer::create();
+    _surface = _renderer->getPrimarySurface();
     _window = this;
     _effectiveAlpha = 1;
 }
@@ -70,22 +70,7 @@ void Window::resizeSurface(int width, int height, float scale) {
     setNeedsLayout();
 }
 void Window::destroySurface() {
-    /*if (_surface) {
-        for (auto vc : _viewControllers) {
-            detachViewController(vc);
-        }
-        _surface = NULL;
-    }*/
-    _doneGlInit = false;
-    //delete _quadBuffer; todo: fix this leak
-    for (auto bitmap : _loadedTextures) {
-        bitmap->onRenderContextDestroyed();
-    }
-    _loadedTextures.clear();
-    for (auto prog : _loadedProgs) {
-        prog->unload();
-    }
-    _loadedProgs.clear();
+    _renderer->reset();
 }
 
 Window::MotionTracker::MotionTracker(int source) {
@@ -294,14 +279,14 @@ void incFrames() {
 void Window::draw() {
     _redrawNeeded = false;
 
-	prepareToDraw();
+	_renderer->prepareToDraw();
 
     if (!_layoutValid) {
         _layoutValid = true;
         layout(_rect);
         ensureFocusedViewIsInSafeArea();
     }
-    _surface->render(this, this);
+    _surface->render(this, _renderer);
 
 	
 	incFrames();
@@ -455,106 +440,8 @@ bool Window::setFocusedView(View* view) {
 
 
 
-void Window::setBlendMode(int blendMode) {
-    if (blendMode != _blendMode) {
-        if (blendMode == BLENDMODE_NONE) {
-            check_gl(glDisable, GL_BLEND);
-        } else {
-            if (blendMode == BLENDMODE_NORMAL) {
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // normal alpha blend
-            } else {
-                glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
-            }
-            if (_blendMode == BLENDMODE_NONE) {
-                check_gl(glEnable, GL_BLEND);
-            }
-        }
-        _blendMode = blendMode;
-    }
-}
 
-void Window::pushClip(RECT clip) {
-    bool firstClip = _clips.size()==0;
-    if (!firstClip) {
-        clip.intersectWith(_clips.top());
-    } else {
-        check_gl(glEnable, GL_SCISSOR_TEST);
-    }
-    _clips.push(clip);
-    glScissor(clip.left(), clip.top(), clip.size.width, clip.size.height);
-}
-void Window::popClip() {
-    assert(_clips.size()>0);
-    RECT clip = _clips.top();
-    _clips.pop();
-    glScissor(clip.left(), clip.top(), clip.size.width, clip.size.height);
-    if (_clips.size() == 0) {
-        check_gl(glDisable, GL_SCISSOR_TEST);
-    }
 
-}
-
-void Window::prepareToDraw() {
-    // GL context init
-    if (!_doneGlInit) {
-        _doneGlInit = 1;
-        check_gl(glDepthMask, GL_TRUE);
-        check_gl(glClear, GL_DEPTH_BUFFER_BIT);
-        check_gl(glDepthMask, GL_FALSE);
-        check_gl(glDisable, GL_DEPTH_TEST);
-        check_gl(glActiveTexture, GL_TEXTURE0);
-        _blendMode = BLENDMODE_NONE;
-        check_gl(glDisable, GL_BLEND);
-        //_enabledFlags.scissorTest = 0;
-        check_gl(glDisable, GL_SCISSOR_TEST);
-
-        // As long as we only have one quadbuffer we only need to bind the once
-        _quadBuffer->bind();
-        _currentVertexConfig = 0;
-
-        COLOR windowBackgroundColor = app.getStyleColor("window.background-color");
-        _backgroundColor[0] = (windowBackgroundColor & 0xFF) / 255.0f;
-        _backgroundColor[1] = ((windowBackgroundColor & 0xFF00)>>8) / 255.0f;
-        _backgroundColor[2] = ((windowBackgroundColor & 0xFF0000)>>16) / 255.0f;
-        _backgroundColor[3] = ((windowBackgroundColor & 0xFF000000)>>24) / 255.0f;
-        check_gl(glClearColor, _backgroundColor[0],_backgroundColor[1],_backgroundColor[2],_backgroundColor[3]);
-    }
-    if (_backgroundColor[3] > 0.f) {
-        check_gl(glClear, GL_COLOR_BUFFER_BIT);
-    }
-
-    _renderCounter++;
-    _currentSurface = NULL;
-    _currentTexture = NULL;
-    _currentProg = 0;
-}
-
-void Window::setCurrentSurface(Surface* surface) {
-    if (surface != _currentSurface) {
-        _currentSurface = surface;
-        _currentSurface->use();
-    }
-}
-
-void Window::setVertexConfig(int vertexConfig) {
-    _currentVertexConfig = vertexConfig;
-    check_gl(glVertexAttribPointer, VERTEXATTRIB_POSITION, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), 0);
-    check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), (void*)8);
-//    check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_UNSIGNED_SHORT, GL_TRUE, sizeof(VERTEX), (void*)8);
-    check_gl(glVertexAttribPointer, VERTEXATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(VERTEX), (void*)16);
-
-    check_gl(glEnableVertexAttribArray, VERTEXATTRIB_POSITION);
-    check_gl(glEnableVertexAttribArray, VERTEXATTRIB_TEXCOORD);
-    check_gl(glEnableVertexAttribArray, VERTEXATTRIB_COLOR);
-
-}
-
-void Window::bindTexture(Bitmap* texture) {
-    if (texture&& _currentTexture != texture) {
-        _currentTexture = texture;
-        texture->bind();
-    }
-}
 
 
 

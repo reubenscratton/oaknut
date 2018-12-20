@@ -51,7 +51,11 @@ ItemPool::Alloc* ItemPool::alloc(int n, ItemPool::Alloc* existingAlloc) {
         }
     }
     if (!a) {
-        resize(_itemCount + MAX(n, _itemsPerPage));
+        int newItemCount = _itemCount + MAX(n, _itemsPerPage);
+        if (_resizeHook) {
+            _resizeHook(_itemCount, newItemCount);
+        }
+        resize(newItemCount);
         a = alloc(n, NULL);
     }
 
@@ -112,73 +116,6 @@ void ItemPool::free(ItemPool::Alloc* alloc) {
     }
 }
 
-
-QuadBuffer::QuadBuffer() : ItemPool(sizeof(QUAD), 256) {
-}
-
-void QuadBuffer::bind() {
-    if (_indexBufferId == 0) {
-#ifdef HAS_VAO
-        check_gl(glGenVertexArrays, 1, &_vao);
-        check_gl(glBindVertexArray, _vao);
-#endif
-        check_gl(glGenBuffers, 1, &_indexBufferId);
-        check_gl(glGenBuffers, 1, &_vertexBufferId);
-        check_gl(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, _indexBufferId);
-        check_gl(glBindBuffer, GL_ARRAY_BUFFER, _vertexBufferId);
-    }
-#ifndef HAS_VAO
-    check_gl(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, _indexBufferId);
-    check_gl(glBindBuffer, GL_ARRAY_BUFFER, _vertexBufferId);
-#else
-    check_gl(glBindVertexArray, _vao);
-#endif
-}
-void QuadBuffer::upload() {
-    bind();
-    if (_itemCount > 0 && _indexBufferId > 0) {
-        check_gl(glBufferData, GL_ELEMENT_ARRAY_BUFFER, sizeof(GLshort) * 6 * _itemCount, _indexes, GL_STATIC_DRAW);
-        // TODO: On first use buffer is unused so pass NULL instead of _base
-        check_gl(glBufferData, GL_ARRAY_BUFFER, sizeof(QUAD) * _itemCount, _base, GL_DYNAMIC_DRAW);
-    }
-}
-
-
-void QuadBuffer::resize(int newItemCount) {
-    int oldItemCount = _itemCount;
-    ItemPool::resize(newItemCount);
-    int cbIndexes = sizeof(GLshort) * 6 * newItemCount;
-    GLshort* newIndexes = (GLshort*) malloc(cbIndexes);
-    if (oldItemCount) {
-        memcpy(newIndexes, _indexes, sizeof(GLshort) * 6 * oldItemCount);
-        ::free(_indexes);
-    }
-    
-    /*
-     
-     C------D
-     |     /|
-     |    / |
-     |   /  |
-     |  /   |
-     | /    |
-     A------B
-     
-     Clockwise triangles are ABC & CBD
-     */
-    _indexes = newIndexes;
-    for (int i=oldItemCount ; i<newItemCount ; i++) {
-        _indexes[i*6+0] = i*4+0; // A
-        _indexes[i*6+1] = i*4+2; // C
-        _indexes[i*6+2] = i*4+3; // D
-        _indexes[i*6+3] = i*4+0; // A
-        _indexes[i*6+4] = i*4+3; // D
-        _indexes[i*6+5] = i*4+1; // B
-    }
-    
-    upload();
-    
-}
 
 
 

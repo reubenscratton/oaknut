@@ -21,7 +21,7 @@
  
  */
 
-
+/*
 #define log2f(x) (logf(x)*1.4426950408889634)
 #ifndef GL_TEXTURE_MAX_LEVEL
 #define GL_TEXTURE_MAX_LEVEL 0x813D
@@ -30,17 +30,32 @@
 
 #define BLUR_RADIUS 4			// 12
 
-#if EMSCRIPTEN
+#if PLATFORM_WEB
 #define MAX_OPTIMIZED_OFFSETS 3
 #else
 #define MAX_OPTIMIZED_OFFSETS 7
 #endif
 
+class GLProgramBlur : public GLProgram {
+public:
+    GLuint _posTexOffset;
+    int _blurRadius;
+    float _sigma;
+    
+    GLProgramBlur(int blurRadius, int sigma);
+    
+    void load() override;
+    void unload() override;
+    virtual void setTexOffset(POINT texOffset);
+};
+
 
 class GLProgramPostBlur : public GLProgram {
 public:
+    GLProgramPostBlur() : GLProgram(ShaderFeatures()) {
+    }
     
-    virtual void load();
+    void load() override;
 };
 
 extern MATRIX4 setOrthoFrustum(float l, float r, float b, float t, float n, float f);
@@ -48,8 +63,10 @@ extern MATRIX4 setOrthoFrustum(float l, float r, float b, float t, float n, floa
 static GLProgramBlur s_progBlur(BLUR_RADIUS, BLUR_RADIUS);
 static GLProgramPostBlur s_progBlurPost;
 
-
+*/
 BlurRenderOp::BlurRenderOp() : RenderOp() {
+    assert(0); // todo
+    /*
     _prog = &s_progBlurPost;
     GLint otex;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &otex);
@@ -78,17 +95,21 @@ BlurRenderOp::BlurRenderOp() : RenderOp() {
     check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
     check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
     check_gl(glBindFramebuffer, GL_FRAMEBUFFER, oldFBO);
-    glBindTexture(GL_TEXTURE_2D, otex);
+    glBindTexture(GL_TEXTURE_2D, otex);*/
+    
 }
 
 BlurRenderOp::~BlurRenderOp() {
+    assert(0); // todo
+    /*
     check_gl(glDeleteTextures, 3, _textureIds);
     check_gl(glDeleteFramebuffers, 2, _fb);
+     */
 }
-
-void BlurRenderOp::validateShader() {
+void BlurRenderOp::validateShader(Renderer* renderer) {
     _shaderValid = true;
 }
+/*
 
 void BlurRenderOp::setRect(const RECT &rect) {
     SIZE prevSize = _rect.size;
@@ -136,8 +157,8 @@ void BlurRenderOp::asQuads(QUAD *quad) {
 }
 
 
-void BlurRenderOp::render(Window* window, Surface* surface) {
-    RenderOp::render(window, surface);
+void BlurRenderOp::render(Renderer* renderer, Surface* surface) {
+    RenderOp::render(renderer, surface);
 
     GLint viewport[4];
     check_gl(glGetIntegerv, GL_VIEWPORT, viewport);
@@ -154,7 +175,7 @@ void BlurRenderOp::render(Window* window, Surface* surface) {
     GLint oldFBO;
     check_gl(glGetIntegerv, GL_FRAMEBUFFER_BINDING, &oldFBO);
     if (!_alloc) {
-        _alloc = window->_quadBuffer->alloc(1, NULL);
+        _alloc = window->_renderer->allocQuads(1, NULL);
     }
     if (!_vertexesValid) {
         QUAD* quad = (QUAD*)_alloc->addr();
@@ -191,7 +212,7 @@ void BlurRenderOp::render(Window* window, Surface* surface) {
 }
 
 
-GLProgramBlur::GLProgramBlur(int blurRadius, int sigma) : _blurRadius(blurRadius) {
+GLProgramBlur::GLProgramBlur(int blurRadius, int sigma) : GLProgram(ShaderFeatures()), _blurRadius(blurRadius) {
     int32_t blurRadiusInPixels = round(_blurRadius);
     uint32_t calculatedSampleRadius = 0;
     if (blurRadiusInPixels >= 1) {
@@ -337,3 +358,4 @@ void GLProgramPostBlur::load() {
                 "}\n"
                 );
 }
+*/

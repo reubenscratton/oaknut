@@ -73,29 +73,6 @@ void BitmapLinux::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
     }
 }
 
-void BitmapLinux::bind() {
-    
-    Bitmap::bind();
-
-    // If bitmap data changed we may need to update texture data
-    if (!_needsUpload) {
-        return;
-    }
-    if (!_cairo_surface){return;}
-    _needsUpload = false;
-    
-    
-    // Slow path
-    void* data = cairo_image_surface_get_data(_cairo_surface);
-    if (!_allocdTexData) {
-        _allocdTexData = true;
-        check_gl(glTexImage2D, _texTarget, 0, getGlInternalFormat(),
-                _width, _height, 0, getGlFormat(), getGlPixelType(), data);
-    } else {
-        check_gl(glTexSubImage2D, _texTarget, 0, 0, 0, _width, _height, getGlFormat(), getGlPixelType(),data);
-    }
-
-}
 
 cairo_t* BitmapLinux::getCairo() {
     if (!_cairo) {

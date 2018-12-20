@@ -24,8 +24,7 @@ void RenderBatch::invalidateGeometry(RenderOp* op) {
     _dirty = true;
 }
 
-void RenderBatch::render(Window* window, Surface* surface, RenderOp* firstOp) {
-
+void RenderBatch::updateQuads(Renderer* renderer) {
     // Upload any changed vertex data
     if (_dirty) {
         _dirty = false;
@@ -35,7 +34,7 @@ void RenderBatch::render(Window* window, Surface* surface, RenderOp* firstOp) {
             _numQuads += op->numQuads();
         }
         if (!_alloc || _alloc->count<_numQuads) {
-            _alloc = window->_quadBuffer->alloc(_numQuads, _alloc);
+            _alloc = renderer->allocQuads(_numQuads, _alloc);
         }
         QUAD* quad = (QUAD*)_alloc->addr();
         int renderBase = 0;
@@ -49,14 +48,16 @@ void RenderBatch::render(Window* window, Surface* surface, RenderOp* firstOp) {
             op->_batchGeometryValid = true;
         }
         //app.log("Buffering %d quads", _alloc->count);
-        check_gl(glBufferSubData, GL_ARRAY_BUFFER, _alloc->offset*sizeof(QUAD), _alloc->count*sizeof(QUAD), _alloc->addr());
+        renderer->invalidateQuads(_alloc);
     }
+}
+
+void RenderBatch::render(Renderer* renderer, Surface* surface, RenderOp* firstOp) {
+    
     
     // Use and configure the shader for this batch
-    firstOp->render(window, surface);
-    if (firstOp->_prog) {
-        firstOp->_prog->lazyLoadUniforms();
-    }
+    firstOp->render(renderer, surface);
+    firstOp->_shader->lazyLoadUniforms();
     
     // Determine how much many ops we can draw right now without breaking render order
     int numQuadsThisChunk = 0;
@@ -89,8 +90,8 @@ void RenderBatch::render(Window* window, Surface* surface, RenderOp* firstOp) {
             // This batch op can be rendered now!
             numQuadsThisChunk += currentOp->numQuads();
             currentOp->_mustRedraw = false;
-            assert(currentOp->_renderCounter != window->_renderCounter);
-            currentOp->_renderCounter = window->_renderCounter;
+            assert(currentOp->_renderCounter != renderer->_renderCounter);
+            currentOp->_renderCounter = renderer->_renderCounter;
 
             // Update nextOpInBatch to point to the next one
             if (++it == _ops.end()) {
@@ -99,7 +100,7 @@ void RenderBatch::render(Window* window, Surface* surface, RenderOp* firstOp) {
             nextOpInBatch = *it;
         } else {
             // Add op to region of stuff thats yet to render, unless of course it already has been rendered
-            if (currentOp->_renderCounter != window->_renderCounter) {
+            if (currentOp->_renderCounter != renderer->_renderCounter) {
                 region.addRect(currentOp->surfaceRect());
             }
         }
@@ -132,15 +133,14 @@ void RenderBatch::render(Window* window, Surface* surface, RenderOp* firstOp) {
     nextInvalidRect:
         rect = *invalidRectIt;
         rect.origin.y = surface->_size.height - rect.bottom(); /* surface -> viewport coords */
-        window->pushClip(rect);
+        renderer->pushClip(rect);
     }
 
-    //   app.log("Drawing %d quads at once", numQuadsThisChunk);
-    check_gl(glDrawElements, GL_TRIANGLES, 6 * numQuadsThisChunk, GL_UNSIGNED_SHORT, (void*)((_alloc->offset+firstOp->_renderBase)*6*sizeof(GLshort)));
+    renderer->drawQuads(numQuadsThisChunk, _alloc->offset+firstOp->_renderBase);
 
     // Iterate next rect of invalid region, if there is any
     if (surface->_supportsPartialRedraw) {
-        window->popClip();
+        renderer->popClip();
         if (++invalidRectIt != surface->_invalidRegion.rects.end()) {
             goto nextInvalidRect;
         }

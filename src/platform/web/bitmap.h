@@ -32,7 +32,6 @@ public:
 
     void lock(PIXELDATA* pixelData, bool forWriting) override;
     void unlock(PIXELDATA* pixelData, bool pixelsChanged) override;
-    void bind() override;
     
     // ISerializeToVariant
     void fromVariant(const variant& v) override;

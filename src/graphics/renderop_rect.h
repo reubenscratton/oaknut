@@ -24,8 +24,8 @@ public:
     void setAlpha(float alpha) override;
     bool canMergeWith(const RenderOp* op) override;
     void asQuads(QUAD* quad) override;
-    void render(Window* window, Surface* surface) override;
-    void validateShader() override;
+    void render(Renderer* renderer, Surface* surface) override;
+    void validateShader(Renderer* renderer) override;
     
 //protected:
     COLOR _strokeColor;

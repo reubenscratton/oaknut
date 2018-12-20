@@ -15,10 +15,10 @@ public:
     int _itemSize;
     int _itemCount;
     int _itemsPerPage;
+    std::function<void(int,int)> _resizeHook;
     
     class Alloc {
     public:
-        //uint8_t* base;
         ItemPool* pool;
         int offset;
         int count;
@@ -34,6 +34,9 @@ public:
         uint8_t* addr() {
             return pool->_base + pool->_itemSize * offset;
         }
+        int cb() {
+            return pool->_itemSize * count;
+        }
 
     };
     
@@ -47,25 +50,9 @@ public:
     
     
     Alloc* alloc(int n, Alloc* existingAlloc);
-    virtual void resize(int newItemCount);
+    void resize(int newItemCount);
     void free(Alloc* alloc);
 };
 
 
-class QuadBuffer : public ItemPool {
-public:
-    
-    GLshort* _indexes;
-    GLuint _indexBufferId;
-    GLuint _vertexBufferId;
-    GLuint _vao;
-    
-    QuadBuffer();
-    void bind();
-    void upload();
-    
-    virtual void resize(int newItemCount);
-    
-    
-};
 

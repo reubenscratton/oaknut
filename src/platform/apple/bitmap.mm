@@ -7,34 +7,6 @@
 #if PLATFORM_APPLE
 #include <oaknut.h>
 
-static CVOpenGLESTextureCacheRef s_cvTextureCacheCamera;
-static CVOpenGLESTextureCacheRef s_cvTextureCacheOther;
-
-static CVOpenGLESTextureCacheRef createTextureCache() {
-    CVOpenGLESTextureCacheRef cache;
-    CVReturn err = CVOpenGLESTextureCacheCreate(NULL, NULL, GLGetCurrentContext(),
-#if !TARGET_OS_IOS
-                                                CGLGetPixelFormat(CGLGetCurrentContext()),
-#endif
-                                                NULL,
-                                                &cache);
-    assert(err==0);
-    return cache;
-}
-
-static CVOpenGLESTextureCacheRef getTextureCache(bool camera) {
-    if (camera) {
-        if (!s_cvTextureCacheCamera) {
-            s_cvTextureCacheCamera = createTextureCache();
-        }
-        return s_cvTextureCacheCamera;
-    }
-    if (!s_cvTextureCacheOther) {
-        s_cvTextureCacheOther = createTextureCache();
-    }
-    return s_cvTextureCacheOther;
-}
-
 
 static CGBitmapInfo bitmapInfoForFormat(int format) {
     switch (format) {
@@ -74,93 +46,19 @@ BitmapApple::BitmapApple(int width, int height, int format, void* pixels, int st
     CGContextScaleCTM(_context, 1, -1);
     CGContextTranslateCTM(_context, 0, -height);
     assert(_context);
-    _needsUpload = true;
 }
 
 BitmapApple::BitmapApple(CVImageBufferRef cvImageBuffer, bool fromCamera) : Bitmap((int)CVPixelBufferGetWidth(cvImageBuffer), (int)CVPixelBufferGetHeight(cvImageBuffer), BITMAPFORMAT_RGBA32) {
     _cvImageBuffer = cvImageBuffer;
-    _cvTextureCache = getTextureCache(fromCamera);
-    
-#if TARGET_OS_IOS
-    CVReturn err = CVOpenGLESTextureCacheCreateTextureFromImage(kCFAllocatorDefault, _cvTextureCache, cvImageBuffer, NULL, GL_TEXTURE_2D, GL_RGBA , _width, _height, GL_BGRA, GL_UNSIGNED_BYTE, 0, &_cvTexture);
-    _textureId = CVOpenGLESTextureGetName(_cvTexture);
-#else
-    CVReturn err = CVOpenGLTextureCacheCreateTextureFromImage(NULL, _cvTextureCache,
-                                                              cvImageBuffer, NULL, &_cvTexture);
-    _textureId = CVOpenGLTextureGetName(_cvTexture);
-    _texTarget = CVOpenGLESTextureGetTarget(_cvTexture);
-    if (_texTarget != GL_TEXTURE_2D) {
-        
-        // TODO: glGets are BAD IDEA and kill performance. Need a GLContext structure that caches all GL properties
-        GLint oldFBO, oldFBOread, oldTex;
-        check_gl(glGetIntegerv, GL_FRAMEBUFFER_BINDING, &oldFBO);
-        check_gl(glGetIntegerv, GL_READ_FRAMEBUFFER_BINDING, &oldFBOread);
-        check_gl(glGetIntegerv, GL_TEXTURE_BINDING_2D, &oldTex);
-        
-        // Set up the camera texture for framebuffer read
-        GLuint fbr = 0;
-        check_gl(glGenFramebuffers, 1, &fbr);
-        check_gl(glBindFramebuffer, GL_READ_FRAMEBUFFER, fbr);
-        check_gl(glFramebufferTexture2D, GL_READ_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,_texTarget,_textureId,0);
-        check_gl(glReadBuffer, GL_COLOR_ATTACHMENT0);
-        
-        // Create a new GL_TEXTURE_2D texture for framebuffer write
-        GLuint fb = 0;
-        check_gl(glGenFramebuffers, 1, &fb);
-        check_gl(glBindFramebuffer, GL_DRAW_FRAMEBUFFER, fb);
-        GLuint texId2 = 0;
-        check_gl(glGenTextures, 1, &texId2);
-        check_gl(glBindTexture, GL_TEXTURE_2D, texId2);
-        
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        
-        check_gl(glTexImage2D, GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        check_gl(glFramebufferTexture2D, GL_DRAW_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,texId2,0);
-        
-        // Copy
-        check_gl(glCopyTexSubImage2D, GL_TEXTURE_2D,0,0,0,0,0,_width,_height);
-        _texTarget = GL_TEXTURE_2D;
-        _textureId = texId2;
-        
-        check_gl(glBindTexture, GL_TEXTURE_2D, oldTex);
-        check_gl(glBindFramebuffer, GL_DRAW_FRAMEBUFFER, oldFBO);
-        check_gl(glBindFramebuffer, GL_READ_FRAMEBUFFER, oldFBOread);
-        check_gl(glDeleteFramebuffers, 1, &fbr);
-        check_gl(glDeleteFramebuffers, 1, &fb);
-        
-        // Delete the CV texture now we've copied it to a normal one
-        CVOpenGLTextureRelease(_cvTexture);
-        _cvTexture = NULL;
-        CVOpenGLTextureCacheFlush(_cvTextureCache, 0);
-        _cvTextureCache = NULL;
-        
-        
-        
-    }
-#endif
-    assert(err==0);
+    CFRetain(cvImageBuffer);
 }
 
 BitmapApple::~BitmapApple() {
-    if (_textureId) {
-        if (!_cvTextureCache) {
-            check_gl(glDeleteTextures, 1, &_textureId);
-        }
-        _textureId = 0;
+    if (_cvImageBuffer) {
+        CFRelease(_cvImageBuffer);
+        _cvImageBuffer = NULL;
     }
-    if (_cvTexture) {
-#if TARGET_OS_OSX
-        CVOpenGLTextureRelease(_cvTexture);
-#else
-        CFRelease(_cvTexture);
-#endif
-        _cvTexture = NULL;
-        CVOpenGLESTextureCacheFlush(_cvTextureCache, 0);
-        _cvTextureCache = NULL;
-    }
+
     if (_context) {
         CGContextRelease(_context);
         _context = NULL;
@@ -196,6 +94,7 @@ void BitmapApple::lock(PIXELDATA* pixelData, bool forWriting) {
         CVReturn err = CVPixelBufferCreate(kCFAllocatorDefault, _width, _height, pixelFormat,
             (__bridge CFDictionaryRef)(pixelBufferAttributes), &_cvImageBuffer);
         assert((_cvImageBuffer && err == kCVReturnSuccess));// || err == kCVReturnInvalidPixelFormat);
+        assert(!_texture); // if this hits then we need to recreate the texture so its a CoreVideoTexture!
     }
 #endif
 
@@ -220,68 +119,11 @@ void BitmapApple::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
         CVReturn err = CVPixelBufferUnlockBaseAddress(_cvImageBuffer, 0);
         assert(err == kCVReturnSuccess);
     }
-    //if (_cvTextureCache) {
-    //    CVOpenGLESTextureCacheFlush(_cvTextureCache, 0);
-   // }
     if (pixelDataChanged) {
-        _needsUpload = true;
+        texInvalidate();
     }
 }
 
-void BitmapApple::bind() {
-
-    // If we have a core video buffer then create a special core video texture than uses the buffer directly
-    if (_cvImageBuffer && !_textureId) {
-        CVReturn err;
-        if (!_cvTextureCache) {
-            _cvTextureCache = getTextureCache(false);
-        }
-#if TARGET_OS_IOS
-        err = CVOpenGLESTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
-           _cvTextureCache, _cvImageBuffer, NULL, GL_TEXTURE_2D,
-                   (_format==4) ? GL_ALPHA : GL_RGBA,
-           _width, _height, (_format==4) ? GL_ALPHA :
-#if TARGET_OS_SIMULATOR
-                                                           GL_RGBA
-#else
-                                                           GL_BGRA
-#endif
-                                                           , GL_UNSIGNED_BYTE, 0, &_cvTexture);
-#else
-        err = CVOpenGLTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
-                                                         _cvTextureCache,
-                                                         _cvImageBuffer,
-                                                         NULL,
-                                                         &_cvTexture);
-#endif
-        assert(_cvTexture && err == kCVReturnSuccess);
-        _texTarget = CVOpenGLESTextureGetTarget(_cvTexture);
-        assert(_texTarget==GL_TEXTURE_2D); // oh dear, OSX uses GL_TEXTURE_RECTANGLE... needs special shaders
-        _textureId = CVOpenGLESTextureGetName(_cvTexture);
-    }
-    
-    Bitmap::bind();
-
-    // If bitmap data changed we may need to update texture data
-    if (!_needsUpload) {
-        return;
-    }
-    _needsUpload = false;
-    
-    
-    // Slow path
-    if (!_cvImageBuffer) {
-        void* data = CGBitmapContextGetData(_context);
-        assert(data);
-        if (!_allocdTexData) {
-            _allocdTexData = true;
-            check_gl(glTexImage2D, _texTarget, 0, getGlInternalFormat(),
-                    _width, _height, 0, getGlFormat(), getGlPixelType(), data);
-        } else {
-            check_gl(glTexSubImage2D, _texTarget, 0, 0, 0, _width, _height, getGlFormat(), getGlPixelType(),data);
-        }
-    }
-}
 
 
 BitmapApple* bitmapFromData(const void* data, int cb) {
@@ -433,50 +275,6 @@ Bitmap* Bitmap::create(int width, int height, int format) {
 
 
 
-/*
- 
- static void printKeys(const void* key, const void* value, void* context) {
- CFShow(key);
- }
- 
- CFArrayRef pixelFormatDescriptionsArray = NULL;
- CFIndex i;
- pixelFormatDescriptionsArray =
- CVPixelFormatDescriptionArrayCreateWithAllPixelFormatTypes(kCFAllocatorDefault);
- printf("Core Video Supported Pixel Format Types:\n\n");
- for (i = 0; i < CFArrayGetCount(pixelFormatDescriptionsArray); i++) {
- CFStringRef pixelFormat = NULL;
- CFNumberRef pixelFormatFourCC = (CFNumberRef)CFArrayGetValueAtIndex(pixelFormatDescriptionsArray, i);
- if (pixelFormatFourCC != NULL) {
- UInt32 value;
- CFNumberGetValue(pixelFormatFourCC, kCFNumberSInt32Type, &value);
- if (value <= 0x28) {
- pixelFormat = CFStringCreateWithFormat(kCFAllocatorDefault, NULL,
- CFSTR("Core Video Pixel Format Type: %d\n"), value);
- } else {
- pixelFormat = CFStringCreateWithFormat(kCFAllocatorDefault, NULL,
- CFSTR("Core Video Pixel Format Type (FourCC):%c%c%c%c\n"), (char)(value >> 24), (char)(value >> 16), (char)(value >> 8), (char)value);
- }
- 
- CFDictionaryRef d = CVPixelFormatDescriptionCreateWithPixelFormatType(kCFAllocatorDefault, (OSType)value);
- CFDictionaryApplyFunction(d, printKeys, this);
- CFNumberRef glFormat = (CFNumberRef)CFDictionaryGetValue(d, kCVPixelFormatOpenGLFormat);
- CFNumberRef glInternalFormat = (CFNumberRef)CFDictionaryGetValue(d, kCVPixelFormatOpenGLInternalFormat);
- CFNumberRef glType = (CFNumberRef)CFDictionaryGetValue(d, kCVPixelFormatOpenGLType);
- UInt32 glFormatVal, glInternalFormatVal, glTypeVal;
- if (glFormat) {
- CFNumberGetValue(glFormat, kCFNumberSInt32Type, &glFormatVal);
- CFNumberGetValue(glInternalFormat, kCFNumberSInt32Type, &glInternalFormatVal);
- CFNumberGetValue(glType, kCFNumberSInt32Type, &glTypeVal);
- app.log("gl %d %d %d", glFormat, glInternalFormat, glType);
- }
- 
- CFShow(pixelFormat);
- CFRelease(pixelFormat);
- }
- }
- 
 
- */
 
 #endif

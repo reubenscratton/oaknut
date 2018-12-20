@@ -39,78 +39,21 @@ MATRIX4 setOrthoFrustum(float l, float r, float b, float t, float n, float f) {
 }
 
 
-Surface::Surface() {
-    _supportsPartialRedraw = false;
+Surface::Surface(bool isPrivate) {
+    _supportsPartialRedraw = isPrivate;
+    _isPrivate = isPrivate;
 }
 
 
-Surface::Surface(View* owningView) : Surface() {
-
-    _supportsPartialRedraw = true;
-    _isPrivate = true;
-    
-}
-
-void Surface::setupPrivateFbo() {
-
-    if (!_tex) {
-#ifndef PLATFORM_MACOS
-        check_gl(glGetIntegerv, GL_IMPLEMENTATION_COLOR_READ_TYPE, &_pixelType);
-        check_gl(glGetIntegerv, GL_IMPLEMENTATION_COLOR_READ_FORMAT, &_pixelFormat);
-#endif
-        if(_pixelFormat == 0) {
-            _pixelFormat = GL_RGBA;
-            _pixelType = GL_UNSIGNED_BYTE;
-        }
-        check_gl(glGenTextures, 1, &_tex);
-        check_gl(glGenFramebuffers, 1, &_fb);
-    }
-    GLint oldFBO, oldTex;
-    check_gl(glGetIntegerv, GL_FRAMEBUFFER_BINDING, &oldFBO);
-    check_gl(glGetIntegerv, GL_TEXTURE_BINDING_2D, &oldTex);
-    check_gl(glBindTexture, GL_TEXTURE_2D, _tex);
-    check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    GLint pixelFormat = _pixelFormat;
-    if (pixelFormat == GL_BGRA) pixelFormat = GL_RGBA; // WebGL no like iOS format
-    check_gl(glTexImage2D, GL_TEXTURE_2D, 0, pixelFormat, _size.width, _size.height, 0, pixelFormat, _pixelType, NULL);
-    check_gl(glBindTexture, GL_TEXTURE_2D, oldTex);
-    
-    check_gl(glBindFramebuffer, GL_FRAMEBUFFER, _fb);
-    check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _tex, 0);
-    check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
-    check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
-    //GLenum x = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    //assert(x==GL_FRAMEBUFFER_COMPLETE);
-    check_gl(glBindFramebuffer, GL_FRAMEBUFFER, oldFBO);
-}
-
-void Surface::setSize(SIZE size) {
-    if (_size.width != size.width  ||  _size.height!=size.height) {
-        _size = size;
-        _mvp = setOrthoFrustum(0, size.width, size.height, 0, -1, 1);
-        if (_supportsPartialRedraw) {
-            _invalidRegion.rects.clear();
-            _invalidRegion.addRect(RECT(0,0,size.width,size.height));
-        }
-        if (_isPrivate) {
-            setupPrivateFbo();
-        }
+void Surface::setSize(const SIZE& size) {
+    _size = size;
+    _mvp = setOrthoFrustum(0, size.width, size.height, 0, -1, 1);
+    if (_supportsPartialRedraw) {
+        _invalidRegion.rects.clear();
+        _invalidRegion.addRect(RECT(0,0,size.width,size.height));
     }
 }
 
-void Surface::use() {
-    check_gl(glBindFramebuffer, GL_FRAMEBUFFER, _tex ? _fb :
-#if TARGET_OS_IOS || defined(PLATFORM_LINUX)
-             1
-#else
-             0
-#endif
-             );
-    check_gl(glViewport, 0, 0, _size.width, _size.height);
-}
 
 void Surface::detachRenderList(RenderList *list) {
     for (auto it=list->_ops.begin() ; it!= list->_ops.end() ; it++) {
@@ -136,7 +79,7 @@ void Surface::addRenderOp(RenderOp* op) {
     _opsNeedingValidation.push_back(op);
 }
 
-void Surface::validateRenderOps() {
+void Surface::validateRenderOps(Renderer* renderer) {
     if (!_opsNeedingValidation.size()) {
         return;
     }
@@ -146,7 +89,7 @@ void Surface::validateRenderOps() {
     auto i = _opsNeedingValidation.begin();
     while (i != _opsNeedingValidation.end()) {
         RenderOp* op = (*i);
-        op->validateShader();
+        op->validateShader(renderer);
         if (op->_shaderValid) {
             opsValid.push_back(op);
             i = _opsNeedingValidation.erase(i);
@@ -228,7 +171,7 @@ void RenderList::removeRenderOp(RenderOp* renderOp) {
 }
 
 
-void Surface::renderPhase1(View* view, Window* window, POINT origin) {
+void Surface::renderPhase1(View* view, Renderer* renderer, POINT origin) {
 
     if (view->_visibility != Visible) {
         return;
@@ -250,7 +193,7 @@ void Surface::renderPhase1(View* view, Window* window, POINT origin) {
         if (!view->_surface->_op) {
             RECT rect = view->getOwnRect();
             view->_surface->_op = new PrivateSurfaceRenderOp(view, rect);
-            view->_surface->_op->_alloc = window->_quadBuffer->alloc(1, NULL);
+            view->_surface->_op->_alloc = renderer->allocQuads(1, NULL);
         } else {
             if (sizeChanged) {
                 view->_surface->_op->setRect(view->getOwnRect());
@@ -297,7 +240,7 @@ void Surface::renderPhase1(View* view, Window* window, POINT origin) {
     // Recurse subviews
     for (auto it = view->_subviews.begin(); it!=view->_subviews.end() ; it++) {
         sp<View>& subview = *it;
-        surface->renderPhase1(subview, window, origin);
+        surface->renderPhase1(subview, renderer, origin);
     }
     
     // Draw decor renderlist
@@ -313,7 +256,7 @@ void Surface::renderPhase1(View* view, Window* window, POINT origin) {
     }
 
     if (usesPrivateSurface) {
-        surface->validateRenderOps();
+        surface->validateRenderOps(renderer);
     }
 
     if (changesMvp) {
@@ -326,7 +269,7 @@ void Surface::renderPhase1(View* view, Window* window, POINT origin) {
 PrivateSurfaceRenderOp::PrivateSurfaceRenderOp(View* view, const RECT& rect)  : TextureRenderOp(rect, NULL, NULL, 0) {
     _view = view;
     _dirty = true;
-    validateShader();
+    validateShader(Renderer::current);
 }
 PrivateSurfaceRenderOp::~PrivateSurfaceRenderOp() {
     if (_alloc) {
@@ -334,19 +277,20 @@ PrivateSurfaceRenderOp::~PrivateSurfaceRenderOp() {
         _alloc = NULL;
     }
 }
-void PrivateSurfaceRenderOp::validateShader() {
-    TextureRenderOp::validateShader();
+void PrivateSurfaceRenderOp::validateShader(Renderer* renderer) {
+    TextureRenderOp::validateShader(renderer);
     _shaderValid = true;
 }
 void PrivateSurfaceRenderOp::rectToSurfaceQuad(RECT rect, QUAD* quad) {
     rect.origin += _view->_surfaceOrigin;
     *quad = QUAD(rect, 0);
 }
-void PrivateSurfaceRenderOp::render(Window* window, Surface* surface) {
-    RenderOp::render(window, surface);
-    
+void PrivateSurfaceRenderOp::render(Renderer* renderer, Surface* surface) {
+    RenderOp::render(renderer, surface);
+
     // Bind to the private surface texture
-    window->_currentTexture = NULL;
+    assert(0); // todo
+    /*window->_currentTexture = NULL;
     check_gl(glBindTexture, GL_TEXTURE_2D, _view->_surface->_tex);
     
     if (_dirty) {
@@ -356,9 +300,10 @@ void PrivateSurfaceRenderOp::render(Window* window, Surface* surface) {
         check_gl(glBufferSubData, GL_ARRAY_BUFFER, _alloc->offset*sizeof(QUAD), _alloc->count*sizeof(QUAD), _alloc->addr());
     }
     check_gl(glDrawElements, GL_TRIANGLES, 6 * 1, GL_UNSIGNED_SHORT, (void*)((_alloc->offset)*6*sizeof(GLshort)));
+     */
 }
 
-static inline void renderRenderList(RenderList* renderList, Surface* surface, Window* window) {
+static inline void renderRenderList(RenderList* renderList, Surface* surface, Renderer* renderer) {
     for (auto it=renderList->_ops.begin() ; it!=renderList->_ops.end() ; it++) {
         RenderOp* op = *it;
         if (!op->_shaderValid) {
@@ -371,15 +316,15 @@ static inline void renderRenderList(RenderList* renderList, Surface* surface, Wi
         }
         
         // If op not drawn yet, draw it (and as many others in the batch as can be done now)
-        if (op->_renderCounter != window->_renderCounter) {
-            window->setCurrentSurface(surface);
+        if (op->_renderCounter != renderer->_renderCounter) {
+            renderer->setCurrentSurface(surface);
             RenderBatch* batch = op->_batch;
-            batch->render(window, surface, op);
+            batch->render(renderer, surface, op);
         }
     }
 
 }
-void Surface::renderPhase2(Surface* prevsurf, View* view, Window* window) {
+void Surface::renderPhase2(Surface* prevsurf, View* view, Renderer* renderer) {
     if (view->_visibility != Visible) {
         return;
     }
@@ -409,27 +354,27 @@ void Surface::renderPhase2(Surface* prevsurf, View* view, Window* window) {
         RECT clip = view->getOwnRect();
         clip.origin = view->_surfaceOrigin;
         clip.origin.y = surface->_size.height - clip.bottom(); /* surface -> viewport coords */
-        window->pushClip(clip);
+        renderer->pushClip(clip);
     }
     
     // Draw view content, if there is any
     if (view->_renderList) {
-        renderRenderList(view->_renderList, surface, window);
+        renderRenderList(view->_renderList, surface, renderer);
     }
     
     // Recurse subviews
     for (auto it=view->_subviews.begin() ; it != view->_subviews.end() ; it++) {
-        surface->renderPhase2(surface, *it, window);
+        surface->renderPhase2(surface, *it, renderer);
     }
 
     // Draw view decor content, if there is any
     if (view->_renderListDecor) {
-        renderRenderList(view->_renderListDecor, surface, window);
+        renderRenderList(view->_renderListDecor, surface, renderer);
     }
 
     // Pop draw state
     if (view->_clipsContent) {
-        window->popClip();
+        renderer->popClip();
     }
     if (changesMvp) {
         surface->_mvp = savedMatrix;
@@ -438,8 +383,8 @@ void Surface::renderPhase2(Surface* prevsurf, View* view, Window* window) {
     // If rendered a child surface then we must now render the child surface onto its parent
     if (!surfaceIsCurrent) {
         if (prevsurf) {
-            window->setCurrentSurface(prevsurf);
-            surface->_op->render(window, prevsurf);
+            renderer->setCurrentSurface(prevsurf);
+            surface->_op->render(renderer, prevsurf);
             if (surface->_supportsPartialRedraw) {
                 surface->_invalidRegion.rects.clear();
             }
@@ -456,7 +401,7 @@ void Surface::renderPhase2(Surface* prevsurf, View* view, Window* window) {
 }
 
 
-void Surface::render(View* view, Window* window) {
+void Surface::render(View* view, Renderer* renderer) {
 
     _renderInProgress = true;
     
@@ -465,12 +410,17 @@ void Surface::render(View* view, Window* window) {
     /** PHASE 1: ENSURE ALL RENDER LISTS ARE VALID **/
     _renderListsInsertionPos = _renderListsList.end();
     _renderOrder = 1;
-    renderPhase1(view, window, {0,0});
+    renderPhase1(view, renderer, {0,0});
     
-    validateRenderOps();
+    validateRenderOps(renderer);
     
-    /** PHASE 2: THE ACTUAL OPENGL DRAW COMMANDS **/
-    renderPhase2(NULL, view, window);
+    for (RenderBatch* batch : _listBatches) {
+        batch->updateQuads(renderer);
+    }
+    renderer->flushQuadBuffer();
+    
+    /** PHASE 2: SEND BATCHED RENDEROPS TO GPU **/
+    renderPhase2(NULL, view, renderer);
     
     //app.log("batch count:%d", _listBatches.size());
 
@@ -478,19 +428,6 @@ void Surface::render(View* view, Window* window) {
 }
 
 
-
-Surface::~Surface() {
-    cleanup();
-}
-
-void Surface::cleanup() {
-    if (_tex) {
-        check_gl(glDeleteTextures, 1, &_tex);
-        _tex = 0;
-        check_gl(glDeleteFramebuffers, 1, &_fb);
-        _fb = 0;
-    }
-}
 
 
 

@@ -67,6 +67,12 @@ using std::set;
 using std::stack;
 using std::function;
 
+// Default renderer is OpenGL. Platform header can change these
+#define RENDERER_GL     1
+#define RENDERER_METAL  0
+#define RENDERER_VULKAN 0
+#define RENDERER_DX     0
+
 // Platform headers
 #ifdef PLATFORM_WEB
 #define PLATFORM web
@@ -125,8 +131,9 @@ namespace oak {
 #include "graphics/vectors.h"
 #include "graphics/matrix.h"
 #include "graphics/geom.h"
-#include "graphics/quadbuffer.h"
-#include "graphics/glhelp.h"
+#include "util/itempool.h"
+#include "graphics/renderer.h"
+#include "graphics/renderer_gl.h"
 #include "graphics/region.h"
 #include "graphics/textureatlas.h"
 #include "graphics/font.h"

@@ -8,10 +8,9 @@
 
 #include <oaknut.h>
 
+
+
 Bitmap::Bitmap() {
-    _texSampleMethod = GL_LINEAR;
-    _texTarget = GL_TEXTURE_2D;
-    _renderContextIt = app._window->_loadedTextures.end();
 }
 
 Bitmap::Bitmap(int awidth, int aheight, int format) : Bitmap() {
@@ -21,12 +20,15 @@ Bitmap::Bitmap(int awidth, int aheight, int format) : Bitmap() {
 }
 
 Bitmap::~Bitmap() {
-	//app.log("~Bitmap %d x %d", _width, _height);
-    if (_textureId) {
-        check_gl(glDeleteTextures, 1, &_textureId);
+    if (_texture) {
+        _texture->unload();
+        _texture = NULL;
     }
-    if (_renderContextIt != app._window->_loadedTextures.end()) {
-        app._window->_loadedTextures.erase(_renderContextIt);
+}
+
+void Bitmap::texInvalidate() {
+    if (_texture) {
+        _texture->_needsUpload = true;
     }
 }
 
@@ -35,54 +37,12 @@ void Bitmap::fromVariant(const variant& v) {
     _width = v.intVal("w");
     _height = v.intVal("h");
     _format = v.intVal("f");
-    _needsUpload = true;
 }
 
 void Bitmap::toVariant(variant& v) {
     v.set("w", _width);
     v.set("h", _height);
     v.set("f", _format);
-}
-
-
-GLenum Bitmap::getGlFormat() {
-    switch (_format) {
-        case BITMAPFORMAT_RGBA32: return GL_RGBA;
-        case BITMAPFORMAT_BGRA32: return GL_BGRA;
-        case BITMAPFORMAT_RGB565: return GL_RGB;
-        case BITMAPFORMAT_A8:
-#ifdef PLATFORM_LINUX   // TODO: 'red' vs 'alpha' is probably not a Linux thing, it's more likely to be GL vs GL ES
-            return GL_RED;
-#else
-            return GL_ALPHA;
-#endif
-
-    }
-    assert(0);
-}
-GLenum Bitmap::getGlInternalFormat() {
-    switch (_format) {
-        case BITMAPFORMAT_RGBA32: return GL_RGBA;
-        case BITMAPFORMAT_BGRA32: return GL_RGBA;
-        case BITMAPFORMAT_RGB565: return GL_RGB;
-        case BITMAPFORMAT_A8:
-#ifdef PLATFORM_LINUX
-            return GL_RED;
-#else
-            return GL_ALPHA;
-#endif
-    }
-    assert(0);
-}
-
-int Bitmap::getGlPixelType() {
-    switch (_format) {
-        case BITMAPFORMAT_RGBA32: return GL_UNSIGNED_BYTE;
-        case BITMAPFORMAT_BGRA32: return GL_UNSIGNED_BYTE;
-        case BITMAPFORMAT_RGB565: return GL_UNSIGNED_SHORT_5_6_5;
-        case BITMAPFORMAT_A8: return GL_UNSIGNED_BYTE;
-    }
-    assert(0);
 }
 
 bool Bitmap::hasAlpha() {
@@ -112,31 +72,6 @@ uint8_t* Bitmap::pixelAddress(PIXELDATA* pixelData, int x, int y) {
 	return ((uint8_t*)pixelData->data) + y*pixelData->stride + x*getBytesPerPixel();
 }
 
-
-
-void Bitmap::bind() {
-    if (!_textureId) {
-        check_gl(glGenTextures, 1, &_textureId);
-        assert(_textureId>0);
-        _renderContextIt = app._window->_loadedTextures.insert(app._window->_loadedTextures.end(), this);
-    }
-    check_gl(glBindTexture, _texTarget, _textureId);
-    if (!_paramsValid) {
-        check_gl(glTexParameterf, _texTarget, GL_TEXTURE_MIN_FILTER, _texSampleMethod);
-        check_gl(glTexParameterf, _texTarget, GL_TEXTURE_MAG_FILTER, _texSampleMethod);
-        check_gl(glTexParameteri, _texTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        check_gl(glTexParameteri, _texTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        _paramsValid = true;
-    }
-}
-
-void Bitmap::onRenderContextDestroyed() {
-    _textureId = 0;
-    _allocdTexData = false;
-    _paramsValid = false;
-    _needsUpload = true;
-    _renderContextIt = app._window->_loadedTextures.end();
-}
 
 
 

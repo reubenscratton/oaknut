@@ -8,7 +8,7 @@
 class RenderBatch : public Object {
 public:
     list<sp<RenderOp>> _ops;
-    QuadBuffer::Alloc* _alloc;
+    ItemPool::Alloc* _alloc;
     int _numQuads;
     int _head;
     bool _dirty;
@@ -18,10 +18,11 @@ public:
     
     RenderBatch();
     ~RenderBatch();
-    void render(Window* window, Surface* surface, RenderOp* firstOp);
+    void render(Renderer* renderer, Surface* surface, RenderOp* firstOp);
     
     void invalidateGeometry(RenderOp* op);
-
+    void updateQuads(Renderer* renderer);
+    
 #ifdef DEBUG
     string debugDescription();
 #endif

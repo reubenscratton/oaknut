@@ -8,27 +8,7 @@
 #include <oaknut.h>
 
 DECLARE_DYNCREATE(CameraView);
-/*
-class GLProgramTextureDesaturated : public GLProgram {
-public:
-    virtual void load();
-};
 
-// TODO: Desaturation should be an optional shader attribute once we have shader cache done
-void GLProgramTextureDesaturated::load()  {
-    loadShaders(TEXTURE_VERTEX_SHADER,
-        "varying vec2 v_texcoord;\n"
-        "uniform sampler2D texture;\n"
-        "void main() {\n"
-        "    vec4 color = texture2D(texture, v_texcoord);\n"
-        "    float lum = color.r * 0.299 + color.g * 0.587 + color.b * 0.144;\n"
-        "    gl_FragColor = mix(color, vec4(lum,lum,lum, 1.0), 0.0);\n"
-        "}\n"
-        );
-}
-
-static GLProgramTextureDesaturated s_prog;
-*/
 void CameraView::attachToWindow(Window* window) {
     View::attachToWindow(window);
     show();

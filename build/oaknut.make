@@ -62,6 +62,7 @@ XCODE_PROJECT_DIR=$(PROJECT_NAME).xcodeproj
 
 xcode:
 	@mkdir -p $(XCODE_PROJECT_DIR)/xcshareddata/xcschemes
+	@mkdir -p $(XCODE_PROJECT_DIR)/project.xcworkspace/xcshareddata
 	@perl $(OAKNUT_DIR)/build/xcode.pl \
 		-projectname $(PROJECT_NAME) \
 		$(addprefix -framework ,$(FRAMEWORKS)) \

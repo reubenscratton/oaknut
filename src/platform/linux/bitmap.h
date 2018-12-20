@@ -17,7 +17,6 @@ public:
     // Overrides
     virtual void lock(PIXELDATA* pixelData, bool forWriting);
     virtual void unlock(PIXELDATA* pixelData, bool pixelDataChanged);
-    virtual void bind();
 
     cairo_t* getCairo();
 

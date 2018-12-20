@@ -7,7 +7,7 @@
 
 class PrivateSurfaceRenderOp : public TextureRenderOp {
 public:
-    QuadBuffer::Alloc* _alloc;
+    ItemPool::Alloc* _alloc;
     bool _dirty;
     
     PrivateSurfaceRenderOp(View* view, const RECT& rect);
@@ -15,8 +15,8 @@ public:
     
     // Overrides
     void rectToSurfaceQuad(RECT rect, QUAD* quad) override;
-    void render(class Window* window, Surface* surface) override;
-    void validateShader() override;
+    void render(Renderer* renderer, Surface* surface) override;
+    void validateShader(Renderer* renderer) override;
 };
 
 class RenderList : public Object {
@@ -42,44 +42,36 @@ public:
 	SIZE _size;
     REGION _invalidRegion; // unused on primary surface
     MATRIX4 _mvp;
-    GLuint _fb;
-    GLuint _tex;
-    GLint _pixelType;
-    GLint _pixelFormat;
     POINT _savedOrigin;
     list<RenderList*> _renderListsList;
     list<RenderList*>::iterator _renderListsInsertionPos;
     list<RenderOp*> _opsNeedingValidation;
     list<sp<RenderBatch>> _listBatches;
-    bool _isPrivate;
-    bool _supportsPartialRedraw;
     sp<PrivateSurfaceRenderOp> _op;
     int _mvpNum, _mvpNumPeak;
     bool _renderInProgress;
-    
-    Surface();
-    Surface(View* owningView);
-    ~Surface();
-    void render(View* view, Window* window);
-	void setSize(SIZE size);
-	void setupPrivateFbo();
-	void use();
-    void cleanup();
-  
+    bool _isPrivate;
+    bool _supportsPartialRedraw;
+
+    Surface(bool isPrivate);
+
+    virtual void render(View* view, Renderer* renderer);
+    virtual void setSize(const SIZE& size);
+	virtual void use() =0;
+
     void detachRenderList(RenderList* list);
     void attachRenderList(RenderList* list);
 
     void addRenderOp(RenderOp* op);
     void removeRenderOp(RenderOp* op);
     
-    void validateRenderOps();
+    void validateRenderOps(Renderer* renderer);
     void batchRenderOp(RenderOp* op);
     void unbatchRenderOp(RenderOp* op);
     
 private:
-    void renderPhase1(View* view, Window* window, POINT origin);
-    void renderPhase2(Surface* prevsurf, View* view, Window* window);
-    //static int renderOrder(View* view1, View* view2);
+    void renderPhase1(View* view, Renderer* renderer, POINT origin);
+    void renderPhase2(Surface* prevsurf, View* view, Renderer* renderer);
     
     int _renderOrder;
 #ifdef DEBUG

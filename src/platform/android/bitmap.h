@@ -21,7 +21,6 @@ public:
     // Overrides
     void lock(PIXELDATA* pixelData, bool forWriting) override;
     void unlock(PIXELDATA* pixelData, bool pixelDataChanged) override;
-    void bind() override;
     void fromVariant(const variant& v) override;
     void toVariant(variant& v) override;
 };

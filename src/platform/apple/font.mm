@@ -135,7 +135,7 @@ Glyph* FontApple::createGlyph(char32_t ch, Atlas* atlas) {
     CTFontDrawGlyphs(_ctfont, &cgglyph, &pt, 1, c);
     CGContextRestoreGState(c);
     
-    bitmap->_needsUpload = true;
+    bitmap->texInvalidate();
     
     return glyph;
 }

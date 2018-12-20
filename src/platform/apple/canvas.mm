@@ -70,7 +70,7 @@ public:
         CGContextFillRect(context, CGRectMake(0,0,_size.width,_size.height));
         CGContextSetFillColorWithColor(context, _fillColor);
         CGContextSetLineCap(context, kCGLineCapRound);
-        _bitmap->_needsUpload = true;
+        _bitmap->texInvalidate();
         CGContextSetBlendMode(_bitmap->_context, kCGBlendModeNormal);
     }
     void setFillColor(COLOR color) {
@@ -97,7 +97,7 @@ public:
         if (_strokeColor && _strokeWidth>0) {
             CGContextStrokeRect(_bitmap->_context, cgrect);
         }
-        _bitmap->_needsUpload = true;
+        _bitmap->texInvalidate();
     }
 
     void drawOval(RECT rect) {
@@ -108,7 +108,7 @@ public:
         if (_strokeColor && _strokeWidth>0) {
             CGContextStrokeEllipseInRect(_bitmap->_context, cgrect);
         }
-        _bitmap->_needsUpload = true;
+        _bitmap->texInvalidate();
     }
 
     Path* createPath() {
@@ -137,7 +137,7 @@ public:
         if (_strokeColor && _strokeWidth>0) {
             CGContextStrokePath(_bitmap->_context);
         }
-        _bitmap->_needsUpload = true;
+        _bitmap->texInvalidate();
         if (_transform) {
             CGPathRelease(cgpath);
         }

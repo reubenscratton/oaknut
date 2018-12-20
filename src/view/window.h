@@ -97,28 +97,10 @@ public:
 	void attachViewController(ViewController* vc);
     void detachViewController(ViewController* vc);
     
-    void pushClip(RECT clip);
-    void popClip();
-    
+
 	// Render state
-	int _doneGlInit;
-    GLfloat _backgroundColor[4];
-    vector<GLProgram*> _loadedProgs;
-    list<Bitmap*> _loadedTextures;
-	QuadBuffer* _quadBuffer;
-    stack<RECT> _clips;
-	void setBlendMode(int blendMode);
-	void bindTexture(Bitmap* texture);
-	GLuint _currentProg;
-	Surface* _currentSurface;
-	Bitmap* _currentTexture;
-	int _renderCounter;
-	int _currentVertexConfig;
-	int _blendMode;
-	void prepareToDraw();
-	void setCurrentSurface(Surface* surface);
-	void setVertexConfig(int vertexConfig);
-    
+    Renderer* _renderer;
+
     void layout(RECT constraint) override;
     
     EDGEINSETS _safeInsetsTotal;

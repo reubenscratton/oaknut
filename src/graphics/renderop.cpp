@@ -15,7 +15,7 @@ RenderOp::~RenderOp() {
 }
 
 bool RenderOp::canMergeWith(const RenderOp* op) {
-    return _prog==op->_prog && _blendMode==op->_blendMode && _alpha==op->_alpha;
+    return _shader==op->_shader && _blendMode==op->_blendMode && _alpha==op->_alpha;
 }
 
 void RenderOp::setRect(const RECT& rect) {
@@ -106,11 +106,11 @@ string debugRect(const RECT& rect) {
 }
 
 
-void RenderOp::render(Window* window, Surface* surface) {
-    window->setBlendMode(_blendMode);
-    _prog->use(window);
-    _prog->setMvp(surface->_mvp);
-    _prog->setAlpha(_alpha);
+void RenderOp::render(Renderer* renderer, Surface* surface) {
+    renderer->setBlendMode(_blendMode);
+    _shader->use(renderer);
+    _shader->setMvp(surface->_mvp);
+    _shader->setAlpha(_alpha);
 }
 
 void RenderOp::invalidateBatchGeometry() {

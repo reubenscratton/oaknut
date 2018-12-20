@@ -25,9 +25,6 @@ typedef struct {
     int stride;
 } PIXELDATA;
 
-#ifndef GL_BGRA
-#define GL_BGRA 0x80E1
-#endif
 
 
 /**
@@ -55,18 +52,13 @@ typedef struct {
  */
 class Bitmap : public Object, public ISerializeToVariant {
 public:
+    class Texture* _texture;
     int32_t _width;
     int32_t _height;
     int32_t _format;
-    GLuint _texSampleMethod; // default GL_LINEAR
-    GLuint _texTarget;       // default GL_TEXTURE_2D
-    GLuint _textureId;
-    bool _allocdTexData;
-    bool _paramsValid;
-    bool _needsUpload;
     bool _hasPremultipliedAlpha;
-    list<Bitmap*>::iterator _renderContextIt;
-    
+    bool _sampleNearest;
+
     // Constructor is protected, use Bitmap::createXXX() APIs to instantiate
 protected:
     Bitmap(int width, int height, int format);
@@ -79,14 +71,7 @@ public:
     virtual void unlock(PIXELDATA* pixelData, bool pixelsChanged)=0;
     uint8_t* pixelAddress(PIXELDATA* pixelData, int x, int y);
 
-    // Rendering
-    virtual void bind();
-    virtual void onRenderContextDestroyed();
-    
     int getBytesPerPixel();
-    GLenum getGlFormat();
-    GLenum getGlInternalFormat();
-    int getGlPixelType();
     bool hasAlpha();
     bool hasPremultipliedAlpha();
     
@@ -96,7 +81,9 @@ public:
     // ISerializeToVariant
     void fromVariant(const variant& v) override;
     void toVariant(variant& v) override;
-    
+
+    void texInvalidate();
+
 
     // Platform-specific instantiation
     static Bitmap* create(int width, int height, int format);

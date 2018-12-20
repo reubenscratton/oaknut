@@ -619,3 +619,28 @@ close $scheme_fh;
 
 write_shared_scheme("web_asmjs", $web_asmjs_target_ref);
 write_shared_scheme("web_wasm", $web_wasm_target_ref);
+
+# Turn off the XCBuild system added with XCode 10, as it doesn't
+# handle custom targets well (no 'clean' command)
+my $fh;
+open($fh, '>', $projectdir.'/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings');
+print $fh qq(<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>BuildSystemType</key>
+	<string>Original</string>
+</dict>
+</plist>
+);
+close $fh;
+open($fh, '>', $projectdir.'/project.xcworkspace/contents.xcworkspacedata');
+print $fh qq(<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "self:">
+   </FileRef>
+</Workspace>
+);
+close $fh;

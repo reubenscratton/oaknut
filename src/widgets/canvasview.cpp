@@ -25,7 +25,7 @@ void CanvasView::layout(RECT constraint) {
     
     _canvas->resize(_rect.size.width, _rect.size.height);
     Bitmap* bitmap = _canvas->getBitmap();
-    bitmap->_texSampleMethod = GL_NEAREST;
+    bitmap->_sampleNearest = true;
     _textureRenderOp->setBitmap(bitmap);
     
     redraw();

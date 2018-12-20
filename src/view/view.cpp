@@ -811,7 +811,7 @@ void View::updatePrivateSurface(bool updateSubviews) {
     assert(!_surface);
     _surface = _parent ? _parent->_surface : _window->_surface;
     if (_ownsPrivateSurface) {
-        _surface = new Surface(this);
+        _surface = _window->_renderer->createPrivateSurface();
         _needsFullRedraw = true;
     }
 
@@ -888,8 +888,8 @@ void View::detachFromWindow() {
 
     // If this view owns its surface, remove the op that renders it from the render target
     if (_ownsPrivateSurface && _surface->_op) {
-        _surface->cleanup();
         _surface->_op = NULL;
+        delete _surface;
     }
 
     _surface = nullptr;
