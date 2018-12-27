@@ -35,22 +35,23 @@ public:
     virtual int numQuads();
     virtual bool canMergeWith(const RenderOp* op);
     virtual void setRect(const RECT& rect);
-    virtual void render(Renderer* renderer, class Surface* surface);
+    virtual void prepareToRender(Renderer* renderer, class Surface* surface);
+    virtual void render(Renderer* renderer, int numQuads, int vboOffset);
     virtual bool intersects(RenderOp* op);
     virtual void asQuads(QUAD* quad);
     virtual void rectToSurfaceQuad(RECT rect, QUAD* quad);
-    void invalidateBatchGeometry();
+    virtual void invalidateBatchGeometry();
     RECT surfaceRect();
 
     // The op is 'valid' once it has chosen a shader that can satisfy its render params. If the
     // render params change then the shader needs to be validated and possibly generated on demand
     bool _shaderValid;
-    void invalidate();
+    virtual void invalidate();
     virtual void validateShader(Renderer* renderer)=0;
-    void rebatchIfNecessary();
+    virtual void rebatchIfNecessary();
 
-    // Property setters that trigger rebatch
-    void setBlendMode(int blendMode);
+    // Uniform setters. Changing a uniform will trigger a rebatch.
+    virtual void setBlendMode(int blendMode);
     virtual void setAlpha(float alpha);
     virtual void setColor(COLOR color);
     virtual void setInset(EDGEINSETS inset);

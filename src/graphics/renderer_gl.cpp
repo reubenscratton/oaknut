@@ -16,10 +16,13 @@
 #ifndef GL_TEXTURE_EXTERNAL_OES
 #define GL_TEXTURE_EXTERNAL_OES 0x8D65
 #endif
+#ifndef GL_TEXTURE_MAX_LEVEL
+#define GL_TEXTURE_MAX_LEVEL 0x813D
+#endif
 
 // NB: NEVER leave GL error checking in release builds! Each API will stall the CPU
 //     until the GPU catches up... very slow!
-#if 1
+#if 0
 #define check_gl(cmd, ...) cmd(__VA_ARGS__)
 #else
 static void checkGlErr(const char* file, int line, const char* cmd) {
@@ -212,30 +215,7 @@ int GLTexture::getSampler() {
 }
 
 
-template <class T>
-class Uniform {
-public:
-    GLint position;  // as returned by glGetUniformLocation
-    
-    T val;
-    bool dirty;
-    Uniform() {
-        dirty = true;
-    }
-    virtual void set(T val) {
-        if (val != this->val) {
-            this->val = val;
-            dirty = true;
-        }
-    }
-    virtual void use() {
-        if (dirty) {
-            load();
-            dirty = false;
-        }
-    }
-    void load();
-};
+
 
 template<>
 void Uniform<int>::load() {
@@ -267,6 +247,11 @@ void Uniform<VECTOR4>::load() {
     check_gl(glUniform4f, position, val.x, val.y, val.z, val.w);
 }
 
+template<>
+void Uniform<MATRIX4>::load() {
+    check_gl(glUniformMatrix4fv, position, 1, 0, val.get());
+}
+
 
 template<>
 void Uniform<POINT>::load() {
@@ -277,30 +262,143 @@ void Uniform<POINT>::load() {
 
 
 
-class GLShader : public Shader {
+class GLShaderBase : public Shader {
 public:
     
     bool _loaded;
     GLuint _program;
     GLuint _vertexConfig;
-    GLint _posMvp;
-    MATRIX4 _mvp;
-    Uniform<float> _alpha;
+
+    GLShaderBase(ShaderFeatures features) : Shader(features) {
+    }
+    
+    virtual void findVariables() {
+        _mvp.position = check_gl(glGetUniformLocation, _program, "mvp");
+    }
+    
+    void configureForRenderOp(RenderOp* op, const MATRIX4& mvp) override {
+        _mvp.set(mvp);
+        _mvp.use();
+        if (_features.alpha) {
+            _alpha.set(op->_alpha);
+            _alpha.use();
+        }
+    }
+    
+    void unload() override {
+        if (_loaded) {
+            _loaded = false;
+            check_gl(glDeleteShader, _program);
+            _mvp.dirty = true;
+        }
+    }
+
+
+protected:
+    
+    void loadShaders(const char* szVertexShader, const char* szFragShader) {
+        GLuint vertexShader = loadShader(GL_VERTEX_SHADER, szVertexShader);
+        GLuint pixelShader = loadShader(GL_FRAGMENT_SHADER, szFragShader);
+        _program = check_gl(glCreateProgram);
+        
+        _vertexConfig = VERTEXATTRIBS_CONFIG_NORMAL;
+        check_gl(glBindAttribLocation, _program, VERTEXATTRIB_POSITION, "vPosition");
+        check_gl(glBindAttribLocation, _program, VERTEXATTRIB_TEXCOORD, "texcoord");
+        check_gl(glBindAttribLocation, _program, VERTEXATTRIB_COLOR, "color");
+        
+        check_gl(glAttachShader, _program, vertexShader);
+        check_gl(glAttachShader, _program, pixelShader);
+        
+        check_gl(glLinkProgram, _program);
+        GLint linkStatus = GL_FALSE;
+        check_gl(glGetProgramiv, _program, GL_LINK_STATUS, &linkStatus);
+        if (linkStatus != GL_TRUE) {
+            GLint bufLength = 0;
+            check_gl(glGetProgramiv, _program, GL_INFO_LOG_LENGTH, &bufLength);
+            if (bufLength) {
+                char* buf = (char*) malloc(bufLength);
+                if (buf) {
+                    check_gl(glGetProgramInfoLog,_program, bufLength, NULL, buf);
+                    printf("Could not link program:\n%s\n", buf);
+                    free(buf);
+                }
+            }
+            check_gl(glDeleteProgram, _program);
+            _program = 0;
+        }
+        
+        if (!_program) {
+            printf("Could not create program.");
+            return;
+        }
+        findVariables();
+    }
+    GLuint loadShader(GLenum shaderType, const char* pSource) {
+        GLuint shader = check_gl(glCreateShader, shaderType);
+        if (shader) {
+            string source =
+#if TARGET_OS_IOS || defined(ANDROID) || defined(EMSCRIPTEN)
+            "precision mediump float;\n";
+            //"precision highp vec2;\n"
+            //"precision highp mat4;\n"
+            //"precision lowp vec4;\n";
+#else
+            "#version 120\n";
+#endif
+            source.append(pSource);
+#if TARGET_OS_OSX || PLATFORM_LINUX
+            // Surely to god there's a better way than this...!
+            int x;
+            while ((x = (int)source.find("highp")) >= 0) source.erase(x, x+5);
+            while ((x = (int)source.find("lowp")) >= 0) source.erase(x, x+4);
+            while ((x = (int)source.find("mediump")) >= 0) source.erase(x, x+7);
+#endif
+            
+            pSource = source.data();
+            check_gl(glShaderSource, shader, 1, &pSource, NULL);
+            check_gl(glCompileShader, shader);
+            GLint compiled = 0;
+            check_gl(glGetShaderiv, shader, GL_COMPILE_STATUS, &compiled);
+            if (!compiled) {
+                GLint infoLen = 0;
+                check_gl(glGetShaderiv, shader, GL_INFO_LOG_LENGTH, &infoLen);
+                if (infoLen) {
+                    char* buf = (char*) malloc(infoLen);
+                    if (buf) {
+                        check_gl(glGetShaderInfoLog, shader, infoLen, NULL, buf);
+                        printf("Could not compile shader %d:\n%s\n", shaderType, buf);
+                        free(buf);
+                    }
+                    check_gl(glDeleteShader, shader);
+                    shader = 0;
+                }
+            }
+        }
+        return shader;
+    }
+
+
+};
+
+class GLShader : public GLShaderBase {
+public:
+    
     Uniform<int> _sampler;
     Uniform<COLOR> _strokeColor;
     Uniform<VECTOR4> _u;
     Uniform<float> _radius;
     Uniform<VECTOR4> _radii;
     
-    GLShader(ShaderFeatures features) : Shader(features) {
+    GLShader(ShaderFeatures features) : GLShaderBase(features) {
     }
 
-    void load() {
+    void load() override {
         bool useTexCoords = false;
         bool useTexSampler = false;
         int roundRect = _features.roundRect;
         if (roundRect) {
-            useTexCoords = true; // we don't use the sampler, we just want the texture attribute data!
+            useTexCoords = true; // we don't use the sampler, we just want the texcoord attributes, which are
+                                 // not actually texture coords, v_texcoords is x-dist and y-dist from quad centre
         }
         if (_features.sampler0 != GLSAMPLER_NONE) {
             useTexSampler = true;
@@ -338,8 +436,7 @@ public:
             fs += "uniform mediump float alpha;\n";
         }
         if (roundRect) {
-            fs += "varying vec2 v_texcoord;\n" // not actually texture coords, this is x-dist and y-dist from quad centre
-            "uniform vec4 u;\n" // xy = quad half size, w = strokeWidth
+            fs += "uniform vec4 u;\n" // xy = quad half size, w = strokeWidth
             "uniform lowp vec4 strokeColor;\n";
             if (roundRect == SHADER_ROUNDRECT_1) {
                 fs += "uniform mediump float radius;\n";
@@ -406,12 +503,11 @@ public:
         loadShaders(vs.data(), fs.data());
     }
     
+
     void unload() override {
-        check_gl(glDeleteShader, _program);
-        _loaded = false;
+        GLShaderBase::unload();
         _sampler.dirty = true;
         _alpha.dirty = true;
-        memset(&_mvp, 0, sizeof(_mvp));
         if (_features.roundRect) {
             _strokeColor.dirty = true;
             _u.dirty = true;
@@ -424,7 +520,7 @@ public:
     }
 
     void findVariables() override {
-        _posMvp = check_gl(glGetUniformLocation, _program, "mvp");
+        GLShaderBase::findVariables();
         if (_features.sampler0 != GLSAMPLER_NONE) {
             _sampler.position = check_gl(glGetUniformLocation, _program, "texture");
         }
@@ -442,157 +538,61 @@ public:
         }
     }
     
-    void use(Renderer* renderer) override {
-        if (!_loaded) {
-            _loaded = true;
-            load();
-        }
-        if (renderer->_currentProg != _program) {
-            renderer->_currentProg = _program;
-            check_gl(glUseProgram,_program);
-        }
-        
-        // These are program-specific...
-        if (renderer->_currentVertexConfig != _vertexConfig) {
-            renderer->setVertexConfig(_vertexConfig);
-        }
-    }
     
-    void setAlpha(float alpha) override {
-        if (_alpha.position>=0) {
-            _alpha.set(alpha);
-        }
-    }
     
-
-    void lazyLoadUniforms() override {
+    void configureForRenderOp(RenderOp* op, const MATRIX4& mvp) override {
+        GLShaderBase::configureForRenderOp(op, mvp);
+        if (_features.alpha) {
+            _alpha.set(op->_alpha);
+        }
         if (_features.sampler0) {
             _sampler.use();
         }
-        if (_features.alpha) {
-            _alpha.use();
-        }
         if (_features.roundRect) {
+            RectRenderOp* rectOp = (RectRenderOp*)op;
+            _strokeColor.set(rectOp->_strokeColor);
             _strokeColor.use();
+            _u.set(VECTOR4(op->_rect.size.width/2,op->_rect.size.height/2,0,rectOp->_strokeWidth));
             _u.use();
             if (_features.roundRect == SHADER_ROUNDRECT_1) {
+                _radius.set(rectOp->_radii[0]);
                 _radius.use();
             } else {
+                _radii.set(rectOp->_radii);
                 _radii.use();
             }
         }
     }
     
-    void setMvp(const MATRIX4& mvp) override {
-        if (0!=memcmp(mvp.get(), _mvp.get(), 16*sizeof(float))) {
-            _mvp = mvp;
-            check_gl(glUniformMatrix4fv, _posMvp, 1, 0, mvp.get());
-        }
-    }
     
-    void configureForRenderOp(class RectRenderOp* op) override {
-        if (_features.alpha) {
-            _alpha.set(op->_alpha);
-        }
-        if (_features.roundRect) {
-            _strokeColor.set(op->_strokeColor);
-            _u.set(VECTOR4(op->_rect.size.width/2,op->_rect.size.height/2,0,op->_strokeWidth));
-            if (_features.roundRect == SHADER_ROUNDRECT_1) {
-                _radius.set(op->_radii[0]);
-            } else {
-                _radii.set(op->_radii);
-            }
-        }
-    }
-    
-    
-protected:
-    void loadShaders(const char* szVertexShader, const char* szFragShader) {
-        GLuint vertexShader = loadShader(GL_VERTEX_SHADER, szVertexShader);
-        GLuint pixelShader = loadShader(GL_FRAGMENT_SHADER, szFragShader);
-        _program = check_gl(glCreateProgram);
-        
-        _vertexConfig = VERTEXATTRIBS_CONFIG_NORMAL;
-        check_gl(glBindAttribLocation, _program, VERTEXATTRIB_POSITION, "vPosition");
-        check_gl(glBindAttribLocation, _program, VERTEXATTRIB_TEXCOORD, "texcoord");
-        check_gl(glBindAttribLocation, _program, VERTEXATTRIB_COLOR, "color");
-        
-        check_gl(glAttachShader, _program, vertexShader);
-        check_gl(glAttachShader, _program, pixelShader);
-        
-        check_gl(glLinkProgram, _program);
-        GLint linkStatus = GL_FALSE;
-        check_gl(glGetProgramiv, _program, GL_LINK_STATUS, &linkStatus);
-        if (linkStatus != GL_TRUE) {
-            GLint bufLength = 0;
-            check_gl(glGetProgramiv, _program, GL_INFO_LOG_LENGTH, &bufLength);
-            if (bufLength) {
-                char* buf = (char*) malloc(bufLength);
-                if (buf) {
-                    check_gl(glGetProgramInfoLog,_program, bufLength, NULL, buf);
-                    printf("Could not link program:\n%s\n", buf);
-                    free(buf);
-                }
-            }
-            check_gl(glDeleteProgram, _program);
-            _program = 0;
-        }
-        
-        if (!_program) {
-            printf("Could not create program.");
-            return;
-        }
-        findVariables();
-        glGetError();
-    }
-    
-    GLuint loadShader(GLenum shaderType, const char* pSource) {
-        GLuint shader = check_gl(glCreateShader, shaderType);
-        if (shader) {
-            string source =
-#if TARGET_OS_IOS || defined(ANDROID) || defined(EMSCRIPTEN)
-            "precision mediump float;\n";
-            //"precision highp vec2;\n"
-            //"precision highp mat4;\n"
-            //"precision lowp vec4;\n";
-#else
-            "#version 120\n";
-#endif
-            source.append(pSource);
-#if TARGET_OS_OSX || PLATFORM_LINUX
-            // Surely to god there's a better way than this...!
-            int x;
-            while ((x = (int)source.find("highp")) >= 0) source.erase(x, x+5);
-            while ((x = (int)source.find("lowp")) >= 0) source.erase(x, x+4);
-            while ((x = (int)source.find("mediump")) >= 0) source.erase(x, x+7);
-#endif
-            
-            pSource = source.data();
-            check_gl(glShaderSource, shader, 1, &pSource, NULL);
-            check_gl(glCompileShader, shader);
-            GLint compiled = 0;
-            check_gl(glGetShaderiv, shader, GL_COMPILE_STATUS, &compiled);
-            if (!compiled) {
-                GLint infoLen = 0;
-                check_gl(glGetShaderiv, shader, GL_INFO_LOG_LENGTH, &infoLen);
-                if (infoLen) {
-                    char* buf = (char*) malloc(infoLen);
-                    if (buf) {
-                        check_gl(glGetShaderInfoLog, shader, infoLen, NULL, buf);
-                        printf("Could not compile shader %d:\n%s\n", shaderType, buf);
-                        free(buf);
-                    }
-                    check_gl(glDeleteShader, shader);
-                    shader = 0;
-                }
-            }
-        }
-        return shader;
-    }
 };
 
 
 
+void GLRenderer::setActiveShader(Shader* shader) {
+    GLShaderBase* glshader = (GLShaderBase*)shader;
+    if (!glshader->_loaded) {
+        glshader->_loaded = true;
+        glshader->load();
+    }
+    if (_currentShader != shader) {
+        _currentShader = shader;
+        check_gl(glUseProgram, glshader->_program);
+    }
+    
+    // These are program-specific...
+    if (_currentVertexConfig != glshader->_vertexConfig) {
+        _currentVertexConfig = glshader->_vertexConfig;
+        check_gl(glVertexAttribPointer, VERTEXATTRIB_POSITION, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), 0);
+        check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), (void*)8);
+        //    check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_UNSIGNED_SHORT, GL_TRUE, sizeof(VERTEX), (void*)8);
+        check_gl(glVertexAttribPointer, VERTEXATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(VERTEX), (void*)16);
+        
+        check_gl(glEnableVertexAttribArray, VERTEXATTRIB_POSITION);
+        check_gl(glEnableVertexAttribArray, VERTEXATTRIB_TEXCOORD);
+        check_gl(glEnableVertexAttribArray, VERTEXATTRIB_COLOR);
+    }
+}
 
 GLRenderer::GLRenderer() : Renderer() {
     _quadBuffer._resizeHook = [=](int oldItemCount, int newItemCount) {
@@ -672,6 +672,15 @@ void GLRenderer::popClip() {
     }
 }
 
+void GLRenderer::uploadQuad(ItemPool::Alloc* alloc) {
+    check_gl(glBufferSubData, GL_ARRAY_BUFFER, alloc->offset*sizeof(QUAD), alloc->count*sizeof(QUAD), alloc->addr());
+}
+
+void GLRenderer::renderPrivateSurface(Surface* privateSurface, ItemPool::Alloc* alloc) {
+    GLSurface* surface = (GLSurface*)privateSurface;
+    check_gl(glBindTexture, GL_TEXTURE_2D, surface->_tex);
+    check_gl(glDrawElements, GL_TRIANGLES, 6 * 1, GL_UNSIGNED_SHORT, (void*)((alloc->offset)*6*sizeof(GLshort)));
+}
 
 void GLRenderer::flushQuadBuffer() {
     if (_fullBufferUploadNeeded) {
@@ -748,21 +757,9 @@ void GLRenderer::prepareToDraw() {
     _renderCounter++;
     _currentSurface = NULL;
     _currentTexture = NULL;
-    _currentProg = 0;
+    _currentShader = NULL;
 }
 
-void GLRenderer::setVertexConfig(int vertexConfig) {
-    _currentVertexConfig = vertexConfig;
-    check_gl(glVertexAttribPointer, VERTEXATTRIB_POSITION, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), 0);
-    check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), (void*)8);
-    //    check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_UNSIGNED_SHORT, GL_TRUE, sizeof(VERTEX), (void*)8);
-    check_gl(glVertexAttribPointer, VERTEXATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(VERTEX), (void*)16);
-    
-    check_gl(glEnableVertexAttribArray, VERTEXATTRIB_POSITION);
-    check_gl(glEnableVertexAttribArray, VERTEXATTRIB_TEXCOORD);
-    check_gl(glEnableVertexAttribArray, VERTEXATTRIB_COLOR);
-    
-}
 
 
 
@@ -815,8 +812,8 @@ void GLRenderer::convertTexture(GLTexture* texture, int width, int height) {
  on the iPhone 6S it turns out that unless you specify it you get wonky vertex arithmetic
  and horrible off-by-half-a-pixel rendering errors everywhere. Vertices must always be highp.
  */
-/*
-const char* oak::TEXTURE_VERTEX_SHADER =
+
+const char* TEXTURE_VERTEX_SHADER =
 "attribute highp vec2 vPosition;\n"
 "uniform highp mat4 mvp;\n"
 "attribute lowp vec4 color;\n"
@@ -828,10 +825,6 @@ const char* oak::TEXTURE_VERTEX_SHADER =
 "  v_texcoord = texcoord;\n"
 "  v_color=color;\n"
 "}\n";
-
-
-
-*/
 
 
 
@@ -905,6 +898,233 @@ Shader* GLRenderer::getShader(ShaderFeatures features) {
  }
  */
 
+
+class GLBlurShader : public GLShaderBase {
+public:
+    
+    GLuint _posTexOffset;
+    BlurRenderOp* _op;
+    
+    GLBlurShader(BlurRenderOp* op) : GLShaderBase(ShaderFeatures()), _op(op) {
+    }
+
+    void load() override {
+    
+        
+        int numOptimizedOffsets = (int)_op->_optimizedOffsets.size();
+        
+        char ach[128];
+        
+        string vertexShader =
+        "attribute highp vec2 vPosition;\n"
+        "uniform highp mat4 mvp;\n"
+        "attribute vec2 texcoord;\n"
+        "uniform vec2 texOffset;\n";
+        
+        sprintf(ach, "varying vec2 blurCoordinates[%d];\n", 1 + numOptimizedOffsets * 2);
+        vertexShader.append(ach);
+        
+        vertexShader.append("void main() {\n"
+                            "   gl_Position = mvp * vec4(vPosition,0,1);\n");
+        vertexShader.append("   blurCoordinates[0] = texcoord.xy;\n");
+        for (uint32_t i = 0; i < numOptimizedOffsets; i++) {
+            sprintf(ach,
+                    "   blurCoordinates[%lu] = texcoord.xy + texOffset * %f;\n"
+                    "   blurCoordinates[%lu] = texcoord.xy - texOffset * %f;\n",
+                    (unsigned long)((i * 2) + 1), _op->_optimizedOffsets[i],
+                    (unsigned long)((i * 2) + 2), _op->_optimizedOffsets[i]);
+            vertexShader.append(ach);
+        }
+        
+        vertexShader.append("}\n");
+        
+        
+        
+        string fragShader =
+        "uniform sampler2D texture;\n"
+        "uniform vec2 texOffset;\n";
+        sprintf(ach,
+                "varying highp vec2 blurCoordinates[%d];\n", 1 + numOptimizedOffsets * 2);
+        fragShader.append(ach);
+        
+        fragShader.append("void main() {\n");
+        
+        // Inner texture loop
+        sprintf(ach, "lowp vec4 c = texture2D(texture, blurCoordinates[0]) * %f;\n", _op->_standardGaussianWeights[0]);
+        fragShader.append(ach);
+        for (uint32_t i = 0; i < numOptimizedOffsets; i++) {
+            GLfloat firstWeight = _op->_standardGaussianWeights[i * 2 + 1];
+            GLfloat secondWeight = _op->_standardGaussianWeights[i * 2 + 2];
+            GLfloat optimizedWeight = firstWeight + secondWeight;
+            sprintf(ach, "c += texture2D(texture, blurCoordinates[%lu]) * %f;\n", (unsigned long)((i * 2) + 1), optimizedWeight);
+            fragShader.append(ach);
+            sprintf(ach, "c += texture2D(texture, blurCoordinates[%lu]) * %f;\n", (unsigned long)((i * 2) + 2), optimizedWeight);
+            fragShader.append(ach);
+        }
+        
+        // If the number of required samples exceeds the amount we can pass in via varyings, we
+        // have to do dependent texture reads in the fragment shader
+        uint32_t trueNumberOfOptimizedOffsets = _op->_blurRadius / 2 + (_op->_blurRadius % 2);
+        
+
+        if (trueNumberOfOptimizedOffsets > numOptimizedOffsets) {
+            for (uint32_t i = numOptimizedOffsets; i < trueNumberOfOptimizedOffsets; i++) {
+                GLfloat firstWeight = _op->_standardGaussianWeights[i * 2 + 1];
+                GLfloat secondWeight = _op->_standardGaussianWeights[i * 2 + 2];
+                
+                GLfloat optimizedWeight = firstWeight + secondWeight;
+                GLfloat optimizedOffset = (firstWeight * (i * 2 + 1) + secondWeight * (i * 2 + 2)) / optimizedWeight;
+                
+                sprintf(ach, "c += texture2D(texture, blurCoordinates[0] + texOffset * %f) * %f;\n", optimizedOffset, optimizedWeight);
+                fragShader.append(ach);
+                sprintf(ach, "c += texture2D(texture, blurCoordinates[0] - texOffset * %f) * %f;\n", optimizedOffset, optimizedWeight);
+                fragShader.append(ach);
+            }
+        }
+        
+        fragShader.append("   gl_FragColor = c;\n"
+                          "}\n");
+        
+        loadShaders(vertexShader.data(), fragShader.data());
+        
+        _posTexOffset = glGetUniformLocation(_program, "texOffset");
+    }
+ 
+};
+
+
+
+class GLPostBlurShader : public GLShaderBase {
+public:
+    GLPostBlurShader() : GLShaderBase(ShaderFeatures()) {
+    }
+    
+    void load() override {
+        loadShaders(TEXTURE_VERTEX_SHADER,
+                    "varying vec2 v_texcoord;\n"
+                    "varying lowp vec4 v_color;\n"
+                    "uniform sampler2D texture;\n"
+                    "const lowp vec3 luminanceWeighting = vec3(0.2125, 0.7154, 0.0721);\n"
+                    "void main() {\n"
+                    // Desaturate
+                    "   lowp vec4 c = mix(texture2D(texture, v_texcoord), v_color, 0.9);\n"
+                    "   lowp float lum = dot(c.rgb, luminanceWeighting);\n"
+                    "   lowp float lumRatio = ((0.5 - lum) * 0.1);\n"
+                    "   gl_FragColor = vec4(mix(vec3(lum), c.rgb, 0.8) + lumRatio, 1.0);\n"
+                    "}\n");
+    }
+    
+};
+
+
+
+
+
+void BlurRenderOp::rendererLoad(Renderer* renderer) {
+    check_gl(glGenTextures, 3, _textureIds);
+    for (int i=0 ; i<3 ; i++) {
+        check_gl(glBindTexture, GL_TEXTURE_2D, _textureIds[i]);
+        check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    }
+    
+    // Set up a two private FBOs and bind textures 1 and 2 to them
+    GLint oldFBO;
+    check_gl(glGetIntegerv, GL_FRAMEBUFFER_BINDING, &oldFBO);
+    check_gl(glGenFramebuffers, 2, _fb);
+    check_gl(glBindFramebuffer, GL_FRAMEBUFFER, _fb[0]);
+    check_gl(glBindTexture, GL_TEXTURE_2D, _textureIds[1]);
+    check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _textureIds[1], 0);
+    check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+    check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+    check_gl(glBindFramebuffer, GL_FRAMEBUFFER, _fb[1]);
+    check_gl(glBindTexture, GL_TEXTURE_2D, _textureIds[2]);
+    check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _textureIds[2], 0);
+    check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+    check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+    check_gl(glBindFramebuffer, GL_FRAMEBUFFER, oldFBO);
+    
+    _blurShader = new GLBlurShader(this);
+    _shader = new GLPostBlurShader();
+}
+
+void BlurRenderOp::rendererUnload(Renderer* renderer) {
+    if (_textureIds[0]) {
+        check_gl(glDeleteTextures, 3, _textureIds);
+        check_gl(glDeleteFramebuffers, 2, _fb);
+    }
+}
+
+
+void BlurRenderOp::rendererResize(Renderer* renderer) {
+    
+    
+    GLint otex;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &otex);
+    
+
+    //
+    check_gl(glBindTexture, GL_TEXTURE_2D, _textureIds[0]);
+    check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+    check_gl(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 2);
+    check_gl(glTexImage2D, GL_TEXTURE_2D, 0, GL_RGB, _fullSizePow2.width, _fullSizePow2.height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, NULL);
+    
+    check_gl(glBindTexture, GL_TEXTURE_2D, _textureIds[1]);
+    check_gl(glTexImage2D, GL_TEXTURE_2D, 0, GL_RGB, _downsampledSize.width, _downsampledSize.height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    
+    check_gl(glBindTexture, GL_TEXTURE_2D, _textureIds[2]);
+    check_gl(glTexImage2D, GL_TEXTURE_2D, 0, GL_RGB, _downsampledSize.width, _downsampledSize.height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glBindTexture(GL_TEXTURE_2D, otex);
+}
+
+
+void BlurRenderOp::render(Renderer* renderer, int numQuads, int vboOffset) {
+    
+    _blurShader->configureForRenderOp(this, _mvp);
+    
+    GLint viewport[4];
+    check_gl(glGetIntegerv, GL_VIEWPORT, viewport);
+    
+    // Copy the area of framebuffer to be blurred to a private pow2 texture and
+    // generate 2 levels of mipmap (ie 1/2 and 1/4 sizes)
+    check_gl(glBindTexture, GL_TEXTURE_2D, _textureIds[0]);
+    RECT wrect = _rect;
+    wrect.origin.y += viewport[3] - _rect.size.height;
+    check_gl(glCopyTexSubImage2D, GL_TEXTURE_2D, 0, 0, 0, wrect.origin.x, wrect.origin.y, wrect.size.width, wrect.size.height);
+    check_gl(glGenerateMipmap, GL_TEXTURE_2D);
+    
+    // Switch to private FBO
+    GLint oldFBO;
+    check_gl(glGetIntegerv, GL_FRAMEBUFFER_BINDING, &oldFBO);
+    
+    // 1D blur horizontally, source is 1/4-sized mipmap and destination is fb0
+    check_gl(glBindFramebuffer, GL_FRAMEBUFFER, _fb[0]);
+    GLBlurShader* blurShader = (GLBlurShader*)_blurShader._obj;
+    check_gl(glUniform2f, blurShader->_posTexOffset, 0, 1.f/_downsampledSize.height);
+    glViewport(0, 0, _downsampledSize.width, _downsampledSize.height);
+    check_gl(glDrawElements, GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, (void*)((_alloc->offset)*6*sizeof(GLshort)));
+    
+    // 1D blur vertically
+    check_gl(glBindTexture, GL_TEXTURE_2D, _textureIds[1]);
+    check_gl(glBindFramebuffer, GL_FRAMEBUFFER, _fb[1]);
+    check_gl(glUniform2f, blurShader->_posTexOffset, 1.f/_downsampledSize.width, 0);
+    check_gl(glDrawElements, GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, (void*)((_alloc->offset)*6*sizeof(GLshort)));
+    
+    // Switch back to rendering to the backbuffer
+    check_gl(glBindFramebuffer, GL_FRAMEBUFFER, oldFBO);
+    check_gl(glViewport, viewport[0], viewport[1], viewport[2], viewport[3]);
+    check_gl(glBindTexture, GL_TEXTURE_2D, _textureIds[2]);
+    
+    // Normal prepareRender using the post-blur shader
+    renderer->setBlendMode(_blendMode);
+    renderer->setActiveShader(_shader);
+    _shader->configureForRenderOp(this, *_pmvp);
+
+    RenderOp::render(renderer, numQuads, vboOffset);
+
+}
 
 
 

@@ -106,11 +106,13 @@ string debugRect(const RECT& rect) {
 }
 
 
-void RenderOp::render(Renderer* renderer, Surface* surface) {
+void RenderOp::prepareToRender(Renderer* renderer, Surface* surface) {
     renderer->setBlendMode(_blendMode);
-    _shader->use(renderer);
-    _shader->setMvp(surface->_mvp);
-    _shader->setAlpha(_alpha);
+    renderer->setActiveShader(_shader);
+    _shader->configureForRenderOp(this, surface->_mvp);
+}
+void RenderOp::render(Renderer* renderer, int numQuads, int vboOffset) {
+    renderer->drawQuads(numQuads, vboOffset + _renderBase);
 }
 
 void RenderOp::invalidateBatchGeometry() {

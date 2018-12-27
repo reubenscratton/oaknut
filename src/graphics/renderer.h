@@ -37,7 +37,7 @@ union ShaderFeatures {
 
 
 
-class Texture {
+class Texture : public Object {
 public:
     Texture(Bitmap* bitmap);
     virtual ~Texture();
@@ -52,20 +52,45 @@ public:
     list<Texture*>::iterator _it;
 };
 
-class Shader {
+template <class T>
+class Uniform {
+public:
+    GLint position;  // as returned by glGetUniformLocation
+    
+    T val;
+    bool dirty;
+    Uniform() {
+        dirty = true;
+    }
+    virtual void set(T val) {
+        if (val != this->val) {
+            this->val = val;
+            dirty = true;
+        }
+    }
+    virtual void use() {
+        if (dirty) {
+            load();
+            dirty = false;
+        }
+    }
+    void load();
+};
+
+class Shader : public Object  {
 public:
     ShaderFeatures _features;
+    Uniform<MATRIX4> _mvp;
+    Uniform<float> _alpha;
 
     Shader(ShaderFeatures features);
 
+    virtual void load() =0;
     virtual void unload() =0;
-    virtual void findVariables() =0;
-    virtual void lazyLoadUniforms() =0;
-    virtual void setMvp(const MATRIX4& mvp) =0;
-    virtual void setAlpha(float alpha) =0;
-    virtual void configureForRenderOp(class RectRenderOp* op) =0;
-    virtual void use(class Renderer* renderer) =0;
+    virtual void configureForRenderOp(class RenderOp* op, const MATRIX4& mvp) =0;
 };
+
+
 
 /**
  Abstract base class for hardware-accelerated rendering.
@@ -78,7 +103,7 @@ public:
 
     // Render state (used during render loop)
     bool _doneInit;
-    GLuint _currentProg;
+    Shader* _currentShader;
     int _currentVertexConfig;
     int _blendMode;
     stack<RECT> _clips;
@@ -98,7 +123,6 @@ public:
     virtual Surface* getPrimarySurface() =0;
     virtual Surface* createPrivateSurface() =0;
     virtual Shader* getShader(ShaderFeatures features)=0;
-    virtual void setVertexConfig(int vertexConfig)=0;
     virtual void pushClip(RECT clip) =0;
     virtual void popClip() =0;
     virtual Texture* createTexture(Bitmap* bitmap)=0;
@@ -106,9 +130,12 @@ public:
     virtual void setBlendMode(int blendMode) =0;
     virtual void drawQuads(int numQuads, int index) =0;
     virtual void prepareToDraw() =0;
+    virtual void setActiveShader(Shader* shader) =0;
+    virtual void uploadQuad(ItemPool::Alloc* alloc) =0;
+    virtual void renderPrivateSurface(Surface* privateSurface, ItemPool::Alloc* alloc) =0;
+
 
     static Renderer* create();
-    static Renderer* current;
     
 protected:
     Renderer();

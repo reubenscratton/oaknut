@@ -130,10 +130,6 @@ void RectRenderOp::asQuads(QUAD *quad) {
     }
 }
 
-void RectRenderOp::render(Renderer* renderer, Surface* surface) {
-    RenderOp::render(renderer, surface);
-    _shader->configureForRenderOp(this);
-}
 
 
 

@@ -39,14 +39,16 @@ public:
     Surface* getPrimarySurface() override;
     Surface* createPrivateSurface() override;
     Shader* getShader(ShaderFeatures features) override;
-    void setVertexConfig(int vertexConfig) override;
+    Texture* createTexture(Bitmap* bitmap) override;
+    void prepareToDraw() override;
+    void setBlendMode(int blendMode) override;
+    void setActiveShader(Shader* shader) override;
     void pushClip(RECT clip) override;
     void popClip() override;
-    Texture* createTexture(Bitmap* bitmap) override;
     void flushQuadBuffer() override;
-    void setBlendMode(int blendMode) override;
+    void uploadQuad(ItemPool::Alloc* alloc) override;
     void drawQuads(int numQuads, int index) override;
-    void prepareToDraw() override;
+    void renderPrivateSurface(Surface* privateSurface, ItemPool::Alloc* alloc) override;
 
     // Helpers
     void convertTexture(GLTexture* texture, int width, int height);

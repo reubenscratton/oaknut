@@ -7,6 +7,55 @@
 
 #include <oaknut.h>
 
+
+namespace oak {
+class PrivateSurfaceRenderOp : public TextureRenderOp {
+public:
+    ItemPool::Alloc* _alloc;
+    bool _dirty;
+    
+    PrivateSurfaceRenderOp(Renderer* renderer, View* view, const RECT& rect) : TextureRenderOp(rect, NULL, NULL, 0) {
+        _view = view;
+        _alloc = renderer->allocQuads(1, NULL);
+        _dirty = true;
+        validateShader(renderer);
+    }
+    ~PrivateSurfaceRenderOp() {
+        _alloc->pool->free(_alloc);
+        _alloc = NULL;
+    }
+
+    // Overrides
+    void rectToSurfaceQuad(RECT rect, QUAD* quad) override {
+        rect.origin += _view->_surfaceOrigin;
+        *quad = QUAD(rect, 0);
+    }
+    void validateShader(Renderer* renderer) override {
+        //TextureRenderOp::validateShader(renderer);
+        ShaderFeatures features;
+        features.sampler0 = 1; //_bitmap->_texture->getSampler();
+        features.alpha = (_alpha<1.0f);
+        features.tint = (_color!=0);
+        _shader = renderer->getShader(features);
+        _shaderValid = true;
+    }
+    void prepareToRender(Renderer* renderer, Surface* surface) override {
+        RenderOp::prepareToRender(renderer, surface);
+
+        if (_dirty) {
+            _dirty = false;
+            QUAD* quad = (QUAD*)_alloc->addr();
+            asQuads(quad);
+            renderer->uploadQuad(_alloc);
+        }
+
+        // Bind to the private surface texture
+        renderer->renderPrivateSurface(_view->_surface, _alloc);
+    }
+};
+}
+
+
 /**
  
  A deep dive into rendering
@@ -171,7 +220,7 @@ void RenderList::removeRenderOp(RenderOp* renderOp) {
 }
 
 
-void Surface::renderPhase1(View* view, Renderer* renderer, POINT origin) {
+void Surface::renderPhase1(Renderer* renderer, View* view, POINT origin) {
 
     if (view->_visibility != Visible) {
         return;
@@ -192,8 +241,7 @@ void Surface::renderPhase1(View* view, Renderer* renderer, POINT origin) {
         // Create the private surface op, allocating vertex space from the host surface's vbo
         if (!view->_surface->_op) {
             RECT rect = view->getOwnRect();
-            view->_surface->_op = new PrivateSurfaceRenderOp(view, rect);
-            view->_surface->_op->_alloc = renderer->allocQuads(1, NULL);
+            view->_surface->_op = new PrivateSurfaceRenderOp(renderer, view, rect);
         } else {
             if (sizeChanged) {
                 view->_surface->_op->setRect(view->getOwnRect());
@@ -240,7 +288,7 @@ void Surface::renderPhase1(View* view, Renderer* renderer, POINT origin) {
     // Recurse subviews
     for (auto it = view->_subviews.begin(); it!=view->_subviews.end() ; it++) {
         sp<View>& subview = *it;
-        surface->renderPhase1(subview, renderer, origin);
+        surface->renderPhase1(renderer, subview, origin);
     }
     
     // Draw decor renderlist
@@ -255,8 +303,10 @@ void Surface::renderPhase1(View* view, Renderer* renderer, POINT origin) {
         surface->_renderListsInsertionPos = view->_renderListDecor->_surfaceIt;
     }
 
+    // If this is a private surface then got to ensure vertex buffer is up to date
+    // Wondering if surfaces should own their own vertex buffers...
     if (usesPrivateSurface) {
-        surface->validateRenderOps(renderer);
+        surface->renderPhase2(renderer);
     }
 
     if (changesMvp) {
@@ -265,42 +315,12 @@ void Surface::renderPhase1(View* view, Renderer* renderer, POINT origin) {
 
 }
 
-
-PrivateSurfaceRenderOp::PrivateSurfaceRenderOp(View* view, const RECT& rect)  : TextureRenderOp(rect, NULL, NULL, 0) {
-    _view = view;
-    _dirty = true;
-    validateShader(Renderer::current);
-}
-PrivateSurfaceRenderOp::~PrivateSurfaceRenderOp() {
-    if (_alloc) {
-        _alloc->pool->free(_alloc);
-        _alloc = NULL;
+void Surface::renderPhase2(Renderer* renderer) {
+    validateRenderOps(renderer);
+    for (RenderBatch* batch : _listBatches) {
+        batch->updateQuads(renderer);
     }
-}
-void PrivateSurfaceRenderOp::validateShader(Renderer* renderer) {
-    TextureRenderOp::validateShader(renderer);
-    _shaderValid = true;
-}
-void PrivateSurfaceRenderOp::rectToSurfaceQuad(RECT rect, QUAD* quad) {
-    rect.origin += _view->_surfaceOrigin;
-    *quad = QUAD(rect, 0);
-}
-void PrivateSurfaceRenderOp::render(Renderer* renderer, Surface* surface) {
-    RenderOp::render(renderer, surface);
-
-    // Bind to the private surface texture
-    assert(0); // todo
-    /*window->_currentTexture = NULL;
-    check_gl(glBindTexture, GL_TEXTURE_2D, _view->_surface->_tex);
-    
-    if (_dirty) {
-        _dirty = false;
-        QUAD* quad = (QUAD*)_alloc->addr();
-        asQuads(quad);
-        check_gl(glBufferSubData, GL_ARRAY_BUFFER, _alloc->offset*sizeof(QUAD), _alloc->count*sizeof(QUAD), _alloc->addr());
-    }
-    check_gl(glDrawElements, GL_TRIANGLES, 6 * 1, GL_UNSIGNED_SHORT, (void*)((_alloc->offset)*6*sizeof(GLshort)));
-     */
+    renderer->flushQuadBuffer();
 }
 
 static inline void renderRenderList(RenderList* renderList, Surface* surface, Renderer* renderer) {
@@ -324,7 +344,9 @@ static inline void renderRenderList(RenderList* renderList, Surface* surface, Re
     }
 
 }
-void Surface::renderPhase2(Surface* prevsurf, View* view, Renderer* renderer) {
+
+
+void Surface::renderPhase3(Renderer* renderer, View* view, Surface* prevsurf) {
     if (view->_visibility != Visible) {
         return;
     }
@@ -364,7 +386,7 @@ void Surface::renderPhase2(Surface* prevsurf, View* view, Renderer* renderer) {
     
     // Recurse subviews
     for (auto it=view->_subviews.begin() ; it != view->_subviews.end() ; it++) {
-        surface->renderPhase2(surface, *it, renderer);
+        surface->renderPhase3(renderer, *it, surface);
     }
 
     // Draw view decor content, if there is any
@@ -384,7 +406,7 @@ void Surface::renderPhase2(Surface* prevsurf, View* view, Renderer* renderer) {
     if (!surfaceIsCurrent) {
         if (prevsurf) {
             renderer->setCurrentSurface(prevsurf);
-            surface->_op->render(renderer, prevsurf);
+            surface->_op->prepareToRender(renderer, prevsurf);
             if (surface->_supportsPartialRedraw) {
                 surface->_invalidRegion.rects.clear();
             }
@@ -403,32 +425,27 @@ void Surface::renderPhase2(Surface* prevsurf, View* view, Renderer* renderer) {
 
 void Surface::render(View* view, Renderer* renderer) {
 
-    _renderInProgress = true;
-    
     _mvpNum = _mvpNumPeak = 0;
     
     /** PHASE 1: ENSURE ALL RENDER LISTS ARE VALID **/
     _renderListsInsertionPos = _renderListsList.end();
     _renderOrder = 1;
-    renderPhase1(view, renderer, {0,0});
+    renderPhase1(renderer, view, {0,0});
     
-    validateRenderOps(renderer);
-    
-    for (RenderBatch* batch : _listBatches) {
-        batch->updateQuads(renderer);
-    }
-    renderer->flushQuadBuffer();
-    
-    /** PHASE 2: SEND BATCHED RENDEROPS TO GPU **/
-    renderPhase2(NULL, view, renderer);
-    
-    //app.log("batch count:%d", _listBatches.size());
+    /** PHASE 2: VALIDATE ALL SHADERS, ENSURE VERTEX BUFFER IS UP TO DATE */
+    renderPhase2(renderer);
 
-    _renderInProgress = false;
+    /** PHASE 3: SEND BATCHED RENDEROPS TO GPU **/
+    renderPhase3(renderer, view, NULL);
 }
 
 
 
+void Surface::markPrivateRenderQuadDirty() {
+    if (_op) {
+        ((PrivateSurfaceRenderOp*)_op._obj)->_dirty = true;
+    }
+}
 
 
 

@@ -68,11 +68,6 @@ void BeebView::setVisibleArea(int left, int top, int width, int height) {
 
 void BeebView::drawFrame() {
     _bitmap->unlock(&_bitmapData, true);
-    // Since we're uploading outside of canvas we must preserve the currently-bound texture
-    GLint otex;
-    glGetIntegerv(GL_TEXTURE_BINDING_2D, &otex);
-    _bitmap->bind(); // binding the bitmap will ensure texture data is up to date
-    check_gl(glBindTexture, GL_TEXTURE_2D, otex);
     _bitmap->lock(&_bitmapData, true);
     _beeb->setVideoBitmapParams((uint8_t*)_bitmapData.data, _bitmapData.stride);
     setNeedsFullRedraw();

@@ -448,8 +448,8 @@ void View::adjustSurfaceOrigin(const POINT& d) {
     
     // If this view is a surface owner, no need to propagate the change to renderlist or subviews
     if (_ownsPrivateSurface) {
-        if (_surface && _surface->_op) {
-            _surface->_op->_dirty = true;
+        if (_surface) {
+            _surface->markPrivateRenderQuadDirty();
         }
         return;
     }
@@ -889,7 +889,6 @@ void View::detachFromWindow() {
     // If this view owns its surface, remove the op that renders it from the render target
     if (_ownsPrivateSurface && _surface->_op) {
         _surface->_op = NULL;
-        delete _surface;
     }
 
     _surface = nullptr;
@@ -981,9 +980,6 @@ void View::removeSubview(View* subview) {
 	}
 }
 void View::removeFromParent() {
-    if (_surface) {
-        assert(!_surface->_renderInProgress); // naughty!
-    }
 	if (_parent) {
 		_parent->removeSubview(this);
 	}

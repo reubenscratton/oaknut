@@ -8,8 +8,6 @@
 #include <oaknut.h>
 
 
-Renderer* Renderer::current = NULL;
-
 Texture::Texture(Bitmap* bitmap) : _bitmap(bitmap) {
     assert(!bitmap->_texture);
     bitmap->_texture = this;
@@ -24,7 +22,6 @@ Shader::Shader(ShaderFeatures features) : _features(features) {
 
 
 Renderer::Renderer() : _quadBuffer(sizeof(QUAD), 256) {
-    current = this; // todo: should be set by window drawing function
 }
 
 void Renderer::reset() {

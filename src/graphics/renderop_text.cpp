@@ -63,8 +63,8 @@ int TextRenderOp::numQuads() {
     return (int)_rects.size();
 }
 
-void TextRenderOp::render(Renderer* renderer, Surface* surface) {
-    RenderOp::render(renderer, surface);
+void TextRenderOp::prepareToRender(Renderer* renderer, Surface* surface) {
+    RenderOp::prepareToRender(renderer, surface);
     renderer->bindBitmap(_textRenderParams.atlasPage->_bitmap);
 }
 

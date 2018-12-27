@@ -54,10 +54,8 @@ void RenderBatch::updateQuads(Renderer* renderer) {
 
 void RenderBatch::render(Renderer* renderer, Surface* surface, RenderOp* firstOp) {
     
-    
     // Use and configure the shader for this batch
-    firstOp->render(renderer, surface);
-    firstOp->_shader->lazyLoadUniforms();
+    firstOp->prepareToRender(renderer, surface);
     
     // Determine how much many ops we can draw right now without breaking render order
     int numQuadsThisChunk = 0;
@@ -107,7 +105,6 @@ void RenderBatch::render(Renderer* renderer, Surface* surface, RenderOp* firstOp
         
         // Move to next op in render order
         auto jt = currentOp->_listIterator;
-        auto prevOp = currentOp;
         jt++;
         if (jt == currentOp->_list->_ops.end()) {
             auto kt = currentOp->_list->_surfaceIt;
@@ -136,7 +133,8 @@ void RenderBatch::render(Renderer* renderer, Surface* surface, RenderOp* firstOp
         renderer->pushClip(rect);
     }
 
-    renderer->drawQuads(numQuadsThisChunk, _alloc->offset+firstOp->_renderBase);
+    // Draw!
+    firstOp->render(renderer, numQuadsThisChunk, _alloc->offset);
 
     // Iterate next rect of invalid region, if there is any
     if (surface->_supportsPartialRedraw) {

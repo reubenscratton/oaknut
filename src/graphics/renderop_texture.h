@@ -39,11 +39,9 @@ public:
 
     // Overrides
     bool canMergeWith(const RenderOp* op) override;
-    void render(Renderer* renderer, Surface* surface) override;
+    void prepareToRender(Renderer* renderer, Surface* surface) override;
     void asQuads(QUAD* quad) override;
     void validateShader(Renderer* renderer) override;
-    void setAlpha(float alpha) override;
-    void setColor(COLOR color) override;
     
     
 };

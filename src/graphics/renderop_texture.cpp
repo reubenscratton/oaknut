@@ -67,12 +67,6 @@ void TextureRenderOp::validateShader(Renderer* renderer) {
         _shaderValid = true;
     }
 }
-void TextureRenderOp::setAlpha(float alpha) {
-    if (alpha != _alpha) {
-        _alpha = alpha;
-        invalidate();
-    }
-}
 void TextureRenderOp::setTexRect(const RECT& texRect) {
     _rectTex = texRect;
     invalidateBatchGeometry();
@@ -91,18 +85,9 @@ bool TextureRenderOp::canMergeWith(const RenderOp* op) {
         && _bitmap==((const TextureRenderOp*)op)->_bitmap;
 }
 
-void TextureRenderOp::render(Renderer* renderer, Surface* surface) {
-    if (_bitmap) {
-        RenderOp::render(renderer, surface);
-        renderer->bindBitmap(_bitmap);
-    }
-}
-
-void TextureRenderOp::setColor(COLOR color) {
-    if (color != _color) {
-        _color = color;
-        invalidate();
-    }
+void TextureRenderOp::prepareToRender(Renderer* renderer, Surface* surface) {
+    RenderOp::prepareToRender(renderer, surface);
+    renderer->bindBitmap(_bitmap);
 }
 
 

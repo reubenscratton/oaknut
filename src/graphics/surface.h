@@ -5,19 +5,6 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-class PrivateSurfaceRenderOp : public TextureRenderOp {
-public:
-    ItemPool::Alloc* _alloc;
-    bool _dirty;
-    
-    PrivateSurfaceRenderOp(View* view, const RECT& rect);
-    ~PrivateSurfaceRenderOp();
-    
-    // Overrides
-    void rectToSurfaceQuad(RECT rect, QUAD* quad) override;
-    void render(Renderer* renderer, Surface* surface) override;
-    void validateShader(Renderer* renderer) override;
-};
 
 class RenderList : public Object {
 public:
@@ -47,12 +34,8 @@ public:
     list<RenderList*>::iterator _renderListsInsertionPos;
     list<RenderOp*> _opsNeedingValidation;
     list<sp<RenderBatch>> _listBatches;
-    sp<PrivateSurfaceRenderOp> _op;
     int _mvpNum, _mvpNumPeak;
-    bool _renderInProgress;
-    bool _isPrivate;
-    bool _supportsPartialRedraw;
-
+    
     Surface(bool isPrivate);
 
     virtual void render(View* view, Renderer* renderer);
@@ -69,11 +52,20 @@ public:
     void batchRenderOp(RenderOp* op);
     void unbatchRenderOp(RenderOp* op);
     
+    // Private surface support
+    bool _isPrivate;
+    bool _supportsPartialRedraw;
+    sp<RenderOp> _op;
+    void markPrivateRenderQuadDirty();
+    
+
 private:
-    void renderPhase1(View* view, Renderer* renderer, POINT origin);
-    void renderPhase2(Surface* prevsurf, View* view, Renderer* renderer);
+    void renderPhase1(Renderer* renderer, View* view, POINT origin);
+    void renderPhase2(Renderer* renderer);
+    void renderPhase3(Renderer* renderer, View* view, Surface* prevsurf);
     
     int _renderOrder;
+
 #ifdef DEBUG
     string _renderLog;
 #endif
