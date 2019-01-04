@@ -35,7 +35,7 @@ Glyph* FontAndroid::createGlyph(char32_t ch, Atlas* atlas) {
         POINT pt = glyph->atlasNode->rect.origin;
         BitmapAndroid* bitmap = (BitmapAndroid*)glyph->atlasNode->page->_bitmap._obj;
         env->CallVoidMethod(_obj, s_jmidDrawGlyph, (jint)ch, bitmap->_androidBitmap, pt.x-glyph->bitmapLeft, pt.y+glyph->bitmapHeight+glyph->bitmapTop);
-        bitmap->_needsUpload = true;
+        bitmap->texInvalidate();
     }
     return glyph;
 }

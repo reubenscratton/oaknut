@@ -38,6 +38,7 @@ public:
     // Overrides
     Surface* getPrimarySurface() override;
     Surface* createPrivateSurface() override;
+    void setCurrentSurface(Surface* surface) override;
     Shader* getShader(ShaderFeatures features) override;
     Texture* createTexture(Bitmap* bitmap) override;
     void prepareToDraw() override;
@@ -54,8 +55,8 @@ public:
     void convertTexture(GLTexture* texture, int width, int height);
     
 protected:
-    GLRenderer();
-    
+    GLRenderer(Window* window);
+
     GLfloat _backgroundColor[4]; // TODO: this belongs on GLSurface...
     GLuint _indexBufferId;
     GLuint _vertexBufferId;

@@ -76,8 +76,8 @@ BitmapAndroid::BitmapAndroid() : Bitmap(), _androidBitmap(NULL) {
 }
 
 BitmapAndroid::BitmapAndroid(int width, int height, int format) : Bitmap(width,height,format) {
-    _texTarget = GL_TEXTURE_2D;
-    _needsUpload = true;
+    //_texTarget = GL_TEXTURE_2D;
+    //_needsUpload = true;
     _androidBitmap = createAndroidBitmap(width, height, format, NULL);
 }
 
@@ -85,7 +85,7 @@ BitmapAndroid::BitmapAndroid(jobject jbitmap) {
     auto env = getBitmapEnv();
     assert(jbitmap);
     _androidBitmap = env->NewGlobalRef(jbitmap);
-    _texTarget = GL_TEXTURE_2D;
+    //_texTarget = GL_TEXTURE_2D;
     AndroidBitmapInfo info;
     AndroidBitmap_getInfo(env, _androidBitmap, &info);
     _width = info.width;
@@ -97,11 +97,12 @@ BitmapAndroid::BitmapAndroid(jobject jbitmap) {
         case ANDROID_BITMAP_FORMAT_A_8: _format=BITMAPFORMAT_A8; break;
         default: assert(0); break;
     }
-    _needsUpload = true;
+    //_needsUpload = true;
 }
 BitmapAndroid::BitmapAndroid(GLuint textureId) {
-    _texTarget = GL_TEXTURE_2D;
-    _textureId = textureId;
+    //_texTarget = GL_TEXTURE_2D;
+    //_textureId = textureId;
+    assert(0);
 }
 
 BitmapAndroid::~BitmapAndroid() {
@@ -212,7 +213,7 @@ void BitmapAndroid::fromVariant(const variant& v) {
     Bitmap::fromVariant(v);
     auto bb = v.bytearrayVal("bb");
     _androidBitmap = createAndroidBitmap(_width, _height, _format, &bb);
-    _needsUpload = true;
+    texInvalidate();
 }
 void BitmapAndroid::toVariant(variant& v) {
     Bitmap::toVariant(v);

@@ -52,10 +52,25 @@ ItemPool::Alloc* ItemPool::alloc(int n, ItemPool::Alloc* existingAlloc) {
     }
     if (!a) {
         int newItemCount = _itemCount + MAX(n, _itemsPerPage);
-        if (_resizeHook) {
-            _resizeHook(_itemCount, newItemCount);
-        }
-        resize(newItemCount);
+        //uint8_t* oldBase = _base;
+
+        _resizeFunc(_itemCount, newItemCount);
+
+        int d = newItemCount - _itemCount;
+        /*for (auto it=_blocks.begin() ; it != _blocks.end() ; it++) {
+            ItemPool::Alloc* a = *it;
+            if (a->used) {
+                memcpy(_base + a->offset*_itemSize, oldBase + a->offset*_itemSize, a->count*_itemSize);
+            }
+        }*/
+
+        Alloc* a2 = new Alloc(this, _itemCount, d);
+        _blocks.push_back(a2);
+        a2->it = _blocks.end();
+        a2->it--;
+        _itemCount = newItemCount;
+
+        
         a = alloc(n, NULL);
     }
 
@@ -69,23 +84,6 @@ ItemPool::Alloc* ItemPool::alloc(int n, ItemPool::Alloc* existingAlloc) {
     return a;
 }
 
-void ItemPool::resize(int newItemCount) {
-    int d = newItemCount - _itemCount;
-    uint8_t* newBase = (uint8_t*)malloc(newItemCount*_itemSize);
-    for (auto it=_blocks.begin() ; it != _blocks.end() ; it++) {
-        ItemPool::Alloc* a = *it;
-        if (a->used) {
-            memcpy(newBase + a->offset*_itemSize, _base + a->offset*_itemSize, a->count*_itemSize);
-        }
-    }
-    ::free(_base);
-    _base = newBase;
-    Alloc* a = new Alloc(this, _itemCount, d);
-    _blocks.push_back(a);
-    a->it = _blocks.end();
-    a->it--;
-    _itemCount = newItemCount;
-}
 
 void ItemPool::free(ItemPool::Alloc* alloc) {
     alloc->used = false; // this is all thats really needed

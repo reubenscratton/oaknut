@@ -55,12 +55,6 @@
 
 
 
-
-/*- (void)didMoveToWindow {
-    [super didMoveToWindow];
-}*/
-
-
 - (void)render {
     if (!_renderNeeded) {
         return;
@@ -141,68 +135,6 @@
     [self handleTouches:touches eventType:INPUT_EVENT_CANCEL remove:YES];
 }
 
-
-
-
-/*
- - (void)encodeWithCoder:(nonnull NSCoder *)aCoder {
- }
- 
- + (nonnull instancetype)appearance {
- return (OaknutView*)[UIApplication sharedApplication].delegate.window.rootViewController.view;
- }
- 
- + (nonnull instancetype)appearanceForTraitCollection:(nonnull UITraitCollection *)trait {
- return (OaknutView*)[UIApplication sharedApplication].delegate.window.rootViewController.view;
- }
- 
- + (nonnull instancetype)appearanceForTraitCollection:(nonnull UITraitCollection *)trait whenContainedIn:(nullable Class<UIAppearanceContainer>)ContainerClass, ... {
- return (OaknutView*)[UIApplication sharedApplication].delegate.window.rootViewController.view;
- }
- 
- + (nonnull instancetype)appearanceForTraitCollection:(nonnull UITraitCollection *)trait whenContainedInInstancesOfClasses:(nonnull NSArray<Class<UIAppearanceContainer>> *)containerTypes {
- return (OaknutView*)[UIApplication sharedApplication].delegate.window.rootViewController.view;
- }
- 
- + (nonnull instancetype)appearanceWhenContainedIn:(nullable Class<UIAppearanceContainer>)ContainerClass, ... {
- return (OaknutView*)[UIApplication sharedApplication].delegate.window.rootViewController.view;
- }
- 
- + (nonnull instancetype)appearanceWhenContainedInInstancesOfClasses:(nonnull NSArray<Class<UIAppearanceContainer>> *)containerTypes {
- return (OaknutView*)[UIApplication sharedApplication].delegate.window.rootViewController.view;
- }
- 
- - (void)traitCollectionDidChange:(nullable UITraitCollection *)previousTraitCollection {
- }
- 
- - (CGPoint)convertPoint:(CGPoint)point fromCoordinateSpace:(nonnull id<UICoordinateSpace>)coordinateSpace {
- return point;
- }
- 
- - (CGPoint)convertPoint:(CGPoint)point toCoordinateSpace:(nonnull id<UICoordinateSpace>)coordinateSpace {
- return point;
- }
- 
- - (CGRect)convertRect:(CGRect)rect fromCoordinateSpace:(nonnull id<UICoordinateSpace>)coordinateSpace {
- return rect;
- }
- 
- - (CGRect)convertRect:(CGRect)rect toCoordinateSpace:(nonnull id<UICoordinateSpace>)coordinateSpace {
- return rect;
- }
- 
- - (void)didUpdateFocusInContext:(nonnull UIFocusUpdateContext *)context withAnimationCoordinator:(nonnull UIFocusAnimationCoordinator *)coordinator {
- }
- 
- - (void)setNeedsFocusUpdate {
- }
- 
- - (BOOL)shouldUpdateFocusInContext:(nonnull UIFocusUpdateContext *)context {
- return NO;
- }
- 
- - (void)updateFocusIfNeeded {
- }*/
 
 @end
 

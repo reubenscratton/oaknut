@@ -19,6 +19,11 @@
 #ifndef GL_TEXTURE_MAX_LEVEL
 #define GL_TEXTURE_MAX_LEVEL 0x813D
 #endif
+#ifndef GL_READ_FRAMEBUFFER_BINDING
+#define GL_READ_FRAMEBUFFER GL_READ_FRAMEBUFFER_APPLE
+#define GL_READ_FRAMEBUFFER_BINDING GL_READ_FRAMEBUFFER_BINDING_APPLE
+#define GL_DRAW_FRAMEBUFFER GL_DRAW_FRAMEBUFFER_APPLE
+#endif
 
 // NB: NEVER leave GL error checking in release builds! Each API will stall the CPU
 //     until the GPU catches up... very slow!
@@ -69,11 +74,6 @@ public:
             check_gl(glDeleteFramebuffers, 1, &_fb);
             _fb = 0;
         }
-    }
-
-    void use() override {
-        check_gl(glBindFramebuffer, GL_FRAMEBUFFER, _fb);
-        check_gl(glViewport, 0, 0, _size.width, _size.height);
     }
 
     void setSize(const SIZE& size) override {
@@ -217,6 +217,31 @@ int GLTexture::getSampler() {
 
 
 
+template <class T>
+class Uniform {
+public:
+    GLint position;  // as returned by glGetUniformLocation
+    
+    T val;
+    bool dirty;
+    Uniform() {
+        dirty = true;
+    }
+    virtual void set(T val) {
+        if (val != this->val) {
+            this->val = val;
+            dirty = true;
+        }
+    }
+    virtual void use() {
+        if (dirty) {
+            load();
+            dirty = false;
+        }
+    }
+    void load();
+};
+
 template<>
 void Uniform<int>::load() {
     check_gl(glUniform1i, position, val);
@@ -264,10 +289,12 @@ void Uniform<POINT>::load() {
 
 class GLShaderBase : public Shader {
 public:
-    
     bool _loaded;
+
     GLuint _program;
     GLuint _vertexConfig;
+    Uniform<MATRIX4> _mvp;
+    Uniform<float> _alpha;
 
     GLShaderBase(ShaderFeatures features) : Shader(features) {
     }
@@ -567,6 +594,14 @@ public:
     
 };
 
+void GLRenderer::setCurrentSurface(Surface* surface) {
+    if (surface != _currentSurface) {
+        _currentSurface = surface;
+        GLSurface* glsurface = (GLSurface*)surface;
+        check_gl(glBindFramebuffer, GL_FRAMEBUFFER, glsurface->_fb);
+        check_gl(glViewport, 0, 0, surface->_size.width, surface->_size.height);
+    }
+}
 
 
 void GLRenderer::setActiveShader(Shader* shader) {
@@ -594,36 +629,41 @@ void GLRenderer::setActiveShader(Shader* shader) {
     }
 }
 
-GLRenderer::GLRenderer() : Renderer() {
-    _quadBuffer._resizeHook = [=](int oldItemCount, int newItemCount) {
-            int cbIndexes = sizeof(GLshort) * 6 * newItemCount;
-            GLshort* newIndexes = (GLshort*) malloc(cbIndexes);
-            if (oldItemCount) {
-                memcpy(newIndexes, _indexes, sizeof(GLshort) * 6 * oldItemCount);
-                ::free(_indexes);
-            }
-            
-            /*
-             
-             C------D
-             |     /|
-             |    / |
-             |   /  |
-             |  /   |
-             | /    |
-             A------B
-             
-             Clockwise triangles are ABC & CBD
-             */
-            _indexes = newIndexes;
-            for (int i=oldItemCount ; i<newItemCount ; i++) {
-                _indexes[i*6+0] = i*4+0; // A
-                _indexes[i*6+1] = i*4+2; // C
-                _indexes[i*6+2] = i*4+3; // D
-                _indexes[i*6+3] = i*4+0; // A
-                _indexes[i*6+4] = i*4+3; // D
-                _indexes[i*6+5] = i*4+1; // B
-            }
+GLRenderer::GLRenderer(Window* window) : Renderer(window) {
+    _quadBuffer._resizeFunc = [=](int oldItemCount, int newItemCount) {
+        
+        // Realloc
+        _quadBuffer._base = (uint8_t*)realloc(_quadBuffer._base, newItemCount*_quadBuffer._itemSize);
+
+        // Grow the index buffer, copying the old one into place
+        int cbIndexes = sizeof(GLshort) * 6 * newItemCount;
+        GLshort* newIndexes = (GLshort*) malloc(cbIndexes);
+        if (oldItemCount) {
+            memcpy(newIndexes, _indexes, sizeof(GLshort) * 6 * oldItemCount);
+            ::free(_indexes);
+        }
+        
+        /*
+         
+         C------D
+         |     /|
+         |    / |
+         |   /  |
+         |  /   |
+         | /    |
+         A------B
+         
+         Clockwise triangles are ABC & CBD
+         */
+        _indexes = newIndexes;
+        for (int i=oldItemCount ; i<newItemCount ; i++) {
+            _indexes[i*6+0] = i*4+0; // A
+            _indexes[i*6+1] = i*4+2; // C
+            _indexes[i*6+2] = i*4+3; // D
+            _indexes[i*6+3] = i*4+0; // A
+            _indexes[i*6+4] = i*4+3; // D
+            _indexes[i*6+5] = i*4+1; // B
+        }
         
         _fullBufferUploadNeeded =true;
 
@@ -776,8 +816,10 @@ void GLRenderer::convertTexture(GLTexture* texture, int width, int height) {
     check_gl(glGenFramebuffers, 1, &fbr);
     check_gl(glBindFramebuffer, GL_READ_FRAMEBUFFER, fbr);
     check_gl(glFramebufferTexture2D, GL_READ_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,texture->_texTarget,texture->_textureId,0);
+#if !PLATFORM_ANDROID
     check_gl(glReadBuffer, GL_COLOR_ATTACHMENT0);
-    
+#endif
+
     // Create a new GL_TEXTURE_2D texture for framebuffer write
     GLuint fb = 0;
     check_gl(glGenFramebuffers, 1, &fb);

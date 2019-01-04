@@ -10,6 +10,7 @@ typedef float GLfloat;
 #include <android/log.h>
 #include <EGL/egl.h>
 #include <GLES/gl.h>
+#include <GLES/glext.h>
 #include <poll.h>
 #include <pthread.h>
 #include <sched.h>

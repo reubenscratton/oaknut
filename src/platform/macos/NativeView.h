@@ -6,13 +6,24 @@
 //
 #if PLATFORM_MACOS
 
-#import <Cocoa/Cocoa.h>
 #include "oaknut.h"
 
-@interface NativeView : NSOpenGLView {
+@interface NativeView :
+#if RENDERER_GL
+    NSOpenGLView
+#else
+    NSView //MTKView
+#endif
+{
+    Window* _oaknutWindow;
     NSTouch* _touches[10];
+#if RENDERER_METAL
+    @public
+    CAMetalLayer* _metalLayer;
+#endif
 }
 
+- (id)initWithWindow:(Window*)window;
 - (void)awake;
 
 @end

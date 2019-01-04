@@ -40,7 +40,6 @@ public:
 
     virtual void render(View* view, Renderer* renderer);
     virtual void setSize(const SIZE& size);
-	virtual void use() =0;
 
     void detachRenderList(RenderList* list);
     void attachRenderList(RenderList* list);

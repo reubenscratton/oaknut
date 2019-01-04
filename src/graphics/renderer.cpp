@@ -21,7 +21,7 @@ Shader::Shader(ShaderFeatures features) : _features(features) {
 }
 
 
-Renderer::Renderer() : _quadBuffer(sizeof(QUAD), 256) {
+Renderer::Renderer(Window* window) : _window(window), _quadBuffer(sizeof(QUAD), 256) {
 }
 
 void Renderer::reset() {
@@ -53,13 +53,6 @@ void Renderer::bindBitmap(Bitmap* bitmap) {
     if (_currentTexture != bitmap->_texture) {
         _currentTexture = bitmap->_texture;
         _currentTexture->bind();
-    }
-}
-
-void Renderer::setCurrentSurface(Surface* surface) {
-    if (surface != _currentSurface) {
-        _currentSurface = surface;
-        surface->use();
     }
 }
 

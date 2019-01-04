@@ -6,6 +6,7 @@
 //
 #if PLATFORM_APPLE
 #include <oaknut.h>
+#if RENDERER_GL
 
 #if TARGET_OS_IOS
 #define GLGetCurrentContext() [EAGLContext currentContext]
@@ -121,7 +122,16 @@ public:
     
     CVOpenGLESTextureCacheRef _cvTextureCache;
     
+    RendererApple(Window* window) : GLRenderer(window) {
+    }
 
+    void bindToNativeWindow(long nativeWindowHandle) override {
+        //NativeView* nativeView = (__bridge NativeView*)(void*)nativeWindowHandle;
+        // todo: move Apple-specific EAGL setup code here
+    }
+    void commit() override {
+        // todo: move Apple-specific swapBuffer stuff here
+    }
     
     Texture* createTexture(Bitmap* abitmap) override {
         BitmapApple* bitmap = (BitmapApple*)abitmap;
@@ -144,8 +154,8 @@ public:
 
 };
 
-Renderer* Renderer::create() {
-    return new RendererApple();
+Renderer* Renderer::create(Window* window) {
+    return new RendererApple(window);
 }
 
 
@@ -153,5 +163,5 @@ Renderer* Renderer::create() {
 
 
 
-
+#endif
 #endif

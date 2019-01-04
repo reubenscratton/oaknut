@@ -16,7 +16,7 @@ static jmethodID jmidStopPreview;
 static jmethodID jmidClose;
 
 
-static const char* VERTEX_SHADER =
+/*static const char* VERTEX_SHADER =
         "precision mediump float;\n"
         "attribute highp vec2 vPosition;\n"
         "attribute vec2 texcoord;\n"
@@ -149,7 +149,7 @@ int TextureConverter::convert(GLuint texId, int width, int height, float* transf
     return texId2;
 
 }
-
+*/
 CameraFrameAndroid::~CameraFrameAndroid() {
     if (_jbytes) {
         getJNIEnv()->DeleteGlobalRef(_jbytes);
@@ -163,7 +163,7 @@ Bitmap* CameraFrameAndroid::asBitmap() {
 class CameraAndroid : public Camera {
 public:
     jobject camera;
-    TextureConverter _converter;
+    //TextureConverter _converter;
 
     CameraAndroid(const Options& options) : Camera(options) {
         JNIEnv *env = getJNIEnv();
@@ -220,8 +220,9 @@ JAVA_FN(void, Camera, nativeOnFrameAvailable)(JNIEnv *env, jobject obj, jlong ca
     CameraAndroid* camera = (CameraAndroid*)cameraPtr;
     sp<CameraFrameAndroid> frame = new CameraFrameAndroid();
     env->GetFloatArrayRegion(jtransform, 0, 16, frame->_transform);
-    auto texId2 = camera->_converter.convert(textureId, width, height, frame->_transform);
-    frame->_bitmap = new BitmapAndroid(texId2);
+    //auto texId2 = camera->_converter.convert(textureId, width, height, frame->_transform);
+    //frame->_bitmap = new BitmapAndroid(texId2);
+    frame->_bitmap = new BitmapAndroid(textureId);
     frame->_bitmap->_width = width;
     frame->_bitmap->_height = height;
     frame->_textureId = textureId;

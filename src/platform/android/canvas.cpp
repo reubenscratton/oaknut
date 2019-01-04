@@ -76,7 +76,7 @@ public:
     }
     void clear(COLOR color) override {
         getJNIEnv()->CallVoidMethod(_canvas, jmidClear, (jint)color);
-        _bitmap->_needsUpload = true;
+        _bitmap->texInvalidate();
     }
     void setFillColor(COLOR fillColor) override {
         getJNIEnv()->CallVoidMethod(_canvas, jmidSetFillColor, (jint)fillColor);
@@ -103,7 +103,7 @@ public:
                                     (jfloat)rect.origin.y,
                                     (jfloat)rect.size.width,
                                     (jfloat)rect.size.height);
-        _bitmap->_needsUpload = true;
+        _bitmap->texInvalidate();
     }
     void drawOval(RECT rect) override {
         getJNIEnv()->CallVoidMethod(_canvas, jmidDrawOval,
@@ -111,17 +111,17 @@ public:
                                     (jfloat)rect.origin.y,
                                     (jfloat)rect.size.width,
                                     (jfloat)rect.size.height);
-        _bitmap->_needsUpload = true;
+        _bitmap->texInvalidate();
     }
     void drawPath(Path* path) override {
         AndroidPath* androidPath = (AndroidPath*)path;
         getJNIEnv()->CallVoidMethod(_canvas, jmidDrawPath, androidPath->_path);
-        _bitmap->_needsUpload = true;
+        _bitmap->texInvalidate();
     }
     void drawBitmap(Bitmap* abitmap, const RECT& rectSrc, const RECT& rectDst) override {
         BitmapAndroid* bitmap = (BitmapAndroid*)abitmap;
         getJNIEnv()->CallVoidMethod(_canvas, jmidDrawBitmap, bitmap->_androidBitmap);
-        _bitmap->_needsUpload = true;
+        _bitmap->texInvalidate();
     }
     Bitmap* getBitmap() override {
         return _bitmap;

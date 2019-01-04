@@ -52,36 +52,10 @@ public:
     list<Texture*>::iterator _it;
 };
 
-template <class T>
-class Uniform {
-public:
-    GLint position;  // as returned by glGetUniformLocation
-    
-    T val;
-    bool dirty;
-    Uniform() {
-        dirty = true;
-    }
-    virtual void set(T val) {
-        if (val != this->val) {
-            this->val = val;
-            dirty = true;
-        }
-    }
-    virtual void use() {
-        if (dirty) {
-            load();
-            dirty = false;
-        }
-    }
-    void load();
-};
 
 class Shader : public Object  {
 public:
     ShaderFeatures _features;
-    Uniform<MATRIX4> _mvp;
-    Uniform<float> _alpha;
 
     Shader(ShaderFeatures features);
 
@@ -97,6 +71,7 @@ public:
  */
 class Renderer : public Object {
 public:
+    class Window* _window;
     map<uint32_t, Shader*> _shaders;
     list<Texture*> _textures;
     
@@ -111,17 +86,18 @@ public:
     int _renderCounter;
     class Surface* _currentSurface;
 
-    
     void reset();
-    void setCurrentSurface(Surface* surface);
     ItemPool::Alloc* allocQuads(int num, ItemPool::Alloc* existingAlloc);
     void releaseTexture(Texture* tex);
     void bindBitmap(Bitmap* bitmap);
     void invalidateQuads(ItemPool::Alloc* alloc);
 
+
     // To be implemented by GL, Metal, Vulkan, etc
+    virtual void bindToNativeWindow(long nativeWindowHandle) =0;
     virtual Surface* getPrimarySurface() =0;
     virtual Surface* createPrivateSurface() =0;
+    virtual void setCurrentSurface(Surface* surface)=0;
     virtual Shader* getShader(ShaderFeatures features)=0;
     virtual void pushClip(RECT clip) =0;
     virtual void popClip() =0;
@@ -130,15 +106,16 @@ public:
     virtual void setBlendMode(int blendMode) =0;
     virtual void drawQuads(int numQuads, int index) =0;
     virtual void prepareToDraw() =0;
+    virtual void commit() =0;
     virtual void setActiveShader(Shader* shader) =0;
     virtual void uploadQuad(ItemPool::Alloc* alloc) =0;
     virtual void renderPrivateSurface(Surface* privateSurface, ItemPool::Alloc* alloc) =0;
 
 
-    static Renderer* create();
+    static Renderer* create(Window* window);
     
 protected:
-    Renderer();
+    Renderer(Window* window);
 
     // QuadBuffer data
     ItemPool _quadBuffer;

@@ -1,5 +1,5 @@
 
-class TextureConverter {
+/*class TextureConverter {
 public:
     GLuint fb;
     GLuint indexBufferId, vertexBufferId;
@@ -11,7 +11,7 @@ public:
 
     int convert(GLuint texId, int width, int height, float* transform);
 
-};
+};*/
 
 
 

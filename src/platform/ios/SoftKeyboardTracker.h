@@ -16,7 +16,6 @@
     CGRect toRect;
     CADisplayLink* displayLink;
     NSTimeInterval firstFrame;
-    //NativeView* view;
 }
 + (SoftKeyboardTracker*)runForNotification:(NSNotification*)notification;
 - (void)cancel;

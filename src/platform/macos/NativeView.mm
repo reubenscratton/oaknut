@@ -15,24 +15,31 @@ static bool s_mouseIsDown;
 
 @implementation NativeView
 
+- (id)initWithWindow:(Window*)window {
+    if (self = [super initWithFrame:CGRectMake(0,0,300,300)]) {
+        _oaknutWindow = window;
+    }
+    return self;
+}
+
 - (void)dispatchInputEvent:(NSEvent*)event type:(int)type isScrollwheel:(BOOL)isScrollWheel {
     INPUTEVENT inputEvent;
     inputEvent.type = type;
     inputEvent.deviceIndex = 0;
     CGPoint pt = event.locationInWindow;
     pt.y = self.frame.size.height - pt.y;
-    inputEvent.pt.x = pt.x*app._window->_scale;
-    inputEvent.pt.y = pt.y*app._window->_scale;
+    inputEvent.pt.x = pt.x*_oaknutWindow->_scale;
+    inputEvent.pt.y = pt.y*_oaknutWindow->_scale;
     inputEvent.time = event.timestamp*1000;
     if (isScrollWheel) {
         inputEvent.deviceType = INPUTEVENT::ScrollWheel;
         inputEvent.delta = {
-            (float)(event.scrollingDeltaX*app._window->_scale),
-            (float)(event.scrollingDeltaY*app._window->_scale)};
+            (float)(event.scrollingDeltaX*_oaknutWindow->_scale),
+            (float)(event.scrollingDeltaY*_oaknutWindow->_scale)};
     } else {
         inputEvent.deviceType = INPUTEVENT::Mouse;
     }
-    app._window->dispatchInputEvent(inputEvent);
+    _oaknutWindow->dispatchInputEvent(inputEvent);
     [self setNeedsDisplay:YES];
 }
 - (void)mouseDown:(NSEvent *)event {
@@ -77,8 +84,65 @@ static bool s_mouseIsDown;
 
 }
 
+- (void)windowWillClose:(NSNotification*)notification {
+}
+
+#if RENDERER_METAL
+
+- (void)awake {
+    
+    self.acceptsTouchEvents = YES;
+    
+    [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawOnSetNeedsDisplay];
+
+}
 
 
+- (CALayer*)makeBackingLayer {
+    app.log("makeBackingLayer");
+    return _metalLayer;
+}
+
+- (BOOL)isOpaque {
+    return YES;
+}
+
+- (BOOL)wantsUpdateLayer {
+    return YES;
+}
+- (void)updateLayer {
+    app.log("balls");
+}
+- (void)displayLayer:(CALayer *)layer {
+    _oaknutWindow->draw();
+}
+
+- (void)setNeedsDisplay:(BOOL)needsDisplay {
+    [super setNeedsDisplay:needsDisplay];
+    if (needsDisplay) {
+        [self.layer setNeedsDisplay];
+    }
+}
+
+- (void)setFrameSize:(NSSize)newSize {
+    [super setFrameSize:newSize];
+
+    NSRect viewRectPoints = [self bounds];
+    NSRect viewRectPixels = [self convertRectToBacking:viewRectPoints];
+    
+    CGFloat scale = viewRectPixels.size.width / viewRectPoints.size.width;
+    
+    self.layer.bounds = self.bounds;
+
+    _oaknutWindow->resizeSurface(viewRectPixels.size.width, viewRectPixels.size.height, scale);
+    
+    [self setNeedsDisplay:YES];
+}
+
+#endif
+
+
+#if RENDERER_GL
 - (void)awake {
     
     self.acceptsTouchEvents = YES;
@@ -127,9 +191,6 @@ static bool s_mouseIsDown;
 }
 
 
-- (void)windowWillClose:(NSNotification*)notification {
-}
-
 
 - (void)reshape {
     [super reshape];
@@ -140,7 +201,7 @@ static bool s_mouseIsDown;
     
     CGFloat scale = viewRectPixels.size.width / viewRectPoints.size.width;
     
-    app._window->resizeSurface(viewRectPixels.size.width, viewRectPixels.size.height, scale);
+    _oaknutWindow->resizeSurface(viewRectPixels.size.width, viewRectPixels.size.height, scale);
 
     CGLUnlockContext([[self openGLContext] CGLContextObj]);
 }
@@ -155,10 +216,11 @@ static bool s_mouseIsDown;
     NSOpenGLContext* context = [self openGLContext];
     [context makeCurrentContext];
     CGLLockContext([context CGLContextObj]);
-    app._window->draw();
+    _oaknutWindow->draw();
     CGLFlushDrawable([context CGLContextObj]);
     CGLUnlockContext([context CGLContextObj]);
 }
+#endif
 
 
 @end

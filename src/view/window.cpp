@@ -9,7 +9,7 @@
 
 
 Window::Window() : _rootViewController(NULL), _scale(1) {
-    _renderer = Renderer::create();
+    _renderer = Renderer::create(this);
     _surface = _renderer->getPrimarySurface();
     _window = this;
     _effectiveAlpha = 1;
@@ -288,6 +288,7 @@ void Window::draw() {
     }
     _surface->render(this, _renderer);
 
+    _renderer->commit();
 	
 	incFrames();
 

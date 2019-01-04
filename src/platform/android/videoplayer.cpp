@@ -74,7 +74,7 @@ public:
         setStatus(Ready);
     }
 
-    TextureConverter _converter;
+    // TextureConverter _converter;
 
     void dispatchNewFrame(int textureId, int width, int height, float* transform) {
 
@@ -84,8 +84,8 @@ public:
         // this is a limitation of the SurfaceTexture API. As soon as onFrameAvailable returns
         // the buffer gets recycled, so we *have* to use it now. Here we convert the
         // external texture into a proper OpenGL texture that's the right way up.
-
-        GLuint convertedTex = _converter.convert(textureId, width, height, transform);
+assert(0); // todo
+        GLuint convertedTex = 0;//_converter.convert(textureId, width, height, transform);
         sp<Bitmap> frame = new BitmapAndroid(convertedTex);
         frame->_width = width;
         frame->_height = height;

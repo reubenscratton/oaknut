@@ -15,7 +15,7 @@ public:
     int _itemSize;
     int _itemCount;
     int _itemsPerPage;
-    std::function<void(int,int)> _resizeHook;
+    std::function<void(int oldCount, int newCount)> _resizeFunc;
     
     class Alloc {
     public:
@@ -50,7 +50,6 @@ public:
     
     
     Alloc* alloc(int n, Alloc* existingAlloc);
-    void resize(int newItemCount);
     void free(Alloc* alloc);
 };
 
