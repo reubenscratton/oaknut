@@ -127,7 +127,25 @@ GLTexture::GLTexture(Bitmap* bitmap) : Texture(bitmap) {
     _textureId = 0;
 }
 
-
+void GLTexture::bind() {
+    if (!_textureId) {
+        check_gl(glGenTextures, 1, &_textureId);
+        assert(_textureId>0);
+    }
+    check_gl(glBindTexture, _texTarget, _textureId);
+    if (!_paramsValid) {
+        GLuint method = _bitmap->_sampleNearest ? GL_NEAREST : GL_LINEAR;
+        check_gl(glTexParameterf, _texTarget, GL_TEXTURE_MIN_FILTER, method);
+        check_gl(glTexParameterf, _texTarget, GL_TEXTURE_MAG_FILTER, method);
+        check_gl(glTexParameteri, _texTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        check_gl(glTexParameteri, _texTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        _paramsValid = true;
+    }
+    if (_needsUpload) {
+        _needsUpload = false;
+        upload();
+    }
+}
 
 void GLTexture::upload() {
     PIXELDATA pixeldata;
@@ -187,25 +205,6 @@ void GLTexture::unload() {
     }
 }
 
-void GLTexture::bind() {
-    if (!_textureId) {
-        check_gl(glGenTextures, 1, &_textureId);
-        assert(_textureId>0);
-    }
-    check_gl(glBindTexture, _texTarget, _textureId);
-    if (!_paramsValid) {
-        GLuint method = _bitmap->_sampleNearest ? GL_NEAREST : GL_LINEAR;
-        check_gl(glTexParameterf, _texTarget, GL_TEXTURE_MIN_FILTER, method);
-        check_gl(glTexParameterf, _texTarget, GL_TEXTURE_MAG_FILTER, method);
-        check_gl(glTexParameteri, _texTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        check_gl(glTexParameteri, _texTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        _paramsValid = true;
-    }
-    if (_needsUpload) {
-        _needsUpload = false;
-        upload();
-    }
-}
 
 int GLTexture::getSampler() {
     if (_texTarget == GL_TEXTURE_EXTERNAL_OES) {
@@ -595,14 +594,15 @@ public:
 };
 
 void GLRenderer::setCurrentSurface(Surface* surface) {
-    if (surface != _currentSurface) {
-        _currentSurface = surface;
-        GLSurface* glsurface = (GLSurface*)surface;
-        check_gl(glBindFramebuffer, GL_FRAMEBUFFER, glsurface->_fb);
-        check_gl(glViewport, 0, 0, surface->_size.width, surface->_size.height);
-    }
+    GLSurface* glsurface = (GLSurface*)surface;
+    check_gl(glBindFramebuffer, GL_FRAMEBUFFER, glsurface->_fb);
+    check_gl(glViewport, 0, 0, surface->_size.width, surface->_size.height);
 }
 
+void GLRenderer::setCurrentTexture(Texture* texture) {
+    GLTexture* gltex = (GLTexture*)texture;
+    gltex->bind();
+}
 
 void GLRenderer::setActiveShader(Shader* shader) {
     GLShaderBase* glshader = (GLShaderBase*)shader;

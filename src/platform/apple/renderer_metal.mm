@@ -14,28 +14,50 @@
 #endif
 
 
+#define SAMPLER_NONE 0
+#define SAMPLER_TEXTURE2D_A8 1
+#define SAMPLER_TEXTURE2D_RGBA 2
 
 
 
 class MetalTexture : public Texture {
 public:
     //bool _paramsValid = false;
+    id<MTLTexture> _tex;
+    id<MTLSamplerState> _sampler;
     
-    
-    MetalTexture(Bitmap* bitmap) : Texture(bitmap) {
+    MetalTexture(Bitmap* bitmap, id<MTLDevice> device) : Texture(bitmap) {
+        _needsUpload = true;
+        MTLPixelFormat pixelFormat = MTLPixelFormatBGRA8Unorm;
+        switch (bitmap->_format) {
+            case BITMAPFORMAT_RGBA32:
+                pixelFormat = MTLPixelFormatRGBA8Unorm;
+                break;
+            case BITMAPFORMAT_BGRA32:
+                pixelFormat = MTLPixelFormatBGRA8Unorm;
+                break;
+            case BITMAPFORMAT_A8:
+                pixelFormat = MTLPixelFormatA8Unorm;
+                break;
+        }
+        MTLTextureDescriptor* desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:pixelFormat
+                                                                                        width:bitmap->_width
+                                                                                       height:bitmap->_height
+                                                                                    mipmapped:NO];
+        _tex = [device newTextureWithDescriptor:desc];
+        
+        MTLSamplerDescriptor* samplerDesc = [MTLSamplerDescriptor new];
+        _sampler = [device newSamplerStateWithDescriptor:samplerDesc];
     }
     
     void unload() override {
-        
-    }
-    void bind() override {
-        
+        _tex = NULL;
     }
     void upload() override {
         
     }
     int getSampler() override {
-        return 0;
+        return (_bitmap->_format==BITMAPFORMAT_A8) ? SAMPLER_TEXTURE2D_A8 : SAMPLER_TEXTURE2D_RGBA;
     }
     
 };
@@ -74,11 +96,10 @@ public:
             useTexCoords = true; // we don't use the sampler, we just want the texcoord attributes, which are
             // not actually texture coords, v_texcoords is x-dist and y-dist from quad centre
         }
-        /*if (_features.sampler0 != GLSAMPLER_NONE) {
+        if (_features.sampler0 != SAMPLER_NONE) {
             useTexSampler = true;
             useTexCoords = true;
-            _sampler.set(0);
-        }*/
+        }
         
         string s =
             "using namespace metal;\n"
@@ -112,9 +133,29 @@ public:
             "   return output;\n"
             "}\n";
         
-        s+= "fragment half4 frag_shader(VertexOutput in [[stage_in]]) {\n"
-        "    return in.color;\n"
-            "}\n";
+        s+= "fragment half4 frag_shader(VertexOutput in [[stage_in]]";
+        if (useTexSampler) {
+            if (_features.sampler0 == SAMPLER_TEXTURE2D_A8) {
+                s+= ", texture2d<half> colorTexture [[ texture(0) ]]";
+            } else {
+                s+= ", texture2d<half> colorTexture [[ texture(0) ]]";
+            }
+            s+= ", sampler textureSampler [[ sampler(0) ]]";
+        }
+        s+= ") {\n";
+        if (useTexSampler) {
+            if (_features.sampler0 == SAMPLER_TEXTURE2D_A8) {
+                s+= "half4 c = colorTexture.sample(textureSampler, in.texcoord);\n";
+                s+= "c.r=c.b=1.0f;\n";
+                s+= "return c;\n";
+            } else {
+                s+= "half4 c = colorTexture.sample(textureSampler, in.texcoord);\n";
+                s+= "return half4(c);\n";
+            }
+        } else {
+            s += "    return in.color;\n";
+        }
+        s += "}\n";
         /*
         if (_features.alpha) {
             fs += "uniform mediump float alpha;\n";
@@ -128,11 +169,8 @@ public:
                 fs += "uniform mediump vec4 radii;\n";
             }
         }
-        if (useTexCoords) {
-            fs += "varying vec2 v_texcoord;\n";
-        }
-        
-        if (_features.sampler0 == GLSAMPLER_TEXTURE_2D) {
+
+         if (_features.sampler0 == GLSAMPLER_TEXTURE_2D) {
             fs += "uniform sampler2D texture;\n";
         }
         if (_features.sampler0 == GLSAMPLER_TEXTURE_EXT_OES) {
@@ -201,7 +239,7 @@ public:
                                                                  error:&error];
         assert(_pipelineState);
         
-        _uniformsBuffer = [_device newBufferWithLength:sizeof(Uniforms) options:MTLResourceCPUCacheModeDefaultCache];
+        _uniformsBuffer = [_device newBufferWithLength:sizeof(Uniforms) options:MTLResourceCPUCacheModeDefaultCache|MTLResourceStorageModeShared];
         _uniforms = (Uniforms*)_uniformsBuffer.contents;
     }
     
@@ -229,7 +267,6 @@ public:
     id<MTLBuffer> _indexBuffer;
     id<MTLCommandQueue> _commandQueue;
     id<MTLCommandBuffer> _commandBuffer;
-    //var timer: CADisplayLink!
     MTLRenderPassDescriptor* _renderPassDescriptor;
     id<MTLRenderCommandEncoder> _renderCommandEncoder;
     id<CAMetalDrawable> _drawable;
@@ -239,14 +276,14 @@ public:
         _quadBuffer._resizeFunc = [=](int oldItemCount, int newItemCount) {
             long cb = newItemCount * _quadBuffer._itemSize;
             //_vertexBuffer = [_device newBufferWithLength:cb options:MTLResourceCPUCacheModeWriteCombined | MTLResourceStorageModeShared];
-            _vertexBuffer = [_device newBufferWithLength:cb options:MTLResourceCPUCacheModeDefaultCache];
+            _vertexBuffer = [_device newBufferWithLength:cb options:MTLResourceCPUCacheModeDefaultCache | MTLResourceStorageModeShared];
             _quadBuffer._base = (uint8_t*)_vertexBuffer.contents;
 
 
             // Grow the index buffer, copying the old one into place
             int cbIndexes = sizeof(uint16_t) * 6 * newItemCount;
             id<MTLBuffer> oldIndexBuffer = _indexBuffer;
-            _indexBuffer = [_device newBufferWithLength:cbIndexes options:MTLResourceCPUCacheModeDefaultCache];
+            _indexBuffer = [_device newBufferWithLength:cbIndexes options:MTLResourceCPUCacheModeDefaultCache | MTLResourceStorageModeShared];
             uint16_t* newIndexes = (uint16_t*)_indexBuffer.contents;
             if (oldItemCount) {
                 memcpy(newIndexes, oldIndexBuffer.contents, sizeof(uint16_t) * 6 * oldItemCount);
@@ -319,7 +356,7 @@ public:
     }
 
     Texture* createTexture(Bitmap* bitmap) override {
-        return new MetalTexture(bitmap);
+        return new MetalTexture(bitmap, _device);
     }
     void flushQuadBuffer() override {
         
@@ -329,15 +366,11 @@ public:
     }
     
     void drawQuads(int numQuads, int index) override {
-        /*[_renderCommandEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip
-                                  vertexStart:index*4
-                                  vertexCount:numQuads*4
-                                instanceCount: 1];*/
         [_renderCommandEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
                                           indexCount:numQuads*6
                                            indexType:MTLIndexTypeUInt16
                                          indexBuffer:_indexBuffer
-                                   indexBufferOffset:index*6];
+                                   indexBufferOffset:index*6*sizeof(uint16_t)];
     }
     void prepareToDraw() override {
         _drawable = [_metalLayer nextDrawable];
@@ -350,8 +383,9 @@ public:
         // Get a new render encoder. AFAICS this must be done every frame.
         _renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
         _renderPassDescriptor.colorAttachments[0].texture = _drawable.texture;
-        _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionDontCare; //
-        //renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 0.0, green: 104.0/255.0, blue: 55.0/255.0, alpha: 1.0)
+        _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionDontCare;
+        //_renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
+        //_renderPassDescriptor.colorAttachments[0].clearColor = {0.0, 104.0/255.0, 55.0/255.0, 1.0};
         _renderCommandEncoder = [_commandBuffer renderCommandEncoderWithDescriptor:_renderPassDescriptor];
 
 
@@ -372,18 +406,29 @@ public:
     }
 
     void setCurrentSurface(Surface* surface) override {
-        if (surface != _currentSurface) {
-            _currentSurface = surface;
-            //MetalSurface* metalSurface = (MetalSurface*)surface;
-            MTLViewport viewport;
-            viewport.originX = 0;
-            viewport.originY = 0;
-            viewport.width = surface->_size.width;
-            viewport.height = surface->_size.height;
-            viewport.znear = 0;
-            viewport.zfar = 1;
-            [_renderCommandEncoder setViewport:viewport];
+        //MetalSurface* metalSurface = (MetalSurface*)surface;
+        MTLViewport viewport;
+        viewport.originX = 0;
+        viewport.originY = 0;
+        viewport.width = surface->_size.width;
+        viewport.height = surface->_size.height;
+        viewport.znear = 0;
+        viewport.zfar = 1;
+        [_renderCommandEncoder setViewport:viewport];
+    }
+    
+    void setCurrentTexture(Texture* texture) override {
+        MetalTexture* metalTexture = (MetalTexture*)texture;
+        if (metalTexture->_needsUpload) {
+            metalTexture->_needsUpload = false;
+            PIXELDATA pixeldata;
+            metalTexture->_bitmap->lock(&pixeldata, false);
+            [metalTexture->_tex replaceRegion:MTLRegionMake2D(0,0,metalTexture->_bitmap->_width,metalTexture->_bitmap->_height) mipmapLevel:0 withBytes:pixeldata.data bytesPerRow:pixeldata.stride];
+            metalTexture->_bitmap->unlock(&pixeldata, false);
         }
+
+        [_renderCommandEncoder setFragmentTexture:metalTexture->_tex atIndex:0];
+        [_renderCommandEncoder setFragmentSamplerState:metalTexture->_sampler atIndex:0];
     }
 
     void setActiveShader(Shader* shader) override {

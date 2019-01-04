@@ -41,7 +41,6 @@ class Texture : public Object {
 public:
     Texture(Bitmap* bitmap);
     virtual ~Texture();
-    virtual void bind()=0;
     virtual void upload()=0;
     virtual void unload()=0;
     virtual int getSampler()=0;
@@ -98,6 +97,7 @@ public:
     virtual Surface* getPrimarySurface() =0;
     virtual Surface* createPrivateSurface() =0;
     virtual void setCurrentSurface(Surface* surface)=0;
+    virtual void setCurrentTexture(Texture* texture)=0;
     virtual Shader* getShader(ShaderFeatures features)=0;
     virtual void pushClip(RECT clip) =0;
     virtual void popClip() =0;

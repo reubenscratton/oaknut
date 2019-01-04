@@ -337,7 +337,10 @@ static inline void renderRenderList(RenderList* renderList, Surface* surface, Re
         
         // If op not drawn yet, draw it (and as many others in the batch as can be done now)
         if (op->_renderCounter != renderer->_renderCounter) {
-            renderer->setCurrentSurface(surface);
+            if (surface != renderer->_currentSurface) {
+                renderer->_currentSurface = surface;
+                renderer->setCurrentSurface(surface);
+            }
             RenderBatch* batch = op->_batch;
             batch->render(renderer, surface, op);
         }
@@ -405,7 +408,10 @@ void Surface::renderPhase3(Renderer* renderer, View* view, Surface* prevsurf) {
     // If rendered a child surface then we must now render the child surface onto its parent
     if (!surfaceIsCurrent) {
         if (prevsurf) {
-            renderer->setCurrentSurface(prevsurf);
+            if (prevsurf != renderer->_currentSurface) {
+                renderer->_currentSurface = prevsurf;
+                renderer->setCurrentSurface(prevsurf);
+            }
             surface->_op->prepareToRender(renderer, prevsurf);
             if (surface->_supportsPartialRedraw) {
                 surface->_invalidRegion.rects.clear();

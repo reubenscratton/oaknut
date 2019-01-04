@@ -52,7 +52,7 @@ void Renderer::bindBitmap(Bitmap* bitmap) {
     }
     if (_currentTexture != bitmap->_texture) {
         _currentTexture = bitmap->_texture;
-        _currentTexture->bind();
+        setCurrentTexture(bitmap->_texture);
     }
 }
 

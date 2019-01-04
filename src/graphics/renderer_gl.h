@@ -15,9 +15,9 @@ public:
     
     
     GLTexture(Bitmap* bitmap);
+    void bind();
     
     void unload() override;
-    void bind() override;
     void upload() override;
     int getSampler() override;
     
