@@ -39,11 +39,12 @@ public:
     Surface* getPrimarySurface() override;
     Surface* createPrivateSurface() override;
     void setCurrentSurface(Surface* surface) override;
+    void setCurrentShader(Shader* shader) override;
+    void setCurrentTexture(Texture* texture) override;
+    void setCurrentBlendMode(int blendMode) override;
     Shader* getShader(ShaderFeatures features) override;
     Texture* createTexture(Bitmap* bitmap) override;
     void prepareToDraw() override;
-    void setBlendMode(int blendMode) override;
-    void setActiveShader(Shader* shader) override;
     void pushClip(RECT clip) override;
     void popClip() override;
     void flushQuadBuffer() override;

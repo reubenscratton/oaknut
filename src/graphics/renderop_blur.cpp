@@ -130,8 +130,8 @@ void BlurRenderOp::setRect(const RECT &rect) {
 void BlurRenderOp::prepareToRender(Renderer* renderer, Surface* surface) {
 
     // Deliberately don't call base class cos the default mechanism is set up with the final render
-    renderer->setBlendMode(BLENDMODE_NONE);
-    renderer->setActiveShader(_blurShader);
+    setBlendMode(BLENDMODE_NONE);
+    renderer->prepareToRenderRenderOp(this, _blurShader, _mvp);
     _pmvp = &surface->_mvp;
     
     if (_dirty) {

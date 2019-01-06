@@ -77,10 +77,11 @@ struct Uniforms {
 
 class MetalShader : public Shader {
 public:
-    bool _loaded;
     id<MTLDevice> _device;
     id<MTLLibrary> _library;
-    id<MTLRenderPipelineState> _pipelineState;
+    id<MTLFunction> _vertexShader;
+    id<MTLFunction> _fragShader;
+    id<MTLRenderPipelineState> _pipelineState[3]; // one per blend mode
     id<MTLBuffer> _uniformsBuffer;
     Uniforms* _uniforms;
 
@@ -143,18 +144,16 @@ public:
             s+= ", sampler textureSampler [[ sampler(0) ]]";
         }
         s+= ") {\n";
-        if (useTexSampler) {
-            if (_features.sampler0 == SAMPLER_TEXTURE2D_A8) {
-                s+= "half4 c = colorTexture.sample(textureSampler, in.texcoord);\n";
-                s+= "c.r=c.b=1.0f;\n";
-                s+= "return c;\n";
-            } else {
-                s+= "half4 c = colorTexture.sample(textureSampler, in.texcoord);\n";
-                s+= "return half4(c);\n";
-            }
+        
+        if (!useTexSampler) {
+            s += "half4 c = in.color;\n";
         } else {
-            s += "    return in.color;\n";
+            s += "half4 c = colorTexture.sample(textureSampler, in.texcoord);\n";
+            if (_features.tint) {
+                s += "c.rgb = in.color.rgb;\n";
+            }
         }
+        s+= "return c;\n";
         s += "}\n";
         /*
         if (_features.alpha) {
@@ -182,14 +181,6 @@ public:
         
         /*fs += "void main() {\n";
         
-        string color_src = "v_color";
-        if (useTexSampler) {
-            fs += "    vec4 color = texture2D(texture, v_texcoord);\n";
-            if (_features.tint) {
-                fs += "    color.rgb = v_color.rgb;\n";
-            }
-            color_src = "color";
-        }
         
         
         
@@ -225,20 +216,33 @@ public:
         NSError* error = nil;
         id<MTLLibrary> library = [_device newLibraryWithSource:[NSString stringWithUTF8String:s.data()] options:nil error:&error];
         assert(library);
-        id<MTLFunction> vertexShader = [library newFunctionWithName: @"vertex_shader"];
-        id<MTLFunction> fragShader = [library newFunctionWithName: @"frag_shader"];
+        _vertexShader = [library newFunctionWithName: @"vertex_shader"];
+        _fragShader = [library newFunctionWithName: @"frag_shader"];
 
         
         MTLRenderPipelineDescriptor *pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
-        //pipelineStateDescriptor.label = @"Simple Pipeline";
-        pipelineStateDescriptor.vertexFunction = vertexShader;
-        pipelineStateDescriptor.fragmentFunction = fragShader;
+        pipelineStateDescriptor.vertexFunction = _vertexShader;
+        pipelineStateDescriptor.fragmentFunction = _fragShader;
         pipelineStateDescriptor.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
-        
-        _pipelineState = [_device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor
+        pipelineStateDescriptor.colorAttachments[0].blendingEnabled = NO;
+        _pipelineState[BLENDMODE_NONE] = [_device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor
                                                                  error:&error];
-        assert(_pipelineState);
-        
+
+        pipelineStateDescriptor.colorAttachments[0].blendingEnabled = YES;
+        pipelineStateDescriptor.colorAttachments[0].rgbBlendOperation = MTLBlendOperationAdd;
+        pipelineStateDescriptor.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
+        pipelineStateDescriptor.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+        pipelineStateDescriptor.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorSourceAlpha;
+        pipelineStateDescriptor.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+        pipelineStateDescriptor.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+        _pipelineState[BLENDMODE_NORMAL] = [_device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor
+                                                                 error:&error];
+
+        pipelineStateDescriptor.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorOne;
+        pipelineStateDescriptor.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
+        _pipelineState[BLENDMODE_PREMULTIPLIED] = [_device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor
+                                                                                   error:&error];
+
         _uniformsBuffer = [_device newBufferWithLength:sizeof(Uniforms) options:MTLResourceCPUCacheModeDefaultCache|MTLResourceStorageModeShared];
         _uniforms = (Uniforms*)_uniformsBuffer.contents;
     }
@@ -361,9 +365,11 @@ public:
     void flushQuadBuffer() override {
         
     }
-    void setBlendMode(int blendMode) override {
-        
+    
+    void setCurrentBlendMode(int blendMode) override {
+        // no-op
     }
+
     
     void drawQuads(int numQuads, int index) override {
         [_renderCommandEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
@@ -431,16 +437,13 @@ public:
         [_renderCommandEncoder setFragmentSamplerState:metalTexture->_sampler atIndex:0];
     }
 
-    void setActiveShader(Shader* shader) override {
+    void setCurrentShader(Shader* shader) override {
         MetalShader* metalShader = (MetalShader*)shader;
-        if (!metalShader->_loaded) {
-            metalShader->_loaded = true;
-            metalShader->load();
-        }
+
         // Bind the render encoder to our vertex buffer
         [_renderCommandEncoder setVertexBuffer:_vertexBuffer offset:0 atIndex:0];
         [_renderCommandEncoder setVertexBuffer:metalShader->_uniformsBuffer offset:0 atIndex:1];
-        [_renderCommandEncoder setRenderPipelineState:metalShader->_pipelineState];
+        [_renderCommandEncoder setRenderPipelineState:metalShader->_pipelineState[_blendMode]];
     }
     
     void uploadQuad(ItemPool::Alloc* alloc) override {

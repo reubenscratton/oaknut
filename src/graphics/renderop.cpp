@@ -107,9 +107,7 @@ string debugRect(const RECT& rect) {
 
 
 void RenderOp::prepareToRender(Renderer* renderer, Surface* surface) {
-    renderer->setBlendMode(_blendMode);
-    renderer->setActiveShader(_shader);
-    _shader->configureForRenderOp(this, surface->_mvp);
+    renderer->prepareToRenderRenderOp(this, _shader, surface->_mvp);
 }
 void RenderOp::render(Renderer* renderer, int numQuads, int vboOffset) {
     renderer->drawQuads(numQuads, vboOffset + _renderBase);

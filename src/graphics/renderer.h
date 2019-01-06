@@ -55,6 +55,7 @@ public:
 class Shader : public Object  {
 public:
     ShaderFeatures _features;
+    bool _loaded;
 
     Shader(ShaderFeatures features);
 
@@ -90,7 +91,7 @@ public:
     void releaseTexture(Texture* tex);
     void bindBitmap(Bitmap* bitmap);
     void invalidateQuads(ItemPool::Alloc* alloc);
-
+    void prepareToRenderRenderOp(RenderOp* op, Shader* shader, const MATRIX4& mvp);
 
     // To be implemented by GL, Metal, Vulkan, etc
     virtual void bindToNativeWindow(long nativeWindowHandle) =0;
@@ -98,16 +99,16 @@ public:
     virtual Surface* createPrivateSurface() =0;
     virtual void setCurrentSurface(Surface* surface)=0;
     virtual void setCurrentTexture(Texture* texture)=0;
+    virtual void setCurrentShader(Shader* shader) =0;
+    virtual void setCurrentBlendMode(int blendMode)=0;
     virtual Shader* getShader(ShaderFeatures features)=0;
     virtual void pushClip(RECT clip) =0;
     virtual void popClip() =0;
     virtual Texture* createTexture(Bitmap* bitmap)=0;
     virtual void flushQuadBuffer() =0;
-    virtual void setBlendMode(int blendMode) =0;
     virtual void drawQuads(int numQuads, int index) =0;
     virtual void prepareToDraw() =0;
     virtual void commit() =0;
-    virtual void setActiveShader(Shader* shader) =0;
     virtual void uploadQuad(ItemPool::Alloc* alloc) =0;
     virtual void renderPrivateSurface(Surface* privateSurface, ItemPool::Alloc* alloc) =0;
 

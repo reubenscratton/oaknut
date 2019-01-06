@@ -288,8 +288,6 @@ void Uniform<POINT>::load() {
 
 class GLShaderBase : public Shader {
 public:
-    bool _loaded;
-
     GLuint _program;
     GLuint _vertexConfig;
     Uniform<MATRIX4> _mvp;
@@ -604,16 +602,10 @@ void GLRenderer::setCurrentTexture(Texture* texture) {
     gltex->bind();
 }
 
-void GLRenderer::setActiveShader(Shader* shader) {
+void GLRenderer::setCurrentShader(Shader* shader) {
+    assert(shader->_loaded);
     GLShaderBase* glshader = (GLShaderBase*)shader;
-    if (!glshader->_loaded) {
-        glshader->_loaded = true;
-        glshader->load();
-    }
-    if (_currentShader != shader) {
-        _currentShader = shader;
-        check_gl(glUseProgram, glshader->_program);
-    }
+    check_gl(glUseProgram, glshader->_program);
     
     // These are program-specific...
     if (_currentVertexConfig != glshader->_vertexConfig) {
@@ -674,21 +666,19 @@ Texture* GLRenderer::createTexture(Bitmap *bitmap) {
     return new GLTexture(bitmap);
 }
 
-void GLRenderer::setBlendMode(int blendMode) {
-    if (blendMode != _blendMode) {
-        if (blendMode == BLENDMODE_NONE) {
-            check_gl(glDisable, GL_BLEND);
+
+void GLRenderer::setCurrentBlendMode(int blendMode) {
+    if (blendMode == BLENDMODE_NONE) {
+        check_gl(glDisable, GL_BLEND);
+    } else {
+        if (blendMode == BLENDMODE_NORMAL) {
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // normal alpha blend
         } else {
-            if (blendMode == BLENDMODE_NORMAL) {
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // normal alpha blend
-            } else {
-                glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
-            }
-            if (_blendMode == BLENDMODE_NONE) {
-                check_gl(glEnable, GL_BLEND);
-            }
+            glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
         }
-        _blendMode = blendMode;
+        if (_blendMode == BLENDMODE_NONE) {
+            check_gl(glEnable, GL_BLEND);
+        }
     }
 }
 
@@ -1160,9 +1150,7 @@ void BlurRenderOp::render(Renderer* renderer, int numQuads, int vboOffset) {
     check_gl(glBindTexture, GL_TEXTURE_2D, _textureIds[2]);
     
     // Normal prepareRender using the post-blur shader
-    renderer->setBlendMode(_blendMode);
-    renderer->setActiveShader(_shader);
-    _shader->configureForRenderOp(this, *_pmvp);
+    renderer->prepareToRenderRenderOp(this, _shader, *_pmvp);
 
     RenderOp::render(renderer, numQuads, vboOffset);
 
