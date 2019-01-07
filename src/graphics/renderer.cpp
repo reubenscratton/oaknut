@@ -84,10 +84,10 @@ void Renderer::prepareToRenderRenderOp(RenderOp* op, Shader* shader, const MATRI
         _currentShader = shader;
         setCurrentShader(shader);
     }
-    shader->configureForRenderOp(op, mvp);
     if (op->_blendMode != _blendMode) {
         setCurrentBlendMode(op->_blendMode);
         _blendMode = op->_blendMode;
     }
+    
 }
 

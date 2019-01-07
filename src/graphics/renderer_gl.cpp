@@ -300,7 +300,7 @@ public:
         _mvp.position = check_gl(glGetUniformLocation, _program, "mvp");
     }
     
-    void configureForRenderOp(RenderOp* op, const MATRIX4& mvp) override {
+    virtual void configureForRenderOp(RenderOp* op, const MATRIX4& mvp) {
         _mvp.set(mvp);
         _mvp.use();
         if (_features.alpha) {
@@ -730,8 +730,11 @@ void GLRenderer::flushQuadBuffer() {
         }
 
     }
+}
 
-
+void GLRenderer::prepareToRenderRenderOp(RenderOp* op, Shader* shader, const MATRIX4& mvp) {
+    Renderer::prepareToRenderRenderOp(op, shader, mvp);
+    ((GLShaderBase*)shader)->configureForRenderOp(op, mvp);
 }
 
 void GLRenderer::drawQuads(int numQuads, int index) {
@@ -1114,7 +1117,7 @@ void BlurRenderOp::rendererResize(Renderer* renderer) {
 
 void BlurRenderOp::render(Renderer* renderer, int numQuads, int vboOffset) {
     
-    _blurShader->configureForRenderOp(this, _mvp);
+    ((GLShaderBase*)_blurShader._obj)->configureForRenderOp(this, _mvp);
     
     GLint viewport[4];
     check_gl(glGetIntegerv, GL_VIEWPORT, viewport);

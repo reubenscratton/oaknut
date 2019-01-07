@@ -22,7 +22,6 @@
 
 class MetalTexture : public Texture {
 public:
-    //bool _paramsValid = false;
     id<MTLTexture> _tex;
     id<MTLSamplerState> _sampler;
     
@@ -61,14 +60,45 @@ public:
     }
     
 };
+
+
 class MetalSurface : public Surface {
 public:
-    
-    MetalSurface(bool isPrivate) : Surface(isPrivate) {
-        if (isPrivate) {
-        }
+    id<MTLDevice> _device;
+    MTLRenderPassDescriptor* _renderPassDescriptor;
+    id<MTLRenderCommandEncoder> _renderCommandEncoder;
+    MTLViewport _viewport;
+    id<MTLTexture> _texture;
+    id<MTLSamplerState> _sampler;
+
+    MetalSurface(id<MTLDevice> device, bool isPrivate) : Surface(isPrivate) {
+        _device = device;
+        _viewport.originX = 0;
+        _viewport.originY = 0;
+        _viewport.znear = 0;
+        _viewport.zfar = 1;
+        _renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+        _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionDontCare;
     }
     
+    void setSize(const SIZE& size) override {
+        Surface::setSize(size);
+        _viewport.width = size.width;
+        // NB: Flip Y for offscreen surface texture
+        _viewport.height = _isPrivate ? (-size.height) : size.height;
+        _viewport.originY = _isPrivate ? size.height : 0;
+        if (!_isPrivate) {
+            return;
+        }
+        
+        MTLTextureDescriptor* textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
+            width:size.width height:size.height mipmapped:NO];
+
+        textureDescriptor.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
+        _texture = [_device newTextureWithDescriptor:textureDescriptor];
+        MTLSamplerDescriptor* samplerDesc = [MTLSamplerDescriptor new];
+        _sampler = [_device newSamplerStateWithDescriptor:samplerDesc];
+    }
 };
 
 struct Uniforms {
@@ -82,8 +112,6 @@ public:
     id<MTLFunction> _vertexShader;
     id<MTLFunction> _fragShader;
     id<MTLRenderPipelineState> _pipelineState[3]; // one per blend mode
-    id<MTLBuffer> _uniformsBuffer;
-    Uniforms* _uniforms;
 
     MetalShader(id<MTLDevice> device, ShaderFeatures features) : Shader(features) {
         _device = device;
@@ -242,22 +270,12 @@ public:
         pipelineStateDescriptor.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
         _pipelineState[BLENDMODE_PREMULTIPLIED] = [_device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor
                                                                                    error:&error];
-
-        _uniformsBuffer = [_device newBufferWithLength:sizeof(Uniforms) options:MTLResourceCPUCacheModeDefaultCache|MTLResourceStorageModeShared];
-        _uniforms = (Uniforms*)_uniformsBuffer.contents;
     }
     
     void unload() override {
         
     }
     
-    void configureForRenderOp(class RenderOp* op, const MATRIX4& mvp) override {
-        if (_uniforms->mvp != mvp) {
-            _uniforms->mvp = mvp;
-            //[_uniformsBuffer didModifyRange:NSMakeRange(0, sizeof(Uniforms))];
-        }
-
-    }
 
 };
 
@@ -271,12 +289,13 @@ public:
     id<MTLBuffer> _indexBuffer;
     id<MTLCommandQueue> _commandQueue;
     id<MTLCommandBuffer> _commandBuffer;
-    MTLRenderPassDescriptor* _renderPassDescriptor;
-    id<MTLRenderCommandEncoder> _renderCommandEncoder;
     id<CAMetalDrawable> _drawable;
+    MetalSurface* _primarySurface;
 
     RendererApple(Window* window) : Renderer(window) {
         _device = MTLCreateSystemDefaultDevice();
+        _primarySurface = new MetalSurface(_device, false);
+
         _quadBuffer._resizeFunc = [=](int oldItemCount, int newItemCount) {
             long cb = newItemCount * _quadBuffer._itemSize;
             //_vertexBuffer = [_device newBufferWithLength:cb options:MTLResourceCPUCacheModeWriteCombined | MTLResourceStorageModeShared];
@@ -329,16 +348,14 @@ public:
         _metalLayer.framebufferOnly = true;
         NativeView* nativeView = (__bridge NativeView*)(void*)nativeWindowHandle;
         nativeView->_metalLayer =_metalLayer;
-        nativeView.wantsLayer = YES;
-        //nativeView.layer.bounds = CGRectMake(0,0,300,300);//.frame = nativeView.frame;  // 5
-        
+        nativeView.wantsLayer = YES;        
         _commandQueue = [_device newCommandQueue];
     }
     Surface* getPrimarySurface() override {
-        return new MetalSurface(false);
+        return _primarySurface;
     }
     Surface* createPrivateSurface() override {
-        return new MetalSurface(true);
+        return new MetalSurface(_device, true);
 
     }
     
@@ -370,9 +387,28 @@ public:
         // no-op
     }
 
+    Uniforms _uniforms;
+    bool _uniformsValid;
+
+    void prepareToRenderRenderOp(RenderOp* op, Shader* shader, const MATRIX4& mvp) override {
+        Renderer::prepareToRenderRenderOp(op, shader, mvp);
+
+        if (_uniforms.mvp != mvp) {
+            _uniforms.mvp = mvp;
+            _uniformsValid = false;
+        }
+    }
+
     
     void drawQuads(int numQuads, int index) override {
-        [_renderCommandEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
+        MetalSurface* metalSurface = (MetalSurface*)_currentSurface;
+
+        if (!_uniformsValid) {
+            _uniformsValid = true;
+            [((MetalSurface*)_currentSurface)->_renderCommandEncoder setVertexBytes:&_uniforms length:sizeof(Uniforms) atIndex:1];
+        }
+
+        [metalSurface->_renderCommandEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
                                           indexCount:numQuads*6
                                            indexType:MTLIndexTypeUInt16
                                          indexBuffer:_indexBuffer
@@ -385,14 +421,7 @@ public:
         }
 
         _commandBuffer = [_commandQueue commandBuffer];
-
-        // Get a new render encoder. AFAICS this must be done every frame.
-        _renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-        _renderPassDescriptor.colorAttachments[0].texture = _drawable.texture;
-        _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionDontCare;
-        //_renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-        //_renderPassDescriptor.colorAttachments[0].clearColor = {0.0, 104.0/255.0, 55.0/255.0, 1.0};
-        _renderCommandEncoder = [_commandBuffer renderCommandEncoderWithDescriptor:_renderPassDescriptor];
+        _primarySurface->_texture = _drawable.texture;
 
 
         _renderCounter++;
@@ -406,21 +435,42 @@ public:
         if (!_drawable) {
             return;
         }
-        [_renderCommandEncoder endEncoding];
+        [_primarySurface->_renderCommandEncoder endEncoding];
+        _primarySurface->_renderCommandEncoder = nil;
         [_commandBuffer presentDrawable:_drawable];
         [_commandBuffer commit];
     }
 
     void setCurrentSurface(Surface* surface) override {
-        //MetalSurface* metalSurface = (MetalSurface*)surface;
-        MTLViewport viewport;
-        viewport.originX = 0;
-        viewport.originY = 0;
-        viewport.width = surface->_size.width;
-        viewport.height = surface->_size.height;
-        viewport.znear = 0;
-        viewport.zfar = 1;
-        [_renderCommandEncoder setViewport:viewport];
+
+        // Terminate the current encoder if there is one
+        if (_currentSurface) {
+            MetalSurface* prevSurface = (MetalSurface*)_currentSurface;
+            [prevSurface->_renderCommandEncoder endEncoding];
+            prevSurface->_renderCommandEncoder = nil;
+        }
+
+        
+        // Create new encoder
+        MetalSurface* metalSurface = (MetalSurface*)surface;
+        metalSurface->_renderPassDescriptor.colorAttachments[0].texture = metalSurface->_texture;
+        metalSurface->_renderCommandEncoder = [_commandBuffer renderCommandEncoderWithDescriptor:metalSurface->_renderPassDescriptor];
+        
+        // Bind the encoder to current texture and shader
+        if (_currentTexture) {
+            MetalTexture* metalTexture = (MetalTexture*)_currentTexture;
+            [metalSurface->_renderCommandEncoder setFragmentTexture:metalTexture->_tex atIndex:0];
+            [metalSurface->_renderCommandEncoder setFragmentSamplerState:metalTexture->_sampler atIndex:0];
+        }
+        if (_currentShader) {
+            setCurrentShader(_currentShader);
+        }
+        
+        // Mark uniforms as invalid (i.e. so drawQuads will inject them into the command stream).
+        _uniformsValid = false;
+        
+        // Update the viewport
+        [metalSurface->_renderCommandEncoder setViewport:metalSurface->_viewport];
     }
     
     void setCurrentTexture(Texture* texture) override {
@@ -432,26 +482,34 @@ public:
             [metalTexture->_tex replaceRegion:MTLRegionMake2D(0,0,metalTexture->_bitmap->_width,metalTexture->_bitmap->_height) mipmapLevel:0 withBytes:pixeldata.data bytesPerRow:pixeldata.stride];
             metalTexture->_bitmap->unlock(&pixeldata, false);
         }
-
-        [_renderCommandEncoder setFragmentTexture:metalTexture->_tex atIndex:0];
-        [_renderCommandEncoder setFragmentSamplerState:metalTexture->_sampler atIndex:0];
+        MetalSurface* metalSurface = (MetalSurface*)_currentSurface;
+        [metalSurface->_renderCommandEncoder setFragmentTexture:metalTexture->_tex atIndex:0];
+        [metalSurface->_renderCommandEncoder setFragmentSamplerState:metalTexture->_sampler atIndex:0];
     }
 
     void setCurrentShader(Shader* shader) override {
+        MetalSurface* metalSurface = (MetalSurface*)_currentSurface;
         MetalShader* metalShader = (MetalShader*)shader;
 
         // Bind the render encoder to our vertex buffer
-        [_renderCommandEncoder setVertexBuffer:_vertexBuffer offset:0 atIndex:0];
-        [_renderCommandEncoder setVertexBuffer:metalShader->_uniformsBuffer offset:0 atIndex:1];
-        [_renderCommandEncoder setRenderPipelineState:metalShader->_pipelineState[_blendMode]];
+        [metalSurface->_renderCommandEncoder setRenderPipelineState:metalShader->_pipelineState[_blendMode]];
+        [metalSurface->_renderCommandEncoder setVertexBuffer:_vertexBuffer offset:0 atIndex:0];
     }
     
     void uploadQuad(ItemPool::Alloc* alloc) override {
-        
+        // no-op cos vertex buffer is shared between CPU and GPU
     }
     
     void renderPrivateSurface(Surface* privateSurface, ItemPool::Alloc* alloc) override {
-        
+        MetalSurface* privateMetalSurface = (MetalSurface*)privateSurface;
+        MetalSurface* metalSurface = (MetalSurface*)_currentSurface;
+        [metalSurface->_renderCommandEncoder setFragmentTexture:privateMetalSurface->_texture atIndex:0];
+        [metalSurface->_renderCommandEncoder setFragmentSamplerState:privateMetalSurface->_sampler atIndex:0];
+
+        drawQuads(1, alloc->offset);
+        if (_currentTexture) {
+            setCurrentTexture(_currentTexture);
+        }
     }
 
 

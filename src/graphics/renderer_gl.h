@@ -49,6 +49,7 @@ public:
     void popClip() override;
     void flushQuadBuffer() override;
     void uploadQuad(ItemPool::Alloc* alloc) override;
+    void prepareToRenderRenderOp(RenderOp* op, Shader* shader, const MATRIX4& mvp) override;
     void drawQuads(int numQuads, int index) override;
     void renderPrivateSurface(Surface* privateSurface, ItemPool::Alloc* alloc) override;
 

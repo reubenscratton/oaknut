@@ -99,20 +99,9 @@ static bool s_mouseIsDown;
 
 
 - (CALayer*)makeBackingLayer {
-    app.log("makeBackingLayer");
     return _metalLayer;
 }
 
-- (BOOL)isOpaque {
-    return YES;
-}
-
-- (BOOL)wantsUpdateLayer {
-    return YES;
-}
-- (void)updateLayer {
-    app.log("balls");
-}
 - (void)displayLayer:(CALayer *)layer {
     _oaknutWindow->draw();
 }
@@ -121,6 +110,7 @@ static bool s_mouseIsDown;
     [super setNeedsDisplay:needsDisplay];
     if (needsDisplay) {
         [self.layer setNeedsDisplay];
+        [_metalLayer setNeedsDisplay];
     }
 }
 
@@ -133,6 +123,8 @@ static bool s_mouseIsDown;
     CGFloat scale = viewRectPixels.size.width / viewRectPoints.size.width;
     
     self.layer.bounds = self.bounds;
+    _metalLayer.bounds = self.bounds;
+    _metalLayer.drawableSize = viewRectPixels.size;
 
     _oaknutWindow->resizeSurface(viewRectPixels.size.width, viewRectPixels.size.height, scale);
     

@@ -61,7 +61,6 @@ public:
 
     virtual void load() =0;
     virtual void unload() =0;
-    virtual void configureForRenderOp(class RenderOp* op, const MATRIX4& mvp) =0;
 };
 
 
@@ -91,7 +90,7 @@ public:
     void releaseTexture(Texture* tex);
     void bindBitmap(Bitmap* bitmap);
     void invalidateQuads(ItemPool::Alloc* alloc);
-    void prepareToRenderRenderOp(RenderOp* op, Shader* shader, const MATRIX4& mvp);
+    virtual void prepareToRenderRenderOp(class RenderOp* op, Shader* shader, const MATRIX4& mvp);
 
     // To be implemented by GL, Metal, Vulkan, etc
     virtual void bindToNativeWindow(long nativeWindowHandle) =0;
