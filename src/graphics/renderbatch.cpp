@@ -52,22 +52,18 @@ void RenderBatch::updateQuads(Renderer* renderer) {
     }
 }
 
+
 void RenderBatch::render(Renderer* renderer, Surface* surface, RenderOp* firstOp) {
     
-    // Use and configure the shader for this batch
-    firstOp->prepareToRender(renderer, surface);
-    
-    // Determine how much many ops we can draw right now without breaking render order
+    // Determine how many ops we can draw right now without breaking render order by
+    // walking the render tree in render order. For each op after the given one we need to look
+    // for anything else in the rendertree that is currently unrendered and which must
+    // render before the next op in this batch.
     int numQuadsThisChunk = 0;
     auto it = firstOp->_batchIterator;
     RenderOp* currentOp = firstOp;
     RenderOp* nextOpInBatch = firstOp;
-    
     REGION region;
-    
-    // Walk the render tree in render order. For each op after the current one we need to look
-    // for anything else in the rendertree that is currently unrendered and which must
-    // render before the next op in this batch.
     for (;;) {
 
         // If we've found the next batch op
@@ -83,7 +79,10 @@ void RenderBatch::render(Renderer* renderer, Surface* surface, RenderOp* firstOp
                 break;
             }
             
-            // TODO: We must disallow batching outside the current clip rect
+            // Don't redraw anything that doesn't actually need it
+            if (surface->_supportsPartialRedraw && !nextOpInBatch->_mustRedraw) {
+                break;
+            }
 
             // This batch op can be rendered now!
             numQuadsThisChunk += currentOp->numQuads();
@@ -119,6 +118,9 @@ void RenderBatch::render(Renderer* renderer, Surface* surface, RenderOp* firstOp
         
     }
 
+    // Use and configure the shader for this batch
+    firstOp->prepareToRender(renderer, surface);
+    
     // If redrawing an invalid region, start iterating the region rects here
     RECT rect;
     vector<RECT>::iterator invalidRectIt;
@@ -134,7 +136,7 @@ void RenderBatch::render(Renderer* renderer, Surface* surface, RenderOp* firstOp
     }
 
     // Draw!
-    firstOp->render(renderer, numQuadsThisChunk, _alloc->offset);
+    renderer->drawQuads(numQuadsThisChunk, _alloc->offset + firstOp->_renderBase);
 
     // Iterate next rect of invalid region, if there is any
     if (surface->_supportsPartialRedraw) {

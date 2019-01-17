@@ -5,12 +5,37 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+class BlurShader : public Shader {
+public:
+    BlurShader(Renderer* renderer, class BlurRenderOp* op);
+
+    string getVertexSource() override;
+    string getFragmentSource() override;
+
+    int16_t _u_sampler;
+    int16_t _u_texOffset;
+    BlurRenderOp* _op;
+};
+
+class PostBlurShader : public Shader {
+public:
+    PostBlurShader(Renderer* renderer);
+    string getVertexSource() override;
+    string getFragmentSource() override;
+};
+
 
 class BlurRenderOp : public RenderOp {
 public:
 	BlurRenderOp();
     ~BlurRenderOp();
 
+    // Overrides
+    void setRect(const RECT& rect) override;
+    void asQuads(QUAD *quad) override;
+    void validateShader(Renderer* renderer) override;
+    void prepareToRender(Renderer* renderer, Surface* surface) override;
+    
     // These are also in PrivateSurfaceRenderOp...
     bool _dirty;
     ItemPool::Alloc* _alloc;
@@ -22,25 +47,13 @@ public:
     float _sigma;
     vector<float> _standardGaussianWeights;
     vector<float> _optimizedOffsets;
-#if RENDERER_GL
-    GLuint _textureIds[3];
-    GLuint _fb[2];
-#endif
-    sp<Shader> _blurShader;
+    
+    sp<Texture> _tex1;
+    sp<Surface> _surface1;
+    sp<Surface> _surface2;
+    sp<BlurShader> _blurShader;
     MATRIX4* _pmvp;
     
-    // Overrides
-    void setRect(const RECT& rect) override;
-    void asQuads(QUAD *quad) override;
-    void validateShader(Renderer* renderer) override;
-    void prepareToRender(Renderer* renderer, Surface* surface) override;
-    void render(Renderer* renderer, int numQuads, int vboOffset) override;
-
-private:
-    // Renderer-specific helpers
-    void rendererLoad(Renderer* renderer);
-    void rendererResize(Renderer* renderer);
-    void rendererUnload(Renderer* renderer);
 
 };
 

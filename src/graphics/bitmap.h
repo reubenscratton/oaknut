@@ -52,7 +52,7 @@ typedef struct {
  */
 class Bitmap : public Object, public ISerializeToVariant {
 public:
-    class Texture* _texture;
+    sp<Texture> _texture;
     int32_t _width;
     int32_t _height;
     int32_t _format;
@@ -63,7 +63,7 @@ public:
 protected:
     Bitmap(int width, int height, int format);
     Bitmap();
-    ~Bitmap();
+
 public:
 
     // Accessing pixel data

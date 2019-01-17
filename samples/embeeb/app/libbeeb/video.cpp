@@ -518,7 +518,7 @@ void Video::pollvideo(int aclocks) {
                     if (cursorOnThisFrame && (ulactrl.raw & cursorTable[cursorDrawIndex])) {
                         int pixelsPerChar = ulactrl.isHighFreqClock ? 8 : 16;
                         for (int i = 0; i < pixelsPerChar; ++i) {
-                            *(uintBPP_t*)(bitmapPixels + (offset + i)*sizeof(uintBPP_t)) ^= (uintBPP_t)-1;
+                            *(uintBPP_t*)(bitmapPixels + (offset + i)*sizeof(uintBPP_t)) ^= 0xFFFFFF;// (uintBPP_t)-1;
                         }
                     }
                     if (++cursorDrawIndex == 7) cursorDrawIndex = 0;

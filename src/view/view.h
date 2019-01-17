@@ -366,8 +366,8 @@ protected:
     bool _updateRenderOpsNeeded;
     bool _opaque;
     MATRIX4* _matrix;
-    void addScrollbarOp(RenderOp* renderOp);
-    void removeScrollbarOp(RenderOp* renderOp);
+    void addDecorOp(RenderOp* renderOp);
+    void removeDecorOp(RenderOp* renderOp);
     void updateBackgroundRect();
     void addRenderOpToList(RenderOp* renderOp, bool atFront, sp<RenderList>& list);
     void removeRenderOpFromList(RenderOp* renderOp, sp<RenderList>& list);

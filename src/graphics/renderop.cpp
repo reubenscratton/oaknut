@@ -105,12 +105,16 @@ string debugRect(const RECT& rect) {
     return string(ach);
 }
 
+string RenderOp::debugDescription() {
+    return debugRect(_rect);
+}
+
 
 void RenderOp::prepareToRender(Renderer* renderer, Surface* surface) {
-    renderer->prepareToRenderRenderOp(this, _shader, surface->_mvp);
-}
-void RenderOp::render(Renderer* renderer, int numQuads, int vboOffset) {
-    renderer->drawQuads(numQuads, vboOffset + _renderBase);
+    assert(_shader);
+    renderer->setCurrentShader(_shader);
+    renderer->setCurrentBlendMode(_blendMode);
+    renderer->setUniform(_shader->_u_mvp, surface->_mvp);
 }
 
 void RenderOp::invalidateBatchGeometry() {
@@ -157,6 +161,10 @@ void RenderOp::setColor(COLOR color) {
 void RenderOp::setInset(EDGEINSETS inset) {
     _inset = inset;
     // no need to do anything here, the view code applies the inset when it sets the rect
+}
+
+int RenderOp::getRenderOrder() {
+    return (_list->_renderOrder << 16) | _listIndex;
 }
 
 void RenderOp::rebatchIfNecessary() {

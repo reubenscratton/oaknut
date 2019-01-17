@@ -56,14 +56,13 @@ TextureRenderOp::TextureRenderOp(const char* assetPath, int tintColor) : Texture
 void TextureRenderOp::validateShader(Renderer* renderer) {
     if (_bitmap) {
         if (!_bitmap->_texture) {
-            renderer->createTexture(_bitmap);
-            assert(_bitmap->_texture);
+            renderer->createTextureForBitmap(_bitmap);
         }
         ShaderFeatures features;
         features.sampler0 = _bitmap->_texture->getSampler();
         features.alpha = (_alpha<1.0f);
         features.tint = (_color!=0);
-        _shader = renderer->getShader(features);
+        _shader = renderer->getStandardShader(features);
         _shaderValid = true;
     }
 }
@@ -87,6 +86,9 @@ bool TextureRenderOp::canMergeWith(const RenderOp* op) {
 
 void TextureRenderOp::prepareToRender(Renderer* renderer, Surface* surface) {
     RenderOp::prepareToRender(renderer, surface);
+    if (_alpha < 1) {
+        renderer->setUniform(((StandardShader*)_shader)->_u_alpha, _alpha);
+    }
     renderer->bindBitmap(_bitmap);
 }
 

@@ -76,8 +76,6 @@ BitmapAndroid::BitmapAndroid() : Bitmap(), _androidBitmap(NULL) {
 }
 
 BitmapAndroid::BitmapAndroid(int width, int height, int format) : Bitmap(width,height,format) {
-    //_texTarget = GL_TEXTURE_2D;
-    //_needsUpload = true;
     _androidBitmap = createAndroidBitmap(width, height, format, NULL);
 }
 
@@ -85,7 +83,6 @@ BitmapAndroid::BitmapAndroid(jobject jbitmap) {
     auto env = getBitmapEnv();
     assert(jbitmap);
     _androidBitmap = env->NewGlobalRef(jbitmap);
-    //_texTarget = GL_TEXTURE_2D;
     AndroidBitmapInfo info;
     AndroidBitmap_getInfo(env, _androidBitmap, &info);
     _width = info.width;

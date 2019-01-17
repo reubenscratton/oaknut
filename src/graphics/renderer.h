@@ -35,33 +35,98 @@ union ShaderFeatures {
 #define VERTEXATTRIBS_CONFIG_NORMAL     1 // float x,y; uint16 s,t; uint32 color = 16 bytes
 #define VERTEXATTRIBS_CONFIG_ROUNDRECT  2 // float x,y; uint16 dist_xy; uint32 fillColor; uint32 strokeColor; strokeWidth; radii
 
-
-
-class Texture : public Object {
+/**
+ Base class for Renderer-allocated objects such as Textures and Shaders. It manages
+ a connection to the Renderer that created it, ensuring correct cleanup is performed
+ during destruction, thereby freeing rendering code from needing to do explicit cleanup.
+ */
+class RenderResource : public Object {
 public:
-    Texture(Bitmap* bitmap);
-    virtual ~Texture();
-    virtual void upload()=0;
-    virtual void unload()=0;
+    RenderResource(class Renderer* renderer);
+
+protected:
+    Renderer* _renderer;
+    list<RenderResource*>::iterator _it;
+    friend class Renderer;
+};
+
+class Texture : public RenderResource {
+public:
+    Texture(Renderer* renderer);
+    ~Texture();
+    
+    virtual void resize(int width, int height)=0;
     virtual int getSampler()=0;
     
-    Bitmap* _bitmap;
-    bool _allocdTexData;
+    class Bitmap* _bitmap; // NB: can be null
+    int _format; // see BitmapFormat
     bool _needsUpload;
-    list<Texture*>::iterator _it;
+    int _maxMipMapLevel; // defaults to 0, i.e. no mipmaps
+    bool _minFilterLinear;
+    bool _magFilterLinear;
+    bool _mipFilterLinear;
 };
 
 
-class Shader : public Object  {
+
+class Shader : public RenderResource  {
 public:
-    ShaderFeatures _features;
-    bool _loaded;
+    Shader(Renderer* renderer);
+    ~Shader();
+    
+    void* _shaderState; // opaque data managed by renderer. Non-null while shader is loaded.
+    struct Uniform {
+        enum Type {
+            Int1,
+            Float1,
+            Float2,
+            Float4,
+            Matrix4,
+        } type;
+        enum Usage {
+            Vertex,
+            Fragment
+        } usage;
+        const char* name;
+        int16_t offset;
+        int16_t length();
+    };
+    vector<Uniform> _uniforms;
 
-    Shader(ShaderFeatures features);
+    
+    virtual string getVertexSource() =0;
+    virtual string getFragmentSource() =0;
 
-    virtual void load() =0;
-    virtual void unload() =0;
+    // Uniforms
+    int16_t _u_mvp;
+    
+protected:
+    int16_t declareUniform(const char* name, Uniform::Type type, Uniform::Usage usage=Uniform::Usage::Fragment);
 };
+
+/**
+ StandardShader does the vast majority of rendering. They are constructed on-demand for a unique feature
+ */
+class StandardShader : public Shader {
+public:
+    StandardShader(Renderer* renderer, ShaderFeatures features);
+    
+    string getVertexSource() override;
+    string getFragmentSource() override;
+    
+    ShaderFeatures _features;
+
+    // Uniforms
+    int16_t _u_alpha;
+    int16_t _u_sampler;
+    int16_t _u_strokeColor;
+    int16_t _u_u;
+    int16_t _u_radius;
+    int16_t _u_radii;
+};
+
+
+    
 
 
 
@@ -71,8 +136,9 @@ public:
 class Renderer : public Object {
 public:
     class Window* _window;
-    map<uint32_t, Shader*> _shaders;
-    list<Texture*> _textures;
+    list<RenderResource*> _textures;
+    list<RenderResource*> _shaders;
+    map<uint32_t, Shader*> _standardShaders; // standard shaders, not custom ones
     
 
     // Render state (used during render loop)
@@ -87,35 +153,54 @@ public:
 
     void reset();
     ItemPool::Alloc* allocQuads(int num, ItemPool::Alloc* existingAlloc);
-    void releaseTexture(Texture* tex);
+    virtual void createTextureForBitmap(Bitmap* bitmap);
+    Shader* getStandardShader(ShaderFeatures features);
     void bindBitmap(Bitmap* bitmap);
-    void invalidateQuads(ItemPool::Alloc* alloc);
-    virtual void prepareToRenderRenderOp(class RenderOp* op, Shader* shader, const MATRIX4& mvp);
+    virtual void releaseTexture(Texture* tex);
+    virtual void releaseShader(Shader* shader);
 
-    // To be implemented by GL, Metal, Vulkan, etc
+    void setCurrentShader(Shader* shader);
+    void invalidateQuads(ItemPool::Alloc* alloc);
+
+    template<class T>
+    void setUniform(int16_t uniformIndex, const T& val);
+    
+
+    // Non-drawing interface, ie use these outside the render loop
     virtual void bindToNativeWindow(long nativeWindowHandle) =0;
     virtual Surface* getPrimarySurface() =0;
     virtual Surface* createPrivateSurface() =0;
+    virtual Texture* createTexture() =0;
+    enum IntProperty {
+        MaxVaryingFloats,
+    };
+    virtual int getIntProperty(IntProperty property) =0;
+
+    // Drawing interface, i.e. for use of RenderOps
+    virtual void prepareToDraw() =0;
     virtual void setCurrentSurface(Surface* surface)=0;
     virtual void setCurrentTexture(Texture* texture)=0;
-    virtual void setCurrentShader(Shader* shader) =0;
     virtual void setCurrentBlendMode(int blendMode)=0;
-    virtual Shader* getShader(ShaderFeatures features)=0;
+    virtual void setUniformData(int16_t uniformIndex, const void* data, int32_t cb) =0;
+    virtual void copyFromCurrent(const RECT& rect, Texture* destTex, const POINT& destOrigin)=0;
+    virtual void generateMipmaps(Texture* tex) =0;
     virtual void pushClip(RECT clip) =0;
     virtual void popClip() =0;
-    virtual Texture* createTexture(Bitmap* bitmap)=0;
     virtual void flushQuadBuffer() =0;
-    virtual void drawQuads(int numQuads, int index) =0;
-    virtual void prepareToDraw() =0;
-    virtual void commit() =0;
     virtual void uploadQuad(ItemPool::Alloc* alloc) =0;
-    virtual void renderPrivateSurface(Surface* privateSurface, ItemPool::Alloc* alloc) =0;
-
+    virtual void drawQuads(int numQuads, int index) =0;
+    virtual void commit() =0;
+    
+    
 
     static Renderer* create(Window* window);
     
 protected:
     Renderer(Window* window);
+
+    virtual void* createShaderState(Shader* shader) =0;
+    virtual void deleteShaderState(void* state) =0;
+    virtual void bindCurrentShader() =0;
 
     // QuadBuffer data
     ItemPool _quadBuffer;

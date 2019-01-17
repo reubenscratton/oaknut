@@ -7,7 +7,7 @@
 
 class RenderBatch : public Object {
 public:
-    list<sp<RenderOp>> _ops;
+    list<sp<class RenderOp>> _ops;
     ItemPool::Alloc* _alloc;
     int _numQuads;
     int _head;

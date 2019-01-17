@@ -20,14 +20,13 @@ void TextRenderOp::validateShader(Renderer* renderer) {
     Bitmap* bitmap = _textRenderParams.atlasPage->_bitmap;
     if (bitmap) {
         if (!bitmap->_texture) {
-            renderer->createTexture(bitmap);
-            assert(bitmap->_texture);
+            renderer->createTextureForBitmap(bitmap);
         }
         ShaderFeatures features;
         features.sampler0 = bitmap->_texture->getSampler();
         features.tint = 1;
         features.alpha = _alpha<1.0f;
-        _shader = renderer->getShader(features);
+        _shader = renderer->getStandardShader(features);
         _shaderValid = true;
     }
 }

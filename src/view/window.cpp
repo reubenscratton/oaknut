@@ -483,13 +483,13 @@ void Window::updateDecorOp(bool bottom, float height) {
         if (!op) {
             op = new RectRenderOp();
             op->setFillColor(color);
-            addScrollbarOp(op);
+            addDecorOp(op);
         }
         RECT rect = {0,bottom?(_rect.size.height-height):0,_rect.size.width, height};
         op->setRect(rect);
     } else  {
         if (op) {
-            removeScrollbarOp(op);
+            removeDecorOp(op);
             op = NULL;
         }
     }

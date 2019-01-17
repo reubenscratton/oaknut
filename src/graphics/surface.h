@@ -35,6 +35,7 @@ public:
     list<RenderOp*> _opsNeedingValidation;
     list<sp<RenderBatch>> _listBatches;
     int _mvpNum, _mvpNumPeak;
+    sp<Texture> _texture; // null on primary surface
     
     Surface(bool isPrivate);
 

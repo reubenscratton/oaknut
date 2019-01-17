@@ -89,9 +89,28 @@ void RectRenderOp::validateShader(Renderer* renderer) {
         }
     }
     _blendMode = BLENDMODE_NORMAL;
-    _shader = renderer->getShader(features);
+    _shader = renderer->getStandardShader(features);
 }
 
+void RectRenderOp::prepareToRender(Renderer* renderer, class Surface* surface) {
+    RenderOp::prepareToRender(renderer, surface);
+    StandardShader* shader = (StandardShader*)_shader;
+    if (shader->_features.alpha) {
+        renderer->setUniform(shader->_u_alpha, _alpha);
+    }
+    if (shader->_features.sampler0) {
+        //_sampler.use();
+    }
+    if (shader->_features.roundRect) {
+        renderer->setUniform(shader->_u_strokeColor, _strokeColor);
+        renderer->setUniform(shader->_u_u, VECTOR4(_rect.size.width/2, _rect.size.height/2,0, _strokeWidth));
+        if (shader->_features.roundRect == SHADER_ROUNDRECT_1) {
+            renderer->setUniform(shader->_u_radius, _radii[0]);
+        } else {
+            renderer->setUniform(shader->_u_radii, _radii);
+        }
+    }
+}
 
 
 
@@ -99,11 +118,11 @@ bool RectRenderOp::canMergeWith(const RenderOp* op) {
     if (!RenderOp::canMergeWith(op)) {
         return false;
     }
-    Shader* shaderOther = op->_shader;
-    if (_shader->_features.all != shaderOther->_features.all) {
+    StandardShader* shaderOther = (StandardShader*)op->_shader;
+    if (((StandardShader*)_shader)->_features.all != shaderOther->_features.all) {
         return false;
     }
-    if (_shader->_features.roundRect) {
+    if (((StandardShader*)_shader)->_features.roundRect) {
         return _rect.size.width == ((const RectRenderOp*)op)->_rect.size.width
         && _rect.size.height == ((const RectRenderOp*)op)->_rect.size.height
         && _strokeColor==((const RectRenderOp*)op)->_strokeColor
@@ -120,7 +139,7 @@ bool RectRenderOp::canMergeWith(const RenderOp* op) {
 
 void RectRenderOp::asQuads(QUAD *quad) {
     rectToSurfaceQuad(_rect, quad);
-    if (_shader->_features.roundRect) {
+    if (((StandardShader*)_shader)->_features.roundRect) {
         // Put the quad size into the texture coords so the frag shader
         // can trivially know distance to quad center
         quad->tl.s = quad->bl.s = -_rect.size.width/2;

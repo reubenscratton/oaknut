@@ -1078,11 +1078,11 @@ void View::onStateChanged(STATESET changedStates) {
     }
 }
 
-void View::addScrollbarOp(RenderOp* renderOp) {
+void View::addDecorOp(RenderOp* renderOp) {
     addRenderOpToList(renderOp, false, _renderListDecor);
 }
 
-void View::removeScrollbarOp(RenderOp* renderOp) {
+void View::removeDecorOp(RenderOp* renderOp) {
     removeRenderOpFromList(renderOp, _renderListDecor);
 }
 

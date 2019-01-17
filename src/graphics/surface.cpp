@@ -36,7 +36,7 @@ public:
         features.sampler0 = 1; //_bitmap->_texture->getSampler();
         features.alpha = (_alpha<1.0f);
         features.tint = (_color!=0);
-        _shader = renderer->getShader(features);
+        _shader = renderer->getStandardShader(features);
         _shaderValid = true;
     }
     void prepareToRender(Renderer* renderer, Surface* surface) override {
@@ -49,9 +49,10 @@ public:
             renderer->uploadQuad(_alloc);
         }
 
-        // Bind to the private surface texture
-        renderer->renderPrivateSurface(_view->_surface, _alloc);
+        renderer->setCurrentTexture(_view->_surface->_texture);
+        renderer->drawQuads(1, _alloc->offset);
     }
+    
 };
 }
 
@@ -177,6 +178,8 @@ void Surface::batchRenderOp(RenderOp* op) {
         }
     }
     
+    int renderOrder = op->getRenderOrder();
+    
     // No compatible batch exists, so create it
     if (!batch) {
         batch = new RenderBatch();
@@ -184,17 +187,18 @@ void Surface::batchRenderOp(RenderOp* op) {
         batch->_renderBatchListIterator = _listBatches.insert(_listBatches.end(), batch);
     }
     
-    // Find the insertion point in the batch so we respect render order
+    // Find the insertion point in the batch that respects the overall render order
     assert(!op->_batch);
     op->_batch = batch;
     batch->_dirty = true;
     for (auto it=batch->_ops.begin() ; it!=batch->_ops.end() ;it++) {
-        if (op->_list->_renderOrder < (*it)->_list->_renderOrder) {
+        if (renderOrder < (*it)->getRenderOrder()) {
             op->_batchIterator = batch->_ops.insert(it, op);
             return;
         }        
     }
     op->_batchIterator = batch->_ops.insert(batch->_ops.end(), op);
+    
 }
 void Surface::unbatchRenderOp(RenderOp* op) {
     RenderBatch* batch = op->_batch;
@@ -211,6 +215,12 @@ void Surface::unbatchRenderOp(RenderOp* op) {
 void RenderList::addRenderOp(RenderOp* renderOp, bool atFront/*=false*/) {
     assert(!renderOp->_list);
     renderOp->_list = this;
+    renderOp->_listIndex = atFront ? 0 : (int)_ops.size();
+    if (atFront) {
+        for (auto it : _ops) {
+            it->_listIndex++;
+        }
+    }
     renderOp->_listIterator = _ops.insert(atFront ? _ops.begin() : _ops.end(), renderOp);
 }
 void RenderList::removeRenderOp(RenderOp* renderOp) {
@@ -276,7 +286,11 @@ void Surface::renderPhase1(Renderer* renderer, View* view, POINT origin) {
     // Draw content renderlist
     if (view->_renderList) {
         if (!view->_renderList->_renderOrder) {
-            view->_renderList->_surfaceIt = surface->_renderListsList.insert(surface->_renderListsInsertionPos, view->_renderList);
+            auto insertPoint = surface->_renderListsInsertionPos;
+            if (insertPoint != surface->_renderListsList.end()) {
+                insertPoint++;
+            }
+            view->_renderList->_surfaceIt = surface->_renderListsList.insert(insertPoint, view->_renderList);
         }
         view->_renderList->_renderOrder = surface->_renderOrder++;
         surface->_renderListsInsertionPos = view->_renderList->_surfaceIt;
@@ -428,6 +442,26 @@ void Surface::renderPhase3(Renderer* renderer, View* view, Surface* prevsurf) {
     
 }
 
+static int s_frame=0;
+
+static void debugDump(Surface* surface) {
+    app.log("Frame %d lists=%d batches=%d", ++s_frame, (int)surface->_renderListsList.size(), (int)surface->_listBatches.size());
+    for (auto it : surface->_renderListsList) {
+        RenderList* list = it;
+        app.log("> list order=%d size=%d", list->_renderOrder, list->_ops.size());
+    }
+    for (auto it : surface->_listBatches) {
+        RenderBatch* batch = it;
+        app.log("> batch size=%d", batch->_ops.size());
+        for (auto jt : batch->_ops) {
+            RenderOp* op = jt;
+            string str = op->debugDescription();
+            app.log(" op=%s", str.data());
+        }
+    }
+    app.log("");
+}
+
 
 void Surface::render(View* view, Renderer* renderer) {
 
@@ -443,6 +477,8 @@ void Surface::render(View* view, Renderer* renderer) {
 
     /** PHASE 3: SEND BATCHED RENDEROPS TO GPU **/
     renderPhase3(renderer, view, NULL);
+    
+    //debugDump(this);
 }
 
 

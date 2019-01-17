@@ -88,7 +88,7 @@ void ScrollInfo::updateVisibility(View* view, bool isVertical) {
             _renderOp = new RectRenderOp();
             _renderOp->setFillColor(0xFF4E4E4E);
             _renderOp->setCornerRadius(2.5); // todo: STYLE!
-            view->addScrollbarOp(_renderOp);
+            view->addDecorOp(_renderOp);
         }
         
         // If there's no fade-in animation and the alpha isn't yet one, do the fade-in animation
@@ -105,7 +105,7 @@ void ScrollInfo::updateVisibility(View* view, bool isVertical) {
         updateRect(view);
     } else {
         if (_renderOp) {
-            view->removeScrollbarOp(_renderOp);
+            view->removeDecorOp(_renderOp);
             _renderOp = NULL;
         }
         detach();

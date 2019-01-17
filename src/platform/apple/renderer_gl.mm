@@ -27,7 +27,7 @@ public:
     CVOpenGLESTextureRef _cvTexture;
     CVOpenGLESTextureCacheRef _cvTextureCache;
     
-    CoreVideoTexture(BitmapApple* bitmap, GLRenderer* renderer, CVOpenGLESTextureCacheRef cvTextureCache) : GLTexture(bitmap) {
+    CoreVideoTexture(BitmapApple* bitmap, GLRenderer* renderer, CVOpenGLESTextureCacheRef cvTextureCache) : GLTexture(renderer) {
         _cvTextureCache = cvTextureCache;
 #if TARGET_OS_IOS
         CVReturn err = CVOpenGLESTextureCacheCreateTextureFromImage(kCFAllocatorDefault, _cvTextureCache, bitmap->_cvImageBuffer, NULL, GL_TEXTURE_2D, GL_RGBA , bitmap->_width, bitmap->_height, GL_BGRA, GL_UNSIGNED_BYTE, 0, &_cvTexture);
@@ -97,7 +97,7 @@ public:
         }
     }
 
-    void unload() override {
+    /*void unload() override {
         GLTexture::unload();
         if (_cvTexture) {
 #if TARGET_OS_OSX
@@ -109,7 +109,7 @@ public:
             _cvTexture = NULL;
             _cvTextureCache = NULL;
         }
-    }
+    }*/
     
 
 
@@ -133,7 +133,7 @@ public:
         // todo: move Apple-specific swapBuffer stuff here
     }
     
-    Texture* createTexture(Bitmap* abitmap) override {
+    void createTextureForBitmap(Bitmap* abitmap) override {
         BitmapApple* bitmap = (BitmapApple*)abitmap;
         if (bitmap->_cvImageBuffer) {
             if (!_cvTextureCache) {
@@ -145,10 +145,10 @@ public:
                                                             &_cvTextureCache);
                 assert(err==0);
             }
-            return new CoreVideoTexture(bitmap, this, _cvTextureCache);
+            bitmap->_texture = new CoreVideoTexture(bitmap, this, _cvTextureCache);
+        } else {
+            Renderer::createTextureForBitmap(abitmap);
         }
-    
-        return new GLTexture(bitmap);
     }
 
 

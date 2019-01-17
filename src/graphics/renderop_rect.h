@@ -25,6 +25,7 @@ public:
     bool canMergeWith(const RenderOp* op) override;
     void asQuads(QUAD* quad) override;
     void validateShader(Renderer* renderer) override;
+    void prepareToRender(Renderer* renderer, class Surface* surface) override;
     
 //protected:
     COLOR _strokeColor;

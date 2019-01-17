@@ -19,12 +19,7 @@ Bitmap::Bitmap(int awidth, int aheight, int format) : Bitmap() {
     _format = format;
 }
 
-Bitmap::~Bitmap() {
-    if (_texture) {
-        _texture->unload();
-        _texture = NULL;
-    }
-}
+
 
 void Bitmap::texInvalidate() {
     if (_texture) {

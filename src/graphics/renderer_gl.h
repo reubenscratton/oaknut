@@ -14,13 +14,14 @@ public:
     bool _paramsValid = false;
     
     
-    GLTexture(Bitmap* bitmap);
-    void bind();
-    
-    void unload() override;
-    void upload() override;
+    GLTexture(Renderer* renderer);
+    virtual void upload();
+
+    void resize(int width, int height) override;
     int getSampler() override;
     
+protected:
+    void realloc(int width, int height, void* pixelData, bool sizeChanged);
 };
 
 
@@ -39,22 +40,28 @@ public:
     Surface* getPrimarySurface() override;
     Surface* createPrivateSurface() override;
     void setCurrentSurface(Surface* surface) override;
-    void setCurrentShader(Shader* shader) override;
+    void* createShaderState(Shader* shader) override;
+    void deleteShaderState(void* state) override;
+    void bindCurrentShader() override;
     void setCurrentTexture(Texture* texture) override;
     void setCurrentBlendMode(int blendMode) override;
-    Shader* getShader(ShaderFeatures features) override;
-    Texture* createTexture(Bitmap* bitmap) override;
+    Texture* createTexture() override;
+    void releaseTexture(Texture* texture) override;
     void prepareToDraw() override;
     void pushClip(RECT clip) override;
     void popClip() override;
     void flushQuadBuffer() override;
     void uploadQuad(ItemPool::Alloc* alloc) override;
-    void prepareToRenderRenderOp(RenderOp* op, Shader* shader, const MATRIX4& mvp) override;
     void drawQuads(int numQuads, int index) override;
-    void renderPrivateSurface(Surface* privateSurface, ItemPool::Alloc* alloc) override;
+    void copyFromCurrent(const RECT& rect, Texture* destTex, const POINT& destOrigin) override;
+    void generateMipmaps(Texture* tex) override;
+    
+    void setUniformData(int16_t uniformIndex, const void* data, int32_t cb) override;
 
     // Helpers
     void convertTexture(GLTexture* texture, int width, int height);
+    
+    int getIntProperty(IntProperty property) override;
     
 protected:
     GLRenderer(Window* window);

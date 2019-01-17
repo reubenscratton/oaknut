@@ -11,15 +11,22 @@
  Blur render op and custom shader. The blur is implemented as follows:
  
  1. Maintain 3 private textures, 1 one full-size and 2 quarter-sized.
- 2. glCopyTexSubImage2D from framebuffer to texture 0 (the full-sized one).
+ 2. Copy the area to be blurred from the framebuffer to texture 0 (the full-sized one).
  3. Generate 2 levels of mipmap on texture 0, 1/2 size and 1/4 size.
- 4. Using texture 0 as source and texture 1 as target, run 1D blur program horizontally
- 5. Using texture 1 as source and texture 2 as target, run 1D blur vertically
- 6. Upscale from texture 2 to the framebuffer
+ 4. Using texture 0 as source and texture 1 as target, run 1D blur shader horizontally
+ 5. Using texture 1 as source and texture 2 as target, run 1D blur shader vertically
+ 6. Upscale from texture 2 to the framebuffer with a custom desaturation effect
 
- Expensive, eh? My hope is that mipmap generation is cheap as chips
- 
  */
+
+BlurShader::BlurShader(Renderer* renderer, BlurRenderOp* op) : Shader(renderer), _op(op) {
+    _u_sampler = declareUniform("texture", Uniform::Int1);
+    _u_texOffset = declareUniform("texOffset", Uniform::Type::Float2, Uniform::Usage::Vertex);
+}
+
+PostBlurShader::PostBlurShader(Renderer* renderer) : Shader(renderer) {
+}
+
 
 extern MATRIX4 setOrthoFrustum(float l, float r, float b, float t, float n, float f);
 
@@ -67,15 +74,13 @@ void BlurRenderOp::validateShader(Renderer* renderer) {
         _standardGaussianWeights[i] /= sumOfWeights;
     }
     
-    // TODO: IIRC there is a GL api for determining the max number of parameters...
-#if PLATFORM_WEB
-#define MAX_OPTIMIZED_OFFSETS 3
-#else
-#define MAX_OPTIMIZED_OFFSETS 7
-#endif
+    // Work out how many offsets can be passed via vertex interpolation (varyings)
+    int maxOptimizedOffsets = renderer->getIntProperty(Renderer::MaxVaryingFloats);
+    maxOptimizedOffsets -= 4; // float4 position is the only other varying
+    
     
     // From these weights we calculate the offsets to read interpolated values from
-    uint32_t numOptimizedOffsets = MIN(_blurRadius / 2 + (_blurRadius % 2), MAX_OPTIMIZED_OFFSETS);
+    uint32_t numOptimizedOffsets = MIN(_blurRadius / 2 + (_blurRadius % 2), maxOptimizedOffsets);
     _optimizedOffsets.clear();
     for (uint32_t i = 0; i < numOptimizedOffsets; i++) {
         float firstWeight = _standardGaussianWeights[i*2 + 1];
@@ -85,9 +90,18 @@ void BlurRenderOp::validateShader(Renderer* renderer) {
     }
     
     
-    rendererLoad(renderer);
-    assert(_shader);
-    
+    _blurShader = new BlurShader(renderer, this);
+    _shader = new PostBlurShader(renderer);
+
+    _tex1 = renderer->createTexture();
+    _tex1->_maxMipMapLevel = 2;
+    _tex1->_minFilterLinear = true;
+    _tex1->_mipFilterLinear = false;
+
+    _surface1 = renderer->createPrivateSurface();
+    _surface2 = renderer->createPrivateSurface();
+    _surface2->_texture->_magFilterLinear = true;
+
     _shaderValid = true;
 }
 
@@ -121,6 +135,7 @@ void BlurRenderOp::setRect(const RECT &rect) {
     
     _mvp = setOrthoFrustum(0,_downsampledSize.width,0,_downsampledSize.height,-1,1);
 
+    
 }
 
 
@@ -128,27 +143,51 @@ void BlurRenderOp::setRect(const RECT &rect) {
 
 
 void BlurRenderOp::prepareToRender(Renderer* renderer, Surface* surface) {
-
-    // Deliberately don't call base class cos the default mechanism is set up with the final render
-    setBlendMode(BLENDMODE_NONE);
-    renderer->prepareToRenderRenderOp(this, _blurShader, _mvp);
-    _pmvp = &surface->_mvp;
     
     if (_dirty) {
         _dirty = false;
-        
-        rendererResize(renderer);
+
+        _tex1->resize(_fullSizePow2.width, _fullSizePow2.height);
+        _surface1->setSize({static_cast<float>(_downsampledSize.width), static_cast<float>(_downsampledSize.height)});
+        _surface2->setSize({static_cast<float>(_downsampledSize.width), static_cast<float>(_downsampledSize.height)});
         
         QUAD* quad = (QUAD*)_alloc->addr();
         float dw = _downsampledSize.width;
         float dh = _downsampledSize.height;
-        quad->bl = {0, 0, 0, 0, 0};
-        quad->br = {dw, 0, 1, 0, 0};
-        quad->tl = {0,  dh, 0, 1, 0};
-        quad->tr = {dw, dh, 1, 1, 0};
+        quad->tl = {0,   0, 0, 1, 0};
+        quad->tr = {dw,  0, 1, 1, 0};
+        quad->bl = {0,  dh, 0, 0, 0};
+        quad->br = {dw, dh, 1, 0, 0};
         renderer->uploadQuad(_alloc);
     }
+    
+    // Grab the region to be blurred into tex1
+    RECT rect = surfaceRect();
+    renderer->setCurrentTexture(_tex1);
+    renderer->copyFromCurrent(rect, _tex1, {0,0});
+    
+    // Generate 2 levels of mipmap to scale down by 1/4
+    renderer->generateMipmaps(_tex1);
 
+    // Prepare to render to offscreen surface
+    renderer->setCurrentShader(_blurShader);
+    renderer->setCurrentBlendMode(BLENDMODE_NONE);
+    renderer->setUniform(_blurShader->_u_mvp, _mvp);
+
+    // 1D blur horizontally, source is 1/4-sized mipmap in tex1 and destination is surface1
+    renderer->setCurrentSurface(_surface1);
+    renderer->setUniform(_blurShader->_u_texOffset, VECTOR2(0, 1.f/_downsampledSize.height));
+    renderer->drawQuads(1, _alloc->offset);
+    
+    // 1D blur vertically, source is surface1 and destination is surface2
+    renderer->setCurrentSurface(_surface2);
+    renderer->setCurrentTexture(_surface1->_texture);
+    renderer->setUniform(_blurShader->_u_texOffset, VECTOR2(1.f/_downsampledSize.width,0));
+    renderer->drawQuads(1, _alloc->offset);
+    
+    renderer->setCurrentSurface(surface);
+    renderer->setCurrentTexture(_surface2->_texture);
+    RenderOp::prepareToRender(renderer, surface);
 
 }
 
