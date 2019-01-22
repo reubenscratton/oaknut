@@ -76,7 +76,7 @@ public:
     // Character access
     char32_t operator[](const int32_t charIndex)  const;
     char32_t charAt(const int32_t charIndex)  const;
-    string substr(int32_t charIndexStart, int32_t charIndexEnd) const;
+    string substr(int32_t charIndexStart, int32_t charIndexEnd=-1) const;
     
     // Search
     int32_t find(const string& str, bool caseSensitive=true) const;

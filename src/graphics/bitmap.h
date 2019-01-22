@@ -15,9 +15,10 @@
 */
 #define BITMAPFORMAT_UNKNOWN 0
 #define BITMAPFORMAT_RGBA32  1
-#define BITMAPFORMAT_RGB565  2
-#define BITMAPFORMAT_BGRA32  3   // iOS only
-#define BITMAPFORMAT_A8      4   // Not supported in WebGL, convert to RGBA instead
+#define BITMAPFORMAT_BGRA32  2   // iOS only
+#define BITMAPFORMAT_RGB24   3
+#define BITMAPFORMAT_RGB565  4
+#define BITMAPFORMAT_A8      5   // Not supported in WebGL, convert to RGBA instead
 
 typedef struct {
     void* data;

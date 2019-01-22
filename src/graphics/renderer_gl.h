@@ -66,6 +66,7 @@ public:
 protected:
     GLRenderer(Window* window);
 
+    Surface* _primarySurface;
     GLfloat _backgroundColor[4]; // TODO: this belongs on GLSurface...
     GLuint _indexBufferId;
     GLuint _vertexBufferId;

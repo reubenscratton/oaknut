@@ -51,6 +51,7 @@ int Bitmap::getBytesPerPixel() {
     switch (_format) {
         case BITMAPFORMAT_RGBA32: return 4;
         case BITMAPFORMAT_BGRA32: return 4;
+        case BITMAPFORMAT_RGB24: return 3;
         case BITMAPFORMAT_RGB565: return 2;
         case BITMAPFORMAT_A8: return 1;
     }

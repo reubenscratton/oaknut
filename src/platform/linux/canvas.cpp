@@ -52,7 +52,7 @@ public:
         //CGContextFillRect(context, CGRectMake(0,0,_size.width,_size.height));
         //CGContextSetFillColorWithColor(context, _fillColor);
         //CGContextSetLineCap(context, kCGLineCapRound);
-        _bitmap->_needsUpload = true;
+        _bitmap->texInvalidate();
         //CGContextSetBlendMode(_bitmap->_context, kCGBlendModeNormal);
     }
 

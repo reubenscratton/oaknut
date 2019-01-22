@@ -75,7 +75,7 @@ char32_t string::charAt(const int32_t charIndex)  const {
     int32_t byteIndex = charIndexToByteIndex(charIndex);
     return readUtf8(byteIndex);
 }
-string string::substr(int32_t charIndexStart, int32_t charIndexEnd) const {
+string string::substr(int32_t charIndexStart, int32_t charIndexEnd /*=-1*/) const {
     normaliseCharRange(charIndexStart, charIndexEnd);
     int32_t byteIndexStart = charIndexToByteIndex(charIndexStart);
     int32_t byteIndexEnd = charIndexToByteIndex(charIndexEnd);

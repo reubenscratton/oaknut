@@ -55,7 +55,18 @@ void ControllerView::setTouchedKey(int finger, ControllerKey* currentKey) {
 
 bool ControllerView::handleInputEvent(INPUTEVENT *event) {
 
-	if (event->type==INPUT_EVENT_DOWN || event->type==INPUT_EVENT_MOVE) {
+	// Determine if event is a 'touch', i.e. either a finger event
+	// or a mouse-move where the primary mouse button is pressed.
+	bool isTouchEvent = event->type==INPUT_EVENT_DOWN;
+	if (event->type==INPUT_EVENT_MOVE) {
+		if (event->deviceType == INPUTEVENT::Touch) {
+			isTouchEvent = true;
+		} else if (event->deviceType == INPUTEVENT::Mouse) {
+			isTouchEvent = event->flags & INPUT_FLAG_LBUTTON_DOWN;
+		}
+	}
+
+	if (isTouchEvent) {
 		setTouchedKey(event->deviceIndex, hitTest(event->ptLocal));
 	}
 	if (event->type==INPUT_EVENT_UP) {

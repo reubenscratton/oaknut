@@ -15,24 +15,19 @@ i.e. `macos`, `web`, `ios`, `android`, `linux`, or `windows`.
 
 Immediate Todos
 ---------------
-- Linux urlrequest
-- Initial non-ref documentation
-- Clean target
-- Sample : Hello world
-- Sample : Todo list
-- Project template
-- Fix imageview bug I just added. Maybe move or remove the 
-BitmapProvider thing, I don't think renderops should support 
-being notified like that. It's a view-level responsibility
-to obtain the Bitmap to be shown, then create the renderop
-for it.
-- Standardize on one word for image/bitmap/texture. "Image" is
-currently my preferred option.
+- Linux: fix keyboard input processing (backspace doesnt work)
+- Linux: fix text measurement. Somethings way off somewhere.
+- Linux: fix VSCode generator
+- Windows bindings & DX renderer
+- Add CodeBlocks project generator
+- Get reference docs to acceptable state
+- CLion: what can we do about the broken 'clean' command? No way to clean custom targets
+- ImageView: Maybe move or remove BitmapProvider, am not sure renderops should be concerned with being notified. It's a view-level responsibility to obtain the Bitmap to be shown, *then* create the renderop for it.
 
 Medium-term Roadmap
 -------------------
-- Initial 0.1 release to interested devs
-- Windows bindings
+- Sample : Todo list
+- New Project template, i.e. you can run 'oaknut/build/createproj ~/helloworld'
 - Build a proper UI widget library
 - Extend Canvas as far as possible
 

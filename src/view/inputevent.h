@@ -5,14 +5,6 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#define INPUT_SOURCE_TYPE_KEY 0
-#define INPUT_SOURCE_TYPE_MOUSE 1
-#define INPUT_SOURCE_TYPE_FINGER 2
-#define INPUT_SOURCE_TYPE_SCROLLER 3
-
-#define MAKE_SOURCE(type, id) ((type<<8)|id)
-#define SOURCE_TYPE(source) (source>>8)
-#define SOURCE_ID(source) (source&255)
 
 #define INPUT_EVENT_DOWN 0
 #define INPUT_EVENT_MOVE 1
@@ -23,6 +15,12 @@
 #define INPUT_EVENT_TAP_CONFIRMED 7
 #define INPUT_EVENT_FLING 8
 #define INPUT_EVENT_LONG_PRESS 9
+
+#define INPUT_FLAG_LBUTTON_DOWN 1
+#define INPUT_FLAG_RBUTTON_DOWN 2
+#define INPUT_FLAG_MBUTTON_DOWN 4
+
+
 
 #define NUM_PAST 10
 
@@ -39,6 +37,7 @@ struct INPUTEVENT {
         ScrollWheel //
     } deviceType;
     int deviceIndex;
+    int flags; // see INPUT_FLAG_ values. 
     TIMESTAMP time;
     POINT pt, ptLocal;
     POINT delta; // specific to ScrollWheel

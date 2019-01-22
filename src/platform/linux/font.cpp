@@ -81,7 +81,7 @@ Glyph* FontLinux::createGlyph(char32_t ch, Atlas* atlas) {
     cairo_show_glyphs(cr, cairo_glyph, 1);
     //cairo_surface_flush(bitmap->_cairo_surface);
     
-    bitmap->_needsUpload = true;
+    bitmap->texInvalidate();
     return glyph;
 }
 

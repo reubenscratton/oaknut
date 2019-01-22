@@ -44,10 +44,10 @@ $(ASSETS_DIR)/assets: $(ASSETS_DIR)
 	rsync -rupE --delete $(PROJECT_ROOT)/assets $(ASSETS_DIR)
 
 ALLOPTS:= $(CFLAGS) \
-				  $(if $(DEBUG),-g -O0,-O3) \
-					-DPLATFORM_LINUX=1 $(OPTS) \
-					-isystem $(OAKNUT_DIR)/src \
-					$(SYSINCS)
+          $(if $(DEBUG),-g -O0 -DDEBUG=1,-O3) \
+          -DPLATFORM_LINUX=1 $(OPTS) \
+          -isystem $(OAKNUT_DIR)/src \
+          $(SYSINCS)
 
 # GCC precompiled header has to be .gch, not .pch. The compiler will find it automatically.
 #PCH:=$(BUILD_DIR)/oaknut.gch

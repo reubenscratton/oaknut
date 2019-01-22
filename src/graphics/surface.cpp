@@ -89,7 +89,7 @@ MATRIX4 setOrthoFrustum(float l, float r, float b, float t, float n, float f) {
 }
 
 
-Surface::Surface(bool isPrivate) {
+Surface::Surface(Renderer* renderer, bool isPrivate) : RenderResource(renderer) {
     _supportsPartialRedraw = isPrivate;
     _isPrivate = isPrivate;
 }

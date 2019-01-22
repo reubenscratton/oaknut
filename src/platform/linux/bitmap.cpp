@@ -13,6 +13,7 @@ static int bytesPerPixelForFormat(int format) {
     switch (format) {
         case BITMAPFORMAT_RGBA32: return 4;
         case BITMAPFORMAT_BGRA32: return 4;
+        case BITMAPFORMAT_RGB24: return 3;
         case BITMAPFORMAT_RGB565: return 2;
         case BITMAPFORMAT_A8: return 1;
         default: assert(0);
@@ -21,19 +22,31 @@ static int bytesPerPixelForFormat(int format) {
 }
 
 BitmapLinux::BitmapLinux(GdkPixbuf* pixbuf) : Bitmap() {
-    _pixbuf = pixbuf;
-    g_object_ref(_pixbuf);
     int nc = gdk_pixbuf_get_n_channels(pixbuf);
     int bpc = gdk_pixbuf_get_bits_per_sample(pixbuf);
-    if (nc==4 && bpc==8) _format = BITMAPFORMAT_RGBA32;
-    else assert(false); // todo: add format here
     _width = gdk_pixbuf_get_width(pixbuf);
     _height = gdk_pixbuf_get_height(pixbuf);
-    int stride = gdk_pixbuf_get_rowstride(pixbuf);
-    _cairo_surface = cairo_image_surface_create_for_data(gdk_pixbuf_get_pixels(pixbuf), CAIRO_FORMAT_ARGB32, _width, _height, stride);
-    _needsUpload = true;
-
+    _format = BITMAPFORMAT_BGRA32; // yes, BGRA. Cairo's 32bpp format has *blue* in lowest channel, not red.
+    cairo_format_t cairo_fmt = CAIRO_FORMAT_ARGB32;
+    // If pixbuf is already 32bpp we can take a fast path that just wraps the Cairo-compatible
+    // pixbuf in the surface object
+    if (nc==4 && bpc==8) {
+        int stride = gdk_pixbuf_get_rowstride(pixbuf);
+        _cairo_surface = cairo_image_surface_create_for_data(gdk_pixbuf_get_pixels(pixbuf), cairo_fmt, _width, _height, stride);
+        _pixbuf = pixbuf;
+        g_object_ref(_pixbuf);
+    
+    // Otherwise we must draw the pixbuf to a 32bpp cairo surface. This is slower
+    // but at least we don't need to hang on to the pixbuf.
+    } else {
+        _cairo_surface = cairo_image_surface_create(cairo_fmt, _width, _height);
+        assert(_cairo_surface != NULL);
+        _cairo = cairo_create(_cairo_surface);
+        gdk_cairo_set_source_pixbuf(_cairo, pixbuf, 0, 0);
+        cairo_paint(_cairo);
+    }
 }
+
 BitmapLinux::BitmapLinux(int width, int height, int format) : Bitmap(width, height, format) {
     cairo_format_t cairo_format;
     switch (format) {
@@ -43,17 +56,13 @@ BitmapLinux::BitmapLinux(int width, int height, int format) : Bitmap(width, heig
         default: assert(false);
     }
     _cairo_surface = cairo_image_surface_create(cairo_format, width, height);
-    _needsUpload = true;
+    assert(_cairo_surface);
 }
 
 BitmapLinux::~BitmapLinux() {
     if (_cairo_surface) {
         cairo_surface_destroy(_cairo_surface);
         _cairo_surface = NULL;
-    }
-    if (_textureId) {
-         check_gl(glDeleteTextures, 1, &_textureId);
-        _textureId = 0;
     }
     g_object_unref(_pixbuf);
 }
@@ -69,7 +78,7 @@ void BitmapLinux::lock(PIXELDATA* pixelData, bool forWriting) {
 
 void BitmapLinux::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
     if (pixelDataChanged) {
-        _needsUpload = true;
+        texInvalidate();
     }
 }
 

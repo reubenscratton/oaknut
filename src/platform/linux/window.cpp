@@ -15,6 +15,7 @@ public:
     GtkWidget* glarea;
     GtkWidget* glwindow;
     float _scale;
+    int _inputFlags;
 
     WindowLinux() {
         glwindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -86,9 +87,9 @@ public:
     }
     static gboolean render(GtkGLArea *area, GdkGLContext *context, gpointer callback_data)  {
         WindowLinux* window = (WindowLinux*)callback_data;
-        glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        //glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         window->draw();
-        glFlush();
+        //glFlush();
         return TRUE;
     }
     static gint glarea_key_press_event(GtkWidget *widget, GdkEventKey *event, gpointer callback_data) {
@@ -129,22 +130,25 @@ public:
         switch(event->type) {
             case GDK_BUTTON_PRESS:
                 eventType = INPUT_EVENT_DOWN;
+                window->_inputFlags |= INPUT_FLAG_LBUTTON_DOWN;
                 break;
             case GDK_MOTION_NOTIFY:
                 eventType = INPUT_EVENT_MOVE;
                 break;
             case GDK_BUTTON_RELEASE:
                 eventType = INPUT_EVENT_UP;
+                window->_inputFlags &= ~INPUT_FLAG_LBUTTON_DOWN;
                 break;
             default:
                 app.log("unhandled mouse event type=%d", event->type);
                 return FALSE;
         }
-        //app.log("x=%d y=%d", x, y);
+        //app.log("t=%d x=%d y=%d", eventType, x, y);
         INPUTEVENT inputEvent;
         inputEvent.deviceType = INPUTEVENT::Mouse;
         inputEvent.deviceIndex = 0;
         inputEvent.type = eventType;
+        inputEvent.flags = window->_inputFlags;
         inputEvent.pt.x = x * window->_scale;
         inputEvent.pt.y = y * window->_scale;
         inputEvent.time = app.currentMillis();
@@ -169,7 +173,22 @@ Window* Window::create() {
     return new WindowLinux();
 }
 
+class LinuxRenderer : public GLRenderer {
+public:
+    LinuxRenderer(Window* window) : GLRenderer(window) {
+    }
+    void bindToNativeWindow(long nativeWindowHandle) override {
+        // todo: move EAGL setup code here
+    }
+    void commit() override {
+        // todo: move Linux swapBuffer stuff here
+    }
 
+};
+
+Renderer* Renderer::create(Window* window) {
+    return new LinuxRenderer(window);
+}
 
 #endif
 

@@ -24,7 +24,7 @@ public:
  Surfaces are owned by Views, all visible Views in the owning view's hierarchy
  will be rendered to the surface.*/
 
-class Surface : public Object {
+class Surface : public RenderResource {
 public:
 	SIZE _size;
     REGION _invalidRegion; // unused on primary surface
@@ -37,7 +37,7 @@ public:
     int _mvpNum, _mvpNumPeak;
     sp<Texture> _texture; // null on primary surface
     
-    Surface(bool isPrivate);
+    Surface(Renderer* renderer, bool isPrivate);
 
     virtual void render(View* view, Renderer* renderer);
     virtual void setSize(const SIZE& size);

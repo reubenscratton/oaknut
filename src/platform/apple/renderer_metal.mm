@@ -43,6 +43,9 @@ public:
             case BITMAPFORMAT_BGRA32:
                 pixelFormat = MTLPixelFormatBGRA8Unorm;
                 break;
+            case BITMAPFORMAT_RGB24:
+                assert(0); // Metal does not support this format, you must use 32bpp
+                break;
             case BITMAPFORMAT_A8:
                 pixelFormat = MTLPixelFormatA8Unorm;
                 break;

@@ -12,6 +12,7 @@ static CGBitmapInfo bitmapInfoForFormat(int format) {
     switch (format) {
         case BITMAPFORMAT_RGBA32: return kCGImageAlphaPremultipliedLast;
         case BITMAPFORMAT_BGRA32: return kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst;
+        case BITMAPFORMAT_RGB24: return kCGBitmapByteOrder32Little| kCGImageAlphaNone;
         case BITMAPFORMAT_RGB565: return kCGImageAlphaNone;
         case BITMAPFORMAT_A8: return kCGImageAlphaOnly;
         default: assert(0);
@@ -23,7 +24,8 @@ static int bytesPerPixelForFormat(int format) {
     switch (format) {
         case BITMAPFORMAT_RGBA32: return 4;
         case BITMAPFORMAT_BGRA32: return 4;
-        case BITMAPFORMAT_RGB565: return 2;
+        case BITMAPFORMAT_RGB24: return 3;
+        case BITMAPFORMAT_BGRA32: return 4;
         case BITMAPFORMAT_A8: return 1;
         default: assert(0);
     }
@@ -81,6 +83,7 @@ void BitmapApple::lock(PIXELDATA* pixelData, bool forWriting) {
             case BITMAPFORMAT_RGBA32: pixelFormat = kCVPixelFormatType_32BGRA; break;
             case BITMAPFORMAT_BGRA32:
             pixelFormat = kCVPixelFormatType_32BGRA; break;
+            case BITMAPFORMAT_RGB24: pixelFormat = kCVPixelFormatType_24RGB; break;
             case BITMAPFORMAT_RGB565: pixelFormat = kCVPixelFormatType_16LE565; break;
             case BITMAPFORMAT_A8: pixelFormat = kCVPixelFormatType_OneComponent8; break;
             default: assert(0); break;
@@ -189,7 +192,8 @@ BitmapApple* bitmapFromData(const void* data, int cb) {
             }
             break;
         case 24:
-            assert(0); // Can OpenGL on iOS support these or do they need conversion? No idea...
+            format = BITMAPFORMAT_RGB24;
+            assert(0); // Can Metal or GL on iOS support these or do they need conversion? No idea...
             break;
         case 16:
             format = BITMAPFORMAT_RGB565;

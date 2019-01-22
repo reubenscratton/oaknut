@@ -153,16 +153,10 @@ class GLSurface : public Surface {
 public:
     GLuint _fb;
     
-    GLSurface(bool isPrivate) : Surface(isPrivate) {
+    GLSurface(Renderer* renderer, bool isPrivate) : Surface(renderer, isPrivate) {
         if (isPrivate) {
             check_gl(glGenFramebuffers, 1, &_fb);
-
-        } else {
-#if TARGET_OS_IOS || defined(PLATFORM_LINUX)
-            _fb = 1;
-#else
-            _fb = 0;
-#endif
+            assert(_fb > 0);
         }
     }
     ~GLSurface() {
@@ -179,17 +173,17 @@ public:
         }
         _texture->resize(size.width, size.height);
 
-        GLint oldFBO;
-        check_gl(glGetIntegerv, GL_FRAMEBUFFER_BINDING, &oldFBO);
-        
         check_gl(glBindFramebuffer, GL_FRAMEBUFFER, _fb);
         check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ((GLTexture*)_texture._obj)->_textureId, 0);
         check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
         check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
         //GLenum x = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         //assert(x==GL_FRAMEBUFFER_COMPLETE);
-        check_gl(glBindFramebuffer, GL_FRAMEBUFFER, oldFBO);
 
+        GLSurface* currentGlSurface = (GLSurface*)_renderer->_currentSurface;
+        if (currentGlSurface) {
+            check_gl(glBindFramebuffer, GL_FRAMEBUFFER, currentGlSurface->_fb);
+        }
     }
     
 
@@ -198,11 +192,11 @@ public:
 
 
 Surface* GLRenderer::getPrimarySurface() {
-    return new GLSurface(false); // todo: make this a singleton member of GLRenderer
+    return _primarySurface; 
 }
 
 Surface* GLRenderer::createPrivateSurface() {
-    GLSurface* surface = new GLSurface(true);
+    GLSurface* surface = new GLSurface(this, true);
     surface->_texture = new GLTexture(this);
     return surface;
 
@@ -235,6 +229,12 @@ void GLTexture::realloc(int width, int height, void* pixelData, bool sizeChanged
             pixelType = GL_UNSIGNED_BYTE;
             format = GL_BGRA;
             internalFormat = GL_RGBA;
+            break;
+        }
+        case BITMAPFORMAT_RGB24: {
+            pixelType = GL_UNSIGNED_BYTE;
+            format = GL_RGB;
+            internalFormat = GL_RGB;
             break;
         }
         case BITMAPFORMAT_RGB565: {
@@ -508,6 +508,7 @@ void GLRenderer::bindCurrentShader() {
 }
 
 GLRenderer::GLRenderer(Window* window) : Renderer(window) {
+    _primarySurface = new GLSurface(this, false);
     _quadBuffer._resizeFunc = [=](int oldItemCount, int newItemCount) {
         
         // Realloc
@@ -640,6 +641,9 @@ void GLRenderer::prepareToDraw() {
     // GL context init
     if (!_doneInit) {
         _doneInit = 1;
+
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, (GLint*)&((GLSurface*)_primarySurface)->_fb);
+
         check_gl(glDepthMask, GL_TRUE);
         check_gl(glClear, GL_DEPTH_BUFFER_BIT);
         check_gl(glDepthMask, GL_FALSE);
