@@ -13,7 +13,7 @@ var navmodelRef = [
   { t:"Task", u:"/ref/base_group/Task"}, 
   { t:"Timer", u:"/ref/base_group/Timer"}, 
   { t:"bytearray", u:"/ref/base_group/bytearray"}, 
-  { t:"sp< T >", u:"/ref/base_group/sp< T >"}, 
+  { t:"sp< T >", u:"/ref/base_group/sp_lt_ T _gt_"}, 
   { t:"string", u:"/ref/base_group/string"}]}, 
 { t:"Data", i: [  { t:"ByteBuffer", u:"/ref/data_group/ByteBuffer"}, 
   { t:"ByteBufferStream", u:"/ref/data_group/ByteBufferStream"}, 

@@ -44,7 +44,6 @@ Name         | Type                   | Default
 `tint`       | color  |
 `visibility` | `visible`&#124;`hidden`&#124;`gone`  | visible
 `width`      | measurement            |     
-
 ### Identity & Hierarchy
 
 `void addSubview(`[`View`](/ref/views/View)`* subview)`<br>Adds a subview to the end of the subviews list, i.e.
@@ -262,3 +261,5 @@ Custom views should override this method to add support for custom attributes.
 `void inflate(const `[`string`](/ref/base_group/string)` & layoutFile)`<br>
 
 `void bind(T*& rview, const `[`string`](/ref/base_group/string)` & id)`<br>
+
+

@@ -39,6 +39,11 @@ public class Doxy {
 		writeTextFile(path, html, false);
 	}
 
+	static String safeFilename(String s) {
+		return s.replace("<", "_lt_")
+				.replace(">", "_gt_");
+	}
+
 	public static void main(String[] args) throws ParserConfigurationException, SAXException, IOException {
 	
 		// Find the group files
@@ -63,7 +68,7 @@ public class Doxy {
 			writeTextFile(outputPath + group.name + "/index.md", group.toMarkdown(), true);
 			for (CppClass clazz : group.classes) {
 				//writeHtmlFile(clazz.name, outputPath + group.name + "/" + clazz.name + ".html", clazz.toHtml());
-				writeTextFile(outputPath + group.name + "/" + clazz.name + ".md", clazz.toMarkdown(), true);
+				writeTextFile(outputPath + group.name + "/" + safeFilename(clazz.name) + ".md", clazz.toMarkdown(), true);
 			}
 		}
 		
@@ -85,7 +90,7 @@ public class Doxy {
 				}			
 			});
 			for (CppClass clazz : group.classes) {
-				navModel += "  { t:\"" + clazz.name + "\", u:\"/ref/" + group.name + "/" + clazz.name + "\"}";
+				navModel += "  { t:\"" + clazz.name + "\", u:\"/ref/" + group.name + "/" + safeFilename(clazz.name) + "\"}";
 				if (clazz != group.classes.get(group.classes.size()-1)) {
 					navModel += ", \n";
 				}
