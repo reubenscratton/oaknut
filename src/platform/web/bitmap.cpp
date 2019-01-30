@@ -15,30 +15,8 @@ static int bytesPerPixelForFormat(int format) {
         case BITMAPFORMAT_RGBA32: return 4;
         case BITMAPFORMAT_BGRA32: return 4;
         case BITMAPFORMAT_RGB24: return 3;
-        case BITMAPFORMAT_BGRA32: return 4;
+        case BITMAPFORMAT_RGB565: return 2;
         case BITMAPFORMAT_A8: return 1;
-        default: assert(0);
-    }
-    return 0;
-}
-
-static int glformatForFormat(int format) {
-    switch (format) {
-        case BITMAPFORMAT_RGBA32: return GL_RGBA;
-        case BITMAPFORMAT_BGRA32: return GL_RGBA;
-        case BITMAPFORMAT_RGB565: return GL_RGB;
-        case BITMAPFORMAT_A8: return GL_ALPHA;
-        default: assert(0);
-    }
-    return 0;
-}
-
-static int gltypeForFormat(int format) {
-    switch (format) {
-        case BITMAPFORMAT_RGBA32: return GL_UNSIGNED_BYTE;
-        case BITMAPFORMAT_BGRA32: return GL_UNSIGNED_BYTE;
-        case BITMAPFORMAT_RGB565: return GL_UNSIGNED_SHORT_5_6_5;
-        case BITMAPFORMAT_A8: return GL_UNSIGNED_BYTE;
         default: assert(0);
     }
     return 0;
@@ -64,7 +42,7 @@ BitmapWeb::BitmapWeb(int width, int height, int format) : Bitmap(width, height, 
 }
 
 // Read-only bitmap constructor, wraps the Image created by an ImageRequest
-BitmapWeb::BitmapWeb(val img, bool isPng)  : _img(img), _isPng(isPng), _buff(val::null()) {
+BitmapWeb::BitmapWeb(val img)  : _img(img), _buff(val::null()) {
     _width = img["width"].as<int>();
     _height = img["height"].as<int>();
     _format = BITMAPFORMAT_RGBA32;
@@ -127,18 +105,21 @@ void BitmapWeb::unlock(PIXELDATA* pixelData, bool pixelsChanged) {
         free(_pixelData.data);
         _pixelData.data = NULL;
     }
+    if (pixelsChanged && _texture) {
+        texInvalidate();
+    }
     // NB: Nothing happens here. Once an image has been lock()d into heap memory
     // there's no real point copying back to Javascript-only memory and then copying all
     // over again on the next lock() call. Better (I think) to just keep the
     // buffer hanging around until the object is freed.
 }
 
-void BitmapWeb::bind() {
-    Bitmap::bind();
+
+void BitmapWeb::glTexImage2D() {
+    // TODO: this really belongs in Renderer. Need an 'uploadTextureFromBitmap' method...
     val gl = val::global("gl");
-    int format = _isPng ? GL_RGBA : GL_RGB;
-    format = glformatForFormat(_format);
-    int type = gltypeForFormat(_format);
+    int format = (_format==BITMAPFORMAT_A8) ? GL_ALPHA : GL_RGBA;
+    int type = GL_UNSIGNED_BYTE;
     if (!_img.isNull()) {
         gl.call<void>("texImage2D", GL_TEXTURE_2D, 0, format, format, type, _img);
     } else if (!_buff.isNull()) {
@@ -149,7 +130,7 @@ void BitmapWeb::bind() {
             _canvas->_hasChanged = false;
         }
     } else {
-        app.log("bind() called on data-less bitmap");
+        app.log("glTexImage2D() called on data-less bitmap");
     }
 }
 

@@ -63,7 +63,6 @@ void TextureRenderOp::validateShader(Renderer* renderer) {
         features.alpha = (_alpha<1.0f);
         features.tint = (_color!=0);
         _shader = renderer->getStandardShader(features);
-        _shaderValid = true;
     }
 }
 void TextureRenderOp::setTexRect(const RECT& texRect) {
@@ -73,10 +72,17 @@ void TextureRenderOp::setTexRect(const RECT& texRect) {
 
 void TextureRenderOp::asQuads(QUAD *quad) {
     rectToSurfaceQuad(_rect, quad);
-    quad->tl.s = quad->bl.s = _rectTex.left();
-    quad->tl.t = quad->tr.t = _rectTex.top();
-    quad->tr.s = quad->br.s = _rectTex.right();
-    quad->bl.t = quad->br.t = _rectTex.bottom();
+    if (_bitmap->_texture->_denormalizedCoords) {
+        quad->tl.s = quad->bl.s = _rectTex.left() * _bitmap->_width;
+        quad->tl.t = quad->tr.t = _rectTex.top()  * _bitmap->_height;
+        quad->tr.s = quad->br.s = _rectTex.right() * _bitmap->_width;
+        quad->bl.t = quad->br.t = _rectTex.bottom() * _bitmap->_height;
+    } else {
+        quad->tl.s = quad->bl.s = _rectTex.left();
+        quad->tl.t = quad->tr.t = _rectTex.top();
+        quad->tr.s = quad->br.s = _rectTex.right();
+        quad->bl.t = quad->br.t = _rectTex.bottom();
+    }
 }
 
 bool TextureRenderOp::canMergeWith(const RenderOp* op) {
@@ -87,7 +93,7 @@ bool TextureRenderOp::canMergeWith(const RenderOp* op) {
 void TextureRenderOp::prepareToRender(Renderer* renderer, Surface* surface) {
     RenderOp::prepareToRender(renderer, surface);
     if (_alpha < 1) {
-        renderer->setUniform(((StandardShader*)_shader)->_u_alpha, _alpha);
+        renderer->setUniform(_shader.as<StandardShader>()->_u_alpha, _alpha);
     }
     renderer->bindBitmap(_bitmap);
 }

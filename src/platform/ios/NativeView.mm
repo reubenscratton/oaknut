@@ -11,65 +11,68 @@
 
 @implementation NativeView
 
+#if RENDERER_GL
 + (Class)layerClass {
     return [CAEAGLLayer class];
 }
+#endif
+#if RENDERER_METAL
++ (Class)layerClass {
+    return [CAMetalLayer class];
+}
+#endif
+
 
 - (id)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
         _renderNeeded = YES;
-    //dispatch_async(oakQueue, ^{
-    glLayer = (CAEAGLLayer*)self.layer;
-    glLayer.opaque = YES;
-    glLayer.contentsScale = [UIScreen mainScreen].scale;//self.contentScaleFactor;
-    glLayer.drawableProperties = @{
-                                   kEAGLDrawablePropertyColorFormat:kEAGLColorFormatRGBA8,
-                                   kEAGLDrawablePropertyRetainedBacking:@NO // todo: experiment with YES
-                                   };
-    
-    glContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-    if (!glContext) {
-        NSLog(@"Unable to create EAGLContext");
-        exit(1);
-    }
-    if (![EAGLContext setCurrentContext:glContext]) {
-        NSLog(@"Unable to set current EAGLContext");
-        exit(1);
-    }
-    glGenRenderbuffers(1, &renderbuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
-    [glContext renderbufferStorage:GL_RENDERBUFFER fromDrawable:glLayer];
-    GLuint framebuffer;
-    glGenFramebuffers(1, &framebuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderbuffer);
-    
-    //});
-    
-    displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(render)];
-    [displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+#if RENDERER_GL
+        glLayer = (CAEAGLLayer*)self.layer;
+        glLayer.opaque = YES;
+        glLayer.contentsScale = [UIScreen mainScreen].scale;//self.contentScaleFactor;
+        glLayer.drawableProperties = @{
+                                       kEAGLDrawablePropertyColorFormat:kEAGLColorFormatRGBA8,
+                                       kEAGLDrawablePropertyRetainedBacking:@NO // todo: experiment with YES
+                                       };
+        
+        glContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+        if (!glContext) {
+            NSLog(@"Unable to create EAGLContext");
+            exit(1);
+        }
+        if (![EAGLContext setCurrentContext:glContext]) {
+            NSLog(@"Unable to set current EAGLContext");
+            exit(1);
+        }
+        glGenRenderbuffers(1, &renderbuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+        [glContext renderbufferStorage:GL_RENDERBUFFER fromDrawable:glLayer];
+        GLuint framebuffer;
+        glGenFramebuffers(1, &framebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderbuffer);
+#endif
+        displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(render)];
+        [displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
     
     }
     return self;
 }
-
-
 
 - (void)render {
     if (!_renderNeeded) {
         return;
     }
     _renderNeeded = NO;
-    //dispatch_async(oakQueue, ^{
     
     _window->draw();
     
+#if RENDERER_GL
     [glContext presentRenderbuffer:GL_RENDERBUFFER];
-    
     // GLKView does this for us
     //GLenum discards = GL_COLOR_ATTACHMENT0;
     //glDiscardFramebufferEXT(GL_FRAMEBUFFER, 1, &discards); // aka glInvalidateFramebuffer in ES 3.0
-    //});
+#endif
 }
 
 - (BOOL)canBecomeFirstResponder {

@@ -54,6 +54,10 @@ class sp {
 public:
 	T* _obj;
     
+    template<class TC>
+    TC* as() const {
+        return static_cast<TC*>(_obj);
+    }
 /*#if DEBUG
     void dbgLog(bool retain) {
         if (_obj && _obj==DBGOBJ) {

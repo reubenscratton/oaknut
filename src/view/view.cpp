@@ -611,11 +611,7 @@ void View::layout(RECT constraint) {
     if (_visibility == Gone) {
         return;
     }
-#if DEBUG
-    if (_debugTag.length()) {
-        app.log("%s: layout(%s)", _debugTag.data(), constraint.toString().data());
-    }
-#endif
+
     //assert(!_layoutValid);
     SIZE refSize = {0,0};
     

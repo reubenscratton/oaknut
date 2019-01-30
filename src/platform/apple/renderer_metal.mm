@@ -82,10 +82,10 @@ class MetalSurface : public Surface {
 public:
     MTLViewport _viewport;
     id<MTLTexture> getTexture() {
-        return ((MetalTexture*)_texture._obj)->_tex;
+        return _texture.as<MetalTexture>()->_tex;
     };
 
-    MetalSurface(Renderer* renderer, bool isPrivate) : Surface(isPrivate) {
+    MetalSurface(Renderer* renderer, bool isPrivate) : Surface(renderer, isPrivate) {
         _viewport.originX = 0;
         _viewport.originY = 0;
         _viewport.znear = 0;
@@ -262,7 +262,7 @@ string StandardShader::getVertexSource() {
 
     
     // Frag shader
-    string fragUniforms = getUniformFields(this, Uniform::Usage::Fragment);
+    string fragUniforms = getUniformFields(Uniform::Usage::Fragment);
     if (fragUniforms.length() > 0) {
         s+= "struct FragUniforms {\n";
         s+= fragUniforms;
@@ -325,6 +325,37 @@ string StandardShader::getFragmentSource() {
 }
 
 
+class CoreVideoTexture : public MetalTexture {
+public:
+    
+    CVMetalTextureRef _cvTexture;
+    CVMetalTextureCacheRef _cvTextureCache;
+    
+    CoreVideoTexture(BitmapApple* bitmap, Renderer* renderer, CVMetalTextureCacheRef cvTextureCache) : MetalTexture(renderer) {
+        _cvTextureCache = cvTextureCache;
+        CVReturn err = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, cvTextureCache, bitmap->_cvImageBuffer, NULL, MTLPixelFormatBGRA8Unorm, bitmap->_width, bitmap->_height, 0, &_cvTexture);
+        assert(err==0);
+        _tex = CVMetalTextureGetTexture(_cvTexture);
+        assert(_tex);
+        
+        MTLSamplerDescriptor* samplerDesc = [MTLSamplerDescriptor new];
+        samplerDesc.minFilter = _minFilterLinear ? MTLSamplerMinMagFilterLinear : MTLSamplerMinMagFilterNearest;
+        samplerDesc.magFilter = _magFilterLinear ? MTLSamplerMinMagFilterLinear : MTLSamplerMinMagFilterNearest;
+        samplerDesc.mipFilter = MTLSamplerMipFilterNotMipmapped;
+        _sampler = [s_device newSamplerStateWithDescriptor:samplerDesc];
+    }
+    ~CoreVideoTexture() {
+        if (_cvTexture) {
+            _cvTexture = NULL;
+            CVMetalTextureCacheFlush(_cvTextureCache, 0);
+            _cvTextureCache = NULL;
+        }
+    }
+    void resize(int width, int height) override {
+        assert(0); // CV textures aren't resizable
+    }
+
+};
 
 
 class RendererApple : public Renderer {
@@ -409,16 +440,24 @@ public:
     }
     
     void bindToNativeWindow(long nativeWindowHandle) override {
+        NativeView* nativeView = (__bridge NativeView*)(void*)nativeWindowHandle;
+#if PLATFORM_MACOS
         _metalLayer = [CAMetalLayer layer];
+        nativeView->_metalLayer =_metalLayer;
+#else
+        _metalLayer = (CAMetalLayer*)nativeView.layer;
+#endif
         _metalLayer.opaque = YES;
-        _metalLayer.contentsScale = [NSScreen mainScreen].backingScaleFactor;
         _metalLayer.device = _device;
         _metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
         _metalLayer.framebufferOnly = false;//true;
+        _metalLayer.contentsScale = _window->_scale;// [NSScreen mainScreen].backingScaleFactor;
+#if PLATFORM_MACOS
         _metalLayer.displaySyncEnabled = 0;
-        NativeView* nativeView = (__bridge NativeView*)(void*)nativeWindowHandle;
-        nativeView->_metalLayer =_metalLayer;
-        nativeView.wantsLayer = YES;        
+#endif
+#if PLATFORM_MACOS
+        nativeView.wantsLayer = YES;
+#endif
         _commandQueue = [_device newCommandQueue];
     }
     Surface* getPrimarySurface() override {
@@ -541,9 +580,6 @@ public:
             [_renderCommandEncoder setFragmentTexture:metalTexture->_tex atIndex:0];
             [_renderCommandEncoder setFragmentSamplerState:metalTexture->_sampler atIndex:0];
         }
-        
-
-        
 
         [_renderCommandEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
                                           indexCount:numQuads*6
@@ -558,7 +594,7 @@ public:
         }
 
         _commandBuffer = [_commandQueue commandBuffer];
-        ((MetalTexture*)_primarySurface->_texture._obj)->_tex = _drawable.texture;
+        _primarySurface->_texture.as<MetalTexture>()->_tex = _drawable.texture;
         
         _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionDontCare;
         //_renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
@@ -640,10 +676,13 @@ public:
         
         // Create new encoder
         MetalSurface* metalSurface = (MetalSurface*)surface;
-        _renderPassDescriptor.colorAttachments[0].texture = ((MetalTexture*)metalSurface->_texture._obj)->_tex;
+        _renderPassDescriptor.colorAttachments[0].texture = metalSurface->_texture.as<MetalTexture>()->_tex;
         updateEncoder(Render);
-        _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionDontCare;
-
+        //if (surface == _primarySurface) {
+        //    _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionDontCare;
+        //} else {
+            _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionLoad;
+        //}
 
         // Update the viewport
         [_renderCommandEncoder setViewport:metalSurface->_viewport];
@@ -685,6 +724,20 @@ public:
         [_blitCommandEncoder generateMipmapsForTexture:metalTex->_tex];
     }
     
+    CVMetalTextureCacheRef _cvTextureCache;
+    
+    void createTextureForBitmap(Bitmap* abitmap) override {
+        BitmapApple* bitmap = (BitmapApple*)abitmap;
+        if (bitmap->_cvImageBuffer) {
+            if (!_cvTextureCache) {
+                CVReturn err = CVMetalTextureCacheCreate(NULL, NULL, _device, NULL, &_cvTextureCache);
+                assert(err==0);
+            }
+            bitmap->_texture = new CoreVideoTexture(bitmap, this, _cvTextureCache);
+        } else {
+            Renderer::createTextureForBitmap(abitmap);
+        }
+    }
 
 
 };
@@ -717,10 +770,10 @@ string BlurShader::getVertexSource() {
     s+= "};\n";
 
     s+= "struct VertexUniforms {\n";
-    s+= getUniformFields(this, Uniform::Usage::Vertex);
+    s+= getUniformFields(Uniform::Usage::Vertex);
     s+="};\n"
     "struct FragUniforms {\n";
-    s+= getUniformFields(this, Uniform::Usage::Fragment);
+    s+= getUniformFields(Uniform::Usage::Fragment);
     s+= "};\n";
 
     
@@ -796,7 +849,7 @@ string PostBlurShader::getVertexSource() {
 
     // Generic stuff, move elsewhere
     bool useTexSampler = true;
-    string fragUniforms = getUniformFields(this, Uniform::Usage::Fragment);
+    string fragUniforms = getUniformFields(Uniform::Usage::Fragment);
     if (fragUniforms.length() > 0) {
         s+= "struct FragUniforms {\n";
         s+= fragUniforms;

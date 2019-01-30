@@ -98,6 +98,7 @@ void RenderOp::asQuads(QUAD* quad) {
 }
 
 
+#if DEBUG
 string debugRect(const RECT& rect) {
     char ach[128];
     sprintf(ach, "%d,%d:%dx%d", (int)rect.origin.x, (int)rect.origin.y,
@@ -108,7 +109,7 @@ string debugRect(const RECT& rect) {
 string RenderOp::debugDescription() {
     return debugRect(_rect);
 }
-
+#endif
 
 void RenderOp::prepareToRender(Renderer* renderer, Surface* surface) {
     assert(_shader);
@@ -129,14 +130,14 @@ void RenderOp::invalidateBatchGeometry() {
 }
 
 void RenderOp::invalidate() {
-    if (_shaderValid) {
-        _shaderValid = false;
+    if (_shader) {
         if (_view->_surface) {
             if (_batch) {
                 _view->_surface->unbatchRenderOp(this);
                 _view->_surface->_opsNeedingValidation.push_back(this);
             }
         }
+        _shader = NULL;
     }
 }
 void RenderOp::setBlendMode(int blendMode) {

@@ -8,114 +8,186 @@
 
 DECLARE_DYNCREATE(MaskView);
 
-class MaskRenderProg : public GLProgram {
+#if RENDERER_METAL
+#define SL_HALF4 "half4"
+#define SL_FLOAT1 "float"
+#define SL_FLOAT2 "float2"
+#define SL_FLOAT4 "float4"
+#define SL_OUTPIXVAL "c"
+#define SL_UNIFORM(x) "uniforms->"#x
+#define SL_ATTRIB(x) "in."#x
+#define SL_FLOAT4_TO_OUTPIX(x) "half4("#x ")"
+#elif RENDERER_GL
+#define SL_HALF4 "lowp float4"
+#define SL_FLOAT1 "float"
+#define SL_FLOAT2 "vec2"
+#define SL_FLOAT4 "vec4"
+#define SL_OUTPIXVAL "gl_FragColor"
+#define SL_UNIFORM(x) #x
+#define SL_ATTRIB(x) "v_"#x
+#define SL_FLOAT4_TO_OUTPIX(x) #x
+#else
+#error todo
+#endif
+
+class MaskShader : public Shader {
 public:
-    Uniform<VECTOR2> _holeRadii;
-    Uniform<COLOR> _backgroundColour;
-    Uniform<COLOR> _holeStrokeColour;
-    Uniform<COLOR> _holeFillColour;
-    Uniform<float> _holeStrokeWidth;
-    Uniform<float> _holeCornerRadius;
+    
+    MaskShader(Renderer* renderer) : Shader(renderer) {
+        _u_holeRadii = declareUniform("holeRadii", Uniform::Float2, Uniform::Fragment);
+        _u_backgroundColour = declareUniform("backgroundColour", Uniform::Float4, Uniform::Fragment);
+        _u_holeStrokeColour = declareUniform("holeStrokeColour", Uniform::Float4, Uniform::Fragment);
+        _u_holeFillColour = declareUniform("holeFillColour", Uniform::Float4, Uniform::Fragment);
+        _u_holeStrokeWidth = declareUniform("holeStrokeWidth", Uniform::Float1, Uniform::Fragment);
+    }
+    int16_t _u_holeRadii;
+    int16_t _u_backgroundColour;
+    int16_t _u_holeStrokeColour;
+    int16_t _u_holeFillColour;
+    int16_t _u_holeStrokeWidth;
+    
+#if RENDERER_GL
+    string getVertexSource() override {
+        return
+        "attribute highp vec2 vPosition;\n"
+        "uniform highp mat4 mvp;\n"
+        "attribute vec2 texcoord;\n"
+        "varying vec2 v_texcoord;\n"
+        "void main() {\n"
+        "  gl_Position = mvp * vec4(vPosition,0,1);\n"
+        "  v_texcoord = texcoord;\n"
+        "}\n";
+    }
+    string getFragmentSource() override {
+        string s =
+        "varying vec2 v_texcoord;\n"
+        "uniform mediump vec2 holeRadii;\n"
+        "uniform mediump float holeStrokeWidth;\n"
+        "uniform lowp vec4 backgroundColour;\n"
+        "uniform lowp vec4 holeStrokeColour;\n"
+        "uniform lowp vec4 holeFillColour;\n"
+        "void main() {\n";
+        
+        s += getMainProg();
+        s += "}";
+        return s;
+    }
+#elif RENDERER_METAL
+    string getVertexSource() override {
+        string s =
+        "using namespace metal;\n"
+        "struct VertexInput {\n"
+        "   float2 position [[attribute(0)]];\n"
+        "   float2 texcoord [[attribute(1)]];\n"
+        "   uint color [[attribute(2)]];\n"
+        "   float unused1;\n"
+        "   float unused2;\n"
+        "   float unused3;\n"
+        "};\n"
+        "struct VertexOutput {\n"
+        "   float4 position [[position]];\n"
+        "   float2 texcoord;\n"
+        "};\n"
+        "struct VertexUniforms {\n"
+        "   float4x4 mvp;\n"
+        "};\n"
+        "vertex VertexOutput vertex_shader(uint vid [[vertex_id]],\n"
+        "                                  constant VertexInput* v_in [[buffer(0)]],\n"
+        "                                  constant VertexUniforms* uniforms [[buffer(1)]]) {\n"
+        "   VertexOutput output;\n"
+        "   output.position = uniforms->mvp * float4(v_in[vid].position,0,1);\n"
+        "   output.texcoord = v_in[vid].texcoord;\n"
+        "   return output;\n"
+        "}\n";
+        s+= "struct FragUniforms {\n";
+        s+= getUniformFields(Uniform::Usage::Fragment);;
+        s+= "};\n";
+        
+        s+= "fragment half4 frag_shader(VertexOutput in [[stage_in]]\n";
+        s += ",constant FragUniforms* uniforms [[buffer(0)]]\n";
+        s+= ") {\n";
+        s+= " half4 c;\n";
+        s+= getMainProg();
+        s+= " return " SL_OUTPIXVAL ";\n";
+        s += "}\n";
+        return s;
 
-    void lazyLoadUniforms() override {
-        GLProgram::lazyLoadUniforms();
-        _holeRadii.use();
-        _backgroundColour.use();
-        _holeStrokeColour.use();
-        _holeFillColour.use();
-        _holeStrokeWidth.use();
     }
+    string getFragmentSource() override {
+        return "";
+    }
+#else
+#error todo
+#endif
 
-    void findVariables() override {
-        GLProgram::findVariables();
-        _holeRadii.position = check_gl(glGetUniformLocation, _program, "holeRadii");
-        _backgroundColour.position = check_gl(glGetUniformLocation, _program, "backgroundColour");
-        _holeStrokeColour.position = check_gl(glGetUniformLocation, _program, "holeStrokeColour");
-        _holeFillColour.position = check_gl(glGetUniformLocation, _program, "holeFillColour");
-        _holeStrokeWidth.position = check_gl(glGetUniformLocation, _program, "holeStrokeWidth");
-    }
-    virtual void load() override {
-        GLProgram::loadShaders(
-                               TEXTURE_VERTEX_SHADER,
-                               (
-                               "varying vec2 v_texcoord;\n"
-                               "uniform mediump vec2 holeRadii;\n"
-                               "uniform mediump float holeStrokeWidth;\n"
-                               "uniform lowp vec4 backgroundColour;\n"
-                               "uniform lowp vec4 holeStrokeColour;\n"
-                               "uniform lowp vec4 holeFillColour;\n"
-                               + getMainProg()).data());
-    }
-                               
+    
     virtual string getMainProg() {
-       return "void main() {\n"
-              "    gl_FragColor = backgroundColour;\n"
-              "}\n";
+        return "c = " SL_UNIFORM(backgroundColour) ";\n";
     }
 
 };
 
-class MaskRenderProgOval : public MaskRenderProg {
+
+class MaskShaderOval : public MaskShader {
 public:
+    
+    MaskShaderOval(Renderer* renderer) : MaskShader(renderer) {
+    }
     
     // -inf to -strokeWidth/2 = fillColour
     // -strokeWidth/2 to strokeWidth/2 = strokeColour
     // strokeWidth/2 to +inf  = backgroundColour
     
     string getMainProg() override {
-        return "void main() {\n"
-               "    vec2 w=vec2(holeStrokeWidth/2.0,holeStrokeWidth/2.0);\n"
-               "    vec2 ri=holeRadii - w;\n"
-               "    vec2 ro=holeRadii + w;\n"
-               "    vec2 p=v_texcoord.xy;"
-               // Ellipse distance function adapted from 3D version at http://iquilezles.org/www/articles/distfunctions/distfunctions.htm
-               "    float d_o = (length(p/ro) - 1.0) * min(ro.x,ro.y);\n"
-               "    if (d_o >= 0.0) {"
-               "        gl_FragColor = mix(holeStrokeColour, backgroundColour, min(max(d_o,0.0),1.0));\n"
-               "    } else {\n"
-               "        float d_i = (length(p/ri) - 1.0) * min(ri.x,ri.y);\n"
-               "        gl_FragColor = mix(vec4(0.0), holeStrokeColour, min(max(d_i,0.0),1.0));\n"
-               "    }\n"
-               "}\n";
+        return
+        SL_FLOAT2 " w=" SL_FLOAT2 "(" SL_UNIFORM(holeStrokeWidth)"/2.0," SL_UNIFORM(holeStrokeWidth) "/2.0);\n"
+        SL_FLOAT2 " ri=" SL_UNIFORM(holeRadii)" - w;\n"
+        SL_FLOAT2 " ro=" SL_UNIFORM(holeRadii)" + w;\n"
+        SL_FLOAT2 " p=" SL_ATTRIB(texcoord) ";\n"
+        // Ellipse distance function adapted from 3D version at http://iquilezles.org/www/articles/distfunctions/distfunctions.htm
+        SL_FLOAT1 " d_o = (length(p/ro) - 1.0) * min(ro.x,ro.y);\n"
+        SL_FLOAT4 " tmp;\n"
+        "if (d_o >= 0.0) {"
+            "tmp = mix(" SL_UNIFORM(holeStrokeColour) ", " SL_UNIFORM(backgroundColour) ", min(max(d_o,0.0),1.0));\n"
+        "} else {\n"
+            SL_FLOAT1 " d_i = (length(p/ri) - 1.0) * min(ri.x,ri.y);\n"
+            "tmp = mix(" SL_FLOAT4 "(0.0), " SL_UNIFORM(holeStrokeColour) ", min(max(d_i,0.0),1.0));\n"
+        "}\n"
+        SL_OUTPIXVAL " = " SL_FLOAT4_TO_OUTPIX(tmp) ";\n";
     }
 };
 
 
-class MaskRenderProgRect : public MaskRenderProg {
+
+
+class MaskShaderRect : public MaskShader {
 public:
 
-    void findVariables() override {
-        MaskRenderProg::findVariables();
-        _holeCornerRadius.position = check_gl(glGetUniformLocation, _program, "holeCornerRadius");
+    MaskShaderRect(Renderer* renderer) : MaskShader(renderer) {
+        _u_holeCornerRadius = declareUniform("holeCornerRadius", Uniform::Float1, Uniform::Fragment);
     }
-    void lazyLoadUniforms() override {
-        MaskRenderProg::lazyLoadUniforms();
-        _holeCornerRadius.use();
-    }
+    
+    int16_t _u_holeCornerRadius;
 
+    
     // Round-rect shader adapted from https://www.shadertoy.com/view/ltS3zW
     string getMainProg() override {
-        return "uniform mediump float holeCornerRadius;\n"
-            "void main() {\n"
-            "    vec2 p=v_texcoord.xy;\n"
-            "    float halfBorder = holeStrokeWidth/2.0;\n"
-            "    float r = holeCornerRadius - halfBorder;\n"
-            "    vec2 d = abs(p) - holeRadii + vec2(r);\n"
-            "    float fDist = min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - r;\n"
-            "    vec4 v4ToColor = backgroundColour;\n"
-            "    if (fDist < 0.0) {\n"
-            "       v4ToColor = vec4(0.0, 0.0, 0.0, 0.0);\n"
-            "       fDist = -fDist;\n"
-            "    }\n"
-            "    float fBlendAmount = smoothstep(-1.0, 1.0, fDist - halfBorder);\n"
-            "    gl_FragColor = mix(holeStrokeColour, v4ToColor, fBlendAmount);\n"
-            "}\n";
+        return
+        "    vec2 p=v_texcoord.xy;\n"
+        "    float halfBorder = holeStrokeWidth/2.0;\n"
+        "    float r = holeCornerRadius - halfBorder;\n"
+        "    vec2 d = abs(p) - holeRadii + vec2(r);\n"
+        "    float fDist = min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - r;\n"
+        "    vec4 v4ToColor = backgroundColour;\n"
+        "    if (fDist < 0.0) {\n"
+        "       v4ToColor = vec4(0.0, 0.0, 0.0, 0.0);\n"
+        "       fDist = -fDist;\n"
+        "    }\n"
+        "    float fBlendAmount = smoothstep(-1.0, 1.0, fDist - halfBorder);\n"
+        "    gl_FragColor = mix(holeStrokeColour, v4ToColor, fBlendAmount);\n";
     }
 };
 
-static MaskRenderProg     s_progNone;
-static MaskRenderProgOval s_progOval;
-static MaskRenderProgRect s_progRect;
 
 class MaskRenderOp : public RenderOp {
 public:
@@ -125,14 +197,13 @@ public:
     MaskRenderOp(MaskView* maskView) : RenderOp(), _maskView(maskView) {
         
     }
-    void validateShader() override {
-        _shaderValid = true;
+    void validateShader(Renderer* renderer) override {
         if (_maskView->_holeShape == MaskView::HoleShape::None) {
-            _prog = &s_progNone;
+            _shader = new MaskShader(renderer);
         } else if (_maskView->_holeShape == MaskView::HoleShape::Oval) {
-            _prog = &s_progOval;
+            _shader = new MaskShaderOval(renderer);
         } else if (_maskView->_holeShape == MaskView::HoleShape::Rect) {
-            _prog = &s_progRect;
+            _shader = new MaskShaderRect(renderer);
         }
         _blendMode = BLENDMODE_NORMAL;
     }
@@ -152,14 +223,16 @@ public:
         quad->bl.t = quad->br.t = rect.bottom();
     }
 
-    void render(Window* window, Surface* surface) override {
-        RenderOp::render(window, surface);
-        MaskRenderProg* prog = (MaskRenderProg*)_prog;
-        prog->_holeRadii.set({_maskView->_holeRect.size.width/2, _maskView->_holeRect.size.height/2});
-        prog->_backgroundColour.set(_maskView->_backgroundColour);
-        prog->_holeStrokeColour.set(_maskView->_holeStrokeColour);
-        prog->_holeStrokeWidth.set(_maskView->_holeStrokeWidth);
-        prog->_holeCornerRadius.set(_maskView->_holeCornerRadius);
+    void prepareToRender(Renderer* renderer, class Surface* surface) override {
+        RenderOp::prepareToRender(renderer, surface);
+        MaskShader* shader = _shader.as<MaskShader>();
+        renderer->setUniform(shader->_u_holeRadii, VECTOR2(_maskView->_holeRect.size.width/2, _maskView->_holeRect.size.height/2));
+        renderer->setUniform(shader->_u_backgroundColour, _maskView->_backgroundColour);
+        renderer->setUniform(shader->_u_holeStrokeColour, _maskView->_holeStrokeColour);
+        renderer->setUniform(shader->_u_holeStrokeWidth, _maskView->_holeStrokeWidth);
+        if (_maskView->_holeShape == MaskView::HoleShape::Rect) {
+            renderer->setUniform(((MaskShaderRect*)shader)->_u_holeCornerRadius, _maskView->_holeCornerRadius);
+        }
     }
 
 };

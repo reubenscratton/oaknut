@@ -25,11 +25,10 @@ public:
         //todo req->dispatchResult(NULL);
     }
     static void OnImageLoad(URLRequestWeb* req) {
-        bool isPng = req->_url.contains(".png"); // TODO: use content type, not this dumbassery
         
         // This is a rather special case. Instead of calling dispatchResult() we use
         // a special web-only Bitmap constructor and call the handler manually.
-        sp<Bitmap> bitmap = new BitmapWeb(req->_val, isPng);
+        sp<Bitmap> bitmap = new BitmapWeb(req->_val);
         req->_httpStatus = 200;
         req->_val = val::null();
         if (req->_handlerBitmap) {

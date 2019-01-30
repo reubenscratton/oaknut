@@ -27,7 +27,6 @@ void TextRenderOp::validateShader(Renderer* renderer) {
         features.tint = 1;
         features.alpha = _alpha<1.0f;
         _shader = renderer->getStandardShader(features);
-        _shaderValid = true;
     }
 }
 

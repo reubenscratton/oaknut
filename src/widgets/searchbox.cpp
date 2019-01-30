@@ -29,30 +29,34 @@ void SearchBox::setPadding(EDGEINSETS padding) {
     EditText::setPadding(padding);
 }
 
-void SearchBox::layout(RECT constraint) {
-    EditText::layout(constraint);
-    RECT rect = getOwnRect();
-    rect.inset(app.dp(12), app.dp(6));
+RECT SearchBox::getIconRect(float val) {
+    RECT rect = getOwnRectPadded();
     
     SIZE searchIconSize = {app.dp(16),app.dp(16)};
-    _searchIconOp->setRect(RECT(rect.origin.x+(rect.size.width-searchIconSize.width)/2,rect.origin.y+(rect.size.height-searchIconSize.height)/2, searchIconSize.width, searchIconSize.height));
+    
+    rect.origin.y = rect.midY() - searchIconSize.height / 2;
+    rect.size.height = searchIconSize.height;
+
+    float spaceForSearchIcon = this->spaceForSearchIcon();
+    rect.origin.x -= spaceForSearchIcon;
+    rect.size.width += spaceForSearchIcon;
+    float x1 = rect.origin.x + (rect.size.width - searchIconSize.width) / 2;
+    float x2 = rect.origin.x;
+    rect.origin.x = x1 + (x2-x1)*val;
+    rect.size.width = searchIconSize.width;
+    return rect;
+}
+
+void SearchBox::layout(RECT constraint) {
+    EditText::layout(constraint);
+    _searchIconOp->setRect(getIconRect(isFocused()?1:0));
 }
 
 void SearchBox::onStateChanged(STATESET changes) {
     EditText::onStateChanged(changes);
     if ((changes.mask & STATE_FOCUSED) && (changes.state & STATE_FOCUSED)) {
         Animation::start(this, 250,  [=](float val) {
-            RECT iconRect;
-            iconRect.size = {app.dp(16), app.dp(16)};
-            RECT paddedBounds = getOwnRectPadded();
-            float spaceForSearchIcon = this->spaceForSearchIcon();
-            paddedBounds.origin.x -= spaceForSearchIcon;
-            paddedBounds.size.width += spaceForSearchIcon;
-            iconRect.origin.y = paddedBounds.origin.y + (paddedBounds.size.height - iconRect.size.height) / 2;
-            float x1 = paddedBounds.origin.x + (paddedBounds.size.width - iconRect.size.width) / 2;
-            float x2 = paddedBounds.origin.x;
-            iconRect.origin.x = x1 + (x2-x1)*val;
-            _searchIconOp->setRect(iconRect);
+            _searchIconOp->setRect(getIconRect(val));
             setNeedsFullRedraw();
         });
     }

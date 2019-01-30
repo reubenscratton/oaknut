@@ -21,11 +21,14 @@ public:
         if (getSectionTextFromItem) {
             validateSections();
         }
-        return _sections.size();
+        return MAX(1,_sections.size());
     }
     int getItemCount(int section) override {
         if (_filtered) return (int)_itemsFiltered.size();
         if (getSectionTextFromItem) {
+            if (section >= _sections.size()) {
+                return 0;
+            }
             validateSections();
             auto& it = _sections.at(section);
             return (int)it.second.size();
@@ -70,6 +73,9 @@ public:
     }
 
     virtual string getSectionTitle(int section) {
+        if (section >= _sections.size()) {
+            return "";
+        }
         return _sections[section].first;
     }
     

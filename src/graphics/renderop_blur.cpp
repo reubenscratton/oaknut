@@ -101,8 +101,6 @@ void BlurRenderOp::validateShader(Renderer* renderer) {
     _surface1 = renderer->createPrivateSurface();
     _surface2 = renderer->createPrivateSurface();
     _surface2->_texture->_magFilterLinear = true;
-
-    _shaderValid = true;
 }
 
 void BlurRenderOp::asQuads(QUAD *quad) {

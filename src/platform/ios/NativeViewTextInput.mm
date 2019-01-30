@@ -83,6 +83,9 @@ static UITextInputStringTokenizer* _tokenizer;
 
 - (BOOL)hasText {
     NSLOG(@"hasText");
+    if (!_window->_textInputReceiver) {
+        return FALSE;
+    }
     return _window->_textInputReceiver->getTextLength() > 0;
 }
 - (void)insertText:(NSString *)text {
@@ -111,6 +114,9 @@ static UITextInputStringTokenizer* _tokenizer;
 }
 
 - (UITextPosition*)endOfDocument {
+    if (!_window->_textInputReceiver) {
+        return NULL;
+    }
     NSLOG(@"endOfDocument -> %d", _window->_textInputReceiver->getTextLength());
     return [SimpleTextPos pos:_window->_textInputReceiver->getTextLength()];
 }
@@ -124,6 +130,9 @@ static UITextInputStringTokenizer* _tokenizer;
 }
 
 - (UITextRange*)selectedTextRange {
+    if (!_window->_textInputReceiver) {
+        return NULL;
+    }
     SimpleTextRange* range = [SimpleTextRange new];
     range->_start = [SimpleTextPos pos:_window->_textInputReceiver->getSelectionStart()];
     range->_end = [SimpleTextPos pos:_window->_textInputReceiver->getInsertionPoint()];

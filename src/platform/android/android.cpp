@@ -186,6 +186,23 @@ Window* Window::create() {
 }
 
 
+class AndroidRenderer : public GLRenderer {
+public:
+    AndroidRenderer(Window* window) : GLRenderer(window) {
+    }
+    void bindToNativeWindow(long nativeWindowHandle) override {
+        // todo: move EAGL setup code here
+    }
+    void commit() override {
+        // todo: move Linux swapBuffer stuff here
+    }
+
+};
+
+Renderer* Renderer::create(Window* window) {
+    return new AndroidRenderer(window);
+}
+
 JAVA_FN(jlong, MainActivity, onCreateNative)(JNIEnv *env, jobject obj,
                                             jobject jassetManager, jfloat screenScale,
                                              jfloat statusBarHeight, jfloat navigationBarHeight,
@@ -350,7 +367,6 @@ JAVA_FN(void, MainActivity, onContentRectChangedNative)(JNIEnv* env, jobject obj
                                     jint x, jint y, jint w, jint h) {
     WindowAndroid* window = (WindowAndroid*)nativePtr;
     //window->resizeClientArea(x,y,w,h);
-    check_gl(glClear, GL_COLOR_BUFFER_BIT);
 }
 
 

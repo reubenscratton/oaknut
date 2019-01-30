@@ -68,7 +68,7 @@ Glyph* FontWeb::createGlyph(char32_t ch, Atlas* atlas) {
     glyph->atlasNode = atlas->reserve(glyph->bitmapWidth, glyph->bitmapHeight, 1);
     
     // Copy the pixels from the helper into the atlas
-    BitmapWeb* bitmap = (BitmapWeb*)glyph->atlasNode->page->_bitmap._obj;
+    auto bitmap = glyph->atlasNode->page->_bitmap.as<BitmapWeb>();
     val targetBuff = val(typed_memory_view((size_t)bitmap->_pixelData.cb, (unsigned char*)bitmap->_pixelData.data));
     _fontHelper.call<void>("copyPixels",
                            val(glyph->bitmapWidth),
@@ -77,6 +77,7 @@ Glyph* FontWeb::createGlyph(char32_t ch, Atlas* atlas) {
                            val(glyph->atlasNode->rect.origin.y),
                            targetBuff,
                            val(bitmap->_pixelData.stride));
+    bitmap->texInvalidate();
 
     return glyph;
 }

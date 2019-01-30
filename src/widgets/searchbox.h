@@ -21,6 +21,7 @@ public:
     virtual void setText(const AttributedString& text) override;
 
 protected:
+    RECT getIconRect(float val);
     float spaceForSearchIcon();
     
     SEARCHTEXTCHANGED _searchTextChangedDelegate;

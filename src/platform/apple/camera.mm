@@ -111,7 +111,12 @@ public:
         // Data output
         videoOutput = [[AVCaptureVideoDataOutput alloc] init];
         [videoOutput setAlwaysDiscardsLateVideoFrames:YES];
-        [videoOutput setVideoSettings:[NSDictionary dictionaryWithObject:[NSNumber numberWithInt:kCVPixelFormatType_32BGRA] forKey:(id)kCVPixelBufferPixelFormatTypeKey]];
+        [videoOutput setVideoSettings:@{
+#if RENDERER_METAL
+            (NSString *)kCVPixelBufferMetalCompatibilityKey: @YES,
+#endif
+            (NSString*)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_32BGRA)
+        }];
         [videoOutput setSampleBufferDelegate:_helper queue:dispatch_get_main_queue()];
         
         [captureSession addOutput:videoOutput];

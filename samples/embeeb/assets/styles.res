@@ -2,6 +2,7 @@
 window: {
     default-width:320dp
     default-height:520dp
+    status-bar-light: true
 }
 
 NavigationBar: {

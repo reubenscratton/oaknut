@@ -64,5 +64,21 @@ void App::setStringSetting(const char* key, const char* value) {
     ls.call<void>("setItem", val(key), val(value));
 }
 
+class WebGLRenderer : public GLRenderer {
+public:
+    WebGLRenderer(Window* window) : GLRenderer(window) {
+    }
+    void bindToNativeWindow(long nativeWindowHandle) override {
+        // todo: move EAGL setup code here
+    }
+    void commit() override {
+        // todo: 
+    }
+};
+
+Renderer* Renderer::create(Window* window) {
+    return new WebGLRenderer(window);
+}
+
 #endif
 

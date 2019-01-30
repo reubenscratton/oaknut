@@ -68,7 +68,7 @@ Glyph* FontLinux::createGlyph(char32_t ch, Atlas* atlas) {
     glyph->bitmapTop = -(glyph->bitmapHeight + floorf(cairo_text_extents.y_bearing));
     
     // Get the atlas bitmap context
-    BitmapLinux* bitmap = (BitmapLinux*)glyph->atlasNode->page->_bitmap._obj;
+    auto bitmap = glyph->atlasNode->page->_bitmap.as<BitmapLinux>();
     cairo_t* cr = bitmap->getCairo();
     cairo_glyph->x = glyph->atlasNode->rect.origin.x - glyph->bitmapLeft;
     cairo_glyph->y = glyph->atlasNode->rect.origin.y

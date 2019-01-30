@@ -30,8 +30,8 @@ protected:
 
 #define GLSAMPLER_NONE 0
 #define GLSAMPLER_TEXTURE_2D 1
-#define GLSAMPLER_TEXTURE_EXT_OES 2
-
+#define GLSAMPLER_TEXTURE_RECT 2
+#define GLSAMPLER_TEXTURE_EXT_OES 3
 
 class GLRenderer : public Renderer {
 public:
@@ -58,9 +58,6 @@ public:
     
     void setUniformData(int16_t uniformIndex, const void* data, int32_t cb) override;
 
-    // Helpers
-    void convertTexture(GLTexture* texture, int width, int height);
-    
     int getIntProperty(IntProperty property) override;
     
 protected:

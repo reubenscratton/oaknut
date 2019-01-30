@@ -37,7 +37,6 @@ public:
         features.alpha = (_alpha<1.0f);
         features.tint = (_color!=0);
         _shader = renderer->getStandardShader(features);
-        _shaderValid = true;
     }
     void prepareToRender(Renderer* renderer, Surface* surface) override {
         RenderOp::prepareToRender(renderer, surface);
@@ -140,7 +139,7 @@ void Surface::validateRenderOps(Renderer* renderer) {
     while (i != _opsNeedingValidation.end()) {
         RenderOp* op = (*i);
         op->validateShader(renderer);
-        if (op->_shaderValid) {
+        if (op->_shader) {
             opsValid.push_back(op);
             i = _opsNeedingValidation.erase(i);
         }
@@ -151,7 +150,7 @@ void Surface::validateRenderOps(Renderer* renderer) {
     
     // Then embatch them
     for (auto& op : opsValid) {
-        assert(op->_shaderValid && !op->_batch);
+        assert(op->_shader && !op->_batch);
         batchRenderOp(op);
     }
 }
@@ -340,7 +339,7 @@ void Surface::renderPhase2(Renderer* renderer) {
 static inline void renderRenderList(RenderList* renderList, Surface* surface, Renderer* renderer) {
     for (auto it=renderList->_ops.begin() ; it!=renderList->_ops.end() ; it++) {
         RenderOp* op = *it;
-        if (!op->_shaderValid) {
+        if (!op->_shader) {
             continue;
         }
         
@@ -444,6 +443,8 @@ void Surface::renderPhase3(Renderer* renderer, View* view, Surface* prevsurf) {
 
 static int s_frame=0;
 
+#if DEBUG
+
 static void debugDump(Surface* surface) {
     app.log("Frame %d lists=%d batches=%d", ++s_frame, (int)surface->_renderListsList.size(), (int)surface->_listBatches.size());
     for (auto it : surface->_renderListsList) {
@@ -461,6 +462,7 @@ static void debugDump(Surface* surface) {
     }
     app.log("");
 }
+#endif
 
 
 void Surface::render(View* view, Renderer* renderer) {
@@ -485,7 +487,7 @@ void Surface::render(View* view, Renderer* renderer) {
 
 void Surface::markPrivateRenderQuadDirty() {
     if (_op) {
-        ((PrivateSurfaceRenderOp*)_op._obj)->_dirty = true;
+        _op.as<PrivateSurfaceRenderOp>()->_dirty = true;
     }
 }
 

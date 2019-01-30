@@ -11,7 +11,7 @@ DECLARE_DYNCREATE(GameView);
 
 GameView::GameView() {
 
-    AtlasPage* atlas = new AtlasPage(512, 512, BITMAPFORMAT_RGBA32);
+    AtlasPage* atlas = new AtlasPage(512, 512, BITMAPFORMAT_DEFAULT32);
     _imgUnknown = atlas->importAsset("images/unknown.png");
     _imgMine = atlas->importAsset("images/mine.png");
     _imgBoom = atlas->importAsset("images/boom.png");

@@ -25,7 +25,7 @@ static int bytesPerPixelForFormat(int format) {
         case BITMAPFORMAT_RGBA32: return 4;
         case BITMAPFORMAT_BGRA32: return 4;
         case BITMAPFORMAT_RGB24: return 3;
-        case BITMAPFORMAT_BGRA32: return 4;
+        case BITMAPFORMAT_RGB565: return 2;
         case BITMAPFORMAT_A8: return 1;
         default: assert(0);
     }
@@ -50,7 +50,13 @@ BitmapApple::BitmapApple(int width, int height, int format, void* pixels, int st
     assert(_context);
 }
 
-BitmapApple::BitmapApple(CVImageBufferRef cvImageBuffer, bool fromCamera) : Bitmap((int)CVPixelBufferGetWidth(cvImageBuffer), (int)CVPixelBufferGetHeight(cvImageBuffer), BITMAPFORMAT_RGBA32) {
+static int getBitmapFormat(CVImageBufferRef cvImageBuffer) {
+    OSType type = CVPixelBufferGetPixelFormatType(cvImageBuffer);
+    if (type == 'BGRA') return BITMAPFORMAT_BGRA32;
+    if (type == 'RGBA') return BITMAPFORMAT_RGBA32;
+    assert(0);
+}
+BitmapApple::BitmapApple(CVImageBufferRef cvImageBuffer, bool fromCamera) : Bitmap((int)CVPixelBufferGetWidth(cvImageBuffer), (int)CVPixelBufferGetHeight(cvImageBuffer), getBitmapFormat(cvImageBuffer)) {
     _cvImageBuffer = cvImageBuffer;
     CFRetain(cvImageBuffer);
 }
@@ -81,8 +87,7 @@ void BitmapApple::lock(PIXELDATA* pixelData, bool forWriting) {
         OSType pixelFormat = 0;
         switch (_format) {
             case BITMAPFORMAT_RGBA32: pixelFormat = kCVPixelFormatType_32BGRA; break;
-            case BITMAPFORMAT_BGRA32:
-            pixelFormat = kCVPixelFormatType_32BGRA; break;
+            case BITMAPFORMAT_BGRA32: pixelFormat = kCVPixelFormatType_32BGRA; break;
             case BITMAPFORMAT_RGB24: pixelFormat = kCVPixelFormatType_24RGB; break;
             case BITMAPFORMAT_RGB565: pixelFormat = kCVPixelFormatType_16LE565; break;
             case BITMAPFORMAT_A8: pixelFormat = kCVPixelFormatType_OneComponent8; break;
@@ -96,7 +101,7 @@ void BitmapApple::lock(PIXELDATA* pixelData, bool forWriting) {
         };
         CVReturn err = CVPixelBufferCreate(kCFAllocatorDefault, _width, _height, pixelFormat,
             (__bridge CFDictionaryRef)(pixelBufferAttributes), &_cvImageBuffer);
-        assert((_cvImageBuffer && err == kCVReturnSuccess));// || err == kCVReturnInvalidPixelFormat);
+        assert((_cvImageBuffer && err == kCVReturnSuccess) || err == kCVReturnInvalidPixelFormat);
         assert(!_texture); // if this hits then we need to recreate the texture so its a CoreVideoTexture!
     }
 #endif
@@ -215,6 +220,18 @@ BitmapApple* bitmapFromData(const void* data, int cb) {
                 p[i] = (p[i] << 24) | ((p[i] & 0xFF00) << 8) | ((p[i] >> 8) & 0xFF00) | (p[i] >> 24);
         }
     }
+
+    // If on iOS hardware convert RGBA to BGRA as the GPU greatly prefers it and we get
+    // to use CoreVideo direct access
+#if !TARGET_SIMULATOR
+    if (format == BITMAPFORMAT_RGBA32) {
+        format = BITMAPFORMAT_BGRA32;
+        uint32_t* p = (uint32_t*)pixels;
+        for (int i = 0; i < width * height; i++)
+            p[i] = (p[i] & 0xFF00FF00) | ((p[i] & 0xFF) << 16) | ((p[i]&0xFF0000)>>16);
+    }
+#endif
+    
 
     // Create the native bitmap
     BitmapApple* bitmap = new BitmapApple(width, height, format, pixels, (int)cbUncompressed/height);

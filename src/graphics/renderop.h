@@ -14,7 +14,7 @@ public:
     class View* _view;
     RECT _rect;
     EDGEINSETS _inset;
-    Shader* _shader;
+    sp<Shader> _shader;
     class RenderList* _list;
     int _listIndex;
     list<sp<RenderOp>>::iterator _listIterator; 
@@ -46,7 +46,6 @@ public:
 
     // The op is 'valid' once it has chosen a shader that can satisfy its render params. If the
     // render params change then the shader needs to be validated and possibly generated on demand
-    bool _shaderValid;
     virtual void invalidate();
     virtual void validateShader(Renderer* renderer)=0;
     virtual void rebatchIfNecessary();
@@ -58,7 +57,9 @@ public:
     virtual void setInset(EDGEINSETS inset);
     
     // Overrides
+#if DEBUG
     string debugDescription() override;
+#endif
 };
 
 

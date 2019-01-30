@@ -11,10 +11,14 @@
 
 @interface NativeView : UIView {
 @public
+#if RENDERER_METAL
+    CAMetalLayer* _metalLayer;
+#else
     CAEAGLLayer* glLayer;
     EAGLContext* glContext;
-    CADisplayLink* displayLink;
     GLuint renderbuffer;
+#endif
+    CADisplayLink* displayLink;
     UITouch* _touches[10];
     bool _renderNeeded;
     id<UITextInputDelegate> _textInputDelegate;

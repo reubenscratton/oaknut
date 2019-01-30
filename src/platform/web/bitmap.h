@@ -22,12 +22,11 @@ public:
     val _buff;
     PIXELDATA _pixelData;
     class CanvasWeb* _canvas;
-    bool _isPng; // TODO: remove, now we have _format
     
     BitmapWeb();
     BitmapWeb(int width, int height, int format);
     BitmapWeb(CanvasWeb* canvas);
-    BitmapWeb(val img, bool isPng);
+    BitmapWeb(val img);
     ~BitmapWeb();
 
     void lock(PIXELDATA* pixelData, bool forWriting) override;
@@ -36,6 +35,8 @@ public:
     // ISerializeToVariant
     void fromVariant(const variant& v) override;
     void toVariant(variant& v) override;
+    
+    void glTexImage2D();
 
 };
 

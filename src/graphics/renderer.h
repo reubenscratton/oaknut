@@ -61,6 +61,7 @@ public:
     class Bitmap* _bitmap; // NB: can be null
     int _format; // see BitmapFormat
     bool _needsUpload;
+    bool _denormalizedCoords; // usually false, only true for OpenGL's rectangular textures
     int _maxMipMapLevel; // defaults to 0, i.e. no mipmaps
     bool _minFilterLinear;
     bool _magFilterLinear;
@@ -102,6 +103,7 @@ public:
     
 protected:
     int16_t declareUniform(const char* name, Uniform::Type type, Uniform::Usage usage=Uniform::Usage::Fragment);
+    string getUniformFields(Shader::Uniform::Usage usage);
 };
 
 /**
@@ -138,7 +140,7 @@ public:
     class Window* _window;
     list<RenderResource*> _textures;
     list<RenderResource*> _shaders;
-    map<uint32_t, Shader*> _standardShaders; // standard shaders, not custom ones
+    map<uint32_t, sp<Shader>> _standardShaders; // standard shaders, not custom ones
     
 
     // Render state (used during render loop)

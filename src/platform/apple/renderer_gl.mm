@@ -29,6 +29,7 @@ public:
     
     CoreVideoTexture(BitmapApple* bitmap, GLRenderer* renderer, CVOpenGLESTextureCacheRef cvTextureCache) : GLTexture(renderer) {
         _cvTextureCache = cvTextureCache;
+
 #if TARGET_OS_IOS
         CVReturn err = CVOpenGLESTextureCacheCreateTextureFromImage(kCFAllocatorDefault, _cvTextureCache, bitmap->_cvImageBuffer, NULL, GL_TEXTURE_2D, GL_RGBA , bitmap->_width, bitmap->_height, GL_BGRA, GL_UNSIGNED_BYTE, 0, &_cvTexture);
         assert(err==0);
@@ -39,23 +40,24 @@ public:
                                                                   bitmap->_cvImageBuffer, NULL, &_cvTexture);
         assert(err==0);
         _textureId = CVOpenGLTextureGetName(_cvTexture);
-        _texTarget = CVOpenGLESTextureGetTarget(_cvTexture);
-        
-        // Camera textures on Mac can be a non-standard GL format. I'm not at all sure conversion
-        // is strictly necessary, presumably I wrote it cos the shader samplers were hardcoded to
-        // the normal TEXTURE_2D one... need to look up this kind of texture and see how to sample it in a shader
-        if (_texTarget != GL_TEXTURE_2D) {
-            
-            renderer->convertTexture(this, bitmap->_width, bitmap->_height);
-
-            // Delete the CV texture now we've copied it to a normal one
-            CVOpenGLTextureRelease(_cvTexture);
-            CVOpenGLTextureCacheFlush(_cvTextureCache, 0);
-            _cvTexture = NULL;
-            _cvTextureCache = NULL;
-        }
+        _texTarget = CVOpenGLESTextureGetTarget(_cvTexture); // GL_TEXTURE_RECTANGLE
+        _denormalizedCoords = true;
 #endif
 
+    }
+    ~CoreVideoTexture() {
+        if (_cvTexture) {
+            _textureId = 0;
+            auto t = _cvTexture;
+            auto tc = _cvTextureCache;
+            _cvTexture = NULL;
+            _cvTextureCache = NULL;
+            //dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.25 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            CVOpenGLTextureRelease(t);
+            CVOpenGLESTextureCacheFlush(tc, 0);
+            //CVOpenGLTextureCacheRelease(tc);
+            //});
+        }
     }
     /*
     void bind() override {
@@ -119,9 +121,9 @@ public:
 
 class RendererApple : public GLRenderer {
 public:
-    
     CVOpenGLESTextureCacheRef _cvTextureCache;
-    
+
+
     RendererApple(Window* window) : GLRenderer(window) {
     }
 
@@ -139,11 +141,12 @@ public:
             if (!_cvTextureCache) {
                 CVReturn err = CVOpenGLESTextureCacheCreate(NULL, NULL, GLGetCurrentContext(),
 #if !TARGET_OS_IOS
-                                                            CGLGetPixelFormat(CGLGetCurrentContext()),
+                                                        CGLGetPixelFormat(CGLGetCurrentContext()),
 #endif
-                                                            NULL,
-                                                            &_cvTextureCache);
+                                                        NULL,
+                                                        &_cvTextureCache);
                 assert(err==0);
+                CVOpenGLTextureCacheRetain(_cvTextureCache);
             }
             bitmap->_texture = new CoreVideoTexture(bitmap, this, _cvTextureCache);
         } else {

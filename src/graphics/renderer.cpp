@@ -29,6 +29,25 @@ Shader::~Shader() {
     }
 }
 
+string Shader::getUniformFields(Shader::Uniform::Usage usage) {
+    string s="";
+    for (auto& uniform : _uniforms) {
+        if (usage == uniform.usage) {
+            switch (uniform.type) {
+                case Shader::Uniform::Int1: s+="int"; break;
+                case Shader::Uniform::Float1: s+="float"; break;
+                case Shader::Uniform::Float2: s+="float2"; break;
+                case Shader::Uniform::Float4: s+="float4"; break;
+                case Shader::Uniform::Matrix4: s+="float4x4"; break;
+            }
+            s+= " ";
+            s+= uniform.name;
+            s+= ";\n";
+        }
+    }
+    return s;
+}
+
 int16_t Shader::Uniform::length() {
     switch (type) {
         case Int1:  return 4;

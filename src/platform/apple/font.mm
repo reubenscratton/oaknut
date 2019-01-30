@@ -114,7 +114,7 @@ Glyph* FontApple::createGlyph(char32_t ch, Atlas* atlas) {
     glyph->bitmapTop = boundingRect.origin.y;
     
     // Get the atlas bitmap context
-    BitmapApple* bitmap = (BitmapApple*)glyph->atlasNode->page->_bitmap._obj;
+    auto bitmap = glyph->atlasNode->page->_bitmap.as<BitmapApple>();
     CGContext* c = bitmap->_context;
     
     POINT origin = glyph->atlasNode->rect.origin;

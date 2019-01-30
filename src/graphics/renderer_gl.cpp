@@ -140,6 +140,7 @@ struct GLShaderState {
             i++;
         }
         _uniformData.resize(cb);
+        memset(_uniformData.data(), 0, cb);
     }
     
     ~GLShaderState() {
@@ -174,7 +175,7 @@ public:
         _texture->resize(size.width, size.height);
 
         check_gl(glBindFramebuffer, GL_FRAMEBUFFER, _fb);
-        check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ((GLTexture*)_texture._obj)->_textureId, 0);
+        check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _texture.as<GLTexture>()->_textureId, 0);
         check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
         check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
         //GLenum x = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -213,6 +214,7 @@ GLTexture::GLTexture(Renderer* renderer) : Texture(renderer) {
 void GLTexture::resize(int width, int height) {
     realloc(width, height, NULL, true);
 }
+
 
 void GLTexture::realloc(int width, int height, void* pixelData, bool sizeChanged) {
     int pixelType;
@@ -256,16 +258,27 @@ void GLTexture::realloc(int width, int height, void* pixelData, bool sizeChanged
         }
         default: assert(0);
     }
-#if PLATFORM_WEB
-    if (pixelFormat == GL_BGRA) pixelFormat = GL_RGBA; // WebGL no like iOS format
-#endif
 
-    
     check_gl(glBindTexture, _texTarget, _textureId);
     check_gl(glTexParameteri, _texTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     check_gl(glTexParameteri, _texTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     check_gl(glTexParameteri, _texTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     check_gl(glTexParameteri, _texTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+// WebGL has some special APIs for converting certain JS objects into textures
+#if PLATFORM_WEB
+    if (_bitmap) {
+        BitmapWeb* webBmp = (BitmapWeb*)_bitmap;
+        webBmp->glTexImage2D();
+        if (_renderer->_currentTexture && _renderer->_currentTexture != this) {
+            check_gl(glBindTexture, GL_TEXTURE_2D, ((GLTexture*)_renderer->_currentTexture)->_textureId);
+        }
+        return;
+    }
+    if (format == GL_BGRA) format = GL_RGBA; // WebGL doesn't accept BGRA
+#endif
+
+    
     if (sizeChanged || !pixelData) {
         check_gl(glTexImage2D, _texTarget, 0, internalFormat, width, height, 0, format, pixelType, pixelData);
     } else {
@@ -286,6 +299,9 @@ void GLTexture::upload() {
 
 
 int GLTexture::getSampler() {
+    if (_texTarget == GL_TEXTURE_RECTANGLE_ARB) {
+        return GLSAMPLER_TEXTURE_RECT;
+    }
     if (_texTarget == GL_TEXTURE_EXTERNAL_OES) {
         return GLSAMPLER_TEXTURE_EXT_OES;
     }
@@ -312,6 +328,9 @@ string StandardShader::getVertexSource() {
     
     string vs;
     
+    if (_features.sampler0 == GLSAMPLER_TEXTURE_RECT) {
+        vs += "#extension GL_ARB_texture_rectangle : require\n";
+    }
     if (_features.sampler0 == GLSAMPLER_TEXTURE_EXT_OES) {
         vs += "#extension GL_OES_EGL_image_external : require\n";
     }
@@ -366,11 +385,19 @@ string StandardShader::getFragmentSource() {
         fs += "varying vec2 v_texcoord;\n";
     }
 
+    // Add appropriate sampler
+    string textureFunc;
     if (_features.sampler0 == GLSAMPLER_TEXTURE_2D) {
         fs += "uniform sampler2D texture;\n";
+        textureFunc = "texture2D";
     }
-    if (_features.sampler0 == GLSAMPLER_TEXTURE_EXT_OES) {
+    else if (_features.sampler0 == GLSAMPLER_TEXTURE_RECT) {
+        fs += "uniform sampler2DRect texture;\n";
+        textureFunc = "texture2DRect";
+    }
+    else if (_features.sampler0 == GLSAMPLER_TEXTURE_EXT_OES) {
         fs += "uniform samplerExternalOES texture;\n";
+        textureFunc = "texture2D";
     }
     
     
@@ -380,7 +407,7 @@ string StandardShader::getFragmentSource() {
     
     string color_src = "v_color";
     if (useTexSampler) {
-        fs += "    vec4 color = texture2D(texture, v_texcoord);\n";
+        fs += "    vec4 color = " + textureFunc + "(texture, v_texcoord);\n";
         if (_features.tint) {
             fs += "    color.rgb = v_color.rgb;\n";
         }
@@ -613,6 +640,7 @@ void GLRenderer::uploadQuad(ItemPool::Alloc* alloc) {
 void GLRenderer::flushQuadBuffer() {
     if (_fullBufferUploadNeeded) {
         if (_quadBuffer._itemCount > 0 && _indexBufferId > 0) {
+
             check_gl(glBufferData, GL_ELEMENT_ARRAY_BUFFER, sizeof(GLshort) * 6 * _quadBuffer._itemCount, _indexes, GL_STATIC_DRAW);
             // TODO: On first use buffer is unused so pass NULL instead of _base
             check_gl(glBufferData, GL_ARRAY_BUFFER, sizeof(QUAD) * _quadBuffer._itemCount, _quadBuffer._base, GL_DYNAMIC_DRAW);
@@ -684,7 +712,7 @@ void GLRenderer::prepareToDraw() {
     if (_backgroundColor[3] > 0.f) {
         check_gl(glClear, GL_COLOR_BUFFER_BIT);
     }
-    
+
     _renderCounter++;
     _currentSurface = NULL;
     _currentTexture = NULL;
@@ -694,15 +722,9 @@ void GLRenderer::prepareToDraw() {
 
 
 
-void GLRenderer::convertTexture(GLTexture* texture, int width, int height) {
-    
-    // TODO: glGets are BAD IDEA and kill performance. Need a GLContext structure that caches all GL properties
-    GLint oldFBO, oldFBOread, oldTex;
-    check_gl(glGetIntegerv, GL_FRAMEBUFFER_BINDING, &oldFBO);
-    check_gl(glGetIntegerv, GL_READ_FRAMEBUFFER_BINDING, &oldFBOread);
-    check_gl(glGetIntegerv, GL_TEXTURE_BINDING_2D, &oldTex);
-    
-    // Set up the camera texture for framebuffer read
+//void GLRenderer::convertTexture(GLTexture* texture, int width, int height) {
+    /*
+    // Set up the texture for framebuffer read
     GLuint fbr = 0;
     check_gl(glGenFramebuffers, 1, &fbr);
     check_gl(glBindFramebuffer, GL_READ_FRAMEBUFFER, fbr);
@@ -737,7 +759,8 @@ void GLRenderer::convertTexture(GLTexture* texture, int width, int height) {
     check_gl(glBindFramebuffer, GL_READ_FRAMEBUFFER, oldFBOread);
     check_gl(glDeleteFramebuffers, 1, &fbr);
     check_gl(glDeleteFramebuffers, 1, &fb);
-}
+     */
+//}
 
 
 /**
@@ -790,7 +813,12 @@ void GLRenderer::setUniformData(int16_t uniformIndex, const void* data, int32_t 
 int GLRenderer::getIntProperty(IntProperty property) {
     if (property == MaxVaryingFloats) {
         GLint val = 0;
+#if PLATFORM_WEB || PLATFORM_IOS || PLATFORM_ANDROID
+        check_gl(glGetIntegerv, GL_MAX_VARYING_VECTORS, &val);
+        val*=4;
+#else
         check_gl(glGetIntegerv, GL_MAX_VARYING_FLOATS, &val);
+#endif
         return val;
     }
     assert(0);

@@ -23,7 +23,11 @@
     return self;
 }
 - (UIStatusBarStyle) preferredStatusBarStyle {
-    return UIStatusBarStyleDefault;
+    auto val = app.getStyleValue("window.status-bar-light");
+    if (!val) {
+        return UIStatusBarStyleDefault;
+    }
+    return val->boolVal() ? UIStatusBarStyleLightContent : UIStatusBarStyleDefault;
 }
 - (void)onKeyboardWillChange:(NSNotification*)notification {
     if (currentKeyboardTracker) {
@@ -62,6 +66,7 @@ public:
         _scale = [UIScreen mainScreen].scale;
         CGRect statusBarFrame = [UIApplication sharedApplication].statusBarFrame;
         setSafeInsets(StatusBar, EDGEINSETS(0, statusBarFrame.size.height * _scale, 0, 0));
+        _renderer->bindToNativeWindow((long)(__bridge void*)_nativeView);
 
     }
     

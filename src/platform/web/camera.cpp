@@ -8,18 +8,35 @@
 
 #include <oaknut.h>
 
+class WebGLTexture : public Texture {
+public:
+    val _tex;
+    int _textureId;
+    
+    WebGLTexture(val tex) : Texture(NULL), _tex(tex) {
+        _textureId = tex["name"].as<int>();
+    }
+    void resize(int width, int height) {
+        assert(0);
+    }
+    virtual int getSampler() {
+        assert(0);
+    }
+
+};
+
 class CameraWebBitmap : public BitmapWeb {
 public:
     
-    CameraWebBitmap(val texture) : _texture(texture)  {
+    CameraWebBitmap(val texture) {
+        _texture = new WebGLTexture(texture);
         _format = BITMAPFORMAT_RGBA32;
-        _textureId = _texture["name"].as<int>();
     }
 
     
-    void bind() override {
+    /*void bind() override {
         val::global("gl").call<void>("bindTexture", GL_TEXTURE_2D, _texture);
-    }
+    }*/
     
     void lock(PIXELDATA* pixelData, bool forWriting) override {
         
@@ -111,7 +128,6 @@ public:
         return jpeg_bytes;
     }*/
 
-    val _texture;
 };
 
 
