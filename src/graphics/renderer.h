@@ -5,27 +5,38 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#define SHADER_ROUNDRECT_0  0
-#define SHADER_ROUNDRECT_1  1
-#define SHADER_ROUNDRECT_2H 2
-#define SHADER_ROUNDRECT_2V 3
-#define SHADER_ROUNDRECT_4  4
+// TODO: Move these elsewhere
+#if RENDERER_METAL
+#define SL_HALF4 "half4"
+#define SL_FLOAT1 "float"
+#define SL_FLOAT2 "float2"
+#define SL_FLOAT4 "float4"
+#define SL_MATRIX4 "float4x4"
+#define SL_OUTPIXVAL "c"
+#define SL_UNIFORM(x) "uniforms->"#x
+#define SL_ATTRIB(x) "in."#x
+#define SL_FLOAT4_TO_OUTPIX(x) "half4("#x ")"
+#define SL_TEXSAMPLE_2D(x, coord) "colorTexture.sample(textureSampler," coord ")"
+#define SL_TEXSAMPLE_2D_RECT(x, coord) "colorTexture.sample(textureSampler," coord ")"
+#define SL_TEXSAMPLE_2D_OES(x, coord) "colorTexture.sample(textureSampler," coord ")"
 
+#elif RENDERER_GL
+#define SL_HALF4 "lowp vec4"
+#define SL_FLOAT1 "float"
+#define SL_FLOAT2 "vec2"
+#define SL_FLOAT4 "vec4"
+#define SL_MATRIX4 "highp mat4"
+#define SL_OUTPIXVAL "gl_FragColor"
+#define SL_UNIFORM(x) #x
+#define SL_ATTRIB(x) "v_"#x
+#define SL_FLOAT4_TO_OUTPIX(x) #x
+#define SL_TEXSAMPLE_2D(x, coord) "texture2D(texture," coord ")"
+#define SL_TEXSAMPLE_2D_RECT(x, coord) "texture2DRect(texture," coord ")"
+#define SL_TEXSAMPLE_2D_OES(x, coord) "texture2D(texture," coord ")"
 
-union ShaderFeatures {
-    uint32_t all;
-    struct {
-        uint32_t alpha:1;
-        uint32_t roundRect:3;
-        uint32_t sampler0:4;
-        uint32_t sampler1:4;
-        uint32_t sampler2:4;
-        uint32_t sampler3:4;
-        uint32_t tint:1;
-    };
-    ShaderFeatures() : all(0) {
-    }
-};
+#else
+#error todo
+#endif
 
 
 #define VERTEXATTRIB_POSITION 0
@@ -56,9 +67,14 @@ public:
     ~Texture();
     
     virtual void resize(int width, int height)=0;
-    virtual int getSampler()=0;
     
     class Bitmap* _bitmap; // NB: can be null
+    enum Type {
+        None,
+        Normal,
+        Rect,
+        OES
+    } _type;
     int _format; // see BitmapFormat
     bool _needsUpload;
     bool _denormalizedCoords; // usually false, only true for OpenGL's rectangular textures
@@ -69,21 +85,87 @@ public:
 };
 
 
+/**
+ StandardShader does the vast majority of rendering. They are constructed on-demand
+ for a unique feature set
+ */
+#define SHADER_ROUNDRECT_0  0
+#define SHADER_ROUNDRECT_1  1
+#define SHADER_ROUNDRECT_2H 2
+#define SHADER_ROUNDRECT_2V 3
+#define SHADER_ROUNDRECT_4  4
 
 class Shader : public RenderResource  {
 public:
+    struct Features {
+        uint32_t alpha:1;
+        uint32_t roundRect:3;
+        uint32_t tint:1;
+        Texture::Type textures[2];
+        
+        Features() {
+            alpha = 0;
+            roundRect = 0;
+            tint = 0;
+            textures[0] = Texture::Type::None;
+            textures[1] = Texture::Type::None;
+        }
+        
+        bool operator==(const Features& other) const {
+            if (alpha!=other.alpha) return false;
+            if (roundRect!=other.roundRect) return false;
+            if (tint!=other.tint) return false;
+            if (textures[0]!=other.textures[0]) return false;
+            if (textures[1]!=other.textures[1]) return false;
+            return true;
+        }
+        bool operator!=(const Features& other) const {
+            if (alpha!=other.alpha) return true;
+            if (roundRect!=other.roundRect) return true;
+            if (tint!=other.tint) return true;
+            if (textures[0]!=other.textures[0]) return true;
+            if (textures[1]!=other.textures[1]) return true;
+            return false;
+        }
+        bool operator<(const Features& other) const {
+            if (alpha<other.alpha) return true;
+            if (roundRect<other.roundRect) return true;
+            if (tint<other.tint) return true;
+            if (textures[0]<other.textures[0]) return true;
+            if (textures[1]<other.textures[1]) return true;
+            return false;
+        }
+    } _features;
+
     Shader(Renderer* renderer);
+    Shader(Renderer* renderer, Features features);
+
     ~Shader();
+
+
+
+    enum VariableType {
+        Color, // a lowp vec4 or half4 in shader code
+        Int1,
+        Float1,
+        Float2,
+        Float4,
+        Matrix4,
+    };
+
+    struct Attribute {
+        VariableType type;
+        const char* name;
+        int16_t inOffset;
+    };
+    vector<Attribute> _attributes;
     
-    void* _shaderState; // opaque data managed by renderer. Non-null while shader is loaded.
+    
+
+
+    
     struct Uniform {
-        enum Type {
-            Int1,
-            Float1,
-            Float2,
-            Float4,
-            Matrix4,
-        } type;
+        VariableType type;
         enum Usage {
             Vertex,
             Fragment
@@ -94,40 +176,29 @@ public:
     };
     vector<Uniform> _uniforms;
 
-    
-    virtual string getVertexSource() =0;
-    virtual string getFragmentSource() =0;
+    void* _shaderState; // opaque data managed by renderer. Non-null while shader is loaded.
+
+    // Generic shader language APIs. The outer program structure is provided by the renderer.
+    virtual string getVertexSource();
+    virtual string getFragmentSource();
 
     // Uniforms
     int16_t _u_mvp;
-    
-protected:
-    int16_t declareUniform(const char* name, Uniform::Type type, Uniform::Usage usage=Uniform::Usage::Fragment);
-    string getUniformFields(Shader::Uniform::Usage usage);
-};
-
-/**
- StandardShader does the vast majority of rendering. They are constructed on-demand for a unique feature
- */
-class StandardShader : public Shader {
-public:
-    StandardShader(Renderer* renderer, ShaderFeatures features);
-    
-    string getVertexSource() override;
-    string getFragmentSource() override;
-    
-    ShaderFeatures _features;
-
-    // Uniforms
     int16_t _u_alpha;
     int16_t _u_sampler;
     int16_t _u_strokeColor;
     int16_t _u_u;
     int16_t _u_radius;
     int16_t _u_radii;
+
+    
+protected:
+    int16_t declareAttribute(const char* name, VariableType type);
+    int16_t declareUniform(const char* name, VariableType type, Uniform::Usage usage=Uniform::Usage::Fragment);
 };
 
 
+string sl_getTypeString(Shader::VariableType type);
     
 
 
@@ -140,7 +211,7 @@ public:
     class Window* _window;
     list<RenderResource*> _textures;
     list<RenderResource*> _shaders;
-    map<uint32_t, sp<Shader>> _standardShaders; // standard shaders, not custom ones
+    map<Shader::Features, sp<Shader>> _standardShaders; // standard shaders, not custom ones
     
 
     // Render state (used during render loop)
@@ -156,7 +227,7 @@ public:
     void reset();
     ItemPool::Alloc* allocQuads(int num, ItemPool::Alloc* existingAlloc);
     virtual void createTextureForBitmap(Bitmap* bitmap);
-    Shader* getStandardShader(ShaderFeatures features);
+    Shader* getStandardShader(Shader::Features features);
     void bindBitmap(Bitmap* bitmap);
     virtual void releaseTexture(Texture* tex);
     virtual void releaseShader(Shader* shader);
@@ -203,6 +274,7 @@ protected:
     virtual void* createShaderState(Shader* shader) =0;
     virtual void deleteShaderState(void* state) =0;
     virtual void bindCurrentShader() =0;
+
 
     // QuadBuffer data
     ItemPool _quadBuffer;

@@ -30,10 +30,17 @@ public:
         rect.origin += _view->_surfaceOrigin;
         *quad = QUAD(rect, 0);
     }
+    void asQuads(QUAD *quad) override {
+        rectToSurfaceQuad(_rect, quad);
+        quad->tl.s = quad->bl.s = _rectTex.left();
+        quad->tl.t = quad->tr.t = _rectTex.top();
+        quad->tr.s = quad->br.s = _rectTex.right();
+        quad->bl.t = quad->br.t = _rectTex.bottom();
+    }
     void validateShader(Renderer* renderer) override {
         //TextureRenderOp::validateShader(renderer);
-        ShaderFeatures features;
-        features.sampler0 = 1; //_bitmap->_texture->getSampler();
+        Shader::Features features;
+        features.textures[0] = Texture::Type::Normal;// _view->_surface->_texture->getTextureType();
         features.alpha = (_alpha<1.0f);
         features.tint = (_color!=0);
         _shader = renderer->getStandardShader(features);

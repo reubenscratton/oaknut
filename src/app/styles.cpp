@@ -185,15 +185,27 @@ COLOR StyleValue::colorVal()  const {
                 int g = (val & 0xF0)>>4;
                 int b = val & 0xF;
                 return 0xFF000000
-                     | (((r<<4)|r)<<16)
+                     | (((b<<4)|b)<<16)
                      | (((g<<4)|g)<<8)
-                     | ((b<<4)|b);
+                     | ((r<<4)|r);
             }
             else if (colorVal.length()==6) {
-                return 0xFF000000 | val;
+                uint32_t r = (val & 0xFF0000)>>16;
+                uint32_t g = (val & 0xFF00)>>8;
+                uint32_t b = val & 0xFF;
+                return 0xFF000000
+                    | (b<<16)
+                    | (g<<8)
+                    | (r);
             }
             else if (colorVal.length()==8) {
-                return val;
+                uint32_t r = (val & 0xFF0000)>>16;
+                uint32_t g = (val & 0xFF00)>>8;
+                uint32_t b = val & 0xFF;
+                return (val & 0xFF000000)
+                    | (b<<16)
+                    | (g<<8)
+                    | (r);
             }
             else {
                 app.warn("Malformed hex color value");

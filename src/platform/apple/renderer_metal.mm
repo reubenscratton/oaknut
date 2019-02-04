@@ -14,10 +14,6 @@
 #endif
 
 
-#define SAMPLER_NONE 0
-#define SAMPLER_TEXTURE2D_A8 1
-#define SAMPLER_TEXTURE2D_RGBA 2
-
 static id<MTLDevice> s_device;
 
 
@@ -70,10 +66,6 @@ public:
 
     }
 
-    int getSampler() override {
-        return (_format==BITMAPFORMAT_A8) ? SAMPLER_TEXTURE2D_A8 : SAMPLER_TEXTURE2D_RGBA;
-    }
-
     
 };
 
@@ -113,6 +105,19 @@ static void alignInt(int32_t& i, int32_t alignment) {
     }
 }
 
+static string getUniformFields(Shader* shader, Shader::Uniform::Usage usage) {
+    string s="";
+    for (auto& uniform : shader->_uniforms) {
+        if (usage == uniform.usage) {
+            s += sl_getTypeString(uniform.type);
+            s+= " ";
+            s+= uniform.name;
+            s+= ";\n";
+        }
+    }
+    return s;
+}
+
 struct ShaderState {
     id<MTLFunction> _vertexShader;
     id<MTLFunction> _fragShader;
@@ -130,11 +135,11 @@ struct ShaderState {
         for (auto& uniform: shader->_uniforms) {
             int32_t alignment = 4;
             switch (uniform.type) {
-                case Shader::Uniform::Type::Int1: alignment=4; break;
-                case Shader::Uniform::Type::Float1: alignment=4; break;
-                case Shader::Uniform::Type::Float2: alignment=8; break;
-                case Shader::Uniform::Type::Float4: alignment=16; break;
-                case Shader::Uniform::Type::Matrix4: alignment=16; break;
+                case Shader::VariableType::Int1: alignment=4; break;
+                case Shader::VariableType::Float1: alignment=4; break;
+                case Shader::VariableType::Float2: alignment=8; break;
+                case Shader::VariableType::Float4: alignment=16; break;
+                case Shader::VariableType::Matrix4: alignment=16; break;
                 default: assert(0);
             }
             int32_t& cb = (uniform.usage == Shader::Uniform::Fragment) ? cbFrag : cbVert;
@@ -151,7 +156,78 @@ struct ShaderState {
         _vertexUniformData.resize(cbVert);
         _fragUniformData.resize(cbFrag);
 
-        string s = shader->getVertexSource();
+        
+        string s =
+        "using namespace metal;\n"
+        "\n"
+        "struct VertexInput {\n"
+        "   float2 position [[attribute(0)]];\n"
+        "   float2 texcoord [[attribute(1)]];\n"
+        "   uint color [[attribute(2)]];\n"
+        "   float unused1;\n"
+        "   float unused2;\n"
+        "   float unused3;\n"
+        "};\n"
+        "struct VertexOutput {\n"
+        "   float4 position [[position]];\n";
+        for (auto& attribute : shader->_attributes) {
+            if (0!=strcmp(attribute.name, "position")) {
+                s += sl_getTypeString(attribute.type);
+                s += " ";
+                s += attribute.name;
+                s += ";\n";
+            }
+        }
+        s+= "};\n"
+        "struct VertexUniforms {\n";
+        s+= getUniformFields(shader, Shader::Uniform::Usage::Vertex);
+        s+= "};\n";
+        
+        // Vertex shader
+        s+= "vertex VertexOutput vertex_shader(uint vid [[vertex_id]],\n"
+        "                                  constant VertexInput* v_in [[buffer(0)]],\n"
+        "                                  constant VertexUniforms* uniforms [[buffer(1)]]) {\n"
+        "   VertexOutput output;\n"
+        "   output.position = uniforms->mvp * float4(v_in[vid].position,0,1);\n";
+        
+        // All non-position attributes
+        for (auto& attribute : shader->_attributes) {
+            if (0!=strcmp(attribute.name, "position")) {
+                s += string::format("output.%s = ", attribute.name);
+                if (attribute.type == Shader::VariableType::Color) {
+                    s += string::format("unpack_unorm4x8_to_half(v_in[vid].%s);\n", attribute.name);
+                } else {
+                    s += string::format("v_in[vid].%s;\n", attribute.name);
+                }
+            }
+        }
+
+        s+= "   return output;\n"
+            "}\n";
+
+        // Frag shader header
+        string fragUniforms = getUniformFields(shader, Shader::Uniform::Usage::Fragment);
+        if (fragUniforms.length() > 0) {
+            s+= "struct FragUniforms {\n";
+            s+= fragUniforms;
+            s+= "};\n";
+        }
+        s+= "fragment half4 frag_shader(VertexOutput in [[stage_in]]\n";
+        if (fragUniforms.length() > 0) {
+            s += ",constant FragUniforms* uniforms [[buffer(0)]]\n";
+        }
+        if (shader->_features.textures[0] != Texture::Type::None) {
+            s+= ",texture2d<half> colorTexture [[ texture(0) ]]\n";
+            s+= ",sampler textureSampler [[ sampler(0) ]]";
+        }
+        s+= ") {\n";
+        
+        s += shader->getFragmentSource();
+
+        s+= "return c;\n";
+        s += "}\n";
+        
+
         NSError* error = nil;
         id<MTLLibrary> library = [device newLibraryWithSource:[NSString stringWithUTF8String:s.data()] options:nil error:&error];
         assert(library);
@@ -186,143 +262,6 @@ struct ShaderState {
 };
 
 
-static string getUniformFields(Shader* shader, Shader::Uniform::Usage usage) {
-    string s="";
-    for (auto& uniform : shader->_uniforms) {
-        if (usage == uniform.usage) {
-            switch (uniform.type) {
-                case Shader::Uniform::Int1: s+="int"; break;
-                case Shader::Uniform::Float1: s+="float"; break;
-                case Shader::Uniform::Float2: s+="float2"; break;
-                case Shader::Uniform::Float4: s+="float4"; break;
-                case Shader::Uniform::Matrix4: s+="float4x4"; break;
-            }
-            s+= " ";
-            s+= uniform.name;
-            s+= ";\n";
-        }
-    }
-    return s;
-}
-
-static string getShaderSource(Shader* shader, bool useTexCoordsAttrib, bool useColorAttrib) {
-    string s =
-    "using namespace metal;\n"
-    "\n"
-    "struct VertexInput {\n"
-    "   float2 position [[attribute(0)]];\n"
-    "   float2 texcoord [[attribute(1)]];\n"
-    "   uint color [[attribute(2)]];\n"
-    "   float unused1;\n"
-    "   float unused2;\n"
-    "   float unused3;\n"
-    "};\n"
-    "struct VertexOutput {\n"
-    "   float4 position [[position]];\n";
-    if (useTexCoordsAttrib) {
-        s+= "   float2 texcoord;\n";
-    }
-    if (useColorAttrib) {
-        s+= "   half4 color;\n";
-    }
-    s+= "};\n"
-        "struct VertexUniforms {\n";
-    s+= getUniformFields(shader, Shader::Uniform::Usage::Vertex);
-    s+= "};\n";
-    s+= "vertex VertexOutput vertex_shader(uint vid [[vertex_id]],\n"
-    "                                  constant VertexInput* v_in [[buffer(0)]],\n"
-    "                                  constant VertexUniforms* uniforms [[buffer(1)]]) {\n"
-    "   VertexOutput output;\n"
-    "   output.position = uniforms->mvp * float4(v_in[vid].position,0,1);\n";
-    if (useTexCoordsAttrib) {
-        s += "   output.texcoord = v_in[vid].texcoord;\n";
-    }
-    if (useColorAttrib) {
-        s+= "   output.color = unpack_unorm4x8_to_half(v_in[vid].color);\n";
-    }
-    s+= "   return output;\n"
-        "}\n";
-    return s;
-}
-
-string StandardShader::getVertexSource() {
-    bool useTexCoords = false;
-    bool useTexSampler = false;
-    int roundRect = _features.roundRect;
-    if (roundRect) {
-        useTexCoords = true; // we don't use the sampler, we just want the texcoord attributes, which are
-        // not actually texture coords, v_texcoords is x-dist and y-dist from quad centre
-    }
-    if (_features.sampler0 != SAMPLER_NONE) {
-        useTexSampler = true;
-        useTexCoords = true;
-    }
-    
-    string s = getShaderSource(this, useTexCoords, true);
-
-    
-    // Frag shader
-    string fragUniforms = getUniformFields(Uniform::Usage::Fragment);
-    if (fragUniforms.length() > 0) {
-        s+= "struct FragUniforms {\n";
-        s+= fragUniforms;
-        s+= "};\n";
-    }
-    s+= "fragment half4 frag_shader(VertexOutput in [[stage_in]]\n";
-    if (fragUniforms.length() > 0) {
-       s += ",constant FragUniforms* uniforms [[buffer(0)]]\n";
-    }
-    if (useTexSampler) {
-        s+= ",texture2d<half> colorTexture [[ texture(0) ]]\n";
-        s+= ",sampler textureSampler [[ sampler(0) ]]";
-    }
-    s+= ") {\n";
-    
-    if (!useTexSampler) {
-        s += "half4 c = in.color;\n";
-    } else {
-        s += "half4 c = colorTexture.sample(textureSampler, in.texcoord);\n";
-        if (_features.tint) {
-            s += "c.rgb = in.color.rgb;\n";
-        }
-    }
-    
-    if (roundRect) {
-        if (roundRect == SHADER_ROUNDRECT_1) {
-            s += "    float2 b = uniforms->u.xy - float2(uniforms->radius); \n"
-                 "    float dist = length(max(abs(in.texcoord)-b, 0.0)) - uniforms->radius  - 0.5;\n";
-        }
-        else if (roundRect == SHADER_ROUNDRECT_2H) {
-            // branchless selection of radius=r.x if on left side of quad or radius=r.y on right side
-            s += "   float2 size = uniforms->u.xy; \n"
-                "   float2 r = uniforms->radii.xw\n;" // TODO: this is specific to left|right config
-                "   float s=step(in.texcoord.x,0.0);\n"
-                "   float radius = s*r.x + (1.0-s)*r.y;\n"
-                "   size -= float2(radius);\n"
-                "   float2 d = abs(in.texcoord) - size;\n"
-                "   float dist = min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - radius;\n";
-        }
-        s +=    "   half4 col = half4(uniforms->strokeColor);\n"
-                "   col.a = mix(0.0, uniforms->strokeColor.a, clamp(-dist, 0.0, 1.0));\n"   // outer edge blend
-                "   c = mix(col, c, half4(clamp(-(dist + uniforms->u.w), 0.0, 1.0)));\n";
-    }
-
-
-    
-    
-    if (_features.alpha) {
-        s += "c.a *= uniforms->alpha;\n";
-    }
-        
-    s+= "return c;\n";
-    s += "}\n";
-    
-    return s;
-}
-    
-string StandardShader::getFragmentSource() {
-    return "";
-}
 
 
 class CoreVideoTexture : public MetalTexture {
@@ -542,7 +481,6 @@ public:
         }
     }
 
-    
     void drawQuads(int numQuads, int index) override {
         
         ShaderState* state = (ShaderState*)_currentShader->_shaderState;
@@ -770,10 +708,10 @@ string BlurShader::getVertexSource() {
     s+= "};\n";
 
     s+= "struct VertexUniforms {\n";
-    s+= getUniformFields(Uniform::Usage::Vertex);
+    s+= getUniformFields(this, Uniform::Usage::Vertex);
     s+="};\n"
     "struct FragUniforms {\n";
-    s+= getUniformFields(Uniform::Usage::Fragment);
+    s+= getUniformFields(this, Uniform::Usage::Fragment);
     s+= "};\n";
 
     
@@ -843,13 +781,13 @@ string BlurShader::getFragmentSource() {
 
 
 string PostBlurShader::getVertexSource() {
-    string s = getShaderSource(this, true, true);
+    string s = "";// getShaderSource(this, true, true);
 
     s+= "constant half3 luminanceWeighting = half3(0.2125h, 0.7154h, 0.0721h);\n";
 
     // Generic stuff, move elsewhere
     bool useTexSampler = true;
-    string fragUniforms = getUniformFields(Uniform::Usage::Fragment);
+    string fragUniforms = getUniformFields(this, Uniform::Usage::Fragment);
     if (fragUniforms.length() > 0) {
         s+= "struct FragUniforms {\n";
         s+= fragUniforms;

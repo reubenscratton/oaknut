@@ -41,6 +41,7 @@ public:
         assert(err==0);
         _textureId = CVOpenGLTextureGetName(_cvTexture);
         _texTarget = CVOpenGLESTextureGetTarget(_cvTexture); // GL_TEXTURE_RECTANGLE
+        _type = Rect;
         _denormalizedCoords = true;
 #endif
 

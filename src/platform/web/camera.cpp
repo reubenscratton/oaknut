@@ -19,9 +19,6 @@ public:
     void resize(int width, int height) {
         assert(0);
     }
-    virtual int getSampler() {
-        assert(0);
-    }
 
 };
 

@@ -18,20 +18,11 @@ public:
     virtual void upload();
 
     void resize(int width, int height) override;
-    int getSampler() override;
     
 protected:
     void realloc(int width, int height, void* pixelData, bool sizeChanged);
 };
 
-
-// GL Sampler types. There are 11 of these in the GLSL spec, see:
-// https://www.khronos.org/opengl/wiki/Sampler_(GLSL)#Sampler_types
-
-#define GLSAMPLER_NONE 0
-#define GLSAMPLER_TEXTURE_2D 1
-#define GLSAMPLER_TEXTURE_RECT 2
-#define GLSAMPLER_TEXTURE_EXT_OES 3
 
 class GLRenderer : public Renderer {
 public:
@@ -57,7 +48,7 @@ public:
     void generateMipmaps(Texture* tex) override;
     
     void setUniformData(int16_t uniformIndex, const void* data, int32_t cb) override;
-
+    
     int getIntProperty(IntProperty property) override;
     
 protected:

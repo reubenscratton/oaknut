@@ -58,8 +58,8 @@ void TextureRenderOp::validateShader(Renderer* renderer) {
         if (!_bitmap->_texture) {
             renderer->createTextureForBitmap(_bitmap);
         }
-        ShaderFeatures features;
-        features.sampler0 = _bitmap->_texture->getSampler();
+        Shader::Features features;
+        features.textures[0] = _bitmap->_texture->_type;
         features.alpha = (_alpha<1.0f);
         features.tint = (_color!=0);
         _shader = renderer->getStandardShader(features);
@@ -93,7 +93,7 @@ bool TextureRenderOp::canMergeWith(const RenderOp* op) {
 void TextureRenderOp::prepareToRender(Renderer* renderer, Surface* surface) {
     RenderOp::prepareToRender(renderer, surface);
     if (_alpha < 1) {
-        renderer->setUniform(_shader.as<StandardShader>()->_u_alpha, _alpha);
+        renderer->setUniform(_shader->_u_alpha, _alpha);
     }
     renderer->bindBitmap(_bitmap);
 }

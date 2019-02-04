@@ -90,17 +90,109 @@ struct GLShaderState {
     vector<GLuint> _uniformLocations;
     bytearray _uniformData;
 
+
     GLShaderState(Shader* shader) {
-        string vertexSource = shader->getVertexSource();
-        string fragmentSource = shader->getFragmentSource();
         
-        GLuint vertexShader = loadShader(GL_VERTEX_SHADER, vertexSource.data());
-        GLuint pixelShader = loadShader(GL_FRAGMENT_SHADER, fragmentSource.data());
+        string vs;
+        if (shader->_features.textures[0] == Texture::Type::Rect) {
+            vs += "#extension GL_ARB_texture_rectangle : require\n";
+        }
+        if (shader->_features.textures[0] == Texture::Type::OES) {
+            vs += "#extension GL_OES_EGL_image_external : require\n";
+        }
+        
+        
+        for (auto& attribute : shader->_attributes) {
+            vs += "attribute ";
+            if (attribute.type == Shader::VariableType::Color) {
+                vs += "lowp vec4";
+            } else {
+                vs += sl_getTypeString(attribute.type);
+            }
+            vs += " ";
+            vs += attribute.name;
+            vs += ";\n";
+            vs += "varying ";
+            vs += sl_getTypeString(attribute.type);
+            vs += " v_";
+            vs += attribute.name;
+            vs += ";\n";
+        }
+
+        for (auto& uniform : shader->_uniforms) {
+            if (Shader::Uniform::Usage::Vertex == uniform.usage) {
+                vs += "uniform ";
+                vs += sl_getTypeString(uniform.type);
+                vs+= " ";
+                vs+= uniform.name;
+                vs+= ";\n";
+            }
+        }
+
+        
+        vs += "void main() {\n"
+              "  gl_Position = mvp * vec4(position,0,1);\n";
+        
+        // All other attributes
+        for (auto& attribute : shader->_attributes) {
+            if (0!=strcmp(attribute.name, "position")) {
+                vs += string::format("v_%s = %s;\n", attribute.name, attribute.name);
+            }
+        }
+        
+        vs += "}\n";
+
+        //vs += shader->getVertexSource();
+        
+        // Attributes and uniforms for fragshader
+        string fs = "";
+        for (auto& attribute : shader->_attributes) {
+            if (0!=strcmp(attribute.name, "position")) {
+                fs += "varying ";
+                fs += sl_getTypeString(attribute.type);
+                fs += " v_";
+                fs += attribute.name;
+                fs += ";\n";
+            }
+        }
+        for (auto& uniform : shader->_uniforms) {
+            if (Shader::Uniform::Usage::Fragment == uniform.usage) {
+                fs += "uniform ";
+                fs += sl_getTypeString(uniform.type);
+                fs+= " ";
+                fs+= uniform.name;
+                fs+= ";\n";
+            }
+        }
+        
+        // Add appropriate sampler
+        if (shader->_features.textures[0] != Texture::Type::None) {
+            fs += "uniform ";
+            if (shader->_features.textures[0] == Texture::Type::Normal) {
+                fs += "sampler2D texture;\n";
+            }
+            else if (shader->_features.textures[0] == Texture::Type::Rect) {
+                fs += "sampler2DRect texture;\n";
+            }
+            else if (shader->_features.textures[0] == Texture::Type::OES) {
+                fs += "samplerExternalOES texture;\n";
+            }
+            else {
+                assert(0);
+            }
+        }
+
+        fs += "void main() {\n";
+        fs += shader->getFragmentSource();
+        fs += "}\n";
+
+        GLuint vertexShader = loadShader(GL_VERTEX_SHADER, vs.data());
+        GLuint pixelShader = loadShader(GL_FRAGMENT_SHADER, fs.data());
 
         _program = check_gl(glCreateProgram);
         
         _vertexConfig = VERTEXATTRIBS_CONFIG_NORMAL;
-        check_gl(glBindAttribLocation, _program, VERTEXATTRIB_POSITION, "vPosition");
+        check_gl(glBindAttribLocation, _program, VERTEXATTRIB_POSITION, "position");
         check_gl(glBindAttribLocation, _program, VERTEXATTRIB_TEXCOORD, "texcoord");
         check_gl(glBindAttribLocation, _program, VERTEXATTRIB_COLOR, "color");
         
@@ -298,175 +390,9 @@ void GLTexture::upload() {
 }
 
 
-int GLTexture::getSampler() {
-    if (_texTarget == GL_TEXTURE_RECTANGLE_ARB) {
-        return GLSAMPLER_TEXTURE_RECT;
-    }
-    if (_texTarget == GL_TEXTURE_EXTERNAL_OES) {
-        return GLSAMPLER_TEXTURE_EXT_OES;
-    }
-    return GLSAMPLER_TEXTURE_2D;
-}
-
 
     
 
-string StandardShader::getVertexSource() {
-    
-    bool useTexCoords = false;
-    bool useTexSampler = false;
-    int roundRect = _features.roundRect;
-    if (roundRect) {
-        useTexCoords = true; // we don't use the sampler, we just want the texcoord attributes, which are
-                             // not actually texture coords, v_texcoords is x-dist and y-dist from quad centre
-    }
-    if (_features.sampler0 != GLSAMPLER_NONE) {
-        useTexSampler = true;
-        useTexCoords = true;
-        //_sampler.set(0);
-    }
-    
-    string vs;
-    
-    if (_features.sampler0 == GLSAMPLER_TEXTURE_RECT) {
-        vs += "#extension GL_ARB_texture_rectangle : require\n";
-    }
-    if (_features.sampler0 == GLSAMPLER_TEXTURE_EXT_OES) {
-        vs += "#extension GL_OES_EGL_image_external : require\n";
-    }
-    vs += "attribute highp vec2 vPosition;\n"     // the 'highp' qualifier is VERY IMPORTANT! See above
-    "uniform highp mat4 mvp;\n"
-    "attribute lowp vec4 color;\n"
-    "varying lowp vec4 v_color;\n";
-    if (useTexCoords) {
-        vs += "attribute vec2 texcoord;\n"
-        "varying vec2 v_texcoord;\n";
-    }
-    
-    vs += "void main() {\n"
-    "  gl_Position = mvp * vec4(vPosition,0,1);\n"
-    "  v_color=color;\n";
-    if (useTexCoords) {
-        vs += "  v_texcoord = texcoord;\n";
-    }
-    vs += "}\n";
-    return vs;
-}
-
-
-string StandardShader::getFragmentSource() {
-    bool useTexCoords = false;
-    bool useTexSampler = false;
-    int roundRect = _features.roundRect;
-    if (roundRect) {
-        useTexCoords = true; // we don't use the sampler, we just want the texcoord attributes, which are
-        // not actually texture coords, v_texcoords is x-dist and y-dist from quad centre
-    }
-    if (_features.sampler0 != GLSAMPLER_NONE) {
-        useTexSampler = true;
-        useTexCoords = true;
-        //_sampler.set(0);
-    }
-    
-    string fs = "varying lowp vec4 v_color;\n";
-    if (_features.alpha) {
-        fs += "uniform mediump float alpha;\n";
-    }
-    if (_features.roundRect) {
-        fs += "uniform vec4 u;\n" // xy = quad half size, w = strokeWidth
-        "uniform lowp vec4 strokeColor;\n";
-        if (_features.roundRect == SHADER_ROUNDRECT_1) {
-            fs += "uniform mediump float radius;\n";
-        } else {
-            fs += "uniform mediump vec4 radii;\n";
-        }
-    }
-    if (useTexCoords) {
-        fs += "varying vec2 v_texcoord;\n";
-    }
-
-    // Add appropriate sampler
-    string textureFunc;
-    if (_features.sampler0 == GLSAMPLER_TEXTURE_2D) {
-        fs += "uniform sampler2D texture;\n";
-        textureFunc = "texture2D";
-    }
-    else if (_features.sampler0 == GLSAMPLER_TEXTURE_RECT) {
-        fs += "uniform sampler2DRect texture;\n";
-        textureFunc = "texture2DRect";
-    }
-    else if (_features.sampler0 == GLSAMPLER_TEXTURE_EXT_OES) {
-        fs += "uniform samplerExternalOES texture;\n";
-        textureFunc = "texture2D";
-    }
-    
-    
-    
-    
-    fs += "void main() {\n";
-    
-    string color_src = "v_color";
-    if (useTexSampler) {
-        fs += "    vec4 color = " + textureFunc + "(texture, v_texcoord);\n";
-        if (_features.tint) {
-            fs += "    color.rgb = v_color.rgb;\n";
-        }
-        color_src = "color";
-    }
-    
-    
-    
-    if (roundRect) {
-        
-        if (roundRect == SHADER_ROUNDRECT_1) {
-            fs += "    vec2 b = u.xy - vec2(radius); \n"
-            "    float dist = length(max(abs(v_texcoord)-b, 0.0)) - radius  - 0.5;\n";
-        }
-        else if (roundRect == SHADER_ROUNDRECT_2H) {
-            // branchless selection of radius=r.x if on left side of quad or radius=r.y on right side
-            fs += "   vec2 size = u.xy; \n"
-            "   vec2 r = radii.xw\n;" // TODO: this is specific to left|right config
-            "   float s=step(v_texcoord.x,0.0);\n"
-            "   float radius = s*r.x + (1.0-s)*r.y;\n"
-            "   size -= vec2(radius);\n"
-            "   vec2 d = abs(v_texcoord) - size;\n"
-            "   float dist = min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - radius;\n";
-        }
-        fs +=   "   vec4 col = strokeColor;\n"
-        "   col.a = mix(0.0, strokeColor.a, clamp(-dist, 0.0, 1.0));\n"   // outer edge blend
-        "   gl_FragColor = mix(col, " + color_src + ", clamp(-(dist + u.w), 0.0, 1.0));\n";
-    }
-    else {
-        fs += "    gl_FragColor = " + color_src + ";\n";
-    }
-    if (_features.alpha) {
-        fs += "    gl_FragColor.a *= alpha;\n";
-    }
-    fs += "}\n";
-    
-    return fs;
-}
-    
-
-    /*void unload() override {
-        GLShaderBase::unload();
-        _sampler.dirty = true;
-        _alpha.dirty = true;
-        if (_features.roundRect) {
-            _strokeColor.dirty = true;
-            _u.dirty = true;
-            if (_features.roundRect == SHADER_ROUNDRECT_1) {
-                _radius.dirty = true;
-            } else {
-                _radii.dirty = true;
-            }
-        }
-    }*/
-
-    
-
-    
-    
 
 void GLRenderer::setCurrentSurface(Surface* surface) {
     GLSurface* glsurface = (GLSurface*)surface;
@@ -533,6 +459,7 @@ void GLRenderer::bindCurrentShader() {
         check_gl(glEnableVertexAttribArray, VERTEXATTRIB_COLOR);
     }
 }
+
 
 GLRenderer::GLRenderer(Window* window) : Renderer(window) {
     _primarySurface = new GLSurface(this, false);
@@ -802,11 +729,11 @@ void GLRenderer::setUniformData(int16_t uniformIndex, const void* data, int32_t 
     GLuint loc = state->_uniformLocations[uniformIndex];
     assert(loc >= 0);
     switch (uniform.type) {
-        case Shader::Uniform::Int1: check_gl(glUniform1iv, loc, 1, (GLint*)data); break;
-        case Shader::Uniform::Float1: check_gl(glUniform1fv, loc, 1, (GLfloat*)data); break;
-        case Shader::Uniform::Float2: check_gl(glUniform2fv, loc, 1, (GLfloat*)data); break;
-        case Shader::Uniform::Float4: check_gl(glUniform4fv, loc, 1, (GLfloat*)data); break;
-        case Shader::Uniform::Matrix4: check_gl(glUniformMatrix4fv, loc, 1, false, (GLfloat*)data); break;
+        case Shader::VariableType::Int1: check_gl(glUniform1iv, loc, 1, (GLint*)data); break;
+        case Shader::VariableType::Float1: check_gl(glUniform1fv, loc, 1, (GLfloat*)data); break;
+        case Shader::VariableType::Float2: check_gl(glUniform2fv, loc, 1, (GLfloat*)data); break;
+        case Shader::VariableType::Float4: check_gl(glUniform4fv, loc, 1, (GLfloat*)data); break;
+        case Shader::VariableType::Matrix4: check_gl(glUniformMatrix4fv, loc, 1, false, (GLfloat*)data); break;
     }
 }
 

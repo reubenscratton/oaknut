@@ -184,9 +184,6 @@ struct QUAD {
     QUAD(const RECT& rect, uint32_t color) {
         float l = rect.left(), r=rect.right();
         float t = rect.top(), b=rect.bottom();
-        uint8_t red = color&255;
-        uint8_t blue = (color&0xff0000)>>16;
-        color = (color & 0xFF00FF00) | blue | (red<<16); // swap red & blue. Might be iOS specific, not sure
         tl = {l, t, 0, 0, color};
         tr = {r, t, 1, 0, color};
         bl = {l, b, 0, 1, color};

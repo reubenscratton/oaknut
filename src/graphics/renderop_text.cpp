@@ -13,7 +13,7 @@
 TextRenderOp::TextRenderOp(const TEXTRENDERPARAMS* textRenderParams) : RenderOp() {
     _alpha = 1.0f;
     _textRenderParams = *textRenderParams;
-    this->_blendMode = BLENDMODE_NORMAL;
+    _blendMode = BLENDMODE_NORMAL;
 }
 
 void TextRenderOp::validateShader(Renderer* renderer) {
@@ -22,8 +22,8 @@ void TextRenderOp::validateShader(Renderer* renderer) {
         if (!bitmap->_texture) {
             renderer->createTextureForBitmap(bitmap);
         }
-        ShaderFeatures features;
-        features.sampler0 = bitmap->_texture->getSampler();
+        Shader::Features features;        
+        features.textures[0] = bitmap->_texture->_type;
         features.tint = 1;
         features.alpha = _alpha<1.0f;
         _shader = renderer->getStandardShader(features);
@@ -67,7 +67,6 @@ void TextRenderOp::prepareToRender(Renderer* renderer, Surface* surface) {
 }
 
 void TextRenderOp::asQuads(QUAD *quad) {
-    _color = _textRenderParams.forecolor; // todo: why is this here??
     for (int i=0 ; i<_rects.size() ; i++) {
         rectToSurfaceQuad(_rects.at(i), quad);
         RECT& rectTex = _rectsTex.at(i);
@@ -75,6 +74,10 @@ void TextRenderOp::asQuads(QUAD *quad) {
         quad->tl.t = quad->tr.t = rectTex.top();
         quad->tr.s = quad->br.s = rectTex.right();
         quad->bl.t = quad->br.t = rectTex.bottom();
+        quad->tl.color = _textRenderParams.forecolor;
+        quad->tr.color = _textRenderParams.forecolor;
+        quad->bl.color = _textRenderParams.forecolor;
+        quad->br.color = _textRenderParams.forecolor;
         quad++;
     }
 }

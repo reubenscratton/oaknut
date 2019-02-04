@@ -20,8 +20,8 @@
  */
 
 BlurShader::BlurShader(Renderer* renderer, BlurRenderOp* op) : Shader(renderer), _op(op) {
-    _u_sampler = declareUniform("texture", Uniform::Int1);
-    _u_texOffset = declareUniform("texOffset", Uniform::Type::Float2, Uniform::Usage::Vertex);
+    _u_sampler = declareUniform("texture", VariableType::Int1);
+    _u_texOffset = declareUniform("texOffset", VariableType::Float2, Uniform::Usage::Vertex);
 }
 
 PostBlurShader::PostBlurShader(Renderer* renderer) : Shader(renderer) {

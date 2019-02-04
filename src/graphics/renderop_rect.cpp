@@ -63,7 +63,7 @@ void RectRenderOp::setCornerRadii(const VECTOR4& radii) {
 }
 
 void RectRenderOp::validateShader(Renderer* renderer) {
-    ShaderFeatures features;
+    Shader::Features features;
     if (_alpha<1.0f) {
         features.alpha = 1;
         _blendMode = BLENDMODE_NORMAL;
@@ -93,20 +93,16 @@ void RectRenderOp::validateShader(Renderer* renderer) {
 
 void RectRenderOp::prepareToRender(Renderer* renderer, class Surface* surface) {
     RenderOp::prepareToRender(renderer, surface);
-    StandardShader* shader = _shader.as<StandardShader>();
-    if (shader->_features.alpha) {
-        renderer->setUniform(shader->_u_alpha, _alpha);
+    if (_shader->_features.alpha) {
+        renderer->setUniform(_shader->_u_alpha, _alpha);
     }
-    if (shader->_features.sampler0) {
-        //_sampler.use();
-    }
-    if (shader->_features.roundRect) {
-        renderer->setUniform(shader->_u_strokeColor, _strokeColor);
-        renderer->setUniform(shader->_u_u, VECTOR4(_rect.size.width/2, _rect.size.height/2,0, _strokeWidth));
-        if (shader->_features.roundRect == SHADER_ROUNDRECT_1) {
-            renderer->setUniform(shader->_u_radius, _radii[0]);
+    if (_shader->_features.roundRect) {
+        renderer->setUniform(_shader->_u_strokeColor, _strokeColor);
+        renderer->setUniform(_shader->_u_u, VECTOR4(_rect.size.width/2, _rect.size.height/2,0, _strokeWidth));
+        if (_shader->_features.roundRect == SHADER_ROUNDRECT_1) {
+            renderer->setUniform(_shader->_u_radius, _radii[0]);
         } else {
-            renderer->setUniform(shader->_u_radii, _radii);
+            renderer->setUniform(_shader->_u_radii, _radii);
         }
     }
 }
@@ -117,12 +113,10 @@ bool RectRenderOp::canMergeWith(const RenderOp* op) {
     if (!RenderOp::canMergeWith(op)) {
         return false;
     }
-    StandardShader* shaderThis = _shader.as<StandardShader>();
-    StandardShader* shaderOther = op->_shader.as<StandardShader>();
-    if (shaderThis->_features.all != shaderOther->_features.all) {
+    if (_shader->_features != op->_shader->_features) {
         return false;
     }
-    if (shaderThis->_features.roundRect) {
+    if (_shader->_features.roundRect) {
         return _rect.size.width == ((const RectRenderOp*)op)->_rect.size.width
         && _rect.size.height == ((const RectRenderOp*)op)->_rect.size.height
         && _strokeColor==((const RectRenderOp*)op)->_strokeColor
@@ -139,7 +133,7 @@ bool RectRenderOp::canMergeWith(const RenderOp* op) {
 
 void RectRenderOp::asQuads(QUAD *quad) {
     rectToSurfaceQuad(_rect, quad);
-    if (_shader.as<StandardShader>()->_features.roundRect) {
+    if (_shader->_features.roundRect) {
         // Put the quad size into the texture coords so the frag shader
         // can trivially know distance to quad center
         quad->tl.s = quad->bl.s = -_rect.size.width/2;

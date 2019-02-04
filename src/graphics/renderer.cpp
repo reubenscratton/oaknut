@@ -12,6 +12,7 @@ RenderResource::RenderResource(Renderer* renderer) : _renderer(renderer) {
 
 Texture::Texture(Renderer* renderer) : RenderResource(renderer) {
     _it = renderer->_textures.insert(renderer->_textures.end(), this);
+    _type = Normal;
 }
 Texture::~Texture() {
     if (_renderer) {
@@ -19,37 +20,46 @@ Texture::~Texture() {
     }
 }
 
-Shader::Shader(Renderer* renderer) : RenderResource(renderer) {
-    _it = renderer->_shaders.insert(renderer->_shaders.end(), this);
-    _u_mvp = declareUniform("mvp", Uniform::Matrix4, Uniform::Vertex);
+Shader::Shader(Renderer* renderer) : Shader(renderer, Shader::Features()) {
 }
+Shader::Shader(Renderer* renderer, Shader::Features features) : RenderResource(renderer), _features(features) {
+    _it = renderer->_shaders.insert(renderer->_shaders.end(), this);
+    declareAttribute("position", VariableType::Float2);
+    _u_mvp = declareUniform("mvp", VariableType::Matrix4, Uniform::Vertex);
+    bool useTexCoordAttrib = false;
+    if (_features.textures[0]) {
+        useTexCoordAttrib = true;
+    }
+    if (_features.alpha) {
+        _u_alpha = declareUniform("alpha", VariableType::Float1);
+    }
+    if (_features.roundRect) {
+        _u_strokeColor = declareUniform("strokeColor", VariableType::Float4);
+        _u_u = declareUniform("u", VariableType::Float4);
+        if (_features.roundRect == SHADER_ROUNDRECT_1) {
+            _u_radius = declareUniform("radius", VariableType::Float1);
+        } else {
+            _u_radii = declareUniform("radii", VariableType::Float4);
+        }
+        useTexCoordAttrib = true;
+    }
+    
+    if (useTexCoordAttrib) {
+        declareAttribute("texcoord", VariableType::Float2);
+    }
+    declareAttribute("color", VariableType::Color);
+}
+
 Shader::~Shader() {
     if (_renderer) {
         _renderer->releaseShader(this);
     }
 }
 
-string Shader::getUniformFields(Shader::Uniform::Usage usage) {
-    string s="";
-    for (auto& uniform : _uniforms) {
-        if (usage == uniform.usage) {
-            switch (uniform.type) {
-                case Shader::Uniform::Int1: s+="int"; break;
-                case Shader::Uniform::Float1: s+="float"; break;
-                case Shader::Uniform::Float2: s+="float2"; break;
-                case Shader::Uniform::Float4: s+="float4"; break;
-                case Shader::Uniform::Matrix4: s+="float4x4"; break;
-            }
-            s+= " ";
-            s+= uniform.name;
-            s+= ";\n";
-        }
-    }
-    return s;
-}
 
 int16_t Shader::Uniform::length() {
     switch (type) {
+        case Color: assert(0); // shouldn't be used as a uniform
         case Int1:  return 4;
         case Float1: return 4;
         case Float2: return 8;
@@ -60,7 +70,16 @@ int16_t Shader::Uniform::length() {
     return 4;
 }
 
-int16_t Shader::declareUniform(const char* name, Uniform::Type type, Uniform::Usage usage) {
+
+int16_t Shader::declareAttribute(const char* name, VariableType type) {
+    Attribute attribute;
+    attribute.name = name;
+    attribute.type = type;
+    _attributes.push_back(attribute);
+    return 0;
+}
+
+int16_t Shader::declareUniform(const char* name, VariableType type, Uniform::Usage usage) {
     Uniform uniform;
     uniform.name = name;
     uniform.usage = usage;
@@ -71,36 +90,108 @@ int16_t Shader::declareUniform(const char* name, Uniform::Type type, Uniform::Us
 
 
 
-StandardShader::StandardShader(Renderer* renderer, ShaderFeatures features) : Shader(renderer), _features(features) {
-    if (_features.sampler0 != 0) {
-        _u_sampler = declareUniform("texture", Uniform::Int1);
+string oak::sl_getTypeString(Shader::VariableType type) {
+    switch (type) {
+        case Shader::VariableType::Color: return SL_HALF4;
+        case Shader::VariableType::Int1: return "int";
+        case Shader::VariableType::Float1: return SL_FLOAT1;
+        case Shader::VariableType::Float2: return SL_FLOAT2;
+        case Shader::VariableType::Float4: return SL_FLOAT4;
+        case Shader::VariableType::Matrix4: return SL_MATRIX4;
     }
-    if (_features.alpha) {
-        _u_alpha = declareUniform("alpha", Uniform::Float1);
-    }
-    if (_features.roundRect) {
-        _u_strokeColor = declareUniform("strokeColor", Uniform::Float4);
-        _u_u = declareUniform("u", Uniform::Float4);
-        if (_features.roundRect == SHADER_ROUNDRECT_1) {
-            _u_radius = declareUniform("radius", Uniform::Float1);
-        } else {
-            _u_radii = declareUniform("radii", Uniform::Float4);
-        }
-    }
-
 }
 
+
+string Shader::getVertexSource() {
+    return "";
+}
+
+
+string Shader::getFragmentSource() {
+    bool useTexCoords = false;
+    bool useTexSampler = false;
+    int roundRect = _features.roundRect;
+    if (roundRect) {
+        useTexCoords = true; // we don't use the sampler, we just want the texcoord attributes, which are
+        // not actually texture coords, v_texcoords is x-dist and y-dist from quad centre
+    }
+    if (_features.textures[0]) {
+        useTexSampler = true;
+        useTexCoords = true;
+        //_sampler.set(0);
+    }
+    
+    
+    
+    
+    string fs = SL_HALF4 " c = ";
+    if (useTexSampler) {
+        switch (_features.textures[0]) {
+            case Texture::Type::Normal:
+                fs += SL_TEXSAMPLE_2D("texture",  SL_ATTRIB(texcoord));
+                break;
+            case Texture::Type::Rect:
+                fs += SL_TEXSAMPLE_2D_RECT("texture",  SL_ATTRIB(texcoord));
+                break;
+            case Texture::Type::OES:
+                fs += SL_TEXSAMPLE_2D_OES("texture",  SL_ATTRIB(texcoord));
+                break;
+        }
+        fs += ";\n";
+        
+        if (_features.tint) {
+            fs += "    c.rgb = " SL_ATTRIB(color) ".rgb;\n";
+        }
+    } else {
+        fs += SL_ATTRIB(color);
+        fs += ";\n";
+
+    }
+    
+
+    if (roundRect) {
+        
+        if (roundRect == SHADER_ROUNDRECT_1) {
+            fs += SL_FLOAT2 " b = " SL_UNIFORM(u) ".xy - " SL_FLOAT2 "(" SL_UNIFORM(radius) ");\n"
+                  "float dist = length(max(abs(" SL_ATTRIB(texcoord)")-b, 0.0)) - " SL_UNIFORM(radius) "  - 0.5;\n";
+        }
+        else if (roundRect == SHADER_ROUNDRECT_2H) {
+            // branchless selection of radius=r.x if on left side of quad or radius=r.y on right side
+            fs +=
+            SL_FLOAT2 " size = " SL_UNIFORM(u) ".xy;\n"
+            SL_FLOAT2 " r = " SL_UNIFORM(radii) ".xw\n;" // TODO: this is specific to left|right config
+            "float s=step(" SL_ATTRIB(texcoord) ".x,0.0);\n"
+            "float radius = s*r.x + (1.0-s)*r.y;\n"
+            "size -= " SL_FLOAT2 "(radius);\n"
+            SL_FLOAT2 " d = abs(" SL_ATTRIB(texcoord) ") - size;\n"
+            "float dist = min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - radius;\n";
+        }
+        fs +=  SL_HALF4 " col = " SL_HALF4 "(" SL_UNIFORM(strokeColor) ");\n"
+        "   col.a = mix(0.0, " SL_UNIFORM(strokeColor) ".a, clamp(-dist, 0.0, 1.0));\n"   // outer edge blend
+        SL_OUTPIXVAL " = mix(col, c, " SL_HALF4 "(clamp(-(dist + " SL_UNIFORM(u) ".w), 0.0, 1.0)));\n";
+    }
+    else {
+        fs += SL_OUTPIXVAL " = c;\n";
+    }
+    
+    
+    if (_features.alpha) {
+        fs += SL_OUTPIXVAL ".a *= " SL_UNIFORM(alpha) ";\n";
+    }
+
+    return fs;
+}
 
 
 
 Renderer::Renderer(Window* window) : _window(window), _quadBuffer(sizeof(QUAD), 256) {
 }
 
-Shader* Renderer::getStandardShader(ShaderFeatures features) {
-    Shader* shader = _standardShaders[features.all];
+Shader* Renderer::getStandardShader(Shader::Features features) {
+    Shader* shader = _standardShaders[features];
     if (!shader) {
-        shader = new StandardShader(this, features);
-        _standardShaders[features.all] = shader;
+        shader = new Shader(this, features);
+        _standardShaders[features] = shader;
     }
     return shader;    
 }
@@ -134,9 +225,9 @@ template<>
 void Renderer::setUniform<COLOR>(int16_t uniformIndex, const COLOR& val) {
     float c[4];
     c[3] = ((val&0xff000000)>>24)/255.0f;
-    c[2] = (val&0xff)/255.0f;
+    c[2] = ((val&0xff0000)>>16)/255.0f;
     c[1] = ((val&0xff00)>>8)/255.0f;
-    c[0] = ((val&0xff0000)>>16)/255.0f;
+    c[0] = (val&0xff)/255.0f;
     setUniformData(uniformIndex, c, sizeof(c));
 }
 template<>
