@@ -90,7 +90,7 @@ public:
         
         
         // Inner texture loop
-        string s = string::format(SL_HALF4 " tmp = " SL_TEXSAMPLE_2D(texture, SL_VERTEX_OUTPUT(blurCoord0)) " * %f;\n", _standardGaussianWeights[0]);
+        string s = string::format(SL_HALF4_DECL " tmp = " SL_TEXSAMPLE_2D(texture, SL_VERTEX_OUTPUT(blurCoord0)) " * %f;\n", _standardGaussianWeights[0]);
 
         for (uint32_t i = 0; i < numOptimizedOffsets; i++) {
             GLfloat firstWeight = _standardGaussianWeights[i * 2 + 1];
@@ -141,11 +141,11 @@ public:
     }
     string getFragmentSource() override {
         return
-        /*SL_CONST " "*/ SL_HALF3 " luminanceWeighting = " SL_HALF3 "(0.2125, 0.7154, 0.0721);\n"
+        SL_HALF3_DECL " luminanceWeighting = " SL_HALF3 "(0.2125, 0.7154, 0.0721);\n"
         // Desaturate
-        SL_HALF4 " tmp = mix(" SL_TEXSAMPLE_2D(texture, SL_VERTEX_OUTPUT(texcoord)) ", " SL_VERTEX_OUTPUT(color) ", " SL_HALF1 "(0.9));\n"
-        SL_HALF1 " lum = dot(tmp.rgb, luminanceWeighting);\n"
-        SL_HALF1 " lumRatio = ((0.5 - lum) * 0.1);\n"
+        SL_HALF4_DECL " tmp = mix(" SL_TEXSAMPLE_2D(texture, SL_VERTEX_OUTPUT(texcoord)) ", " SL_VERTEX_OUTPUT(color) ", " SL_HALF1 "(0.9));\n"
+        SL_HALF1_DECL " lum = dot(tmp.rgb, luminanceWeighting);\n"
+        SL_HALF1_DECL " lumRatio = ((0.5 - lum) * 0.1);\n"
         SL_OUTPIXVAL "  = " SL_HALF4 "(mix(" SL_HALF3 "(lum), tmp.rgb, " SL_HALF1 "(0.8)) + lumRatio, " SL_HALF1 "(1.0));\n";
     }
 };

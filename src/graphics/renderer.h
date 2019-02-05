@@ -10,8 +10,11 @@
 #define SL_SIZEOF_COLOR 8
 #define SL_CONST "constant"
 #define SL_HALF1 "half"
+#define SL_HALF1_DECL "half"
 #define SL_HALF3 "half3"
+#define SL_HALF3_DECL "half3"
 #define SL_HALF4 "half4"
+#define SL_HALF4_DECL "half4"
 #define SL_FLOAT1 "float"
 #define SL_FLOAT2 "float2"
 #define SL_FLOAT4 "float4"
@@ -27,9 +30,12 @@
 #elif RENDERER_GL
 #define SL_SIZEOF_COLOR 16
 #define SL_CONST "const"
-#define SL_HALF1 "lowp float"
-#define SL_HALF3 "lowp vec3"
-#define SL_HALF4 "lowp vec4"
+#define SL_HALF1 "float"
+#define SL_HALF1_DECL "lowp float"
+#define SL_HALF3 "vec3"
+#define SL_HALF3_DECL "lowp vec3"
+#define SL_HALF4 "vec4"
+#define SL_HALF4_DECL "lowp vec4"
 #define SL_FLOAT1 "float"
 #define SL_FLOAT2 "vec2"
 #define SL_FLOAT4 "vec4"
