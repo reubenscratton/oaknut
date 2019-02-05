@@ -716,6 +716,9 @@ void GLRenderer::generateMipmaps(Texture* tex) {
     check_gl(glGenerateMipmap, gltex->_texTarget);
 }
 
+void GLRenderer::setColorUniform(int16_t uniformIndex, const float* rgba) {
+    setUniformData(uniformIndex, rgba, sizeof(float)*4);
+}
 
 void GLRenderer::setUniformData(int16_t uniformIndex, const void* data, int32_t cb) {
     GLShaderState* state = (GLShaderState*)_currentShader->_shaderState;
@@ -729,6 +732,7 @@ void GLRenderer::setUniformData(int16_t uniformIndex, const void* data, int32_t 
     GLuint loc = state->_uniformLocations[uniformIndex];
     assert(loc >= 0);
     switch (uniform.type) {
+        case Shader::VariableType::Color: check_gl(glUniform4fv, loc, 1, (GLfloat*)data); break;
         case Shader::VariableType::Int1: check_gl(glUniform1iv, loc, 1, (GLint*)data); break;
         case Shader::VariableType::Float1: check_gl(glUniform1fv, loc, 1, (GLfloat*)data); break;
         case Shader::VariableType::Float2: check_gl(glUniform2fv, loc, 1, (GLfloat*)data); break;

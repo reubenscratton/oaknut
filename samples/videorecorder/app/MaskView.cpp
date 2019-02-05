@@ -13,93 +13,26 @@ class MaskShader : public Shader {
 public:
     
     MaskShader(Renderer* renderer) : Shader(renderer) {
-        _u_backgroundColour = declareUniform("backgroundColour", Uniform::Float4, Uniform::Fragment);
-        _u_holeStrokeColour = declareUniform("holeStrokeColour", Uniform::Float4, Uniform::Fragment);
-        _u_holeFillColour = declareUniform("holeFillColour", Uniform::Float4, Uniform::Fragment);
-        _u_holeStrokeWidth = declareUniform("holeStrokeWidth", Uniform::Float1, Uniform::Fragment);
+        _features.textures[0] = Texture::Type::Normal; // to trigger texcoord attribute binding
+        declareAttribute("texcoord", VariableType::Float2);
+
+        _u_backgroundColour = declareUniform("backgroundColour", VariableType::Color, Uniform::Fragment);
+        _u_holeStrokeColour = declareUniform("holeStrokeColour", VariableType::Color, Uniform::Fragment);
+        _u_holeFillColour = declareUniform("holeFillColour", VariableType::Color, Uniform::Fragment);
+        _u_holeStrokeWidth = declareUniform("holeStrokeWidth", VariableType::Float1, Uniform::Fragment);
     }
     int16_t _u_backgroundColour;
     int16_t _u_holeStrokeColour;
     int16_t _u_holeFillColour;
     int16_t _u_holeStrokeWidth;
     
-#if RENDERER_GL
-    string getVertexSource() override {
-        return
-        "attribute highp vec2 vPosition;\n"
-        "uniform highp mat4 mvp;\n"
-        "attribute vec2 texcoord;\n"
-        "varying vec2 v_texcoord;\n"
-        "void main() {\n"
-        "  gl_Position = mvp * vec4(vPosition,0,1);\n"
-        "  v_texcoord = texcoord;\n"
-        "}\n";
-    }
     string getFragmentSource() override {
-        string s =
-        "varying vec2 v_texcoord;\n"
-        "uniform mediump vec2 holeRadii;\n"
-        "uniform mediump float holeStrokeWidth;\n"
-        "uniform lowp vec4 backgroundColour;\n"
-        "uniform lowp vec4 holeStrokeColour;\n"
-        "uniform lowp vec4 holeFillColour;\n"
-        "void main() {\n";
-        
-        s += getMainProg();
-        s += "}";
-        return s;
+        return getMainProg();
     }
-#elif RENDERER_METAL
-    string getVertexSource() override {
-        string s =
-        "using namespace metal;\n"
-        "struct VertexInput {\n"
-        "   float2 position [[attribute(0)]];\n"
-        "   float2 texcoord [[attribute(1)]];\n"
-        "   uint color [[attribute(2)]];\n"
-        "   float unused1;\n"
-        "   float unused2;\n"
-        "   float unused3;\n"
-        "};\n"
-        "struct VertexOutput {\n"
-        "   float4 position [[position]];\n"
-        "   float2 texcoord;\n"
-        "};\n"
-        "struct VertexUniforms {\n"
-        "   float4x4 mvp;\n"
-        "};\n"
-        "vertex VertexOutput vertex_shader(uint vid [[vertex_id]],\n"
-        "                                  constant VertexInput* v_in [[buffer(0)]],\n"
-        "                                  constant VertexUniforms* uniforms [[buffer(1)]]) {\n"
-        "   VertexOutput output;\n"
-        "   output.position = uniforms->mvp * float4(v_in[vid].position,0,1);\n"
-        "   output.texcoord = v_in[vid].texcoord;\n"
-        "   return output;\n"
-        "}\n";
-        s+= "struct FragUniforms {\n";
-        s+= getUniformFields(Uniform::Usage::Fragment);;
-        s+= "};\n";
-        
-        s+= "fragment half4 frag_shader(VertexOutput in [[stage_in]]\n";
-        s += ",constant FragUniforms* uniforms [[buffer(0)]]\n";
-        s+= ") {\n";
-        s+= " half4 c;\n";
-        s+= getMainProg();
-        s+= " return " SL_OUTPIXVAL ";\n";
-        s += "}\n";
-        return s;
-
-    }
-    string getFragmentSource() override {
-        return "";
-    }
-#else
-#error todo
-#endif
 
     
     virtual string getMainProg() {
-        return "c = " SL_UNIFORM(backgroundColour) ";\n";
+        return SL_OUTPIXVAL " = " SL_UNIFORM(backgroundColour) ";\n";
     }
 
 };
@@ -109,7 +42,7 @@ class MaskShaderOval : public MaskShader {
 public:
     
     MaskShaderOval(Renderer* renderer) : MaskShader(renderer) {
-        _u_holeRadii = declareUniform("holeRadii", Uniform::Float2, Uniform::Fragment);
+        _u_holeRadii = declareUniform("holeRadii", VariableType::Float2, Uniform::Fragment);
     }
     
     // -inf to -strokeWidth/2 = fillColour
@@ -124,14 +57,13 @@ public:
         SL_FLOAT2 " p=" SL_ATTRIB(texcoord) ";\n"
         // Ellipse distance function adapted from 3D version at http://iquilezles.org/www/articles/distfunctions/distfunctions.htm
         SL_FLOAT1 " d_o = (length(p/ro) - 1.0) * min(ro.x,ro.y);\n"
-        SL_FLOAT4 " tmp;\n"
+        SL_HALF4 " c;\n"
         "if (d_o >= 0.0) {"
-            "tmp = mix(" SL_UNIFORM(holeStrokeColour) ", " SL_UNIFORM(backgroundColour) ", min(max(d_o,0.0),1.0));\n"
+            SL_OUTPIXVAL " = mix(" SL_UNIFORM(holeStrokeColour) ", " SL_UNIFORM(backgroundColour) ", " SL_HALF1 "(min(max(d_o,0.0),1.0)));\n"
         "} else {\n"
             SL_FLOAT1 " d_i = (length(p/ri) - 1.0) * min(ri.x,ri.y);\n"
-            "tmp = mix(" SL_FLOAT4 "(0.0), " SL_UNIFORM(holeStrokeColour) ", min(max(d_i,0.0),1.0));\n"
-        "}\n"
-        SL_OUTPIXVAL " = " SL_FLOAT4_TO_OUTPIX(tmp) ";\n";
+            SL_OUTPIXVAL " = mix(" SL_HALF4 "(0.0), " SL_UNIFORM(holeStrokeColour) ", " SL_HALF1 "(min(max(d_i,0.0),1.0)));\n"
+        "}\n";
     }
     
     int16_t _u_holeRadii;
@@ -144,7 +76,7 @@ class MaskShaderRect : public MaskShader {
 public:
 
     MaskShaderRect(Renderer* renderer) : MaskShader(renderer) {
-        _u_holeCornerRadius = declareUniform("holeCornerRadius", Uniform::Float1, Uniform::Fragment);
+        _u_holeCornerRadius = declareUniform("holeCornerRadius", Shader::VariableType::Float1, Uniform::Fragment);
     }
     
     int16_t _u_holeCornerRadius;

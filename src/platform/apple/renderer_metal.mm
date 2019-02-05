@@ -135,6 +135,7 @@ struct ShaderState {
         for (auto& uniform: shader->_uniforms) {
             int32_t alignment = 4;
             switch (uniform.type) {
+                case Shader::VariableType::Color: alignment=8; break; // Color is a half4
                 case Shader::VariableType::Int1: alignment=4; break;
                 case Shader::VariableType::Float1: alignment=4; break;
                 case Shader::VariableType::Float2: alignment=8; break;
@@ -463,6 +464,24 @@ public:
         _blendMode = blendMode;
     }
 
+    static inline uint16_t make_half(float f) {
+        uint32_t x = *((uint32_t*)&f);
+        int e = ((x&0x7f800000U) >> 23) -127; // undo 32-bit bias to get the real exponent
+        e = MIN(15, MAX(-15,e)) + 15; // clamp to 5-bit range and add the 16-bit bias
+        uint16_t h = ((x>>16)&0x8000U)
+                   | (e<<10) // exponent is 5 bits, down from 8
+                   | ((x>>13)&0x03ffU); // significand is 10 bits, truncated from 23
+        return h;
+    }
+    
+    void setColorUniform(int16_t uniformIndex, const float* rgba) override {
+        uint16_t halfs[4];
+        halfs[0] = make_half(rgba[0]);
+        halfs[1] = make_half(rgba[1]);
+        halfs[2] = make_half(rgba[2]);
+        halfs[3] = make_half(rgba[3]);
+        setUniformData(uniformIndex, halfs, sizeof(halfs));
+    }
 
     void setUniformData(int16_t uniformIndex, const void* data, int32_t cb) override {
         auto& uniform = _currentShader->_uniforms[uniformIndex];

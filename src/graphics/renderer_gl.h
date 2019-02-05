@@ -47,6 +47,7 @@ public:
     void copyFromCurrent(const RECT& rect, Texture* destTex, const POINT& destOrigin) override;
     void generateMipmaps(Texture* tex) override;
     
+    void setColorUniform(int16_t uniformIndex, const float* rgba) override;
     void setUniformData(int16_t uniformIndex, const void* data, int32_t cb) override;
     
     int getIntProperty(IntProperty property) override;

@@ -7,6 +7,8 @@
 
 // TODO: Move these elsewhere
 #if RENDERER_METAL
+#define SL_SIZEOF_COLOR 8
+#define SL_HALF1 "half"
 #define SL_HALF4 "half4"
 #define SL_FLOAT1 "float"
 #define SL_FLOAT2 "float2"
@@ -21,6 +23,8 @@
 #define SL_TEXSAMPLE_2D_OES(x, coord) "colorTexture.sample(textureSampler," coord ")"
 
 #elif RENDERER_GL
+#define SL_SIZEOF_COLOR 16
+#define SL_HALF1 "lowp float"
 #define SL_HALF4 "lowp vec4"
 #define SL_FLOAT1 "float"
 #define SL_FLOAT2 "vec2"
@@ -173,6 +177,7 @@ public:
         const char* name;
         int16_t offset;
         int16_t length();
+        COLOR cachedColorVal; // exists to avoid a lot of unneccessary COLOR->float[] conversions
     };
     vector<Uniform> _uniforms;
 
@@ -255,6 +260,7 @@ public:
     virtual void setCurrentTexture(Texture* texture)=0;
     virtual void setCurrentBlendMode(int blendMode)=0;
     virtual void setUniformData(int16_t uniformIndex, const void* data, int32_t cb) =0;
+    virtual void setColorUniform(int16_t uniformIndex, const float* rgba) =0;
     virtual void copyFromCurrent(const RECT& rect, Texture* destTex, const POINT& destOrigin)=0;
     virtual void generateMipmaps(Texture* tex) =0;
     virtual void pushClip(RECT clip) =0;

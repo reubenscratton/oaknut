@@ -34,7 +34,7 @@ Shader::Shader(Renderer* renderer, Shader::Features features) : RenderResource(r
         _u_alpha = declareUniform("alpha", VariableType::Float1);
     }
     if (_features.roundRect) {
-        _u_strokeColor = declareUniform("strokeColor", VariableType::Float4);
+        _u_strokeColor = declareUniform("strokeColor", VariableType::Color);
         _u_u = declareUniform("u", VariableType::Float4);
         if (_features.roundRect == SHADER_ROUNDRECT_1) {
             _u_radius = declareUniform("radius", VariableType::Float1);
@@ -59,7 +59,7 @@ Shader::~Shader() {
 
 int16_t Shader::Uniform::length() {
     switch (type) {
-        case Color: assert(0); // shouldn't be used as a uniform
+        case Color: return SL_SIZEOF_COLOR;
         case Int1:  return 4;
         case Float1: return 4;
         case Float2: return 8;
@@ -166,8 +166,8 @@ string Shader::getFragmentSource() {
             SL_FLOAT2 " d = abs(" SL_ATTRIB(texcoord) ") - size;\n"
             "float dist = min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - radius;\n";
         }
-        fs +=  SL_HALF4 " col = " SL_HALF4 "(" SL_UNIFORM(strokeColor) ");\n"
-        "   col.a = mix(0.0, " SL_UNIFORM(strokeColor) ".a, clamp(-dist, 0.0, 1.0));\n"   // outer edge blend
+        fs +=  SL_HALF4 " col = " SL_UNIFORM(strokeColor) ";\n"
+        "   col.a = mix(" SL_HALF1 "(0.0), " SL_UNIFORM(strokeColor) ".a, " SL_HALF1 "(clamp(-dist, 0.0, 1.0)));\n"   // outer edge blend
         SL_OUTPIXVAL " = mix(col, c, " SL_HALF4 "(clamp(-(dist + " SL_UNIFORM(u) ".w), 0.0, 1.0)));\n";
     }
     else {
@@ -223,12 +223,17 @@ void Renderer::setUniform<MATRIX4>(int16_t uniformIndex, const MATRIX4& val) {
 }
 template<>
 void Renderer::setUniform<COLOR>(int16_t uniformIndex, const COLOR& val) {
+    auto& uniform = _currentShader->_uniforms[uniformIndex];
+    if (uniform.cachedColorVal == val) {
+        return;
+    }
+    uniform.cachedColorVal = val;
     float c[4];
     c[3] = ((val&0xff000000)>>24)/255.0f;
     c[2] = ((val&0xff0000)>>16)/255.0f;
     c[1] = ((val&0xff00)>>8)/255.0f;
     c[0] = (val&0xff)/255.0f;
-    setUniformData(uniformIndex, c, sizeof(c));
+    setColorUniform(uniformIndex, c);
 }
 template<>
 void Renderer::setUniform<VECTOR2>(int16_t uniformIndex, const VECTOR2& val) {
