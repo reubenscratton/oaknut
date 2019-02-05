@@ -135,8 +135,14 @@ struct GLShaderState {
         
         // All other attributes
         for (auto& attribute : shader->_attributes) {
-            if (0!=strcmp(attribute.name, "position")) {
-                vs += string::format("v_%s = %s;\n", attribute.name, attribute.name);
+            if (0!=attribute.name.compare("position")) {
+                vs += string::format("v_%s = ", attribute.name.data());
+                if (attribute.outValue.length() > 0) {
+                    vs += attribute.outValue;
+                } else {
+                    vs += attribute.name;
+                }
+                vs += ";\n";
             }
         }
         
@@ -147,7 +153,7 @@ struct GLShaderState {
         // Attributes and uniforms for fragshader
         string fs = "";
         for (auto& attribute : shader->_attributes) {
-            if (0!=strcmp(attribute.name, "position")) {
+            if (0!=attribute.name.compare("position")) {
                 fs += "varying ";
                 fs += sl_getTypeString(attribute.type);
                 fs += " v_";
@@ -182,7 +188,8 @@ struct GLShaderState {
             }
         }
 
-        fs += "void main() {\n";
+        fs += "void main() {\n"
+              SL_HALF4 " c;\n";
         fs += shader->getFragmentSource();
         fs += "}\n";
 
@@ -228,7 +235,7 @@ struct GLShaderState {
         for (auto& uniform: shader->_uniforms) {
             uniform.offset = cb;
             cb += uniform.length();
-            _uniformLocations[i] = check_gl(glGetUniformLocation, _program, uniform.name);
+            _uniformLocations[i] = check_gl(glGetUniformLocation, _program, uniform.name.data());
             i++;
         }
         _uniformData.resize(cb);
@@ -800,123 +807,6 @@ int GLRenderer::getIntProperty(IntProperty property) {
  
  };
  */
-
-
-
-
-
-
-string BlurShader::getVertexSource() {
-    int numOptimizedOffsets = (int)_op->_optimizedOffsets.size();
-    
-    char ach[128];
-    
-    string vs =
-    "attribute highp vec2 vPosition;\n"
-    "uniform highp mat4 mvp;\n"
-    "attribute vec2 texcoord;\n"
-    "uniform vec2 texOffset;\n";
-    
-    sprintf(ach, "varying vec2 blurCoordinates[%d];\n", 1 + numOptimizedOffsets * 2);
-    vs.append(ach);
-    
-    vs.append("void main() {\n"
-                        "   gl_Position = mvp * vec4(vPosition,0,1);\n");
-    vs.append("   blurCoordinates[0] = texcoord.xy;\n");
-    for (uint32_t i = 0; i < numOptimizedOffsets; i++) {
-        sprintf(ach,
-                "   blurCoordinates[%lu] = texcoord.xy + texOffset * %f;\n"
-                "   blurCoordinates[%lu] = texcoord.xy - texOffset * %f;\n",
-                (unsigned long)((i * 2) + 1), _op->_optimizedOffsets[i],
-                (unsigned long)((i * 2) + 2), _op->_optimizedOffsets[i]);
-        vs.append(ach);
-    }
-    
-    vs.append("}\n");
-    return vs;
-}
-    
-string BlurShader::getFragmentSource() {
-    int numOptimizedOffsets = (int)_op->_optimizedOffsets.size();
-    char ach[128];
-
-    string fs =
-    "uniform sampler2D texture;\n"
-    "uniform vec2 texOffset;\n";
-    sprintf(ach,
-            "varying highp vec2 blurCoordinates[%d];\n", 1 + numOptimizedOffsets * 2);
-    fs.append(ach);
-    
-    fs.append("void main() {\n");
-    
-    // Inner texture loop
-    sprintf(ach, "lowp vec4 c = texture2D(texture, blurCoordinates[0]) * %f;\n", _op->_standardGaussianWeights[0]);
-    fs.append(ach);
-    for (uint32_t i = 0; i < numOptimizedOffsets; i++) {
-        GLfloat firstWeight = _op->_standardGaussianWeights[i * 2 + 1];
-        GLfloat secondWeight = _op->_standardGaussianWeights[i * 2 + 2];
-        GLfloat optimizedWeight = firstWeight + secondWeight;
-        sprintf(ach, "c += texture2D(texture, blurCoordinates[%lu]) * %f;\n", (unsigned long)((i * 2) + 1), optimizedWeight);
-        fs.append(ach);
-        sprintf(ach, "c += texture2D(texture, blurCoordinates[%lu]) * %f;\n", (unsigned long)((i * 2) + 2), optimizedWeight);
-        fs.append(ach);
-    }
-    
-    // If the number of required samples exceeds the amount we can pass in via varyings, we
-    // have to do dependent texture reads in the fragment shader
-    uint32_t trueNumberOfOptimizedOffsets = _op->_blurRadius / 2 + (_op->_blurRadius % 2);
-    
-
-    if (trueNumberOfOptimizedOffsets > numOptimizedOffsets) {
-        for (uint32_t i = numOptimizedOffsets; i < trueNumberOfOptimizedOffsets; i++) {
-            GLfloat firstWeight = _op->_standardGaussianWeights[i * 2 + 1];
-            GLfloat secondWeight = _op->_standardGaussianWeights[i * 2 + 2];
-            
-            GLfloat optimizedWeight = firstWeight + secondWeight;
-            GLfloat optimizedOffset = (firstWeight * (i * 2 + 1) + secondWeight * (i * 2 + 2)) / optimizedWeight;
-            
-            sprintf(ach, "c += texture2D(texture, blurCoordinates[0] + texOffset * %f) * %f;\n", optimizedOffset, optimizedWeight);
-            fs.append(ach);
-            sprintf(ach, "c += texture2D(texture, blurCoordinates[0] - texOffset * %f) * %f;\n", optimizedOffset, optimizedWeight);
-            fs.append(ach);
-        }
-    }
-    
-    fs.append("   gl_FragColor = c;\n"
-                      "}\n");
-    return fs;
-    
-}
-
-string PostBlurShader::getVertexSource() {
-    return
-    "attribute highp vec2 vPosition;\n"
-    "attribute lowp vec4 color;\n"
-    "attribute vec2 texcoord;\n"
-    "uniform highp mat4 mvp;\n"
-    "varying lowp vec4 v_color;\n"
-    "varying vec2 v_texcoord;\n"
-    "void main() {\n"
-    "  gl_Position = mvp * vec4(vPosition,0,1);\n"
-    "  v_texcoord = texcoord;\n"
-    "  v_color=color;\n"
-    "}\n";
-;
-}
-string PostBlurShader::getFragmentSource() {
-    return
-    "varying vec2 v_texcoord;\n"
-    "varying lowp vec4 v_color;\n"
-    "uniform sampler2D texture;\n"
-    "const lowp vec3 luminanceWeighting = vec3(0.2125, 0.7154, 0.0721);\n"
-    "void main() {\n"
-    // Desaturate
-    "   lowp vec4 c = mix(texture2D(texture, v_texcoord), v_color, 0.9);\n"
-    "   lowp float lum = dot(c.rgb, luminanceWeighting);\n"
-    "   lowp float lumRatio = ((0.5 - lum) * 0.1);\n"
-    "   gl_FragColor = vec4(mix(vec3(lum), c.rgb, 0.8) + lumRatio, 1.0);\n"
-    "}\n";
-}
 
 
 

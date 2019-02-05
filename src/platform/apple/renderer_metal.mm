@@ -172,7 +172,7 @@ struct ShaderState {
         "struct VertexOutput {\n"
         "   float4 position [[position]];\n";
         for (auto& attribute : shader->_attributes) {
-            if (0!=strcmp(attribute.name, "position")) {
+            if (0!=attribute.name.compare("position")) {
                 s += sl_getTypeString(attribute.type);
                 s += " ";
                 s += attribute.name;
@@ -193,13 +193,18 @@ struct ShaderState {
         
         // All non-position attributes
         for (auto& attribute : shader->_attributes) {
-            if (0!=strcmp(attribute.name, "position")) {
-                s += string::format("output.%s = ", attribute.name);
+            if (0!=attribute.name.compare("position")) {
+                s += string::format("output.%s = ", attribute.name.data());
                 if (attribute.type == Shader::VariableType::Color) {
-                    s += string::format("unpack_unorm4x8_to_half(v_in[vid].%s);\n", attribute.name);
+                    s += string::format("unpack_unorm4x8_to_half(v_in[vid].%s)", attribute.name.data());
                 } else {
-                    s += string::format("v_in[vid].%s;\n", attribute.name);
+                    if (attribute.outValue.length() > 0) {
+                        s += attribute.outValue;
+                    } else {
+                        s += string::format("v_in[vid].%s", attribute.name.data());
+                    }
                 }
+                s += ";\n";
             }
         }
 
@@ -221,7 +226,8 @@ struct ShaderState {
             s+= ",texture2d<half> colorTexture [[ texture(0) ]]\n";
             s+= ",sampler textureSampler [[ sampler(0) ]]";
         }
-        s+= ") {\n";
+        s+= ") {\n"
+        " half4 c;\n";
         
         s += shader->getFragmentSource();
 
@@ -696,145 +702,7 @@ public:
         }
     }
 
-
 };
-
-
-
-
-
-
-
-string BlurShader::getVertexSource() {
-    int numOptimizedOffsets = (int)_op->_optimizedOffsets.size();
-
-    string s =
-    "using namespace metal;\n"
-    "\n"
-    "struct VertexInput {\n"
-    "   float2 position [[attribute(0)]];\n"
-    "   float2 texcoord [[attribute(1)]];\n"
-    "   uint unused0;\n"
-    "   float unused1;\n"
-    "   float unused2;\n"
-    "   float unused3;\n"
-    "};\n"
-    "struct VertexOutput {\n"
-    "   float4 position [[position]];\n";
-    for (int i=0 ; i<1 + numOptimizedOffsets * 2 ; i++) {
-        s+= string::format("   float2 blurCoordinates%d;\n", i);
-    }
-    s+= "};\n";
-
-    s+= "struct VertexUniforms {\n";
-    s+= getUniformFields(this, Uniform::Usage::Vertex);
-    s+="};\n"
-    "struct FragUniforms {\n";
-    s+= getUniformFields(this, Uniform::Usage::Fragment);
-    s+= "};\n";
-
-    
-    s+= "vertex VertexOutput vertex_shader(uint vid [[vertex_id]],\n"
-    "                                  constant VertexInput* v_in [[buffer(0)]],\n"
-    "                                  constant VertexUniforms* uniforms [[buffer(1)]]) {\n"
-    "   VertexOutput output;\n"
-    "   output.position = uniforms->mvp * float4(v_in[vid].position,0,1);\n";
-
-    s += "   output.blurCoordinates0 = v_in[vid].texcoord;\n";
-    for (uint32_t i = 0; i < numOptimizedOffsets; i++) {
-        s+= string::format(
-            "   output.blurCoordinates%lu = v_in[vid].texcoord + uniforms->texOffset * %f;\n"
-            "   output.blurCoordinates%lu = v_in[vid].texcoord - uniforms->texOffset * %f;\n",
-            (unsigned long)((i * 2) + 1), _op->_optimizedOffsets[i],
-            (unsigned long)((i * 2) + 2), _op->_optimizedOffsets[i]);
-    }
-    s += "    return output;\n"
-         "}\n\n";
-
-    
-    
-    
-    s+= "fragment half4 frag_shader(VertexOutput in [[stage_in]]\n"
-        ",constant FragUniforms* uniforms [[buffer(0)]]\n";
-    s+= ",texture2d<half> colorTexture [[ texture(0) ]]\n";
-    s+= ",sampler textureSampler [[ sampler(0) ]]";
-    s+= ") {\n";
-    
-    s += string::format(
-         "half4 c = colorTexture.sample(textureSampler, in.blurCoordinates0) * %f;\n",
-            _op->_standardGaussianWeights[0]);
-    // Inner texture loop
-    for (uint32_t i = 0; i < numOptimizedOffsets; i++) {
-        GLfloat firstWeight = _op->_standardGaussianWeights[i * 2 + 1];
-        GLfloat secondWeight = _op->_standardGaussianWeights[i * 2 + 2];
-        GLfloat optimizedWeight = firstWeight + secondWeight;
-        s+= string::format("c += colorTexture.sample(textureSampler, in.blurCoordinates%lu) * %f;\n", (unsigned long)((i * 2) + 1), optimizedWeight);
-        s+= string::format("c += colorTexture.sample(textureSampler, in.blurCoordinates%lu) * %f;\n", (unsigned long)((i * 2) + 2), optimizedWeight);
-    }
-    
-    // If the number of required samples exceeds the amount we can pass in via varyings, we
-    // have to do dependent texture reads in the fragment shader
-    uint32_t trueNumberOfOptimizedOffsets = _op->_blurRadius / 2 + (_op->_blurRadius % 2);
-    
-    
-    if (trueNumberOfOptimizedOffsets > numOptimizedOffsets) {
-        for (uint32_t i = numOptimizedOffsets; i < trueNumberOfOptimizedOffsets; i++) {
-            GLfloat firstWeight = _op->_standardGaussianWeights[i * 2 + 1];
-            GLfloat secondWeight = _op->_standardGaussianWeights[i * 2 + 2];
-            
-            GLfloat optimizedWeight = firstWeight + secondWeight;
-            GLfloat optimizedOffset = (firstWeight * (i * 2 + 1) + secondWeight * (i * 2 + 2)) / optimizedWeight;
-            
-            s+= string::format("c += colorTexture.sample(textureSampler, in.blurCoordinates0 + texOffset * %f) * %f;\n", optimizedOffset, optimizedWeight);
-            s+= string::format("c += colorTexture.sample(textureSampler, in.blurCoordinates0 - texOffset * %f) * %f;\n", optimizedOffset, optimizedWeight);
-        }
-    }
-    
-    s+= "return c;\n";
-    s += "}\n";
-    return s;
-}
-string BlurShader::getFragmentSource() {
-    return "";
-}
-
-
-string PostBlurShader::getVertexSource() {
-    string s = "";// getShaderSource(this, true, true);
-
-    s+= "constant half3 luminanceWeighting = half3(0.2125h, 0.7154h, 0.0721h);\n";
-
-    // Generic stuff, move elsewhere
-    bool useTexSampler = true;
-    string fragUniforms = getUniformFields(this, Uniform::Usage::Fragment);
-    if (fragUniforms.length() > 0) {
-        s+= "struct FragUniforms {\n";
-        s+= fragUniforms;
-        s+= "};\n";
-    }
-    s+= "fragment half4 frag_shader(VertexOutput in [[stage_in]]\n";
-    if (fragUniforms.length() > 0) {
-        s += ",constant FragUniforms* uniforms [[buffer(0)]]\n";
-    }
-    if (useTexSampler) {
-        s+= ",texture2d<half> colorTexture [[ texture(0) ]]\n";
-        s+= ",sampler textureSampler [[ sampler(0) ]]";
-    }
-    s+= ") {\n";
-    
-    s += "   half4 c = mix(colorTexture.sample(textureSampler, in.texcoord), in.color, 0.9h);\n"
-        "   half lum = dot(c.rgb, luminanceWeighting);\n"
-        "   half lumRatio = (0.5h - lum) * 0.1h;\n"
-        "   return half4(mix(half3(lum), c.rgb, half3(0.8h)) + lumRatio, 1.0h);\n"
-    "}\n";
-    return s;
-}
-string PostBlurShader::getFragmentSource() {
-    return "";
-}
-
-
-
 
 
 Renderer* Renderer::create(Window* window) {

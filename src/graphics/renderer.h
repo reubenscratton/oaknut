@@ -8,7 +8,9 @@
 // TODO: Move these elsewhere
 #if RENDERER_METAL
 #define SL_SIZEOF_COLOR 8
+#define SL_CONST "constant"
 #define SL_HALF1 "half"
+#define SL_HALF3 "half3"
 #define SL_HALF4 "half4"
 #define SL_FLOAT1 "float"
 #define SL_FLOAT2 "float2"
@@ -16,15 +18,17 @@
 #define SL_MATRIX4 "float4x4"
 #define SL_OUTPIXVAL "c"
 #define SL_UNIFORM(x) "uniforms->"#x
-#define SL_ATTRIB(x) "in."#x
-#define SL_FLOAT4_TO_OUTPIX(x) "half4("#x ")"
+#define SL_VERTEX_INPUT(x) "v_in[vid]."#x
+#define SL_VERTEX_OUTPUT(x) "in."#x
 #define SL_TEXSAMPLE_2D(x, coord) "colorTexture.sample(textureSampler," coord ")"
 #define SL_TEXSAMPLE_2D_RECT(x, coord) "colorTexture.sample(textureSampler," coord ")"
 #define SL_TEXSAMPLE_2D_OES(x, coord) "colorTexture.sample(textureSampler," coord ")"
 
 #elif RENDERER_GL
 #define SL_SIZEOF_COLOR 16
+#define SL_CONST "const"
 #define SL_HALF1 "lowp float"
+#define SL_HALF3 "lowp vec3"
 #define SL_HALF4 "lowp vec4"
 #define SL_FLOAT1 "float"
 #define SL_FLOAT2 "vec2"
@@ -32,8 +36,8 @@
 #define SL_MATRIX4 "highp mat4"
 #define SL_OUTPIXVAL "gl_FragColor"
 #define SL_UNIFORM(x) #x
-#define SL_ATTRIB(x) "v_"#x
-#define SL_FLOAT4_TO_OUTPIX(x) #x
+#define SL_VERTEX_INPUT(x) #x
+#define SL_VERTEX_OUTPUT(x) "v_"#x
 #define SL_TEXSAMPLE_2D(x, coord) "texture2D(texture," coord ")"
 #define SL_TEXSAMPLE_2D_RECT(x, coord) "texture2DRect(texture," coord ")"
 #define SL_TEXSAMPLE_2D_OES(x, coord) "texture2D(texture," coord ")"
@@ -114,7 +118,14 @@ public:
             textures[0] = Texture::Type::None;
             textures[1] = Texture::Type::None;
         }
-        
+        Features(bool alpha, uint32_t roundRect, bool tint, Texture::Type tex) {
+            this->alpha = alpha;
+            this->roundRect = roundRect;
+            this->tint = tint;
+            this->textures[0] = tex;
+            this->textures[1] = Texture::Type::None;
+        }
+
         bool operator==(const Features& other) const {
             if (alpha!=other.alpha) return false;
             if (roundRect!=other.roundRect) return false;
@@ -159,8 +170,8 @@ public:
 
     struct Attribute {
         VariableType type;
-        const char* name;
-        int16_t inOffset;
+        string name;
+        string outValue;
     };
     vector<Attribute> _attributes;
     
@@ -174,7 +185,7 @@ public:
             Vertex,
             Fragment
         } usage;
-        const char* name;
+        string name;
         int16_t offset;
         int16_t length();
         COLOR cachedColorVal; // exists to avoid a lot of unneccessary COLOR->float[] conversions
@@ -198,8 +209,8 @@ public:
 
     
 protected:
-    int16_t declareAttribute(const char* name, VariableType type);
-    int16_t declareUniform(const char* name, VariableType type, Uniform::Usage usage=Uniform::Usage::Fragment);
+    int16_t declareAttribute(const string& name, VariableType type, string value="");
+    int16_t declareUniform(const string& name, VariableType type, Uniform::Usage usage=Uniform::Usage::Fragment);
 };
 
 

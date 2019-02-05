@@ -71,15 +71,16 @@ int16_t Shader::Uniform::length() {
 }
 
 
-int16_t Shader::declareAttribute(const char* name, VariableType type) {
+int16_t Shader::declareAttribute(const string& name, VariableType type, string outValue) {
     Attribute attribute;
     attribute.name = name;
     attribute.type = type;
+    attribute.outValue = outValue;
     _attributes.push_back(attribute);
     return 0;
 }
 
-int16_t Shader::declareUniform(const char* name, VariableType type, Uniform::Usage usage) {
+int16_t Shader::declareUniform(const string& name, VariableType type, Uniform::Usage usage) {
     Uniform uniform;
     uniform.name = name;
     uniform.usage = usage;
@@ -124,26 +125,26 @@ string Shader::getFragmentSource() {
     
     
     
-    string fs = SL_HALF4 " c = ";
+    string fs = "c = ";
     if (useTexSampler) {
         switch (_features.textures[0]) {
             case Texture::Type::Normal:
-                fs += SL_TEXSAMPLE_2D("texture",  SL_ATTRIB(texcoord));
+                fs += SL_TEXSAMPLE_2D("texture",  SL_VERTEX_OUTPUT(texcoord));
                 break;
             case Texture::Type::Rect:
-                fs += SL_TEXSAMPLE_2D_RECT("texture",  SL_ATTRIB(texcoord));
+                fs += SL_TEXSAMPLE_2D_RECT("texture",  SL_VERTEX_OUTPUT(texcoord));
                 break;
             case Texture::Type::OES:
-                fs += SL_TEXSAMPLE_2D_OES("texture",  SL_ATTRIB(texcoord));
+                fs += SL_TEXSAMPLE_2D_OES("texture",  SL_VERTEX_OUTPUT(texcoord));
                 break;
         }
         fs += ";\n";
         
         if (_features.tint) {
-            fs += "    c.rgb = " SL_ATTRIB(color) ".rgb;\n";
+            fs += "    c.rgb = " SL_VERTEX_OUTPUT(color) ".rgb;\n";
         }
     } else {
-        fs += SL_ATTRIB(color);
+        fs += SL_VERTEX_OUTPUT(color);
         fs += ";\n";
 
     }
@@ -153,17 +154,17 @@ string Shader::getFragmentSource() {
         
         if (roundRect == SHADER_ROUNDRECT_1) {
             fs += SL_FLOAT2 " b = " SL_UNIFORM(u) ".xy - " SL_FLOAT2 "(" SL_UNIFORM(radius) ");\n"
-                  "float dist = length(max(abs(" SL_ATTRIB(texcoord)")-b, 0.0)) - " SL_UNIFORM(radius) "  - 0.5;\n";
+                  "float dist = length(max(abs(" SL_VERTEX_OUTPUT(texcoord)")-b, 0.0)) - " SL_UNIFORM(radius) "  - 0.5;\n";
         }
         else if (roundRect == SHADER_ROUNDRECT_2H) {
             // branchless selection of radius=r.x if on left side of quad or radius=r.y on right side
             fs +=
             SL_FLOAT2 " size = " SL_UNIFORM(u) ".xy;\n"
             SL_FLOAT2 " r = " SL_UNIFORM(radii) ".xw\n;" // TODO: this is specific to left|right config
-            "float s=step(" SL_ATTRIB(texcoord) ".x,0.0);\n"
+            "float s=step(" SL_VERTEX_OUTPUT(texcoord) ".x,0.0);\n"
             "float radius = s*r.x + (1.0-s)*r.y;\n"
             "size -= " SL_FLOAT2 "(radius);\n"
-            SL_FLOAT2 " d = abs(" SL_ATTRIB(texcoord) ") - size;\n"
+            SL_FLOAT2 " d = abs(" SL_VERTEX_OUTPUT(texcoord) ") - size;\n"
             "float dist = min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - radius;\n";
         }
         fs +=  SL_HALF4 " col = " SL_UNIFORM(strokeColor) ";\n"

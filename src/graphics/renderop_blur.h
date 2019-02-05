@@ -5,26 +5,6 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-class BlurShader : public Shader {
-public:
-    BlurShader(Renderer* renderer, class BlurRenderOp* op);
-
-    string getVertexSource() override;
-    string getFragmentSource() override;
-
-    int16_t _u_sampler;
-    int16_t _u_texOffset;
-    BlurRenderOp* _op;
-};
-
-class PostBlurShader : public Shader {
-public:
-    PostBlurShader(Renderer* renderer);
-    string getVertexSource() override;
-    string getFragmentSource() override;
-};
-
-
 class BlurRenderOp : public RenderOp {
 public:
 	BlurRenderOp();
@@ -42,16 +22,11 @@ public:
     
     SIZEI _fullSizePow2;
     SIZEI _downsampledSize;
-    MATRIX4 _mvp;
-    int _blurRadius;
-    float _sigma;
-    vector<float> _standardGaussianWeights;
-    vector<float> _optimizedOffsets;
-    
+    MATRIX4 _mvp;    
     sp<Texture> _tex1;
     sp<Surface> _surface1;
     sp<Surface> _surface2;
-    sp<BlurShader> _blurShader;
+    sp<Shader> _blurShader;
     MATRIX4* _pmvp;
     
 
