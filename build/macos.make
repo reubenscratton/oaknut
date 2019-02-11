@@ -9,11 +9,14 @@ FRAMEWORKS_MACOS+= AppKit OpenGL
 
 CFLAGS_COMMON := \
     -stdlib=libc++ \
-	-isysroot $(XCODE_APP)/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/$(MACOS_SDK) \
 	$(CFLAGS) \
 	$(FLAGS) \
 	$(WARNINGS) \
 	-Wunguarded-availability
+
+ifdef MACOS_SDK
+CFLAGS_COMMON+= -isysroot $(XCODE_APP)/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/$(MACOS_SDK)
+endif
 
 BUNDLE_DIR:=$(BUILD_DIR)/$(PROJECT_NAME).app
 EXECUTABLE:=$(BUNDLE_DIR)/Contents/MacOS/$(PROJECT_NAME)

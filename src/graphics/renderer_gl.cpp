@@ -27,7 +27,7 @@
 
 // NB: NEVER leave GL error checking in release builds! Each API will stall the CPU
 //     until the GPU catches up... very slow!
-#if 0
+#if 1
 #define check_gl(cmd, ...) cmd(__VA_ARGS__)
 #else
 static void checkGlErr(const char* file, int line, const char* cmd) {
@@ -44,9 +44,6 @@ static GLuint loadShader(GLenum shaderType, const char* pSource) {
         string source =
 #if TARGET_OS_IOS || defined(ANDROID) || defined(EMSCRIPTEN)
         "precision mediump float;\n";
-        //"precision highp vec2;\n"
-        //"precision highp mat4;\n"
-        //"precision lowp vec4;\n";
 #else
         "#version 120\n";
 #endif
@@ -104,11 +101,7 @@ struct GLShaderState {
         
         for (auto& attribute : shader->_attributes) {
             vs += "attribute ";
-            if (attribute.type == Shader::VariableType::Color) {
-                vs += "lowp vec4";
-            } else {
-                vs += sl_getTypeString(attribute.type);
-            }
+            vs += sl_getTypeString(attribute.type);
             vs += " ";
             vs += attribute.name;
             vs += ";\n";
@@ -297,17 +290,16 @@ Surface* GLRenderer::getPrimarySurface() {
 
 Surface* GLRenderer::createPrivateSurface() {
     GLSurface* surface = new GLSurface(this, true);
-    surface->_texture = new GLTexture(this);
+    surface->_texture = new GLTexture(this, _primarySurfaceFormat);
     return surface;
 
 }
 
 
 
-GLTexture::GLTexture(Renderer* renderer) : Texture(renderer) {
+GLTexture::GLTexture(Renderer* renderer, int format) : Texture(renderer, format) {
     _texTarget = GL_TEXTURE_2D;
     check_gl(glGenTextures, 1, &_textureId);
-    _format = BITMAPFORMAT_RGBA32;
 }
 
 void GLTexture::resize(int width, int height) {
@@ -319,32 +311,34 @@ void GLTexture::realloc(int width, int height, void* pixelData, bool sizeChanged
     int pixelType;
     GLenum format, internalFormat;
     
+    assert(_format != PIXELFORMAT_UNKNOWN);
+    
     switch (_format) {
-        case BITMAPFORMAT_RGBA32: {
+        case PIXELFORMAT_RGBA32: {
             pixelType = GL_UNSIGNED_BYTE;
             format = GL_RGBA;
             internalFormat = GL_RGBA;
             break;
         }
-        case BITMAPFORMAT_BGRA32: {
+        case PIXELFORMAT_BGRA32: {
             pixelType = GL_UNSIGNED_BYTE;
             format = GL_BGRA;
             internalFormat = GL_RGBA;
             break;
         }
-        case BITMAPFORMAT_RGB24: {
+        case PIXELFORMAT_RGB24: {
             pixelType = GL_UNSIGNED_BYTE;
             format = GL_RGB;
             internalFormat = GL_RGB;
             break;
         }
-        case BITMAPFORMAT_RGB565: {
+        case PIXELFORMAT_RGB565: {
             pixelType = GL_UNSIGNED_SHORT_5_6_5;
             format = GL_RGB;
             internalFormat = GL_RGB;
             break;
         }
-        case BITMAPFORMAT_A8: {
+        case PIXELFORMAT_A8: {
             pixelType = GL_UNSIGNED_BYTE;
 #ifdef PLATFORM_LINUX   // TODO: 'red' vs 'alpha' is probably not a Linux thing, it's more likely to be GL vs GL ES
             format = GL_RED;
@@ -359,16 +353,15 @@ void GLTexture::realloc(int width, int height, void* pixelData, bool sizeChanged
     }
 
     check_gl(glBindTexture, _texTarget, _textureId);
-    check_gl(glTexParameteri, _texTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    check_gl(glTexParameteri, _texTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    check_gl(glTexParameteri, _texTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    check_gl(glTexParameteri, _texTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    if (!_paramsValid) {
+        updateParams();
+    }
 
 // WebGL has some special APIs for converting certain JS objects into textures
 #if PLATFORM_WEB
     if (_bitmap) {
         BitmapWeb* webBmp = (BitmapWeb*)_bitmap;
-        webBmp->glTexImage2D();
+        webBmp->glTexImage2D(width, height);
         if (_renderer->_currentTexture && _renderer->_currentTexture != this) {
             check_gl(glBindTexture, GL_TEXTURE_2D, ((GLTexture*)_renderer->_currentTexture)->_textureId);
         }
@@ -388,6 +381,29 @@ void GLTexture::realloc(int width, int height, void* pixelData, bool sizeChanged
     }
 }
 
+void GLTexture::updateParams() {
+    GLuint minFilter;
+    if (_maxMipMapLevel<=0) {
+        minFilter = _minFilterLinear ? GL_LINEAR : GL_NEAREST;
+    } else {
+        if (_minFilterLinear) {
+            minFilter = _mipFilterLinear ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR_MIPMAP_NEAREST;
+        } else {
+            minFilter = _mipFilterLinear ? GL_NEAREST_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_NEAREST;
+        }
+    }
+    GLuint maxFilter = _magFilterLinear ? GL_LINEAR : GL_NEAREST;
+    check_gl(glTexParameterf, _texTarget, GL_TEXTURE_MIN_FILTER, minFilter);
+    check_gl(glTexParameterf, _texTarget, GL_TEXTURE_MAG_FILTER, maxFilter);
+    check_gl(glTexParameteri, _texTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    check_gl(glTexParameteri, _texTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    if (_maxMipMapLevel > 0) {
+#if !PLATFORM_WEB // todo: should be if !WebGL 1.0.  This works in WebGL 2.
+        check_gl(glTexParameteri, _texTarget, GL_TEXTURE_MAX_LEVEL, _maxMipMapLevel);
+#endif
+    }
+    _paramsValid = true;
+}
 
 void GLTexture::upload() {
     PIXELDATA pixeldata;
@@ -416,25 +432,7 @@ void GLRenderer::setCurrentTexture(Texture* texture) {
     GLTexture* gltex = (GLTexture*)texture;
     check_gl(glBindTexture, gltex->_texTarget, gltex->_textureId);
     if (!gltex->_paramsValid) {
-        GLuint minFilter;
-        if (gltex->_maxMipMapLevel<=0) {
-            minFilter = gltex->_minFilterLinear ? GL_LINEAR : GL_NEAREST;
-        } else {
-            if (gltex->_minFilterLinear) {
-                minFilter = gltex->_mipFilterLinear ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR_MIPMAP_NEAREST;
-            } else {
-                minFilter = gltex->_mipFilterLinear ? GL_NEAREST_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_NEAREST;
-            }
-        }
-        GLuint maxFilter = gltex->_magFilterLinear ? GL_LINEAR : GL_NEAREST;
-        check_gl(glTexParameterf, gltex->_texTarget, GL_TEXTURE_MIN_FILTER, minFilter);
-        check_gl(glTexParameterf, gltex->_texTarget, GL_TEXTURE_MAG_FILTER, maxFilter);
-        check_gl(glTexParameteri, gltex->_texTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        check_gl(glTexParameteri, gltex->_texTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        if (gltex->_maxMipMapLevel > 0) {
-            check_gl(glTexParameteri, gltex->_texTarget, GL_TEXTURE_MAX_LEVEL, gltex->_maxMipMapLevel);
-        }
-        gltex->_paramsValid = true;
+        gltex->updateParams();
     }
     if (gltex->_needsUpload) {
         gltex->_needsUpload = false;
@@ -510,8 +508,8 @@ GLRenderer::GLRenderer(Window* window) : Renderer(window) {
     };
 }
 
-Texture* GLRenderer::createTexture() {
-    return new GLTexture(this);
+Texture* GLRenderer::createTexture(int format) {
+    return new GLTexture(this, format);
 }
 void GLRenderer::releaseTexture(Texture* texture) {
     GLTexture* gltex = (GLTexture*)texture;
@@ -565,12 +563,6 @@ void GLRenderer::uploadQuad(ItemPool::Alloc* alloc) {
     check_gl(glBufferSubData, GL_ARRAY_BUFFER, alloc->offset*sizeof(QUAD), alloc->count*sizeof(QUAD), alloc->addr());
 }
 
-/*void GLRenderer::renderPrivateSurface(Surface* privateSurface, ItemPool::Alloc* alloc) {
-    GLSurface* surface = (GLSurface*)privateSurface;
-    check_gl(glBindTexture, GL_TEXTURE_2D, surface->_tex);
-    check_gl(glDrawElements, GL_TRIANGLES, 6 * 1, GL_UNSIGNED_SHORT, (void*)((alloc->offset)*6*sizeof(GLshort)));
-}*/
-
 void GLRenderer::flushQuadBuffer() {
     if (_fullBufferUploadNeeded) {
         if (_quadBuffer._itemCount > 0 && _indexBufferId > 0) {
@@ -606,6 +598,23 @@ void GLRenderer::prepareToDraw() {
 
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, (GLint*)&((GLSurface*)_primarySurface)->_fb);
 
+        
+#ifdef GL_IMPLEMENTATION_COLOR_READ_FORMAT
+        GLint pixType, pixFmt;
+        check_gl(glGetIntegerv, GL_IMPLEMENTATION_COLOR_READ_TYPE, &pixType);
+        assert(GL_UNSIGNED_BYTE==pixType);
+        check_gl(glGetIntegerv, GL_IMPLEMENTATION_COLOR_READ_FORMAT, &pixFmt);
+        if (pixFmt == GL_RGB) {
+            _primarySurfaceFormat = PIXELFORMAT_RGB24;
+        } else if (pixFmt == GL_RGBA) {
+            _primarySurfaceFormat = PIXELFORMAT_RGBA32;
+        } else {
+            assert(0); //???
+        }
+#else
+        _primarySurfaceFormat = PIXELFORMAT_DEFAULT32;
+#endif
+        
         check_gl(glDepthMask, GL_TRUE);
         check_gl(glClear, GL_DEPTH_BUFFER_BIT);
         check_gl(glDepthMask, GL_FALSE);

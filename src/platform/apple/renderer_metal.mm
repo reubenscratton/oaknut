@@ -22,8 +22,7 @@ public:
     id<MTLTexture> _tex;
     id<MTLSamplerState> _sampler;
     
-    MetalTexture(Renderer* renderer) : Texture(renderer) {
-        _format = BITMAPFORMAT_BGRA32; // to get to MTLPixelFormatBGRA8Unorm;
+    MetalTexture(Renderer* renderer, int format) : Texture(renderer, format) {
     }
     
     void unload() {
@@ -33,16 +32,16 @@ public:
     void resize(int width, int height) override {
         MTLPixelFormat pixelFormat = MTLPixelFormatBGRA8Unorm;
         switch (_format) {
-            case BITMAPFORMAT_RGBA32:
+            case PIXELFORMAT_RGBA32:
                 pixelFormat = MTLPixelFormatRGBA8Unorm;
                 break;
-            case BITMAPFORMAT_BGRA32:
+            case PIXELFORMAT_BGRA32:
                 pixelFormat = MTLPixelFormatBGRA8Unorm;
                 break;
-            case BITMAPFORMAT_RGB24:
+            case PIXELFORMAT_RGB24:
                 assert(0); // Metal does not support this format, you must use 32bpp
                 break;
-            case BITMAPFORMAT_A8:
+            case PIXELFORMAT_A8:
                 pixelFormat = MTLPixelFormatA8Unorm;
                 break;
         }
@@ -82,15 +81,13 @@ public:
         _viewport.originY = 0;
         _viewport.znear = 0;
         _viewport.zfar = 1;
-        _texture = new MetalTexture(renderer);
+        _texture = new MetalTexture(renderer, renderer->_primarySurfaceFormat);
     }
     
     void setSize(const SIZE& size) override {
         Surface::setSize(size);
         _viewport.width = size.width;
-        // NB: Flip Y for offscreen surface texture
-        _viewport.height = _isPrivate ? (-size.height) : size.height;
-        _viewport.originY = _isPrivate ? size.height : 0;
+        _viewport.height = size.height;
         if (!_isPrivate) {
             return;
         }
@@ -277,7 +274,7 @@ public:
     CVMetalTextureRef _cvTexture;
     CVMetalTextureCacheRef _cvTextureCache;
     
-    CoreVideoTexture(BitmapApple* bitmap, Renderer* renderer, CVMetalTextureCacheRef cvTextureCache) : MetalTexture(renderer) {
+    CoreVideoTexture(BitmapApple* bitmap, Renderer* renderer, CVMetalTextureCacheRef cvTextureCache) : MetalTexture(renderer, bitmap->_format) {
         _cvTextureCache = cvTextureCache;
         CVReturn err = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, cvTextureCache, bitmap->_cvImageBuffer, NULL, MTLPixelFormatBGRA8Unorm, bitmap->_width, bitmap->_height, 0, &_cvTexture);
         assert(err==0);
@@ -314,7 +311,6 @@ public:
     id<MTLCommandQueue> _commandQueue;
     id<MTLCommandBuffer> _commandBuffer;
     id<CAMetalDrawable> _drawable;
-    MetalSurface* _primarySurface;
     MTLRenderPassDescriptor* _renderPassDescriptor;
     Texture* _currentTextureBound;
     id<MTLRenderPipelineState> _currentPipelineState;
@@ -456,8 +452,8 @@ public:
         [_renderCommandEncoder setScissorRect:rect];
     }
 
-    Texture* createTexture() override {
-        return new MetalTexture(this);
+    Texture* createTexture(int format) override {
+        return new MetalTexture(this, format);
     }
     
 

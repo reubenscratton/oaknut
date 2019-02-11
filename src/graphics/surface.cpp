@@ -33,14 +33,19 @@ public:
     void asQuads(QUAD *quad) override {
         rectToSurfaceQuad(_rect, quad);
         quad->tl.s = quad->bl.s = _rectTex.left();
-        quad->tl.t = quad->tr.t = _rectTex.top();
         quad->tr.s = quad->br.s = _rectTex.right();
+#if RENDERER_GL
+        quad->tl.t = quad->tr.t = _rectTex.bottom();
+        quad->bl.t = quad->br.t = _rectTex.top();
+#else
+        quad->tl.t = quad->tr.t = _rectTex.top();
         quad->bl.t = quad->br.t = _rectTex.bottom();
+#endif
     }
     void validateShader(Renderer* renderer) override {
         //TextureRenderOp::validateShader(renderer);
         Shader::Features features;
-        features.textures[0] = Texture::Type::Normal;// _view->_surface->_texture->getTextureType();
+        features.textures[0] = Texture::Type::Normal;
         features.alpha = (_alpha<1.0f);
         features.tint = (_color!=0);
         _shader = renderer->getStandardShader(features);
@@ -53,6 +58,7 @@ public:
             QUAD* quad = (QUAD*)_alloc->addr();
             asQuads(quad);
             renderer->uploadQuad(_alloc);
+            renderer->invalidateQuads(_alloc);
         }
 
         renderer->setCurrentTexture(_view->_surface->_texture);
@@ -398,7 +404,9 @@ void Surface::renderPhase3(Renderer* renderer, View* view, Surface* prevsurf) {
     if (view->_clipsContent) {
         RECT clip = view->getOwnRect();
         clip.origin = view->_surfaceOrigin;
-        clip.origin.y = surface->_size.height - clip.bottom(); /* surface -> viewport coords */
+#if RENDERER_GL
+        clip.origin.y = surface->_size.height - clip.bottom(); /* flip Y */
+#endif
         renderer->pushClip(clip);
     }
     
@@ -448,11 +456,12 @@ void Surface::renderPhase3(Renderer* renderer, View* view, Surface* prevsurf) {
     
 }
 
-static int s_frame=0;
 
 #if DEBUG
 
+
 static void debugDump(Surface* surface) {
+    static int s_frame=0;
     app.log("Frame %d lists=%d batches=%d", ++s_frame, (int)surface->_renderListsList.size(), (int)surface->_listBatches.size());
     for (auto it : surface->_renderListsList) {
         RenderList* list = it;

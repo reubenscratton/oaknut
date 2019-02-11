@@ -13,17 +13,17 @@
  Supported bitmap formats. Bitmaps in other formats must be converted by platform code
  into one of these (see Bitmap::createXXX()).
 */
-#define BITMAPFORMAT_UNKNOWN 0
-#define BITMAPFORMAT_RGBA32  1
-#define BITMAPFORMAT_BGRA32  2   // iOS only
-#define BITMAPFORMAT_RGB24   3
-#define BITMAPFORMAT_RGB565  4
-#define BITMAPFORMAT_A8      5   // Not supported in WebGL, convert to RGBA instead
+#define PIXELFORMAT_UNKNOWN 0
+#define PIXELFORMAT_RGBA32  1
+#define PIXELFORMAT_BGRA32  2   // iOS only
+#define PIXELFORMAT_RGB24   3
+#define PIXELFORMAT_RGB565  4
+#define PIXELFORMAT_A8      5   // Not supported in WebGL, convert to RGBA instead
 
 #if PLATFORM_APPLE
-#define BITMAPFORMAT_DEFAULT32 BITMAPFORMAT_BGRA32
+#define PIXELFORMAT_DEFAULT32 PIXELFORMAT_BGRA32
 #else
-#define BITMAPFORMAT_DEFAULT32 BITMAPFORMAT_RGBA32
+#define PIXELFORMAT_DEFAULT32 PIXELFORMAT_RGBA32
 #endif
 
 typedef struct {

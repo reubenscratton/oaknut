@@ -17,15 +17,15 @@ void BeebView::setBeeb(Beeb* beeb) {
     // Create pixel store
 #ifdef USE_32BPP
 # ifdef PLATFORM_APPLE
-    int format = BITMAPFORMAT_BGRA32;
-    app.log("beebview format is BITMAPFORMAT_BGRA32");
+    int format = PIXELFORMAT_BGRA32;
+    app.log("beebview format is PIXELFORMAT_BGRA32");
 # else
-    int format = BITMAPFORMAT_RGBA32;
-    app.log("beebview format is BITMAPFORMAT_RGBA32");
+    int format = PIXELFORMAT_RGBA32;
+    app.log("beebview format is PIXELFORMAT_RGBA32");
 # endif
 #else
-    int format = BITMAPFORMAT_RGB565;
-    app.log("beebview format is BITMAPFORMAT_RGB565");
+    int format = PIXELFORMAT_RGB565;
+    app.log("beebview format is PIXELFORMAT_RGB565");
 #endif
     _bitmap = Bitmap::create(SURFACE_WIDTH, SURFACE_HEIGHT, format);
     _bitmap->lock(&_bitmapData, true);

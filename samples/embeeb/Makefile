@@ -17,7 +17,7 @@ IOS_CERT=AA35BF8660055BE507571702777D49D2609620E9
 IOS_PROVISIONING_PROFILE=/Users/reuben/Library/MobileDevice/Provisioning\ Profiles/8973664a-c5d7-4972-92d9-9c9a1990499e.mobileprovision
 
 # macOS
-MACOS_SDK=MacOSX10.13.sdk
+# MACOS_SDK=MacOSX10.13.sdk
 
 
 include $(OAKNUT_DIR)/build/oaknut.make

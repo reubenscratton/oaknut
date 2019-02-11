@@ -36,7 +36,7 @@ public:
     void fromVariant(const variant& v) override;
     void toVariant(variant& v) override;
     
-    void glTexImage2D();
+    void glTexImage2D(int width, int height);
 
 };
 

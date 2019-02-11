@@ -11,7 +11,7 @@ DECLARE_DYNCREATE(GameView);
 
 GameView::GameView() {
 
-    AtlasPage* atlas = new AtlasPage(512, 512, BITMAPFORMAT_DEFAULT32);
+    AtlasPage* atlas = new AtlasPage(512, 512, PIXELFORMAT_DEFAULT32);
     _imgUnknown = atlas->importAsset("images/unknown.png");
     _imgMine = atlas->importAsset("images/mine.png");
     _imgBoom = atlas->importAsset("images/boom.png");
@@ -99,7 +99,7 @@ bool GameView::handleInputEvent(INPUTEVENT* event) {
 void GameView::processCellTouch(const POINT& pt, bool longPress) {
     int col = pt.x / _cellSize;
     int row = pt.y / _cellSize;
-    if (col>=0 && row>=0 && col<_game->_cols && row<_game->_rows) {
+    if (col>=0 && row>=0 && col < _game->_cols && row < _game->_rows) {
         if (longPress) {
             _game->toggleFlag(col, row);
         } else {

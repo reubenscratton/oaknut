@@ -11,11 +11,11 @@
 
 static int bytesPerPixelForFormat(int format) {
     switch (format) {
-        case BITMAPFORMAT_RGBA32: return 4;
-        case BITMAPFORMAT_BGRA32: return 4;
-        case BITMAPFORMAT_RGB24: return 3;
-        case BITMAPFORMAT_RGB565: return 2;
-        case BITMAPFORMAT_A8: return 1;
+        case PIXELFORMAT_RGBA32: return 4;
+        case PIXELFORMAT_BGRA32: return 4;
+        case PIXELFORMAT_RGB24: return 3;
+        case PIXELFORMAT_RGB565: return 2;
+        case PIXELFORMAT_A8: return 1;
         default: assert(0);
     }
     return 0;
@@ -26,7 +26,7 @@ BitmapLinux::BitmapLinux(GdkPixbuf* pixbuf) : Bitmap() {
     int bpc = gdk_pixbuf_get_bits_per_sample(pixbuf);
     _width = gdk_pixbuf_get_width(pixbuf);
     _height = gdk_pixbuf_get_height(pixbuf);
-    _format = BITMAPFORMAT_BGRA32; // yes, BGRA. Cairo's 32bpp format has *blue* in lowest channel, not red.
+    _format = PIXELFORMAT_BGRA32; // yes, BGRA. Cairo's 32bpp format has *blue* in lowest channel, not red.
     cairo_format_t cairo_fmt = CAIRO_FORMAT_ARGB32;
     // If pixbuf is already 32bpp we can take a fast path that just wraps the Cairo-compatible
     // pixbuf in the surface object
@@ -50,9 +50,9 @@ BitmapLinux::BitmapLinux(GdkPixbuf* pixbuf) : Bitmap() {
 BitmapLinux::BitmapLinux(int width, int height, int format) : Bitmap(width, height, format) {
     cairo_format_t cairo_format;
     switch (format) {
-        case BITMAPFORMAT_RGBA32: cairo_format = CAIRO_FORMAT_ARGB32; break;
-        case BITMAPFORMAT_RGB565: cairo_format = CAIRO_FORMAT_RGB16_565; break;
-        case BITMAPFORMAT_A8: cairo_format = CAIRO_FORMAT_A8; break;
+        case PIXELFORMAT_RGBA32: cairo_format = CAIRO_FORMAT_ARGB32; break;
+        case PIXELFORMAT_RGB565: cairo_format = CAIRO_FORMAT_RGB16_565; break;
+        case PIXELFORMAT_A8: cairo_format = CAIRO_FORMAT_A8; break;
         default: assert(false);
     }
     _cairo_surface = cairo_image_surface_create(cairo_format, width, height);

@@ -55,9 +55,9 @@ static JNIEnv* getBitmapEnv() {
 static jobject createAndroidBitmap(int width, int height, int format, bytearray* pixels) {
   auto env = getBitmapEnv();
   jobject jformat;
-  if (format == BITMAPFORMAT_RGBA32) jformat = configARGB8888;
-  else if (format == BITMAPFORMAT_RGB565) jformat = configRGB565;
-  else if (format == BITMAPFORMAT_A8) jformat = configAlpha8;
+  if (format == PIXELFORMAT_RGBA32) jformat = configARGB8888;
+  else if (format == PIXELFORMAT_RGB565) jformat = configRGB565;
+  else if (format == PIXELFORMAT_A8) jformat = configAlpha8;
   else assert(0);
   jobject androidBitmap = env->CallStaticObjectMethod(jclassBitmap, jmidCreateBitmap, width, height, jformat);
   assert(androidBitmap);
@@ -87,10 +87,10 @@ BitmapAndroid::BitmapAndroid(jobject jbitmap) {
     _width = info.width;
     _height = info.height;
     switch (info.format) {
-        case ANDROID_BITMAP_FORMAT_NONE: _format=BITMAPFORMAT_UNKNOWN; break;
-        case ANDROID_BITMAP_FORMAT_RGBA_8888: _format=BITMAPFORMAT_RGBA32; break;
-        case ANDROID_BITMAP_FORMAT_RGB_565: _format=BITMAPFORMAT_RGB565; break;
-        case ANDROID_BITMAP_FORMAT_A_8: _format=BITMAPFORMAT_A8; break;
+        case ANDROID_BITMAP_FORMAT_NONE: _format=PIXELFORMAT_UNKNOWN; break;
+        case ANDROID_BITMAP_FORMAT_RGBA_8888: _format=PIXELFORMAT_RGBA32; break;
+        case ANDROID_BITMAP_FORMAT_RGB_565: _format=PIXELFORMAT_RGB565; break;
+        case ANDROID_BITMAP_FORMAT_A_8: _format=PIXELFORMAT_A8; break;
         default: assert(0); break;
     }
     //_needsUpload = true;

@@ -14,7 +14,8 @@ public:
     bool _paramsValid = false;
     
     
-    GLTexture(Renderer* renderer);
+    GLTexture(Renderer* renderer, int format);
+    virtual void updateParams();
     virtual void upload();
 
     void resize(int width, int height) override;
@@ -36,7 +37,7 @@ public:
     void bindCurrentShader() override;
     void setCurrentTexture(Texture* texture) override;
     void setCurrentBlendMode(int blendMode) override;
-    Texture* createTexture() override;
+    Texture* createTexture(int format) override;
     void releaseTexture(Texture* texture) override;
     void prepareToDraw() override;
     void pushClip(RECT clip) override;
@@ -55,7 +56,6 @@ public:
 protected:
     GLRenderer(Window* window);
 
-    Surface* _primarySurface;
     GLfloat _backgroundColor[4]; // TODO: this belongs on GLSurface...
     GLuint _indexBufferId;
     GLuint _vertexBufferId;

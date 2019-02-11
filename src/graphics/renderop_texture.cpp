@@ -27,15 +27,12 @@ TextureRenderOp::TextureRenderOp() : RenderOp() {
     _alpha = 1.0f;
     _rectTex = RECT(0,0,1,1);
 }
-TextureRenderOp::TextureRenderOp(const RECT& rect, Bitmap* bitmap, const RECT* rectTex, COLOR tintColor) : RenderOp() {
+TextureRenderOp::TextureRenderOp(const RECT& rect, Bitmap* bitmap, const RECT* rectTex, COLOR tintColor) : TextureRenderOp() {
     _bitmap = bitmap;
-    _alpha = 1.0f;
     _color = tintColor;
     _rect = rect;
     if (rectTex) {
         _rectTex = *rectTex;
-    } else {
-        _rectTex = RECT(0,1,1,-1);
     }
 }
 
@@ -43,11 +40,9 @@ TextureRenderOp::TextureRenderOp(const RECT& rect, Bitmap* bitmap, const RECT* r
  * Constructor for tinted .png icons
  */
 TextureRenderOp::TextureRenderOp(const char* assetPath, int tintColor) : TextureRenderOp() {
-    _alpha = 1.0f;
     _color = tintColor;
     ByteBuffer* data = app.loadAsset(assetPath);
     Bitmap::createFromData(data->data, (int)data->cb, [&](Bitmap* bitmap) {
-        _rectTex = RECT(0,0,1,1);
         setBitmap(bitmap);
     });
     setBlendMode(BLENDMODE_NORMAL);

@@ -77,7 +77,7 @@ protected:
 
 class Texture : public RenderResource {
 public:
-    Texture(Renderer* renderer);
+    Texture(Renderer* renderer, int format);
     ~Texture();
     
     virtual void resize(int width, int height)=0;
@@ -234,6 +234,8 @@ public:
     list<RenderResource*> _textures;
     list<RenderResource*> _shaders;
     map<Shader::Features, sp<Shader>> _standardShaders; // standard shaders, not custom ones
+    class Surface* _primarySurface;
+    int _primarySurfaceFormat;
     
 
     // Render state (used during render loop)
@@ -265,7 +267,7 @@ public:
     virtual void bindToNativeWindow(long nativeWindowHandle) =0;
     virtual Surface* getPrimarySurface() =0;
     virtual Surface* createPrivateSurface() =0;
-    virtual Texture* createTexture() =0;
+    virtual Texture* createTexture(int format) =0;
     enum IntProperty {
         MaxVaryingFloats,
     };

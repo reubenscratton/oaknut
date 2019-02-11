@@ -13,7 +13,7 @@ public:
     val _tex;
     int _textureId;
     
-    WebGLTexture(val tex) : Texture(NULL), _tex(tex) {
+    WebGLTexture(val tex) : Texture(NULL, PIXELFORMAT_RGBA32), _tex(tex) {
         _textureId = tex["name"].as<int>();
     }
     void resize(int width, int height) {
@@ -27,7 +27,7 @@ public:
     
     CameraWebBitmap(val texture) {
         _texture = new WebGLTexture(texture);
-        _format = BITMAPFORMAT_RGBA32;
+        _format = PIXELFORMAT_RGBA32;
     }
 
     

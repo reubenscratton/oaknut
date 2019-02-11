@@ -24,7 +24,7 @@ FontLinux::FontLinux(const string& fontAssetPath, float size, float weight) : Fo
     _scaled_font = pango_cairo_font_get_scaled_font ((PangoCairoFont *)pango_font);
 
     if (!cairo_for_measuring) {
-        BitmapLinux* bmp2 = new BitmapLinux(1,1,BITMAPFORMAT_RGBA32); // lives forever
+        BitmapLinux* bmp2 = new BitmapLinux(1,1,PIXELFORMAT_RGBA32); // lives forever
         cairo_for_measuring = bmp2->getCairo();
     }
 

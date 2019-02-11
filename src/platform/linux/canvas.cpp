@@ -38,7 +38,7 @@ public:
 
     void resize(int width, int height) override {
     //    _size = size;
-        _bitmap = new BitmapLinux(width, height, BITMAPFORMAT_RGBA32);
+        _bitmap = new BitmapLinux(width, height, PIXELFORMAT_RGBA32);
     }
     Bitmap* getBitmap() override {
         return _bitmap;

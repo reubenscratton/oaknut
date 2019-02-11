@@ -10,9 +10,10 @@
 RenderResource::RenderResource(Renderer* renderer) : _renderer(renderer) {
 }
 
-Texture::Texture(Renderer* renderer) : RenderResource(renderer) {
+Texture::Texture(Renderer* renderer, int format) : RenderResource(renderer) {
     _it = renderer->_textures.insert(renderer->_textures.end(), this);
     _type = Normal;
+    _format = format;
 }
 Texture::~Texture() {
     if (_renderer) {
@@ -93,7 +94,7 @@ int16_t Shader::declareUniform(const string& name, VariableType type, Uniform::U
 
 string oak::sl_getTypeString(Shader::VariableType type) {
     switch (type) {
-        case Shader::VariableType::Color: return SL_HALF4;
+        case Shader::VariableType::Color: return SL_HALF4_DECL;
         case Shader::VariableType::Int1: return "int";
         case Shader::VariableType::Float1: return SL_FLOAT1;
         case Shader::VariableType::Float2: return SL_FLOAT2;
@@ -186,6 +187,7 @@ string Shader::getFragmentSource() {
 
 
 Renderer::Renderer(Window* window) : _window(window), _quadBuffer(sizeof(QUAD), 256) {
+    _primarySurfaceFormat = PIXELFORMAT_DEFAULT32;
 }
 
 Shader* Renderer::getStandardShader(Shader::Features features) {
@@ -268,9 +270,8 @@ void Renderer::releaseShader(Shader* shader) {
 }
 
 void Renderer::createTextureForBitmap(Bitmap* bitmap) {
-    bitmap->_texture = createTexture();
+    bitmap->_texture = createTexture(bitmap->_format);
     bitmap->_texture->_bitmap = bitmap;
-    bitmap->_texture->_format = bitmap->_format;
     bitmap->_texture->_minFilterLinear = !bitmap->_sampleNearest;
     bitmap->_texture->_magFilterLinear = !bitmap->_sampleNearest;
     bitmap->_texture->resize(bitmap->_width, bitmap->_height);

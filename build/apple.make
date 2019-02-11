@@ -88,7 +88,7 @@ WARNINGS_OBJC := \
 	-Wprotocol
 
 FRAMEWORKS+=CoreText GLKit SceneKit AudioToolbox \
-			       OpenAL CoreImage CoreVideo QuartzCore
+			       OpenAL CoreImage CoreVideo QuartzCore Metal
 
 	FRAMEWORKS+= AVFoundation CoreMedia
 	FRAMEWORKS+= AudioToolbox

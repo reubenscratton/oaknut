@@ -177,7 +177,7 @@ void BlurRenderOp::validateShader(Renderer* renderer) {
     _blurShader = new BlurShader(renderer);
     _shader = new PostBlurShader(renderer);
 
-    _tex1 = renderer->createTexture();
+    _tex1 = renderer->createTexture(renderer->_primarySurfaceFormat);
     _tex1->_maxMipMapLevel = 2;
     _tex1->_minFilterLinear = true;
     _tex1->_mipFilterLinear = false;
@@ -190,9 +190,14 @@ void BlurRenderOp::validateShader(Renderer* renderer) {
 void BlurRenderOp::asQuads(QUAD *quad) {
     rectToSurfaceQuad(_rect, quad);
     quad->tl.s = quad->bl.s = 0;
-    quad->tl.t = quad->tr.t = _rect.size.height / _fullSizePow2.height;
     quad->tr.s = quad->br.s = _rect.size.width / _fullSizePow2.width;
+#if RENDERER_GL
+    quad->tl.t = quad->tr.t =  _rect.size.height / _fullSizePow2.height;
     quad->bl.t = quad->br.t = 0;
+#else
+    quad->tl.t = quad->tr.t = 0 ;
+    quad->bl.t = quad->br.t = _rect.size.height / _fullSizePow2.height; // 0;
+#endif
 }
 
 

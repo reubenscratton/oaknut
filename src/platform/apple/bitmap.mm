@@ -10,11 +10,11 @@
 
 static CGBitmapInfo bitmapInfoForFormat(int format) {
     switch (format) {
-        case BITMAPFORMAT_RGBA32: return kCGImageAlphaPremultipliedLast;
-        case BITMAPFORMAT_BGRA32: return kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst;
-        case BITMAPFORMAT_RGB24: return kCGBitmapByteOrder32Little| kCGImageAlphaNone;
-        case BITMAPFORMAT_RGB565: return kCGImageAlphaNone;
-        case BITMAPFORMAT_A8: return kCGImageAlphaOnly;
+        case PIXELFORMAT_RGBA32: return kCGImageAlphaPremultipliedLast;
+        case PIXELFORMAT_BGRA32: return kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst;
+        case PIXELFORMAT_RGB24: return kCGBitmapByteOrder32Little| kCGImageAlphaNone;
+        case PIXELFORMAT_RGB565: return kCGImageAlphaNone;
+        case PIXELFORMAT_A8: return kCGImageAlphaOnly;
         default: assert(0);
     }
     return 0;
@@ -22,11 +22,11 @@ static CGBitmapInfo bitmapInfoForFormat(int format) {
 
 static int bytesPerPixelForFormat(int format) {
     switch (format) {
-        case BITMAPFORMAT_RGBA32: return 4;
-        case BITMAPFORMAT_BGRA32: return 4;
-        case BITMAPFORMAT_RGB24: return 3;
-        case BITMAPFORMAT_RGB565: return 2;
-        case BITMAPFORMAT_A8: return 1;
+        case PIXELFORMAT_RGBA32: return 4;
+        case PIXELFORMAT_BGRA32: return 4;
+        case PIXELFORMAT_RGB24: return 3;
+        case PIXELFORMAT_RGB565: return 2;
+        case PIXELFORMAT_A8: return 1;
         default: assert(0);
     }
     return 0;
@@ -41,7 +41,7 @@ BitmapApple::BitmapApple(int width, int height, int format, void* pixels, int st
     if (stride == 0) {
         stride = width*bytesPerPixelForFormat(format);
     }
-    CGColorSpaceRef colorspace = (format==BITMAPFORMAT_A8) ? CGColorSpaceCreateDeviceGray() : CGColorSpaceCreateDeviceRGB();
+    CGColorSpaceRef colorspace = (format==PIXELFORMAT_A8) ? CGColorSpaceCreateDeviceGray() : CGColorSpaceCreateDeviceRGB();
     
     _context = CGBitmapContextCreate(pixels, width, height, 8, stride, colorspace, bitmapInfoForFormat(format));
     // Flip Y. CoreGraphics bitmaps have origin at lower left but Oaknut coords are top left.
@@ -52,8 +52,8 @@ BitmapApple::BitmapApple(int width, int height, int format, void* pixels, int st
 
 static int getBitmapFormat(CVImageBufferRef cvImageBuffer) {
     OSType type = CVPixelBufferGetPixelFormatType(cvImageBuffer);
-    if (type == 'BGRA') return BITMAPFORMAT_BGRA32;
-    if (type == 'RGBA') return BITMAPFORMAT_RGBA32;
+    if (type == 'BGRA') return PIXELFORMAT_BGRA32;
+    if (type == 'RGBA') return PIXELFORMAT_RGBA32;
     assert(0);
 }
 BitmapApple::BitmapApple(CVImageBufferRef cvImageBuffer, bool fromCamera) : Bitmap((int)CVPixelBufferGetWidth(cvImageBuffer), (int)CVPixelBufferGetHeight(cvImageBuffer), getBitmapFormat(cvImageBuffer)) {
@@ -86,11 +86,11 @@ void BitmapApple::lock(PIXELDATA* pixelData, bool forWriting) {
     if (forWriting && !_cvImageBuffer) {
         OSType pixelFormat = 0;
         switch (_format) {
-            case BITMAPFORMAT_RGBA32: pixelFormat = kCVPixelFormatType_32BGRA; break;
-            case BITMAPFORMAT_BGRA32: pixelFormat = kCVPixelFormatType_32BGRA; break;
-            case BITMAPFORMAT_RGB24: pixelFormat = kCVPixelFormatType_24RGB; break;
-            case BITMAPFORMAT_RGB565: pixelFormat = kCVPixelFormatType_16LE565; break;
-            case BITMAPFORMAT_A8: pixelFormat = kCVPixelFormatType_OneComponent8; break;
+            case PIXELFORMAT_RGBA32: pixelFormat = kCVPixelFormatType_32BGRA; break;
+            case PIXELFORMAT_BGRA32: pixelFormat = kCVPixelFormatType_32BGRA; break;
+            case PIXELFORMAT_RGB24: pixelFormat = kCVPixelFormatType_24RGB; break;
+            case PIXELFORMAT_RGB565: pixelFormat = kCVPixelFormatType_16LE565; break;
+            case PIXELFORMAT_A8: pixelFormat = kCVPixelFormatType_OneComponent8; break;
             default: assert(0); break;
         }
 
@@ -170,9 +170,9 @@ BitmapApple* bitmapFromData(const void* data, int cb) {
 
     
     // Conversions from unsupported pixel formats
-    int format = BITMAPFORMAT_UNKNOWN;
+    int format = PIXELFORMAT_UNKNOWN;
     if (bpp==16 && colormodel==kCGColorSpaceModelMonochrome) {  // A16 ==> A8
-        format = BITMAPFORMAT_A8;
+        format = PIXELFORMAT_A8;
         uint8_t* p1 = (uint8_t*)pixels;
         uint16_t* p2 = (uint16_t*)pixels;
         for (int i=0 ; i<width*height ; i++) {
@@ -190,21 +190,21 @@ BitmapApple* bitmapFromData(const void* data, int cb) {
                 case kCGImageAlphaPremultipliedFirst:
                 case kCGImageAlphaFirst:
                 case kCGImageAlphaNoneSkipFirst:
-                    format = BITMAPFORMAT_BGRA32;
+                    format = PIXELFORMAT_BGRA32;
                     break;
                 default:
-                    format = BITMAPFORMAT_RGBA32;
+                    format = PIXELFORMAT_RGBA32;
             }
             break;
         case 24:
-            format = BITMAPFORMAT_RGB24;
+            format = PIXELFORMAT_RGB24;
             assert(0); // Can Metal or GL on iOS support these or do they need conversion? No idea...
             break;
         case 16:
-            format = BITMAPFORMAT_RGB565;
+            format = PIXELFORMAT_RGB565;
             break;
         case 8:
-            format = BITMAPFORMAT_A8;
+            format = PIXELFORMAT_A8;
             break;
         default:
             assert(0);
@@ -212,7 +212,7 @@ BitmapApple* bitmapFromData(const void* data, int cb) {
     }
     
     // Convert ARGB to BGRA (NB: CGImage only produces ARGB on simulator)
-    if (format == BITMAPFORMAT_BGRA32) {
+    if (format == PIXELFORMAT_BGRA32) {
         if ((info & kCGBitmapByteOrderMask) != kCGBitmapByteOrder32Host) {
             info = (info&~kCGBitmapByteOrderMask) | kCGBitmapByteOrder32Host;
             uint32_t* p = (uint32_t*)pixels;
@@ -224,8 +224,8 @@ BitmapApple* bitmapFromData(const void* data, int cb) {
     // If on iOS hardware convert RGBA to BGRA as the GPU greatly prefers it and we get
     // to use CoreVideo direct access
 #if !TARGET_SIMULATOR
-    if (format == BITMAPFORMAT_RGBA32) {
-        format = BITMAPFORMAT_BGRA32;
+    if (format == PIXELFORMAT_RGBA32) {
+        format = PIXELFORMAT_BGRA32;
         uint32_t* p = (uint32_t*)pixels;
         for (int i = 0; i < width * height; i++)
             p[i] = (p[i] & 0xFF00FF00) | ((p[i] & 0xFF) << 16) | ((p[i]&0xFF0000)>>16);
@@ -243,7 +243,7 @@ void BitmapApple::fromVariant(const variant& v) {
     Bitmap::fromVariant(v);
     int32_t stride = v.intVal("s");
     auto bb = v.bytearrayVal("bb");
-    CGColorSpaceRef colorspace = (_format==BITMAPFORMAT_A8) ? CGColorSpaceCreateDeviceGray() : CGColorSpaceCreateDeviceRGB();
+    CGColorSpaceRef colorspace = (_format==PIXELFORMAT_A8) ? CGColorSpaceCreateDeviceGray() : CGColorSpaceCreateDeviceRGB();
     _context = CGBitmapContextCreateWithData(NULL, _width, _height, 8, stride, colorspace, bitmapInfoForFormat(_format), nil, nil);
     void* pixels = CGBitmapContextGetData(_context);
     memcpy(pixels, bb.data(), bb.size());

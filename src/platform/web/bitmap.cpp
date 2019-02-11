@@ -12,11 +12,11 @@
 
 static int bytesPerPixelForFormat(int format) {
     switch (format) {
-        case BITMAPFORMAT_RGBA32: return 4;
-        case BITMAPFORMAT_BGRA32: return 4;
-        case BITMAPFORMAT_RGB24: return 3;
-        case BITMAPFORMAT_RGB565: return 2;
-        case BITMAPFORMAT_A8: return 1;
+        case PIXELFORMAT_RGBA32: return 4;
+        case PIXELFORMAT_BGRA32: return 4;
+        case PIXELFORMAT_RGB24: return 3;
+        case PIXELFORMAT_RGB565: return 2;
+        case PIXELFORMAT_A8: return 1;
         default: assert(0);
     }
     return 0;
@@ -29,7 +29,7 @@ BitmapWeb::BitmapWeb() : Bitmap(), _img(val::null()), _buff(val::null()) {
 }
 
 BitmapWeb::BitmapWeb(CanvasWeb* canvas) : Bitmap(), _img(val::null()), _buff(val::null()), _canvas(canvas) {
-    _format = BITMAPFORMAT_RGBA32;
+    _format = PIXELFORMAT_RGBA32;
 }
 
 
@@ -45,7 +45,7 @@ BitmapWeb::BitmapWeb(int width, int height, int format) : Bitmap(width, height, 
 BitmapWeb::BitmapWeb(val img)  : _img(img), _buff(val::null()) {
     _width = img["width"].as<int>();
     _height = img["height"].as<int>();
-    _format = BITMAPFORMAT_RGBA32;
+    _format = PIXELFORMAT_RGBA32;
 }
 
 BitmapWeb::~BitmapWeb() {
@@ -65,7 +65,7 @@ void BitmapWeb::lock(PIXELDATA* pixelData, bool forWriting) {
         val ctxt = canvas.call<val>("getContext", val("2d"));
         ctxt.call<void>("drawImage", _img, val(0), val(0), val(_width), val(_height));
         val imgdata = ctxt.call<val>("getImageData", val(0), val(0), val(_width), val(_height));
-        assert(_format == BITMAPFORMAT_RGBA32);
+        assert(_format == PIXELFORMAT_RGBA32);
         val imgdatabuff = imgdata["data"];
         _pixelData.cb = imgdatabuff["length"].as<int>();
         _pixelData.stride = _pixelData.cb / _height;
@@ -115,10 +115,12 @@ void BitmapWeb::unlock(PIXELDATA* pixelData, bool pixelsChanged) {
 }
 
 
-void BitmapWeb::glTexImage2D() {
+void BitmapWeb::glTexImage2D(int width, int height) {
+    _width = width;
+    _height = height;
     // TODO: this really belongs in Renderer. Need an 'uploadTextureFromBitmap' method...
     val gl = val::global("gl");
-    int format = (_format==BITMAPFORMAT_A8) ? GL_ALPHA : GL_RGBA;
+    int format = (_format==PIXELFORMAT_A8) ? GL_ALPHA : GL_RGBA;
     int type = GL_UNSIGNED_BYTE;
     if (!_img.isNull()) {
         gl.call<void>("texImage2D", GL_TEXTURE_2D, 0, format, format, type, _img);
@@ -180,7 +182,7 @@ public:
             task->_bitmap->retain(); // release() is after Task::complete().
             task->_bitmap->_width = img["width"].as<int>();
             task->_bitmap->_height = img["height"].as<int>();
-            task->_bitmap->_format = BITMAPFORMAT_RGBA32;
+            task->_bitmap->_format = PIXELFORMAT_RGBA32;
             if (task->_bitmap->_width<=0) { // image failed to decode
                 app.warn("Bitmap failed to decode");
                 task->_bitmap->_img = val::null();

@@ -27,7 +27,7 @@ public:
     CVOpenGLESTextureRef _cvTexture;
     CVOpenGLESTextureCacheRef _cvTextureCache;
     
-    CoreVideoTexture(BitmapApple* bitmap, GLRenderer* renderer, CVOpenGLESTextureCacheRef cvTextureCache) : GLTexture(renderer) {
+    CoreVideoTexture(BitmapApple* bitmap, GLRenderer* renderer, CVOpenGLESTextureCacheRef cvTextureCache) : GLTexture(renderer, bitmap->_format) {
         _cvTextureCache = cvTextureCache;
 
 #if TARGET_OS_IOS
@@ -53,11 +53,8 @@ public:
             auto tc = _cvTextureCache;
             _cvTexture = NULL;
             _cvTextureCache = NULL;
-            //dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.25 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            CVOpenGLTextureRelease(t);
+            CFRelease(t);
             CVOpenGLESTextureCacheFlush(tc, 0);
-            //CVOpenGLTextureCacheRelease(tc);
-            //});
         }
     }
     /*
@@ -147,7 +144,7 @@ public:
                                                         NULL,
                                                         &_cvTextureCache);
                 assert(err==0);
-                CVOpenGLTextureCacheRetain(_cvTextureCache);
+                CFRetain(_cvTextureCache);
             }
             bitmap->_texture = new CoreVideoTexture(bitmap, this, _cvTextureCache);
         } else {

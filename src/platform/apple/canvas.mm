@@ -60,7 +60,7 @@ public:
     void resize(int width, int height) {
         _size.width = width;
         _size.height = height;
-        _bitmap = new BitmapApple(width, height, BITMAPFORMAT_RGBA32);
+        _bitmap = new BitmapApple(width, height, PIXELFORMAT_RGBA32);
         _bitmap->_hasPremultipliedAlpha = true;
     }
     void clear(COLOR color) {

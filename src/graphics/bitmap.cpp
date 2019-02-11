@@ -41,7 +41,7 @@ void Bitmap::toVariant(variant& v) {
 }
 
 bool Bitmap::hasAlpha() {
-    return _format!=BITMAPFORMAT_RGB565;
+    return _format!=PIXELFORMAT_RGB565;
 }
 bool Bitmap::hasPremultipliedAlpha() {
     return _hasPremultipliedAlpha;
@@ -49,11 +49,11 @@ bool Bitmap::hasPremultipliedAlpha() {
 
 int Bitmap::getBytesPerPixel() {
     switch (_format) {
-        case BITMAPFORMAT_RGBA32: return 4;
-        case BITMAPFORMAT_BGRA32: return 4;
-        case BITMAPFORMAT_RGB24: return 3;
-        case BITMAPFORMAT_RGB565: return 2;
-        case BITMAPFORMAT_A8: return 1;
+        case PIXELFORMAT_RGBA32: return 4;
+        case PIXELFORMAT_BGRA32: return 4;
+        case PIXELFORMAT_RGB24: return 3;
+        case PIXELFORMAT_RGB565: return 2;
+        case PIXELFORMAT_A8: return 1;
     }
     assert(0);
 }
@@ -77,8 +77,8 @@ Bitmap* Bitmap::convertToFormat(int newFormat) {
     Bitmap* bitmap = Bitmap::create(_width, _height, newFormat);
     PIXELDATA pixeldataDst;
     bitmap->lock(&pixeldataDst, true);
-    if (newFormat == BITMAPFORMAT_A8) {
-        if (_format == BITMAPFORMAT_RGBA32) {
+    if (newFormat == PIXELFORMAT_A8) {
+        if (_format == PIXELFORMAT_RGBA32) {
             uint8_t* rowDst = (uint8_t*)pixeldataDst.data;
             uint8_t* rowSrc = (uint8_t*)pixeldataSrc.data;
             for (int y=0 ; y<_height ; y++) {
