@@ -16,7 +16,7 @@ public:
     std::function<void()> onKeyboardAction;
     
     // Overrides
-    bool applyStyleValue(const string &name, const StyleValue *value) override;
+    bool applySingleStyle(const string &name, const style& value) override;
     bool requestFocus() override;
     
 };

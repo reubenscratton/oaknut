@@ -39,7 +39,7 @@ public:
     /** @name Overrides
      * @{
      */
-    bool applyStyleValue(const string& name, const StyleValue* value) override;
+    bool applySingleStyle(const string& name, const style& value) override;
     void setPadding(EDGEINSETS padding) override;
     IKeyboardInputHandler* getKeyboardInputHandler() override;
     ITextInputReceiver* getTextInputReceiver() override;

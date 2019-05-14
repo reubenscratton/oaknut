@@ -67,6 +67,7 @@ public:
     }
     
     void show() override {
+        Window::show();
         float width = app.getStyleFloat("window.default-width") / _scale;
         float height = app.getStyleFloat("window.default-height") / _scale;
         _nativeWindow = [[NativeWindow alloc] initWithContentRect:NSMakeRect(0, 0, width, height)

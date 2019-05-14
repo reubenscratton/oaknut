@@ -36,7 +36,8 @@ public:
     
     static void flushAutodeletePool();
     
-    static Object* createByName(const string& className);
+    template<class ...Ts>
+    static Object* createByName(const string& className, Ts...);
 
 };
 

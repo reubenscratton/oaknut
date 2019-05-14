@@ -32,7 +32,7 @@ public:
     /** @name Overrides
      * @{
      */
-    bool applyStyleValue(const string& name, const StyleValue* value) override;
+    bool applySingleStyle(const string& name, const style& value) override;
     void invalidateContentSize() override;
     void layout(RECT constraint) override;
     void onEffectiveTintColorChanged() override;

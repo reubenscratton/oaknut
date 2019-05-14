@@ -9,9 +9,13 @@
 #define BLENDMODE_NORMAL 1
 #define BLENDMODE_PREMULTIPLIED 2
 
+#define MERGETYPE_ANY 0
+#define MERGETYPE_TEXT 1
+
 class RenderOp : public Object {
 public:
     class View* _view;
+    int _mergeType;
     RECT _rect;
     EDGEINSETS _inset;
     sp<Shader> _shader;

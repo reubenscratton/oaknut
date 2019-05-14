@@ -33,32 +33,32 @@ void View::inflate(const string& layoutFile) {
 
 
 
-bool View::applyStyleValue(const string& name, const StyleValue* value) {
+bool View::applySingleStyle(const string& name, const style& value) {
     // Ignore "class" and "subviews" which are handled by layoutInflate
     if (name=="class" || name=="subviews") {
         return true;
     }
     
     if (name == "id") {
-        _id = value->stringVal();
+        _id = value.stringVal();
         return true;
     } else if (name == "size") {
         processSizeStyleValue(value, &_widthMeasureSpec, &_heightMeasureSpec);
         return true;
     } else if (name == "height") {
-        _heightMeasureSpec = MEASURESPEC(value, this);
+        _heightMeasureSpec = MEASURESPEC::fromStyle(&value.variantVal(), this);
         return true;
     } else if (name == "width") {
-        _widthMeasureSpec = MEASURESPEC(value, this);
+        _widthMeasureSpec = MEASURESPEC::fromStyle(&value.variantVal(), this);
         return true;
     } else if (name == "align") {
         processAlignStyleValue(value, &_alignspecHorz, &_alignspecVert);
         return true;
     } else if (name == "alignX") {
-        _alignspecHorz = ALIGNSPEC(value, this);
+        _alignspecHorz = ALIGNSPEC(value.variantVal(), this);
         return true;
     } else if (name == "alignY") {
-        _alignspecVert = ALIGNSPEC(value, this);
+        _alignspecVert = ALIGNSPEC(value.variantVal(), this);
         return true;
     } else if (name == "background") {
         if (handleStatemapDeclaration(name, value)) {
@@ -67,10 +67,10 @@ bool View::applyStyleValue(const string& name, const StyleValue* value) {
         setBackground(processDrawable(value));
         return true;
     } else if (name == "enabled") {
-        setEnabled(value->boolVal());
+        setEnabled(value.boolVal());
         return true;
     } else if (name == "visibility") {
-        string str = value->stringVal();
+        string str = value.stringVal();
         if (str == "visible") {
             setVisibility(Visible);
         } else if (str == "hidden" || str == "invisible") {
@@ -91,50 +91,51 @@ bool View::applyStyleValue(const string& name, const StyleValue* value) {
         processGravityStyleValue(value, false, true);
         return true;
     } else if (name == "padding") {
-        EDGEINSETS padding = value->edgeInsetsVal();
+        EDGEINSETS padding = value.edgeInsetsVal();
         setPadding(padding);
         return true;
     } else if (name == "paddingX") {
-        float pad = value->floatVal();
+        float pad = value.floatVal();
         setPadding(EDGEINSETS(pad,_padding.top,pad,_padding.bottom));
         return true;
     } else if (name == "paddingY") {
-        float pad = value->floatVal();
+        float pad = value.floatVal();
         setPadding(EDGEINSETS(_padding.left,pad,_padding.right,pad));
         return true;
     } else if (name == "tint") {
-        setTintColor(value->colorVal());
+        setTintColor(value.colorVal());
         return true;
     }
 #if DEBUG
     if (name == "debug") {
-        _debugTag = value->stringVal();
+        _debugTag = value.stringVal();
         return true;
     }
 #endif
     return false;
 }
 
-void View::processSizeStyleValue(const StyleValue* sizeValue, MEASURESPEC* widthspec, MEASURESPEC* heightspec) {
-    if (sizeValue->isArray()) {
-        auto arrayVal = sizeValue->arrayVal();
+void View::processSizeStyleValue(const style& sizeValue, MEASURESPEC* widthspec, MEASURESPEC* heightspec) {
+    if (sizeValue.isArray()) {
+        auto arrayVal = sizeValue.arrayVal();
         assert(arrayVal.size()==2);
-        *widthspec = MEASURESPEC(&arrayVal[0], this);
-        *heightspec = MEASURESPEC(&arrayVal[1], this);
+        *widthspec = MEASURESPEC::fromStyle(&arrayVal[0].variantVal(), this);
+        *heightspec = MEASURESPEC::fromStyle(&arrayVal[1].variantVal(), this);
     } else {
-        *widthspec = MEASURESPEC(sizeValue, this);
-        *heightspec = MEASURESPEC(sizeValue, this);
+        *widthspec = MEASURESPEC::fromStyle(&sizeValue.variantVal(), this);
+        *heightspec = MEASURESPEC::fromStyle(&sizeValue.variantVal(), this);
     }
 }
-void View::processAlignStyleValue(const StyleValue* alignValue, ALIGNSPEC* horzspec, ALIGNSPEC* vertspec) {
-    if (alignValue->isArray()) {
-        auto arrayVal = alignValue->arrayVal();
+
+void View::processAlignStyleValue(const style& alignValue, ALIGNSPEC* horzspec, ALIGNSPEC* vertspec) {
+    if (alignValue.isArray()) {
+        auto arrayVal = alignValue.arrayVal();
         assert(arrayVal.size()==2);
-        *horzspec = ALIGNSPEC(&arrayVal[0], this);
-        *vertspec = ALIGNSPEC(&arrayVal[1], this);
+        *horzspec = ALIGNSPEC(arrayVal[0].variantVal(), this);
+        *vertspec = ALIGNSPEC(arrayVal[1].variantVal(), this);
     } else {
-        *horzspec = ALIGNSPEC(alignValue, this);
-        *vertspec = ALIGNSPEC(alignValue, this);
+        *horzspec = ALIGNSPEC(alignValue.variantVal(), this);
+        *vertspec = ALIGNSPEC(alignValue.variantVal(), this);
     }
 }
 
@@ -157,16 +158,16 @@ static uint8_t gravityValueFromString(const string& str) {
     assert(0);
 }
 
-void View::processGravityStyleValue(const StyleValue* gravityValue, bool applyToHorz, bool applyToVert) {
+void View::processGravityStyleValue(const style& gravityValue, bool applyToHorz, bool applyToVert) {
     uint8_t horz = _gravity.horz;
     uint8_t vert = _gravity.vert;
-    if (gravityValue->isArray()) {
-        auto arrayVal = gravityValue->arrayVal();
+    if (gravityValue.isArray()) {
+        auto arrayVal = gravityValue.arrayVal();
         assert(arrayVal.size()==2);
         horz = gravityValueFromString(arrayVal[0].stringVal());
         vert = gravityValueFromString(arrayVal[1].stringVal());
     } else {
-        string str = gravityValue->stringVal();
+        string str = gravityValue.stringVal();
         if (applyToHorz) {
             horz = gravityValueFromString(str);
         }
@@ -177,16 +178,16 @@ void View::processGravityStyleValue(const StyleValue* gravityValue, bool applyTo
     setGravity({horz, vert});
 }
 
-void processFill(RectRenderOp* op, const StyleValue& value) {
-    if (value.type == StyleValue::Type::Compound) {
+void processFill(RectRenderOp* op, const style& value) {
+    if (value.isCompound()) {
         assert(0); // todo: support compound values
         return;
     }
     op->setFillColor(value.colorVal());
 }
 
-RenderOp* View::processDrawable(const StyleValue* value) {
-    if (value->isEmpty()) {
+RenderOp* View::processDrawable(const style& value) {
+    if (value.isEmpty()) {
         return NULL;
     }
 
@@ -198,9 +199,8 @@ RenderOp* View::processDrawable(const StyleValue* value) {
     RectRenderOp* op = new RectRenderOp();
     
     
-    if (value->type == StyleValue::Type::Compound) {
-        auto& compoundVal = value->compoundVal();
-        for (auto& it : compoundVal) {
+    if (value.isCompound()) {
+        for (auto& it : *value.compound) {
             auto& subval = it.second;
  
             if (it.first == "fill") {
@@ -219,7 +219,7 @@ RenderOp* View::processDrawable(const StyleValue* value) {
             }
         }
     } else {
-        op->setFillColor(value->colorVal());
+        op->setFillColor(value.colorVal());
     }
     return op;
 }
@@ -239,15 +239,15 @@ static bool isStateName(const string& name) {
     return false;
 
 }
-bool View::handleStatemapDeclaration(const string& name, const StyleValue* value) {
-    if (value->type != StyleValue::Compound) {
+bool View::handleStatemapDeclaration(const string& name, const style& value) {
+    
+    // A style can only be a statemap if it's a map and one or more of it's keys
+    // are view state names. Early exit if not dealing with a statemap style.
+    if (!value.isCompound()) {
         return false;
     }
-    
-    // Inspect map keys to see if its a statemap or not
-    auto& compoundVal = value->compoundVal();
     int c = 0;
-    for (auto& k : compoundVal) {
+    for (auto& k : *value.compound) {
         if (isStateName(k.first)) {
             c++;
         }
@@ -256,45 +256,47 @@ bool View::handleStatemapDeclaration(const string& name, const StyleValue* value
         return false;
     }
     
-    // Its a statemap. Find all the non-state values and apply them to the state values.
-    map<string,StyleValue> shared;
-    for (auto& k : compoundVal) {
+    // Find all the non-state values and apply them to the state values.
+    map<string,style> nonstateVals;
+    for (auto& k : *value.compound) {
         if (!isStateName(k.first)) {
-            shared.insert(k);
+            nonstateVals.insert(k);
         }
     }
-    if (shared.size() > 0) {
-        for (auto& k : compoundVal) {
+    if (nonstateVals.size() > 0) {
+        for (auto& k : *value.compound) {
             if (isStateName(k.first)) {
-                const_cast<StyleValue&>(k.second).importValues(shared);
+                const_cast<style&>(k.second).importNamedValues(nonstateVals);
             }
-        }
-        for (auto& k : shared) {
-            const_cast<map<string, StyleValue>&>(compoundVal).erase(k.first);
         }
     }
 
-    // Its a statemap.
+    // Remove the nonstate values from the statemap
+    for (auto& k : nonstateVals) {
+        const_cast<map<string, style>&>(*value.compound).erase(k.first);
+    }
+
+    // Ensure we have a valid statemap container with no existing entry for the given name
     if (_statemapStyleValues) {
         _statemapStyleValues->erase(name);
+    } else {
+        _statemapStyleValues = new map<string, style*>();
     }
-    if (!_statemapStyleValues) {
-        _statemapStyleValues = new map<string, StyleValue>();
-    }
-    auto newval = make_pair(name, *value);
-    _statemapStyleValues->insert(newval);
+    
+    // Create the new statemap container entry
+    _statemapStyleValues->insert(make_pair(name, (style*)&value));
     
     // Choose initial value immediately
     applyStatemapStyleValue(name, value);
     return true;
 }
 
-void View::applyStatemapStyleValue(const string& name, const StyleValue* statemap) {
+void View::applyStatemapStyleValue(const string& name, const style& statemap) {
     // Walk the map and find the values which apply. Longest (i.e. most state bits) matching value wins.
-    list<StyleValue*> matchingValues;
-    const StyleValue* bestMatchValue = NULL;
+    list<style*> matchingValues;
+    const style* bestMatchValue = NULL;
     int best_pri=0;
-    for (auto& it : statemap->compoundVal()) {
+    for (auto& it : *statemap.compound) {
         int pri=1;
         
         // Convert the map entry to a stateset
@@ -317,10 +319,10 @@ void View::applyStatemapStyleValue(const string& name, const StyleValue* statema
     }
     
     if (bestMatchValue) {
-        applyStyleValue(name, bestMatchValue);
+        applySingleStyle(name, *bestMatchValue);
     } else {
-        StyleValue nullVal;
-        applyStyleValue(name, &nullVal);
+        style nullVal;
+        applySingleStyle(name, nullVal);
     }
 }
 
@@ -1069,7 +1071,7 @@ void View::setState(STATE mask, STATE value) {
 void View::onStateChanged(STATESET changedStates) {
     if (_statemapStyleValues) {
         for (auto& it : *_statemapStyleValues) {
-            applyStatemapStyleValue(it.first, &it.second);
+            applyStatemapStyleValue(it.first, *it.second);
         }
     }
 }
@@ -1122,7 +1124,9 @@ void View::removeRenderOpFromList(RenderOp* renderOp, sp<RenderList>& list) {
     }
     list->removeRenderOp(renderOp);
     if (!list->_ops.size()) {
-        _surface->detachRenderList(list);
+        if (_surface) {
+            _surface->detachRenderList(list);
+        }
         list = NULL;
     }
     renderOp->_view = NULL;

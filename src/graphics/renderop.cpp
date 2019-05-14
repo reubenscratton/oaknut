@@ -9,13 +9,16 @@
 
 
 
-RenderOp::RenderOp() : _view(NULL), _alpha(1.0f) {
+RenderOp::RenderOp() : _view(NULL), _mergeType(MERGETYPE_ANY), _alpha(1.0f) {
 }
 RenderOp::~RenderOp() {
 }
 
 bool RenderOp::canMergeWith(const RenderOp* op) {
-    return _shader==op->_shader && _blendMode==op->_blendMode && _alpha==op->_alpha;
+    return _shader==op->_shader
+        && _mergeType==op->_mergeType
+        && _blendMode==op->_blendMode
+        && _alpha==op->_alpha;
 }
 
 void RenderOp::setRect(const RECT& rect) {

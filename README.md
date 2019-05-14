@@ -41,10 +41,9 @@ implementation of Bitmap handles this completely transparently.
 
 Immediate Todos
 ---------------
+- emBeeb Web: disks VC is very scrolly?
 - Android: emBeeb status bar is wrong colour.
 - Cameras and facedetectors on all platforms need a catchup
-- emBeeb Web: disks VC is very scrolly?
-- Mac/Metal: blur effect is upside down
 - Linux: fix VSCode generator
 - Linux: fix keyboard input processing (backspace doesnt work)
 - Linux: fix text measurement. Somethings way off somewhere.
@@ -70,8 +69,18 @@ Medium-term Roadmap
 Long-term Roadmap
 -----------------
 - SVG support
-- Rust port!
-- Web IDE
+- Rust interop
+- IDE
+
+
+OakIDE
+======
+An IDE written in Oaknut intended to be mainly used natively. Key difference
+would be that working copies of projects etc are quietly sync'd to cloud, the
+goal is to be able to stop working on one device and then immediately continue
+on another. I'd like to be able to invite other users to be 'guests' in my
+workspace, e.g. for instant pre-commit code review. Bit like google docs, they can
+read everything and suggest stuff but can't edit without special permission.
 
 
 CC++ (Concise C++)
@@ -81,6 +90,35 @@ A sort of a simplified C++ 'dialect' for Oaknut.
 Level 1 : Die, header files, die
 --------------------------------
 - Primary goal is to process a CC++ source file (.ccpp) into a .cpp file and a .h file.
+  - Preprocessor directives prior to the first function go to the .h,
+    directives following it go to the .cpp.
+  - The .cpp only #includes its own header.
+  - Implicit #pragma once in the .h
+
+A.ccpp
+------
+#include "B.h"
+
+class A {
+   B _b;
+   void foo() { ... }
+};
+
+Becomes :
+A.h
+---
+#pragma once
+#include "B.h"
+class A {
+   B _b;
+   void foo();
+};
+
+A.cpp
+-----
+#include "A.h"
+void A::foo() { ... }
+
 - Configure IDEs for correct syntax colouring.
 - Make/build integration
 - Can we post-process symbol files to point debuggers into the .ccpp? To do so we'd need a line-number map between .cpp and .ccpp.

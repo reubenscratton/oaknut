@@ -16,6 +16,7 @@ Window::Window() : _rootViewController(NULL), _scale(1) {
 }
 
 void Window::show() {
+    _backgroundColor = app.getStyleColor("window.background-color");
 }
 
 

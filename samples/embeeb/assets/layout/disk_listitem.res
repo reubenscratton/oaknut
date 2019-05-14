@@ -17,14 +17,14 @@
         class: Label
         id: title
         style: $listview.item-title
-        size: 100%-56dp, wrap
+        size: fill(-56dp), wrap
         align: toRightOf(image 8dp), top
     },
     {
         class: Label
         id: subtitle
         style: $listview.item-subtitle
-        size: 100%-56dp, wrap
+        size: fill(-56dp), wrap
         align: toRightOf(image 8dp), bottom
     }
     ]

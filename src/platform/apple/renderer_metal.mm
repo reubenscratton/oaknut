@@ -126,6 +126,9 @@ struct ShaderState {
 
     ShaderState(Shader* shader, id<MTLDevice> device) {
         
+        _vertexUniformsValid = false;
+        _fragUniformsValid = false;
+
         // Work out the uniform structs, respecting alignments as per Metal Language spec
         int32_t cbVert=0, cbFrag=0;
         int32_t vertMaxAlign=0, fragMaxAlign=0;
@@ -421,6 +424,8 @@ public:
 
     
     void pushClip(RECT clip) override {
+        if (clip.size.width<0) clip.size.width = 0;
+        if (clip.size.height<0) clip.size.height = 0;
         bool firstClip = _clips.size()==0;
         if (!firstClip) {
             clip.intersectWith(_clips.top());
@@ -555,10 +560,18 @@ public:
         _commandBuffer = [_commandQueue commandBuffer];
         _primarySurface->_texture.as<MetalTexture>()->_tex = _drawable.texture;
         
-        _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionDontCare;
-        //_renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-        //_renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0, 1, 0, 1);
-
+        if (_window->_backgroundColor) {
+            float f[4] = {
+                (_window->_backgroundColor & 0xFF) / 255.0f,
+                ((_window->_backgroundColor & 0xFF00)>>8) / 255.0f,
+                ((_window->_backgroundColor & 0xFF0000)>>16) / 255.0f,
+                ((_window->_backgroundColor & 0xFF000000)>>24) / 255.0f
+            };
+            _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
+            _renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(f[0], f[1], f[2], f[3]);
+        } else {
+            _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionDontCare;
+        }
 
         _renderCounter++;
         _currentSurface = NULL;

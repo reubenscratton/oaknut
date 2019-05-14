@@ -17,9 +17,11 @@ public:
     string::iterator current() const { return _it; }
 
 	void skipWhitespace();
+    void skipSpacesAndTabs();
     string nextToken();
     string nextNumber();
     string nextIdentifier();
+    string nextQuotedString();
     string nextToEndOfLine();
     bool nextWas(const string& s);
 

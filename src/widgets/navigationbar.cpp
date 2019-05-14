@@ -13,20 +13,20 @@ NavigationBar::NavigationBar() {
     applyStyle("NavigationBar");
 }
 
-bool NavigationBar::applyStyleValue(const string& name, const StyleValue* value) {
+bool NavigationBar::applySingleStyle(const string& name, const style& value) {
     if (name == "background") {
-        setBackgroundColor(value->colorVal()); // ONLY COLOR BACKGROUNDS ALLOWED ON NAVBAR
+        setBackgroundColor(value.colorVal()); // ONLY COLOR BACKGROUNDS ALLOWED ON NAVBAR
         return true;
     }
     if (name == "title") {
-        _titleStyle = *value;
+        _titleStyle = &value;
         return true;
     }
     if (name == "preferredContentHeight") {
-        _preferredContentHeight = value->floatVal();
+        _preferredContentHeight = value.floatVal();
         return true;
     }
-    return View::applyStyleValue(name, value);
+    return View::applySingleStyle(name, value);
 }
 
 void NavigationBar::updateContentSize(SIZE constrainingSize) {
@@ -42,7 +42,7 @@ void NavigationBar::addViewControllerNav(ViewController* viewController) {
         titleLabel->setMeasureSpecs(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
         titleLabel->setAlignSpecs(ALIGNSPEC::Center(), ALIGNSPEC(NULL, 0.5f, -0.5f, 0));
         titleLabel->setText(viewController->_title);
-        titleLabel->applyStyle(_titleStyle);
+        titleLabel->applyStyle(*_titleStyle);
         viewController->_titleView = titleLabel;
     }
     if (viewController->_titleView) {

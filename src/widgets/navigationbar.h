@@ -19,13 +19,13 @@ public:
     float getPreferredContentHeight() { return _preferredContentHeight; }
 
     // Overrides
-    bool applyStyleValue(const string& name, const StyleValue* value) override;
+    bool applySingleStyle(const string& name, const style& value) override;
     void setBackground(RenderOp* renderOp) override;
 	void setBackgroundColor(COLOR backgroundColor) override;
     void updateContentSize(SIZE constrainingSize) override;
 
 protected:
-    StyleValue _titleStyle;
+    const style* _titleStyle;
     float _preferredContentHeight;
 };
 

@@ -23,7 +23,7 @@
     return self;
 }
 - (UIStatusBarStyle) preferredStatusBarStyle {
-    auto val = app.getStyleValue("window.status-bar-light");
+    auto val = app.getStyle("window.status-bar-light");
     if (!val) {
         return UIStatusBarStyleDefault;
     }
@@ -71,6 +71,7 @@ public:
     }
     
     void show() override {
+        Window::show();
         if (_nativeWindowOwnedByOaknut) {
             _nativeWindow.rootViewController = _viewController;
         } else {

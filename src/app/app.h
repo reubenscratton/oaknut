@@ -62,7 +62,7 @@ public:
     void loadStyleAsset(const string& assetPath);
     
     /** Get a named style value */
-    const StyleValue* getStyleValue(const string& keypath);
+    const style* getStyle(const string& keypath);
     
     /** Get a named style value and coerce to a string */
     string getStyleString(const string& key, const char* defaultString = NULL);
@@ -173,7 +173,7 @@ public:
     
 
 protected:
-    StyleValue _styles;
+    style _styles;
 
 
 };

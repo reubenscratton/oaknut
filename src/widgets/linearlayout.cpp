@@ -13,9 +13,9 @@ DECLARE_DYNCREATE(LinearLayout);
 LinearLayout::LinearLayout() : View(), _orientation(Horizontal) {
 }
 
-bool LinearLayout::applyStyleValue(const string& name, const StyleValue* value) {
+bool LinearLayout::applySingleStyle(const string& name, const style& value) {
     if (name=="orientation") {
-        auto str = value->stringVal();
+        auto str = value.stringVal();
         if (str == "horizontal") {
             _orientation = Horizontal;
             return true;
@@ -25,11 +25,11 @@ bool LinearLayout::applyStyleValue(const string& name, const StyleValue* value) 
             return true;
         }
     } else if (name == "spacing") {
-        setSpacing(value->floatVal());
+        setSpacing(value.floatVal());
         return true;
     } else if (name == "weights") {
-        assert(value->isArray());
-        auto weights = value->arrayVal();
+        assert(value.isArray());
+        auto weights = value.arrayVal();
         for (auto& weight : weights) {
             float f = weight.floatVal();
             _weights.push_back(f);
@@ -38,7 +38,7 @@ bool LinearLayout::applyStyleValue(const string& name, const StyleValue* value) 
         return true;
     }
 
-    return View::applyStyleValue(name, value);
+    return View::applySingleStyle(name, value);
 }
 
 

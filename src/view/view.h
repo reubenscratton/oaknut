@@ -429,16 +429,16 @@ protected:
 protected:
     /** Applies a single style value for the given attribute name. Custom views
         should override this method to add support for custom attributes. */
-    bool applyStyleValue(const string& name, const StyleValue* value) override;
+    bool applySingleStyle(const string& name, const style& value) override;
     
     /**  \cond INTERNAL */
-    virtual bool handleStatemapDeclaration(const string& name, const StyleValue* value);
-    virtual void applyStatemapStyleValue(const string& name, const StyleValue* value);
-    map<string, StyleValue>* _statemapStyleValues;
-    RenderOp* processDrawable(const StyleValue* value);
-    void processSizeStyleValue(const StyleValue* sizeValue, MEASURESPEC* widthspec, MEASURESPEC* heightspec);
-    void processAlignStyleValue(const StyleValue* alignValue, ALIGNSPEC* horzspec, ALIGNSPEC* vertspec);
-    void processGravityStyleValue(const StyleValue* gravityValue, bool horz, bool vert);
+    virtual bool handleStatemapDeclaration(const string& name, const style& value);
+    virtual void applyStatemapStyleValue(const string& name, const style& value);
+    map<string, style*>* _statemapStyleValues;
+    RenderOp* processDrawable(const style& value);
+    void processSizeStyleValue(const style& sizeValue, MEASURESPEC* widthspec, MEASURESPEC* heightspec);
+    void processAlignStyleValue(const style& alignValue, ALIGNSPEC* horzspec, ALIGNSPEC* vertspec);
+    void processGravityStyleValue(const style& gravityValue, bool horz, bool vert);
     /**  \endcond */
     /**@}*/
 

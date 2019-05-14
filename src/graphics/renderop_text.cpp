@@ -14,6 +14,7 @@ TextRenderOp::TextRenderOp(const TEXTRENDERPARAMS* textRenderParams) : RenderOp(
     _alpha = 1.0f;
     _textRenderParams = *textRenderParams;
     _blendMode = BLENDMODE_NORMAL;
+    _mergeType = MERGETYPE_TEXT;
 }
 
 void TextRenderOp::validateShader(Renderer* renderer) {

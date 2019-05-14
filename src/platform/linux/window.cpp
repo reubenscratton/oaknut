@@ -55,6 +55,7 @@ public:
         gtk_window_set_title(GTK_WINDOW(glwindow), viewController->getTitle().data());
     }
     void show() override {
+        Window::show();
         gtk_widget_set_size_request(glarea,
                                     app.getStyleFloat("window.default-width"),
                                     app.getStyleFloat("window.default-height"));

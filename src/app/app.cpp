@@ -47,17 +47,20 @@ void App::loadStyleAsset(const string& assetPath) {
         return;
     }
     StringProcessor it(data->toString(false));
-    _styles.parse(it);
+    style s;
+    s.parse(it);
+    assert(s.isCompound());
+    _styles.importNamedValues(*s.compound);
 }
 
 
-const StyleValue* App::getStyleValue(const string& keypath) {
+const style* App::getStyle(const string& keypath) {
     return _styles.get(keypath);
 }
 
 
 string App::getStyleString(const string& keypath, const char* defaultString) {
-    auto value = getStyleValue(keypath);
+    auto value = getStyle(keypath);
     if (!value) {
         if (defaultString) {
             return string(defaultString);
@@ -69,7 +72,7 @@ string App::getStyleString(const string& keypath, const char* defaultString) {
 }
 
 float App::getStyleFloat(const string& keypath) {
-    auto value = getStyleValue(keypath);
+    auto value = getStyle(keypath);
     if (!value) {
         app.warn("Missing float style info '%s'", keypath.data());
         return 0;
@@ -77,7 +80,7 @@ float App::getStyleFloat(const string& keypath) {
     return value->floatVal();
 }
 COLOR App::getStyleColor(const string& key) {
-    auto value = getStyleValue(key);
+    auto value = getStyle(key);
     if (!value) {
         app.warn("Missing color style info '%s'", key.data());
         return 0;
@@ -85,7 +88,7 @@ COLOR App::getStyleColor(const string& key) {
     return value->colorVal();
 }
 
-static View* inflateFromResource(const StyleValue& value, View* parent) {
+static View* inflateFromResource(const style& value, View* parent) {
     string className = value.stringVal("class");
     if (className.length() == 0) {
         className = "View";
@@ -114,10 +117,9 @@ void App::layoutInflateExistingView(View* view, const string& assetPath) {
         return;
     }
     StringProcessor it(data->toString(false));
-    StyleValue layoutRoot;
-    bool parsed = layoutRoot.parse(it);
-    assert(parsed);
-    assert(layoutRoot.type == StyleValue::Type::Compound);
+    style layoutRoot;
+    layoutRoot.parse(it);
+    assert(layoutRoot.isCompound());
 
     // Apply the attributes to the inflated view.
     view->applyStyle(layoutRoot);
@@ -135,10 +137,9 @@ View* App::layoutInflate(const string& assetPath) {
         return NULL;
     }
     StringProcessor it(data->toString(false));
-    StyleValue layoutRoot;
-    bool parsed = layoutRoot.parse(it);
-    assert(parsed);
-    assert(layoutRoot.type == StyleValue::Type::Compound);
+    style layoutRoot;
+    layoutRoot.parse(it);
+    assert(layoutRoot.isCompound());
     return inflateFromResource(layoutRoot, NULL);
 }
 

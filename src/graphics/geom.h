@@ -53,6 +53,9 @@ struct POINT {
 struct SIZE {
 	float width;
 	float height;
+    SIZE() {}
+    SIZE(float w, float h) : width(w), height(h) {
+    }
 };
 
 struct SIZEI {

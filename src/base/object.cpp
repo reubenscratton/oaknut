@@ -52,6 +52,12 @@ string Object::debugDescription() {
 
 map<string, Object* (*)()>* oak::s_classRegister;
 
+template<class ...Ts>
+Object* Object::createByName(const string& className, Ts...) {
+    return s_classRegister->find(className)->second();
+}
+
+template<>
 Object* Object::createByName(const string& className) {
     return s_classRegister->find(className)->second();
 }

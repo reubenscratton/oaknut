@@ -46,6 +46,16 @@ void StringProcessor::skipWhitespace() {
 		}
 	}
 }
+void StringProcessor::skipSpacesAndTabs() {
+    while(!eof()) {
+        char32_t ch = peek();
+        if (ch==' ' || ch=='\t') {
+            next();
+        } else {
+            return;
+        }
+    }
+}
 inline bool isDigit(char ch) {
     return ch>='0'&&ch<='9';
 }
@@ -76,6 +86,20 @@ string StringProcessor::nextToken() {
         }
     }
     return "";
+}
+
+string StringProcessor::nextQuotedString() {
+    auto start = _it;
+    auto end = start;
+    while (!eof()) {
+        char32_t ch = peek();
+        if (!isIdentifierChar(ch)) {
+            break;
+        }
+        next();
+        end = _it;
+    }
+    return string(start, end);
 }
 
 string StringProcessor::nextIdentifier() {

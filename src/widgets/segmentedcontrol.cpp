@@ -16,29 +16,29 @@ SegmentedControl::SegmentedControl() {
 	_selectedIndex = _pressedIndex = -1;
 }
 
-bool SegmentedControl::applyStyleValue(const string &name, const StyleValue *value) {
+bool SegmentedControl::applySingleStyle(const string &name, const style& value) {
     if (name == "stroke-width") {
-        _lineWidth = value->floatVal();
+        _lineWidth = value.floatVal();
         return true;
     }
     if (name=="font-name") {
-        setFontName(value->stringVal());
+        setFontName(value.stringVal());
         return true;
     }
     if (name=="font-size") {
-        setFontSize(value->floatVal());
+        setFontSize(value.floatVal());
         return true;
     }
     if (name=="font-weight") {
-        setFontWeight(value->fontWeightVal());
+        setFontWeight(value.fontWeightVal());
         return true;
     }
     if (name=="corner-radius") {
-        _cornerRadius = value->floatVal();
+        _cornerRadius = value.floatVal();
         updateBorders();
         return true;
     }
-    return View::applyStyleValue(name, value);
+    return View::applySingleStyle(name, value);
 }
 
 void SegmentedControl::setFontName(const string& fontName) {

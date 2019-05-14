@@ -49,32 +49,32 @@ Label::~Label() {
 }
 
 
-bool Label::applyStyleValue(const string& name, const StyleValue* value) {
+bool Label::applySingleStyle(const string& name, const style& value) {
     if (name=="font-name") {
-        _textRenderer.setFontName(value->stringVal());
+        _textRenderer.setFontName(value.stringVal());
         return true;
     }
     if (name=="font-size") {
-        _textRenderer.setFontSize(value->floatVal());
+        _textRenderer.setFontSize(value.floatVal());
         return true;
     }
     if (name=="font-weight") {
-        _textRenderer.setFontWeight(value->fontWeightVal());
+        _textRenderer.setFontWeight(value.fontWeightVal());
         return true;
     }
     if (name=="forecolor") {
-        setTextColor(value->colorVal());
+        setTextColor(value.colorVal());
         return true;
     }
     if (name=="text") {
-        setText(value->stringVal());
+        setText(value.stringVal());
         return true;
     }
     if (name=="maxLines") {
-        setMaxLines(value->intVal());
+        setMaxLines(value.intVal());
         return true;
     }
-    return View::applyStyleValue(name, value);
+    return View::applySingleStyle(name, value);
 }
 
 void Label::setText(const AttributedString& text) {

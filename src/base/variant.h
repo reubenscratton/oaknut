@@ -5,7 +5,35 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-#define FLAG_ALLOW_JSONLITE 1
+#define PARSEFLAG_JSON 1
+#define PARSEFLAG_EXPLICIT_ARRAY 2 // for non-Json
+
+
+/**
+ * @ingroup app_group
+ * @brief Represents a measurement in one of the following units:
+ *
+ * * `PX`  Pixels
+ * * `DP`  Device-independent Pixels
+ * * `SP`  Scaled Pixels
+ * * `PC`  Percent
+ */
+class measurement {
+public:
+    
+    /** Returns the measurement value in pixels */
+    float val() const;
+    float _unitVal;
+    enum unit {
+        PX,
+        DP,
+        SP,
+        PC
+    } _unit;
+    measurement(float v, unit unit) : _unitVal(v), _unit(unit) {}
+    measurement(const measurement& m) : _unitVal(m._unitVal), _unit(m._unit) {}
+    string toString() const;
+};
 
 /**
  * @ingroup base
@@ -40,6 +68,7 @@ private:
         uint64_t _u64;
         float _f32;
         double _f64;
+        measurement _measurement;
         string* _str;
         bytearray* _bytearray;
         vector<variant>* _vec;
@@ -51,6 +80,7 @@ public:
         INT32,  INT64,
         UINT32, UINT64,
         FLOAT32, FLOAT64,
+        MEASUREMENT,
         STRING,
         BYTEARRAY,
         ARRAY,
@@ -58,7 +88,7 @@ public:
     } type;
     
     void setType(enum type newType);
-    
+
     variant();
     variant(int32_t val);
     variant(int64_t val);
@@ -69,15 +99,25 @@ public:
     variant(const bytearray& val);
     variant(const char* val);
     variant(const string& val);
+    variant(const measurement& val);
     variant(const variant& var);
     variant(variant&& var) noexcept;
     variant(class ISerializeToVariant* val);
-    //variant(const vector<variant>& val);
+    variant(const vector<variant>& val);
     variant(const vector<pair<string,variant>>& vals);
     variant& operator=(const variant& rhs);
     bool operator<(const variant& rhs) const;
     ~variant();
-    
+
+    // Type tests
+    bool isEmpty() const;
+    bool isNumeric() const;
+    bool isFloatingPoint() const;
+    bool isString() const;
+    bool isMeasurement() const;
+    bool isArray() const;
+    bool isCompound() const;
+
     // Comparison
     bool operator ==(float val) {return type==FLOAT32 && _f32==val; }
     bool operator ==(int val) {return (type==INT32 && _i32==val) || (type==UINT32 && _u32==val); }
@@ -86,10 +126,14 @@ public:
     // Accessors
     int intVal() const;
     string stringVal() const;
+    bool boolVal() const;
     float floatVal() const;
     double doubleVal() const;
     const vector<variant>& arrayVal() const;
     const bytearray& bytearrayVal() const;
+    vector<string> stringArrayVal() const;
+    measurement measurementVal() const;
+    const map<string, variant>& compoundVal() const;
 
     // Compound accessors
     int intVal(const char* name) const;
@@ -97,6 +141,7 @@ public:
     float floatVal(const char* name) const;
     double doubleVal(const char* name) const;
     const bytearray& bytearrayVal(const char* name) const;
+    vector<string> stringArrayVal(const char* name) const;
     const vector<variant>& arrayVal(const char* name) const;
     template <class T>
     vector<sp<T>> arrayVal(const char* name) const {
@@ -161,6 +206,15 @@ public:
         return (*((_map->insert(std::make_pair(string(key),variant()))).first)).second;
     }
 
+    /*map<string,variant>::iterator mapBegin() const {
+        assert(type==MAP);
+        return _map->begin();
+    }
+    map<string,variant>::iterator mapEnd() const {
+        assert(type==MAP);
+        return _map->end();
+    }*/
+
     const variant* get(const string& keypath) const;
     void set(const string& key, const variant& val);
     void set(const string& key, ISerializeToVariant* object);
@@ -170,7 +224,7 @@ public:
 
     // Parsing from JSON and config files
     static variant parse(class StringProcessor& it, int flags);
-    string toJson();
+    string toJson() const;
     static variant parseNumber(StringProcessor& it);
 
     // Javascript helpers
@@ -187,12 +241,20 @@ public:
         setType(STRING);
         _str->assign((char*)p, cb);
     }
+    void setInt32(int32_t i) {
+        setType(INT32);
+        _i32 = i;
+    }
     void setDouble(double d) {
         setType(FLOAT64);
         _f64 = d;
     }
 
     friend class Stream;
+    
+#if DEBUG
+    const char* debugString() const;
+#endif
     
 private:
     inline void assign(const variant& src);

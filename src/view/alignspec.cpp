@@ -38,16 +38,17 @@ ALIGNSPEC ALIGNSPEC::Below(View* view, float margin) {
 }
 
 
-ALIGNSPEC::ALIGNSPEC(const StyleValue* value, View* view) {
+ALIGNSPEC::ALIGNSPEC(const variant& value, View* view) {
     anchor = NULL;
-    if (value->isNumeric()) {
+    if (value.isNumeric()) {
         multiplierAnchor = 0;
         multiplierSelf = 0;
-        margin = value->floatVal();
+        margin = value.floatVal();
         return;
     }
-    string str = value->stringVal();
+    string str = value.stringVal();
     string type = str.tokenise("(");
+    str.hadSuffix(")");
 
     bool anchorMandatory = false;
     if (type=="center") *this=Center();
@@ -68,22 +69,24 @@ ALIGNSPEC::ALIGNSPEC(const StyleValue* value, View* view) {
     if (str.length() > 0) {
         string anchorName;
         StringProcessor proc(str);
-        StyleValue arg1, arg2;
-        arg1.parse(proc, PARSEFLAG_IS_ARGUMENT);
+        string tok1 = proc.nextToken(); //.parse(proc, PARSEFLAG_IS_ARGUMENT);
+        StringProcessor proc1(tok1);
+        style arg1;
+        arg1.parse(proc1);
         proc.skipWhitespace();
-        if (proc.peek()==')') {
+        if (proc.eof()) {
             if (arg1.isString()) {
                 anchorName = arg1.stringVal();
             } else {
                 margin  = arg1.floatVal();
             }
         } else {
-            arg2.parse(proc, PARSEFLAG_IS_ARGUMENT);
+            variant arg2 = variant::parse(proc, 0);
             assert(arg1.isString()); // if two args provided, first must be anchor
             assert(arg2.isNumeric()); // and second must be margin
             anchorName = arg1.stringVal();
             margin = arg2.floatVal();
-            assert(proc.peek()==')');
+            assert(proc.eof());
         }
         if (anchorName.length()) {
             anchor = view->getParent()->findViewById(anchorName);

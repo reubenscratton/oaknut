@@ -16,16 +16,16 @@ ListView::ListView() {
     _deleteConfirmIndex = LISTINDEX_NONE;
 }
 
-bool ListView::applyStyleValue(const string &name, const StyleValue *value) {
+bool ListView::applySingleStyle(const string &name, const style& value) {
     if (name=="divider-height") {
-        _dividerHeight = value->floatVal();
+        _dividerHeight = value.floatVal();
         return true;
     }
     if (name=="divider-color") {
-        _dividerColor = value->colorVal();
+        _dividerColor = value.colorVal();
         return true;
     }
-    return View::applyStyleValue(name, value);
+    return View::applySingleStyle(name, value);
 }
 
 IListAdapter* ListView::getAdapter() const {

@@ -89,6 +89,15 @@ bool Stream::readVariant(variant* val) {
         case variant::FLOAT32: return readBytes(sizeof(float), &val->_f32);
         case variant::FLOAT64: return readBytes(sizeof(double), &val->_f64);
         case variant::STRING: return readString(val->_str);
+        case variant::MEASUREMENT: {
+            float f;
+            measurement::unit type;
+            if (readBytes(4, &f) && readBytes(2, &type)) {
+                val->_measurement = measurement(f, type);
+                return true;
+            }
+            return false;
+        }
         case variant::BYTEARRAY: return readByteArray(val->_bytearray);
         case variant::ARRAY: {
             uint32_t num = 0;
@@ -139,6 +148,14 @@ bool Stream::writeVariant(const variant& val) {
     case variant::FLOAT32:return writeBytes(sizeof(float), &val._f32);
     case variant::FLOAT64:return writeBytes(sizeof(double), &val._f64);
     case variant::STRING:return writeString(*val._str);
+    case variant::MEASUREMENT: {
+        float f = val._measurement._unitVal;
+        short type = val._measurement._unit;
+        if (writeBytes(4, &f) && writeBytes(2, &type)) {
+            return true;
+        }
+        return false;
+    }
     case variant::BYTEARRAY:return writeByteArray(*val._bytearray);
     case variant::ARRAY: {
         uint32_t num = (uint32_t)val._vec->size();

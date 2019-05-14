@@ -72,7 +72,7 @@ xcode:
 		-projectdir $(XCODE_PROJECT_DIR)
 
 cmake:
-	@perl $(OAKNUT_DIR)/build/cmake.pl -projectname $(PROJECT_NAME) > CMakeLists.txt
+	@perl $(OAKNUT_DIR)/build/cmake.pl -projectname $(PROJECT_NAME)
 
 clion: cmake
 

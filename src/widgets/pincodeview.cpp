@@ -62,9 +62,9 @@ public:
     PinCodeViewField* _next;
 };
 
-bool PinCodeView::applyStyleValue(const string &name, const StyleValue *value) {
+bool PinCodeView::applySingleStyle(const string &name, const style& value) {
     if (name == "numDigits") {
-        int numDigits = value->intVal();
+        int numDigits = value.intVal();
         PinCodeViewField* prev = NULL;
         for (int i=0 ; i<numDigits ; i++) {
             PinCodeViewField* field = new PinCodeViewField();
@@ -104,7 +104,7 @@ bool PinCodeView::applyStyleValue(const string &name, const StyleValue *value) {
         }
         return true;
     }
-    return LinearLayout::applyStyleValue(name, value);
+    return LinearLayout::applySingleStyle(name, value);
 }
 
 

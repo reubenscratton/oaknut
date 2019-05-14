@@ -101,6 +101,8 @@ public:
 	// Render state
     Renderer* _renderer;
 
+    COLOR _backgroundColor;
+    
     void layout(RECT constraint) override;
     
     EDGEINSETS _safeInsetsTotal;

@@ -48,9 +48,9 @@ void EditText::onStateChanged(STATESET changedStates) {
     }
 }
 
-bool EditText::applyStyleValue(const string& name, const StyleValue* value) {
+bool EditText::applySingleStyle(const string& name, const style& value) {
     if (name == "softKeyboardType") {
-        string softKeyboardType = value->stringVal().lowercase();
+        string softKeyboardType = value.stringVal().lowercase();
         if (softKeyboardType == "phone") {
             _softKeyboardType = KeyboardPhone;
         } else if (softKeyboardType == "email") {
@@ -63,7 +63,7 @@ bool EditText::applyStyleValue(const string& name, const StyleValue* value) {
         return true;
     }
     if (name == "actionType") {
-        string actionType = value->stringVal().lowercase();
+        string actionType = value.stringVal().lowercase();
         if (actionType == "none") {
             _actionType = ActionNone;
         } else if (actionType == "next") {
@@ -80,15 +80,15 @@ bool EditText::applyStyleValue(const string& name, const StyleValue* value) {
         return true;
     }
     if (name == "next") {
-        _next = value->stringVal();
+        _next = value.stringVal();
         _actionType = ActionNext;
         return true;
     }
     if (name == "maxLength") {
-        setMaxLength(value->intVal());
+        setMaxLength(value.intVal());
         return true;
     }
-    return Label::applyStyleValue(name, value);
+    return Label::applySingleStyle(name, value);
 }
 
 void EditText::updateCursor() {

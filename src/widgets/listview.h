@@ -91,7 +91,7 @@ public:
     virtual void setAdapter(IListAdapter* adapter);
 
 	// Overrides
-    bool applyStyleValue(const string &name, const StyleValue *value) override;
+    bool applySingleStyle(const string &name, const style& value) override;
 	void layout(RECT constraint) override;
 	void updateContentSize(SIZE constrainingSize) override;
     void setContentOffset(POINT contentOffset) override;

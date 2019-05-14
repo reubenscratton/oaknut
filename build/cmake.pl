@@ -3,14 +3,14 @@
 
 # This Perl script generates a CMakeLists.txt project file for an Oaknut project.
 #
-# There's absolutely no need to build Oaknut projects with CMake, this exists to
+# There's no need to build Oaknut projects with CMake, this exists to
 # support the CLion IDE.
-
 
 
 use warnings;
 use strict;
 use File::Basename;
+use File::Path;
 use Getopt::Long;
 
 my $projectname="app";
@@ -36,7 +36,7 @@ print $fh "<config projectName=\"$projectname\" targetName=\"".$proj_macos."\" /
 print $fh "<config projectName=\"$projectname\" targetName=\"".$proj_android."\" />";
 print $fh "<config projectName=\"$projectname\" targetName=\"".$proj_web_asmjs."\" />";
 print $fh "<config projectName=\"$projectname\" targetName=\"".$proj_web_wasm."\" />";
-print $fh "<config projectName=\"$projectname\" targetName=\"".$projectname."_do_not_build\" />";
+#print $fh "<config projectName=\"$projectname\" targetName=\"".$projectname."_do_not_build\" />";
 print $fh qq(
 </generated>
 </component>
@@ -82,8 +82,28 @@ print $fh qq(
 </project>);
 close $fh;
 
+# Clean
+sub gen_clean_file {
+	my ($platform, $config) = @_;
+	my $cmdir = '.build/cmake-'.$config.'/CMakeFiles/'.$projectname.'_'.$platform.'.dir';
+	mkpath($cmdir,0,0755);
+	open(my $fh, '>', $cmdir.'/cmake_clean_CXX.cmake') or die $!;
+	print $fh 'file(REMOVE_RECURSE  "../../.build/'.$platform.'/'.$config.'")';
+	close $fh;
+}
+sub gen_clean_files {
+		gen_clean_file(@_, 'debug');
+		gen_clean_file(@_, 'release');
+}
+gen_clean_files('macos');
+gen_clean_files('ios');
+gen_clean_files('android');
+gen_clean_files('web_asmjs');
+gen_clean_files('web_wasm');
 
-print qq(cmake_minimum_required(VERSION 3.9)
+# CMakeLists.txt
+open($fh, '>', 'CMakeLists.txt');
+print $fh qq(cmake_minimum_required(VERSION 3.9)
 project($projectname)
 
 if (NOT IS_DIRECTORY \$ENV{OAKNUT_DIR})
@@ -91,5 +111,5 @@ message(FATAL_ERROR "Environment variable OAKNUT_DIR must point to the Oaknut re
 endif()
 
 include(\$ENV{OAKNUT_DIR}/build/CMakeLists.txt)
-
 );
+close $fh;

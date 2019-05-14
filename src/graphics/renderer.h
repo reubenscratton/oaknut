@@ -236,7 +236,6 @@ public:
     map<Shader::Features, sp<Shader>> _standardShaders; // standard shaders, not custom ones
     class Surface* _primarySurface;
     int _primarySurfaceFormat;
-    
 
     // Render state (used during render loop)
     bool _doneInit;

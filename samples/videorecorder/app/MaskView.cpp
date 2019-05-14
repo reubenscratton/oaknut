@@ -54,10 +54,9 @@ public:
         SL_FLOAT2 " w=" SL_FLOAT2 "(" SL_UNIFORM(holeStrokeWidth)"/2.0," SL_UNIFORM(holeStrokeWidth) "/2.0);\n"
         SL_FLOAT2 " ri=" SL_UNIFORM(holeRadii)" - w;\n"
         SL_FLOAT2 " ro=" SL_UNIFORM(holeRadii)" + w;\n"
-        SL_FLOAT2 " p=" SL_ATTRIB(texcoord) ";\n"
+        SL_FLOAT2 " p=" SL_VERTEX_OUTPUT(texcoord) ";\n"
         // Ellipse distance function adapted from 3D version at http://iquilezles.org/www/articles/distfunctions/distfunctions.htm
         SL_FLOAT1 " d_o = (length(p/ro) - 1.0) * min(ro.x,ro.y);\n"
-        SL_HALF4 " c;\n"
         "if (d_o >= 0.0) {"
             SL_OUTPIXVAL " = mix(" SL_UNIFORM(holeStrokeColour) ", " SL_UNIFORM(backgroundColour) ", " SL_HALF1 "(min(max(d_o,0.0),1.0)));\n"
         "} else {\n"

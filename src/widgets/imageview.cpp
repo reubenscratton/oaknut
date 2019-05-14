@@ -16,24 +16,24 @@ ImageView::ImageView() {
     addRenderOp(_renderOp);
 }
 
-bool ImageView::applyStyleValue(const string& name, const StyleValue* value) {
+bool ImageView::applySingleStyle(const string& name, const style& value) {
     if (name=="image") {
         if (handleStatemapDeclaration(name, value)) {
             return true;
         }
         // TODO: leverage drawable code
-        setImageAsset(value->stringVal());
+        setImageAsset(value.stringVal());
         return true;
     }
     if (name=="contentMode") {
-        string mode = value->stringVal();
+        string mode = value.stringVal();
         if (mode == "actualSize") setContentMode(ActualSize);
         else if (mode == "aspectFit") setContentMode(AspectFit);
         else if (mode == "aspectFill") setContentMode(AspectFill);
         else assert(0);
         return true;
     }
-    return View::applyStyleValue(name, value);
+    return View::applySingleStyle(name, value);
 }
 
 void ImageView::setImageUrl(const string& url) {

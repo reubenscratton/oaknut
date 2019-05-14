@@ -457,7 +457,7 @@ string::iterator::reference string::iterator::operator*() {
     return _str->readUtf8(_byteOffsetNext);
 }
 bool string::iterator::eof() const {return _byteOffset<0;}
-char* string::iterator::data() const { return _str->_p + _byteOffset; }
+char* string::iterator::data() const { return _str->_p + ((_byteOffset<0) ? _str->_cb :  _byteOffset); }
 
 
 string string::lowercase() const {

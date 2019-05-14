@@ -608,6 +608,8 @@ void GLRenderer::prepareToDraw() {
             _primarySurfaceFormat = PIXELFORMAT_RGB24;
         } else if (pixFmt == GL_RGBA) {
             _primarySurfaceFormat = PIXELFORMAT_RGBA32;
+        } else if (pixFmt == GL_BGRA) {
+            _primarySurfaceFormat = PIXELFORMAT_BGRA32;
         } else {
             assert(0); //???
         }
@@ -645,11 +647,10 @@ void GLRenderer::prepareToDraw() {
 #endif
         _currentVertexConfig = 0;
         
-        COLOR windowBackgroundColor = app.getStyleColor("window.background-color");
-        _backgroundColor[0] = (windowBackgroundColor & 0xFF) / 255.0f;
-        _backgroundColor[1] = ((windowBackgroundColor & 0xFF00)>>8) / 255.0f;
-        _backgroundColor[2] = ((windowBackgroundColor & 0xFF0000)>>16) / 255.0f;
-        _backgroundColor[3] = ((windowBackgroundColor & 0xFF000000)>>24) / 255.0f;
+        _backgroundColor[0] = (_window->_backgroundColor & 0xFF) / 255.0f;
+        _backgroundColor[1] = ((_window->_backgroundColor & 0xFF00)>>8) / 255.0f;
+        _backgroundColor[2] = ((_window->_backgroundColor & 0xFF0000)>>16) / 255.0f;
+        _backgroundColor[3] = ((_window->_backgroundColor & 0xFF000000)>>24) / 255.0f;
         check_gl(glClearColor, _backgroundColor[0],_backgroundColor[1],_backgroundColor[2],_backgroundColor[3]);
     }
     if (_backgroundColor[3] > 0.f) {

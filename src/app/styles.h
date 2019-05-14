@@ -5,30 +5,77 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+
 /**
- * @ingroup app_group
- * @brief Represents a measurement in one of the following units:
- *
- * * `PX`  Pixels
- * * `DP`  Device-independent Pixels
- * * `SP`  Scaled Pixels
- * * `PC`  Percent
+ Style work needed:
+ 
+ - Replace StyleValue with a Style type that contains a map of strings to variants and a pointer to its parent.
+ - Restore the cascadeability, e.g. looking up a style entry will look to parent style if it doesnt have it.
+ -
+ 
  */
-class measurement {
+
+
+class style {
 public:
-    
-    /** Returns the measurement value in pixels */
-    float val() const;
-    enum {
-        PX,
-        DP,
-        SP,
-        PC
+    style* _parent;
+    enum type {
+        TypeSimple,
+        TypeReference,
+        TypeArray,
+        TypeCompound,
+        TypeQual
+    } type;
+    union {
+        variant var;                   // value is simple
+        const style* reference;
+        vector<style>* array;
+        map<string,style>* compound;   // value is compound (or qualified)
     };
-    measurement(float v, int unit) : _val(v), _unit(unit) {}
-    int _unit;
-private:
-    float _val;
+    style();
+    style(const style&);
+    style(style&& rval) noexcept;
+    ~style();
+    
+    style& operator=(const style& other);
+    
+    // Type testing
+    bool isEmpty() const;
+    bool isNumeric() const;
+    bool isFloatingPoint() const;
+    bool isString() const;
+    bool isMeasurement() const;
+    bool isArray() const;
+    bool isCompound() const;
+        
+    // Accessors
+    const variant& variantVal() const;
+    string stringVal() const;
+    int intVal() const;
+    float floatVal() const;
+    bool boolVal() const;
+    measurement measurementVal() const;
+    EDGEINSETS edgeInsetsVal() const;
+    COLOR colorVal() const;
+    VECTOR4 cornerRadiiVal() const;
+    float fontWeightVal() const;
+    const vector<style>& arrayVal() const;
+
+    // Compound accessors
+    string stringVal(const char* name) const;
+    const vector<style>& arrayVal(const char* name) const;
+
+    bool parse(class StringProcessor& it);
+    void importNamedValues(const map<string,style>& styleValues);
+
+protected:
+    const style* resolve() const;
+    void copyFrom(const style* other);
+    void setType(enum type newType);
+    void fromVariant(const variant& v);
+    const style* get(const string& name) const;
+    friend class App;
+    friend class Styleable;
 };
 
 /**
@@ -40,98 +87,15 @@ private:
  * Is alarmingly similar to the 'variant' type with which it should probably be unified.
  */
 
+/*
 class StyleValue {
 public:
-    enum Type {
-        Empty,
-        Int,
-        Float,
-        String,
-        Array, // value is an array of two or more values
-        Compound, // value is a set of key-value pairs
-        // Additional style-specific types
-        Measure,
-        Reference, // value is the name of another StyleValue, defined elsewhere
-        QualifiedCompound // value is compound where they keys are qualifiers. Zero-length key maps to default value.
-    } type;
 
-    /** @name Constructors
-     * @{
-     */
-    StyleValue();
-    StyleValue(const StyleValue&);
-    StyleValue(StyleValue&&) noexcept;
-    /** @} */
-    
-    /**  @cond INTERNAL */
-    ~StyleValue();
-    StyleValue& operator=(const StyleValue& other);
-    /**  @endcond */
-
-    /** @name Type tests
-     * @{
-     */
-    bool isEmpty() const;
-    bool isNumeric() const;
-    bool isString() const;
-    bool isMeasurement() const;
-    bool isArray() const;
-    /** @} */
-
-    /** @name Accessors
-     * @{
-     */
-    int intVal() const;
-    bool boolVal() const;
-    float floatVal() const;
-    string stringVal() const;
-    measurement measurementVal() const;
-    COLOR colorVal() const;
-    const vector<StyleValue>& arrayVal() const;
-    const map<string, StyleValue>& compoundVal() const;
-    VECTOR4 cornerRadiiVal() const;
-    EDGEINSETS edgeInsetsVal() const;
-    float fontWeightVal() const;
-    /** @} */
-
-    /** @name Compound accessors
-     * @{
-     */
-    const StyleValue* get(const string& keypath) const;
-    int intVal(const string& name) const;
-    float floatVal(const string& name) const;
-    string stringVal(const string& name) const;
-    const vector<StyleValue>& arrayVal(const string& name) const;
+    const style* get(const string& keypath) const;
     void importValues(const map<string, StyleValue>& values);
-    /** @} */
 
 
-#define PARSEFLAG_IN_ARRAY 1
-#define PARSEFLAG_IS_ARGUMENT 2
-    
-    /** @name Parsing
-     * @{
-     */
-    bool parse(class StringProcessor& it, int flags=0);
-    /** @} */
-
-private:
-    void setType(Type newType);
-    void copyFrom(const StyleValue* other);
-    union {
-        int i;
-        float f;
-        string str; // includes refs
-        measurement _measurement;
-        vector<StyleValue>* array;
-        map<string, StyleValue>* compound;
-    };
-
-    const StyleValue* select() const;
-
-
-    bool parseNumberOrMeasurement(StringProcessor& it);
-};
+};*/
 
 /**
  * @ingroup app_group
@@ -142,12 +106,12 @@ private:
  */
 class Styleable : public Object {
 public:
-    virtual void applyStyle(const string& style);
-    virtual void applyStyle(const class StyleValue& value);
+    virtual void applyStyle(const string& styleName);
+    virtual void applyStyle(const style& style);
     
 protected:
-    /** Applies a single style value for the given attribute name. Custom views
+    /** Applies a single resolved style for the given attribute name. Custom views
      should override this method to add support for custom attributes. */
-    virtual bool applyStyleValue(const string& name, const StyleValue* value) = 0;
+    virtual bool applySingleStyle(const string& name, const style& style) = 0;
 };
 

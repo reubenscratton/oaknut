@@ -98,7 +98,7 @@ void URLRequest::dispatchResult(int httpStatus, const map<string, string>& respo
         if (contentType.contains("json")) {
             string str = _responseData.toString();
             StringProcessor it(str);
-            json = variant::parse(it, 0);
+            json = variant::parse(it, PARSEFLAG_JSON);
         }
         retain();
         App::postToMainThread([=]() {

@@ -68,13 +68,13 @@ void TextRenderer::measure() {
     measure({0,0});
 }
 
-bool TextRenderer::applyStyleValue(const string& name, const StyleValue* value) {
+bool TextRenderer::applySingleStyle(const string& name, const style& value) {
     if (name == "forecolor") {
-        setColor(value->colorVal());
+        setColor(value.colorVal());
         return true;
     }
     if (name == "font-size") {
-        setFontSize(value->floatVal());
+        setFontSize(value.floatVal());
         return true;
     }
     return false;

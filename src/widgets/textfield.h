@@ -14,7 +14,7 @@ public:
     void setText(const string& text);
     
     // Overrides
-    bool applyStyleValue(const string& name, const StyleValue* value) override;
+    bool applySingleStyle(const string& name, const style& value) override;
     bool requestFocus() override;
     
 protected:

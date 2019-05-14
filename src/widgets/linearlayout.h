@@ -22,7 +22,7 @@ public:
     void layoutSubviews(RECT constraint) override;
 	void addSubview(View* subview) override;
 	void removeSubview(View* subview) override;
-    bool applyStyleValue(const string& name, const StyleValue* value) override;
+    bool applySingleStyle(const string& name, const style& value) override;
 
 protected:
     void setWeight(View* subview, float weight);

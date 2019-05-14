@@ -53,7 +53,7 @@ public:
     void getCharacterOrigin(int32_t characterIndex, POINT* origin, float* ascent, float* descent) const;
     
     /** Styleable */
-    bool applyStyleValue(const string& name, const StyleValue* value) override;
+    bool applySingleStyle(const string& name, const style& value) override;
 
     
     typedef struct {

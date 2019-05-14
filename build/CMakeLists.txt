@@ -57,16 +57,15 @@ if (APPLE)
 
 endif ()
 
+
 # Ignore this target, it exists so CLion's Intellisense detects Oaknut source code
 # Cmake does not let you specify include directories for a custom target, very silly
-add_executable(${PROJECT_NAME}_do_not_build ${SOURCES})
-target_include_directories(${PROJECT_NAME}_do_not_build SYSTEM PUBLIC $ENV{OAKNUT_DIR}/src
-    /usr/include/gtk-3.0
-        /usr/include/pango-1.0
-        /usr/include/harfbuzz
-        /usr/include/freetype2
-        /usr/include/gdk-pixbuf-2.0
-        /usr/include/cairo
-        /usr/include/glib-2.0)
-
-
+#add_executable(${PROJECT_NAME}_do_not_build ${SOURCES})
+#target_include_directories(${PROJECT_NAME}_do_not_build SYSTEM PUBLIC $ENV{OAKNUT_DIR}/src
+#    /usr/include/gtk-3.0
+#        /usr/include/pango-1.0
+#        /usr/include/harfbuzz
+#        /usr/include/freetype2
+#        /usr/include/gdk-pixbuf-2.0
+#        /usr/include/cairo
+#        /usr/include/glib-2.0)

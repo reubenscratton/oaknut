@@ -51,7 +51,7 @@ public:
 
     /** @name Overrides
      * @{ */
-    bool applyStyleValue(const string &name, const StyleValue *value) override;
+    bool applySingleStyle(const string &name, const style& value) override;
 	void updateContentSize(SIZE constrainingSize) override;
 	void layout(RECT constraint) override;
     void updateRenderOps() override;

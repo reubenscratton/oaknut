@@ -224,7 +224,7 @@ JAVA_FN(jlong, MainActivity, onCreateNative)(JNIEnv *env, jobject obj,
         ViewController* rootVC = ((ViewController* (*)(void*))rootVCcreator)(NULL);
         window->setRootViewController((ViewController*)rootVC);
     }
-    //window->show();
+    window->show();
     return (jlong)window;
 }
 

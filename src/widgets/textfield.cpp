@@ -17,23 +17,23 @@ TextField::TextField() {
     applyStyle("TextField");
 }
 
-bool TextField::applyStyleValue(const string& name, const StyleValue* value) {
+bool TextField::applySingleStyle(const string& name, const style& value) {
     if (name == "label") {
-        if (value->isString()) {
-            _label->setText(value->stringVal());
+        if (value.isString()) {
+            _label->setText(value.stringVal());
         } else {
-            _label->applyStyle(*value);
+            _label->applyStyle(value);
         }
         return true;
     }
     if (name == "actionType" || name == "next") {
-        return editText->applyStyleValue(name, value);
+        return editText->applySingleStyle(name, value);
     }
     if (name == "edittext") {
-        editText->applyStyle(*value);
+        editText->applyStyle(value);
         return true;
     }
-    return View::applyStyleValue(name, value);
+    return View::applySingleStyle(name, value);
 }
 
 bool TextField::requestFocus() {
