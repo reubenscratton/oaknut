@@ -17,6 +17,7 @@ public:
     string::iterator current() const { return _it; }
 
 	void skipWhitespace();
+    void skipWhitespaceAndComments();
     void skipSpacesAndTabs();
     string nextToken();
     string nextNumber();

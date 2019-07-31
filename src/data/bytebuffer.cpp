@@ -70,7 +70,7 @@ bool ByteBuffer::writeSelfToStream(Stream* stream) const {
 ByteBuffer* ByteBuffer::createFromFile(const string &path) {
     FILE *file = fopen(path.data(), "rb");
     if (!file) {
-        app.log("Failed to open file: %s", path.data());
+        app->log("Failed to open file: %s", path.data());
         return NULL;
     }
     ByteBuffer* data = new ByteBuffer();
@@ -87,7 +87,7 @@ ByteBuffer* ByteBuffer::createFromFile(const string &path) {
 void ByteBuffer::saveToFile(const string& path) {
     FILE *file = fopen(path.data(), "w+b");
     if (!file) {
-        app.log("Failed to open %s", path.data());
+        app->log("Failed to open %s", path.data());
         return;
     }
     fwrite(data, cb, 1, file);

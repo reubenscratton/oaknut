@@ -63,16 +63,18 @@ public:
 
     // Compound accessors
     string stringVal(const char* name) const;
+    COLOR colorVal(const char* name) const;
     const vector<style>& arrayVal(const char* name) const;
+    EDGEINSETS edgeInsetsVal(const char* name) const;
 
     bool parse(class StringProcessor& it);
     void importNamedValues(const map<string,style>& styleValues);
+    void fromVariant(const variant& v);
 
 protected:
     const style* resolve() const;
     void copyFrom(const style* other);
     void setType(enum type newType);
-    void fromVariant(const variant& v);
     const style* get(const string& name) const;
     friend class App;
     friend class Styleable;

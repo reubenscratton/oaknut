@@ -7,9 +7,11 @@
 
 #include <oaknut.h>
 
-App oak::app;
+App* oak::app;
 
 App::App() {
+    assert(!app);
+    app = this;
     StringProcessor parser(
 #include "styles.res"
     );
@@ -34,19 +36,19 @@ void App::warn(char const* fmt, ...) {
 
 
 float App::dp(float dp) {
-    return dp*_window->_scale;
+    return dp*_defaultDisplay->_scale;
 }
 float App::idp(float pix) {
-    return pix/_window->_scale;
+    return pix/_defaultDisplay->_scale;
 }
 
 
 void App::loadStyleAsset(const string& assetPath) {
-    sp<ByteBuffer> data = app.loadAsset(assetPath.data());
-    if (!data) {
+    bytearray data;
+    if (!loadAsset(assetPath.data(), data)) {
         return;
     }
-    StringProcessor it(data->toString(false));
+    StringProcessor it(data.toString());
     style s;
     s.parse(it);
     assert(s.isCompound());
@@ -65,7 +67,7 @@ string App::getStyleString(const string& keypath, const char* defaultString) {
         if (defaultString) {
             return string(defaultString);
         }
-        app.warn("Missing string style info '%s'", keypath.data());
+        app->warn("Missing string style info '%s'", keypath.data());
         return "";
     }
     return value->stringVal();
@@ -74,7 +76,7 @@ string App::getStyleString(const string& keypath, const char* defaultString) {
 float App::getStyleFloat(const string& keypath) {
     auto value = getStyle(keypath);
     if (!value) {
-        app.warn("Missing float style info '%s'", keypath.data());
+        app->warn("Missing float style info '%s'", keypath.data());
         return 0;
     }
     return value->floatVal();
@@ -82,7 +84,7 @@ float App::getStyleFloat(const string& keypath) {
 COLOR App::getStyleColor(const string& key) {
     auto value = getStyle(key);
     if (!value) {
-        app.warn("Missing color style info '%s'", key.data());
+        app->warn("Missing color style info '%s'", key.data());
         return 0;
     }
     return value->colorVal();
@@ -112,11 +114,11 @@ static View* inflateFromResource(const style& value, View* parent) {
 
 
 void App::layoutInflateExistingView(View* view, const string& assetPath) {
-    sp<ByteBuffer> data = loadAsset(assetPath.data());
-    if (!data) {
+    bytearray data;
+    if (!loadAsset(assetPath.data(), data)) {
         return;
     }
-    StringProcessor it(data->toString(false));
+    StringProcessor it(data.toString());
     style layoutRoot;
     layoutRoot.parse(it);
     assert(layoutRoot.isCompound());
@@ -132,11 +134,11 @@ void App::layoutInflateExistingView(View* view, const string& assetPath) {
 }
 
 View* App::layoutInflate(const string& assetPath) {
-    sp<ByteBuffer> data = loadAsset(assetPath.data());
-    if (!data) {
+    bytearray data;
+    if (!loadAsset(assetPath.data(), data)) {
         return NULL;
     }
-    StringProcessor it(data->toString(false));
+    StringProcessor it(data.toString());
     style layoutRoot;
     layoutRoot.parse(it);
     assert(layoutRoot.isCompound());
@@ -164,4 +166,43 @@ string App::friendlyTimeString(TIMESTAMP timestamp) {
     struct tm* tm = localtime(&time);
     strftime(buff, sizeof(buff), "%d %b %Y", tm);
     return buff;
+}
+
+
+
+// Generic file handling
+bool App::fileLoad(const string& path, bytearray& fileContents) const {
+    string rpath = path;
+    if (!fileResolve(rpath)) {
+        return false;
+    }
+    FILE* file = fopen(rpath.data(), "rb");
+    if (!file) {
+        app->warn("Failed to open %s", path.data());
+        return false;
+    }
+    fseek (file, 0, SEEK_END);
+    uint64_t cb = ftell(file);
+    fileContents.resize(cb);
+    fseek (file, 0, SEEK_SET);
+    size_t read = fread(fileContents.data(), 1, cb, (FILE*)file);
+    assert(read == cb);
+    fclose(file);
+    return true;
+}
+
+bool App::loadAsset(const char* assetPath, bytearray& data) {
+    string path = "//assets/";
+    path += assetPath;
+    return fileLoad(path, data);
+}
+
+void App::subscribe(const char* notificationName, Object* observer, std::function<void(const char*, void*, variant&)> callback, void* source/*=NULL*/) {
+    
+}
+void App::notify(const char* notificationName, void* source/*=NULL*/, variant data/*=variant()*/) {
+    
+}
+void App::unsubscribe(const char* notificationName, Object* observer) {
+    
 }

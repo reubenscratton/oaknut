@@ -116,7 +116,7 @@ self.delegate->onNewAudioSamples(appBuffer.mutableBytes, numBytes);
  }
  OSStatus encoderCallback(UInt32* ioNumberDataPackets, AudioBufferList* ioData) {
  UInt32 cbWanted = *ioNumberDataPackets * _audioConverterInputFormat.mBytesPerPacket;
- //app.log("Callback wants %d packets (%d bytes) we have %d bytes available", *ioNumberDataPackets, cbWanted, self.audioConverterInputBuffer.length);
+ //app->log("Callback wants %d packets (%d bytes) we have %d bytes available", *ioNumberDataPackets, cbWanted, self.audioConverterInputBuffer.length);
  //assert(cbWanted <= self.audioConverterInputBuffer.length);
  if (_audioConverterInputBuffer.length == 0) {
  ioData->mBuffers[0].mData = NULL;

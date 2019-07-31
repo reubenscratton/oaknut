@@ -33,7 +33,7 @@ void FaceDetector::detectFaces(class Bitmap* bitmap, const RECT& roiRect, std::f
     bitmap->unlock(&pixelData, false);
     process(data_in, [=](const variant& data_out) {
         vector<RECT> results;
-        auto& vresults = data_out.arrayVal();
+        auto& vresults = data_out.arrayRef();
         for (auto& vrect : vresults) {
             RECT rect;
             rect.origin.x = vrect.floatVal("x");
@@ -42,7 +42,7 @@ void FaceDetector::detectFaces(class Bitmap* bitmap, const RECT& roiRect, std::f
             rect.size.height = vrect.floatVal("height");
             results.push_back(rect);
         }
-        //app.log("Found %d faces!", results.size());
+        //app->log("Found %d faces!", results.size());
         resultCallback(results);
         _isBusy = false;
     });

@@ -15,6 +15,15 @@ int App::getIntSetting(const char *key, const int defaultValue) {
 void App::setIntSetting(const char* key, const int value) {
     [[NSUserDefaults standardUserDefaults] setObject:@(value) forKey:[NSString stringWithCString:key encoding:NSUTF8StringEncoding]];
 }
+
+bool App::getBoolSetting(const char *key, const bool defaultValue) {
+    id val = [[NSUserDefaults standardUserDefaults] objectForKey:[NSString stringWithCString:key encoding:NSUTF8StringEncoding]];
+    return val ? [val boolValue] : defaultValue;
+}
+void App::setBoolSetting(const char* key, const bool value) {
+    [[NSUserDefaults standardUserDefaults] setObject:@(value) forKey:[NSString stringWithCString:key encoding:NSUTF8StringEncoding]];
+}
+
 string App::getStringSetting(const char *key, const char* defaultValue) {
     id val = [[NSUserDefaults standardUserDefaults] objectForKey:[NSString stringWithCString:key encoding:NSUTF8StringEncoding]];
     if (!val) {
@@ -37,27 +46,6 @@ TIMESTAMP App::currentMillis() {
 
 string App::currentCountryCode() const {
     return [NSLocale currentLocale].countryCode.UTF8String;
-}
-
-static string getPath(NSSearchPathDirectory spd) {
-    // TODO: Create a 'appname' subdirectory for app support and cache options rather than blart all over the root dir
-    NSURL* url = [[[NSFileManager defaultManager] URLsForDirectory:spd inDomains:NSUserDomainMask] lastObject];\
-    string str = url.fileSystemRepresentation;
-    [[NSFileManager defaultManager] createDirectoryAtPath:[NSString stringWithCString:str.data() encoding:NSUTF8StringEncoding] withIntermediateDirectories:YES attributes:nil error:nil];
-    return str;
-}
-
-string App::getPathForGeneralFiles() {
-    return getPath(NSApplicationSupportDirectory);
-}
-string App::getPathForUserDocuments() {
-    return getPath(NSDocumentDirectory);
-}
-string App::getPathForCacheFiles() {
-    return getPath(NSCachesDirectory);
-}
-string App::getPathForTemporaryFiles() {
-    return NSTemporaryDirectory().fileSystemRepresentation;
 }
 
 
@@ -155,33 +143,102 @@ TaskQueue* TaskQueue::create(const string& name) {
 */
 
 
-
-ByteBuffer* App::loadAsset(const char* assetPath) {
-
-    NSString* path = [NSBundle bundleForClass:NSClassFromString(@"NativeView")].bundlePath;
-    string str = string([path UTF8String]);
-#if TARGET_OS_OSX
-    str.append("/Contents/Resources/");
-#endif
-    str.append("/assets/");
-    str.append(assetPath);
-    FILE* asset = fopen(str.data(), "rb");
-    if (!asset) {
-        app.log("Failed to open asset: %s", assetPath);
-        return NULL;
+bool App::fileResolve(string& path) const {
+    if (!path.hasPrefix("//")) {
+        return true;
     }
     
-    ByteBuffer* data = new ByteBuffer();
-    fseek (asset, 0, SEEK_END);
-    data->cb = ftell(asset);
-    data->data = (uint8_t*) malloc (sizeof(char)*data->cb);
-    fseek ((FILE*)asset, 0, SEEK_SET);
-    size_t read = fread(data->data, 1, data->cb, (FILE*)asset);
-    assert(read == data->cb);
-    fclose(asset);
-    return data;
+    //assets/...
+    if (path.hasPrefix("//assets/")) {
+        path.erase(0); // remove just the leading slash, leaving the path as '/assets/...'
+        string bundlepath = [NSBundle bundleForClass:NSClassFromString(@"NativeView")].bundlePath.UTF8String;
+#if TARGET_OS_OSX
+        bundlepath.append("/Contents/Resources/");
+#endif
+        path.insert(0, bundlepath);
+        return true;
+    }
     
+    //data/... : ~/Library/Application Support/<bundleid>/...
+    if (path.hadPrefix("//data/")) {
+        NSURL* url = [[[NSFileManager defaultManager] URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask] lastObject];
+        url = [url URLByAppendingPathComponent:[[NSBundle mainBundle] bundleIdentifier]];
+        path.insert(0, url.fileSystemRepresentation);
+        return true;
+    }
+    
+    //cache/... : ~/Library/Caches/<bundleid>/...
+    if (path.hadPrefix("//cache/")) {
+        NSURL* url = [[[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask] lastObject];
+        url = [url URLByAppendingPathComponent:[[NSBundle mainBundle] bundleIdentifier]];
+        path.insert(0, url.fileSystemRepresentation);
+        return true;
+    }
+    
+    //docs/... : ~/Documents/...
+    if (path.hadPrefix("//docs/")) {
+        NSURL* url = [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
+        path.insert(0, url.fileSystemRepresentation);
+        return true;
+    }
+
+    //tmp/... : ~/Documents/...
+    if (path.hadPrefix("//tmp/")) {
+        path.insert(0, NSTemporaryDirectory().fileSystemRepresentation);
+        return true;
+    }
+
+    // :-(
+    app->warn("Unknown path: %s", path.data());
+    return false;
 }
+    
+bool App::fileEnsureFolderExists(string& path) const {
+    if (!fileResolve(path)) {
+        return false;
+    }
+    [[NSFileManager defaultManager] createDirectoryAtPath:[NSString stringWithUTF8String:path.data()] withIntermediateDirectories:YES attributes:nil error:nil];
+    return true;
+}
+
+
+bool App::fileExists(string& path) const {
+    if (!fileResolve(path)) {
+        return false;
+    }
+    return [[NSFileManager defaultManager] fileExistsAtPath:[NSString stringWithUTF8String:path.data()]];
+}
+uint64_t App::fileSize(string& path) const {
+    if (!fileResolve(path)) {
+        return 0;
+    }
+    NSError* err = nil;
+    NSDictionary* fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[NSString stringWithUTF8String:path.data()] error:&err];
+    if (err) {
+        app->warn("Error getting attributes for file at %s", path.data());
+        return 0;
+    }
+    
+    NSNumber *fileSizeNumber = [fileAttributes objectForKey:NSFileSize];
+    return [fileSizeNumber longLongValue];
+}
+//    return fopen(str.data(), "rb");
+
+vector<string> App::fileList(string& dir) const {
+    fileResolve(dir);
+    NSError* error = nil;
+    NSArray<NSString*>* foo = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[NSString stringWithUTF8String:dir.data()]  error:(NSError * _Nullable *)&error];
+    assert(!error);
+    vector<string> files;
+    for (NSString* e : foo) {
+        files.push_back(e.UTF8String);
+    }
+    return files;
+
+}
+
+
+
 
 
 string string::uuid() {

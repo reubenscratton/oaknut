@@ -44,7 +44,7 @@ void ProgressSpinner::redraw() {
     COLOR colour = _effectiveTintColor;
     assert(colour); // this widget expects a tint colour
     _canvas->setAffineTransform(NULL);
-    float dotSize = app.dp(5);
+    float dotSize = app->dp(5);
     float midX = getWidth() / 2;
     float midY = getHeight() / 2;
     float rx = (_rect.size.width - dotSize) / 2;

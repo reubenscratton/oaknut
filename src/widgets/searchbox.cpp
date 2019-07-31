@@ -22,7 +22,7 @@ void SearchBox::setSearchTextChangedDelegate(SEARCHTEXTCHANGED delegate) {
 }
 
 float SearchBox::spaceForSearchIcon() {
-    return app.dp(18);
+    return app->dp(18);
 }
 void SearchBox::setPadding(EDGEINSETS padding) {
     padding.left += spaceForSearchIcon();
@@ -32,7 +32,7 @@ void SearchBox::setPadding(EDGEINSETS padding) {
 RECT SearchBox::getIconRect(float val) {
     RECT rect = getOwnRectPadded();
     
-    SIZE searchIconSize = {app.dp(16),app.dp(16)};
+    SIZE searchIconSize = {app->dp(16),app->dp(16)};
     
     rect.origin.y = rect.midY() - searchIconSize.height / 2;
     rect.size.height = searchIconSize.height;

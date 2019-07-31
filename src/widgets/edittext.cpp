@@ -58,7 +58,7 @@ bool EditText::applySingleStyle(const string& name, const style& value) {
         } else if (softKeyboardType == "general") {
             _softKeyboardType = KeyboardGeneral;
         } else {
-            app.warn("invalid softKeyboardType '%s'", softKeyboardType.data());
+            app->warn("invalid softKeyboardType '%s'", softKeyboardType.data());
         }
         return true;
     }
@@ -75,7 +75,7 @@ bool EditText::applySingleStyle(const string& name, const style& value) {
         } else if (actionType == "go") {
             _actionType = ActionGo;
         } else {
-            app.warn("invalid actionType '%s'", actionType.data());
+            app->warn("invalid actionType '%s'", actionType.data());
         }
         return true;
     }
@@ -136,7 +136,7 @@ void EditText::updateCursor() {
 
 void EditText::setPadding(EDGEINSETS padding) {
     if (_showClearButtonWhenNotEmpty) {
-        padding.right += app.dp(16);
+        padding.right += app->dp(16);
     }
     Label::setPadding(padding);
 }
@@ -172,8 +172,8 @@ void EditText::updateClearButton() {
             if (!_clearButtonOp) {
                 _clearButtonOp = new TextureRenderOp("images/edittext_clear.png", 0xff999999);
                 RECT rect = getOwnRectPadded();
-                _clearButtonOp->_rect.origin.x = rect.origin.x+rect.size.width-app.dp(22);
-                _clearButtonOp->_rect.origin.y = rect.origin.y+(rect.size.height-app.dp(22)) / 2;
+                _clearButtonOp->_rect.origin.x = rect.origin.x+rect.size.width-app->dp(22);
+                _clearButtonOp->_rect.origin.y = rect.origin.y+(rect.size.height-app->dp(22)) / 2;
                 addRenderOp(_clearButtonOp);
             }
         }

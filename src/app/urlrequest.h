@@ -60,6 +60,8 @@ public:
     
     /** Process the response on the downloading thread and maybe dispatch some other kind of handler */
     std::function<bool(int,const map<string, string>&)> onGotResponseInBackground;
+    std::function<bool(variant& json)> onGotJsonInBackground;
+    
     /**@}*/
 
     

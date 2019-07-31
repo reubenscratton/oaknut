@@ -26,16 +26,17 @@ static bool s_mouseIsDown;
     INPUTEVENT inputEvent;
     inputEvent.type = type;
     inputEvent.deviceIndex = 0;
+    float scale = app->_defaultDisplay->_scale;
     CGPoint pt = event.locationInWindow;
     pt.y = self.frame.size.height - pt.y;
-    inputEvent.pt.x = pt.x*_oaknutWindow->_scale;
-    inputEvent.pt.y = pt.y*_oaknutWindow->_scale;
+    inputEvent.pt.x = pt.x * scale;
+    inputEvent.pt.y = pt.y * scale;
     inputEvent.time = event.timestamp*1000;
     if (isScrollWheel) {
         inputEvent.deviceType = INPUTEVENT::ScrollWheel;
         inputEvent.delta = {
-            (float)(event.scrollingDeltaX*_oaknutWindow->_scale),
-            (float)(event.scrollingDeltaY*_oaknutWindow->_scale)};
+            (float)(event.scrollingDeltaX * scale),
+            (float)(event.scrollingDeltaY * scale)};
     } else {
         inputEvent.deviceType = INPUTEVENT::Mouse;
     }
@@ -120,13 +121,13 @@ static bool s_mouseIsDown;
     NSRect viewRectPoints = [self bounds];
     NSRect viewRectPixels = [self convertRectToBacking:viewRectPoints];
     
-    CGFloat scale = viewRectPixels.size.width / viewRectPoints.size.width;
+    //CGFloat scale = viewRectPixels.size.width / viewRectPoints.size.width;
     
     self.layer.bounds = self.bounds;
     _metalLayer.bounds = self.bounds;
     _metalLayer.drawableSize = viewRectPixels.size;
 
-    _oaknutWindow->resizeSurface(viewRectPixels.size.width, viewRectPixels.size.height, scale);
+    _oaknutWindow->resizeSurface(viewRectPixels.size.width, viewRectPixels.size.height);
     
     [self setNeedsDisplay:YES];
 }

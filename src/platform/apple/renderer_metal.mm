@@ -396,7 +396,7 @@ public:
         _metalLayer.device = _device;
         _metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
         _metalLayer.framebufferOnly = false;//true;
-        _metalLayer.contentsScale = _window->_scale;// [NSScreen mainScreen].backingScaleFactor;
+        _metalLayer.contentsScale = app->_defaultDisplay->_scale;// [NSScreen mainScreen].backingScaleFactor;
 #if PLATFORM_MACOS
         _metalLayer.displaySyncEnabled = 0;
 #endif

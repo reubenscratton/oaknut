@@ -123,31 +123,35 @@ public:
     bool operator ==(int val) {return (type==INT32 && _i32==val) || (type==UINT32 && _u32==val); }
     bool operator ==(const string& val) {return type==STRING && _str->compare(val)==0; }
     
-    // Accessors
+    // Accessors (by value, some types are coerced)
     int intVal() const;
-    string stringVal() const;
-    bool boolVal() const;
-    float floatVal() const;
-    double doubleVal() const;
-    const vector<variant>& arrayVal() const;
-    const bytearray& bytearrayVal() const;
-    vector<string> stringArrayVal() const;
-    measurement measurementVal() const;
-    const map<string, variant>& compoundVal() const;
-
-    // Compound accessors
     int intVal(const char* name) const;
+    string stringVal() const;
     string stringVal(const char* name) const;
+    bool boolVal() const;
+    bool boolVal(const char* name) const;
+    float floatVal() const;
     float floatVal(const char* name) const;
+    double doubleVal() const;
     double doubleVal(const char* name) const;
-    const bytearray& bytearrayVal(const char* name) const;
+    measurement measurementVal() const;
+    vector<string> stringArrayVal() const;
     vector<string> stringArrayVal(const char* name) const;
-    const vector<variant>& arrayVal(const char* name) const;
+
+    // Accessors (by reference, no coercion)
+    string& stringRef() const;
+    vector<variant>& arrayRef() const;
+    vector<variant>& arrayRef(const char* name) const;
+    bytearray& bytearrayRef() const;
+    bytearray& bytearrayRef(const char* name) const;
+    map<string, variant>& compoundRef() const;
+    map<string, variant>& compoundRef(const char* name) const;
+
     template <class T>
-    vector<sp<T>> arrayVal(const char* name) const {
+    vector<sp<T>> arrayOf(const char* name) const {
         static_assert(std::is_base_of<ISerializeToVariant, T>::value, "T must implement ISerializeToVariant");
         vector<sp<T>> vec;
-        auto a = arrayVal(name);
+        auto& a = arrayRef(name);
         for (auto& e : a) {
             T* t = new T();
             t->fromVariant(e);
@@ -206,18 +210,11 @@ public:
         return (*((_map->insert(std::make_pair(string(key),variant()))).first)).second;
     }
 
-    /*map<string,variant>::iterator mapBegin() const {
-        assert(type==MAP);
-        return _map->begin();
-    }
-    map<string,variant>::iterator mapEnd() const {
-        assert(type==MAP);
-        return _map->end();
-    }*/
-
-    const variant* get(const string& keypath) const;
+    variant& get(const string& keypath) const;
+    bool hasVal(const string& key) const;
     void set(const string& key, const variant& val);
     void set(const string& key, ISerializeToVariant* object);
+    void unset(const string& key);
     void clear();
     void appendVal(const variant& v);
     

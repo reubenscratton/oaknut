@@ -24,6 +24,7 @@ public:
     
     Attribute(Type type, COLOR color) : _type(type), _color(color) {}
     Attribute(Type type, float f) : _type(type), _f(f) {}
+    Attribute(oak::Font* font) : _type(Font), _font(font) {}
     ~Attribute() { if (_type == Font) { _font.~sp(); } }
     Attribute(const Attribute& attr) : _type(attr._type) {
         assign(attr);
@@ -55,6 +56,7 @@ public:
             case FontWeight: _f = src._f; break;
         }
     }
+    static Attribute font(oak::Font* font) { return Attribute(font); }
     static Attribute bold() { return Attribute(FontWeight, FONT_WEIGHT_BOLD); }
     static Attribute forecolor(COLOR color) { return Attribute(Forecolor, color); }
     static Attribute leadingSpace(float space) { return Attribute(LeadingSpace,  space); }
@@ -75,6 +77,7 @@ public:
     void clearAttributes();
     AttributedString& operator=(const AttributedString& str);
 
+    void applyStyle(const class style* s);
     
     friend class TextRenderer;
     

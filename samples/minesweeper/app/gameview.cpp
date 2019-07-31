@@ -25,7 +25,7 @@ GameView::GameView() {
     _imgNumbers[6] = atlas->importAsset("images/6.png");
     _imgNumbers[7] = atlas->importAsset("images/7.png");
     _imgNumbers[8] = atlas->importAsset("images/8.png");
-    _cellSize = app.dp(25);
+    _cellSize = app->dp(25);
 }
 
 void GameView::setGame(Game* game) {

@@ -10,6 +10,7 @@
 
 
 DECLARE_DYNCREATE(View);
+//static ClassRegistrar<View> s_classRegView(View);
 
 View::View() : _alpha(1.0f),
                 _alignspecHorz(ALIGNSPEC::Left()),
@@ -21,14 +22,14 @@ View::View() : _alpha(1.0f),
 }
 
 View::~View() {
-//	app.log("~View()");
+//	app->log("~View()");
     if (_statemapStyleValues) {
         delete _statemapStyleValues;
     }
 }
 
 void View::inflate(const string& layoutFile) {
-    app.layoutInflateExistingView(this, layoutFile);
+    app->layoutInflateExistingView(this, layoutFile);
 }
 
 
@@ -78,7 +79,7 @@ bool View::applySingleStyle(const string& name, const style& value) {
         } else if (str == "gone") {
             setVisibility(Gone);
         } else {
-            app.warn("Invalid visibility: '%s'", str.data());
+            app->warn("Invalid visibility: '%s'", str.data());
         }
         return true;
     } else if (name=="gravity") {
@@ -215,7 +216,7 @@ RenderOp* View::processDrawable(const style& value) {
                 EDGEINSETS insets = subval.edgeInsetsVal();
                 op->setInset(insets);
             } else {
-                app.warn("Unknown drawable attribute: %s", it.first.data());
+                app->warn("Unknown drawable attribute: %s", it.first.data());
             }
         }
     } else {
@@ -435,6 +436,11 @@ RECT View::getRect() const {
     return _rect;
 }
 
+void View::setRect(const RECT& rect) {
+    setRectSize(rect.size);
+    setRectOrigin(rect.origin);
+}
+
 void View::setRectOrigin(const POINT& origin) {
     POINT d;
     d.x = origin.x - _rect.origin.x;
@@ -504,6 +510,11 @@ void View::setMeasureSpecs(MEASURESPEC widthMeasureSpec, MEASURESPEC heightMeasu
 	_heightMeasureSpec = heightMeasureSpec;
 	setNeedsLayout();
 }
+void View::setSize(const SIZE& size) {
+    _widthMeasureSpec = MEASURESPEC::Abs(size.width);
+    _heightMeasureSpec = MEASURESPEC::Abs(size.height);
+    setNeedsLayout();
+}
 
 void View::setAlignSpecs(ALIGNSPEC alignspecHorz, ALIGNSPEC alignspecVert) {
 	_alignspecHorz = alignspecHorz;
@@ -546,6 +557,14 @@ void View::updateContentSize(SIZE constrainingSize) {
     _contentSize.width = _contentSize.height = 0;
 }
 
+void View::sizeToFit(float widthConstraint/*=FLT_MAX*/) {
+    updateContentSize({widthConstraint,FLT_MAX});
+    SIZE size = _contentSize;
+    size.width += _padding.left + _padding.right;
+    size.height += _padding.top + _padding.bottom;
+    setSize(size);
+}
+
 bool View::getClipsContent() const {
     return _clipsContent;
 }
@@ -562,6 +581,9 @@ void View::setGravity(GRAVITY gravity) {
     setNeedsLayout(); // todo: gravity shouldn't affect layout, it should only trigger a repaint
 }
 
+bool View::isHidden() const {
+    return _visibility!=Visible;
+}
 void View::setVisibility(Visibility visibility) {
     if (_visibility != visibility) {
         if ((_visibility==Gone && visibility!=Gone) ||
@@ -595,7 +617,7 @@ float View::getAlignspecVal(const ALIGNSPEC& spec, bool isVertical) {
             anchorSize -= isVertical ? (anchor->_padding.top+anchor->_padding.bottom):  (anchor->_padding.left+anchor->_padding.right);
         } else {
             if (anchor->_parent != _parent) {
-                app.warn("View layout is not clever enough for non-sibling anchors");
+                app->warn("View layout is not clever enough for non-sibling anchors");
             }
             anchorVal = isVertical ? anchor->_rect.origin.y : anchor->_rect.origin.x;
         }
@@ -700,7 +722,7 @@ void View::layout(RECT constraint) {
     }
 #if DEBUG
     if (_debugTag.length()) {
-        app.log("%s: contentSize is %f x %f", _debugTag.data(), _contentSize.width, _contentSize.height);
+        app->log("%s: contentSize is %f x %f", _debugTag.data(), _contentSize.width, _contentSize.height);
     }
 #endif
 
@@ -732,7 +754,7 @@ void View::layout(RECT constraint) {
         
 #if DEBUG
         if (_debugTag.length()) {
-            app.log("%s: laying out subviews in %s", _debugTag.data(), constraintForSubviews.toString().data());
+            app->log("%s: laying out subviews in %s", _debugTag.data(), constraintForSubviews.toString().data());
         }
 #endif
 
@@ -783,7 +805,7 @@ void View::layout(RECT constraint) {
     
 #if DEBUG
     if (_debugTag.length()) {
-        app.log("%s: < layout() _rect is %s", _debugTag.data(), _rect.toString().data());
+        app->log("%s: < layout() _rect is %s", _debugTag.data(), _rect.toString().data());
     }
 #endif
 
@@ -955,6 +977,14 @@ void View::insertSubview(View* subview, int index) {
 	}
 }
 
+void View::iterateSubviews(std::function<bool(View*)> callback) {
+    for (View* subview : _subviews) {
+        if (!callback(subview)) {
+            break;
+        }
+    }
+}
+
 
 int View::indexOfSubview(View* subview) {
 	int i=0;
@@ -968,15 +998,25 @@ int View::indexOfSubview(View* subview) {
 }
 void View::removeSubview(View* subview) {
 	assert(subview->_parent == this);
-	int i=indexOfSubview(subview);
-	assert(i>=0);
-	if (i>=0) {
+    removeSubview(indexOfSubview(subview));
+}
+
+void View::removeSubview(int index) {
+    bool index_ok = index>=0 && index<_subviews.size();
+	assert(index_ok);
+	if (index_ok) {
 		if (_window) {
-			subview->detachFromWindow();
+			_subviews[index]->detachFromWindow();
 		}
-		_subviews.erase(_subviews.begin() + i);
+		_subviews.erase(_subviews.begin() + index);
 	}
 }
+void View::removeAllSubviews() {
+    for (int i=(int)_subviews.size()-1 ; i>=0 ; i--) {
+        removeSubview(i);
+    }
+}
+
 void View::removeFromParent() {
 	if (_parent) {
 		_parent->removeSubview(this);
@@ -1318,7 +1358,7 @@ bool View::handleInputEvent(INPUTEVENT* event) {
         }
     }
     
-    //app.log("%X y=%f", this, event->pt.y);
+    //app->log("%X y=%f", this, event->pt.y);
     bool scrolled = _scrollVert.handleEvent(this, true, event);
     scrolled |= _scrollHorz.handleEvent(this, false, event);
     
@@ -1491,7 +1531,7 @@ void View::debugDumpTree(int depth) {
     string line;
     for (int i=0 ; i<depth ; i++) line.append("-");
     line.append(debugDescription());
-    app.log(line.data());
+    app->log(line.data());
 
     if (_renderList) {
         for (auto op : _renderList->_ops) {

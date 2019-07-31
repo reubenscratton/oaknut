@@ -188,7 +188,7 @@ void TextRenderer::measure(SIZE maxSize) {
                 fontStack.push(currentFont);
                 currentFont = Font::get(currentFont->_name, currentFont->_size, currentFontWeight);
             } else {
-                app.warn("unrecognized attribute type");
+                app->warn("unrecognized attribute type");
             }
             
             spanStartIterator++;
@@ -213,7 +213,7 @@ void TextRenderer::measure(SIZE maxSize) {
         
                 // Tab-handling. For now just convert to spaces.
                 if (codepoint=='\t') {
-                    app.log("todo: tabstops!");
+                    app->log("todo: tabstops!");
                     codepoint = ' ';
                 }
                 

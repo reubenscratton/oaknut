@@ -41,6 +41,12 @@ RECT RECT::copyWithInsets(const EDGEINSETS& insets) const {
     insets.applyToRect(rect);
     return rect;
 }
+RECT RECT::copyWithUninsets(const struct EDGEINSETS& insets) const {
+    RECT rect = *this;
+    insets.unapplyToRect(rect);
+    return rect;
+}
+
 
 string RECT::toString() const {
 	// "{{0, 0}, {100, 100}}"

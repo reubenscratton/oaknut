@@ -36,7 +36,7 @@ public:
         assert(status == 0);
     }
     variant process_(const variant& data_in) override {
-        const bytearray& bytes = data_in.bytearrayVal();
+        const bytearray& bytes = data_in.bytearrayRef();
         _inbuf.append(bytes);
         bytearray output;
         
@@ -59,7 +59,7 @@ public:
             }
             assert(error == 0);
             if (error) {
-                app.log("Error: %d", error);
+                app->log("Error: %d", error);
                 break;
             }
             if (ioOutputDataPacketSize > 0) {

@@ -72,7 +72,7 @@ void LinearLayout::layoutSubviews(RECT constraint) {
         if (excessForThisSubview > 0) {
             MEASURESPEC& spec = (_orientation == Vertical) ? view->_heightMeasureSpec : view->_widthMeasureSpec;
             spec.con += excessForThisSubview;
-            //app.log("Growing by %f, con=%f", excessForThisSubview, constraint.size.width);
+            //app->log("Growing by %f, con=%f", excessForThisSubview, constraint.size.width);
             view->_layoutValid = false;
             view->invalidateContentSize();
             view->layout(constraint);

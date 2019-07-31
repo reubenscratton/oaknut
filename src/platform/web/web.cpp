@@ -38,7 +38,7 @@ TIMESTAMP App::currentMillis() {
 
 EMSCRIPTEN_KEEPALIVE
 extern "C" void dispatchMainWindowDraw() {
-    app._window->draw();
+    app->_window->draw();
 }
 
 
@@ -81,21 +81,21 @@ Timer* Timer::start(const std::function<void()>& del, int intervalMillis, bool r
 
 
 static void oak_setWindowSize(int width, int height, int scale) {
-    app.log("window size %d x %d, scale=%d", width, height, scale);
-    app._window->resizeSurface(width, height, scale);
+    app->log("window size %d x %d, scale=%d", width, height, scale);
+    app->_window->resizeSurface(width, height, scale);
 }
 
 static void oak_userEvent(int eventType, int eventSourceId, int x, int y) {
-    //app.log("userEv type=%d src=%d x=%d,y=%d", eventType, eventSourceId, x, y);
+    //app->log("userEv type=%d src=%d x=%d,y=%d", eventType, eventSourceId, x, y);
     
     INPUTEVENT inputEvent;
     inputEvent.deviceType = INPUTEVENT::Mouse;
     inputEvent.deviceIndex = eventSourceId;
     inputEvent.type = eventType;
-    inputEvent.pt.x = x * app._window->_scale;
-    inputEvent.pt.y = y * app._window->_scale;
-    inputEvent.time = app.currentMillis();
-    app._window->dispatchInputEvent(inputEvent);
+    inputEvent.pt.x = x * app->_window->_scale;
+    inputEvent.pt.y = y * app->_window->_scale;
+    inputEvent.time = app->currentMillis();
+    app->_window->dispatchInputEvent(inputEvent);
 }
 
 static map<string,KeyboardInputSpecialKeyCode> s_specialKeys = {
@@ -116,9 +116,9 @@ static map<string,KeyboardInputSpecialKeyCode> s_specialKeys = {
 };
 
 static void oak_keyEvent(int keyDown, int keyCode, int keynameBuffPtr) {
-    if (app._window->_keyboardHandler) {
+    if (app->_window->_keyboardHandler) {
         string keyname((char*)keynameBuffPtr);
-        //app.log("key: %s", keyname.data());
+        //app->log("key: %s", keyname.data());
         char32_t charCode = 0;
         KeyboardInputSpecialKeyCode specialKey = SpecialKeyNone;
         if (keyname.length()==1) {
@@ -132,19 +132,19 @@ static void oak_keyEvent(int keyDown, int keyCode, int keynameBuffPtr) {
                 if (keyname=="Enter") charCode='\n';
             }
         }
-        app._window->_keyboardHandler->keyInputEvent(keyDown? KeyDown:KeyUp, specialKey, keyCode, charCode);
+        app->_window->_keyboardHandler->keyInputEvent(keyDown? KeyDown:KeyUp, specialKey, keyCode, charCode);
     }
 }
 
 void oakMessageLoop() {
-    //    app._window->draw();
+    //    app->_window->draw();
 }
 
 static void oak_main() {
-    app.loadStyleAsset("styles.res");
-    app.main();
-    app._window->show();
-    app._window->requestRedraw();
+    app->loadStyleAsset("styles.res");
+    app->main();
+    app->_window->show();
+    app->_window->requestRedraw();
 }
 
 EMSCRIPTEN_BINDINGS(oaknut) {
@@ -177,7 +177,7 @@ int main(int argc, char *argv[]) {
     emscripten_webgl_make_context_current(ctx);
     
     
-    app._window = Window::create();
+    app->_window = Window::create();
 
     // Run the main loop (which does nothing)
     emscripten_set_main_loop(oakMessageLoop, 1, 1);

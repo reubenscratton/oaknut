@@ -9,8 +9,8 @@
 #include <oaknut.h>
 
 float measurement::val() const {
-    if (_unit==DP) return app.dp(_unitVal);
-    if (_unit==SP) return app.dp(_unitVal);
+    if (_unit==DP) return app->dp(_unitVal);
+    if (_unit==SP) return app->dp(_unitVal);
     if (_unit==PC) return _unitVal/100;
     return _unitVal;
 }
@@ -66,7 +66,7 @@ variant::variant(const string& val) : type(STRING), _str(new string(val)) {
 }
 variant::variant(const measurement& val) : type(MEASUREMENT), _measurement(val) {
 }
-variant::variant(const bytearray& val) : type(BYTEARRAY), _bytearray(new bytearray(val)) {
+variant::variant(const class bytearray& val) : type(BYTEARRAY), _bytearray(new class bytearray(val)) {
 }
 variant::variant(ISerializeToVariant* val) : type(val?MAP:EMPTY) {
     if (val) {
@@ -118,7 +118,7 @@ void variant::setType(enum type newType) {
     if (newType == STRING) {
         _str = new string();
     } else if (newType == BYTEARRAY) {
-        _bytearray = new bytearray();
+        _bytearray = new class bytearray();
     } else if (newType == ARRAY) {
         _vec = new vector<variant>();
     } else if (newType == MAP) {
@@ -140,7 +140,7 @@ void variant::assign(const variant& src) {
         case FLOAT64: _f64 = src._f64; break;
         case STRING: _str = new string(*src._str); break;
         case MEASUREMENT: _measurement = src._measurement; break;
-        case BYTEARRAY: _bytearray = new bytearray(*src._bytearray); break;
+        case BYTEARRAY: _bytearray = new class bytearray(*src._bytearray); break;
         case ARRAY: _vec = new vector<variant>(src._vec->begin(), src._vec->end()); break;
         case MAP: _map = new map<string,variant>(*src._map); break;
     }
@@ -195,7 +195,7 @@ int variant::intVal() const {
         case MEASUREMENT: return (int)_measurement.val();
         default: break;
     }
-    app.warn("intVal() called on non-numeric Variant");
+    app->warn("intVal() called on non-numeric Variant");
     return 0;
 }
 bool variant::boolVal() const {
@@ -215,13 +215,15 @@ bool variant::boolVal() const {
         case MEASUREMENT: return _measurement.val()!=0.f;
         default: break;
     }
-    app.warn("boolVal() type coerce failed");
+    app->warn("boolVal() type coerce failed");
     return false;
 }
 
 int variant::intVal(const char *name) const {
-    auto v = get(name);
-    return v ? v->intVal() : 0;
+    return get(name).intVal();
+}
+bool variant::boolVal(const char* name) const {
+    return get(name).boolVal();
 }
 
 
@@ -238,15 +240,11 @@ float variant::floatVal() const {
         case STRING: return atof(_str->data());
         default: break;
     }
-    app.warn("floatVal() called on non-numeric Variant");
+    app->warn("floatVal() called on non-numeric Variant");
     return 0.f;
 }
 float variant::floatVal(const char *name) const {
-    auto val = get(name);
-    if (!val) {
-        return 0.f;
-    }
-    return val->floatVal();
+    return get(name).floatVal();
 }
 
 double variant::doubleVal() const {
@@ -262,15 +260,11 @@ double variant::doubleVal() const {
         case STRING: return atof(_str->data());
         default: break;
     }
-    app.warn("doubleVal() called on non-numeric Variant");
+    app->warn("doubleVal() called on non-numeric Variant");
     return 0.;
 }
 double variant::doubleVal(const char *name) const {
-    auto val = get(name);
-    if (!val) {
-        return 0.;
-    }
-    return val->doubleVal();
+    return get(name).doubleVal();
 }
 
 measurement variant::measurementVal() const {
@@ -280,9 +274,11 @@ measurement variant::measurementVal() const {
     if (isNumeric()) {
         return measurement(floatVal(), measurement::PX);
     }
-    app.warn("measurement() type coerce failed");
+    app->warn("measurement() type coerce failed");
     return measurement(0,measurement::PX);
 }
+
+
 
 string variant::stringVal() const {
     switch (type) {
@@ -299,31 +295,23 @@ string variant::stringVal() const {
     if (type==ARRAY) {
         // todo: might be useful to concat the element stringVals...
     }
-    app.warn("stringVal() called on non-stringable StyleValue");
+    app->warn("stringVal() called on non-stringable StyleValue");
     return "";
 }
 string variant::stringVal(const char *name) const {
-    auto val = get(name);
-    if (!val) {
-        return "";
-    }
-    return val->stringVal();
+    return get(name).stringVal();
 }
 vector<string> variant::stringArrayVal() const {
-    auto a = arrayVal();
+    auto& a = arrayRef();
     vector<string> vec;
     for (auto e : a) {
-        a.push_back(e.stringVal());
+        vec.push_back(e.stringVal());
     }
     return vec;
 }
 
 vector<string> variant::stringArrayVal(const char* name) const {
-    auto val = get(name);
-    if (!val) {
-        return {};
-    }
-    return val->stringArrayVal();
+    return get(name).stringArrayVal();
 }
 
 bool variant::isEmpty() const {
@@ -354,20 +342,29 @@ bool variant::isCompound() const {
 
 static vector<variant> s_emptyVec;
 static map<string, variant> s_emptyCompound;
+static string s_emptyStr;
 
-const vector<variant>& variant::arrayVal() const {
+string& variant::stringRef() const {
+    if (type == STRING) {
+        return *_str;
+    }
+    app->warn("stringRef() called on non-string type");
+    return s_emptyStr;
+}
+
+vector<variant>& variant::arrayRef() const {
     if (type==ARRAY) {
         return *_vec;
     }
-    app.warn("arrayVal() called on non-array type");
+    app->warn("arrayRef() called on non-array type");
     return s_emptyVec;
 }
 
-const map<string, variant>& variant::compoundVal() const {
+map<string, variant>& variant::compoundRef() const {
     if (type==MAP) {
         return *_map;
     }
-    app.warn("compoundVal() called on non-compound type");
+    app->warn("compoundRef() called on non-compound type");
     return s_emptyCompound;
 }
 
@@ -379,36 +376,40 @@ void variant::appendVal(const variant& v) {
     _vec->push_back(std::move(v));
 }
 
-const vector<variant>& variant::arrayVal(const char* name) const {
-    return get(name)->arrayVal();
+vector<variant>& variant::arrayRef(const char* name) const {
+    return get(name).arrayRef();
+}
+map<string, variant>& variant::compoundRef(const char* name) const {
+    return get(name).compoundRef();
 }
 
-const bytearray& variant::bytearrayVal() const {
+bytearray& variant::bytearrayRef() const {
     assert (type==BYTEARRAY);
     return *_bytearray;
 }
 
-const bytearray& variant::bytearrayVal(const char* name) const {
-    return get(name)->bytearrayVal();
+bytearray& variant::bytearrayRef(const char* name) const {
+    return get(name).bytearrayRef();
 }
 
 
-/*bool variant::hasValue(const string& key) const {
+bool variant::hasVal(const string& name) const {
     assert(type==MAP);
-    return _map->find(key)!=_map->end();
-}*/
+    return _map->find(name)!=_map->end();
+}
 
+static variant s_emptyVar;
 
-const variant* variant::get(const string& key) const {
+variant& variant::get(const string& key) const {
     if (type==EMPTY) {
-        return NULL;
+        return s_emptyVar;
     }
     assert(type==MAP);
     auto val = _map->find(key);
     if (val == _map->end()) {
-        return NULL;
+        return s_emptyVar;
     }
-    return &val->second;
+    return val->second;
 }
 void variant::set(const string& key, const variant& val) {
     if (type==EMPTY) {
@@ -417,8 +418,7 @@ void variant::set(const string& key, const variant& val) {
     assert(type==MAP);
     auto it = _map->emplace(std::move(key), val);
     if (!it.second) {
-        assert(0);
-        //it.first = val;
+        it.first->second = val;
     }
 }
 
@@ -433,6 +433,14 @@ void variant::set(const string& key, ISerializeToVariant* val) {
     variant v;
     val->toVariant(v);
     (*_map)[key] = v;
+}
+
+void variant::unset(const string& key) {
+    if (type==EMPTY) {
+        return;
+    }
+    assert(type==MAP);
+    _map->erase(std::move(key));
 }
 
 void variant::clear() {
@@ -462,7 +470,7 @@ string variant::toJson() const {
         case STRING: return string::format("\"%s\"", _str->data());
         case MEASUREMENT: return string::format("\"%s\"", _measurement.toString().data());
         case BYTEARRAY: {
-            app.warn("TODO! bytearray json representation needed");
+            app->warn("TODO! bytearray json representation needed");
             break;
         }
         case ARRAY: {
@@ -529,7 +537,7 @@ string parseString(StringProcessor& it) {
                 legalEscape |= (ch == ',' || ch==':' || ch=='}');
             }
             if (!legalEscape) {
-                app.warn("Illegal escape \'\\%c\'", ch);
+                app->warn("Illegal escape \'\\%c\'", ch);
                 continue;
             }
         }
@@ -537,7 +545,7 @@ string parseString(StringProcessor& it) {
         str.append(ch);
     }
     if (quoted && !endquote) {
-        app.warn("Expected closing \"");
+        app->warn("Expected closing \"");
     }
     
     return str;
@@ -636,16 +644,11 @@ variant variant::parseNumber(StringProcessor& it) {
     return val;
 }
 
+
 variant variant::parse(StringProcessor& it, int flags) {
     variant val;
-    it.skipWhitespace();
+    it.skipWhitespaceAndComments();
     
-    // Comments
-    while (it.nextWas("//")) {
-        it.nextToEndOfLine();
-        it.skipWhitespace();
-    }
-
 
     // Parse a compound value
     char32_t ch = it.peek();
@@ -653,21 +656,18 @@ variant variant::parse(StringProcessor& it, int flags) {
         it.next();
         val.type = MAP;
         val._map = new map<string,variant>();
-        it.skipWhitespace();
+        it.skipWhitespaceAndComments();
         while (it.peek() != '}' && !it.eof()) {
-            it.skipWhitespace();
+            it.skipWhitespaceAndComments();
             string fieldName = parseString(it);
-            //app.log(fieldName.data());
+            //app->log(fieldName.data());
             if (!fieldName.length()) {
-                app.log("Invalid json: field name expected");
+                app->log("Invalid json: field name expected");
                 return val;
             }
-            if (fieldName == "bottom@android") {
-                app.log("break");
-            }
-            it.skipWhitespace();
+            it.skipWhitespaceAndComments();
             if (it.next() != ':') {
-                app.log("Invalid json: ':' expected");
+                app->log("Invalid json: ':' expected");
                 return val;
             }
             variant fieldValue = parse(it, (flags & ~PARSEFLAG_EXPLICIT_ARRAY));
@@ -678,9 +678,8 @@ variant variant::parse(StringProcessor& it, int flags) {
                 //it.first = val;
             }
             
-            //it.nextToEndOfLine();
-            it.skipWhitespace();
-            
+            it.skipWhitespaceAndComments();
+
             // JSON object fields are separated by commas
             if (flags & PARSEFLAG_JSON) {
                 if (it.peek() == ',') {
@@ -695,7 +694,7 @@ variant variant::parse(StringProcessor& it, int flags) {
                 it.next();
             } else {
                 if (sep != '}') {
-                    app.log("Invalid json: ',' or object end expected");
+                    app->log("Invalid json: ',' or object end expected");
                 }
                 break;
             }*/
@@ -708,17 +707,17 @@ variant variant::parse(StringProcessor& it, int flags) {
         it.next();
         val.type = ARRAY;
         val._vec = new vector<variant>();
-        it.skipWhitespace();
+        it.skipWhitespaceAndComments();
         while (it.peek() != ']' && !it.eof()) {
             variant element = variant::parse(it, flags | PARSEFLAG_EXPLICIT_ARRAY);
             val._vec->push_back(std::move(element));
-            it.skipWhitespace();
+            it.skipWhitespaceAndComments();
             char32_t sep = it.peek();
             if (sep == ',') {
                 it.next();
             } else {
                 if (sep != ']') {
-                    app.log("Invalid json: ',' or array end expected");
+                    app->log("Invalid json: ',' or array end expected");
                 }
                 break;
             }
@@ -770,12 +769,12 @@ val variant::toJavascriptVal() const {
         case EMPTY: return val::undefined();
         case INT32: return val(_i32);
         case INT64: {
-            if (_i64 & 0x7FC0000000000000LL) app.warn("i64 too big for JS Number");
+            if (_i64 & 0x7FC0000000000000LL) app->warn("i64 too big for JS Number");
             return val((double)_i64);
         }
         case UINT32: return val(_u32);
         case UINT64: {
-            if (_u64 & 0xFFC0000000000000ULL) app.warn("u64 too big for JS Number");
+            if (_u64 & 0xFFC0000000000000ULL) app->warn("u64 too big for JS Number");
             return val((double)_u64);
         }
         case FLOAT32: return val(_f32);

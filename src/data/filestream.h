@@ -14,7 +14,7 @@
 
 class FileStream : public Stream {
 public:
-    FileStream(string path);
+    FileStream(const string& path);
     ~FileStream();
     bool openForRead();
     bool openForWrite();

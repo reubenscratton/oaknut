@@ -57,8 +57,8 @@ public:
     void show() override {
         Window::show();
         gtk_widget_set_size_request(glarea,
-                                    app.getStyleFloat("window.default-width"),
-                                    app.getStyleFloat("window.default-height"));
+                                    app->getStyleFloat("window.default-width"),
+                                    app->getStyleFloat("window.default-height"));
     }
     
     void requestRedrawNative() override {
@@ -141,10 +141,10 @@ public:
                 window->_inputFlags &= ~INPUT_FLAG_LBUTTON_DOWN;
                 break;
             default:
-                app.log("unhandled mouse event type=%d", event->type);
+                app->log("unhandled mouse event type=%d", event->type);
                 return FALSE;
         }
-        //app.log("t=%d x=%d y=%d", eventType, x, y);
+        //app->log("t=%d x=%d y=%d", eventType, x, y);
         INPUTEVENT inputEvent;
         inputEvent.deviceType = INPUTEVENT::Mouse;
         inputEvent.deviceIndex = 0;
@@ -152,7 +152,7 @@ public:
         inputEvent.flags = window->_inputFlags;
         inputEvent.pt.x = x * window->_scale;
         inputEvent.pt.y = y * window->_scale;
-        inputEvent.time = app.currentMillis();
+        inputEvent.time = app->currentMillis();
         window->dispatchInputEvent(inputEvent);
         
         /*if(state & GDK_BUTTON1_MASK) {

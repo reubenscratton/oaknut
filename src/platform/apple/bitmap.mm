@@ -134,8 +134,8 @@ void BitmapApple::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
 
 
 
-BitmapApple* bitmapFromData(const void* data, int cb) {
-    CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, data, cb, NULL);
+BitmapApple* bitmapFromData(bytearray& data) {
+    CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, data.data(), data.size(), NULL);
     CGImageRef cgImage = CGImageCreateWithPNGDataProvider(dataProvider, NULL, NO, kCGRenderingIntentDefault);
     if (!cgImage) {
         cgImage = CGImageCreateWithJPEGDataProvider(dataProvider, NULL, NO, kCGRenderingIntentDefault);
@@ -242,7 +242,7 @@ BitmapApple* bitmapFromData(const void* data, int cb) {
 void BitmapApple::fromVariant(const variant& v) {
     Bitmap::fromVariant(v);
     int32_t stride = v.intVal("s");
-    auto bb = v.bytearrayVal("bb");
+    auto& bb = v.bytearrayRef("bb");
     CGColorSpaceRef colorspace = (_format==PIXELFORMAT_A8) ? CGColorSpaceCreateDeviceGray() : CGColorSpaceCreateDeviceRGB();
     _context = CGBitmapContextCreateWithData(NULL, _width, _height, 8, stride, colorspace, bitmapInfoForFormat(_format), nil, nil);
     void* pixels = CGBitmapContextGetData(_context);
@@ -265,14 +265,14 @@ void BitmapApple::toVariant(variant& v) {
 
 class BitmapDecodeTask : public Task {
 public:
-    BitmapDecodeTask(const void* data, int cb, std::function<void(Bitmap*)> callback) : Task([=]() {
+    BitmapDecodeTask(bytearray& data, std::function<void(Bitmap*)> callback) : Task([=]() {
         callback(_bitmap);
     }) {
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
             if (isCancelled()) {
                 return;
             }
-            _bitmap = bitmapFromData(data, cb);
+            _bitmap = bitmapFromData(data);
             _bitmap->retain();
             dispatch_async(dispatch_get_main_queue(), ^() {
                 Bitmap* bitmap = _bitmap;
@@ -286,8 +286,8 @@ public:
     Bitmap* _bitmap;
 };
 
-Task* Bitmap::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
-    return new BitmapDecodeTask(data, cb, callback);
+Task* Bitmap::createFromData(bytearray& data, std::function<void(Bitmap*)> callback) {
+    return new BitmapDecodeTask(data, callback);
 }
 
 Bitmap* Bitmap::create(int width, int height, int format) {

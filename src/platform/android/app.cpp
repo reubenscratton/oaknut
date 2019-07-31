@@ -43,18 +43,6 @@ static string getPath(int i) {
     return stringFromJbyteArray(env, jbytes);
 }
 
-string App::getPathForGeneralFiles() {
-  return getPath(1);
-}
-string App::getPathForUserDocuments() {
-  return getPath(1);
-}
-string App::getPathForCacheFiles() {
-  return getPath(1);
-}
-string App::getPathForTemporaryFiles() {
-    return getPath(1);
-}
 
 string App::currentCountryCode() const {
     JNIEnv* env = getAppEnv();

@@ -135,7 +135,7 @@ void ListView::setSelectedIndex(LISTINDEX index) {
 		if (itemView) {
             // TODO: Am not wild about poking at item view backgrounds like this, perhaps
             // we need an ItemView type which has a "background overlay" renderop.
-            itemView->setBackgroundColor(app.getStyleColor("listview.selected-bkgnd-color"));
+            itemView->setBackgroundColor(app->getStyleColor("listview.selected-bkgnd-color"));
 		}
 	}
 }
@@ -222,8 +222,9 @@ void ListView::ItemView::updateDeleteButton(bool animate) {
         _deleteButton->setPadding(EDGEINSETS(16, 8, 16, 8));
         _deleteButton->setAlignSpecs(ALIGNSPEC(NULL, 0, animate?-1:0, 0), ALIGNSPEC::Center());
         if (!_listView->_bmpDelete) {
-            ByteBuffer* data = app.loadAsset("images/delete.png"); // TODO: need a different way to do platform assets
-            Bitmap::createFromData(data->data, (int)data->cb, [=](Bitmap* bitmap) {
+            bytearray data;
+            app->loadAsset("images/delete.png", data); // TODO: need a different way to do platform assets
+            Bitmap::createFromData(data, [=](Bitmap* bitmap) {
                 _listView->_bmpDelete = bitmap;
                 _deleteButton->setBitmap(bitmap);
             });

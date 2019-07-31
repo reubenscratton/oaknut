@@ -175,7 +175,7 @@ void Label::updateRenderOps() {
     }
     _textRenderer.updateRenderOps(this);
     //updateEffectiveAlpha();
-    //app.log("Eff. alpha %f for label '%s'", _effectiveAlpha, _textRenderer._text.data());
+    //app->log("Eff. alpha %f for label '%s'", _effectiveAlpha, _textRenderer._text.data());
 }
 
 

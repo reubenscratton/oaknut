@@ -110,6 +110,8 @@ public:
 
     /** Removes a subview */
     virtual void removeSubview(View* subview);
+    virtual void removeSubview(int index);
+    virtual void removeAllSubviews();
 
     /** Return the parent view of this view */
     virtual View* getParent() const;
@@ -125,6 +127,10 @@ public:
     
     /** Return the view at the root of the view tree */
     virtual View* getRootView();
+    
+    /** Walk the subviews in display (Z-) order. Return false to break the loop. */
+    void iterateSubviews(std::function<bool(View*)> callback);
+
 
 
 protected:
@@ -226,6 +232,9 @@ public:
     /** Set the size this view would like to have, given various constraints (see MEASURESPEC and measure()). */
     virtual void setMeasureSpecs(MEASURESPEC widthMeasureSpec, MEASURESPEC heightMeasureSpec);
     
+    /** Set an absolute view size, in pixels. */
+    virtual void setSize(const SIZE& size);
+    
     /** Set the preferred alignment within the parent view. See ALIGNSPEC and layout() **/
     virtual void setAlignSpecs(ALIGNSPEC alignspecHorz, ALIGNSPEC alignspecVert);
     
@@ -236,14 +245,22 @@ public:
         implementation uses SIZESPEC and ALIGNSPEC members but derived types may override the default behaviour. */
     virtual void layout(RECT constraint);
 
-    /** Sets the size of the view rect. CAUTION! This API is dumb and will probably be removed. */
+    /** Set this view's measured size to be that of its content size plus padding. */
+    virtual void sizeToFit(float widthConstraint = FLT_MAX);
+    
+    /** Sets the size of the view rect. CAUTION! This API is dumb and will probably be removed. Use
+     setSize() to set an absolute view size in code. */
     virtual void setRectSize(const SIZE& size);
 
     /** Sets the position of the view. CAUTION! This API exists so Views may override the positioning
         of subviews during layout. Ideally this would not be a `public` API. */
     virtual void setRectOrigin(const POINT& origin);
+    
+    virtual void setRect(const RECT& rect);
 
     virtual void setVisibility(Visibility visibility);
+    
+    virtual bool isHidden() const;
 
 protected:
     /**  \cond INTERNAL */

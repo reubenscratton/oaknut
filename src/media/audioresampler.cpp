@@ -24,7 +24,7 @@ void AudioResampler::open(const AudioFormat& formatIn, const AudioFormat& format
 
 void AudioResampler::process(AudioSamples* samples) {
     Worker::process(samples->getData(), [=](const variant& outdata) {
-        sp<AudioSamples> outSamples = new AudioSamples(outdata.bytearrayVal());
+        sp<AudioSamples> outSamples = new AudioSamples(outdata.bytearrayRef());
         onNewAudioSamples(outSamples);
     });
 }

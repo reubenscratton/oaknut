@@ -8,7 +8,7 @@
 #include <oaknut.h>
 
 
-Window::Window() : _rootViewController(NULL), _scale(1) {
+Window::Window() : _rootViewController(NULL) {
     _renderer = Renderer::create(this);
     _surface = _renderer->getPrimarySurface();
     _window = this;
@@ -16,7 +16,7 @@ Window::Window() : _rootViewController(NULL), _scale(1) {
 }
 
 void Window::show() {
-    _backgroundColor = app.getStyleColor("window.background-color");
+    _backgroundColor = app->getStyleColor("window.background-color");
 }
 
 
@@ -55,13 +55,12 @@ void Window::layout(RECT constraint) {
     _rect = constraint;
     layoutSubviews(_rect);
 }
-void Window::resizeSurface(int width, int height, float scale) {
+void Window::resizeSurface(int width, int height) {
     if (_surface->_size.width==width && _surface->_size.height==height) {
         return;
     }
-	//app.log("Window::resize %d %d %f", width, height, scale);
+	//app->log("Window::resize %d %d %f", width, height, scale);
     _rect = RECT(0,0,width,height);
-	_scale = scale;
     _surface->setSize({(float)width, (float)height});
     updateDecorOp(false, _safeInsetsTotal.top);
     updateDecorOp(true, _safeInsetsTotal.bottom);
@@ -139,7 +138,7 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
             float dx = event.pt.x - ptDown.x;
             float dy = event.pt.y - ptDown.y;
             float dist = sqrtf(dx * dx + dy * dy);
-            if (app.idp(dist) >= TOUCH_SLOP) {
+            if (app->idp(dist) >= TOUCH_SLOP) {
                 if (touchedView) {
                     INPUTEVENT cancelEvent = event;
                     cancelEvent.type = INPUT_EVENT_CANCEL;
@@ -176,7 +175,7 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
                         INPUTEVENT tapEvent = event;
                         tapEvent.type = INPUT_EVENT_TAP;
                         touchedView->dispatchInputEvent(&tapEvent);
-                        app.log("tap %d", numClicks);
+                        app->log("tap %d", numClicks);
                     }
                     multiclickTimer = Timer::start([=] {
                         if (touchedView && touchedView->_window) {
@@ -185,7 +184,7 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
                             touchedView->dispatchInputEvent(&tapEvent);
                         }
                         multiclickTimer = NULL;
-                        app.log("tap confirmed at %d", numClicks);
+                        app->log("tap confirmed at %d", numClicks);
                         numClicks = 0;
                         touchedView = NULL;
                     }, MULTI_CLICK_THRESHOLD, false);
@@ -294,7 +293,7 @@ void Window::draw() {
 	incFrames();
 
     // Tick animations
-    TIMESTAMP now = app.currentMillis();
+    TIMESTAMP now = app->currentMillis();
     auto it = _animations.begin();
     _animationsModified = false;
     while (it != _animations.end()) {
@@ -333,7 +332,7 @@ void Window::startAnimation(Animation* animation, int duration, int delay) {
     animation->_duration = duration;
     animation->_delay = delay;
     animation->_paused = false;
-    animation->_timeStarted = app.currentMillis();
+    animation->_timeStarted = app->currentMillis();
     animation->_window = this;
     animation->_windowAnimationsListIterator = _animations.insert(_animations.end(), animation);
     if (animation->_view) {
@@ -479,7 +478,7 @@ void Window::setSafeInsets(SafeInsetsType type, const EDGEINSETS& insets) {
 
 void Window::updateDecorOp(bool bottom, float height) {
     RectRenderOp*& op = bottom?_renderOpDecorBottom:_renderOpDecorTop;
-    COLOR color = app.getStyleColor(bottom ? "window.safeInsetBackgrounds.bottom" : "window.safeInsetBackgrounds.top");
+    COLOR color = app->getStyleColor(bottom ? "window.safeInsetBackgrounds.bottom" : "window.safeInsetBackgrounds.top");
     if (color!=0 && height>0) {
         if (!op) {
             op = new RectRenderOp();
@@ -524,7 +523,7 @@ void Window::presentModalViewController(ViewController *viewController) {
     scrimView->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Fill());
     addSubview(scrimView);
     setNeedsLayout();
-    COLOR scrimColor = app.getStyleColor("window.scrim");
+    COLOR scrimColor = app->getStyleColor("window.scrim");
     Animation::start(scrimView, 333, [=](float val) {
         scrimView->setBackgroundColor(COLOR::interpolate(0, scrimColor, val));
     });
@@ -542,7 +541,7 @@ void Window::dismissModalViewController(ViewController* viewController, std::fun
     View* scrimView = getSubview(indexOfSubview(view)-1);
     
     // Animate out
-    COLOR scrimColor = app.getStyleColor("window.scrim");
+    COLOR scrimColor = app->getStyleColor("window.scrim");
     Animation::start(view, 333, [=](float val) {
         scrimView->setBackgroundColor(COLOR::interpolate(scrimColor, 0, val));
         if (val >= 1.0f) {

@@ -26,7 +26,7 @@ void Worker::dispatchProcessResult(const variant& data_out) {
 
 void Worker::process(const variant& data_in, std::function<void(const variant&)> callback) {
     if (!_started) {
-        app.log("Warning! process() called on stopped worker");
+        app->log("Warning! process() called on stopped worker");
         return;
     }
     assert(_queue); // not started!

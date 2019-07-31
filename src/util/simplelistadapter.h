@@ -40,10 +40,10 @@ public:
     virtual float getHeaderHeight(int section) {
         if (_filtered) return 0;
         string title = getSectionTitle(section);
-        return title.length() ? app.dp(30) : 0; // TODO: style
+        return title.length() ? app->dp(30) : 0; // TODO: style
     }
     virtual float getItemHeight(LISTINDEX index) {
-        return app.dp(68); // TODO: style
+        return app->dp(68); // TODO: style
     }
 
     virtual View* createItemView(LISTINDEX index) =0;
@@ -58,7 +58,7 @@ public:
     virtual View* createHeaderView(int section) {
         Label* label = new Label();
         label->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
-        label->setPadding(EDGEINSETS(app.dp(16),app.dp(4),app.dp(16),app.dp(4)));
+        label->setPadding(EDGEINSETS(app->dp(16),app->dp(4),app->dp(16),app->dp(4)));
         label->setText(getSectionTitle(section));
         label->setBackgroundColor(0xFFeeeeee); // TODO: style
         return label;

@@ -24,7 +24,7 @@ JNIEnv* getJNIEnv() {
     int getEnvStat = g_jvm->GetEnv((void **)&env, JNI_VERSION_1_6);
     if (getEnvStat == JNI_EDETACHED) {
         if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
-            app.log("Failed to attach to jvm");
+            app->log("Failed to attach to jvm");
             assert(0);
         }
     }
@@ -215,10 +215,10 @@ JAVA_FN(jlong, MainActivity, onCreateNative)(JNIEnv *env, jobject obj,
     window->_scale = screenScale;
     window->assetManager = AAssetManager_fromJava(env, jassetManager);
 
-    app.loadStyleAsset("styles.res");
+    app->loadStyleAsset("styles.res");
 
     // If no VC created then this is app startup
-    app._window = window; // this sucks. I'd like to lose app._window completely...
+    app->_window = window; // this sucks. I'd like to lose app->_window completely...
     if (!rootVCcreator) {
     } else {
         ViewController* rootVC = ((ViewController* (*)(void*))rootVCcreator)(NULL);
@@ -326,8 +326,8 @@ JAVA_FN(void, MainActivity, onSurfaceCreatedNative)(JNIEnv* env, jobject obj, jl
     window->width = w;
     window->height = h;
 
-    if (window == app._window) {
-        app.main();
+    if (window == app->_window) {
+        app->main();
     }
 
     // Initialize GL state.

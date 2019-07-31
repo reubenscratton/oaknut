@@ -20,7 +20,7 @@
  * * [Time](#time)\n
  * * [Locale](#time)\n
  * * [Settings](#settings)\n
- * * [File paths](#file-paths)\n
+ * * [Files](#files)\n
  * * [Logging](#logging)\n
  * \n
  */
@@ -37,7 +37,7 @@ public:
     
     /** Application entry point. Your implementation of this must instantiate a ViewController
         and set it as _window.rootViewController before returning */
-    void main();
+    virtual void main() = 0;
 
     /**@}*/
 
@@ -48,8 +48,9 @@ public:
     
     /** Load a file from the assets directory, synchronously. Since this does IO it's best to
      limit use to app startup and background threads */
-    class ByteBuffer* loadAsset(const char* assetPath);
-    
+    //class ByteBuffer* loadAsset(const char* assetPath);
+    bool loadAsset(const char* assetPath, bytearray& data);
+
     /**@}*/
     
     
@@ -113,7 +114,6 @@ public:
 
     /**@}*/
 
-    
     /** @name Locale
      * @{
      */
@@ -129,17 +129,23 @@ public:
      */
     
     /** Gets a named integer setting */
-    int getIntSetting(const char* key, const int defaultValue);
+    int getIntSetting(const char* key, int defaultValue=0);
 
     /** Sets a named integer setting. */
     void setIntSetting(const char* key, int value);
     
     /** Gets a named string setting */
-    string getStringSetting(const char* key, const char* defaultValue);
+    string getStringSetting(const char* key, const char* defaultValue="");
 
     /** Sets a named string setting. */
     void setStringSetting(const char* key, const char* value);
     
+    /** Gets a named bool setting */
+    bool getBoolSetting(const char* key, bool defaultValue=false);
+    
+    /** Sets a named bool setting. */
+    void setBoolSetting(const char* key, bool value);
+
     /**@}*/
 
     /** @name Logging
@@ -155,22 +161,47 @@ public:
     /**@}*/
     
     
-    /** @name File paths
+    /** @name Files
      * @{
+     * In general files are accessed with the standard libc functions fopen() and friends,
+     * just be sure to use resolved paths. Oaknut adds a few useful helpers such as fileExists,
+     * fileSize, and fileList.
+     *
+     * Filesystems are navigated with standard Unix path notation with the addition of some
+     * special double-slash roots that refer to platform-specific, app-specific, and user-
+     * specific locations:
+     *
+     *                      MacOS
+     *                      =====
+     *     //assets         <app bundle>/assets
+     *     //data           ~/Library/Application Support/AppName
+     *     //cache          ~/Library/Caches/AppName
+     *     //tmp            
+     *     //userdocs       ~/Documents
+     *
+     * Note that Oaknut has a separate API for structured, database-like storage. See LocalStorage.
      */
-    
-    string getPathForGeneralFiles();
-    string getPathForUserDocuments();
-    string getPathForCacheFiles();
-    string getPathForTemporaryFiles();
+    bool fileResolve(string& path) const;
+    bool fileExists(string& path) const;
+    bool fileEnsureFolderExists(string& path) const;
+    uint64_t fileSize(string& path) const;
+    vector<string> fileList(string& path) const;
+    bool fileLoad(const string& path, bytearray& fileContents) const;
     
     /**@}*/
     
+    /** The default display. Usually there is only one. */
+    sp<Display> _defaultDisplay;
     
     /** The application window, which is your app's connection to the display
      and input subsystems of the host OS */
     sp<class Window> _window;
     
+
+    /** Notifications */
+    void subscribe(const char* notificationName, Object* observer, std::function<void(const char*, void*, variant&)> callback, void* source=NULL);
+    void notify(const char* notificationName, void* source=NULL, variant data=variant());
+    void unsubscribe(const char* notificationName, Object* observer);
 
 protected:
     style _styles;
@@ -178,4 +209,4 @@ protected:
 
 };
 
-extern App app;
+extern App* app;

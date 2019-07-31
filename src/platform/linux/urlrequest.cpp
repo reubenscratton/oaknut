@@ -77,7 +77,7 @@ public:
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
             res = curl_easy_perform(curl);
             if (res != CURLE_OK) {
-                app.log("curl_easy_perform() failed: %s\n",
+                app->log("curl_easy_perform() failed: %s\n",
                         curl_easy_strerror(res));
             }
             curl_easy_cleanup(curl);

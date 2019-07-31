@@ -82,31 +82,37 @@ void URLRequest::dispatchResult(int httpStatus, const map<string, string>& respo
         } else {
                 if (contentType == "image/jpeg" || contentType == "image/png") {
                     retain();
-                    Bitmap::createFromData(_responseData.data(), (int)_responseData.size(), [=](Bitmap* bitmap) {
+                    Bitmap::createFromData(_responseData, [=](Bitmap* bitmap) {
                         if (!_cancelled) {
                             _handlerBitmap(this, bitmap);
                         }
                         release();
                     });
                 } else {
-                    app.warn("Unexpected bitmap type %s", contentType.data());
+                    app->warn("Unexpected bitmap type %s", contentType.data());
                 }
         }
     }
-    if (_handlerJson) {
+    if (contentType.contains("json")) {
         variant json;
-        if (contentType.contains("json")) {
-            string str = _responseData.toString();
-            StringProcessor it(str);
-            json = variant::parse(it, PARSEFLAG_JSON);
-        }
-        retain();
-        App::postToMainThread([=]() {
-            if (!_cancelled) {
-                _handlerJson(this, json);
+        string str = _responseData.toString();
+        StringProcessor it(str);
+        json = variant::parse(it, PARSEFLAG_JSON);
+        if (onGotJsonInBackground) {
+            if (onGotJsonInBackground(json)) {
+                return;
             }
-            release();
-        });
+        } else {
+            if (_handlerJson) {
+                retain();
+                App::postToMainThread([=]() {
+                    if (!_cancelled) {
+                        _handlerJson(this, json);
+                    }
+                    release();
+                });
+            }
+        }
     }
 
     if (_handlerData) {

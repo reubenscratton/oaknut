@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2018 Sandcastle Software Ltd
+// Copyright (c) 2019 Sandcastle Software Ltd
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -114,7 +114,6 @@ using namespace oak;
 namespace oak {
 #include "data/stream.h"
 #include "data/base64.h"
-#include "data/filestream.h"
 #include "data/serializable.h"
 #include "data/bytebuffer.h"
 #include "data/bytebufferstream.h"
@@ -151,7 +150,9 @@ namespace oak {
 #include "app/styles.h"
 #include "graphics/textrenderer.h"
 #include "graphics/canvas.h"
+#include "app/display.h"
 #include "app/app.h"
+#include "data/filestream.h"
 #include "app/urlrequest.h"
 #include "util/cache.h"
 #include "util/circularbuffer.h"

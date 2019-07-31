@@ -32,7 +32,7 @@ public class Font {
             else {suffix = "-medium"; if (weight>800) fakeBold=true;}
             typeface = Typeface.create("sans-serif" + suffix, fakeBold?Typeface.BOLD:Typeface.NORMAL);
         } else {
-            typeface = Typeface.createFromAsset(App.app.getAssets(), name);
+            typeface = Typeface.createFromAsset(App.app->getAssets(), name);
         }
         this.size = size;
         textPaint = new TextPaint();

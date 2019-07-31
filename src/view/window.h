@@ -21,7 +21,7 @@ enum SafeInsetsType {
 
 /** @class Window
  *  @brief A window is the top level container for app UI. There is usually only one Window instance, globally
-   accessible through `app.window`. It usually wraps a native window in some way.
+   accessible through `app->window`. It usually wraps a native window in some way.
  *  @ingroup views
  */
 
@@ -33,7 +33,6 @@ public:
 
     sp<class ViewController> _rootViewController;
 	vector<sp<ViewController>> _viewControllers;
-	float _scale;
     class MotionTracker {
     public:
         MotionTracker(int source);
@@ -78,7 +77,7 @@ public:
     class ITextInputReceiver* _textInputReceiver;
 	
 	virtual void setRootViewController(ViewController* viewController);
-	virtual void resizeSurface(int width, int height, float scale);
+	virtual void resizeSurface(int width, int height);
 	virtual void destroySurface();
 	virtual void draw();
 	virtual void requestRedraw();

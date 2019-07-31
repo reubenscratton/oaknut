@@ -55,9 +55,10 @@ CTFontRef FontApple::createCTFont() {
 #endif
         
     } else {
-        sp<ByteBuffer> data = app.loadAsset(_name.data());
-        assert(data->data);
-        CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, data->data, data->cb, NULL);
+        bytearray data;
+        app->loadAsset(_name.data(), data);
+        assert(data.size());
+        CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, data.data(), data.size(), NULL);
         CGFontRef cgfont = CGFontCreateWithDataProvider(dataProvider);
         assert(cgfont);
         CGDataProviderRelease(dataProvider);
@@ -69,7 +70,7 @@ CTFontRef FontApple::createCTFont() {
     
 
 Glyph* FontApple::createGlyph(char32_t ch, Atlas* atlas) {
-    //app.log("Creating glyph for char code %d in font %X", ch, this);
+    //app->log("Creating glyph for char code %d in font %X", ch, this);
     UniChar uch = ch;
     CGGlyph cgglyph = 0;
     if (!CTFontGetGlyphsForCharacters(_ctfont, &uch, &cgglyph, 1)) {
@@ -78,7 +79,7 @@ Glyph* FontApple::createGlyph(char32_t ch, Atlas* atlas) {
         CFRelease(_ctfont);
         _ctfont = createCTFont();
         if (!CTFontGetGlyphsForCharacters(_ctfont, &uch, &cgglyph, 1)) {
-            app.warn("Glyph '%c' not in chosen font", ch);
+            app->warn("Glyph '%c' not in chosen font", ch);
             uch = '?';
             if (!CTFontGetGlyphsForCharacters(_ctfont, &uch, &cgglyph, 1)) {
                 assert(false); // glyph is not in the font, TODO: fall back to another font
@@ -86,7 +87,7 @@ Glyph* FontApple::createGlyph(char32_t ch, Atlas* atlas) {
                 return NULL;
             }
         }
-        app.warn("Stupid Core Text bug caused us to waste time recreating a font");
+        app->warn("Stupid Core Text bug caused us to waste time recreating a font");
     }
     Glyph* glyph = new Glyph(this, ch, cgglyph);
     

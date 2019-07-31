@@ -27,7 +27,7 @@ static int baseBlockHeight = 20;
 class static_init {
 public:
     static_init() {
-        app.log("static_init!");
+        app->log("static_init!");
     }
 } __static_init;
 
@@ -41,7 +41,7 @@ class FaceDetectorWorker : public WorkerImpl {
 public:
 
     void start_(const variant& config) override {
-        app.log("start_()! %X", this);
+        app->log("start_()! %X", this);
         if (!s_initialised) {
             s_initialised = true;
             init_nodes_data();

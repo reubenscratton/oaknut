@@ -44,7 +44,7 @@ RegEx::RegEx(const string& pattern) {
             else if (esc == 's') t.charClass = Whitespace;
             else if (esc == 'S') {t.charClass = Whitespace; t.inverted = true;}
             else if (esc == '+' || esc=='*' || esc=='?' || esc=='^' || esc=='$' || esc=='\\' || esc=='.' || esc=='[' || esc==']' || esc=='{' || esc=='}' || esc=='(' || esc==')' || esc=='|' || esc=='/' || esc==')') {t.charClass=Range; t.chars.push_back(esc);}
-            else app.warn("ignoring unknown escape");
+            else app->warn("ignoring unknown escape");
         } else if (c=='[') {
             if (p.peek()=='^') {
                 t.inverted = true;

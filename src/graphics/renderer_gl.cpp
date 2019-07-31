@@ -32,7 +32,7 @@
 #else
 static void checkGlErr(const char* file, int line, const char* cmd) {
     for (GLint error = glGetError(); error; error = glGetError()) {
-        app.log("GL ERROR: %s(%d) %s() err=0x%x", file, line, cmd, error);
+        app->log("GL ERROR: %s(%d) %s() err=0x%x", file, line, cmd, error);
     }
 }
 #define check_gl(cmd, ...) cmd(__VA_ARGS__); checkGlErr(__FILE__, __LINE__, #cmd);
@@ -587,7 +587,7 @@ void GLRenderer::flushQuadBuffer() {
 
 
 void GLRenderer::drawQuads(int numQuads, int index) {
-    //   app.log("Drawing %d quads at once", numQuads);
+    //   app->log("Drawing %d quads at once", numQuads);
     check_gl(glDrawElements, GL_TRIANGLES, 6 * numQuads, GL_UNSIGNED_SHORT, (void*)((index)*6*sizeof(GLshort)));
 }
 

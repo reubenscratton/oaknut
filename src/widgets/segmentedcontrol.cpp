@@ -165,8 +165,8 @@ void SegmentedControl::updateContentSize(SIZE constrainingSize) {
         Segment& segment = _segments.at(i);
         segment.label->measure();
         SIZE labelSize = segment.label->measuredSize();
-		segment.rect.size.width = app.dp(8) + labelSize.width + app.dp(8);
-		segment.rect.size.height = app.dp(4) + labelSize.height + app.dp(4);
+		segment.rect.size.width = app->dp(8) + labelSize.width + app->dp(8);
+		segment.rect.size.height = app->dp(4) + labelSize.height + app->dp(4);
 		_contentSize.width += segment.rect.size.width;
 		_contentSize.height = MAX(_contentSize.height, segment.rect.size.height);
 	}

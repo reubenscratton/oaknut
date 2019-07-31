@@ -172,6 +172,7 @@ struct RECT {
     }
     
     RECT copyWithInsets(const struct EDGEINSETS& insets) const;
+    RECT copyWithUninsets(const struct EDGEINSETS& insets) const;
 
     string toString() const;
 	
@@ -254,6 +255,12 @@ struct EDGEINSETS {
 		rect.size.width -= left+right;
 		rect.size.height -= top+bottom;
 	}
+    inline void unapplyToRect(RECT& rect) const {
+        rect.origin.x -= left;
+        rect.origin.y -= top;
+        rect.size.width += left+right;
+        rect.size.height += top+bottom;
+    }
     inline bool operator==(const EDGEINSETS& other) const {
         return left==other.left
             && top==other.top

@@ -27,7 +27,7 @@ Fling::Fling(float start, float velocity, float min, float max) {
     velocity = hypotf(velocity, velocity);
     _velocity = velocity;
     _duration = (int) (1000 * velocity / DECELERATION);
-    _startTime = app.currentMillis();
+    _startTime = app->currentMillis();
     _start = start;
     _min = min;
     _max = max;
@@ -49,7 +49,7 @@ void Fling::update(float timePassedSeconds) {
 class Bounce : public Fling {
 public:
     Bounce(float start, float end) : Fling(0,0,0,0) {
-        _startTime = app.currentMillis();
+        _startTime = app->currentMillis();
         _duration = 500;
         _start = start;
         _final = end;
@@ -79,7 +79,7 @@ float ScrollInfo::maxScroll(View* view, bool isVertical) {
     float visibleSize = isVertical ? view->_rect.size.height : view->_rect.size.width;
     float scrollableSize = padPre + content + scrollInset + padPost;
     float m = (scrollableSize) - visibleSize;
-    //app.log("padPre:%f padPost:%f inset:%f content:%f vis:%f  max:%f", padPre, padPost, scrollInset, content, visibleSize, m);
+    //app->log("padPre:%f padPost:%f inset:%f content:%f vis:%f  max:%f", padPre, padPost, scrollInset, content, visibleSize, m);
     return (m>0) ? m : 0;
 }
 void ScrollInfo::updateVisibility(View* view, bool isVertical) {
@@ -236,7 +236,7 @@ void ScrollInfo::flingCancel() {
 }
 
 float ScrollInfo::flingUpdate() {
-    TIMESTAMP timePassed = (app.currentMillis() - _fling->_startTime);
+    TIMESTAMP timePassed = (app->currentMillis() - _fling->_startTime);
     float retval;
     if (timePassed < _fling->_duration) {
         _fling->update(timePassed / 1000.0f);
@@ -257,7 +257,7 @@ void ScrollInfo::updateRect(View* view) {
     float visibleContentHeight = contentSize.height - insets;
     float scale = (view->getHeight()-insets) / visibleContentHeight;
     float scrollbarLength = (view->getHeight()-insets) * scale;
-    scrollbarLength = fmaxf(scrollbarLength, app.dp(40)); // todo: style!
+    scrollbarLength = fmaxf(scrollbarLength, app->dp(40)); // todo: style!
     RECT rect = view->getOwnRect();
     rect.origin.x = rect.size.width - (5+4); // todo: style!
     rect.origin.y = view->_scrollInsets.top + contentOffset.y * scale

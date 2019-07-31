@@ -618,3 +618,13 @@ size_t string::hash() const {
 #endif
 }
 
+string string::join(const vector<string>& vec, const string& delimiter) {
+    string s;
+    for (int i=0 ; i<vec.size() ; i++) {
+        if (i>0) {
+            s += delimiter;
+        }
+        s += vec[i];
+    }
+    return s;
+}

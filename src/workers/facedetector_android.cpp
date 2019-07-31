@@ -25,7 +25,7 @@ public:
         int getEnvStat = g_jvm->GetEnv((void **)&s_env, JNI_VERSION_1_6);
         if (getEnvStat == JNI_EDETACHED) {
             if (g_jvm->AttachCurrentThread(&s_env, NULL) != 0) {
-                app.log("Failed to attach to jvm");
+                app->log("Failed to attach to jvm");
                 assert(0);
             }
         }

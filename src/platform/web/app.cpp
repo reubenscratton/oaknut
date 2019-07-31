@@ -27,7 +27,7 @@ ByteBuffer* App::loadAsset(const char* assetPath) {
     str.append(assetPath);
     FILE* asset = fopen(str.data(), "rb");
     if (!asset) {
-        app.log("Failed to open asset: %s", assetPath);
+        app->log("Failed to open asset: %s", assetPath);
         return NULL;
     }
     
@@ -63,6 +63,7 @@ string App::getStringSetting(const char* key, const char* defaultValue) {
 void App::setStringSetting(const char* key, const char* value) {
     ls.call<void>("setItem", val(key), val(value));
 }
+
 
 class WebGLRenderer : public GLRenderer {
 public:

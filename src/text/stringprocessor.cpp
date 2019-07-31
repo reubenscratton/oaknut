@@ -46,6 +46,33 @@ void StringProcessor::skipWhitespace() {
 		}
 	}
 }
+void StringProcessor::skipWhitespaceAndComments() {
+    bool newLine = _it.byteOffset()==0;
+    while(!eof()) {
+        char32_t ch = peek();
+        if (ch=='\r' || ch=='\n') {
+            newLine = true;
+            next();
+        } else if (ch==' ' || ch=='\t') {
+            next();
+        } else {
+            if (newLine) {
+                if (ch=='#' || (ch=='/' && nextWas("//"))) {
+                    while (!eof()) {
+                        ch = peek();
+                        if (ch=='\r' || ch=='\n') {
+                            break;
+                        } else {
+                            next();
+                        }
+                    }
+                    continue;
+                }
+            }
+            break;
+        }
+    }
+}
 void StringProcessor::skipSpacesAndTabs() {
     while(!eof()) {
         char32_t ch = peek();
@@ -82,7 +109,7 @@ string StringProcessor::nextToken() {
             str.append(ch);
             return str;
         } else {
-            app.warn("Invalid char '%c'", ch);
+            app->warn("Invalid char '%c'", ch);
         }
     }
     return "";

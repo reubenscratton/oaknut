@@ -45,3 +45,6 @@ AttributedString& AttributedString::operator=(const AttributedString& str) {
     return *this;
 }
 
+void AttributedString::applyStyle(const style* s) {
+    app->log("TODO: AttributedString::applyStyle");
+}

@@ -21,12 +21,12 @@ FontWeb::FontWeb(const string& fontAssetPath, float size, float weight) : Font(f
         if (it != s_customFonts.end()) {
             fontFamily = it->second;
         } else {
-            ByteBuffer* fontData = app.loadAsset(fontAssetPath.data());
+            ByteBuffer* fontData = app->loadAsset(fontAssetPath.data());
             fontFamily = fontAssetPath;
             while (fontFamily.extractUpTo("/", true).length() > 0) {}
             fontFamily.hadSuffix(".ttf");
             fontFamily.hadSuffix(".otf");
-            //app.log("Custom font %s loaded from %s", fontFamily.data(), fontAssetPath.data());
+            //app->log("Custom font %s loaded from %s", fontFamily.data(), fontAssetPath.data());
             string fontDataStr = "@font-face { font-family:\"";
             fontDataStr += fontFamily;
             fontDataStr += "\"; src: url(data:application/font-sfnt;base64,";

@@ -28,7 +28,7 @@
         else if (event.keyCode == 125) sk = SpecialKeyCursorDown;
         else if (event.keyCode == 126) sk = SpecialKeyCursorUp;
         else if (event.keyCode == 51) sk = SpecialKeyDelete;
-        app._window->_keyboardHandler->keyInputEvent(eventType, sk, event.keyCode, charCode);
+        app->_window->_keyboardHandler->keyInputEvent(eventType, sk, event.keyCode, charCode);
     }
 }
 - (void)keyDown:(NSEvent *)event {
@@ -59,7 +59,7 @@
 class WindowOSX : public Window {
 public:
     WindowOSX() {
-        _scale = [NSScreen mainScreen].backingScaleFactor;
+        //_scale = [NSScreen mainScreen].backingScaleFactor;
 
         _nativeView =  [[NativeView alloc] initWithWindow:this];
         [_nativeView awake];
@@ -68,8 +68,8 @@ public:
     
     void show() override {
         Window::show();
-        float width = app.getStyleFloat("window.default-width") / _scale;
-        float height = app.getStyleFloat("window.default-height") / _scale;
+        float width = app->getStyleFloat("window.default-width") / app->_defaultDisplay->_scale;
+        float height = app->getStyleFloat("window.default-height") / app->_defaultDisplay->_scale;
         _nativeWindow = [[NativeWindow alloc] initWithContentRect:NSMakeRect(0, 0, width, height)
                                                         styleMask:NSWindowStyleMaskTitled
                                                           backing:NSBackingStoreBuffered
@@ -110,11 +110,27 @@ Window* Window::create() {
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     
+    // Create the default Display
+    NSScreen* screen = [NSScreen mainScreen];
+    NSDictionary *description = [screen deviceDescription];
+    NSSize displayPixelSize = [[description objectForKey:NSDeviceSize] sizeValue];
+    CGSize displayPhysicalSize = CGDisplayScreenSize(
+        [[description objectForKey:@"NSScreenNumber"] unsignedIntValue]
+    );
+    float dpiX = (displayPixelSize.width / displayPhysicalSize.width) * 25.4f; // there being 25.4 mm in an inch
+    float dpiY = (displayPixelSize.height / displayPhysicalSize.height) * 25.4f;
+    app->_defaultDisplay = new Display(screen.frame.size.width,
+                                       screen.frame.size.height,
+                                       dpiX, dpiY,
+                                       screen.backingScaleFactor);
+    
+    
+
     // Got to create app object before we create any native elements so we can get at style system
-    app._window = Window::create();
-    app.loadStyleAsset("styles.res");
-    app._window->show();
-    app.main();
+    app->_window = Window::create();
+    app->loadStyleAsset("styles.res");
+    app->_window->show();
+    app->main();
     
     // Create app menu
     NSMenu* menubar = [NSMenu new];

@@ -146,6 +146,7 @@ public:
         bool operator!=(iterator other) const;
         bool eof() const;
         char* data() const;
+        int32_t byteOffset() const { return _byteOffset;}
     };
     
     string(const iterator& start, const iterator& end) : string(start.data(), int32_t(end.data()-start.data())) {
@@ -168,6 +169,7 @@ public:
     
     static string uuid();
     static string hex(const void* p, int32_t cb);
+    static string join(const vector<string>& vec, const string& delimiter);
     bytearray unhex();
     int32_t asInt();
     string urlEncode();

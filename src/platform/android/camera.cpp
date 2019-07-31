@@ -73,7 +73,7 @@ int TextureConverter::convert(GLuint texId, int width, int height, float* transf
     check_gl(glGetIntegerv, GL_ELEMENT_ARRAY_BUFFER_BINDING, &oldIndexBuffer);
 
     // Reset the canvas' vertex config since our binding to another VBO trashed existing attrib config
-    app._window->_currentVertexConfig = -1; // todo: THIS IS HIDEOUS! Find a way we dont have to do this
+    app->_window->_currentVertexConfig = -1; // todo: THIS IS HIDEOUS! Find a way we dont have to do this
 
     // Create a framebuffer and a normal 2D texture to render to
     GLuint texId2 = 0;

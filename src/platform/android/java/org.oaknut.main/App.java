@@ -1,6 +1,6 @@
 package org.oaknut.main;
 
-import android.app.Application;
+import android.app->Application;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
@@ -33,7 +33,7 @@ public class App extends Application {
 
     public static byte[] loadAsset(String assetPath) {
         try {
-            InputStream inputStream = app.getAssets().open(assetPath);
+            InputStream inputStream = app->getAssets().open(assetPath);
             byte[] buffer = new byte[8192];
             int bytesRead;
             ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -50,10 +50,10 @@ public class App extends Application {
     }
 
     public static byte[] getPath(int i) {
-        return app.getFilesDir().getAbsolutePath().getBytes(UTF_8);
+        return app->getFilesDir().getAbsolutePath().getBytes(UTF_8);
     }
     public static byte[] getCurrentCountryCode() {
-        return app.getResources().getConfiguration().locale.getCountry().getBytes(UTF_8);
+        return app->getResources().getConfiguration().locale.getCountry().getBytes(UTF_8);
     }
 
     public static int getPrefsInt(byte[] key, int defaultVal) {

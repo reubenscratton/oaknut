@@ -462,21 +462,21 @@ void Surface::renderPhase3(Renderer* renderer, View* view, Surface* prevsurf) {
 
 static void debugDump(Surface* surface) {
     static int s_frame=0;
-    app.log("Frame %d lists=%d batches=%d", ++s_frame, (int)surface->_renderListsList.size(), (int)surface->_listBatches.size());
+    app->log("Frame %d lists=%d batches=%d", ++s_frame, (int)surface->_renderListsList.size(), (int)surface->_listBatches.size());
     for (auto it : surface->_renderListsList) {
         RenderList* list = it;
-        app.log("> list order=%d size=%d", list->_renderOrder, list->_ops.size());
+        app->log("> list order=%d size=%d", list->_renderOrder, list->_ops.size());
     }
     for (auto it : surface->_listBatches) {
         RenderBatch* batch = it;
-        app.log("> batch size=%d", batch->_ops.size());
+        app->log("> batch size=%d", batch->_ops.size());
         for (auto jt : batch->_ops) {
             RenderOp* op = jt;
             string str = op->debugDescription();
-            app.log(" op=%s", str.data());
+            app->log(" op=%s", str.data());
         }
     }
-    app.log("");
+    app->log("");
 }
 #endif
 

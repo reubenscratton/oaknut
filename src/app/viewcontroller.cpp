@@ -14,7 +14,7 @@ ViewController::~ViewController() {
 }
 
 View* ViewController::inflate(const string& layoutAsset) {
-    View* view = app.layoutInflate(layoutAsset);
+    View* view = app->layoutInflate(layoutAsset);
     assert(view);
     setView(view);
     return view;

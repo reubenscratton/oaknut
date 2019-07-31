@@ -110,7 +110,7 @@ BitmapAndroid::~BitmapAndroid() {
 
 class BitmapDecodeTask : public Task {
 public:
-    BitmapDecodeTask(const void* data, int cb, std::function<void(Bitmap*)> callback) : _callback(callback), Task(NULL) {
+    BitmapDecodeTask(bytearray& data, std::function<void(Bitmap*)> callback) : _callback(callback), Task(NULL) {
         auto env = getBitmapEnv();
         if (!jclassBitmapDecodeTask) {
             jclassBitmapDecodeTask = env->FindClass(PACKAGE "/BitmapDecodeTask");
@@ -161,7 +161,7 @@ JAVA_FN(void, BitmapDecodeTask, nativeHandleDecodedBitmap)(JNIEnv *env, jobject 
     task->handleDecodedBitmap(jbitmap);
 }
 
-Task* Bitmap::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
+Task* Bitmap::createFromData(bytearray& data, std::function<void(Bitmap*)> callback) {
     return new BitmapDecodeTask(data, cb, callback);
 }
 

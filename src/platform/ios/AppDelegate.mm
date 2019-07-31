@@ -23,7 +23,7 @@
     return self;
 }
 - (UIStatusBarStyle) preferredStatusBarStyle {
-    auto val = app.getStyle("window.status-bar-light");
+    auto val = app->getStyle("window.status-bar-light");
     if (!val) {
         return UIStatusBarStyleDefault;
     }
@@ -191,10 +191,10 @@ Window* Window::create() {
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    app._window = Window::create();
-    app.loadStyleAsset("styles.res");
-    app.main();
-    app._window->show();
+    app->_window = Window::create();
+    app->loadStyleAsset("styles.res");
+    app->main();
+    app->_window->show();
     return YES;
 }
 

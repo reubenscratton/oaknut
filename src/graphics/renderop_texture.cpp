@@ -41,8 +41,11 @@ TextureRenderOp::TextureRenderOp(const RECT& rect, Bitmap* bitmap, const RECT* r
  */
 TextureRenderOp::TextureRenderOp(const char* assetPath, int tintColor) : TextureRenderOp() {
     _color = tintColor;
-    ByteBuffer* data = app.loadAsset(assetPath);
-    Bitmap::createFromData(data->data, (int)data->cb, [&](Bitmap* bitmap) {
+    bytearray data;
+    if (!app->loadAsset(assetPath, data)) {
+        assert(0); // oops
+    }
+    Bitmap::createFromData(data, [&](Bitmap* bitmap) {
         setBitmap(bitmap);
     });
     setBlendMode(BLENDMODE_NORMAL);

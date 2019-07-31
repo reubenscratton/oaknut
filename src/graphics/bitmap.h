@@ -94,7 +94,7 @@ public:
 
     // Platform-specific instantiation
     static Bitmap* create(int width, int height, int format);
-    static Task* createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback);
+    static Task* createFromData(bytearray& data, std::function<void(Bitmap*)> callback);
 
 };
 

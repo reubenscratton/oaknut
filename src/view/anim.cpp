@@ -69,14 +69,14 @@ void Animation::pause() {
         return;
     }
     _paused = true;
-    _elapsedAtPause = app.currentMillis() - _timeStarted;
+    _elapsedAtPause = app->currentMillis() - _timeStarted;
 }
 
 void Animation::unpause() {
     if (!_paused) {
         return;
     }
-    _timeStarted = app.currentMillis() - _elapsedAtPause;
+    _timeStarted = app->currentMillis() - _elapsedAtPause;
     _elapsedAtPause = 0;
     _paused = false;
 }

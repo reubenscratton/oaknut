@@ -98,7 +98,7 @@ MEASURESPEC MEASURESPEC::fromStyle(const variant* value, View* view) {
     
     // Array: both mul and constant parts are present
     else if (value->isArray()) {
-        auto array = value->arrayVal();
+        auto array = value->arrayRef();
         spec.mul = array[0].floatVal();
         spec.con = array[1].floatVal();
     }

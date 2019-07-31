@@ -133,7 +133,7 @@ int style::intVal() const {
     if (val && val->type==TypeSimple) {
         return val->var.intVal();
     }
-    app.warn("intVal() failed");
+    app->warn("intVal() failed");
     return 0;
 }
 bool style::boolVal() const {
@@ -141,7 +141,7 @@ bool style::boolVal() const {
     if (val && val->type==TypeSimple) {
         return val->var.boolVal();
     }
-    app.warn("boolVal() failed");
+    app->warn("boolVal() failed");
     return false;
 }
 
@@ -150,7 +150,7 @@ float style::floatVal() const {
     if (val && val->type==TypeSimple) {
         return val->var.floatVal();
     }
-    app.warn("floatVal() type coerce failed");
+    app->warn("floatVal() type coerce failed");
     return 0.f;
 }
 
@@ -159,11 +159,19 @@ string style::stringVal() const {
     if (val && val->type==TypeSimple) {
         return val->var.stringVal();
     }
-    app.warn("stringVal() type coerce failed");
+    app->warn("stringVal() type coerce failed");
     return "";
 }
 string style::stringVal(const char* name) const {
     return get(name)->stringVal();
+}
+
+COLOR style::colorVal(const char* name) const {
+    auto v = get(name);
+    if (v) {
+        return v->colorVal();
+    }
+    return 0;
 }
 
 /*int style::intVal(const string& name) const {
@@ -171,7 +179,7 @@ string style::stringVal(const char* name) const {
     assert(val->type == Compound);
     auto val2 = val->compound->find(name);
     if (val2 == val->compound->end()) {
-        app.warn("Value missing for field '%'", name.data());
+        app->warn("Value missing for field '%'", name.data());
         return 0;
     }
     return val2->second.intVal();
@@ -185,7 +193,7 @@ const vector<style>& style::arrayVal() const {
     if (val->type==TypeArray) {
         return *array;
     }
-    app.warn("arrayVal() type coerce failed");
+    app->warn("arrayVal() type coerce failed");
     return s_emptyArray;
 }
 const vector<style>& style::arrayVal(const char* name) const {
@@ -216,11 +224,19 @@ EDGEINSETS style::edgeInsetsVal() const {
             insets.bottom = a[3].floatVal();
         } else {
             insets = {0,0,0,0};
-            app.warn("Invalid inset, must be 1 or 4 values");
+            app->warn("Invalid inset, must be 1 or 4 values");
         }
     }
     return insets;
 }
+EDGEINSETS style::edgeInsetsVal(const char* name) const {
+    auto v = get(name);
+    if (v) {
+        return v->edgeInsetsVal();
+    }
+    return EDGEINSETS_Zero;
+}
+
 
 const variant& style::variantVal() const {
     auto val = resolve();
@@ -274,7 +290,7 @@ COLOR style::colorVal()  const {
                 | (r);
             }
             else {
-                app.warn("Malformed hex color value");
+                app->warn("Malformed hex color value");
                 return 0;
             }
         }
@@ -444,7 +460,7 @@ COLOR style::colorVal()  const {
         }
         
     }
-    app.warn("colorVal() failed");
+    app->warn("colorVal() failed");
     return 0;
 }
 
@@ -452,7 +468,7 @@ COLOR style::colorVal()  const {
 float StyleValue::floatVal(const string& name) const {
     auto field = get(name);
     if (!field) {
-        app.warn("Value missing for field '%'", name.data());
+        app->warn("Value missing for field '%'", name.data());
         return 0;
     }
     return field->floatVal();
@@ -467,7 +483,7 @@ static map<string, StyleValue> s_emptyMap;
 const map<string, StyleValue>& StyleValue::compoundVal() const {
     auto val = select();
     if (val->type==Type::Compound) return *(val->compound);
-    app.warn("compoundVal() type coerce failed");
+    app->warn("compoundVal() type coerce failed");
     return s_emptyMap;
 }
 */
@@ -497,7 +513,7 @@ VECTOR4 style::cornerRadiiVal() const {
             r.z = radii[2].floatVal();
             r.w = radii[3].floatVal();
         } else {
-            app.warn("Invalid corner-radii, must be 1 or 4 values");
+            app->warn("Invalid corner-radii, must be 1 or 4 values");
             r = {0,0,0,0};
         }
     }
@@ -521,7 +537,7 @@ float style::fontWeightVal() const {
         if (fw=="heavy") return FONT_WEIGHT_HEAVY;
         if (fw=="black") return FONT_WEIGHT_BLACK;
     }
-    app.warn("Invalid fontWeight");
+    app->warn("Invalid fontWeight");
     return 0;
 }
 
@@ -551,7 +567,7 @@ const style* style::resolve() const {
                     applies = true;
 #endif
                 } else {
-                    app.warn("Unsupported qualifier '%s'", qual.data());
+                    app->warn("Unsupported qualifier '%s'", qual.data());
                 }
                 if (applies) {
                     // TODO: apply precedence that favours higher specificity
@@ -568,9 +584,9 @@ const style* style::resolve() const {
         // Follow references for the first time
         else if (val->type == TypeSimple && var.isString() && var.stringVal().hasPrefix("$")) {
             auto refdstylename = var.stringVal().substr(1);
-            auto refdstyle = app.getStyle(refdstylename);
+            auto refdstyle = app->getStyle(refdstylename);
             if (!refdstyle) {
-                app.warn("Missing referenced style: $%s", refdstylename.data());
+                app->warn("Missing referenced style: $%s", refdstylename.data());
             } else {
                 style* ncval = const_cast<style*>(val);
                 ncval->setType(TypeReference);
@@ -607,7 +623,7 @@ const style* style::get(const string& keypath) const {
         assert(val->type == TypeCompound);
         auto it = val->compound->find(key);
         if (it == val->compound->end()) {
-            //app.warn("Value missing for field '%s'", keypath.data());
+            //app->warn("Value missing for field '%s'", keypath.data());
             return NULL;
         }
         val = &it->second;
@@ -643,13 +659,13 @@ void style::importNamedValues(const map<string,style>& styleValues) {
     for (auto v=styleValues.begin() ; v!=styleValues.end() ; v++) {
         const string& name = v->first;
         const style& val = v->second;
-        if (val.isCompound()) {
+        if (val.type == TypeCompound) {
             const auto& e = compound->find(name);
             if (e == compound->end()) {
                 (*compound)[name] = val;
             } else {
                 auto& eval = e->second;
-                if (eval.isCompound()) {
+                if (eval.type == TypeCompound) {
                     eval.importNamedValues(*val.compound);
                 } else {
                     (*compound)[name] = val;
@@ -680,7 +696,7 @@ void style::fromVariant(const variant& v) {
         map<string,map<string,style>> qual_vals;
         
         // Iterate the compound's fields
-        for (auto e : v.compoundVal()) {
+        for (auto e : v.compoundRef()) {
             style styleVal;
             styleVal.fromVariant(e.second);
             
@@ -702,7 +718,7 @@ void style::fromVariant(const variant& v) {
     
     else if (v.isArray()) {
         setType(TypeArray);
-        for (auto& e : v.arrayVal()) {
+        for (auto& e : v.arrayRef()) {
             style styleVal;
             styleVal.fromVariant(e);
             array->emplace_back(styleVal);
@@ -734,7 +750,7 @@ bool StyleValue::parse(StringProcessor& it, int flags) {
             }
             string fieldName = it.nextToken();
             if (fieldName.length() == 0) {
-                app.log("Error: expected a field name");
+                app->log("Error: expected a field name");
                 return false;
             }
             
@@ -754,7 +770,7 @@ bool StyleValue::parse(StringProcessor& it, int flags) {
             
             it.skipWhitespace();
             if (it.next() != ':') {
-                app.log("Error: expected \':\' after identifier \'%s\'", fieldName.data());
+                app->log("Error: expected \':\' after identifier \'%s\'", fieldName.data());
                 return false;
             }
             it.skipWhitespace();
@@ -835,7 +851,7 @@ bool StyleValue::parse(StringProcessor& it, int flags) {
                 it.next();
             } else {
                 if (it.peek()!=']') {
-                    app.warn("expected ']'");
+                    app->warn("expected ']'");
                     return false;
                 }
             }
@@ -887,7 +903,7 @@ bool StyleValue::parse(StringProcessor& it, int flags) {
                             case 'r': ch='\r'; break;
                             case 't': ch='\t'; break;
                             case 'u': assert(0); // todo! implement unicode escapes
-                            default: app.warn("invalid escape '\\%c'", escapeChar); break;
+                            default: app->warn("invalid escape '\\%c'", escapeChar); break;
                         }
                     }
                 }
@@ -923,7 +939,7 @@ bool StyleValue::parse(StringProcessor& it, int flags) {
 
 
 void Styleable::applyStyle(const string& name) {
-    auto value = app.getStyle(name);
+    auto value = app->getStyle(name);
     if (value) {
         applyStyle(*value);
     }
@@ -944,7 +960,7 @@ void Styleable::applyStyle(const style& astyle) {
     for (auto& field : *style->compound) {
         if (field.first == "style") continue;
         if (!applySingleStyle(field.first, field.second)) {
-            app.warn("Ignored unknown attribute '%s'", field.first.data());
+            app->warn("Ignored unknown attribute '%s'", field.first.data());
         }
     }
 }

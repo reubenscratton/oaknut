@@ -9,9 +9,8 @@
 
 
 
-FileStream::FileStream(string path) {
+FileStream::FileStream(const string& path) : _path(path) {
     _file = NULL;
-    _path = path;
 }
 FileStream::~FileStream() {
     close();
@@ -19,9 +18,12 @@ FileStream::~FileStream() {
 
 bool FileStream::openForRead() {
     assert(!_file);
+    if (!app->fileResolve(_path)) {
+        return false;
+    }
     _file = fopen(_path.data(), "rb");
     if (!_file) {
-        app.log("Failed to open file: %s", _path.data());
+        app->log("Failed to open file: %s", _path.data());
         return false;
     }
     return true;
@@ -29,9 +31,12 @@ bool FileStream::openForRead() {
 
 bool FileStream::openForWrite() {
     assert(!_file);
+    if (!app->fileResolve(_path)) {
+        return false;
+    }
     _file = fopen(_path.data(), "wb");
     if (!_file) {
-        app.log("Failed to open file: %s", _path.data());
+        app->log("Failed to open file: %s", _path.data());
         return false;
     }
     return true;

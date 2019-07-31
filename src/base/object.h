@@ -36,10 +36,44 @@ public:
     
     static void flushAutodeletePool();
     
-    template<class ...Ts>
-    static Object* createByName(const string& className, Ts...);
+    static std::map<string, Object* (*)()>* s_classRegister;
 
+    template<typename T, class ...ARGS>
+    class Registrar {
+    private: static Object* createT(ARGS... args) {return new T(args...); }
+    public:
+        Registrar(const string& className) {
+            if (!s_classRegister) {
+                s_classRegister = new std::map<string, Object*(*)()>();
+            }
+            s_classRegister->insert(std::make_pair(className, reinterpret_cast<Object*(*)()>(&createT)));
+        }
+    };
+
+
+    template<class ...ARGS>
+    static Object* createByName(const string& className, ARGS... args) {
+        const auto& constructor = s_classRegister->find(className);
+        assert(constructor != s_classRegister->end()); // oops!
+        auto real_constructor = reinterpret_cast<Object*(*)(ARGS...)>(constructor->second);
+        return real_constructor(args...);
+    }
+
+    template<class ReturnType, class... Ts>
+    ReturnType callFunction(void *function, const Ts&... args) {
+    }
 };
+
+/**
+ Declare a class as being dynamically creatable with Object::createByName("className",...).
+ The class must have a public constructor that takes the same argument types as listed after
+ the class name.
+ */
+#define STRINGIFY_(x) #x
+#define STRINGIFY(x) STRINGIFY_(x)
+#define VA_ARGS(...) , ##__VA_ARGS__
+#define DECLARE_DYNCREATE(X, ...) static Object::Registrar<X VA_ARGS(__VA_ARGS__)> s_classReg##X(STRINGIFY(X))
+
 
 #if DEBUG
 extern void* DBGOBJ;
@@ -62,7 +96,7 @@ public:
 /*#if DEBUG
     void dbgLog(bool retain) {
         if (_obj && _obj==DBGOBJ) {
-            app.log("DBGOBJ:%s=%d", retain?"+1":"-1", _obj->_refs);
+            app->log("DBGOBJ:%s=%d", retain?"+1":"-1", _obj->_refs);
         }
     }
 #else*/
@@ -130,25 +164,7 @@ public:
     
 };
 
-/**
- Declare a type as being dynamically creatable. The type must have a public constructor that takes no arguments.
- */
 
-#define DECLARE_DYNCREATE2(X,NAME) static ClassRegistrar<X> s_classReg##X(NAME)
-#define DECLARE_DYNCREATE(X) DECLARE_DYNCREATE2(X,#X)
 
-extern std::map<string, Object* (*)()>* s_classRegister;
-
-template<typename T>
-class ClassRegistrar {
-private: static Object* createT() {return new T(); }
-public:
-    ClassRegistrar(const string& className) {
-        if (!s_classRegister) {
-            s_classRegister = new std::map<string, Object*(*)()>();
-        }
-        s_classRegister->insert(std::make_pair(className, &createT));
-    }
-};
 
 

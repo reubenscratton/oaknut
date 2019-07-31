@@ -8,7 +8,7 @@
 #include <oaknut.h>
 
 Worker::Worker(const string& name) {
-    app.log("Worker::Worker(%s)", name.data());
+    app->log("Worker::Worker(%s)", name.data());
 #if PLATFORM_WEB
     string jsfile = name + ".js";
     _worker = emscripten_create_worker(jsfile.data());

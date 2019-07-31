@@ -21,7 +21,7 @@ public:
 
     MainViewController() {
 
-        View* view = app.layoutInflate("layout/main.res");
+        View* view = app->layoutInflate("layout/main.res");
         _gameView = (GameView*)view->findViewById("game");
         _labelNumFlags = (Label*)view->findViewById("flags");
         _imageViewFace = (ImageView*)view->findViewById("face");
@@ -67,7 +67,12 @@ public:
 
 };
 
-void App::main() {
-    MainViewController* mainVC = new MainViewController();
-    _window->setRootViewController(mainVC);
-}
+class MinesweeperApp : public App {
+public:
+
+    void main() override {
+        MainViewController* mainVC = new MainViewController();
+        _window->setRootViewController(mainVC);
+    }
+} the_app;
+

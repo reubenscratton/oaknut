@@ -199,15 +199,10 @@ public:
     
     FILEOFFSET _deadSpace;
     
-    
     FileLocalStore(const string& name, const string& primaryKeyName) : LocalStore(name, primaryKeyName) {
-        _mainFileName = app.getPathForGeneralFiles();
-        if (_mainFileName.charAt(_mainFileName.length()-1)!='/') {
-            _mainFileName.append("/");
-        }
-        _mainFileName.append(name);
-        _indexFileName = _mainFileName;
+        _mainFileName = name;
         _mainFileName.append(".dat");
+        _indexFileName = name;
         _indexFileName.append(".idx");
     }
     
@@ -299,7 +294,7 @@ public:
         object->toVariant(v);
         
         auto key = v.get(_primaryKeyName);
-        assert(key->type != variant::EMPTY); // key is mandatory! (that might change)
+        assert(!key.isEmpty()); // key is mandatory! (that might change)
         _indexDirty = true;
         openFile();
 
@@ -309,7 +304,7 @@ public:
         int cb = (int)bbs.offsetWrite;
         
         // If there's an existing object with this key...
-        auto it = _index.find(*key);
+        auto it = _index.find(key);
         if (it != _index.end()) {
             
             // If the new object is same size or smaller then we can overwrite the existing record
@@ -333,7 +328,7 @@ public:
         INDEX_ENTRY entry;
         entry.offset = (FILEOFFSET)_file.tellp();
         entry.size = cb;
-        auto result = _index.insert(make_pair(*key, entry));
+        auto result = _index.insert(make_pair(key, entry));
         //_it = result.first;
         _file.write((char*)bbs._data.data, cb);
         //assert(written == cb);

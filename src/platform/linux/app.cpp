@@ -19,7 +19,7 @@ ByteBuffer* App::loadAsset(const char* assetPath) {
     str.append(assetPath);
     FILE* asset = fopen(str.data(), "rb");
     if (!asset) {
-        app.log("Failed to open asset: %s", assetPath);
+        app->log("Failed to open asset: %s", assetPath);
         return NULL;
     }
     

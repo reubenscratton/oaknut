@@ -64,7 +64,7 @@ void NavigationController::applySafeInsets(const EDGEINSETS& safeInsets) {
 void NavigationController::applySafeInsetsToChild(ViewController* childVC) {
     EDGEINSETS childInsets = _safeAreaInsets;
     childInsets.top += _navBar->getPreferredContentHeight();
-    app.log("applySafeInsetsToChild %f %f", childInsets.top, childInsets.bottom);
+    app->log("applySafeInsetsToChild %f %f", childInsets.top, childInsets.bottom);
     childVC->applySafeInsets(childInsets);
 }
 
