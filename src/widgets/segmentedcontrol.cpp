@@ -68,23 +68,26 @@ void SegmentedControl::onEffectiveTintColorChanged() {
     for (auto i : _segments) {
         i.rectOp->setStrokeColor(_effectiveTintColor);
         COLOR actualTextColor = _textColor ? _textColor : _effectiveTintColor;
-        i.label->setColor(actualTextColor);
+        i.label->setTextColor(actualTextColor);
     }
 }
 
-void SegmentedControl::addSegment(const string& label) {
+void SegmentedControl::addSegment(const string& labelText) {
     Segment segment;
-    segment.label = new TextRenderer();
-	segment.label->setText(label);
+    segment.label = new Label();
+    segment.label->setMeasureSpecs(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
+    segment.label->setFont(_font);
+    segment.label->setPadding(_padding);
+	segment.label->setText(labelText);
     segment.label->setGravity({GRAVITY_CENTER,GRAVITY_CENTER});
     COLOR actualColor = _textColor ? _textColor : _effectiveTintColor;
-    segment.label->setColor(actualColor);
+    segment.label->setTextColor(actualColor);
     segment.rectOp = new RectRenderOp();
     segment.rectOp->setFillColor(0);
     addRenderOp(segment.rectOp);
+    addSubview(segment.label);
 	_segments.push_back(segment);
     updateBorders();
-    _fontValid = false;
 	invalidateContentSize();
 }
 
@@ -112,14 +115,14 @@ void SegmentedControl::setTextColor(COLOR color) {
     COLOR actualTextColor = _textColor ? _textColor : _effectiveTintColor;
     for (int i=0 ; i<_segments.size() ; i++) {
         Segment& segment = _segments.at(i);
-        segment.label->setColor(actualTextColor);
+        segment.label->setTextColor(actualTextColor);
     }
 }
 void SegmentedControl::setSelectedTextColor(COLOR color) {
 	_selectedTextColor = color;
     if (_selectedIndex >= 0) {
         Segment& selectedSegment = _segments.at(_selectedIndex);
-        selectedSegment.label->setColor(color);
+        selectedSegment.label->setTextColor(color);
     }
 }
 
@@ -129,7 +132,7 @@ void SegmentedControl::setSelectedIndex(int segmentIndex) {
             Segment& selectedSegment = _segments.at(_selectedIndex);
             if (selectedSegment.label) {
                 COLOR actualTextColor = _textColor ? _textColor : _effectiveTintColor;
-                selectedSegment.label->setColor(actualTextColor);
+                selectedSegment.label->setTextColor(actualTextColor);
                 selectedSegment.rectOp->setColor(0);
             }
             // todo: rect fill color
@@ -139,7 +142,7 @@ void SegmentedControl::setSelectedIndex(int segmentIndex) {
         if (_selectedIndex >= 0) {
             Segment& selectedSegment = _segments.at(_selectedIndex);
             if (selectedSegment.label) {
-                selectedSegment.label->setColor(_selectedTextColor);
+                selectedSegment.label->setTextColor(_selectedTextColor);
                 selectedSegment.rectOp->setColor(_effectiveTintColor);
             }
         }
@@ -148,7 +151,7 @@ void SegmentedControl::setSelectedIndex(int segmentIndex) {
 }
 
 
-void SegmentedControl::updateContentSize(SIZE constrainingSize) {
+/*void SegmentedControl::updateContentSize(SIZE constrainingSize) {
     
     if (!_fontValid) {
         _font = Font::get(_fontName, _fontSize);
@@ -163,8 +166,8 @@ void SegmentedControl::updateContentSize(SIZE constrainingSize) {
 	// Calculate segment rects. NB: These are pixel-aligned so roundrects look as good as poss.
 	for (int i=0 ; i<_segments.size() ; i++) {
         Segment& segment = _segments.at(i);
-        segment.label->measure();
-        SIZE labelSize = segment.label->measuredSize();
+        //segment.label->measure();
+        //SIZE labelSize = segment.label->measuredSize();
 		segment.rect.size.width = app->dp(8) + labelSize.width + app->dp(8);
 		segment.rect.size.height = app->dp(4) + labelSize.height + app->dp(4);
 		_contentSize.width += segment.rect.size.width;
@@ -176,8 +179,7 @@ void SegmentedControl::updateContentSize(SIZE constrainingSize) {
     if (1==(((int)_contentSize.height)&1)) {
         _contentSize.height+=1;
     }
-
-}
+}*/
 
 void SegmentedControl::layout(RECT constraint) {
 
@@ -187,7 +189,7 @@ void SegmentedControl::layout(RECT constraint) {
     float x=0;
     for (int i=0 ; i<_segments.size() ; i++) {
         Segment& segment = _segments.at(i);
-        RECT& rect = segment.rect;
+        RECT rect = segment.label->getRect();
         rect.origin.x = x;
         rect.origin.y = 0;
         segment.rectOp->setRect(rect);
@@ -199,24 +201,25 @@ void SegmentedControl::layout(RECT constraint) {
 
 
 void SegmentedControl::updateRenderOps() {
-    for (int i=0 ; i<_segments.size() ; i++) {
+    View::updateRenderOps();
+    /*for (int i=0 ; i<_segments.size() ; i++) {
         Segment& segment = _segments.at(i);
         segment.label->layout(segment.rect);
         segment.label->updateRenderOps(this);
-    }
+    }*/
 }
 
 void SegmentedControl::setPressedIndex(int pressedIndex) {
     if (_pressedIndex >= 0) {
         Segment& segment = _segments.at(_pressedIndex);
         segment.rectOp->setColor((_pressedIndex==_selectedIndex) ? _effectiveTintColor : COLOR(0));
-        invalidateRect(segment.rect);
+        invalidateRect(segment.label->getRect());
     }
     _pressedIndex = pressedIndex;
     if (pressedIndex >=0) {
         Segment& segment = _segments.at(pressedIndex);
         segment.rectOp->setColor(0xc0000000 | (_effectiveTintColor&0xffffff));
-        invalidateRect(segment.rect);
+        invalidateRect(segment.label->getRect());
     }
 }
 
@@ -225,7 +228,7 @@ bool SegmentedControl::handleInputEvent(INPUTEVENT* event) {
 		_pressedIndex = -1;
 		for (int i=0 ; i<_segments.size() ; i++) {
 			Segment& segment = _segments.at(i);
-			if (segment.rect.contains(event->ptLocal)) {
+			if (segment.label->getRect().contains(event->ptLocal)) {
                 setPressedIndex(i);
 				break;
 			}
@@ -233,11 +236,11 @@ bool SegmentedControl::handleInputEvent(INPUTEVENT* event) {
 	} else if (event->type == INPUT_EVENT_UP) {
 		if (_pressedIndex >= 0) {
             Segment& segment = _segments.at(_pressedIndex);
-			if (segment.rect.contains(event->ptLocal)) {
+			if (segment.label->getRect().contains(event->ptLocal)) {
 				onSegmentTap(_pressedIndex);
 				if (_pressedIndex != _selectedIndex) {
 					if (_selectedIndex >= 0) {
-						invalidateRect(_segments.at(_selectedIndex).rect);
+						invalidateRect(_segments.at(_selectedIndex).label->getRect());
 					}
                     setSelectedIndex(_pressedIndex);
 				}

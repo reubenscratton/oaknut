@@ -16,9 +16,6 @@ struct VERTEX {
 };
 
 
-
-
-
 struct POINT {
 	float x;
 	float y;
@@ -46,21 +43,65 @@ struct POINT {
         y-=d.y;
         return *this;
     }
-    
+};
 
+struct POINTI {
+    int x;
+    int y;
+    
+    bool isZero() const { return x==0 && y==0; }
+    const POINTI operator+(const POINTI& rhs) const { return {x+rhs.x, y+rhs.y}; }
+    const POINTI operator-(const POINTI& rhs) const { return {x-rhs.x, y-rhs.y}; }
+    
+    bool equals(POINTI& pt) const {
+        return x==pt.x && y==pt.y;
+    }
+    bool operator==(const POINTI& pt) const {
+        return x==pt.x && y==pt.y;
+    }
+    bool operator!=(const POINTI& pt) const {
+        return !(x==pt.x && y==pt.y);
+    }
+    const POINTI& operator+=(const POINTI& d) {
+        x+=d.x;
+        y+=d.y;
+        return *this;
+    }
+    const POINTI& operator-=(const POINTI& d) {
+        x-=d.x;
+        y-=d.y;
+        return *this;
+    }
 };
 
 struct SIZE {
 	float width;
 	float height;
     SIZE() {}
-    SIZE(float w, float h) : width(w), height(h) {
+    SIZE(float w, float h) : width(w), height(h) {}
+    bool operator==(const SIZE& r) {
+        return width==r.width
+            && height==r.height;
+    }
+    bool operator!=(const SIZE& r) {
+        return !(width==r.width
+                 && height==r.height);
     }
 };
 
 struct SIZEI {
     int width;
     int height;
+    SIZEI() {}
+    SIZEI(int w, int h) : width(w), height(h) {}
+    bool operator==(const SIZEI& r) {
+        return width==r.width
+            && height==r.height;
+    }
+    bool operator!=(const SIZEI& r) {
+        return !(width==r.width
+                 && height==r.height);
+    }
 };
 
 struct RECT {
@@ -144,11 +185,17 @@ struct RECT {
     }
     bool operator==(const RECT& r) {
         return origin.x==r.origin.x
-        && origin.y==r.origin.y
-        && size.width==r.size.width
-        && size.height==r.size.height;
+            && origin.y==r.origin.y
+            && size.width==r.size.width
+            && size.height==r.size.height;
     }
-    
+    bool operator!=(const RECT& r) {
+        return !(origin.x==r.origin.x
+            && origin.y==r.origin.y
+            && size.width==r.size.width
+            && size.height==r.size.height);
+    }
+
     inline RECT& inset(float dx, float dy) {
         origin.x += dx;
         origin.y += dy;

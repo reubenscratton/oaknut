@@ -23,7 +23,7 @@
 
 @endverbatim
 */
-class SegmentedControl : public View {
+class SegmentedControl : public LinearLayout {
 public:
 	
     /**  @cond INTERNAL */
@@ -52,7 +52,7 @@ public:
     /** @name Overrides
      * @{ */
     bool applySingleStyle(const string &name, const style& value) override;
-	void updateContentSize(SIZE constrainingSize) override;
+	//void updateContentSize(SIZE constrainingSize) override;
 	void layout(RECT constraint) override;
     void updateRenderOps() override;
 	bool handleInputEvent(INPUTEVENT* event) override;
@@ -66,9 +66,9 @@ protected:
     float _fontWeight;
     bool _fontValid;
     typedef struct {
-        RECT rect;
+        //RECT rect;
         sp<RectRenderOp> rectOp;
-        sp<TextRenderer> label;
+        sp<Label> label;
     } Segment;
     vector<Segment> _segments;
     COLOR _textColor;

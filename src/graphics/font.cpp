@@ -7,7 +7,7 @@
 
 #include <oaknut.h>
 
-static sp<Atlas> atlas;
+sp<Atlas> Font::atlas;
 static bool s_inited;
 static map<string, sp<Font>> s_loadedFonts;
 
@@ -53,13 +53,18 @@ Glyph* Font::getGlyph(char32_t ch) {
     if (it != _glyphs.end()) {
         return it->second;
     }
-    Glyph* glyph = createGlyph(ch, atlas);
+    Glyph* glyph = createGlyph(ch);
     assert(glyph);
     _glyphs.insert(std::make_pair(ch, glyph));
     return glyph;
 }
 
-Glyph::Glyph(Font* font, char32_t ch, uint16_t glyphIndex) : _font(font) {
-    this->charCode = ch;
-    //this->glyphIndex = glyphIndex;
+Glyph::Glyph(Font* font, char32_t codepoint) : _font(font), _codepoint(codepoint) {
+}
+
+AtlasNode* Glyph::atlasNode() {
+    if (!_atlasNode) {
+        _font->rasterizeGlyph(this, Font::atlas);
+    }
+    return _atlasNode;
 }

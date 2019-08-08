@@ -47,7 +47,7 @@ public:
     }
     
     void deleteBackward() override {
-        if (_textRenderer.getText().length() == 0) {
+        if (_textLayout.getText().length() == 0) {
             if (_prev) {
                 _prev->requestFocus();
                 _prev->deleteBackward();

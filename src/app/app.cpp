@@ -60,6 +60,9 @@ const style* App::getStyle(const string& keypath) {
     return _styles.get(keypath);
 }
 
+Font* App::defaultFont() {
+    return Font::get("", 17.0);
+}
 
 string App::getStyleString(const string& keypath, const char* defaultString) {
     auto value = getStyle(keypath);

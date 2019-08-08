@@ -111,6 +111,7 @@ public:
     bool hadPrefix(const string& prefix, bool caseSensitive=true);
     bool hasSuffix(const string& suffix, bool caseSensitive=true) const;
     bool hadSuffix(const string& suffix, bool caseSensitive=true);
+    bool replace(const string& search, const string& replacement, bool caseSensitive=true);
 
     // Character iteration
     class iterator: public std::iterator<

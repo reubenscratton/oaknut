@@ -12,7 +12,8 @@ public:
     FontApple(const string& fontAssetPath, float size, float weight);
     
 protected:
-    CTFontRef createCTFont();
-    Glyph* createGlyph(char32_t ch, Atlas* atlas);
+    
+    Glyph* createGlyph(char32_t ch) override;
+    void rasterizeGlyph(Glyph* glyph, Atlas* atlas) override;
 };
 

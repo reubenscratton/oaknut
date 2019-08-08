@@ -34,30 +34,39 @@ protected:
     // Gets a font at a particular size. If asset path is zero-length then
     // system font is used. If size is zero then 12 is the default.
     Font(const string& name, float size, float weight);
-    virtual Glyph* createGlyph(char32_t ch, Atlas* atlas) = 0;
     static Font* create(const string& fontAssetPath, float size, float weight);
 
+    // Platform-specific APIs
+    virtual Glyph* createGlyph(char32_t ch) = 0;
+    virtual void rasterizeGlyph(Glyph* glyph, Atlas* atlas) = 0;
+
+    static sp<Atlas> atlas;
+    
 public:
     Glyph* getGlyph(char32_t ch);
     
+    
     static Font* get(const string& name, float size, float weight=FONT_WEIGHT_REGULAR);
+
+    friend class Glyph;
 };
 
 
 
 class Glyph : public Object {
 public:
-    Font* _font;
-    char32_t charCode;
-    //uint16_t glyphIndex;
-    int bitmapWidth;
-    int bitmapHeight;
-	int bitmapLeft;
-	int bitmapTop;
-    AtlasNode* atlasNode;
-    SIZE advance;
+
+    Glyph(Font* font, char32_t codepoint);
     
-    Glyph(Font* font, char32_t ch, uint16_t glyphIndex);
+    AtlasNode* atlasNode();
+    
+    Font* _font;
+    char32_t _codepoint;
+    SIZEI _size;
+    SIZE _advance;
+    POINT _origin; // bitmapLeft, bitmapTop
+    AtlasNode* _atlasNode;
+    
 };
 
 

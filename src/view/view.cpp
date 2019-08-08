@@ -1415,6 +1415,13 @@ void View::setAlpha(float alpha) {
     }
 }
 
+void View::setOpaque(bool opaque) {
+    if(_opaque != opaque) {
+        _opaque = opaque;
+        setNeedsFullRedraw();
+    }
+}
+
 COLOR View::getTintColor() {
     return _tintColor;
 }

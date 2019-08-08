@@ -23,7 +23,7 @@ EditText::EditText() : Label() {
 bool EditText::handleInputEvent(INPUTEVENT* event) {
     if (event->type == INPUT_EVENT_DOWN && event->deviceType!=INPUTEVENT::ScrollWheel) {
         POINT pt = event->ptLocal;
-        setInsertionPoint(_textRenderer.characterIndexFromPoint(pt));
+        setInsertionPoint(_textLayout.charIndexFromPoint(pt));
     }
     if (event->type == INPUT_EVENT_TAP) {
         if (_clearButtonOp && _clearButtonOp->_rect.contains(event->ptLocal)) {
@@ -117,7 +117,7 @@ void EditText::updateCursor() {
     }
     POINT cursorOrigin;
     float ascent, descent;
-    _textRenderer.getCharacterOrigin(_insertionPoint, &cursorOrigin, &ascent, &descent);
+    _textLayout.charOriginFromIndex(_insertionPoint, &cursorOrigin, &ascent, &descent);
     _cursorRenderOp->setRect(RECT(cursorOrigin.x,cursorOrigin.y-ascent,4 /*todo: style*/,ascent-descent));
     _cursorValid = true;
     if (_cursorOn && !_cursorRenderOp->_batch) {
@@ -150,7 +150,7 @@ void EditText::updateContentSize(SIZE constrainingSize) {
 void EditText::setText(const AttributedString& text) {
     auto tt = text;
     if (onTextChange) {
-        onTextChange(_textRenderer._text, tt);
+        onTextChange(_textLayout.getText(), tt);
     }
     Label::setText(tt);
     _selectionStart = MIN(_selectionStart, (int)tt.length());
@@ -195,8 +195,8 @@ void EditText::layout(RECT constraint) {
  ITextInputReceiver
  */
 bool EditText::insertText(string insertionText, int replaceStart, int replaceEnd) {
-    if (insertionText=="\n" && _textRenderer._maxLines >0) {
-        if (_textRenderer._lines.size() >= _textRenderer._maxLines) {
+    if (insertionText=="\n" && _textLayout.maxLines() >0) {
+        if (_textLayout.lineCount() >= _textLayout.maxLines()) {
             handleActionPressed();
             return false;
         }
@@ -240,7 +240,7 @@ void EditText::notifySelectionChanged() {
 }
 
 int EditText::getTextLength() {
-    return (int)_textRenderer.getText().length();
+    return (int)_textLayout.getText().length();
 }
 
 int EditText::getSelectionStart() {
@@ -260,7 +260,7 @@ string EditText::textInRange(int start, int end) {
     if (start>end) {
         std::swap(start, end);
     }
-    const string& text = _textRenderer.getText();
+    const string& text = _textLayout.getText();
     if (start>=text.length()) start = (int)text.length();
     if (start<0) start=0;
     if (end>=text.length()) end = (int)text.length();
@@ -275,12 +275,13 @@ void EditText::setInsertionPoint(int32_t newInsertionPoint) {
     updateCursor();
     
     // Ensure the cursor is fully visible (i.e. autoscroll it into view)
-    auto line = _textRenderer.getLineForCharacterIndex(_insertionPoint, 0);
-    float dy = line->bounds.top() - _contentOffset.y;
+    int lineIndex = _textLayout.lineIndexFromCharIndex(_insertionPoint, 0);
+    auto lineRect = _textLayout.lineRect(lineIndex);
+    float dy = lineRect.top() - _contentOffset.y;
     if (dy < 0) {
         scrollBy({0,dy});
     } else {
-        dy = line->bounds.bottom() - (_rect.size.height+_contentOffset.y);
+        dy = lineRect.bottom() - (_rect.size.height+_contentOffset.y);
         if (dy > 0) {
             scrollBy({0,dy});
         }
@@ -289,7 +290,7 @@ void EditText::setInsertionPoint(int32_t newInsertionPoint) {
 }
 
 void EditText::moveCursor(int dx, int dy) {
-    setInsertionPoint(_textRenderer.moveCharacterIndex(_insertionPoint, dx, dy));
+    setInsertionPoint(_textLayout.charIndexMove(_insertionPoint, dx, dy));
 }
 
 
@@ -331,8 +332,8 @@ void EditText::keyInputEvent(KeyboardInputEventType keyboardInputEventType, Keyb
     }
 
     if (charCode=='\r') charCode = '\n';
-    if (charCode=='\n' && _textRenderer._maxLines >0) {
-        if (_textRenderer._lines.size() >= _textRenderer._maxLines) {
+    if (charCode=='\n' && _textLayout.maxLines() >0) {
+        if (_textLayout.lineCount() >= _textLayout.maxLines()) {
             return;
         }
     }
@@ -354,7 +355,7 @@ void EditText::setInsertionPointReal(int32_t& newInsertionPoint) {
 void EditText::setMaxLength(int32_t maxLength) {
     if (maxLength != _maxLength) {
         _maxLength = maxLength;
-        auto& text = _textRenderer.getText();
+        auto& text = _textLayout.getText();
         if (text.length() > maxLength) {
             AttributedString truncText = text;
             truncText.erase(maxLength, -1);

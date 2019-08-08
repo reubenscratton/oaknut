@@ -83,14 +83,17 @@ public:
     }
     
     void requestScroll(float dx, float dy) override {
-        app.log("todo: remove this override once autofocus works properly");
+        app->log("todo: remove this override once autofocus works properly");
     }
 };
 
 
+class TextEditApp : public App {
+public:
+    
+    void main() override {
+        _window->setRootViewController(new MainViewController());
+    }
 
-void App::main() {
-    _window->setRootViewController(new MainViewController());
-}
-
+} the_app;
 

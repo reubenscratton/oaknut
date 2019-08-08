@@ -45,21 +45,21 @@ Label::Label() : View() {
     // Ensure overridden property setters are actually called.
     setGravity(_gravity);
 }
-Label::~Label() {	
+Label::~Label() {
 }
 
 
 bool Label::applySingleStyle(const string& name, const style& value) {
     if (name=="font-name") {
-        _textRenderer.setFontName(value.stringVal());
+        setFontName(value.stringVal());
         return true;
     }
     if (name=="font-size") {
-        _textRenderer.setFontSize(value.floatVal());
+        setFontSize(value.floatVal());
         return true;
     }
     if (name=="font-weight") {
-        _textRenderer.setFontWeight(value.fontWeightVal());
+        setFontWeight(value.fontWeightVal());
         return true;
     }
     if (name=="forecolor") {
@@ -78,102 +78,112 @@ bool Label::applySingleStyle(const string& name, const style& value) {
 }
 
 void Label::setText(const AttributedString& text) {
-    _textRenderer.setText(text);
+    _textLayout.setText(text);
     invalidateContentSize();
 }
 
 void Label::setFont(Font* font) {
-    _textRenderer.setFont(font);
+    _textLayout.setFont(font);
+    _pendingFontChange.pending = false;
     invalidateContentSize();
 }
 void Label::setFontName(const string& fontName) {
-    _textRenderer.setFontName(fontName);
+    _pendingFontChange.name = fontName;
+    _pendingFontChange.pending = true;
+    invalidateContentSize();
+}
+void Label::setFontSize(float size) {
+    auto font = _textLayout.getFont();
+    if (!font || size != font->_size) {
+        _pendingFontChange.size = size;
+        _pendingFontChange.pending = true;
+        invalidateContentSize();
+    }
+}
+void Label::setFontWeight(float weight) {
+    _pendingFontChange.weight = weight;
+    _pendingFontChange.pending = true;
     invalidateContentSize();
 }
 
 void Label::setMaxLines(int maxLines) {
-    _textRenderer.setMaxLines(maxLines);
+    _textLayout.setMaxLines(maxLines);
     invalidateContentSize();
 }
 
 
 void Label::setTextColor(COLOR color) {
-    _defaultColor = color;
+    _textLayout.setColor(color);
     onEffectiveTintColorChanged();
 }
 
 void Label::onEffectiveTintColorChanged() {
-    _textRenderer.setColor(_effectiveTintColor ? _effectiveTintColor : _defaultColor);
+    //_textLayout.setColor(_effectiveTintColor ? _effectiveTintColor : _defaultColor);
     
-    // TODO: Changing color should not trigger a layout! The bug is that TextRenderer only
-    // reconsiders color as part of the layout process.
-    //_updateRenderOpsNeeded = true;
-    invalidateContentSize();
+    _updateRenderOpsNeeded = true;
+    //invalidateContentSize();
+    setNeedsFullRedraw();
 }
 
 void Label::layout(RECT constraint) {
     
     // If the parent width changed and the label size is relative to parent
     // then force a re-evaluation of content size.
-    if (constraint.size.width != _prevParentWidth) {
+    /*if (constraint.size.width != _prevParentWidth) {
         if (_widthMeasureSpec.ref==nullptr && _widthMeasureSpec.mul != 0.0f) {
             _textRenderer._measuredSizeValid = false;
             _contentSizeValid = false;
             _prevParentWidth = constraint.size.width;
         }
-    }
+    }*/
     View::layout(constraint);
+    
+    RECT rect = getOwnRectPadded();
+    _textLayout.layout(rect);
+    
+
     
     // Automatically set clipsContent based on whether text overflows bounds
     _clipsContent = (_contentSize.height > _rect.size.height)
-    || (_contentSize.width > _rect.size.width);
+                 || (_contentSize.width > _rect.size.width);
     
-    _textRenderer.layout(getOwnRectPadded());
-    _textRendererMustRelayout = false;
-    _updateRenderOpsNeeded = true;
+    //_updateRenderOpsNeeded = true;
 
 }
 
 void Label::setContentOffset(POINT contentOffset) {
     View::setContentOffset(contentOffset);
-    _textRenderer.updateRenderOps(this);
-
-}
-
-void Label::invalidateContentSize() {
-    _textRenderer._measuredSizeValid = false;
-    View::invalidateContentSize();
+    _updateRenderOpsNeeded = true;
 }
 
 
 void Label::updateContentSize(SIZE constrainingSize) {
 
-    _contentSize.width = 0;
-    _contentSize.height = 0;
-
+    // Update font
+    if (_pendingFontChange.pending) {
+        const Font* currentFont = _textLayout.getFont();
+        string name = _pendingFontChange.name.length() ? _pendingFontChange.name : currentFont->_name;
+        float size = _pendingFontChange.size ? _pendingFontChange.size : currentFont->_size;
+        float weight = _pendingFontChange.weight ? _pendingFontChange.weight : currentFont->_weight;
+        _textLayout.setFont(Font::get(name, size, weight));
+        _pendingFontChange.pending = false;
+    }
+    
+    // Measure text
     constrainingSize.width -= (_padding.left + _padding.right);
     constrainingSize.height -= (_padding.top + _padding.bottom);
-    
-    _textRenderer.measure(constrainingSize);
-    
-    _contentSize = _textRenderer.measuredSize();
-    // If we had to use a soft linebreak then we know we filled the available width
-    //if (_textRenderer.hasSoftLineBreaks) {
-    //    _contentSize.width = parentWidth;
-    //}
+    _contentSize = _textLayout.measure(constrainingSize);
     
     // Flag that renderOps will need updating after layout
-    _textRendererMustRelayout = true;
     _updateRenderOpsNeeded = true;
 }
 
 
 void Label::updateRenderOps() {
-    if (_textRendererMustRelayout) {
-        _textRenderer.layout(getOwnRectPadded());
-        _textRendererMustRelayout = false;
-    }
-    _textRenderer.updateRenderOps(this);
+    //COLOR textColor = _effectiveTintColor ? _effectiveTintColor : _defaultColor;
+
+
+    _textLayout.updateRenderOpsForView(this);
     //updateEffectiveAlpha();
     //app->log("Eff. alpha %f for label '%s'", _effectiveAlpha, _textRenderer._text.data());
 }
@@ -181,19 +191,21 @@ void Label::updateRenderOps() {
 
 void Label::setGravity(GRAVITY gravity) {
     View::setGravity(gravity);
-    _textRenderer.setGravity(gravity);
+    _textLayout.setGravity(gravity);
 }
 
 const Attribute* Label::getAttribute(int32_t pos, Attribute::Type type) {
-    return _textRenderer._text.getAttribute(pos, type);
+    return _textLayout._text.getAttribute(pos, type);
 }
+
+
 
 
 #ifdef DEBUG
 
 string Label::debugViewType() {
     char ach[256];
-    snprintf(ach, 256, "Label:%s", _textRenderer.getText().data());
+    snprintf(ach, 256, "Label:%s", _textLayout.getText().data());
     return string(ach);
 }
 

@@ -85,26 +85,16 @@ protected:
  * @brief Represents a value in the global style namespace. Typical usage is to
  * use `App::getStyleValue()` and friends to get one and then use one of the accessors
  * `intVal()`, `stringVal()` to get the raw value.
- *
- * Is alarmingly similar to the 'variant' type with which it should probably be unified.
  */
 
-/*
-class StyleValue {
-public:
 
-    const style* get(const string& keypath) const;
-    void importValues(const map<string, StyleValue>& values);
-
-
-};*/
 
 /**
  * @ingroup app_group
  * @brief  Abstract base class for objects that can have style
  * values applied.
  *
- * In practice this means Views, but also TextRenderer.
+ * In practice this means Views.
  */
 class Styleable : public Object {
 public:

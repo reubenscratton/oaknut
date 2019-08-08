@@ -5,32 +5,18 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-typedef struct _TEXTRENDERPARAMS {
-    AtlasPage* atlasPage;
-    int forecolor;
-    inline bool operator<(const struct _TEXTRENDERPARAMS& y) const {
-        if (atlasPage < y.atlasPage) return true;
-        if (atlasPage > y.atlasPage) return false;
-        return forecolor<y.forecolor;
-    }
-    inline bool operator==(const struct _TEXTRENDERPARAMS& o) const {
-        return atlasPage==o.atlasPage && forecolor==o.forecolor;
-    }
-
-    sp<class TextRenderOp> renderOp;
-} TEXTRENDERPARAMS;
-
 
 class TextRenderOp : public RenderOp {
 public:
     vector<RECT> _rects;
     vector<RECT> _rectsTex;
-    TEXTRENDERPARAMS _textRenderParams;
+    vector<COLOR> _forecolors;
+    AtlasPage* _atlasPage;
     
-    TextRenderOp(const TEXTRENDERPARAMS* textRenderParams);
+    TextRenderOp(AtlasPage* atlasPage);
 
 
-    void addGlyph(Glyph* glyph, const RECT& rect);
+    void addGlyph(Glyph* glyph, const RECT& rect, COLOR forecolor);
     void reset();
     
     // Overrides

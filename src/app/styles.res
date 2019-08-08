@@ -95,6 +95,8 @@ SegmentedControl: {
     font-size: $font-size
     stroke-width: 1dp
     corner-radius: 4dp
+    spacing: 1dp
+    padding: 8dp,4dp
 }
 
 

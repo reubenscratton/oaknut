@@ -20,11 +20,13 @@ public:
     /** @name Properties
      * @{
      */
-    virtual const AttributedString& getText() { return _textRenderer.getText(); }
+    virtual const AttributedString& getText() { return _textLayout.getText(); }
     virtual void setText(const AttributedString& text);
     virtual void setTextColor(COLOR color);
     virtual void setFont(Font* font);
     virtual void setFontName(const string& fontName);
+    virtual void setFontSize(float fontSize);
+    virtual void setFontWeight(float fontWeight);
     virtual void setMaxLines(int maxLines);
     virtual const Attribute* getAttribute(int32_t pos, Attribute::Type type);
     /** @} */
@@ -33,7 +35,7 @@ public:
      * @{
      */
     bool applySingleStyle(const string& name, const style& value) override;
-    void invalidateContentSize() override;
+    //void invalidateContentSize() override;
     void layout(RECT constraint) override;
     void onEffectiveTintColorChanged() override;
     void setContentOffset(POINT contentOffset) override;
@@ -49,10 +51,16 @@ public:
 #endif
     
 protected:
-    TextRenderer _textRenderer;
-    COLOR _defaultColor;
+    TextLayout _textLayout;
     float _prevParentWidth;
-    bool _textRendererMustRelayout;
+    
+    struct {
+        bool pending;
+        string name;
+        float size;
+        float weight;
+    } _pendingFontChange;
+    
     
 };
 

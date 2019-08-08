@@ -302,10 +302,14 @@ string variant::stringVal(const char *name) const {
     return get(name).stringVal();
 }
 vector<string> variant::stringArrayVal() const {
-    auto& a = arrayRef();
     vector<string> vec;
-    for (auto e : a) {
-        vec.push_back(e.stringVal());
+    if (isArray()) {
+        auto& a = arrayRef();
+        for (auto e : a) {
+            vec.push_back(e.stringVal());
+        }
+    } else if (!isEmpty()) {
+        vec.push_back(stringVal());
     }
     return vec;
 }

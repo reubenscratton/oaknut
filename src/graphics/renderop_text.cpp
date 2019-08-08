@@ -10,15 +10,15 @@
 
 
 
-TextRenderOp::TextRenderOp(const TEXTRENDERPARAMS* textRenderParams) : RenderOp() {
+TextRenderOp::TextRenderOp(AtlasPage* atlasPage) : RenderOp() {
     _alpha = 1.0f;
-    _textRenderParams = *textRenderParams;
+    _atlasPage = atlasPage;
     _blendMode = BLENDMODE_NORMAL;
     _mergeType = MERGETYPE_TEXT;
 }
 
 void TextRenderOp::validateShader(Renderer* renderer) {
-    Bitmap* bitmap = _textRenderParams.atlasPage->_bitmap;
+    Bitmap* bitmap = _atlasPage->_bitmap;
     if (bitmap) {
         if (!bitmap->_texture) {
             renderer->createTextureForBitmap(bitmap);
@@ -31,9 +31,9 @@ void TextRenderOp::validateShader(Renderer* renderer) {
     }
 }
 
-void TextRenderOp::addGlyph(Glyph* glyph, const RECT& rect) {
-    RECT rectTex = glyph->atlasNode->rect;
-    Bitmap* bitmap =  glyph->atlasNode->page->_bitmap;
+void TextRenderOp::addGlyph(Glyph* glyph, const RECT& rect, COLOR forecolor) {
+    RECT rectTex = glyph->_atlasNode->rect;
+    Bitmap* bitmap =  glyph->_atlasNode->page->_bitmap;
     rectTex.origin.x /= bitmap->_width;
     rectTex.origin.y /= bitmap->_height;
     rectTex.size.width /= bitmap->_width;
@@ -45,6 +45,7 @@ void TextRenderOp::addGlyph(Glyph* glyph, const RECT& rect) {
     } else {
         _rect.unionWith(rect);
     }
+    _forecolors.push_back(forecolor);
 }
 
 void TextRenderOp::reset() {
@@ -55,7 +56,7 @@ void TextRenderOp::reset() {
 bool TextRenderOp::canMergeWith(const RenderOp* op) {
     if (!RenderOp::canMergeWith(op)) return false;
     const TextRenderOp* textOp = (const TextRenderOp*)op;
-    return _textRenderParams == textOp->_textRenderParams;
+    return _atlasPage == textOp->_atlasPage;
 }
 
 int TextRenderOp::numQuads() {
@@ -64,7 +65,7 @@ int TextRenderOp::numQuads() {
 
 void TextRenderOp::prepareToRender(Renderer* renderer, Surface* surface) {
     RenderOp::prepareToRender(renderer, surface);
-    renderer->bindBitmap(_textRenderParams.atlasPage->_bitmap);
+    renderer->bindBitmap(_atlasPage->_bitmap);
 }
 
 void TextRenderOp::asQuads(QUAD *quad) {
@@ -75,10 +76,10 @@ void TextRenderOp::asQuads(QUAD *quad) {
         quad->tl.t = quad->tr.t = rectTex.top();
         quad->tr.s = quad->br.s = rectTex.right();
         quad->bl.t = quad->br.t = rectTex.bottom();
-        quad->tl.color = _textRenderParams.forecolor;
-        quad->tr.color = _textRenderParams.forecolor;
-        quad->bl.color = _textRenderParams.forecolor;
-        quad->br.color = _textRenderParams.forecolor;
+        quad->tl.color =
+        quad->tr.color =
+        quad->bl.color = 
+        quad->br.color = _forecolors[i];
         quad++;
     }
 }

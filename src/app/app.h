@@ -74,6 +74,8 @@ public:
     /** Get a named style value and coerce to a COLOR */
     COLOR getStyleColor(const string& key);
     
+    Font* defaultFont();
+    
     /**@}*/
     
     

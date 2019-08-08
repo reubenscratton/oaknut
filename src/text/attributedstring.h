@@ -63,7 +63,7 @@ public:
 };
 
 
-class AttributedString : public string {
+class AttributedString : public string { // TODO: Should extend Object, not string.
 public:
     
     AttributedString();
@@ -79,8 +79,8 @@ public:
 
     void applyStyle(const class style* s);
     
-    friend class TextRenderer;
-    
+    friend class TextLayout;
+
 private:
     struct AttributeUse {
         Attribute attribute;

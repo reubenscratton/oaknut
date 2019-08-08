@@ -368,6 +368,8 @@ public:
     /** Sets alpha */
     void setAlpha(float alpha);
 
+    void setOpaque(bool opaque);
+    
 protected:
     /**  \cond INTERNAL */
     virtual void updateRenderOps();

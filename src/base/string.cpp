@@ -441,6 +441,16 @@ bool string::hadSuffix(const string& suffix, bool caseSensitive/*=true*/) {
     return false;
 }
 
+bool string::replace(const string& search, const string& replacement, bool caseSensitive) {
+    int c=0;
+    int32_t i;
+    while ((i = find(search)) >= 0) {
+        erase(i, i+replacement.length());
+        insert(i, replacement);
+        c++;
+    }
+    return c>0;
+}
 
 string::iterator string::iterator::operator++(int) {
     string::iterator retval = *this; ++(*this); return retval;
