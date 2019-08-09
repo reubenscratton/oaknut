@@ -105,15 +105,14 @@ void ImageView::loadImage() {
 	_startLoadTime = app->currentMillis();
     if (_assetPath.length() > 0) {
         auto hashVal = _assetPath.hash();
-        bytearray* data = new bytearray();
-        app->loadAsset(_assetPath.data(), *data);
-        assert(data->size());
-        _imageLoadTask = Bitmap::createFromData(*data, [=](Bitmap *bitmap) {
+        bytearray data;
+        app->loadAsset(_assetPath.data(), data);
+        assert(data.size());
+        _imageLoadTask = Bitmap::createFromData(data, [=](Bitmap *bitmap) {
             if (hashVal == _assetPath.hash()) {
                 setBitmap(bitmap);
             }
             _imageLoadTask = NULL;
-            delete data;
         });
     } else if (_url.length() > 0) {
         _request = URLRequest::get(_url, URL_FLAG_BITMAP);

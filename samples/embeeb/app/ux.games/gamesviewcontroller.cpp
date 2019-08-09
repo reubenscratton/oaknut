@@ -32,9 +32,9 @@ void GamesListAdapter::bindItemView(View* itemview, LISTINDEX index) {
 void GamesListAdapter::handleJson(const variant& json) {
     _items.clear();
     if (json.type != variant::ARRAY) {
-        app.log("Oops!");
+        app->log("Oops!");
     } else {
-        auto& vals = json.arrayVal();
+        auto& vals = json.arrayRef();
         for (auto& val : vals) {
             Game* game = new Game();
             game->fromVariant(val);
@@ -56,7 +56,7 @@ GamesViewController::GamesViewController(std::function<void(Game*)> delegate) {
 	
 	// Navbar
 	_segctrl = new SegmentedControl();
-	_segctrl->setSelectedTextColor(app.getStyleColor("NavigationBar.background")); // as if text is transparent
+	_segctrl->setSelectedTextColor(app->getStyleColor("NavigationBar.background")); // as if text is transparent
 	_segctrl->addSegment("Best");
 	_segctrl->addSegment("All");
     _segctrl->onSegmentSelected = [=](int index) {
@@ -101,15 +101,15 @@ GamesViewController::GamesViewController(std::function<void(Game*)> delegate) {
 
 
 void GamesViewController::onWillAppear(bool firstTime) {
-	_segctrl->setSelectedIndex(app.getIntSetting("disksSeg", 0));
+	_segctrl->setSelectedIndex(app->getIntSetting("disksSeg", 0));
     POINT pt;
     pt.x = 0;
-    pt.y = app.getIntSetting("disksY", 0);
+    pt.y = app->getIntSetting("disksY", 0);
     //_listView->setContentOffset(pt);
 }
 void GamesViewController::onDidDisappear(bool lastTime) {
-	app.setIntSetting("disksSeg", _segctrl->getSelectedIndex());
-	app.setIntSetting("disksY", _listView->getContentOffset().y);
+	app->setIntSetting("disksSeg", _segctrl->getSelectedIndex());
+	app->setIntSetting("disksY", _listView->getContentOffset().y);
 }
 
 void GamesViewController::applySafeInsets(const EDGEINSETS &safeInsets) {
@@ -119,6 +119,6 @@ void GamesViewController::applySafeInsets(const EDGEINSETS &safeInsets) {
 
 void GamesViewController::updateInsets() {
     int index = _segctrl->getSelectedIndex();
-    _listView->setScrollInsets(EDGEINSETS(0, _safeAreaInsets.top + ((index==0)?0:app.dp(40)), 0, 0));
+    _listView->setScrollInsets(EDGEINSETS(0, _safeAreaInsets.top + ((index==0)?0:app->dp(40)), 0, 0));
     _searchBox->getParent()->setAlignSpecs(ALIGNSPEC::Left(), ALIGNSPEC(NULL, 0.0f, 0.0f, _safeAreaInsets.top ));
 }

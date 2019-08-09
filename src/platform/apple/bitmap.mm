@@ -268,11 +268,22 @@ public:
     BitmapDecodeTask(bytearray& data, std::function<void(Bitmap*)> callback) : Task([=]() {
         callback(_bitmap);
     }) {
+        
+        // Detach the compressed image data so nothing owns it
+        uint8_t* pd = data.data();
+        uint32_t cb = data.size();
+        data.detach();
+        
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
+            
+            // Take ownership of compressed image data on this background thread
+            bytearray data_attached;
+            data_attached.assignNoCopy(pd, cb);
+            
             if (isCancelled()) {
                 return;
             }
-            _bitmap = bitmapFromData(data);
+            _bitmap = bitmapFromData(data_attached);
             _bitmap->retain();
             dispatch_async(dispatch_get_main_queue(), ^() {
                 Bitmap* bitmap = _bitmap;

@@ -78,7 +78,7 @@ DiskControls::DiskControls() {
 }
 
 void DiskControls::fromVariant(const variant& v) {
-	_controllers = v.arrayVal<Controller>("layouts");
+	_controllers = v.arrayOf<Controller>("layouts");
 }
 void DiskControls::toVariant(variant& v) {
     variant array;

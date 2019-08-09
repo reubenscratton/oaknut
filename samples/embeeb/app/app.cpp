@@ -10,15 +10,17 @@
 #include "ux.snapshots/snapshotsviewcontroller.h"
 
 
-void App::main() {
-	NavigationController* rootVC = new NavigationController();
-	rootVC->setTitle("emBeeb");
-    rootVC->pushViewController(new MainViewController());
-    _window->setRootViewController(rootVC);
+class EmBeebApp : public App {
+    void main() override {
+        NavigationController* rootVC = new NavigationController();
+        rootVC->setTitle("emBeeb");
+        rootVC->pushViewController(new MainViewController());
+        _window->setRootViewController(rootVC);
 
-    //GamesViewController* mainVC = new GamesViewController(NULL);
-    //SnapshotsViewController* mainVC = new SnapshotsViewController(NULL, NULL, NULL, NULL);
-}
+        //GamesViewController* mainVC = new GamesViewController(NULL);
+        //SnapshotsViewController* mainVC = new SnapshotsViewController(NULL, NULL, NULL, NULL);
+    }
+} the_app;
 
 
 

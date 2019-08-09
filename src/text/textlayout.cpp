@@ -16,7 +16,7 @@
 
 TextLayout::TextLayout() {
     _defaultParams.font = app->defaultFont();
-    _defaultParams.forecolor = 0xFF000000;
+    _defaultParams.forecolor = 0xFF000000; // todo: style
 }
 
 void TextLayout::setText(const AttributedString& text) {
@@ -319,6 +319,13 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
     return _rect.size;
 }
 
+bool TextLayout::glyphsNeedsPositioning() {
+    return _invalid & INVALID_POSITION;
+}
+bool TextLayout::opsValid() {
+    return !(_invalid & INVALID_OPS);
+}
+
 void TextLayout::layout(RECT& containingRect) {
     
     assert(!(_invalid & INVALID_GLYPHS)); // oops, needs a measure()!
@@ -383,6 +390,10 @@ RECT TextLayout::rect() {
     assert(!(_invalid & INVALID_LINES));    // needs measure()!
     assert(!(_invalid & INVALID_POSITION)); // needs layout()!
     return _rect;
+}
+
+void TextLayout::invalidateOps() {
+    _invalid |= INVALID_OPS;
 }
 
 void TextLayout::updateRenderOpsForView(View* view) {

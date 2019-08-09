@@ -72,12 +72,17 @@ void SegmentedControl::onEffectiveTintColorChanged() {
     }
 }
 
+void SegmentedControl::setPadding(EDGEINSETS padding) {
+    _segmentPadding = padding;
+    setNeedsLayout();
+}
+
 void SegmentedControl::addSegment(const string& labelText) {
     Segment segment;
     segment.label = new Label();
     segment.label->setMeasureSpecs(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
     segment.label->setFont(_font);
-    segment.label->setPadding(_padding);
+    segment.label->setPadding(_segmentPadding);
 	segment.label->setText(labelText);
     segment.label->setGravity({GRAVITY_CENTER,GRAVITY_CENTER});
     COLOR actualColor = _textColor ? _textColor : _effectiveTintColor;
@@ -151,7 +156,7 @@ void SegmentedControl::setSelectedIndex(int segmentIndex) {
 }
 
 
-/*void SegmentedControl::updateContentSize(SIZE constrainingSize) {
+void SegmentedControl::updateContentSize(SIZE constrainingSize) {
     
     if (!_fontValid) {
         _font = Font::get(_fontName, _fontSize);
@@ -164,7 +169,7 @@ void SegmentedControl::setSelectedIndex(int segmentIndex) {
 	_contentSize.width = 0;
 	_contentSize.height = 0;
 	// Calculate segment rects. NB: These are pixel-aligned so roundrects look as good as poss.
-	for (int i=0 ; i<_segments.size() ; i++) {
+	/*for (int i=0 ; i<_segments.size() ; i++) {
         Segment& segment = _segments.at(i);
         //segment.label->measure();
         //SIZE labelSize = segment.label->measuredSize();
@@ -178,8 +183,8 @@ void SegmentedControl::setSelectedIndex(int segmentIndex) {
 
     if (1==(((int)_contentSize.height)&1)) {
         _contentSize.height+=1;
-    }
-}*/
+    }*/
+}
 
 void SegmentedControl::layout(RECT constraint) {
 
@@ -201,7 +206,6 @@ void SegmentedControl::layout(RECT constraint) {
 
 
 void SegmentedControl::updateRenderOps() {
-    View::updateRenderOps();
     /*for (int i=0 ; i<_segments.size() ; i++) {
         Segment& segment = _segments.at(i);
         segment.label->layout(segment.rect);

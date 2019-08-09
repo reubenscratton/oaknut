@@ -16,8 +16,8 @@
 
 void Game::fromVariant(const variant& v) {
 	_title = v.stringVal("t");
-    _publishers = v.arrayVal("p");
-    auto diskInfos = v.arrayVal("m");
+    _publishers = v.arrayRef("p");
+    auto diskInfos = v.arrayRef("m");
     for (auto& vdi : diskInfos) {
         DiskInfo* disk = new DiskInfo();
         disk->fromVariant(vdi);

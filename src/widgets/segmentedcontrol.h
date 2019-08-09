@@ -52,11 +52,12 @@ public:
     /** @name Overrides
      * @{ */
     bool applySingleStyle(const string &name, const style& value) override;
-	//void updateContentSize(SIZE constrainingSize) override;
+	void updateContentSize(SIZE constrainingSize) override;
 	void layout(RECT constraint) override;
     void updateRenderOps() override;
 	bool handleInputEvent(INPUTEVENT* event) override;
     void onEffectiveTintColorChanged() override;
+    void setPadding(EDGEINSETS padding) override;
     /** @} */
 
 protected:
@@ -77,6 +78,7 @@ protected:
     float _cornerRadius;
     int _pressedIndex;
     int _selectedIndex;
+    EDGEINSETS _segmentPadding;
 
     void updateBorders();
 };

@@ -9,7 +9,7 @@
 DECLARE_DYNCREATE(ControllerView);
 
 ControllerView::ControllerView() {
-    setBackgroundColor(app.getStyleColor("keyboard.background"));
+    setBackgroundColor(app->getStyleColor("keyboard.background"));
 	_opaque = true;
 	setUsePrivateSurface(true);
 }

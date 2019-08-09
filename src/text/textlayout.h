@@ -78,7 +78,11 @@ public:
     // Generates or updates a set of RenderOps belonging to the given View that will render the text
     void updateRenderOpsForView(View* view);
     void resetRenderOps();
-
+    void invalidateOps(); // used by multiline Label when scrolled
+    
+    bool glyphsNeedsPositioning();
+    bool opsValid();
+    
 protected:
     
     // A single font glyph, at some position

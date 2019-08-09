@@ -113,15 +113,15 @@ void Label::setMaxLines(int maxLines) {
 
 
 void Label::setTextColor(COLOR color) {
-    _textLayout.setColor(color);
-    onEffectiveTintColorChanged();
+    if (_defaultColor != color) {
+        _defaultColor = color;
+        onEffectiveTintColorChanged();
+    }
 }
 
 void Label::onEffectiveTintColorChanged() {
-    //_textLayout.setColor(_effectiveTintColor ? _effectiveTintColor : _defaultColor);
-    
+    _textLayout.setColor(_effectiveTintColor ? _effectiveTintColor : _defaultColor);
     _updateRenderOpsNeeded = true;
-    //invalidateContentSize();
     setNeedsFullRedraw();
 }
 
@@ -138,21 +138,26 @@ void Label::layout(RECT constraint) {
     }*/
     View::layout(constraint);
     
-    RECT rect = getOwnRectPadded();
-    _textLayout.layout(rect);
-    
-
+    layoutText();
     
     // Automatically set clipsContent based on whether text overflows bounds
     _clipsContent = (_contentSize.height > _rect.size.height)
                  || (_contentSize.width > _rect.size.width);
     
-    //_updateRenderOpsNeeded = true;
 
+}
+
+void Label::layoutText() {
+    RECT rect = getOwnRectPadded();
+    _textLayout.layout(rect);
+    if (!_textLayout.opsValid()) {
+        _updateRenderOpsNeeded = true;
+    }
 }
 
 void Label::setContentOffset(POINT contentOffset) {
     View::setContentOffset(contentOffset);
+    _textLayout.invalidateOps();
     _updateRenderOpsNeeded = true;
 }
 
@@ -176,6 +181,12 @@ void Label::updateContentSize(SIZE constrainingSize) {
     
     // Flag that renderOps will need updating after layout
     _updateRenderOpsNeeded = true;
+    
+    // If no layout() call is scheduled but text layout needs repositioning (cos the text
+    // changed) then run text layout using our existing rect frame.
+    if (_layoutValid && _textLayout.glyphsNeedsPositioning()) {
+        layoutText();
+    }
 }
 
 

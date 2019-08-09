@@ -11,7 +11,7 @@ Snapshot::Snapshot() {
 // ISerializeToVariant
 void Snapshot::fromVariant(const variant& v) {
     _diskInfo = v.getObject<DiskInfo>("diskInfo");
-    _data = v.bytearrayVal("data");
+    _data = v.bytearrayRef("data");
     _timestamp = v.doubleVal("timestamp");
     _thumbnail = v.getObject<Bitmap>("thumbnail");
     _label = v.stringVal("label");
@@ -29,7 +29,7 @@ void Snapshot::toVariant(variant& v) {
 
 
 void Snapshot::updateWithData(ByteBuffer* data, Bitmap* thumbnail, string controllerId) {
-	_timestamp = app.currentMillis();
+	_timestamp = app->currentMillis();
 	_thumbnail = thumbnail;
 	_controllerId = controllerId;
     _data.assign(data->data, (int32_t)data->cb);

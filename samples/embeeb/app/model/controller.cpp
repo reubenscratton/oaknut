@@ -24,7 +24,7 @@ Controller::Controller(const Controller& src) {
 
 void Controller::fromVariant(const variant& v) {
     _name = v.stringVal("name");
-    auto keys = v.arrayVal("keys");
+    auto keys = v.arrayRef("keys");
     for (auto& key : keys) {
         ControllerKey::keyFromJson(key, this);
     }

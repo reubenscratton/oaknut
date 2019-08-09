@@ -18,14 +18,14 @@ void BeebView::setBeeb(Beeb* beeb) {
 #ifdef USE_32BPP
 # ifdef PLATFORM_APPLE
     int format = PIXELFORMAT_BGRA32;
-    app.log("beebview format is PIXELFORMAT_BGRA32");
+    app->log("beebview format is PIXELFORMAT_BGRA32");
 # else
     int format = PIXELFORMAT_RGBA32;
-    app.log("beebview format is PIXELFORMAT_RGBA32");
+    app->log("beebview format is PIXELFORMAT_RGBA32");
 # endif
 #else
     int format = PIXELFORMAT_RGB565;
-    app.log("beebview format is PIXELFORMAT_RGB565");
+    app->log("beebview format is PIXELFORMAT_RGB565");
 #endif
     _bitmap = Bitmap::create(SURFACE_WIDTH, SURFACE_HEIGHT, format);
     _bitmap->lock(&_bitmapData, true);

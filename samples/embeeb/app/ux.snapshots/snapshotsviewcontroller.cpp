@@ -7,7 +7,7 @@
 class SnapshotView : public View {
 public:
     SnapshotView() {
-        app.layoutInflateExistingView(this, "layout/snapshot_listitem.res");
+        app->layoutInflateExistingView(this, "layout/snapshot_listitem.res");
         imageView = (ImageView*)findViewById("image");
         titleLabel = (Label*)findViewById("title");
         subtitleLabel = (Label*)findViewById("subtitle");
@@ -15,7 +15,7 @@ public:
     void bind(Snapshot& snapshot) {
         imageView->setBitmap(snapshot._thumbnail);
         titleLabel->setText(snapshot._diskInfo?snapshot._diskInfo->_title:"No disk");
-        subtitleLabel->setText(app.friendlyTimeString(snapshot._timestamp));
+        subtitleLabel->setText(app->friendlyTimeString(snapshot._timestamp));
     }
     ImageView* imageView;
     Label* titleLabel;
@@ -94,8 +94,8 @@ SnapshotsViewController::SnapshotsViewController(Beeb* beeb, BeebView* beebView,
     // Listview
     _listView = new ListView();
     _listView->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Fill());
-    float statusBarHeight = app.getStyleFloat("statusbar.height");
-    _minTopScrollInset = app.getStyleFloat("navbar.height") + statusBarHeight;
+    float statusBarHeight = app->getStyleFloat("statusbar.height");
+    _minTopScrollInset = app->getStyleFloat("navbar.height") + statusBarHeight;
     _listView->setScrollInsets(EDGEINSETS(0, _minTopScrollInset, 0, 0));
     
     _snapshotStore = LocalStore::create("snapshots", "timestamp");
@@ -141,7 +141,7 @@ uint32_t SnapshotsViewController::saveSnapshot(Snapshot* snapshot) {
     sp<Canvas> canvas = Canvas::create();
     RECT rectSrc = _beebView->_visibleArea;
     rectSrc.scale(_beebView->_bitmap->_width, _beebView->_bitmap->_height);
-    RECT rectDst = {0,0, app.dp(72), app.dp(52)}; // matches layout
+    RECT rectDst = {0,0, app->dp(72), app->dp(52)}; // matches layout
     canvas->resize(rectDst.size.width, rectDst.size.height);
     canvas->drawBitmap(_beebView->_bitmap, rectSrc, rectDst);
 

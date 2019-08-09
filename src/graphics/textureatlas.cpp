@@ -17,14 +17,12 @@ AtlasNode::AtlasNode(AtlasPage* page) {
 
 BitmapProvider* AtlasPage::importAsset(const string& assetPath) {
     BitmapProvider* bitmapProvider = new BitmapProvider();
-    bytearray* data = new bytearray();
-    if (!app->loadAsset(assetPath.data(), *data)) {
-        delete data;
+    bytearray data;
+    if (!app->loadAsset(assetPath.data(), data)) {
         assert(0); // oops;
         return NULL;
     };
-    Bitmap::createFromData(*data, [=](Bitmap* bitmap) {
-        delete data;
+    Bitmap::createFromData(data, [=](Bitmap* bitmap) {
         assert(bitmap);
         if (bitmap->_format != _bitmap->_format) {
             bitmap = bitmap->convertToFormat(_bitmap->_format);

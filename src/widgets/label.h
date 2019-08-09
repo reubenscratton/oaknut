@@ -52,6 +52,7 @@ public:
     
 protected:
     TextLayout _textLayout;
+    COLOR _defaultColor;
     float _prevParentWidth;
     
     struct {
@@ -61,7 +62,7 @@ protected:
         float weight;
     } _pendingFontChange;
     
-    
+    void layoutText();
 };
 
 

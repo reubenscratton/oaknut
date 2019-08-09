@@ -11,8 +11,8 @@
 class BeebKeyboardKey : public ControllerKey {
 public:
 	BeebKey* _beebKey;
-	TextRenderer* _label;
-	TextRenderer* _labelTop;
+	TextLayout* _label;
+	TextLayout* _labelTop;
 	float _weight;
 	bool _highlighted;
 	

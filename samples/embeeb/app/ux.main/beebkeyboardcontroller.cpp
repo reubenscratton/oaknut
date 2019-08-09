@@ -47,18 +47,23 @@ void BeebKeyboardKey::attachToView(ControllerView *view) {
     ControllerKey::attachToView(view);
 
 
-    _label = new TextRenderer();
+    _label = new TextLayout();
     _label->setText(name);
-    _label->applyStyle((name.length()>1) ? "keyboard.labels-small" : "keyboard.labels-normal");
+    _label->setColor(0xFFFFFFFF);
+    _label->setFont(Font::get("",app->dp((name.length()>1) ? 12 : 14)));
+   // _label->applyStyle((name.length()>1) ? "keyboard.labels-small" : "keyboard.labels-normal");
     _label->setGravity({GRAVITY_CENTER, GRAVITY_CENTER});
-    _label->measure();
+    SIZE ffs = SIZE(FLT_MAX,FLT_MAX);
+    _label->measure(ffs);
 
     if (_beebKey->shiftLabel) {
-        _labelTop = new TextRenderer();
+        _labelTop = new TextLayout();
         _labelTop->setText(_beebKey->shiftLabel);
-        _labelTop->applyStyle("keyboard.labels-tiny");
+        _labelTop->setColor(0xFFFFFFFF);
+        _label->setFont(Font::get("",app->dp(10)));
+        //_labelTop->applyStyle("keyboard.labels-tiny");
         _labelTop->setGravity({GRAVITY_CENTER, GRAVITY_TOP});
-        _labelTop->measure();
+        _label->measure(ffs);
 	}
 }
 void BeebKeyboardKey::detachFromView(ControllerView *view) {
@@ -71,11 +76,13 @@ void BeebKeyboardKey::detachFromView(ControllerView *view) {
 
 void BeebKeyboardKey::layout() {
 	ControllerKey::layout();
+    _label->measure(_drawRect.size);
     _label->layout(_drawRect);
-    _label->updateRenderOps(_view);
+    _label->updateRenderOpsForView(_view);
     if (_labelTop) {
+        _labelTop->measure(_drawRect.size);
         _labelTop->layout(_drawRect);
-        _labelTop->updateRenderOps(_view);
+        _labelTop->updateRenderOpsForView(_view);
     }
 }
 
@@ -130,10 +137,10 @@ void BeebKeyboardController::KeyRow::layout(const RECT& bounds) {
 
 BeebKeyboardController::BeebKeyboardController() {
 
-    colourForKeyBackground = app.getStyleColor("keyboard.backgroundKeyNormal");
-    colourForPressedKey = app.getStyleColor("keyboard.backgroundKeyPressed");
-    colourForFunctionKeyBackground = app.getStyleColor("keyboard.backgroundKeyFunction");
-    colourForLEDKeyBackground = app.getStyleColor("keyboard.backgroundKeyLED");
+    colourForKeyBackground = app->getStyleColor("keyboard.backgroundKeyNormal");
+    colourForPressedKey = app->getStyleColor("keyboard.backgroundKeyPressed");
+    colourForFunctionKeyBackground = app->getStyleColor("keyboard.backgroundKeyFunction");
+    colourForLEDKeyBackground = app->getStyleColor("keyboard.backgroundKeyLED");
 
 	KeyRow* row = new KeyRow(); _rows.push_back(row);
 	row->_keys.push_back(new BeebKeyboardKey(this, &beebKeyTab));
@@ -277,7 +284,7 @@ void BeebKeyboardController::handleTouchEndInKey(ControllerKey* key, ControllerV
 	key->invalidate();
 	
 	if (beebKeyboardKey->_beebKey->scancode == ScanCode_Break) {
-		app.log("todo: post brk notify");
+		app->log("todo: post brk notify");
 		//[[NSNotificationCenter defaultCenter] postNotificationName:kResetCurrentSnapshot object:nil];
 	}
 }

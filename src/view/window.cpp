@@ -80,6 +80,7 @@ Window::MotionTracker::MotionTracker(int source) {
     timeOfDownEvent = 0;
     pastIndex = pastCount = 0;
     numClicks = 0;
+    _didSendLongpressEvent = false;
 }
 
 void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController* topVC) {

@@ -25,7 +25,7 @@ public:
     GameItemView() {
     }
     GameItemView(bool best) {
-        app.layoutInflateExistingView(this, best ? "layout/disk_listitem_best.res" : "layout/disk_listitem.res");
+        app->layoutInflateExistingView(this, best ? "layout/disk_listitem_best.res" : "layout/disk_listitem.res");
         numberLabel = (Label*)findViewById("number");
         imageView = (ImageView*)findViewById("image");
         titleLabel = (Label*)findViewById("title");
