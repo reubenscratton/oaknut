@@ -1,0 +1,96 @@
+{
+	"version"       : 1.2,
+	"flavour"       : "uk",
+	"serverVarient" : "debug",
+	"killSwitch"    : false,
+	"minAppVersion": "3.0.0.3946",
+	"endpoints" : {
+		"policy"   : {
+			"href" : "https://trevor-producer-cdn.api.bbci.co.uk/policy",
+			"flag" : "green",
+			"ttl"  : 3600
+		},
+		"content"  : {
+			"href" : "https://trevor-producer-cdn.api.bbci.co.uk/content",
+			"flag" : "green",
+			"ttl"  : 600
+		},
+		"layout"   : {
+			"href" : "https://trevor-producer-cdn.api.bbci.co.uk/layout?OSPlatform=ios",
+			"flag" : "green",
+			"ttl"  : 3600
+		},
+		"media"    : {
+			"href" : "https://open.live.bbc.co.uk/mediaselector/5/select/version/2.0/mediaset/%@/vpid/%@/transferformat/%@/format/json",
+			"flag" : "green",
+			"ttl"  : 0
+		},
+		"commentary" : {
+			"href" : "https://trevor-producer-cdn.api.bbci.co.uk/content",
+			"flag" : "green",
+			"ttl"  : 0
+		},
+		"locator"  : {
+			"href" : "https://open.live.bbc.co.uk/locator/locations?la=%+.3f&lo=%+.3f&format=json",
+			"flag" : "green",
+			"ttl"  : 0
+		},
+		"locator_newsregion"  : {
+			"href" : "https://open.live.bbc.co.uk/locator/locations/%@/details/news-organisation?op=intersect&format=json",
+			"flag" : "green",
+			"ttl"  : 0
+		},
+		"resolver" : {
+			"href" : "https://trevor-resolver-cdn.api.bbci.co.uk/resolve?uri=%@",
+			"flag" : "green",
+			"ttl"  : 0
+		},
+		"ichef" : {
+			"href" : "https://ichef.bbci.co.uk/moira/img/ios/v3/%@%@",
+			"flag" : "green",
+			"ttl"  : 0
+		}
+	},
+	"defaultContent" : [],
+	"imageChefRecipes": [80, 100, 128, 160, 200, 240, 288, 320, 360, 400, 432, 480, 512, 576, 640, 720, 768, 800, 854, 960, 1024, 1080,
+						 1136, 1152, 1200, 1280, 1440, 1536, 1600, 1920, 2048, 2560],
+	"trendingTopicsId": "/trending/events",
+	"mostPopularId"   : "/most_popular/news",
+	"handrailId"      : "/handrail",
+	"startingContent" : "/cps/news/front_page",
+	"helpUrl"         : "/cps/news/help-30119604",
+	"contactEmail"    : "mobileapps@bbc.co.uk",
+	"termsAndConditionsUrl" : "http://www.bbc.co.uk/terms/",
+	"privacyPolicyUrl" : "http://www.bbc.co.uk/privacy/",
+	"appStoreUrl": "https://itunes.apple.com/gb/app/bbc-news/id377382255",
+	"storeUrl"        : "https://itunes.apple.com/gb/artist/media-applications-technologies/id377382258",
+	"sportAppITunesUrl":"https://itunes.apple.com/gb/app/bbc-sport/id377388936",
+	"surveyActive": true,
+	"surveyURL": "https://ecustomeropinions.com/survey/survey.php?sid=265999144",
+	"copyright"       : "2015",
+	
+	"maxTopicsFollowed": 25,
+	"maxOfflineMBPerDayWifi": 30,
+	"maxOfflineMBPerDay3G": 2,
+	
+	"betaModeAutoEnabledPercent": 1,
+	"betaModeFeedbackUrl": "https://www.surveymonkey.com/s/HQ3N8VZ",
+	
+	"layoutModes":[],
+
+	"ad_settings":{
+		"ad_enabled": true,
+		"ad_interstitialEnabled":true,
+		"ad_prerollEnabled":true,
+		"ad_inlineDisplayAds":true,
+		"ad_bannerDisplayAds":true,
+		"ad_freqOfInterstitial":4,
+		"ad_maxDailyInterstitial":5,
+		"ad_bannerUnitId":"ca-app-pub-3940256099942544/6300978111",
+		"ad_interstitialAdUnitID":"4817",
+		"ad_commercialExposure": 100,
+		"ad_prerollAdURLFormat": "http://pubads.g.doubleclick.net/gampad/ads?sz=512x288&iu=/4817/%@&ciu_szs&impl=s&gdfp_req=1&env=vp&output=xml_vast2&unviewed_position_start=1&m_ast=vast&url=[referrer_url]&description_url=[description_url]&correlator=[timestamp]",
+		"ad_prerollCustomParams": "&cust_params=sdk%%3Dadmob%%26storyid%%3D%@%%26retina%%3D%@%%26carousel%%3D%@"
+	}
+	
+}

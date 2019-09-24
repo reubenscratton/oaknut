@@ -1,0 +1,13 @@
+{
+	"$":"index",
+    "content": ["/newsapps/mynews?segment=1"],
+    "emptyView": "BNMyNewsEmptyView",
+	"modules": [
+
+		{"$":"myNewsByTimeGroup"},
+		{"$":"copyright"}
+				
+	]
+
+}
+

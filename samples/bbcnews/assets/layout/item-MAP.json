@@ -1,0 +1,22 @@
+{
+	"format": ["bbc.mobile.news.format.audio","bbc.mobile.news.format.video"],
+	"modes": ["portrait"],
+	"class": "BNVerticalStack",
+	"background": "contentBackgroundInv",
+    "modules": [
+		{"$":"itemPrimaryMedia", "hideCaption":true, "autoplay":true},
+		{"$":"itemHeadline"},
+		{"$":"itemByline"},
+		{"$":"itemTopics"},
+		{"$":"itemBody", 		 "mode==adverts": {"insertBannerAdvertAfterParagraph":1,
+                "insertMpuAdvertAfterParagraph":6}},
+
+		{"$":"relatedTitle", "title": "Related video and audio"},
+		{"$":"relatedVideoAndAudio"},
+		{"$":"relatedTitle", "title": "Related Stories"},
+		{"$":"relatedStories", "format": ["bbc.mobile.news.format.textual"]},
+		{"$":"relatedTitle", "title": "Related Topics"},
+		{"$":"relatedTopics"},
+		{"$":"copyright"}
+	]
+}

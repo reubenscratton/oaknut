@@ -21,6 +21,7 @@ MEASURESPEC MEASURESPEC::Abs(float x) { return MEASURESPEC(TypeRelative, NULL, 0
 MEASURESPEC MEASURESPEC::Fill() { return MEASURESPEC(TypeFill, NULL, 1, 0); }
 MEASURESPEC MEASURESPEC::Wrap() { return MEASURESPEC(TypeContent, NULL, 1, 0); }
 MEASURESPEC MEASURESPEC::Aspect(float x) { return MEASURESPEC(TypeAspect, NULL,  x, 0); }
+MEASURESPEC MEASURESPEC::Match(View* view, float con) { return MEASURESPEC(TypeRelative, view, 1, con); }
 
 
 float MEASURESPEC::calcConstraint(float parentSize, float otherSize) const {

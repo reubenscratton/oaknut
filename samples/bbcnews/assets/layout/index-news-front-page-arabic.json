@@ -1,0 +1,59 @@
+{
+    "$":"index",
+    "content": ["/cps/arabic/front_page"],
+    "modules": [
+                
+                {"$":"primaryItem",    "$secondary":"$st_top_stories"},
+                {"$":"advert",         "type":"banner", "mode!=compact":{"paddingBottom":8}},
+                {"$":"secondaryItems", "$secondary":"$st_top_stories"},
+                
+                {"$":"otherItems",     "$secondary":"$st_top_stories", "modes":["compact"]},
+                {"$":"avCarousel"},
+                {"$":"otherItems",     "$secondary":"$st_top_stories", "modes":["!compact"]},
+                {"$":"advert",         "type":"mpu"},
+                
+                {"$":"twoStackedVerticallyInPortraitAndHorizontallyInLandscape", "modes":["tablet"],
+                "$1":[
+                      {"$":"title", "title":"The Papers"},
+                      {"$":"featureGroup", "secondary":"$st_in_the_papers", "limit":1, "mode==portrait":{"imageAspect":0.28125}}
+                      ],
+                "$2":[
+                      {"$":"title", "title":"The Reporters", "contentLink": "/cps/news/the_reporters?title=The%20Reporters"},
+                      {"$":"featureGroup_2col", "limit":2, "secondary": "$st_the_reporters"}
+                      ]
+                },
+                
+                {"$":"title",        "modes":["!tablet"], "title": "The Papers"},
+                {"$":"featureGroup", "modes":["!tablet"], "$secondary":"$st_in_the_papers"},
+                {"$":"title",        "modes":["!tablet"], "title": "The Reporters", "contentLink": "/cps/news/the_reporters?title=The%20Reporters"},
+                {"$":"tightGroup",   "modes":["!tablet"], "$secondary":"$st_the_reporters", "limit":2},
+                
+                {"$":"title", "title":"Features & Analysis"},
+                {"$":"featureGroup",      "modes":["!tablet"], "$secondary":"$st_features", "limit":2},
+                {"$":"featureGroup_2col", "modes":["!tablet"], "$secondary":"$st_features", "limit":10, "offset":2},
+                {"$":"featuresSection",   "modes":["tablet"],  "$secondary":"$st_features"},
+                
+                
+                {"$":"twoDigestGroups", "$1":"$digestBusinessUk",      "$2":"$digestPoliticsUk"},
+                {"$":"twoDigestGroups", "$1":"$digestHealthUk",        "$2":"$digestEducationUk"},
+                {"$":"twoDigestGroups", "$1":"$digestTechnologyUk",    "$2":"$digestScienceUk"},
+                {"$":"twoDigestGroups", "$1":"$digestEntertainmentUk", "$2":"$digestMagazineUk"},
+                
+                {"$":"digestTitle", "title": "Sport", "contentLink": "/cps/sport/front-page?title=Sport"},
+                {"$":"digestGroup", "$secondary": "$st_digest_sports_uk", "mode==tablet":{"limit":4, "cellsPerRow":2, "cellMargins":"{2,8,2,8}"}},
+                
+                
+                {"$":"title", "title": "Also in the News", "contentLink": "/cps/news/also_in_the_news?title=Also%20in%20the%20News"},
+                {"$":"tightGroup",        "modes":["!tablet"], "limit":2, "$secondary":"$st_top_stories_also_in_the_news"},
+                {"$":"featureGroup_2col", "modes":["tablet"],  "limit":2, "$secondary":"$st_top_stories_also_in_the_news", "hideTopics": "yes"},
+                
+                {"$":"title", "title": "Explainers", "contentLink": "/cps/news/explainers?title=Explainers"},
+                {"$":"tightGroup",        "modes":["!tablet"], "limit":2, "$secondary":"$st_ts_explainers"},
+                {"$":"featureGroup_2col", "modes":["tablet"],  "limit":2, "$secondary":"$st_ts_explainers", "hideTopics": "yes"},
+                
+                {"$":"title", "title": "In Pictures", "contentLink": "/cps/news/in_pictures?title=In%20Pictures"},
+                {"$":"photosGroup"},
+                
+                {"$":"copyright"}
+                ]
+}

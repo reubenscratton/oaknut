@@ -3,25 +3,25 @@
 //
 
 #include "statictitlemodule.h"
+#include "containermodule.h"
+#include "cellsmodule.h"
+#include "linearlayout.h"
 /*#import "BNStyles.h"
-#import "BNContainerModule.h"
-#import "BNCellsModule.h"
-#import "BNStaticTitleModule.h"
-#import "BNLinearLayout.h"
 #import "BNAppDelegate.h"
 #import "BBCNURLHandler.h"
 */
 
+DECLARE_DYNCREATE(BNStaticTitleModule, const variant&);
 
 BNStaticTitleModule::BNStaticTitleModule(const variant& json) : BNModule(json) {
     _text = json.stringVal("title");
-    _titleColor = [BNStyles parseColor:json[@"titleColor"]];
+    _titleColor = 0xff000000; //this is unused? app->getStyleColor(json.stringVal("titleColor"));
     _contentId = json.stringVal("contentLink");
     string styleName = json.stringVal("textAttrs");
-    if (!styleName.size()) {
+    if (!styleName.length()) {
         styleName = "title";
     }
-    _style = app.getStyle(styleName);
+    _style = app->getStyle(styleName);
     _numLines = json.intVal("numLines");
 }
 
@@ -33,34 +33,42 @@ BNStaticTitleModule::BNStaticTitleModule(BNStaticTitleModule* source) : BNModule
 	_numLines = source->_numLines;
 }
 
-void BNStaticTitleModule::layoutWithContainingRect(const RECT& rect) override;
+BNModule* BNStaticTitleModule::clone() {
+    return new BNStaticTitleModule(this);
+}
+/*
+void BNStaticTitleModule::layoutWithContainingRect(const RECT& rect)  {
 
+    // Find our index
+    int myIndex = 0;
+    for (BNModule* m : _container->_modules) {
+        if (m==this) break;
+        myIndex++;
+    }
+    
 	// If module following this one is empty, then we occupy no space
-	NSUInteger myIndex = [self.container.modules indexOfObject:self];
-	if (myIndex < self.container.modules.count-1) {
-		BNModule* nextModule = self.container.modules[myIndex+1];
-		if ([nextModule isKindOfClass:[BNCellsModule class]]) {
+	if (myIndex != _container->_modules.size()-1) {
+        BNModule* nextModule = _container->_modules[myIndex+1];
+		if (nextModule->isCellsModule()) {
 			BNCellsModule* cellsModule = (BNCellsModule*)nextModule;
-			if (cellsModule.cells.count == 0) {
-				self.frame = CGRectZero;
+			if (cellsModule->_cells.size() == 0) {
+                _frame = RECT::zero();
 				return;
 			}
-		} else if ([nextModule isKindOfClass:[BNStaticTitleModule class]]) {
-			[nextModule layoutWithContainingRect:rect]; // slightly inefficient
-			if (nextModule.frame.size.height == 0.f) {
-				self.frame = CGRectZero;
+		} else if (nextModule->isStaticTitleModule()) {
+			nextModule->layoutWithContainingRect(rect); // slightly inefficient
+			if (nextModule->_frame.size.height == 0.f) {
+                _frame = RECT::zero();
 				return;
 			}
-		} else if ([nextModule isKindOfClass:[BNLinearLayout class]]) {
+		} else if (nextModule->isLinearLayout()) {
 			// Suggested (RS) fix for 'Your Questions Answered'
 			BNLinearLayout *linearLayout = (BNLinearLayout*)nextModule;
-			
-			BNModule *module = [linearLayout.modules firstObject];
-			
-			if ([module isKindOfClass:[BNCellsModule class]]) {
+			BNModule *module = linearLayout->_modules[0];
+			if (module->isCellsModule()) {
 				BNCellsModule* cellsModule = (BNCellsModule*)module;
-				if (cellsModule.cells.count == 0) {
-					self.frame = CGRectZero;
+				if (cellsModule->_cells.size() == 0) {
+                    _frame = RECT::zero();
 					return;
 				}
 			}
@@ -69,86 +77,84 @@ void BNStaticTitleModule::layoutWithContainingRect(const RECT& rect) override;
 		}
 	}
 
-	rect = UIEdgeInsetsInsetRect(rect, self.padding);
-	if (self.labelInfo == nil) {
-		NSMutableDictionary* attrs = self.attrs.mutableCopy;
-		if (self.titleColor != nil) {
-			attrs[NSForegroundColorAttributeName] = self.titleColor;
-		}
-		self.labelInfo = [[BNLabelInfo alloc] initWithString:self.text attributes:attrs numLines:1];
-		self.labelInfo.useFullWidth = YES;
-		self.labelInfo.numLines = self.numLines;
+	RECT rect2 = rect.copyWithInsets(_padding);
+	if (!_label) {
+        _label = new BNLabel();
+        _label->_useFullWidth = true;
+        _label->setMaxLines(_numLines);
+        _label->setText(_text);
+        _label->applyStyle(*_style);
+        if (_titleColor) {
+            _label->setTextColor(_titleColor);
+        }
 	}
-	rect = UIEdgeInsetsInsetRect(rect, self.textPadding);
-	[self.labelInfo measureForWidth:rect.size.width offset:rect.origin];
-	self.labelInfo.bounds = UIEdgeInsetsUninsetRect(self.labelInfo.bounds, self.textPadding);
+	rect2 = rect2.copyWithInsets(_textPadding);
+	_labelInfo->measureForWidth(rect2.size.width, rect2.origin);
+	_labelInfo->_bounds = _labelInfo->_bounds.copyWithUninsets(_textPadding);
 	//rect.size.height = self.labelInfo.bounds.size.height;
 	//self.frame = CGRectMake(rect.origin.x, rect.origin.y, rect.size.width, rect.size.height + self.padding.bottom);
-	self.frame = UIEdgeInsetsUninsetRect(self.labelInfo.bounds, self.padding);
+	_frame = _labelInfo->_bounds.copyWithUninsets(_padding);
 }
 
-- (void)updateSubviews:(UIView *)superview {
-	BOOL visible = CGRectIntersectsRect(superview.bounds, self.frame) && self.frame.size.height>0;
-	if (visible == self.visible) {
+void BNStaticTitleModule::updateSubviews(View* superview) {
+	bool visible = superview->getOwnRect().intersects(_frame) && _frame.size.height>0;
+	if (visible == _visible) {
 		return;
 	}
-	self.visible = visible;
-	if (visible && self.frame.size.height>0) {
-		[self createLabelView:superview];
+	_visible = visible;
+	if (visible && _frame.size.height>0) {
+        createLabelView(superview);
 	} else {
-		[self removeLabelView];
-	}
-}
-- (void)removeAllViews {
-	self.visible = NO;
-	[self removeLabelView];
-}
-
-- (BOOL)showBackgroundForLinks {
-	return YES;
-}
-
-- (void)createLabelView:(UIView*)superview {
-	if (self.contentId) {
-		[self.labelInfo createButton:superview];
-		
-		UIButton* button = ((UIButton*)self.labelInfo.label);
-		if ([self showBackgroundForLinks]) {
-			NSMutableAttributedString* s = button.titleLabel.attributedText.mutableCopy;
-			//[s addAttribute:NSForegroundColorAttributeName value:[UIColor bbcNewsLiveRed] range:NSMakeRange(0, s.length)];
-			[button setAttributedTitle:s forState:UIControlStateNormal];
-			s = button.titleLabel.attributedText.mutableCopy;
-			[s addAttribute:NSForegroundColorAttributeName value:[UIColor lightGrayColor] range:NSMakeRange(0, s.length)];
-			[button setAttributedTitle:s forState:UIControlStateHighlighted];
-		} else {			
-			UIGraphicsBeginImageContext(CGSizeMake(1,1));
-			CGContextSetFillColorWithColor(UIGraphicsGetCurrentContext(), [UIColor defaultSelectedFillColor].CGColor);
-			CGContextFillRect(UIGraphicsGetCurrentContext(), CGRectMake(0,0,1,1));
-			[button setBackgroundImage:UIGraphicsGetImageFromCurrentImageContext() forState:UIControlStateHighlighted];
-			UIGraphicsEndImageContext();
-		}
-		
-		[button addTarget:self action:@selector(onTitleTapped:) forControlEvents:UIControlEventTouchUpInside];
-		
-		[self.labelInfo.label setAccessibilityTraits:UIAccessibilityTraitHeader | UIAccessibilityTraitButton];
-
-	} else {
-		[self.labelInfo createLabel:superview];
-		[self.labelInfo.label setAccessibilityTraits:UIAccessibilityTraitHeader];
+        removeLabelView();
 	}
 }
 
-- (void)removeLabelView {
-	[self.labelInfo removeLabel];
+void BNStaticTitleModule::removeAllViews() {
+	_visible = false;
+    removeLabelView();
 }
 
-- (void)onTitleTapped:(id)sender {
+bool BNStaticTitleModule::showBackgroundForLinks() {
+	return true;
+}
+*/
 
-	if ([self.contentId hasPrefix:@"/"]) {
-		[[[BBCNURLHandler alloc] initWithURL:[BNAppDelegate URLforResourceSpec:self.contentId]] openURL:YES];
+void BNStaticTitleModule::addToView(View* superview) {
+    BNLabel* label = new BNLabel();
+    label->setText("TODO");
+	if (_contentId.length()) {
+		//_labelInfo->createButton(superview);
+		
+		//Button* button = _label.as<Button>();
+		//if (showBackgroundForLinks()) {
+        //    AttributedString s = label->getText();
+        //    s.setAttribute(Attribute::forecolor(0xFFCCCCCC), 0, s.length());
+		//	label->setText(s);
+		//} else {
+            label->setBackgroundColor(app->getStyleColor("defaultSelectedFill"));
+		//}
+		
+        label->onClick = [=]() {
+            onTitleTapped();
+        };
+		
+		//TODO [self.labelInfo.label setAccessibilityTraits:UIAccessibilityTraitHeader | UIAccessibilityTraitButton];
+
 	} else {
-		NSURL *url = [NSURL URLWithString:self.contentId];
-		[[[BBCNURLHandler alloc] initWithURL:url] openURL:YES];
+		//TODO [self.labelInfo.label setAccessibilityTraits:UIAccessibilityTraitHeader];
+	}
+    superview->addSubview(label);
+}
+
+
+void BNStaticTitleModule::onTitleTapped() {
+
+    app->warn("TODO: need URL launcher");
+	if (_contentId.hasPrefix("/")) {
+		//[[[BBCNURLHandler alloc] initWithURL:[BNAppDelegate URLforResourceSpec:self.contentId]] openURL:YES];
+	} else {
+		//NSURL *url = [NSURL URLWithString:self.contentId];
+		//[[[BBCNURLHandler alloc] initWithURL:url] openURL:YES];
 	}
 
 }

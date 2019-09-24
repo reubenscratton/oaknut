@@ -1,0 +1,12 @@
+{
+    "$":"index",
+    "content": ["/cps/news/front_page"],
+    "modules": [
+                
+                {"$":"primaryItem",    "$secondary":"$st_top_stories"},
+                {"$":"secondaryItems", "$secondary":"$st_top_stories"},
+                
+                {"$":"otherItems",     "$secondary":"$st_top_stories", "limit":2, "modes":["!compact"]}
+                
+                ]
+}

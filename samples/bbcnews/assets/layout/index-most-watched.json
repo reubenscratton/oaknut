@@ -1,0 +1,14 @@
+{
+	"$":"index",
+	"content": ["/most_popular/news/watched"],
+	"modules": [
+		
+		{"$":"mostWatchedGroup", "limit":1},
+        {"$":"advert", "type":"banner"},
+        {"$":"mostWatchedGroup", "offset":1, "limit":6},
+		{"$":"advert", "type":"mpu"},
+		{"$":"mostWatchedGroup", "offset":7},
+		{"$":"copyright"}
+				
+	]
+}

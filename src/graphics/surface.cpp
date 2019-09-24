@@ -123,6 +123,7 @@ void Surface::detachRenderList(RenderList *list) {
     }
     if (list->_renderOrder > 0) {
         _renderListsList.erase(list->_surfaceIt);
+        list->_renderOrder = 0;
     }
 }
 
@@ -244,35 +245,52 @@ void RenderList::removeRenderOp(RenderOp* renderOp) {
 
 void Surface::renderPhase1(Renderer* renderer, View* view, POINT origin) {
 
+    // If view not visible, early exit
     if (view->_visibility != Visible) {
         return;
     }
+    
+    // Attach the view's render list to the surface
+    if (!view->_surface) {
+        view->_surface = view->_parent ? view->_parent->_surface : view->_window->_surface;
+        if (view->_ownsPrivateSurface) {
+            view->_surface = view->_window->_renderer->createPrivateSurface();
+        }
+        
+        if (view->_renderList) {
+            attachRenderList(view->_renderList);
+        }
+        if (view->_renderListDecor) {
+            attachRenderList(view->_renderListDecor);
+        }
+    }
+
     Surface* surface = this;
 
     // If view has a private surface, ensure surface has same size as view
     bool usesPrivateSurface = (view->_surface != surface);
     if (usesPrivateSurface) {
         bool sizeChanged = false;
-        view->_surface->_renderOrder = 1;
-        view->_surface->_renderListsInsertionPos = view->_surface->_renderListsList.end();
-        if (view->_surface->_size.width != view->_rect.size.width || view->_surface->_size.height != view->_rect.size.height) {
-            view->_surface->setSize(view->_rect.size);
+        surface = view->_surface;
+        surface->_renderOrder = 1;
+        surface->_renderListsInsertionPos = surface->_renderListsList.end();
+        if (surface->_size.width != view->_rect.size.width || surface->_size.height != view->_rect.size.height) {
+            surface->setSize(view->_rect.size);
             sizeChanged = true;
         }
         
         // Create the private surface op, allocating vertex space from the host surface's vbo
-        if (!view->_surface->_op) {
+        if (!surface->_op) {
             RECT rect = view->getOwnRect();
-            view->_surface->_op = new PrivateSurfaceRenderOp(renderer, view, rect);
+            surface->_op = new PrivateSurfaceRenderOp(renderer, view, rect);
         } else {
             if (sizeChanged) {
-                view->_surface->_op->setRect(view->getOwnRect());
+                surface->_op->setRect(view->getOwnRect());
             }
         }
 
         // Reset origin
         origin = {0,0};
-        surface = view->_surface;
 
     } else {
 
@@ -288,6 +306,7 @@ void Surface::renderPhase1(Renderer* renderer, View* view, POINT origin) {
         _mvpNumPeak++;
         _mvpNum = _mvpNumPeak;
     }
+    
     
     // Give the view a chance to update its renderOps now that layout is complete
     if (view->_updateRenderOpsNeeded) {
@@ -312,9 +331,17 @@ void Surface::renderPhase1(Renderer* renderer, View* view, POINT origin) {
     }
     
     // Recurse subviews
+    RECT visibleViewRect = view->getVisibleRect();
     for (auto it = view->_subviews.begin(); it!=view->_subviews.end() ; it++) {
         sp<View>& subview = *it;
-        surface->renderPhase1(renderer, subview, origin);
+        bool subviewIsClipped = (view->_clipsContents) && !visibleViewRect.intersects(subview->getRect());
+        if (subviewIsClipped) {
+            if (subview->_surface) {
+                subview->detachFromSurface();
+            }
+        } else {
+            surface->renderPhase1(renderer, subview, origin);
+        }
     }
     
     // Draw decor renderlist
@@ -368,6 +395,7 @@ static inline void renderRenderList(RenderList* renderList, Surface* surface, Re
                 renderer->_currentSurface = surface;
             }
             RenderBatch* batch = op->_batch;
+            assert(batch);
             batch->render(renderer, surface, op);
         }
     }
@@ -401,13 +429,25 @@ void Surface::renderPhase3(Renderer* renderer, View* view, Surface* prevsurf) {
         surface->_mvp *= tm;
     }
     
-    if (view->_clipsContent) {
+    bool clips = view->_clipsContents;
+    bool didClip = false;
+    if (clips) {
+        clips = (view->_contentSize.height > view->_rect.size.height)
+             || (view->_contentSize.width > view->_rect.size.width);
+    }
+    if (clips) {
         RECT clip = view->getOwnRect();
         clip.origin = view->_surfaceOrigin;
+        clip.origin += view->_contentOffsetAccum;
 #if RENDERER_GL
         clip.origin.y = surface->_size.height - clip.bottom(); /* flip Y */
 #endif
+        clip.intersectWith({0,0,_size.width,_size.height});
+        if (clip.size.width <= 0 || clip.size.height <= 0) {
+            goto skipDraw;
+        }
         renderer->pushClip(clip);
+        didClip = true;
     }
     
     // Draw view content, if there is any
@@ -417,16 +457,19 @@ void Surface::renderPhase3(Renderer* renderer, View* view, Surface* prevsurf) {
     
     // Recurse subviews
     for (auto it=view->_subviews.begin() ; it != view->_subviews.end() ; it++) {
-        surface->renderPhase3(renderer, *it, surface);
+        if ((*it)->_surface) {
+            surface->renderPhase3(renderer, *it, surface);
+        }
     }
-
+skipDraw:
+    
     // Draw view decor content, if there is any
     if (view->_renderListDecor) {
         renderRenderList(view->_renderListDecor, surface, renderer);
     }
 
     // Pop draw state
-    if (view->_clipsContent) {
+    if (didClip) {
         renderer->popClip();
     }
     if (changesMvp) {

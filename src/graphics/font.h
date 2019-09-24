@@ -20,8 +20,10 @@ const float FONT_WEIGHT_BLACK       = 900;     // 0.6200000047683716
 class Font : public Object {
 public:
     string _name;
-    float _size;
     float _weight;
+    bool _italic;
+    
+    float _size;
     map<char32_t, sp<class Glyph>> _glyphs; // map of character codes to Glyph*
     float _height;
     float _ascent;

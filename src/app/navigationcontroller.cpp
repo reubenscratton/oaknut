@@ -11,10 +11,10 @@
 NavigationController::NavigationController() {
 
 	_view = new View();
-    _view->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Fill());
+    _view->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Fill());
 	
 	_contentView = new View();
-    _contentView->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Fill());
+    _contentView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Fill());
 	_view->addSubview(_contentView);
 
 	// Navbar

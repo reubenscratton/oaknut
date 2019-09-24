@@ -754,7 +754,7 @@ variant variant::parse(StringProcessor& it, int flags) {
         val._vec->push_back(std::move(firstElem));
         while (it.peek() == ',') {
             it.next();
-            variant elem = variant::parse(it, 0);
+            variant elem = variant::parse(it, PARSEFLAG_EXPLICIT_ARRAY);
             val._vec->push_back(std::move(elem));
             it.skipSpacesAndTabs();
         }

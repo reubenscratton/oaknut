@@ -28,6 +28,7 @@ typedef struct MEASURESPEC {
     static MEASURESPEC Wrap();
     static MEASURESPEC Aspect(float x);
     static MEASURESPEC Fill();
+    static MEASURESPEC Match(View* view, float con=0);
     
     static MEASURESPEC fromStyle(const variant* style, View* view);
 

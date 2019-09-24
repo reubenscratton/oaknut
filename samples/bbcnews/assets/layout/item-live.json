@@ -1,0 +1,28 @@
+{
+	"content": ["/cps/news/10318089", "/cps/news/10473693"],
+	"class": "BNVerticalStack",
+	"background": "contentBackgroundInv",
+    "modules": [
+				
+		{"class": "BNLiveLayoutHeaderHackModule"},
+		{"$":"itemPrimaryMedia", "hideCaption":true},
+		{"$":"itemHeadline", "headlineOverride": "BBC News Channel",
+			"mode==phone":{"textPadding":"{12,16,12,16}"},
+			"mode==tablet":{
+				"mode==portrait":{"textPadding":"{24,64,24,64}"},
+				"mode==landscape":{"textPadding":"{24,80,24,80}"}
+			}
+		},
+		{"$":"itemBody"},
+				
+		{"modes":["tablet","portrait"], "$":"relatedTitle", "title": "Related video and audio"},
+		{"modes":["tablet","portrait"], "$":"relatedVideoAndAudio"},
+		{"modes":["tablet","portrait"], "$":"relatedTitle", "title": "Related Stories"},
+		{"modes":["tablet","portrait"], "$":"relatedStories", "format": ["bbc.mobile.news.format.textual"]},
+		{"modes":["tablet","portrait"], "$":"relatedTitle", "title": "Related Topics"},
+		{"modes":["tablet","portrait"], "$":"relatedTopics"},
+				
+		{"$":"copyright"}
+
+	]
+  }

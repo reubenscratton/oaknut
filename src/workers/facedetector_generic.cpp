@@ -24,13 +24,6 @@ static int8_t* rectData;
 static int baseBlockWidth = 20;
 static int baseBlockHeight = 20;
 
-class static_init {
-public:
-    static_init() {
-        app->log("static_init!");
-    }
-} __static_init;
-
 static void init_nodes_data();
 static void init_rects_data();
 static bool s_initialised = false;

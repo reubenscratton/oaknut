@@ -1,0 +1,28 @@
+{
+	"$":"index",
+	"content": ["/newsapps/mynews?segment=2"],
+	"emptyView": "BNMyNewsEmptyView",
+	"modules": [
+				
+		{
+		"class": "BNGroupingModule",
+		"groupBy": "collection",
+		"modules": [
+					
+				{"$":"myNewsByTopicTitle"},
+				{"$":"myNewsByTopicCarousel"}
+					
+			]
+		},
+				
+		{"modes":["tabs"],
+		 "class":"BNHorizontalLinearLayout", "padding":"{32,4,8,4}",
+		 "modules": [
+				{"class":"BNRedButtonModule", "title":"Add more topics", "padding":"{0,4,0,4}", "selector":"onAddMoreTopicsPressed:"},
+				{"class":"BNRedButtonModule", "title":"Manage topics", "padding":"{0,4,0,4}", "selector":"onManageTopicsPressed:"}
+			]
+		},
+		{"$":"copyright"}
+	]
+}
+

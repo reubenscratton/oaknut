@@ -2,9 +2,8 @@
 //  Copyright (c) 2019 BBC News. All rights reserved.
 //
 
-
+#include "urlrequest.h"
 #include "../../policy/policy.h"
-#include "contentrequest.h"
 /*#import "BNContent.h"
 #import "BNMyNewsCollection.h"
 #import "BNCollections.h"
@@ -15,7 +14,7 @@
 */
 
 
-string BNContentRequest::urlForModelId(const string& modelId) {
+string BNURLRequest::urlForModelId(const string& modelId) {
 	if (!modelId.length()) {
 		return "";
 	}
@@ -34,7 +33,7 @@ string BNContentRequest::urlForModelId(const string& modelId) {
 	
 }
 
-BNContentRequest* BNContentRequest::request(const string& modelId, int flags, int priority) {
+BNURLRequest* BNURLRequest::requestContent(const string& modelId, int flags, int priority) {
 	
 	// Special case for my news
 	if (modelId.hasPrefix(BNModelIdMyNews)) {
@@ -43,10 +42,10 @@ BNContentRequest* BNContentRequest::request(const string& modelId, int flags, in
 		//return;
 	}
 	
-    return requestURL(urlForModelId(modelId), flags, priority);
+    return new BNURLRequest(urlForModelId(modelId), flags, priority);
 }
 
-BNContentRequest* BNContentRequest::requestURL(const string& url, int flags, int priority) {
+BNURLRequest::BNURLRequest(const string& url, int flags, int priority) {
 	
 	// Use normal content TTL for everything except LEP commentaries, which should update every minute
     int ttl = BNPolicy::current()->_endpointContent->_ttl;
@@ -54,25 +53,42 @@ BNContentRequest* BNContentRequest::requestURL(const string& url, int flags, int
 		ttl = 60;
 	}
 	
-    auto req = URLRequest::get(url);
-	// Lookup an existing request or create a new one. In the ideal caching situation this can
-	// complete synchronously, i.e. delegate will run before this function returns.
-	/*[[BNURLRequestManager sharedInstance] requestURL:url delegate:delegate flags:flags priority:priority ttl:ttl creatorBlock:^BNURLRequest *{
-		BNContentRequest* req = [[BNContentRequest alloc] initWithURL:url];
-		return req;
-	}];*/
-    return NULL;
+    _req = URLRequest::get(url);
+    
+    _req->setHeader("User-Agent", BNPolicy::current()->userAgent());
+    
+    // Special background processing
+    _req->onGotJsonInBackground = [=] (variant& json) -> bool {
+        if (json.hasVal("type")) {
+            auto modelObj = BNBaseModel::createModelObjectFromJson(json);
+            retain();
+            App::postToMainThread([=]() {
+                if (!_cancelled) {
+                    onHandleContent(modelObj);
+                }
+                release();
+            });
+            return true;
+        }
+        return false;
+    };
+
 }
 
-/*+ (void)unrequest:(NSString*)modelId delegate:(id<BNURLRequestDelegate>)delegate {
-	if ([modelId hasPrefix:modelIdMyNews]) {
+void BNURLRequest::cancel() {
+
+    /*if ([modelId hasPrefix:modelIdMyNews]) {
 		[[BNMyNewsCollection sharedInstance] removeDelegate:delegate];
 		return;
-	}
-	[[BNURLRequestManager sharedInstance] unrequestURL:[self urlForModelId:modelId] delegate:delegate];
+	}*/
+    _cancelled = true;
+    if (_req) {
+        _req->cancel();
+        _req = NULL;
+    }
 }
 
-
+/*
 - (id)processResponseDataInBackground:(NSData *)data error:(NSError*__autoreleasing*)error {
 	
 	NSDictionary* json = [super processResponseDataInBackground:data error:error];

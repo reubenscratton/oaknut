@@ -1,0 +1,26 @@
+{
+    "$":"index",
+    "content": ["/newsapps/mynews"],
+    "emptyView": "BNMyNewsEmptyView",
+    "padding":"{0,0,32,0}",
+    "class": "BNSegmentedContainer",
+    "defaultsKey": "myNewsTabIndex",
+    "modules": [
+                {"$":"myNewsByTimeGroup", "title": "By Time", "limit" : 200},
+                {"title": "By Topic",
+                "class": "BNGroupingModule",
+                "groupBy": "collection",
+                "modules": [
+                            {"$":"myNewsByTopicTitle"},
+                            {"modes":["carousels"], "$":"myNewsByTopicCarousel"},
+                            {"modes":["!carousels"],
+                            "mode==compact":{"$":"myNewsByTopicNonCarousel"},
+                            "mode!=compact":{"$":"myNewsByTopicOldStyle"}
+                            },
+                            {"$":"advert", "type":"banner", "groupOffsets":[0]},
+                            {"$":"advert", "type":"mpu", "groupOffsets":[2]}
+                            ]
+                }
+                ]
+}
+

@@ -19,6 +19,14 @@ AttributedString::AttributedString(const AttributedString& str) : string(str) {
     _attributes = str._attributes;
 }
 
+void AttributedString::append(const AttributedString& str) {
+    int32_t c = length();
+    string::append(str);
+    for (auto a : str._attributes) {
+        setAttribute(a.attribute, a.start+c, a.end+c);
+    }
+}
+
 void AttributedString::setAttribute(const Attribute& attribute, int32_t start, int32_t end) {
     _attributes.emplace(attribute, start, end);
 }

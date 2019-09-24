@@ -192,6 +192,9 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
         for (;;) {
     
             if (startNewLine) {
+                if (_maxLines && _renderLines.size()>=_maxLines) {
+                    break;
+                }
                 currentLine = _renderLines.emplace(_renderLines.end(), RENDER_LINE {i,0,{0,0,0,0},0,currentFont});
                 startNewLine = false;
             }
@@ -228,6 +231,11 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
             if (exceedsBounds && currentLine->count && codepoint!=' ') { // NB: trailing spaces don't trigger soft breaks
                 filledHorizontally = true;
                 
+                // Break the loop if we've reached the maximum number of lines
+                if (_maxLines && _renderLines.size()>=_maxLines) {
+                    break;
+                }
+
                 // If there were no spaces on this line, force break at preceding char
                 if (breakOpportunity < 0) {
                     breakOpportunity = (int32_t)i-1;

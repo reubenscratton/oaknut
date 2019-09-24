@@ -1,0 +1,28 @@
+{
+	"$":"index",
+	"content": ["/most_popular/news"],
+	"padding": "{0,56,0,56}",
+	"modules": [
+		{
+			"class": "BNHorizontalLinearLayout",
+			"modules": [
+				{
+					"class": "BNVerticalLinearLayout",
+					"modules": [
+						{"$":"title", "title":"Most Read", "padding":"{32,8,0,0}"},
+						{"$":"mostReadGroup"}
+
+					]
+				},
+				{
+					"class": "BNVerticalLinearLayout",
+					"modules": [
+						{"$":"title", "title":"Most Watched", "padding":"{32,8,0,0}"},
+						{"$":"mostWatchedGroup"}
+					]
+				}
+			]
+		},
+		{"$":"copyright"}
+	]
+}

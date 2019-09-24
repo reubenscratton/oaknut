@@ -88,7 +88,7 @@ void ListView::updateContentSize(SIZE constrainingSize) {
     IListAdapter* adapter = _adapter;
     _sectionMetrics.clear();
     if (_headerView) {
-        _headerView->setAlignSpecs(ALIGNSPEC::Top(), ALIGNSPEC(NULL, 0, 0, _contentSize.height));
+        _headerView->setLayoutOrigin(ALIGNSPEC::Top(), ALIGNSPEC(NULL, 0, 0, _contentSize.height));
         _contentSize.height += _headerView->getHeight();
     }
     if (adapter) {
@@ -202,7 +202,7 @@ ListView::ItemView::ItemView(ListView* listView, LISTINDEX listIndex, View* cont
     _listView = listView;
     _listIndex = listIndex;
     _contentView = contentView;
-    contentView->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Fill());
+    contentView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Fill());
     addSubview(contentView);
 }
 
@@ -218,9 +218,9 @@ void ListView::ItemView::updateDeleteButton(bool animate) {
     if (_listView->_editMode && !_deleteButton) {
         float deleteButtonWidth = 16+45+16; // TODO: styles mofo, have you heard of them??
         _deleteButton = new ImageView();
-        _deleteButton->setMeasureSpecs(MEASURESPEC::Abs(deleteButtonWidth), MEASURESPEC::Abs(8+45+8));
+        _deleteButton->setLayoutSize(MEASURESPEC::Abs(deleteButtonWidth), MEASURESPEC::Abs(8+45+8));
         _deleteButton->setPadding(EDGEINSETS(16, 8, 16, 8));
-        _deleteButton->setAlignSpecs(ALIGNSPEC(NULL, 0, animate?-1:0, 0), ALIGNSPEC::Center());
+        _deleteButton->setLayoutOrigin(ALIGNSPEC(NULL, 0, animate?-1:0, 0), ALIGNSPEC::Center());
         if (!_listView->_bmpDelete) {
             bytearray data;
             app->loadAsset("images/delete.png", data); // TODO: need a different way to do platform assets
@@ -257,8 +257,8 @@ void ListView::ItemView::showDeleteConfirmButton(bool show) {
             _deleteConfirmButton->setTextColor(0xFFFFFFFF);
             _deleteConfirmButton->setText("Delete");
             _deleteConfirmButton->setGravity({GRAVITY_CENTER, GRAVITY_CENTER});
-            _deleteConfirmButton->setMeasureSpecs(MEASURESPEC::Abs(CONFIRM_BUTTON_WIDTH), MEASURESPEC::Fill());
-            _deleteConfirmButton->setAlignSpecs(ALIGNSPEC(NULL,1,0,0), ALIGNSPEC::Top());
+            _deleteConfirmButton->setLayoutSize(MEASURESPEC::Abs(CONFIRM_BUTTON_WIDTH), MEASURESPEC::Fill());
+            _deleteConfirmButton->setLayoutOrigin(ALIGNSPEC(NULL,1,0,0), ALIGNSPEC::Top());
             _deleteConfirmButton->onInputEvent = [&] (View* view, INPUTEVENT* event)  -> bool {
                 if (event->type == INPUT_EVENT_TAP) {
                     _listView->deleteRow(_listIndex);
@@ -305,7 +305,7 @@ pair<LISTINDEX,View*> ListView::createItemView(LISTINDEX index, bool atFront, fl
     assert(contentView); // dude, where's my item content view??
     _adapter->bindItemView(contentView, index);
     ItemView* itemView = new ItemView(this, index, contentView);
-    itemView->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Abs(itemHeight));
+    itemView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Abs(itemHeight));
     insertSubview(itemView, (int)_itemViews.size());
     itemView->layout({0,0,_rect.size.width, itemHeight});
     RECT rect = itemView->getRect();
@@ -439,7 +439,7 @@ void ListView::updateVisibleItems() {
             if (headerViewIt==_headerViews.end() || section != headerViewIt->first) {
                 View* headerView = _adapter->createHeaderView(section);
                 assert(headerView);
-                headerView->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Abs(it->headerHeight));
+                headerView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Abs(it->headerHeight));
                 addSubview(headerView);
                 headerView->layout(RECT(0,headerTop,_rect.size.width, it->headerHeight));
                 pair<int,View*> result(section,headerView);

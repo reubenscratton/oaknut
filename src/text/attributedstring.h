@@ -79,6 +79,8 @@ public:
 
     void applyStyle(const class style* s);
     
+    void append(const AttributedString& str);
+
     friend class TextLayout;
 
 private:

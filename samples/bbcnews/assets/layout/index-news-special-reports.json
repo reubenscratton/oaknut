@@ -1,0 +1,13 @@
+{
+	"$":"index",
+    "content":["/cps/news/special_reports"],
+	"modules": [
+		
+		{"$":"primaryItem", "$secondary":"$st_special_reports"},
+        {"$":"advert",         "type":"banner", "mode!=compact":{"paddingBottom":8}},
+		{"$":"secondaryItems", "$secondary":"$st_special_reports", "limit":-1},
+        {"$":"advert",         "type":"mpu"},
+        {"$":"copyright"}
+	
+	]
+}

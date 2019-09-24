@@ -1,0 +1,40 @@
+{
+	"$":"index",
+   	"content": ["/cps/news/magazine"],
+    "modules": [
+				
+		{"$":"primaryItem",       "$secondary":"$st_magazine_primary"},
+        {"$":"advert",            "type":"banner", "mode!=compact":{"paddingBottom":8}},
+		{"$":"secondaryItems",    "$secondary":"$st_guide_content", "offset":0, "limit":-1},
+		{"$":"avCarousel",        "$secondary":"$st_magazine_avcarousel"},
+        {"$":"advert",         "type":"mpu"},
+                
+		{"$":"title", "title":    "Magazine Monitor"},
+		{"modes":["!tablet"], "$":"featureGroup",      "$secondary":"$st_magazine_monitor", "limit":1},
+		{"modes":["!tablet"], "$":"featureGroup",      "$secondary":"$st_magazine_monitor", "offset":1, "limit":2, "hideTopics":"yes",
+				"cellClass": "BNCellItemTopStory"},
+		{"modes":["tablet"],  "$":"featureGroup_2col", "$secondary":"$st_magazine_monitor", "limit":2, "hideTopics":"yes"},
+				
+		{"$":"title", "title":    "BBC Trending"},
+		{"modes":["!tablet"],  "$":"featureGroup",      "$secondary":"$st_magazine_trending", "limit":1},
+		{"modes":["!tablet"],  "$":"featureGroup_2col", "$secondary":"$st_magazine_trending", "limit":2, "offset":1},
+		{"modes":["tablet"],   "$":"featureGroup_2col", "$secondary":"$st_magazine_trending", "limit":2},
+
+		{"$":"title", "title":    "News from Elsewhere"},
+		{"modes":["!tablet"],  "$":"featureGroup",      "$secondary":"$st_magazine_elsewhere", "limit":1},
+		{"modes":["!tablet"],  "$":"featureGroup_2col", "$secondary":"$st_magazine_elsewhere", "limit":2, "offset":1},
+		{"modes":["tablet"],   "$":"featureGroup",      "$secondary":"$st_magazine_elsewhere", "cellsPerRow":3},
+
+		{"$":"title", "title":    "More or Less"},
+		{"modes":["!tablet"],  "$":"featureGroup",      "$secondary":"$st_magazine_more_or_less", "limit":1},
+		{"modes":["!tablet"],  "$":"normalGroup",       "$secondary":"$st_magazine_more_or_less", "offset":1},
+		{"modes":["tablet"],   "$":"featuresSection",   "$secondary":"$st_magazine_more_or_less"},
+                
+        {"$":"title", "title":    "More from Magazine"},
+        {"modes":["!tablet"],  "$":"featureGroup",      "$secondary":"$st_magazine_more_from", "limit":2},
+        {"modes":["!tablet"],  "$":"featureGroup_2col", "$secondary":"$st_magazine_more_from", "limit":10, "offset":2},
+        {"modes":["tablet"],   "$":"featuresSection",   "$secondary":"$st_magazine_more_from"},
+			
+		{"$":"copyright"}
+	]
+}

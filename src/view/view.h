@@ -171,9 +171,9 @@ protected:
     /** Called when the view is detached from the application Window */
     virtual void detachFromWindow();
 
+    virtual void detachFromSurface();
+    
     /**  \cond INTERNAL */
-    /** A private helper for updating internal state when the private surface flag changes */
-    virtual void updatePrivateSurface(bool updateSubviews);
 
     /** The Window that this view is attached to. In practice this is the main application window or NULL. */
     Window* _window;
@@ -189,7 +189,6 @@ protected:
     POINT _surfaceOrigin;
     /**  \endcond */
     /**@}*/
-
     
     /** @name Size & Position
      * @{
@@ -219,7 +218,10 @@ public:
     
     /** Get the view rect in it's own coordinate system, i.e. (0,0,_rect.size.width,_rect.size.height) */
     virtual RECT getOwnRect();
-    
+
+    /** Get the visible view rect, i.e. own coordinate system but with content offset applied */
+    virtual RECT getVisibleRect();
+
     /** Same as getOwnRect() but with current padding insets applied */
     virtual RECT getOwnRectPadded();
 
@@ -229,14 +231,14 @@ public:
     /** Set padding insets, i.e. the space between the view rect and its content */
     virtual void setPadding(EDGEINSETS padding);
     
-    /** Set the size this view would like to have, given various constraints (see MEASURESPEC and measure()). */
-    virtual void setMeasureSpecs(MEASURESPEC widthMeasureSpec, MEASURESPEC heightMeasureSpec);
+    /** Set the size this view would like to have, given various constraints (see MEASURESPEC and layout()). */
+    virtual void setLayoutSize(MEASURESPEC widthSpec, MEASURESPEC heightSpec);
     
     /** Set an absolute view size, in pixels. */
-    virtual void setSize(const SIZE& size);
+    virtual void setLayoutSize(const SIZE& size);
     
     /** Set the preferred alignment within the parent view. See ALIGNSPEC and layout() **/
-    virtual void setAlignSpecs(ALIGNSPEC alignspecHorz, ALIGNSPEC alignspecVert);
+    virtual void setLayoutOrigin(ALIGNSPEC alignspecHorz, ALIGNSPEC alignspecVert);
     
     /** Signal that the view needs to recalculate its size and position */
     virtual void setNeedsLayout();
@@ -248,7 +250,7 @@ public:
     /** Set this view's measured size to be that of its content size plus padding. */
     virtual void sizeToFit(float widthConstraint = FLT_MAX);
     
-    /** Sets the size of the view rect. CAUTION! This API is dumb and will probably be removed. Use
+    /** Sets the view rect. CAUTION! This API is dumb and will probably be removed. Use
      setSize() to set an absolute view size in code. */
     virtual void setRectSize(const SIZE& size);
 
@@ -258,6 +260,11 @@ public:
     
     virtual void setRect(const RECT& rect);
 
+    /** Set visibility. A view will only draw in its window when the following are all true:
+        - The view is attached to a Window
+        - The view's visibility is set to 'Visible'
+        - The view is not clipped by an ancestor whose clipControl is 'Auto' or 'On'.
+     */
     virtual void setVisibility(Visibility visibility);
     
     virtual bool isHidden() const;
@@ -267,7 +274,7 @@ protected:
 
     virtual void layoutSubviews(RECT constraint);
     /** Determines the view rect size, given the parent size constraint. The default implementation
-     uses the MEASURESPECs passed to setMeasureSpecs() to calculate the view rect size. */
+     uses the MEASURESPECs passed to setLayoutSize() to calculate the view rect size. */
     //virtual void measure(SIZE constrainingSize);
     
 
@@ -316,8 +323,22 @@ public:
     virtual bool canScrollHorizontally();
     virtual bool canScrollVertically();
     virtual float getMaxScrollY();
-    virtual bool getClipsContent() const;
-    virtual void setClipsContent(bool clipsContent);
+    
+    /** ClipContents determines whether a view's renderops (including those of
+     subviews) are clipped to the visible portion of the view or not. Defaults
+     to 'true', meaning clipping will be enabled when the view's measured
+     contents exceeds its current bounds, and disabled otherwise.
+     
+     Note that subviews are treated as the view contents by default, i.e. a view that
+     contains a scrollable area (e.g. a list of items) will automatically not waste
+     time drawing subviews that haven't yet been scrolled into view.
+     
+     Clipping involves a per-fragment test at the end of the GPU pipeline and
+     therefore is not free, however its usually far cheaper than rasterizing a ton
+     of things that are currently off the screen. */
+    virtual bool clipsContents() const;
+    virtual void setClipsContents(bool clipContents);
+    
     virtual void scrollBy(POINT scrollAmount);
 
 protected:
@@ -325,7 +346,7 @@ protected:
     SIZE _contentSize;
     POINT _contentOffset, _contentOffsetAccum;
     bool _contentSizeValid;
-    bool _clipsContent;
+    bool _clipsContents;
     GRAVITY _gravity;
     EDGEINSETS _scrollInsets;
     ScrollInfo _scrollVert;

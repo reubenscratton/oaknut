@@ -1,0 +1,27 @@
+{
+	"$":"index",
+	"site":["/sport"],
+	"format": ["bbc.mobile.news.cps.idx", "bbc.mobile.news.legacy.idx"],
+    "modules": [
+				
+		{"$":"primaryItem",        "$secondary":"$st_primary_sport"},
+        {"$":"advert",             "type":"banner", "mode!=compact":{"paddingBottom":8}},
+		{"$":"secondaryItems",     "$secondary":"$st_top_stories_sport"},
+		{"$":"avCarousel",         "$secondary":"$st_avcarousel_sport", "modes":["!compact"]},
+		{"$":"sportPromo",         "contentId": "/cps/sport/front-page"},
+		{"$":"otherItems",         "$secondary":"$st_top_stories_sport"},
+		{"$":"avCarousel",         "$secondary":"$st_avcarousel_sport", "modes":["compact"]},
+		
+		{"$":"title", "title":     "Features & Analysis"},
+		{"$":"featureGroup",       "modes":["!tablet"], "$secondary":"$st_features_sport", "limit": 1},
+		{"$":"featureGroup_2col",  "modes":["!tablet"], "$secondary":"$st_features_sport", "offset":1},
+		{"$":"featuresSection",    "modes":["tablet"],  "$secondary":"$st_features_sport"},
+
+		{"$":"title", "title":     "In Pictures"},
+		{"$":"photosGroup",        "$secondary":"$st_in_pictures_sport"},
+
+		{"$":"copyright"}
+
+	]
+}
+

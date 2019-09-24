@@ -1,0 +1,22 @@
+{
+	"$":"index",
+	"format": [
+		"bbc.linkeddata.concepts.storyline",
+		"bbc.linkeddata.concepts.event",
+		"bbc.linkeddata.concepts.organisation",
+		"bbc.linkeddata.concepts.person",
+		"bbc.linkeddata.concepts.place",
+		"bbc.linkeddata.concepts.theme",
+		"bbc.linkeddata.concepts.unknown"
+	],
+	"modules": [
+
+		{"$":"primaryItem", "$secondary":["bbc.linkeddata.about+"] },
+        {"$":"advert",         "type":"banner", "mode!=compact":{"paddingBottom":8}},
+		{"$":"otherItems",  "$secondary":["bbc.linkeddata.about+"], "offset": 1, "limit": 6},
+        {"$":"advert",         "type":"mpu"},
+        {"$":"otherItems",  "$secondary":["bbc.linkeddata.about+"], "offset": 7},
+		{"$":"copyright"}
+
+    ]
+}

@@ -1,204 +1,185 @@
 //
-//  BNCellItemFeature.m
-//  BBCNews
-//
-//  Copyright (c) 2014 BBC News. All rights reserved.
+//  Copyright (c) 2019 BBC News. All rights reserved.
 //
 
-#import "BNCellItem.h"
-#import "BNStyles.h"
-
-@interface BNCellItemFeature : BNCellItem
-
-@property (nonatomic) CGRect accentFrame;
-@property (nonatomic) UIColor* featureColor;
-@property (nonatomic) UIView* accentView;
-@property (nonatomic) NSString* imagePos;
-@end
+#include "cellitem.h"
 
 
-@implementation BNCellItemFeature
+class BNCellItemFeature : public BNCellItem {
+public:
+    
+    RECT _accentFrame;
+    COLOR _featureColor;
+    View* _accentView;
+    string _imagePos;
+    float _featureAccentStripHeight;
+    
 
+    BNCellItemFeature(BNCellsModule* module) : BNCellItem(module) {
+        
+        _headline->applyStyle((module->_cellsPerRow > 1) ? "featureHeadline" : "featureFullWidthHeadline");
+        _featureAccentStripHeight = app->getStyleFloat("featureAccentStripHeight");
+		_textAreaInsets = app->getStyle("text-insets")->edgeInsetsVal("feature");
+		_showMediaGlyphInHeadline = true;
+		_hideTimestamp = true;
+		_imagePos = module->_json.stringVal("imagePosition");
+        if (app->_defaultDisplay->sizeClass() == Display::Phone) {
+            //self.summary.numLines = 3;
+        }
 
-- (id)initWithRelationship:(BNRelationship*)relationship andModule:(BNCellsModule*)module {
-	self = [super initWithRelationship:relationship andModule:module];
-	if (self) {
-		
-		if (module.cellsPerRow > 1) {
-			self.headlineAttrs = self.inverseColorScheme ? attrsFeatureHeadlineInv : attrsFeatureHeadline;
-		} else {
-			self.headlineAttrs = self.inverseColorScheme ? attrsFullWidthFeatureHeadlineInv : attrsFullWidthFeatureHeadline;
-		}
-		
-		self.textAreaInsets = textInsetsFeature;
-		self.showSummary = module.summaries;
-		
-		self.showMediaGlyphInHeadline = YES;
-		self.hideTimestamp = YES;
-		self.imagePos = module.json[@"imagePosition"];
-
-		// TODO: Magazine will eventually have it's own relationship secondaryType. When it does, replace this.
-		if ([self.item.modelId hasPrefix:modelIdMagazine]) {
-			self.featureColor = [UIColor featureColorMagazine];
-		} else if ([self.item.site isEqualToString:BNContentSite.sport]) {
-			self.featureColor = [UIColor featureColorSport];
-		} else if ([relationship.secondaryType isEqualToString:BNRelationshipType.groupFeatureAnalysis]) {
-			self.featureColor = [UIColor featureColorAnalysis];
-		} else if ([relationship.secondaryType isEqualToString:BNRelationshipType.groupAlsoInTheNews]) {
-			self.featureColor = [UIColor bbcNewsLiveRed];
-		} else {
-			self.featureColor = [UIColor featureColorFeatures];
-		}
+        _accentView = new View();
+        addSubview(_accentView);
 
 	}
-	return self;
-}
+    void setRelationship(BNRelationship* relationship) override {
+        BNCellItem::setRelationship(relationship);
+    
+        // TODO: Magazine will eventually have it's own relationship
+        // secondaryType. When it does, replace this.
+        string colorName;
+        if (_item && _item->_modelId.hasPrefix(BNModelIdMagazine)) {
+            colorName = "color.featureMagazine";
+        } else if (_item && _item->_site == BNContentSiteSport) {
+            colorName = "color.featureSport";
+        } else if (relationship->_secondaryType == BNRelationshipTypeGroupFeatureAnalysis) {
+            colorName = "color.featureAnalysis";
+        } else if (relationship->_secondaryType == BNRelationshipTypeGroupAlsoInTheNews) {
+            colorName = "color.bbcNewsLiveRed";
+        } else {
+            colorName = "color.featureFeatures";
+        }
+        _featureColor = app->getStyleColor(colorName);
+    }
 
-- (void)postInit {
-	[super postInit];
-	if (IS_IPHONE) {
-	//self.summary.numLines = 3;
-	}
-}
+    /*
+    void measureForContainingRect(const RECT& arect) override {
 
+        RECT rect;
+        rect.origin = {0,0};
+        rect.size = arect.size;
+        float imageWidth = rect.size.width;
+        float imageHeight = 0;
+        RECT textArea = rect;
+        float minimumHeight = 0.f;
+        if (_imagePos == "top") {
+            imageHeight = (imageWidth * _imageAspect);
+            textArea.origin.y += imageHeight;
+        } else if (_imagePos == "left" || _imagePos == "right") {
+            imageWidth *= _module->_imageWidthSpec;
+            imageHeight = (imageWidth * _imageAspect);
+            textArea.size.width = rect.size.width - imageWidth;
+            minimumHeight = imageHeight;
+            if (_imagePos == "left") {
+                textArea.origin.x += imageWidth;
+            } else {
+                _imageOrigin = {rect.size.width - imageWidth, 0};
+            }
+        }
+        _imageSize = {imageWidth, imageHeight};
+        
+        _accentFrame = {textArea.origin.x, textArea.origin.y,
+            textArea.size.width, _featureAccentStripHeight};
+        //textArea.origin.y += featureAccentStripHeight;
+        
+        textArea = textArea.copyWithInsets(_textAreaInsets);
+        
+        if (_item->getHomedCollection() && !_hideTopics) {
+            _topic->measureForWidth(textArea.size.width, textArea.origin);
+            textArea.origin.y = _topic->_bounds.bottom() + 4;
+        } else {
+            textArea.origin.y = textArea.origin.y + 8;
+        }
+        
+        _headline->measureForWidth(textArea.size.width, textArea.origin);
+        textArea.origin.y = _headline->_bounds.bottom() + 2; // todo
+        
+        
+        CGFloat textBottom;
+     
+        if (!_summary) {
+            textBottom =_headline->_bounds.bottom() + _textAreaInsets.bottom;
+        } else {
+            _summary->measureForWidth(textArea.size.width, textArea.origin);
+            textBottom = _summary->_bounds.bottom() + _textAreaInsets.bottom;
+        }
+        
+        float frameHeight = MAX(minimumHeight, textBottom);
+        
+        _frame.size = {rect.size.width, frameHeight};
 
+    }
 
-- (void)measureForContainingRect:(CGRect)rect {
+    void createView(View* superview) override {
+        BNCellItem::createView(superview);
+        _accentView->setRect(_accentFrame);
+        _accentView->setBackgroundColor(_featureColor);
+    }
 
-	rect.origin = CGPointZero;
-	CGFloat imageWidth = rect.size.width;
-	CGFloat imageHeight = 0;
-	CGRect textArea = rect;
-	CGFloat minimumHeight = 0.f;
-	if ([self.imagePos isEqualToString:@"top"]) {
-		imageHeight = (imageWidth * self.imageAspect);
-		textArea.origin.y += imageHeight;
-	} else if ([self.imagePos isEqualToString:@"left"] || [self.imagePos isEqualToString:@"right"]) {
-		imageWidth *= self.module.imageWidthSpec;
-		imageHeight = (imageWidth * self.imageAspect);
-		textArea.size.width = rect.size.width - imageWidth;
-		minimumHeight = imageHeight;
-		if ([self.imagePos isEqualToString:@"left"]) {
-			textArea.origin.x += imageWidth;
-		} else {
-			self.imageOrigin = CGPointMake(rect.size.width - imageWidth, 0);
-		}
-	}
-	self.imageSize = CGSizeMake(imageWidth, imageHeight);
-	
-	self.accentFrame = CGRectMake(textArea.origin.x, textArea.origin.y, textArea.size.width, featureAccentStripHeight);
-	//textArea.origin.y += featureAccentStripHeight;
-	
-	textArea = UIEdgeInsetsInsetRect(textArea, self.textAreaInsets);
-	
-	if (self.item.homedCollection && !self.hideTopics) {
-		[self.topic measureForWidth:textArea.size.width offset:textArea.origin];
-		textArea.origin.y = CGRectGetMaxY(self.topic.bounds) + 4;
-	} else {
-		textArea.origin.y = textArea.origin.y + 8;
-	}
-	
-	[self.headline measureForWidth:textArea.size.width offset:textArea.origin];
-	textArea.origin.y = CGRectGetMaxY(self.headline.bounds) + 2;
-	
-	[self.summary measureForWidth:textArea.size.width offset:textArea.origin];
-	
-	CGFloat textBottom;
- 
-	if(!self.showSummary){
-		textBottom = CGRectGetMaxY(self.headline.bounds) + self.textAreaInsets.bottom;
-	} else {
-		textBottom = CGRectGetMaxY(self.summary.bounds) + self.textAreaInsets.bottom;
-	}
-	
-	CGFloat frameHeight = MAX(minimumHeight, textBottom);
-	
-	self.frameSize = CGSizeMake(rect.size.width, frameHeight);
+    void deleteView() override {
+        _accentView->removeFromParent();
+        _accentView = NULL;
+        BNCellItem::deleteView();
+    }*/
 
-}
+};
 
-- (void)createView:(UIView*)superview {
-	[super createView:superview];
-	self.accentView = [[UIView alloc] initWithFrame:self.accentFrame];
-	self.accentView.backgroundColor = self.featureColor;
-	[self.view addSubview:self.accentView];
-}
-
-- (void)deleteView {
-	[self.accentView removeFromSuperview];
-	self.accentView = nil;
-	[super deleteView];
-}
-
-@end
-
-
-@interface BNCellItemFeatureLarge : BNCellItemFeature
-
-@property (nonatomic) UIView* textFrameBackgroundView;
-
-@end
+DECLARE_DYNCREATE(BNCellItemFeature, BNCellsModule*);
 
 
 #define FEATURE_LARGE_ALPHA 0.9f
 
-@implementation BNCellItemFeatureLarge
 
-- (id)initWithRelationship:(BNRelationship*)relationship andModule:(BNCellsModule*)module {
-	self = [super initWithRelationship:relationship andModule:module];
-	if (self) {
-		self.imagePos = @"top";
-	}
-	return self;
-}
+class BNCellItemFeatureLarge : public BNCellItemFeature {
+public:
+    
+    View* _textFrameBackgroundView;
 
-- (void)measureForContainingRect:(CGRect)rect {
-	CGFloat origWidth = rect.size.width;
-	rect.size.width = ((rect.size.width) / 2) - 8;
-	[super measureForContainingRect:rect];
-	rect.size.width = origWidth;
-	self.imageSize = CGSizeMake(rect.size.width, rect.size.width*9.f/16.f);
-	self.frameSize = self.imageSize;
-	CGFloat dy = self.accentFrame.origin.y - 180; // TODO: move this constant into layout
-	[self adjustTextFrame: dy];
-}
+    BNCellItemFeatureLarge(BNCellsModule* module) : BNCellItemFeature(module) {
+        _imagePos = "top";
+    }
 
-- (void)adjustTextFrame:(CGFloat)dy {
-	CGPoint delta = CGPointMake(0, dy);
-	[self.summary adjustFrame:delta];
-	[self.headline adjustFrame:delta];
-	[self.topic adjustFrame:delta];
-	CGRect accentFrame = self.accentFrame;
-	accentFrame.origin.y += delta.y;
-	self.accentFrame = accentFrame;
-}
+/*
+    void measureForContainingRect(const RECT& arect) override {
+        RECT rect = arect;
+        float origWidth = rect.size.width;
+        rect.size.width = ((rect.size.width) / 2) - 8;
+        BNCellItemFeature::measureForContainingRect(rect);
+        rect.size.width = origWidth;
+        _imageSize = {rect.size.width, rect.size.width*9.f/16.f};
+        _frame.size = _imageSize;
+        float dy = _accentFrame.origin.y - 180; // TODO: move this constant into layout
+        POINT delta = {0, dy};
+        _summary->adjustFrame(delta);
+        _headline->adjustFrame(delta);
+        _topic->adjustFrame(delta);
+        _accentFrame.origin.y += delta.y;
+    }
 
-- (void)createView:(UIView*)superview {
-	[super createView:superview];
-	CGRect textFrame = self.accentFrame;
-	textFrame.size.height = self.frame.size.height - textFrame.origin.y;
-	self.textFrameBackgroundView = [[UIView alloc] initWithFrame:textFrame];
-	self.textFrameBackgroundView.backgroundColor = self.headline.label.backgroundColor;
-	self.textFrameBackgroundView.alpha = FEATURE_LARGE_ALPHA;
-	self.headline.label.backgroundColor = nil;
-	self.headline.label.opaque = NO;
-	self.summary.label.backgroundColor = nil;
-	self.summary.label.opaque = NO;
-	
-	[self.view insertSubview:self.textFrameBackgroundView aboveSubview:self.imageView];
-}
+    void createView(View* superview) override {
+        BNCellItemFeature::createView(superview);
+	    RECT textFrame = _accentFrame;
+        textFrame.size.height = _frame.size.height - textFrame.origin.y;
+        _textFrameBackgroundView = new View();
+        _textFrameBackgroundView->setRect(textFrame);
+        // _textFrameBackgroundView->setBackgroundColor(_headline->_label->_backgroundColor);
+        // _textFrameBackgroundView.alpha = FEATURE_LARGE_ALPHA;
+        // _headline->_label.backgroundColor = nil;
+        // self.headline.label.opaque = NO;
+        // self.summary.label.backgroundColor = nil;
+        // self.summary.label.opaque = NO;
+ 
+        _view->insertSubview(_textFrameBackgroundView, _view->indexOfSubview(_imageView));
+    }
 
-- (void)deleteView {
-	[super deleteView];
-	[self.textFrameBackgroundView removeFromSuperview];
-	self.textFrameBackgroundView = nil;
-}
+    void deleteView() override {
+        BNCellItemFeature::deleteView();
+        _textFrameBackgroundView->removeFromParent();
+        _textFrameBackgroundView = NULL;
+    }
 
-- (void)extendToHeight:(CGFloat)height {
-	//CGFloat dy = height - self.frameSize.height;
-	[super extendToHeight:height];
-	//self.imageSize = CGSizeMake(self.imageSize.width, height);
-	//[self adjustTextFrame:dy];
-}
+*/
 
-@end
+};
+
+DECLARE_DYNCREATE(BNCellItemFeatureLarge, BNCellsModule*);
+

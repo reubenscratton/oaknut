@@ -1,0 +1,28 @@
+{
+	"$":"index",
+    "content":["/cps/news/explainers"],
+	"$secondary":"$st_explainers",
+    "modules": [
+
+		{"$":"primaryItem"},
+        {"$":"advert",               "type":"banner", "mode!=compact":{"paddingBottom":8}},
+		{"$":"secondaryItems"},
+		{"$":"otherItems",           "modes":["compact"]},
+		{"$":"avCarousel",           "$secondary":"$st_avcarousel_explainers"},
+		
+		{"$":"otherItems",			 "modes":["!compact"]},
+    
+        {"$":"advert",               "type":"mpu"},
+                
+		{"$":"title", "title":     "From Magazine"},
+		{"$":"featureGroup",       "$secondary":"$st_explainers_feat", "modes":["!tablet"], "limit":1},
+		{"$":"featureGroup_2col",  "$secondary":"$st_explainers_feat", "modes":["!tablet"], "offset":1},
+		{"$":"featuresSection",    "$secondary":"$st_explainers_feat", "modes":["tablet"]},
+		
+		{"$": "title", "title":    "Who Is?"},
+		{"$": "featureGroup",      "$secondary": "$st_explainers_who", "limit":1},
+		
+		{"$":"copyright"}
+
+	]
+}

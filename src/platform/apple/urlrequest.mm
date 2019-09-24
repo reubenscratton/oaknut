@@ -8,6 +8,12 @@
 
 #import "oaknut.h"
 
+static struct loader {
+    loader() {
+        NSURLCache* cache = [[NSURLCache alloc] initWithMemoryCapacity:16*1024*1024 diskCapacity:32*1024*1024 diskPath:nil];
+        NSURLCache.sharedURLCache = cache;
+    }
+} s_loader;
 
 class URLRequestApple : public URLRequest {
 public:
@@ -20,7 +26,7 @@ public:
     
     void run() override {
         NSString* urlstr = [NSString stringWithCString:_url.data() encoding:[NSString defaultCStringEncoding]];
-        NSMutableURLRequest* req = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:urlstr] cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:15];
+        NSMutableURLRequest* req = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:urlstr] cachePolicy:NSURLRequestReturnCacheDataElseLoad timeoutInterval:15];
         req.HTTPMethod = [NSString stringWithUTF8String:_method.data()];
         if (_body.length() > 0) {
             req.HTTPBody = [NSData dataWithBytes:_body.data() length:_body.size()];

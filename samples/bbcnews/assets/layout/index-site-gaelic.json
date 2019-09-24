@@ -1,0 +1,22 @@
+{
+	"$":"index",
+	"site":["/naidheachdan"],
+	"format": ["bbc.mobile.news.cps.idx", "bbc.mobile.news.legacy.idx"],
+    "modules": [
+		
+		{"$":"primaryItem",        "$secondary":"$st_top_stories"},
+        {"$":"advert",            "type":"banner", "mode!=compact":{"paddingBottom":8}},
+		{"$":"secondaryItems",     "$secondary":"$st_top_stories"},
+		{"$":"avCarousel",         "$secondary":"$st_avcarousel_gaelic"},
+		{"$":"otherItems",         "$secondary":"$st_top_stories"},
+        {"$":"advert",         "type":"mpu"},
+                
+		{"$":"title", "title":     "Sgeulachdan aithriseach"},
+		{"$":"featureGroup",       "$secondary":"$st_features_gaelic", "limit":2, "modes":["!tablet"]},
+		{"$":"featureGroup_2col",  "$secondary":"$st_features_gaelic", "limit":10, "offset":2, "modes":["!tablet"]},
+		{"$":"featuresSection",    "$secondary":"$st_features_gaelic", "modes":["tablet"]},
+
+		{"$":"copyright"}
+	
+	]
+}

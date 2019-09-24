@@ -1,0 +1,23 @@
+{
+    "$":"index",
+    "content": ["/cps/newyddion/hafan"],
+    "modules": [
+                
+                {"$":"primaryItem",      "$secondary":"$st_top_stories_welsh"},
+                {"$":"advert",            "type":"banner", "mode!=compact":{"paddingBottom":8}},
+                {"$":"secondaryItems",   "$secondary":"$st_top_stories_welsh"},
+                {"$":"avCarousel",       "$secondary":"$st_av_carousel_welsh"},
+                {"$":"otherItems",       "$secondary":"$st_top_stories_welsh"},
+                {"$":"advert",           "type":"mpu"},
+                
+                {"$":"title", "title": "Cylchgrawn", "contentLink": "/cps/newyddion/cylchgrawn?title=Cylchgrawn"},
+                {"$":"featureGroup",     "modes":["!tablet"], "$secondary":"$st_features", "limit": 2},
+                {"$":"featureGroup_2col","modes":["!tablet"], "$secondary":"$st_features", "limit": 10, "offset": 2},
+                {"$":"featuresSection",  "modes":["tablet"],  "$secondary":"$st_features"},
+                
+                {"$":"title", "title":   "Gwleidyddiaeth"},
+                {"$":"otherItems",       "$secondary":"$st_welsh_gwleidyddiaeth", "allowIncompleteRows":true},
+                
+                {"$":"copyright"}
+    ]
+}

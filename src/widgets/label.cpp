@@ -141,8 +141,10 @@ void Label::layout(RECT constraint) {
     layoutText();
     
     // Automatically set clipsContent based on whether text overflows bounds
-    _clipsContent = (_contentSize.height > _rect.size.height)
-                 || (_contentSize.width > _rect.size.width);
+    // TODO: This is now done via _clipControl for all views, not just Label
+    // Remove this commented out code once its definitely all working
+    //_clipsContent = (_contentSize.height > _rect.size.height)
+    //             || (_contentSize.width > _rect.size.width);
     
 
 }

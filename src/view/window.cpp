@@ -521,7 +521,7 @@ void Window::presentModalViewController(ViewController *viewController) {
     
     // Fade in a 'scrim' view that also prevents the UI underneath being touchable
     View* scrimView = new View();
-    scrimView->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Fill());
+    scrimView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Fill());
     addSubview(scrimView);
     setNeedsLayout();
     COLOR scrimColor = app->getStyleColor("window.scrim");

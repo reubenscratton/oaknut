@@ -1,0 +1,27 @@
+{
+	"$":"index",
+	"site":["/newsbeat"],
+	"format": ["bbc.mobile.news.cps.idx", "bbc.mobile.news.legacy.idx"],
+	"$secondary":"$st_newsbeat",
+    "modules": [
+		
+		{"$":"primaryItem"},
+        {"$":"advert",               "type":"banner", "mode!=compact":{"paddingBottom":8}},
+		{"$":"secondaryItems"},
+		{"$":"otherItems",           "modes":["compact"]},
+		{"$":"avCarousel",           "$secondary":"$st_newsbeat_avcarousel"},
+		{"$":"otherItems",			 "modes":["!compact"]},
+		{"$":"advert",               "type":"mpu"},
+		{"$":"title", "title":          "Features & Analysis"},
+		{"modes":["!tablet"],    "$":"featureGroup",       "$secondary":"$st_newsbeat_features", "limit":1},
+		{"modes":["!tablet"],    "$":"featureGroup_2col",  "$secondary":"$st_newsbeat_features", "offset":1},
+		{"modes":["tablet"],     "$":"featuresSection",    "$secondary":"$st_newsbeat_features"},
+		{"$":"featureGroup_2col",       "$secondary":["bbc.mobile.news.group.also-in-news+"]},
+		
+		{"$":"title", "title":          "In Pictures", "contentLink": "/cps/news/in_pictures?title=In%20Pictures"},
+		{"$":"photosGroup"},
+
+		{"$":"copyright"}
+
+	]
+}

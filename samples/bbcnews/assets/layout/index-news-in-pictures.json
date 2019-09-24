@@ -1,0 +1,24 @@
+{
+	"$":"index",
+    "content":["/cps/news/in_pictures"],
+	"modules": [
+		
+		{"$":"primaryItem",       "$secondary":"$st_in_pics_primary"},
+        {"$":"advert",            "type":"banner", "mode!=compact":{"paddingBottom":8}},
+		{"$":"featureGroup_2col", "modes":["!tablet"], "$secondary":"$st_guide_content"},
+		{"$":"secondaryItems",    "modes":["tablet"],  "$secondary":"$st_guide_content", "offset": 0, "limit": -1},
+		{"$":"advert",            "type":"mpu"},
+                
+		{"$":"title",             "title": "Your Pictures"},
+		{"$":"photosGroup",       "$secondary":"$st_in_pics_your_pics"},
+		{"$":"title", "title":    "More readers' pics"},
+	    {"$":"featureGroup",      "modes":["!tablet"], "$secondary":"$st_in_pics_more", "limit":1},
+		{"$":"normalGroup",       "modes":["!tablet"], "$secondary":"$st_in_pics_more", "offset":1},
+		{"$":"featuresSection",   "modes":["tablet"],  "$secondary":"$st_in_pics_more"},
+
+		{"$":"title", "title":    "We Want Your Pictures"},
+		{"$":"featureGroup",      "$secondary":"$st_in_pics_we_want", "limit":1},
+                
+		{"$":"copyright"}
+	]
+}

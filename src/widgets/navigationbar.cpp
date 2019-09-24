@@ -39,8 +39,8 @@ void NavigationBar::addViewControllerNav(ViewController* viewController) {
     }
     if (viewController->_title.length()) {
         Label* titleLabel = new Label();
-        titleLabel->setMeasureSpecs(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
-        titleLabel->setAlignSpecs(ALIGNSPEC::Center(), ALIGNSPEC(NULL, 0.5f, -0.5f, 0));
+        titleLabel->setLayoutSize(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
+        titleLabel->setLayoutOrigin(ALIGNSPEC::Center(), ALIGNSPEC(NULL, 0.5f, -0.5f, 0));
         titleLabel->setText(viewController->_title);
         titleLabel->applyStyle(*_titleStyle);
         viewController->_titleView = titleLabel;

@@ -80,7 +80,7 @@ void SegmentedControl::setPadding(EDGEINSETS padding) {
 void SegmentedControl::addSegment(const string& labelText) {
     Segment segment;
     segment.label = new Label();
-    segment.label->setMeasureSpecs(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
+    segment.label->setLayoutSize(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
     segment.label->setFont(_font);
     segment.label->setPadding(_segmentPadding);
 	segment.label->setText(labelText);

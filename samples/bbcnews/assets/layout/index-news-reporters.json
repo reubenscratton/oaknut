@@ -1,0 +1,17 @@
+{
+	"$":"index",
+    "content":["/cps/news/the_reporters"],
+    "modules": [
+				
+		{"$":"primaryItem",           "$secondary":"$st_reporters"},
+        {"$":"advert",         "type":"banner", "mode!=compact":{"paddingBottom":8}},
+		{"$":"secondaryItems",        "$secondary":"$st_reporters"},
+		{"$":"avCarousel",            "$secondary":"$st_reporters_avcarousel"},
+		{"$":"otherItems",            "$secondary":"$st_reporters"},
+        {"$":"advert",         "type":"mpu"},
+		{"$":"title", "title":        "Your Questions Answered"},
+		{"$":"featureGroup",          "$secondary":"$st_reporters_your_qs", "limit":1},
+
+		{"$":"copyright"}
+	]
+}

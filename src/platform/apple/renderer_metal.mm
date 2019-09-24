@@ -398,9 +398,7 @@ public:
         _metalLayer.framebufferOnly = false;//true;
         _metalLayer.contentsScale = app->_defaultDisplay->_scale;// [NSScreen mainScreen].backingScaleFactor;
 #if PLATFORM_MACOS
-        _metalLayer.displaySyncEnabled = 0;
-#endif
-#if PLATFORM_MACOS
+        _metalLayer.displaySyncEnabled = 1;
         nativeView.wantsLayer = YES;
 #endif
         _commandQueue = [_device newCommandQueue];
@@ -441,18 +439,19 @@ public:
     void popClip() override {
         MetalSurface* metalSurface = (MetalSurface*)_currentSurface;
         assert(_clips.size()>0);
-        RECT clip = _clips.top();
         _clips.pop();
         MTLScissorRect rect;
-        rect.x = clip.left();
-        rect.y = clip.top();
-        rect.width = clip.size.width;
-        rect.height = clip.size.height;
-        if (_clips.size() == 0) {
+        if (!_clips.size()) {
             rect.x = 0;
             rect.y = 0;
             rect.width = metalSurface->_size.width;
             rect.height = metalSurface->_size.height;
+        } else {
+            RECT clip = _clips.top();
+            rect.x = clip.left();
+            rect.y = clip.top();
+            rect.width = clip.size.width;
+            rect.height = clip.size.height;
         }
         [_renderCommandEncoder setScissorRect:rect];
     }

@@ -93,7 +93,7 @@ SnapshotsViewController::SnapshotsViewController(Beeb* beeb, BeebView* beebView,
 
     // Listview
     _listView = new ListView();
-    _listView->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Fill());
+    _listView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Fill());
     float statusBarHeight = app->getStyleFloat("statusbar.height");
     _minTopScrollInset = app->getStyleFloat("navbar.height") + statusBarHeight;
     _listView->setScrollInsets(EDGEINSETS(0, _minTopScrollInset, 0, 0));
@@ -113,7 +113,7 @@ SnapshotsViewController::SnapshotsViewController(Beeb* beeb, BeebView* beebView,
     view->addSubview(_listView);
 
     /*Button* createButton = new Button();
-    createButton->setMeasureSpecs(MEASURESPEC_FillParent, MEASURESPEC_Abs(app.dp(72)));
+    createButton->setLayoutSize(MEASURESPEC_FillParent, MEASURESPEC_Abs(app.dp(72)));
     createButton->setBackgroundColour(0xFF3083FB);
     createButton->setTextColour(0xFFFFFFFF);
     createButton->setText("Create Snapshot");

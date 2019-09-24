@@ -8,15 +8,15 @@
 #include <oaknut.h>
 
 
-
 DECLARE_DYNCREATE(View);
-//static ClassRegistrar<View> s_classRegView(View);
+
 
 View::View() : _alpha(1.0f),
                 _alignspecHorz(ALIGNSPEC::Left()),
                 _alignspecVert(ALIGNSPEC::Top()),
                 _widthMeasureSpec(MEASURESPEC::None()),
-                _heightMeasureSpec(MEASURESPEC::None())
+                _heightMeasureSpec(MEASURESPEC::None()),
+                _clipsContents(true)
 {
     _visibility = Visible;
 }
@@ -405,10 +405,8 @@ void View::invalidateRect(const RECT& rect) {
 void View::setUsePrivateSurface(bool usePrivateSurface) {
 	if (usePrivateSurface != _ownsPrivateSurface) {
 		_ownsPrivateSurface = usePrivateSurface;
-        if (_window) {
-            updatePrivateSurface(true);
-            setNeedsFullRedraw();
-        }
+        _surface = NULL;
+        setNeedsFullRedraw();
 	}
 }
 
@@ -439,6 +437,12 @@ RECT View::getRect() const {
 void View::setRect(const RECT& rect) {
     setRectSize(rect.size);
     setRectOrigin(rect.origin);
+    
+    app->log("Break here! Want to see what uses this");
+    _widthMeasureSpec = MEASURESPEC::Abs(rect.size.width);
+    _heightMeasureSpec = MEASURESPEC::Abs(rect.size.height);
+    _alignspecHorz = {0,0,0, rect.origin.x};
+    _alignspecVert = {0,0,0, rect.origin.y};
 }
 
 void View::setRectOrigin(const POINT& origin) {
@@ -505,18 +509,18 @@ void View::updateBackgroundRect() {
     }
 }
 
-void View::setMeasureSpecs(MEASURESPEC widthMeasureSpec, MEASURESPEC heightMeasureSpec) {
+void View::setLayoutSize(MEASURESPEC widthMeasureSpec, MEASURESPEC heightMeasureSpec) {
 	_widthMeasureSpec = widthMeasureSpec;
 	_heightMeasureSpec = heightMeasureSpec;
 	setNeedsLayout();
 }
-void View::setSize(const SIZE& size) {
+void View::setLayoutSize(const SIZE& size) {
     _widthMeasureSpec = MEASURESPEC::Abs(size.width);
     _heightMeasureSpec = MEASURESPEC::Abs(size.height);
     setNeedsLayout();
 }
 
-void View::setAlignSpecs(ALIGNSPEC alignspecHorz, ALIGNSPEC alignspecVert) {
+void View::setLayoutOrigin(ALIGNSPEC alignspecHorz, ALIGNSPEC alignspecVert) {
 	_alignspecHorz = alignspecHorz;
 	_alignspecVert = alignspecVert;
 	setNeedsLayout();
@@ -562,15 +566,15 @@ void View::sizeToFit(float widthConstraint/*=FLT_MAX*/) {
     SIZE size = _contentSize;
     size.width += _padding.left + _padding.right;
     size.height += _padding.top + _padding.bottom;
-    setSize(size);
+    setRectSize(size);
 }
 
-bool View::getClipsContent() const {
-    return _clipsContent;
+bool View::clipsContents() const {
+    return _clipsContents;
 }
-void View::setClipsContent(bool clipsContent) {
-    if (clipsContent != _clipsContent) {
-        _clipsContent = clipsContent;
+void View::setClipsContents(bool clipsContents) {
+    if (clipsContents != _clipsContents) {
+        _clipsContents = clipsContents;
         setNeedsFullRedraw();
     }
 }
@@ -827,22 +831,6 @@ void View::setPadding(EDGEINSETS padding) {
     setNeedsLayout();
 }
 
-void View::updatePrivateSurface(bool updateSubviews) {
-    assert(!_surface);
-    _surface = _parent ? _parent->_surface : _window->_surface;
-    if (_ownsPrivateSurface) {
-        _surface = _window->_renderer->createPrivateSurface();
-        _needsFullRedraw = true;
-    }
-
-    if (updateSubviews) {
-        for (auto it = _subviews.begin(); it!=_subviews.end() ; it++) {
-            sp<View> subview = *it;
-            subview->updatePrivateSurface(true);
-        }
-    }
-}
-
 
 void View::attachToWindow(Window *window) {
     if (_visibility != Visible) {
@@ -859,20 +847,10 @@ void View::attachToWindow(Window *window) {
         _surfaceOrigin = _rect.origin;
     }
 
-    updatePrivateSurface(false);
     updateEffectiveAlpha();
     updateEffectiveTint();
     
-    if (_surface) {
-        if (_renderList) {
-            _surface->attachRenderList(_renderList);
-        }
-        if (_renderListDecor) {
-            _surface->attachRenderList(_renderListDecor);
-        }
-    }
-    
-	for (auto it = _subviews.begin(); it!=_subviews.end() ; it++) {
+    for (auto it = _subviews.begin(); it!=_subviews.end() ; it++) {
 		sp<View> subview = *it;
         if (subview->_visibility == Visible) {
             subview->attachToWindow(window);
@@ -889,6 +867,20 @@ void View::detachFromWindow() {
     _scrollVert.detach();
     _window->detachView(this);
     
+    detachFromSurface();
+    
+
+    // Recurse through subviews
+    for (vector<sp<View>>::iterator it = _subviews.begin(); it!=_subviews.end() ; it++) {
+        sp<View> subview = *it;
+        subview->detachFromWindow();
+    }
+    
+    _window = nullptr;
+    _contentOffsetAccum = _contentOffset;
+}
+
+void View::detachFromSurface() {
     
     // Unbatch our ops
     if (_surface) {
@@ -898,24 +890,17 @@ void View::detachFromWindow() {
         if (_renderListDecor) {
             _surface->detachRenderList(_renderListDecor);
         }
+    
+        // If this view owns its surface, remove the op that renders it from the render target
+        if (_ownsPrivateSurface && _surface->_op) {
+            _surface->_op = NULL;
+        }
+        
+        _surface = nullptr;
+
     }
 
-    // Recurse through subviews
-    for (vector<sp<View>>::iterator it = _subviews.begin(); it!=_subviews.end() ; it++) {
-        sp<View> subview = *it;
-        subview->detachFromWindow();
-    }
-
-    // If this view owns its surface, remove the op that renders it from the render target
-    if (_ownsPrivateSurface && _surface->_op) {
-        _surface->_op = NULL;
-    }
-
-    _surface = nullptr;
-    _window = nullptr;
-    _contentOffsetAccum = _contentOffset;
 }
-
 
 View* View::findViewById(const string& id) {
     if (id == _id) {
@@ -1174,10 +1159,13 @@ void View::removeRenderOpFromList(RenderOp* renderOp, sp<RenderList>& list) {
 
 
 RECT View::getOwnRect() {
-	return RECT(0,0,_rect.size.width,_rect.size.height);
+	return RECT(0, 0, _rect.size.width, _rect.size.height);
 }
 RECT View::getOwnRectPadded() {
     return RECT(_padding.left,_padding.top, _rect.size.width-(_padding.left+_padding.right), _rect.size.height - (_padding.top+_padding.bottom));
+}
+RECT View::getVisibleRect() {
+    return RECT(_contentOffset.x, _contentOffset.y, _rect.size.width, _rect.size.height);
 }
 
 void View::setScrollInsets(EDGEINSETS scrollInsets) {
@@ -1195,12 +1183,14 @@ POINT View::getContentOffset() const {
 
 void View::setContentOffset(POINT contentOffset) {
     POINT d = _contentOffset - contentOffset;
-	if (!d.isZero()) {
-		_contentOffset = contentOffset;
-        adjustContentOffsetAccum(d);
-        updateScrollbarVisibility();
-        updateBackgroundRect();
-	}
+	if (d.isZero()) {
+        return;
+    }
+    _contentOffset = contentOffset;
+    adjustContentOffsetAccum(d);
+    updateScrollbarVisibility();
+    updateBackgroundRect();
+	
     if (_window) {
         _window->requestRedraw();
     }

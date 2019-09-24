@@ -1,0 +1,13 @@
+{
+	"$":"index", 
+	"content": ["/most_popular/news/read"],
+	"modules": [
+
+		{"$":"mostReadGroup", "limit":1},
+        {"$":"advert", "type":"banner"},
+		{"$":"mostReadGroup", "offset":1, "limit":6},
+        {"$":"advert", "type":"mpu"},
+        {"$":"mostReadGroup", "offset":7},
+		{"$":"copyright"}
+	]
+}

@@ -1,0 +1,27 @@
+{
+	"format": ["bbc.mobile.news.format.photogallery"],
+	"class": "BNRelativeLayout",
+	"background": "#000",
+	"modules": [
+		{
+			"class": "BNVerticalStack",
+			"fillParent": "yes",
+			"mode!=tablet":{"padding": "{0,0,106,0}"},
+			"mode==tablet":{"padding": "{0,0,256,0}"},
+			"modules": [
+				{
+				"primary": ["bbc.mobile.news.image"],
+				"secondary": ["bbc.mobile.news.placement.photogallery"],
+				"cellClass": "BNPhotoGalleryGridCell",
+				"mode==portrait":{"cellsPerRow":3},
+				"mode==landscape":{"cellsPerRow":4},
+				"allowIncompleteRows":true
+				}
+			]
+		},
+		{
+		"class": "BNPhotoGalleryOverlay",
+		"gravity":"bottom"
+		}
+	]
+}

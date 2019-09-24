@@ -1,0 +1,23 @@
+{
+	"$":"index",
+	"site":["/news"],
+	"format": ["bbc.mobile.news.cps.idx", "bbc.mobile.news.legacy.idx"],
+	"$secondary":"$st_top_stories",
+    "modules": [
+
+		{"$":"primaryItem"},
+        {"$":"advert",               "type":"banner", "mode!=compact":{"paddingBottom":8}},
+		{"$":"secondaryItems"},
+		{"$":"otherItems",           "modes":["compact"]},
+		{"$":"avCarousel"},
+		{"$":"otherItems",			 "modes":["!compact"]},
+        {"$":"advert",               "type":"mpu"},
+                
+		{"$":"title",                "title":"Features & Analysis"},
+		{"modes":["!tablet"],        "$":"featureGroup",         "$secondary":"$st_features", "limit":2},
+		{"modes":["!tablet"],        "$":"featureGroup_2col",    "$secondary":"$st_features", "limit":10, "offset":2},
+		{"modes":["tablet"],         "$":"featuresSection",      "$secondary":"$st_features"},
+
+		{"$":"copyright"}
+	]
+}

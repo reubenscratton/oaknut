@@ -1,0 +1,22 @@
+{
+	"$":"index",
+    "content":["/cps/news/also_in_the_news"],
+    "modules": [
+		
+		{"$":"primaryItem",       "$secondary":"$st_primary"},
+        {"$":"advert",            "type":"banner", "mode!=compact":{"paddingBottom":8}},
+		{"$":"featureGroup_2col", "modes":["!tablet"], "$secondary":"$st_also_in_the_news", "limit":6, "summaries":false},
+		{"$":"secondaryItems",    "modes":["tablet"],  "$secondary":"$st_also_in_the_news"},
+		{"$":"avCarousel"},
+		{"$":"advert",            "type":"mpu"},
+		{"$":"normalGroup",       "modes":["!tablet"], "$secondary":"$st_also_in_the_news",  "offset":6},
+		{"$":"otherItems",        "modes":["tablet"],  "$secondary":"$st_also_in_the_news"},
+
+		{"$":"title", "title":    "Features & Analysis"},
+		{"$":"featureGroup",      "modes":["!tablet"], "$secondary":"$st_features", "imagePosition":"top", "limit":1},
+		{"$":"featureGroup",      "modes":["!tablet"], "$secondary":"$st_features", "imagePosition":"none", "offset":1},
+		{"$":"featuresSection",   "modes":["tablet"],  "$secondary":"$st_features"},
+		
+		{"$":"copyright"}
+	]
+}
