@@ -41,7 +41,7 @@ static CTFontRef createCTFont(FontApple* font) {
         NSInteger weight = font->_weight / 100;
         NSFont* nsfont = [[NSFontManager sharedFontManager] fontWithFamily:nsname traits:traits weight:weight size:font->_size];
         if (nsfont) {
-            return (__bridge CTFontRef)nsfont;
+            return (__bridge_retained CTFontRef)nsfont;
         }
         
         // Maybe its the name of an font asset?

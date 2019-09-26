@@ -60,7 +60,7 @@ public:
     
 
 private:
-    void renderPhase1(Renderer* renderer, View* view, POINT origin);
+    void renderPhase1(Renderer* renderer, View* view, RECT surfaceRect);
     void renderPhase2(Renderer* renderer);
     void renderPhase3(Renderer* renderer, View* view, Surface* prevsurf);
     

@@ -243,7 +243,7 @@ void RenderList::removeRenderOp(RenderOp* renderOp) {
 }
 
 
-void Surface::renderPhase1(Renderer* renderer, View* view, POINT origin) {
+void Surface::renderPhase1(Renderer* renderer, View* view, RECT surfaceRect) {
 
     // If view not visible, early exit
     if (view->_visibility != Visible) {
@@ -255,8 +255,7 @@ void Surface::renderPhase1(Renderer* renderer, View* view, POINT origin) {
         view->_surface = view->_parent ? view->_parent->_surface : view->_window->_surface;
         if (view->_ownsPrivateSurface) {
             view->_surface = view->_window->_renderer->createPrivateSurface();
-        }
-        
+        }        
         if (view->_renderList) {
             attachRenderList(view->_renderList);
         }
@@ -289,14 +288,8 @@ void Surface::renderPhase1(Renderer* renderer, View* view, POINT origin) {
             }
         }
 
-        // Reset origin
-        origin = {0,0};
-
-    } else {
-
-        // Adjust origin
-        origin.x += view->_rect.origin.x;
-        origin.y += view->_rect.origin.y;
+        // Reset surface rect
+        surfaceRect = {0, 0, surface->_size.width, surface->_size.height};
     }
     
     bool changesMvp = view->_matrix || !view->_contentOffset.isZero();
@@ -331,17 +324,19 @@ void Surface::renderPhase1(Renderer* renderer, View* view, POINT origin) {
     }
     
     // Recurse subviews
-    RECT visibleViewRect = view->getVisibleRect();
+    surfaceRect.origin += view->_contentOffset;
     for (auto it = view->_subviews.begin(); it!=view->_subviews.end() ; it++) {
         sp<View>& subview = *it;
-        bool subviewIsClipped = (view->_clipsContents) && !visibleViewRect.intersects(subview->getRect());
-        if (subviewIsClipped) {
+        RECT subviewRect = subview->getOwnRect();
+        subviewRect.origin += subview->_surfaceOrigin;
+        bool subviewIsVisible = subviewRect.intersectWith(surfaceRect);
+        if (view->_clipsContents && !subviewIsVisible) {
             if (subview->_surface) {
                 subview->detachFromSurface();
             }
-        } else {
-            surface->renderPhase1(renderer, subview, origin);
+            continue;
         }
+        surface->renderPhase1(renderer, subview, subviewRect);
     }
     
     // Draw decor renderlist
@@ -438,7 +433,7 @@ void Surface::renderPhase3(Renderer* renderer, View* view, Surface* prevsurf) {
     if (clips) {
         RECT clip = view->getOwnRect();
         clip.origin = view->_surfaceOrigin;
-        clip.origin += view->_contentOffsetAccum;
+        // clip.origin += view->_contentOffsetAccum;
 #if RENDERER_GL
         clip.origin.y = surface->_size.height - clip.bottom(); /* flip Y */
 #endif
@@ -531,7 +526,8 @@ void Surface::render(View* view, Renderer* renderer) {
     /** PHASE 1: ENSURE ALL RENDER LISTS ARE VALID **/
     _renderListsInsertionPos = _renderListsList.end();
     _renderOrder = 1;
-    renderPhase1(renderer, view, {0,0});
+    RECT surfaceRect = {0, 0, _size.width, _size.height};
+    renderPhase1(renderer, view, surfaceRect);
     
     /** PHASE 2: VALIDATE ALL SHADERS, ENSURE VERTEX BUFFER IS UP TO DATE */
     renderPhase2(renderer);

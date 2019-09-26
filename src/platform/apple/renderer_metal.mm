@@ -434,6 +434,7 @@ public:
         rect.y = clip.top();
         rect.width = clip.size.width;
         rect.height = clip.size.height;
+        // app->log("push: %ld,%ld x %ld,%ld", rect.x,rect.y, rect.width, rect.height);
         [_renderCommandEncoder setScissorRect:rect];
     }
     void popClip() override {
@@ -453,6 +454,7 @@ public:
             rect.width = clip.size.width;
             rect.height = clip.size.height;
         }
+        // app->log("pop: %ld,%ld x %ld,%ld", rect.x,rect.y, rect.width, rect.height);
         [_renderCommandEncoder setScissorRect:rect];
     }
 

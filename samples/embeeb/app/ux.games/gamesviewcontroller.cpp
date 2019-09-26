@@ -120,5 +120,5 @@ void GamesViewController::applySafeInsets(const EDGEINSETS &safeInsets) {
 void GamesViewController::updateInsets() {
     int index = _segctrl->getSelectedIndex();
     _listView->setScrollInsets(EDGEINSETS(0, _safeAreaInsets.top + ((index==0)?0:app->dp(40)), 0, 0));
-    _searchBox->getParent()->setAlignSpecs(ALIGNSPEC::Left(), ALIGNSPEC(NULL, 0.0f, 0.0f, _safeAreaInsets.top ));
+    _searchBox->getParent()->setLayoutOrigin(ALIGNSPEC::Left(), ALIGNSPEC(NULL, 0.0f, 0.0f, _safeAreaInsets.top ));
 }
