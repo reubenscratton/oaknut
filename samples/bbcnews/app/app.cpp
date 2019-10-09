@@ -47,45 +47,8 @@ public:
 
 
 
-static std::map<string, Object* (*)()> s_register;
-
-template<typename T, typename ...ARGS>
-class FooRegistrar {
-private: static Object* createT(ARGS... args) {return new T(args...); }
-public:
-    FooRegistrar(const string& className) {
-        s_register.insert(std::make_pair(className, reinterpret_cast<Object*(*)()>(&createT)));
-    }
-};
-
-
-template<class ...ARGS>
-static Object* s_createByName(const string& className, ARGS... args) {
-    const auto& constructor = s_register.find(className);
-    assert(constructor != s_register.end()); // oops!
-    auto real_constructor = reinterpret_cast<Object*(*)(ARGS...)>(constructor->second);
-    return real_constructor(args...);
-}
-
-class Foo : public Object {
-public:
-    //Foo() {
-        
-    //}
-    Foo(int f) {
-        
-    }
-};
-
-#define DYNCREATE(X, ...) static FooRegistrar<X,##__VA_ARGS__> s_classReg##X(STRINGIFY(X))
-
-DYNCREATE(Foo, int);
-
-//static FooRegistrar<Foo, int> s_classReg("Foo");
 
 void BBCNewsApp::main() {
-    
-    Foo* foo = (Foo*)s_createByName("Foo", 1234);
     
     _compactMode = getBoolSetting("compactMode", false);
     _carouselsMode = getBoolSetting("carouselsMode", false);

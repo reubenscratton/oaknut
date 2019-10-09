@@ -19,6 +19,7 @@ ALIGNSPEC::ALIGNSPEC(View* anchor, float multiplierAnchor, float multiplierSelf,
 
 ALIGNSPEC ALIGNSPEC::None()   { return ALIGNSPEC(NO_ANCHOR, 0,0,0); }
 ALIGNSPEC ALIGNSPEC::Left()   { return ALIGNSPEC(NULL, 0.0f, 0.0f, 0); }
+ALIGNSPEC ALIGNSPEC::Abs(float x)   { return ALIGNSPEC(NULL, 0.0f, 0.0f, x); }
 ALIGNSPEC ALIGNSPEC::Center() { return ALIGNSPEC(NULL, 0.5f,-0.5f, 0); }
 ALIGNSPEC ALIGNSPEC::Right()  { return ALIGNSPEC(NULL, 1.0f,-1.0f, 0); }
 ALIGNSPEC ALIGNSPEC::Top()    { return ALIGNSPEC(NULL, 0.0f, 0.0f, 0); }

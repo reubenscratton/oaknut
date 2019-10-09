@@ -60,7 +60,6 @@ protected:
     RectRenderOp* _renderOp;
     
     void startFadeAnim(float targetAlpha);
-    void updateRect(View* view);
 
 };
 

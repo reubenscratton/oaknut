@@ -168,7 +168,7 @@ void RenderOp::setInset(EDGEINSETS inset) {
 }
 
 int RenderOp::getRenderOrder() {
-    return (_list->_renderOrder << 16) | _listIndex;
+    return (_list->_renderListsIndex << 16) | _listIndex;
 }
 
 void RenderOp::rebatchIfNecessary() {
@@ -179,7 +179,7 @@ void RenderOp::rebatchIfNecessary() {
         // after a property change. Alternative is to end up with multiple compatible batches, not wanted.
         //if (_batch->_ops.size() > 1) {
             sp<Surface> surface = _batch->_surface;
-            surface->removeRenderOp(this);
+            surface->detachRenderListOp(this);
             surface->addRenderOp(this);
         //}
     }

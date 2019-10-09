@@ -8,10 +8,12 @@
 
 class RenderList : public Object {
 public:
-    uint32_t _renderOrder; // set by Surface::renderPass1, read in Surface::renderPass2.
+    RenderList();
     list<sp<RenderOp>> _ops;
-    list<RenderList*>::iterator _surfaceIt;
     
+    int _renderListsIndex; // as determined by the Surface.
+    list<RenderList*>::iterator _renderListsPos;
+
     void addRenderOp(RenderOp* renderOp, bool atFront=false);
     void removeRenderOp(RenderOp* renderOp);
 };
@@ -30,8 +32,8 @@ public:
     REGION _invalidRegion; // unused on primary surface
     MATRIX4 _mvp;
     POINT _savedOrigin;
-    list<RenderList*> _renderListsList;
-    list<RenderList*>::iterator _renderListsInsertionPos;
+    list<RenderList*> _renderLists;
+    list<RenderList*>::iterator _renderListsLastTouchedIterator;
     list<RenderOp*> _opsNeedingValidation;
     list<sp<RenderBatch>> _listBatches;
     int _mvpNum, _mvpNumPeak;
@@ -42,11 +44,11 @@ public:
     virtual void render(View* view, Renderer* renderer);
     virtual void setSize(const SIZE& size);
 
+    void ensureRenderListAttached(RenderList* list);
     void detachRenderList(RenderList* list);
-    void attachRenderList(RenderList* list);
 
     void addRenderOp(RenderOp* op);
-    void removeRenderOp(RenderOp* op);
+    void detachRenderListOp(RenderOp* op);
     
     void validateRenderOps(Renderer* renderer);
     void batchRenderOp(RenderOp* op);
@@ -63,8 +65,6 @@ private:
     void renderPhase1(Renderer* renderer, View* view, RECT surfaceRect);
     void renderPhase2(Renderer* renderer);
     void renderPhase3(Renderer* renderer, View* view, Surface* prevsurf);
-    
-    int _renderOrder;
 
 #ifdef DEBUG
     string _renderLog;

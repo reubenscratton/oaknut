@@ -19,9 +19,61 @@ def __lldb_init_module(debugger, dict):
     debugger.HandleCommand('type synthetic add oak::style --python-class lldb_oaknut.style_SynthProvider')
 
     # String-keyed std::pairs
-    debugger.HandleCommand('type summary add -F lldb_oaknut.pair_SummaryProvider -x "std::__1::pair<const oak::string,.*"')    
+    debugger.HandleCommand('type summary add -F lldb_oaknut.pair_SummaryProvider -x "std::__1::pair<const oak::string,.*"')
     debugger.HandleCommand('type synthetic add "std::__1::pair<const oak::string, oak::variant>" --python-class lldb_oaknut.pair_variant_SynthProvider')
     debugger.HandleCommand('type synthetic add "std::__1::pair<const oak::string, oak::style>" --python-class lldb_oaknut.pair_style_SynthProvider')
+
+    # Geometry types
+    debugger.HandleCommand('type summary add -F lldb_oaknut.POINT_SummaryProvider oak::POINT')
+    debugger.HandleCommand('type summary add -F lldb_oaknut.SIZE_SummaryProvider oak::SIZE')
+    debugger.HandleCommand('type summary add -F lldb_oaknut.RECT_SummaryProvider oak::RECT')
+
+    debugger.HandleCommand('type summary add -F lldb_oaknut.COLOR_SummaryProvider oak::COLOR')
+    debugger.HandleCommand('type synthetic add oak::COLOR --python-class lldb_oaknut.COLOR_SynthProvider')
+
+    debugger.HandleCommand('type summary add -F lldb_oaknut.sp_SummaryProvider -x "^oak::sp<.*>"')
+    debugger.HandleCommand('type synthetic add -x "^oak::sp<.*>" --python-class lldb_oaknut.sp_SynthProvider')
+
+def nicetype(t):
+    t = t.strip('oak::')
+    t = t.replace(' *', '*')
+    return t
+
+def sp_SummaryProvider(valobj, dict):
+    obj = valobj.GetNonSyntheticValue().GetChildAtIndex(0, lldb.eNoDynamicValues, True)
+    if obj is None:
+        return 'null'
+    if obj.GetValueAsUnsigned() == 0:
+        return 'null'
+    v = str(obj.GetValue())
+    while v.startswith('0x0'):
+        v = v[0:2] + v[3:]
+    return nicetype(obj.GetDisplayTypeName()) + ' ' + v
+
+class sp_SynthProvider:
+    def __init__(self, valobj, dict):
+        self.valobj = valobj
+    def num_children(self):
+        if self.obj is None:
+            return 0
+        return self.obj.GetNumChildren()
+    def get_child_index(self, name):
+        if self.obj is None:
+            return -1
+        return self.obj.GetIndexOfChildWithName(name)
+    def get_child_at_index(self, index):
+        if self.obj is None:
+            return None
+        return self.obj.GetChildAtIndex(index)
+    def has_children(self):
+        if self.obj is None:
+            return False
+        return self.obj.MightHaveChildren()
+    def update(self):
+        self.obj = self.valobj.GetChildAtIndex(0, lldb.eNoDynamicValues, True)
+        #if self.obj != None:
+        #    self.obj = self.obj.Dereference()
+        #    self.obj.update()
 
 class variant_SynthProvider:
     def __init__(self, valobj, dict):
@@ -82,7 +134,7 @@ def variant_SummaryProvider(valobj, dict):
     if t == 'MEASUREMENT':
         return valobj.GetChildMemberWithName('_measurement').GetSummary()
     if t == 'BYTEARRAY':
-        return valobj.GetChildMemberWithName('_bytearray').GetSummary()   
+        return valobj.GetChildMemberWithName('_bytearray').GetSummary()
     if t == 'ARRAY':
         return valobj.GetChildMemberWithName('_vec').Dereference().GetSummary()
     if t == 'MAP':
@@ -157,6 +209,42 @@ def measurement_SummaryProvider(valobj, dict):
         return r + '%'
     return r
 
+def nicefloat(val):
+    s = str(round(float(val), 3))
+    if s.endswith('.0'):
+        s = s[:-2]
+    return s
+
+def POINT_SummaryProvider(valobj, dict):
+    x = nicefloat(valobj.GetChildMemberWithName('x').GetValue())
+    y = nicefloat(valobj.GetChildMemberWithName('y').GetValue())
+    return '{},{}'.format(x, y)
+
+def SIZE_SummaryProvider(valobj, dict):
+    width = nicefloat(valobj.GetChildMemberWithName('width').GetValue())
+    height = nicefloat(valobj.GetChildMemberWithName('height').GetValue())
+    return '{},{}'.format(width, height)
+
+def RECT_SummaryProvider(valobj, dict):
+    origin = valobj.GetChildMemberWithName('origin')
+    x = nicefloat(origin.GetChildMemberWithName('x').GetValue())
+    y = nicefloat(origin.GetChildMemberWithName('y').GetValue())
+    size = valobj.GetChildMemberWithName('size')
+    width = nicefloat(size.GetChildMemberWithName('width').GetValue())
+    height = nicefloat(size.GetChildMemberWithName('height').GetValue())
+    return '{},{} x {},{}'.format(x, y, width, height)
+
+def COLOR_SummaryProvider(valobj, dict):
+    return '#%x' % valobj.GetNonSyntheticValue().GetChildMemberWithName('_val').GetValueAsUnsigned()
+
+class COLOR_SynthProvider:
+    def __init__(self, valobj, dict):
+        self.valobj = valobj
+    def num_children(self):
+        return 0
+    def has_children(self):
+        return False
+
 def style_SummaryProvider(valobj, dict):
     valobj = valobj.GetNonSyntheticValue()
     t = valobj.GetChildMemberWithName('type').GetValue()
@@ -217,4 +305,3 @@ class style_SynthProvider:
         return
     def has_children(self):
         return self.child_count > 0
-

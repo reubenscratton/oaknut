@@ -11,6 +11,24 @@ public:
     
     BNHorizontalStack(const variant& json) : BNContainerModule(json) {
     }
+    
+    
+    BNHorizontalStack(BNHorizontalStack* source) : BNContainerModule(source) {
+    }
+    BNModule* clone() override {
+        return new BNHorizontalStack(this);
+    }
+    
+    View* createView() override {
+        auto ll = new LinearLayout();
+        ll->setBackgroundColor(_backgroundColor);
+        ll->_orientation = LinearLayout::Horizontal;
+        ll->setSpacing(app->dp(8));
+        ll->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+        ll->setClipsContents(false);
+        return ll;
+    }
+    
 /*
     RECT layoutModules(vector<BNModule*> modules, RECT bounds) override {
         POINT initialOrigin = bounds.origin;

@@ -7,7 +7,6 @@
 
 BNCellContent::BNCellContent(BNCellsModule* module) : BNCell(module) {
 
-    setBackgroundColor(app->getStyleColor(_inverseColorScheme ? "color.contentBackgroundInv":"color.contentBackground"));
 }
 
 

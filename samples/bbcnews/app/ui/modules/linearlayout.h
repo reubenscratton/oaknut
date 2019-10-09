@@ -14,8 +14,6 @@ public:
     BNLinearLayout(BNLinearLayout* source);
     BNModule* clone() override;
 
-    sp<View> _view;
-
     //void updateSubviews(View* superview) override;
     //void removeAllViews() override;
     View* createView() override;

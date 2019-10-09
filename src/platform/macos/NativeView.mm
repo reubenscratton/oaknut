@@ -194,7 +194,7 @@ static bool s_mouseIsDown;
     
     CGFloat scale = viewRectPixels.size.width / viewRectPoints.size.width;
     
-    _oaknutWindow->resizeSurface(viewRectPixels.size.width, viewRectPixels.size.height, scale);
+    _oaknutWindow->resizeSurface(viewRectPixels.size.width, viewRectPixels.size.height);
 
     CGLUnlockContext([[self openGLContext] CGLContextObj]);
 }

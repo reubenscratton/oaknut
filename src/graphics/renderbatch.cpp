@@ -106,9 +106,9 @@ void RenderBatch::render(Renderer* renderer, Surface* surface, RenderOp* firstOp
         auto jt = currentOp->_listIterator;
         jt++;
         if (jt == currentOp->_list->_ops.end()) {
-            auto kt = currentOp->_list->_surfaceIt;
+            auto kt = currentOp->_list->_renderListsPos;
             kt++;
-            if (kt == surface->_renderListsList.end()) {
+            if (kt == surface->_renderLists.end()) {
                 break;
             }
             jt = (*kt)->_ops.begin();

@@ -102,7 +102,31 @@ void ScrollInfo::updateVisibility(View* view, bool isVertical) {
             startFadeAnim(1.0f);
         }
         
-        updateRect(view);
+        //SIZE contentSize = view->getContentSize();
+        //POINT contentOffset = view->getContentOffset();
+        float content = isVertical ? view->_contentSize.height : view->_contentSize.width;
+        float contentOffset = isVertical ? view->_contentOffset.y : view->_contentOffset.x;
+        float contentOffsetPerp = isVertical ? view->_contentOffset.x : view->_contentOffset.y;
+        float topLeftInset = isVertical ? view->_scrollInsets.top : view->_scrollInsets.left;
+        float botRightInset = isVertical ? view->_scrollInsets.bottom : view->_scrollInsets.right;
+        float insets = topLeftInset + botRightInset;
+        float visibleContent = content - insets;
+        float visibleSize = isVertical ? view->_rect.size.height : view->_rect.size.width;
+        float visibleSizeOther = isVertical ? view->_rect.size.width : view->_rect.size.height;
+        float scale = (visibleSize-insets) / visibleContent;
+        RECT rect = view->getOwnRect();
+        float& origin = isVertical ? rect.origin.y : rect.origin.x;
+        float& originPerp = isVertical ? rect.origin.x : rect.origin.y;
+        float& barLength = isVertical ? rect.size.height : rect.size.width;
+        float& barThickness = isVertical ? rect.size.width : rect.size.height;
+        origin = topLeftInset + contentOffset * scale
+                              + contentOffset; // Add the unscaled contentOffset cos we have to correct for
+                                               // it now being part of MVP translation!
+        originPerp = contentOffsetPerp + visibleSizeOther - (5+4); // todo: style!
+        barLength = (visibleSize-insets) * scale;
+        barLength = fmaxf(barLength, app->dp(40)); // todo: style!
+        barThickness = 5; // todo: style!
+        _renderOp->setRect(rect);
     } else {
         if (_renderOp) {
             view->removeDecorOp(_renderOp);
@@ -250,23 +274,6 @@ float ScrollInfo::flingUpdate() {
     return retval;
 }
 
-void ScrollInfo::updateRect(View* view) {
-    SIZE contentSize = view->getContentSize();
-    POINT contentOffset = view->getContentOffset();
-    float insets = view->_scrollInsets.top+view->_scrollInsets.bottom;
-    float visibleContentHeight = contentSize.height - insets;
-    float scale = (view->getHeight()-insets) / visibleContentHeight;
-    float scrollbarLength = (view->getHeight()-insets) * scale;
-    scrollbarLength = fmaxf(scrollbarLength, app->dp(40)); // todo: style!
-    RECT rect = view->getOwnRect();
-    rect.origin.x = rect.size.width - (5+4); // todo: style!
-    rect.origin.y = view->_scrollInsets.top + contentOffset.y * scale
-    +contentOffset.y; // Add the unscaled contentOffset because we have to correct for
-                      // contentOffset now being part of MVP translation!
-    rect.size.width = 5; // todo: style!
-    rect.size.height = scrollbarLength;
-    _renderOp->setRect(rect);
-}
 
 
 

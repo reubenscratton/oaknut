@@ -404,6 +404,9 @@ void View::invalidateRect(const RECT& rect) {
 }
 void View::setUsePrivateSurface(bool usePrivateSurface) {
 	if (usePrivateSurface != _ownsPrivateSurface) {
+        if (_surface) {
+            detachFromSurface();
+        }
 		_ownsPrivateSurface = usePrivateSurface;
         _surface = NULL;
         setNeedsFullRedraw();
@@ -850,6 +853,7 @@ void View::attachToWindow(Window *window) {
     updateEffectiveAlpha();
     updateEffectiveTint();
     
+    // Recurse subviews
     for (auto it = _subviews.begin(); it!=_subviews.end() ; it++) {
 		sp<View> subview = *it;
         if (subview->_visibility == Visible) {
@@ -1131,12 +1135,11 @@ void View::addRenderOpToList(RenderOp* renderOp, bool atFront, sp<RenderList>& l
 
     if (!list) {
         list = new RenderList();
-        if (_surface) {
-            _surface->attachRenderList(list);
-        }
     }
     list->addRenderOp(renderOp, atFront);
-    if (_surface) {
+    
+    // If list is already attached to surface and being drawn, add to surface immediately
+    if (_surface && list->_renderListsIndex>=0) {
         _surface->addRenderOp(renderOp);
     }
 }
@@ -1144,8 +1147,8 @@ void View::addRenderOpToList(RenderOp* renderOp, bool atFront, sp<RenderList>& l
 void View::removeRenderOpFromList(RenderOp* renderOp, sp<RenderList>& list) {
 
     assert(renderOp->_view);
-    if (_surface) {
-        _surface->removeRenderOp(renderOp);
+    if (_surface && list->_renderListsIndex>=0) {
+        _surface->detachRenderListOp(renderOp);
     }
     list->removeRenderOp(renderOp);
     if (!list->_ops.size()) {

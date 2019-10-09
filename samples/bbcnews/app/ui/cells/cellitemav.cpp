@@ -13,6 +13,7 @@ class BNCellItemAV : public BNCellItemTopStory {
 public:
 
     BNCellItemAV(BNCellsModule* module) : BNCellItemTopStory(module) {
+        _widthMeasureSpec = MEASURESPEC::Abs(app->dp(ITEM_WIDTH_IPHONE));
     }
     
 /*    void measureForContainingRect(const RECT& arect) override {

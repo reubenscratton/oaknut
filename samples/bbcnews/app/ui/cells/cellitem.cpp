@@ -47,6 +47,7 @@ void BNCellItem::setRelationship(BNRelationship* relationship) {
 void BNCellItem::setItem(BNItem* item) {
     _item = item;
 
+
     _textFrame->setPadding(_textAreaInsets);
 
     if (_item->_nameOverride.length()) {
@@ -58,6 +59,8 @@ void BNCellItem::setItem(BNItem* item) {
     }
 
     _inverseColorScheme = _item->isMediaItem();
+    setBackgroundColor(app->getStyleColor(_inverseColorScheme ? "color.contentBackgroundInv":"color.contentBackground"));
+
     if (_summary) {
         if (_item->_summaryOverride.length()) {
             _summary->setText(_item->_summaryOverride);

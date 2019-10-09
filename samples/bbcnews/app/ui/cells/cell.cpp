@@ -31,6 +31,10 @@ void BNCell::setPrefetchLevel(int prefetchLevel) {
 void BNCell::layout(RECT constraint) {
     constraint = constraint.copyWithInsets(_margins);
     View::layout(constraint);
+    
+    // Apply bottom margin
+    _rect.size.height += _margins.bottom;
+    _rect.size.height = fmin(_rect.size.height, constraint.size.height);
 }
 
 

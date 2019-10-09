@@ -100,6 +100,8 @@ MATRIX4 setOrthoFrustum(float l, float r, float b, float t, float n, float f) {
     return mat;
 }
 
+RenderList::RenderList() : _renderListsIndex(-1) {
+}
 
 Surface::Surface(Renderer* renderer, bool isPrivate) : RenderResource(renderer) {
     _supportsPartialRedraw = isPrivate;
@@ -118,21 +120,28 @@ void Surface::setSize(const SIZE& size) {
 
 
 void Surface::detachRenderList(RenderList *list) {
-    for (auto it=list->_ops.begin() ; it!= list->_ops.end() ; it++) {
-        removeRenderOp(*it);
+    if (list->_renderListsIndex >= 0) {
+        for (auto it=list->_ops.begin() ; it!= list->_ops.end() ; it++) {
+            detachRenderListOp(*it);
+        }
+        for (auto it = list->_renderListsPos ; it!=_renderLists.end() ; it++) {
+            (*it)->_renderListsIndex--;
+        }
+        bool isLastTouched = _renderListsLastTouchedIterator == list->_renderListsPos;
+        auto newIt = _renderLists.erase(list->_renderListsPos);
+        if (isLastTouched) {
+            _renderListsLastTouchedIterator = newIt;
+        }
+        list->_renderListsPos = _renderLists.end();
+        list->_renderListsIndex = -1;
     }
-    if (list->_renderOrder > 0) {
-        _renderListsList.erase(list->_surfaceIt);
-        list->_renderOrder = 0;
+    int i=0;
+    for (auto& it : _renderLists) {
+        assert(i == it->_renderListsIndex);
+        i++;
     }
 }
 
-void Surface::attachRenderList(RenderList* list) {
-    list->_renderOrder = 0; // indicates list needs insertion into _renderListsList during renderPhase1.
-    for (auto it=list->_ops.begin() ; it!= list->_ops.end() ; it++) {
-        addRenderOp(*it);
-    }
-}
 
 
 void Surface::addRenderOp(RenderOp* op) {
@@ -169,7 +178,7 @@ void Surface::validateRenderOps(Renderer* renderer) {
     }
 }
 
-void Surface::removeRenderOp(RenderOp* op) {
+void Surface::detachRenderListOp(RenderOp* op) {
     auto it = std::find(_opsNeedingValidation.begin(), _opsNeedingValidation.end(), op);
     if (it != _opsNeedingValidation.end()) {
         _opsNeedingValidation.erase(it);
@@ -242,6 +251,42 @@ void RenderList::removeRenderOp(RenderOp* renderOp) {
     _ops.erase(renderOp->_listIterator);
 }
 
+void Surface::ensureRenderListAttached(RenderList* list) {
+    if (list->_renderListsIndex < 0) {
+        
+        // This function is called by renderPhase1 which walks the view tree and tracks the
+        // *previous* list entry in _renderListsLastTouchedIterator. When we find
+        // a list not yet attached we want to add it *after* the last touched one
+        bool isFirst = _renderListsLastTouchedIterator == _renderLists.end();
+        list->_renderListsPos = _renderLists.insert(std::next(_renderListsLastTouchedIterator), list);
+        if (isFirst) {
+            list->_renderListsIndex = 0;
+        } else {
+            list->_renderListsIndex = (*_renderListsLastTouchedIterator)->_renderListsIndex + 1;
+        }
+        
+        // Increment index of everything after the newly inserted list
+        auto tmp = std::next(list->_renderListsPos);
+        while (tmp != _renderLists.end()) {
+            (*tmp)->_renderListsIndex++;
+            tmp++;
+        }
+        for (auto& it : list->_ops) {
+            addRenderOp(it);
+        }
+    }
+    for (auto r : list->_ops) {
+        r->_mvpNum = _mvpNum;
+    }
+    _renderListsLastTouchedIterator = list->_renderListsPos;
+    
+    int i=0;
+    for (auto& it : _renderLists) {
+        assert(i == it->_renderListsIndex);
+        i++;
+    }
+}
+
 
 void Surface::renderPhase1(Renderer* renderer, View* view, RECT surfaceRect) {
 
@@ -250,46 +295,33 @@ void Surface::renderPhase1(Renderer* renderer, View* view, RECT surfaceRect) {
         return;
     }
     
-    // Attach the view's render list to the surface
-    if (!view->_surface) {
-        view->_surface = view->_parent ? view->_parent->_surface : view->_window->_surface;
-        if (view->_ownsPrivateSurface) {
-            view->_surface = view->_window->_renderer->createPrivateSurface();
-        }        
-        if (view->_renderList) {
-            attachRenderList(view->_renderList);
-        }
-        if (view->_renderListDecor) {
-            attachRenderList(view->_renderListDecor);
-        }
-    }
-
-    Surface* surface = this;
-
     // If view has a private surface, ensure surface has same size as view
-    bool usesPrivateSurface = (view->_surface != surface);
-    if (usesPrivateSurface) {
+    if (view->_ownsPrivateSurface) {
+        if (!view->_surface) {
+            view->_surface = view->_window->_renderer->createPrivateSurface();
+        }
         bool sizeChanged = false;
-        surface = view->_surface;
-        surface->_renderOrder = 1;
-        surface->_renderListsInsertionPos = surface->_renderListsList.end();
-        if (surface->_size.width != view->_rect.size.width || surface->_size.height != view->_rect.size.height) {
-            surface->setSize(view->_rect.size);
+        if (_size.width != view->_rect.size.width || _size.height != view->_rect.size.height) {
+            setSize(view->_rect.size);
             sizeChanged = true;
         }
         
+        // Render the view tree to its private surface
+        view->_surface->render(view, renderer);
+        
         // Create the private surface op, allocating vertex space from the host surface's vbo
-        if (!surface->_op) {
+        if (!_op) {
             RECT rect = view->getOwnRect();
-            surface->_op = new PrivateSurfaceRenderOp(renderer, view, rect);
+            _op = new PrivateSurfaceRenderOp(renderer, view, rect);
         } else {
             if (sizeChanged) {
-                surface->_op->setRect(view->getOwnRect());
+                _op->setRect(view->getOwnRect());
             }
         }
-
-        // Reset surface rect
-        surfaceRect = {0, 0, surface->_size.width, surface->_size.height};
+    } else {
+        if (!view->_surface) {
+            view->_surface = this;
+        }
     }
     
     bool changesMvp = view->_matrix || !view->_contentOffset.isZero();
@@ -306,21 +338,11 @@ void Surface::renderPhase1(Renderer* renderer, View* view, RECT surfaceRect) {
         view->updateRenderOps();
         view->_updateRenderOpsNeeded = false;
     }
-        
-    // Draw content renderlist
+
+
+    // Ensure view's main renderlist is in the surface list
     if (view->_renderList) {
-        if (!view->_renderList->_renderOrder) {
-            auto insertPoint = surface->_renderListsInsertionPos;
-            if (insertPoint != surface->_renderListsList.end()) {
-                insertPoint++;
-            }
-            view->_renderList->_surfaceIt = surface->_renderListsList.insert(insertPoint, view->_renderList);
-        }
-        view->_renderList->_renderOrder = surface->_renderOrder++;
-        surface->_renderListsInsertionPos = view->_renderList->_surfaceIt;
-        for (auto r:view->_renderList->_ops) {
-            r->_mvpNum = _mvpNum;
-        }
+        ensureRenderListAttached(view->_renderList);
     }
     
     // Recurse subviews
@@ -336,26 +358,14 @@ void Surface::renderPhase1(Renderer* renderer, View* view, RECT surfaceRect) {
             }
             continue;
         }
-        surface->renderPhase1(renderer, subview, subviewRect);
+        renderPhase1(renderer, subview, subviewRect);
     }
     
-    // Draw decor renderlist
+    // Ensure view decor renderlist is in the surface list
     if (view->_renderListDecor) {
-        if (!view->_renderListDecor->_renderOrder) {
-            view->_renderListDecor->_surfaceIt = surface->_renderListsList.insert(surface->_renderListsInsertionPos, view->_renderListDecor);
-        }
-        view->_renderListDecor->_renderOrder = surface->_renderOrder++;
-        for (auto r:view->_renderListDecor->_ops) {
-            r->_mvpNum = _mvpNum;
-        }
-        surface->_renderListsInsertionPos = view->_renderListDecor->_surfaceIt;
+        ensureRenderListAttached(view->_renderListDecor);
     }
 
-    // If this is a private surface then got to ensure vertex buffer is up to date
-    // Wondering if surfaces should own their own vertex buffers...
-    if (usesPrivateSurface) {
-        surface->renderPhase2(renderer);
-    }
 
     if (changesMvp) {
         _mvpNum = mvpNumToRestore;
@@ -430,6 +440,7 @@ void Surface::renderPhase3(Renderer* renderer, View* view, Surface* prevsurf) {
         clips = (view->_contentSize.height > view->_rect.size.height)
              || (view->_contentSize.width > view->_rect.size.width);
     }
+    clips = false;
     if (clips) {
         RECT clip = view->getOwnRect();
         clip.origin = view->_surfaceOrigin;
@@ -500,10 +511,10 @@ skipDraw:
 
 static void debugDump(Surface* surface) {
     static int s_frame=0;
-    app->log("Frame %d lists=%d batches=%d", ++s_frame, (int)surface->_renderListsList.size(), (int)surface->_listBatches.size());
-    for (auto it : surface->_renderListsList) {
+    app->log("Frame %d lists=%d batches=%d", ++s_frame, (int)surface->_renderLists.size(), (int)surface->_listBatches.size());
+    for (auto it : surface->_renderLists) {
         RenderList* list = it;
-        app->log("> list order=%d size=%d", list->_renderOrder, list->_ops.size());
+        app->log("> list order=%d size=%d", list->_renderListsIndex, list->_ops.size());
     }
     for (auto it : surface->_listBatches) {
         RenderBatch* batch = it;
@@ -524,8 +535,8 @@ void Surface::render(View* view, Renderer* renderer) {
     _mvpNum = _mvpNumPeak = 0;
     
     /** PHASE 1: ENSURE ALL RENDER LISTS ARE VALID **/
-    _renderListsInsertionPos = _renderListsList.end();
-    _renderOrder = 1;
+    //_renderListsCurrentIndex = -1;
+    _renderListsLastTouchedIterator = _renderLists.end();
     RECT surfaceRect = {0, 0, _size.width, _size.height};
     renderPhase1(renderer, view, surfaceRect);
     

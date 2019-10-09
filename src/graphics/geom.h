@@ -146,7 +146,16 @@ struct RECT {
         && size.width==r2.size.width
         && size.height==r2.size.height;
     }
+    
+#define valueInRange(value, min, max) ((value >= (min)) && (value < (max)))
+    
     bool intersects(const RECT& r) const {
+        /*bool xOverlap = valueInRange(origin.x, r.origin.x, r.origin.x + r.size.width) ||
+                        valueInRange(r.origin.x, origin.x, origin.x+size.width);
+        if (!xOverlap) return false;
+        bool yOverlap = valueInRange(origin.y, r.origin.y, r.origin.y + r.size.height) ||
+                        valueInRange(r.origin.y, origin.y, origin.y+size.height);
+        return xOverlap && yOverlap;*/
         return origin.x < r.right() &&
         r.origin.x < right() &&
         origin.y < r.bottom() &&
@@ -177,6 +186,7 @@ struct RECT {
             size.height = r1.bottom-r1.top;
             return true;
         }
+        size.width = size.height = 0;
         return false;
     }
 
