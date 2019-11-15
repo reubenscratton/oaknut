@@ -37,7 +37,7 @@ jbyteArray jbyteArrayFromString(JNIEnv* env, const string& str) {
     if (cb > 0) {
         array = env->NewByteArray(cb);
         if (array != NULL) {
-            env->SetByteArrayRegion(array, 0, cb, (jbyte*)str.data());
+            env->SetByteArrayRegion(array, 0, cb, (jbyte*)str.c_str());
         }
     }
     return array;
@@ -45,7 +45,7 @@ jbyteArray jbyteArrayFromString(JNIEnv* env, const string& str) {
 string stringFromJbyteArray(JNIEnv* env, jbyteArray jbytes) {
     int cb = env->GetArrayLength(jbytes);
     bytearray data(cb);
-    env->GetByteArrayRegion(jbytes, 0, cb, reinterpret_cast<jbyte*>(data.data()));
+    env->GetByteArrayRegion(jbytes, 0, cb, reinterpret_cast<jbyte*>(data.c_str()));
     return data.toString();
 }
 
@@ -53,7 +53,7 @@ string stringFromJbyteArray(JNIEnv* env, jbyteArray jbytes) {
 jstring jstringFromString(JNIEnv* env, const string& str) {
     int cb = str.lengthInBytes();
     if (cb > 0) {
-        return env->NewStringUTF(str.data());
+        return env->NewStringUTF(str.c_str());
     }
     return NULL;
 }

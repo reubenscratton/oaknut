@@ -29,8 +29,8 @@ public:
           s_jmidConstructor = env->GetMethodID(s_jclass, "<init>", "(JLjava/lang/String;Ljava/lang/String;[B[B)V");
           s_jmidCancel = env->GetMethodID(s_jclass, "cancel", "()V");
       }
-      jobject url = env->NewStringUTF(_url.data());
-      jobject method = env->NewStringUTF(_method.data());
+      jobject url = env->NewStringUTF(_url.c_str());
+      jobject method = env->NewStringUTF(_method.c_str());
 
       // Concatenate the headers into a single string
       jbyteArray headersBytes = NULL;
@@ -47,7 +47,7 @@ public:
       if (cb) {
           headersBytes = env->NewByteArray(cb);
           jbyte *buf = env->GetByteArrayElements(headersBytes, NULL);
-          memcpy((char*)buf, headersStr.data(), cb);
+          memcpy((char*)buf, headersStr.c_str(), cb);
           env->ReleaseByteArrayElements(headersBytes, buf, 0);
       }
 
@@ -101,9 +101,10 @@ JAVA_FN(void, URLRequest, nativeOnGotData)(JNIEnv *env, jobject jobj, jlong cobj
         string httpHeadersStr((char *) httpHeadersUtf8Bytes.data());
         auto httpHeadersVec = httpHeadersStr.split("\n");
         for (auto &it : httpHeadersVec) {
-            string header = it;
-            string name = header.extractUpTo(":", true);
-            responseHeaders[name.lowercase()] = header;
+            auto colonPos = it->find(":");
+            string name = it->substr(0, colonPos);
+            string value = it->substr(colonPos+1);
+            responseHeaders[name.lowercase()] = value;
         }
     }
     req->dispatchResult((int)httpStatus, responseHeaders, data);

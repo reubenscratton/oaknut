@@ -3,9 +3,9 @@
 //
 
 #include "_module.h"
-#include "../articles/elementtext.h"
-#include "../articles/elementmedia.h"
-#include "../articles/articlebodyxmlparser.h"
+#include "../ui/articles/elementtext.h"
+#include "../ui/articles/elementmedia.h"
+#include "../ui/articles/articlebodyxmlparser.h"
 
 
 
@@ -16,10 +16,13 @@ BNItem::BNItem(const string& type, const string& modelId) : BNContent(type, mode
 BNItem::BNItem(const variant& json) : BNContent(json) {
     _shortName = json.stringVal("shortName");
     auto bodyData = json.stringVal("body");
-    BNArticleBodyXmlParser *parser = new BNArticleBodyXmlParser(bodyData, this);
-    //parser->parse();
-    configureAfterParsing();
-    delete parser;
+    if (bodyData.length()) {
+        bodyData.hadPrefix("<?xml version='1.0'?>"); // strip this cos it buggers up parsing.
+        BNArticleBodyXmlParser *parser = new BNArticleBodyXmlParser(bodyData, this);
+        //parser->parse();
+        configureAfterParsing();
+        delete parser;
+    }
 }
 
 
@@ -162,7 +165,7 @@ static BNRelationship* findRelationshipByModelId(const vector<BNRelationship*>& 
 			return rel;
 		}
 	}
-	return nil;
+	return nullptr;
 }
 
 BNRelationship* BNItem::imageForMediaId(const string& mediaId) {
@@ -188,8 +191,8 @@ void BNItem::configureAfterParsing() {
 	
 	// Remove any empty text elements (cos they cause crashes)
 	int leadingImageCount = 0;
-	BOOL seenFirstTextElement = NO;
-	for (uint i=0 ; i<_elements.size() ; i++) {
+	bool seenFirstTextElement = false;
+	for (uint32_t i=0 ; i<_elements.size() ; i++) {
 		BNElement* element = (BNElement*)_elements[i];
 		if (element->isElementText()) {
 			BNElementText* elementText = (BNElementText*)element;
@@ -197,7 +200,7 @@ void BNItem::configureAfterParsing() {
                 _elements.erase(_elements.begin() + i);
 				i--;
 			}
-			seenFirstTextElement = YES;
+			seenFirstTextElement = true;
 		} else {
 			if (!seenFirstTextElement) {
 				leadingImageCount++;
@@ -205,7 +208,8 @@ void BNItem::configureAfterParsing() {
 		}
 	}
 	
-	// If article leads with multiple images (the prime example being In The Papers) demote the primary image to be an ordinary body image
+	// If article leads with multiple images (the prime example being In The Papers) demote
+    // the primary image to be an ordinary body image
 	if (leadingImageCount > 1) {
         auto rels = findRelationships({BNModelTypeImage}, {BNRelationshipTypePlacementPrimary}, {});
 		if (rels.size() > 0) {

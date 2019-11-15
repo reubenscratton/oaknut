@@ -10,11 +10,11 @@
 
 
 RegEx::RegEx(const string& pattern) {
-    StringProcessor p(pattern);
+    uint32_t p = 0;
     int currentGroup = -1;
     int numCapturedGroups = 0;
-    while (!p.eof()) {
-        char32_t c = p.next();
+    while (p<pattern.lengthInBytes()) {
+        char32_t c = pattern.readChar(p);
         // Start of group
         if (c=='(') {
             //_groups.emplace_back(Group {(int)_pattern.size(), -1});
@@ -36,7 +36,7 @@ RegEx::RegEx(const string& pattern) {
         if (c=='.') {
             t.charClass = Any;
         } else if (c=='\\') {
-            char32_t esc = p.next();
+            char32_t esc =  pattern.readChar(p);
             if (esc == 'w') t.charClass = Word;
             else if (esc == 'W') {t.charClass = Word; t.inverted = true;}
             else if (esc == 'd') t.charClass = Digit;
@@ -46,17 +46,17 @@ RegEx::RegEx(const string& pattern) {
             else if (esc == '+' || esc=='*' || esc=='?' || esc=='^' || esc=='$' || esc=='\\' || esc=='.' || esc=='[' || esc==']' || esc=='{' || esc=='}' || esc=='(' || esc==')' || esc=='|' || esc=='/' || esc==')') {t.charClass=Range; t.chars.push_back(esc);}
             else app->warn("ignoring unknown escape");
         } else if (c=='[') {
-            if (p.peek()=='^') {
+            if (pattern.peekChar(p)=='^') {
                 t.inverted = true;
-                p.next();
+                pattern.readChar(p);
             }
-            while (!p.eof()) {
-                c = p.next();
+            while (p<pattern.lengthInBytes()) {
+                c = pattern.readChar(p);
                 if (c==']') {
                     break;
                 }
                 t.chars.push_back(c);
-                if (p.peek() == '-') { // range
+                if (pattern.peekChar(p) == '-') { // range
                     assert(0); // todo
                 }
             }
@@ -65,35 +65,35 @@ RegEx::RegEx(const string& pattern) {
             t.chars.push_back(c);
         }
         // Quantifiers
-        c = p.peek();
+        c = pattern.peekChar(p);
         if (c=='?') {
             t.quantMin = 0;
             t.quantMax = 1;
-            p.next();
+            pattern.readChar(p);
         } else if (c=='+') {
             t.quantMin = 1;
             t.quantMax = INT32_MAX;
-            p.next();
+            pattern.readChar(p);
         } else if (c=='*') {
             t.quantMin = 0;
             t.quantMax = INT32_MAX;
-            p.next();
+            pattern.readChar(p);
         } else if (c=='{') {
-            p.next();
-            t.quantMin = p.nextNumber().asInt();
-            c = p.peek();
+            pattern.readChar(p);
+            t.quantMin = pattern.readNumber(p).asInt();
+            c = pattern.peekChar(p);
             if (c == ',') {
-                p.next();
-                if (p.peek()=='}') {
+                pattern.readChar(p);
+                if (pattern.peekChar(p)=='}') {
                     t.quantMax = INT32_MAX;
                 } else {
-                    t.quantMax = p.nextNumber().asInt();
+                    t.quantMax = pattern.readNumber(p).asInt();
                     assert(t.quantMax>=t.quantMin);
                 }
             } else {
                 t.quantMax = t.quantMin;
             }
-            c = p.next();
+            c = pattern.readChar(p);
             assert(c == '}');
         } else {
             t.quantMin = 1;
@@ -109,17 +109,17 @@ RegEx::MatchResult RegEx::match(const string& str, vector<string>& matchedGroups
     if (str.length()==0) {
         return MatchPartial;
     }
-    StringProcessor it(str);
+    uint32_t it = 0;
     int tokenIndex = -1;
     for (auto token : _pattern) {
         tokenIndex++;
-        if (it.eof()) {
+        if (it>=str.lengthInBytes()) {
             return MatchPartial;
         }
         int q = 0;
         while (q<token.quantMax) {
             bool match = false;
-            char32_t ch = it.peek();
+            char32_t ch = str.peekChar(it);
             switch (token.charClass) {
                 case Range:
                     for (auto c : token.chars) {
@@ -151,7 +151,7 @@ RegEx::MatchResult RegEx::match(const string& str, vector<string>& matchedGroups
             
             // Char matched the pattern
             q++;
-            it.next();
+            str.readChar(it);
             
             // Add matched char to current group
             if (token.group >= 0) {
@@ -165,7 +165,7 @@ RegEx::MatchResult RegEx::match(const string& str, vector<string>& matchedGroups
             return q?MatchPartial:MatchNone;
         }
     }
-    return it.eof() ? MatchFull : MatchNone;
+    return (it>=str.lengthInBytes()) ? MatchFull : MatchNone;
 }
 
     

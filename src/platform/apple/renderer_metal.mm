@@ -194,14 +194,15 @@ struct ShaderState {
         // All non-position attributes
         for (auto& attribute : shader->_attributes) {
             if (0!=attribute.name.compare("position")) {
-                s += string::format("output.%s = ", attribute.name.data());
+                auto szname = attribute.name.c_str();
+                s += string::format("output.%s = ", szname);
                 if (attribute.type == Shader::VariableType::Color) {
-                    s += string::format("unpack_unorm4x8_to_half(v_in[vid].%s)", attribute.name.data());
+                    s += string::format("unpack_unorm4x8_to_half(v_in[vid].%s)", szname);
                 } else {
                     if (attribute.outValue.length() > 0) {
                         s += attribute.outValue;
                     } else {
-                        s += string::format("v_in[vid].%s", attribute.name.data());
+                        s += string::format("v_in[vid].%s", szname);
                     }
                 }
                 s += ";\n";
@@ -236,7 +237,7 @@ struct ShaderState {
         
 
         NSError* error = nil;
-        id<MTLLibrary> library = [device newLibraryWithSource:[NSString stringWithUTF8String:s.data()] options:nil error:&error];
+        id<MTLLibrary> library = [device newLibraryWithSource:[NSString stringWithUTF8String:s.c_str()] options:nil error:&error];
         assert(library);
         _vertexShader = [library newFunctionWithName: @"vertex_shader"];
         _fragShader = [library newFunctionWithName: @"frag_shader"];
@@ -398,7 +399,7 @@ public:
         _metalLayer.framebufferOnly = false;//true;
         _metalLayer.contentsScale = app->_defaultDisplay->_scale;// [NSScreen mainScreen].backingScaleFactor;
 #if PLATFORM_MACOS
-        _metalLayer.displaySyncEnabled = 1;
+        _metalLayer.displaySyncEnabled = 0;
         nativeView.wantsLayer = YES;
 #endif
         _commandQueue = [_device newCommandQueue];

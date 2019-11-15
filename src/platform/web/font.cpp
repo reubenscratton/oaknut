@@ -21,12 +21,13 @@ FontWeb::FontWeb(const string& fontAssetPath, float size, float weight) : Font(f
         if (it != s_customFonts.end()) {
             fontFamily = it->second;
         } else {
-            ByteBuffer* fontData = app->loadAsset(fontAssetPath.data());
+            ByteBuffer* fontData = app->loadAsset(fontAssetPath);
             fontFamily = fontAssetPath;
-            while (fontFamily.extractUpTo("/", true).length() > 0) {}
+            auto lastSlashPos = fontAssetPath.findLast('/');
+            fontFamily = lastSlashPos ? (lastSlashPos+1) : fontAssetPath;
             fontFamily.hadSuffix(".ttf");
             fontFamily.hadSuffix(".otf");
-            //app->log("Custom font %s loaded from %s", fontFamily.data(), fontAssetPath.data());
+            //app->log("Custom font %s loaded from %s", fontFamily.c_str(), fontAssetPath.c_str());
             string fontDataStr = "@font-face { font-family:\"";
             fontDataStr += fontFamily;
             fontDataStr += "\"; src: url(data:application/font-sfnt;base64,";
@@ -37,12 +38,12 @@ FontWeb::FontWeb(const string& fontAssetPath, float size, float weight) : Font(f
                 style.type = "text/css";
                 style.innerHTML = Pointer_stringify($0);
                 document.getElementsByTagName('head')[0].appendChild(style);
-            }, fontDataStr.data());
+            }, fontDataStr.c_str());
             s_customFonts.insert(std::make_pair(fontAssetPath, fontFamily));
         }
     }
     
-    _fontHelper = val::global("FontHelper").new_(val(_name.data()), val(_size), val(_weight), val(fontFamily.data()));
+    _fontHelper = val::global("FontHelper").new_(val(_name.c_str()), val(_size), val(_weight), val(fontFamily.c_str()));
     val metrics = _fontHelper.call<val>("measure", val("Mg"));
     _ascent = metrics["a"].as<float>();
     _descent = -metrics["d"].as<float>();

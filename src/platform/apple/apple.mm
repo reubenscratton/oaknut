@@ -123,7 +123,7 @@ public:
         }
 #endif
         _queue = [NSOperationQueue new];
-        _queue.name = [[NSString alloc] initWithUTF8String:name.data()];
+        _queue.name = [[NSString alloc] initWithUTF8String:name.c_str()];
     }
     ~AppleTaskQueue() {
         _queue = nil;
@@ -150,12 +150,12 @@ bool App::fileResolve(string& path) const {
     
     //assets/...
     if (path.hasPrefix("//assets/")) {
-        path.erase(0); // remove just the leading slash, leaving the path as '/assets/...'
+        path.erase(0, 1); // remove just the leading slash, leaving the path as '/assets/...'
         string bundlepath = [NSBundle bundleForClass:NSClassFromString(@"NativeView")].bundlePath.UTF8String;
 #if TARGET_OS_OSX
         bundlepath.append("/Contents/Resources/");
 #endif
-        path.insert(0, bundlepath);
+        path.prepend(bundlepath);
         return true;
     }
     
@@ -163,7 +163,7 @@ bool App::fileResolve(string& path) const {
     if (path.hadPrefix("//data/")) {
         NSURL* url = [[[NSFileManager defaultManager] URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask] lastObject];
         url = [url URLByAppendingPathComponent:[[NSBundle mainBundle] bundleIdentifier]];
-        path.insert(0, url.fileSystemRepresentation);
+        path.prepend(url.fileSystemRepresentation);
         return true;
     }
     
@@ -171,25 +171,25 @@ bool App::fileResolve(string& path) const {
     if (path.hadPrefix("//cache/")) {
         NSURL* url = [[[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask] lastObject];
         url = [url URLByAppendingPathComponent:[[NSBundle mainBundle] bundleIdentifier]];
-        path.insert(0, url.fileSystemRepresentation);
+        path.prepend(url.fileSystemRepresentation);
         return true;
     }
     
     //docs/... : ~/Documents/...
     if (path.hadPrefix("//docs/")) {
         NSURL* url = [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
-        path.insert(0, url.fileSystemRepresentation);
+        path.prepend(url.fileSystemRepresentation);
         return true;
     }
 
     //tmp/... : ~/Documents/...
     if (path.hadPrefix("//tmp/")) {
-        path.insert(0, NSTemporaryDirectory().fileSystemRepresentation);
+        path.prepend(NSTemporaryDirectory().fileSystemRepresentation);
         return true;
     }
 
     // :-(
-    app->warn("Unknown path: %s", path.data());
+    app->warn("Unknown path: %s", path.c_str());
     return false;
 }
     
@@ -197,7 +197,7 @@ bool App::fileEnsureFolderExists(string& path) const {
     if (!fileResolve(path)) {
         return false;
     }
-    [[NSFileManager defaultManager] createDirectoryAtPath:[NSString stringWithUTF8String:path.data()] withIntermediateDirectories:YES attributes:nil error:nil];
+    [[NSFileManager defaultManager] createDirectoryAtPath:[NSString stringWithUTF8String:path.c_str()] withIntermediateDirectories:YES attributes:nil error:nil];
     return true;
 }
 
@@ -206,28 +206,28 @@ bool App::fileExists(string& path) const {
     if (!fileResolve(path)) {
         return false;
     }
-    return [[NSFileManager defaultManager] fileExistsAtPath:[NSString stringWithUTF8String:path.data()]];
+    return [[NSFileManager defaultManager] fileExistsAtPath:[NSString stringWithUTF8String:path.c_str()]];
 }
 uint64_t App::fileSize(string& path) const {
     if (!fileResolve(path)) {
         return 0;
     }
     NSError* err = nil;
-    NSDictionary* fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[NSString stringWithUTF8String:path.data()] error:&err];
+    NSDictionary* fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[NSString stringWithUTF8String:path.c_str()] error:&err];
     if (err) {
-        app->warn("Error getting attributes for file at %s", path.data());
+        app->warn("Error getting attributes for file at %s", path.c_str());
         return 0;
     }
     
     NSNumber *fileSizeNumber = [fileAttributes objectForKey:NSFileSize];
     return [fileSizeNumber longLongValue];
 }
-//    return fopen(str.data(), "rb");
+//    return fopen(str.c_str(), "rb");
 
 vector<string> App::fileList(string& dir) const {
     fileResolve(dir);
     NSError* error = nil;
-    NSArray<NSString*>* foo = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[NSString stringWithUTF8String:dir.data()]  error:(NSError * _Nullable *)&error];
+    NSArray<NSString*>* foo = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[NSString stringWithUTF8String:dir.c_str()]  error:(NSError * _Nullable *)&error];
     assert(!error);
     vector<string> files;
     for (NSString* e : foo) {

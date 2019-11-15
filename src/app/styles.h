@@ -67,7 +67,7 @@ public:
     const vector<style>& arrayVal(const char* name) const;
     EDGEINSETS edgeInsetsVal(const char* name) const;
 
-    bool parse(class StringProcessor& it);
+    bool parse(const string& str);
     void importNamedValues(const map<string,style>& styleValues);
     void fromVariant(const variant& v);
 

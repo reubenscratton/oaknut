@@ -12,10 +12,10 @@ App* oak::app;
 App::App() {
     assert(!app);
     app = this;
-    StringProcessor parser(
+    string stylesres(
 #include "styles.res"
     );
-    _styles.parse(parser);
+    _styles.parse(stylesres);
 }
 
 #ifndef ANDROID
@@ -45,12 +45,12 @@ float App::idp(float pix) {
 
 void App::loadStyleAsset(const string& assetPath) {
     bytearray data;
-    if (!loadAsset(assetPath.data(), data)) {
+    if (!loadAsset(assetPath, data)) {
         return;
     }
-    StringProcessor it(data.toString());
+    string str = data.toString();
     style s;
-    s.parse(it);
+    s.parse(str);
     assert(s.isCompound());
     _styles.importNamedValues(*s.compound);
 }
@@ -70,7 +70,7 @@ string App::getStyleString(const string& keypath, const char* defaultString) {
         if (defaultString) {
             return string(defaultString);
         }
-        app->warn("Missing string style info '%s'", keypath.data());
+        app->warn("Missing string style info '%s'", keypath.c_str());
         return "";
     }
     return value->stringVal();
@@ -79,7 +79,7 @@ string App::getStyleString(const string& keypath, const char* defaultString) {
 float App::getStyleFloat(const string& keypath) {
     auto value = getStyle(keypath);
     if (!value) {
-        app->warn("Missing float style info '%s'", keypath.data());
+        app->warn("Missing float style info '%s'", keypath.c_str());
         return 0;
     }
     return value->floatVal();
@@ -87,7 +87,7 @@ float App::getStyleFloat(const string& keypath) {
 COLOR App::getStyleColor(const string& key) {
     auto value = getStyle(key);
     if (!value) {
-        app->warn("Missing color style info '%s'", key.data());
+        app->warn("Missing color style info '%s'", key.c_str());
         return 0;
     }
     return value->colorVal();
@@ -118,12 +118,12 @@ static View* inflateFromResource(const style& value, View* parent) {
 
 void App::layoutInflateExistingView(View* view, const string& assetPath) {
     bytearray data;
-    if (!loadAsset(assetPath.data(), data)) {
+    if (!loadAsset(assetPath, data)) {
         return;
     }
-    StringProcessor it(data.toString());
+    string str = data.toString();
     style layoutRoot;
-    layoutRoot.parse(it);
+    layoutRoot.parse(str);
     assert(layoutRoot.isCompound());
 
     // Apply the attributes to the inflated view.
@@ -138,12 +138,12 @@ void App::layoutInflateExistingView(View* view, const string& assetPath) {
 
 View* App::layoutInflate(const string& assetPath) {
     bytearray data;
-    if (!loadAsset(assetPath.data(), data)) {
+    if (!loadAsset(assetPath, data)) {
         return NULL;
     }
-    StringProcessor it(data.toString());
+    string str = data.toString();
     style layoutRoot;
-    layoutRoot.parse(it);
+    layoutRoot.parse(str);
     assert(layoutRoot.isCompound());
     return inflateFromResource(layoutRoot, NULL);
 }
@@ -179,9 +179,9 @@ bool App::fileLoad(const string& path, bytearray& fileContents) const {
     if (!fileResolve(rpath)) {
         return false;
     }
-    FILE* file = fopen(rpath.data(), "rb");
+    FILE* file = fopen(rpath.c_str(), "rb");
     if (!file) {
-        app->warn("Failed to open %s", path.data());
+        app->warn("Failed to open %s", path.c_str());
         return false;
     }
     fseek (file, 0, SEEK_END);
@@ -194,7 +194,7 @@ bool App::fileLoad(const string& path, bytearray& fileContents) const {
     return true;
 }
 
-bool App::loadAsset(const char* assetPath, bytearray& data) {
+bool App::loadAsset(const string& assetPath, bytearray& data) {
     string path = "//assets/";
     path += assetPath;
     return fileLoad(path, data);

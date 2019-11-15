@@ -33,7 +33,8 @@ static CTFontRef createCTFont(FontApple* font) {
     if (font->_name.length()) {
 
         // Treat the name as a font family and ask NSFontManager to get the best match
-        NSString* nsname = [NSString stringWithUTF8String:font->_name.data()];
+        NSString* nsname = [NSString stringWithUTF8String:font->_name.c_str()];
+#if PLATFORM_MAC
         NSFontTraitMask traits = 0;
         if (font->_italic) {
             traits |= NSFontItalicTrait;
@@ -43,10 +44,11 @@ static CTFontRef createCTFont(FontApple* font) {
         if (nsfont) {
             return (__bridge_retained CTFontRef)nsfont;
         }
+#endif
         
         // Maybe its the name of an font asset?
         bytearray data;
-        app->loadAsset(font->_name.data(), data);
+        app->loadAsset(font->_name, data);
         if (data.size()) {
             CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, data.data(), data.size(), NULL);
             CGFontRef cgfont = CGFontCreateWithDataProvider(dataProvider);

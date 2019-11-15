@@ -22,7 +22,7 @@ FontAndroid::FontAndroid(const string& fontAssetPath, float size, float weight) 
         s_jmidCreateGlyph = env->GetMethodID(s_jclass, "createGlyph", "(JI)J");
         s_jmidDrawGlyph = env->GetMethodID(s_jclass, "drawGlyph", "(ILandroid/graphics/Bitmap;FF)V");
     }
-    jstring strAssetPath = env->NewStringUTF(fontAssetPath.data());
+    jstring strAssetPath = env->NewStringUTF(fontAssetPath.c_str());
     _obj = env->NewObject(s_jclass, s_jmidConstructor, (jlong)this, strAssetPath, size, weight);
     _obj = env->NewGlobalRef(_obj);
 }

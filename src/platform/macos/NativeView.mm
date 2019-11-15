@@ -18,6 +18,12 @@ static bool s_mouseIsDown;
 - (id)initWithWindow:(Window*)window {
     if (self = [super initWithFrame:CGRectMake(0,0,300,300)]) {
         _oaknutWindow = window;
+        CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink);
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                selector:@selector(windowWillClose:)
+                                                    name:NSWindowWillCloseNotification
+                                                        object:[self window]];
+
     }
     return self;
 }
@@ -33,10 +39,25 @@ static bool s_mouseIsDown;
     inputEvent.pt.y = pt.y * scale;
     inputEvent.time = event.timestamp*1000;
     if (isScrollWheel) {
-        inputEvent.deviceType = INPUTEVENT::ScrollWheel;
-        inputEvent.delta = {
+        
+        /** NB: Two-fingered drags on the Macbook touchpad result in "scrollwheel" events
+         which makes sense. The "locationInWindow" property remains constant, as the mouse
+         pointer is not moving, and the "scrollingDeltaX/Y" properties are relative to
+         the previous event. We use this data to trivially derive the apparent mouse
+         position, as if it were a touch event. We don't really have to care where the
+         real mouse pointer is. */        
+        
+        POINT delta = {
             (float)(event.scrollingDeltaX * scale),
-            (float)(event.scrollingDeltaY * scale)};
+            (float)(event.scrollingDeltaY * scale)
+        };
+        inputEvent.deviceType = INPUTEVENT::ScrollWheel;
+        if (inputEvent.type == INPUT_EVENT_DOWN) {
+            _deltaAcc = {0,0};
+        }
+        _deltaAcc += delta;
+        inputEvent.delta = delta;
+        inputEvent.pt += _deltaAcc;
     } else {
         inputEvent.deviceType = INPUTEVENT::Mouse;
     }
@@ -64,6 +85,8 @@ static bool s_mouseIsDown;
         type = INPUT_EVENT_UP;
     } else if (event.phase == NSEventPhaseChanged) {
         type = INPUT_EVENT_MOVE;
+    } else if (event.phase == NSEventPhaseCancelled) {
+        type = INPUT_EVENT_CANCEL;
     } else {
         return;
     }
@@ -90,12 +113,28 @@ static bool s_mouseIsDown;
 
 #if RENDERER_METAL
 
+// This is the renderer output callback function
+static CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeStamp* now, const CVTimeStamp* outputTime, CVOptionFlags flagsIn, CVOptionFlags* flagsOut, void* displayLinkContext)
+{
+    NativeView* view = (__bridge NativeView*)displayLinkContext;
+    dispatch_async(dispatch_get_main_queue(), ^() {
+        [view->_metalLayer setNeedsDisplay];
+    });
+    return noErr;
+}
+
+
+
 - (void)awake {
     
     self.acceptsTouchEvents = YES;
     
-    [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawOnSetNeedsDisplay];
+    CVDisplayLinkSetOutputCallback(_displayLink, &DisplayLinkCallback, (__bridge void*)self);
+    
+    // NSViewLayerContentsRedrawOnSetNeedsDisplay
+    [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawNever];
 
+    CVDisplayLinkStart(_displayLink);
 }
 
 
@@ -105,14 +144,6 @@ static bool s_mouseIsDown;
 
 - (void)displayLayer:(CALayer *)layer {
     _oaknutWindow->draw();
-}
-
-- (void)setNeedsDisplay:(BOOL)needsDisplay {
-    [super setNeedsDisplay:needsDisplay];
-    if (needsDisplay) {
-        [self.layer setNeedsDisplay];
-        [_metalLayer setNeedsDisplay];
-    }
 }
 
 - (void)setFrameSize:(NSSize)newSize {
@@ -132,6 +163,9 @@ static bool s_mouseIsDown;
     [self setNeedsDisplay:YES];
 }
 
+- (void)_windowWillClose:(NSNotification*)notification {
+    CVDisplayLinkStop(_displayLink);
+}
 #endif
 
 
@@ -174,11 +208,6 @@ static bool s_mouseIsDown;
     [[self openGLContext] makeCurrentContext];
     GLint swapInt = 1;
     [[self openGLContext] setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
-
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                            selector:@selector(windowWillClose:)
-                                                name:NSWindowWillCloseNotification
-                                                    object:[self window]];
 
     [self setNeedsDisplay:YES];
 }

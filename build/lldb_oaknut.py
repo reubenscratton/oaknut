@@ -191,10 +191,16 @@ def bytearray_SummaryProvider(valobj, dict):
     return 'len=' + s.GetValue()
 
 def string_SummaryProvider(valobj, dict):
-    s = valobj.GetChildMemberWithName('_p')
-    if s.GetValueAsSigned(0) == 0:
-            return ''
-    return s.GetSummary()
+    buf = valobj.GetChildMemberWithName('_buf').GetValueAsUnsigned()
+    if buf == 0:
+        return '<null>'
+    offset = valobj.GetChildMemberWithName('_offset').GetValueAsUnsigned()
+    cb = valobj.GetChildMemberWithName('_cb').GetValueAsUnsigned()
+    error = lldb.SBError()
+    cstring = valobj.GetProcess().ReadCStringFromMemory(buf+offset, cb+1, error)
+    if error.Success():
+        return cstring
+    return '<err: ' + error.GetCString() + '>'
 
 def measurement_SummaryProvider(valobj, dict):
     r = valobj.GetChildMemberWithName('_unitVal').GetValue()

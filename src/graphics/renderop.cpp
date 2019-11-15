@@ -90,7 +90,7 @@ bool RenderOpMultiRect::intersects(RenderOp* op) {
 }*/
 
 void RenderOp::rectToSurfaceQuad(RECT rect, QUAD* quad) {
-    if (!_view->_ownsPrivateSurface) {
+    if (!_view->_ownsSurface) {
         rect.origin += _view->_surfaceOrigin;
     }
     *quad = QUAD(rect, _color);

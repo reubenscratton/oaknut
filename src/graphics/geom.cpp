@@ -13,27 +13,18 @@ const RECT RECT::zero() {
 }
 
 
-static float parseFloat(const char*& p) {
-	// Scan until we find a digit
-	while (!((*p>='0' && *p<='9') || *p=='.' || *p=='\0')) {
-		p++;
-	}
-	// Parse the float value out of the string
-	float f = atof(p);
-	// Scan past the float
-	while (!((*p>='0' && *p<='9') || *p=='.' || *p=='\0')) {
-		p++;
-	}
-	return f;
+static float parseFloat(const string& str, uint32_t& p) {
+    str.readUpToOneOf(p, "0123456789.");
+    return str.readNumber(p).asFloat();
 }
 
 RECT::RECT(const string& str) {
 	// "{{0, 0}, {100, 100}}"
-	const char* p = str.data();
-	origin.x = parseFloat(p);
-	origin.y = parseFloat(p);
-	size.width = parseFloat(p);
-	size.height = parseFloat(p);
+	uint32_t p = 0;
+	origin.x = parseFloat(str, p);
+	origin.y = parseFloat(str, p);
+	size.width = parseFloat(str, p);
+	size.height = parseFloat(str, p);
 }
 
 RECT RECT::copyWithInsets(const EDGEINSETS& insets) const {

@@ -31,9 +31,9 @@ ByteBuffer::ByteBuffer(const ByteBuffer& other) {
     memcpy(data, other.data, cb);
 }
 ByteBuffer::ByteBuffer(const string& str) {
-    cb = str.length();
-    data = (uint8_t*)malloc(cb);
-    memcpy(data, str.data(), cb);
+    cb = str.lengthInBytes();
+    data = (uint8_t*)malloc(str._cb);
+    memcpy(data, str._buf+str._offset, cb);
 }
 
 ByteBuffer::~ByteBuffer() {
@@ -68,9 +68,10 @@ bool ByteBuffer::writeSelfToStream(Stream* stream) const {
 
 
 ByteBuffer* ByteBuffer::createFromFile(const string &path) {
-    FILE *file = fopen(path.data(), "rb");
+    string pathcopy(path);
+    FILE *file = fopen(pathcopy.c_str(), "rb");
     if (!file) {
-        app->log("Failed to open file: %s", path.data());
+        app->log("Failed to open file: %s", path.c_str());
         return NULL;
     }
     ByteBuffer* data = new ByteBuffer();
@@ -85,28 +86,18 @@ ByteBuffer* ByteBuffer::createFromFile(const string &path) {
 }
 
 void ByteBuffer::saveToFile(const string& path) {
-    FILE *file = fopen(path.data(), "w+b");
+    string pathcopy(path);
+    FILE *file = fopen(pathcopy.c_str(), "w+b");
     if (!file) {
-        app->log("Failed to open %s", path.data());
+        app->log("Failed to open %s", path.c_str());
         return;
     }
     fwrite(data, cb, 1, file);
     fclose(file);
 }
 
-string ByteBuffer::toString(bool copy) {
-    int32_t cb = (int32_t)this->cb;
-    if (copy) {
-        return string((char*)data, cb);
-    }
-    // Move the data to ownership of the string without making a copy
-    string str;
-    str._p = (char*)data;
-    str._cb = cb;
-    data = NULL;
-    this->cb = 0;
-    return str;
-
+string ByteBuffer::toString() {
+    return string((char*)data, int32_t(this->cb));
 }
 
 void ByteBuffer::attach(uint8_t* data, size_t cb) {

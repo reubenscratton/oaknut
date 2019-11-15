@@ -66,6 +66,7 @@ string BNEnvironment::URLscheme() {
     return "bbcnewsapp"; // todo: load from plist or build settings
 }
 string BNEnvironment::URLforResourceSpec(const string& resourceSpec) {
-    return  string::format("%s:%s", URLscheme().data(), resourceSpec.data());
+    auto scheme = URLscheme();
+    return  string::format("%s:%s", scheme.c_str(), resourceSpec.c_str());
 }
 

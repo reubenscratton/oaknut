@@ -21,6 +21,7 @@ NavigationController::NavigationController() {
 	_navBar = new NavigationBar();
 	_view->addSubview(_navBar);
 
+    _navigationController = this;
 }
 
 NavigationBar* NavigationController::getNavBar() const {
@@ -71,7 +72,7 @@ void NavigationController::applySafeInsetsToChild(ViewController* childVC) {
 void NavigationController::pushViewController(ViewController* vc) {
     if (_currentViewController) {
         if (!vc->_leftButtonsFrame) {
-            vc->addNavButton(false, "images/back.png", [=] () { vc->onBackButtonClicked(); });
+            vc->addNavButton(false, "images/back@2x.png", [=] () { vc->onBackButtonClicked(); });
         }
     }
 

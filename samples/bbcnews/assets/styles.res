@@ -1,7 +1,7 @@
 {
 window: {
     default-width:375dp
-    default-height:520dp
+    default-height:580dp
     status-bar-light: true
     background-color: $color.windowBackground
 }
@@ -153,7 +153,7 @@ topicAndTimestamp: {
     insets: 3dp,5dp
     forecolor: $color.timestamp
     forecolor-inv: $color.timestampInv
-    maxLines: 1
+    lines: 1
 }
 tinyTimestamps: {
     font-weight: light

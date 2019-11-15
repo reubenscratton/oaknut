@@ -220,9 +220,9 @@ public:
     
 
     // Parsing from JSON and config files
-    static variant parse(class StringProcessor& it, int flags);
+    static variant parse(const string& str, int flags);
     string toJson() const;
-    static variant parseNumber(StringProcessor& it);
+    static variant parseNumber(const string& str, uint32_t& offset);
 
     // Javascript helpers
 #ifdef PLATFORM_WEB
@@ -255,6 +255,7 @@ public:
     
 private:
     inline void assign(const variant& src);
+    static variant parse(const string& str, uint32_t& o, int flags);
 };
 
 template <>

@@ -56,7 +56,7 @@ static GLuint loadShader(GLenum shaderType, const char* pSource) {
         while ((x = (int)source.find("mediump")) >= 0) source.erase(x, x+7);
 #endif
         
-        pSource = source.data();
+        pSource = source.c_str();
         check_gl(glShaderSource, shader, 1, &pSource, NULL);
         check_gl(glCompileShader, shader);
         GLint compiled = 0;
@@ -129,7 +129,7 @@ struct GLShaderState {
         // All other attributes
         for (auto& attribute : shader->_attributes) {
             if (0!=attribute.name.compare("position")) {
-                vs += string::format("v_%s = ", attribute.name.data());
+                vs += string::format("v_%s = ", attribute.name.c_str());
                 if (attribute.outValue.length() > 0) {
                     vs += attribute.outValue;
                 } else {
@@ -186,8 +186,8 @@ struct GLShaderState {
         fs += shader->getFragmentSource();
         fs += "}\n";
 
-        GLuint vertexShader = loadShader(GL_VERTEX_SHADER, vs.data());
-        GLuint pixelShader = loadShader(GL_FRAGMENT_SHADER, fs.data());
+        GLuint vertexShader = loadShader(GL_VERTEX_SHADER, vs.c_str());
+        GLuint pixelShader = loadShader(GL_FRAGMENT_SHADER, fs.c_str());
 
         _program = check_gl(glCreateProgram);
         
@@ -228,7 +228,7 @@ struct GLShaderState {
         for (auto& uniform: shader->_uniforms) {
             uniform.offset = cb;
             cb += uniform.length();
-            _uniformLocations[i] = check_gl(glGetUniformLocation, _program, uniform.name.data());
+            _uniformLocations[i] = check_gl(glGetUniformLocation, _program, uniform.name.c_str());
             i++;
         }
         _uniformData.resize(cb);

@@ -7,7 +7,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>BBCNews</string>
 	<key>CFBundleExecutable</key>
-	<string>bbcnews</string>
+	<string>BBCNews</string>
 	<key>CFBundleIdentifier</key>
 	<string>net.oaknut.samples.bbcnews</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -35,27 +35,7 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 		<key>NSExceptionDomains</key>
-		<dict>
-			<key>127.0.0.1</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-				<key>NSExceptionMinimumTLSVersion</key>
-				<string>TLSv1.2</string>
-				<key>NSExceptionRequiresForwardSecrecy</key>
-				<false/>
-				<key>NSIncludesSubdomains</key>
-				<true/>
-				<key>NSRequiresCertificateTransparency</key>
-				<false/>
-				<key>NSThirdPartyExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-				<key>NSThirdPartyExceptionMinimumTLSVersion</key>
-				<string>TLSv1.2</string>
-				<key>NSThirdPartyExceptionRequiresForwardSecrecy</key>
-				<false/>
-			</dict>
-		</dict>
+		<dict/>
 	</dict>
 	<key>UIDeviceFamily</key>
 	<array>

@@ -382,7 +382,7 @@
         },
         "mode!=tablet":{
             "padding":"{0,4,0,4}",
-            "cellMargins":"{8,16,0,16}"
+            "cellMargins":"{8,4,0,4}"
         }
     },
     "tightGroup":{

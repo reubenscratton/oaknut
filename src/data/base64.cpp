@@ -18,16 +18,11 @@ static char encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
 static char *decoding_table = NULL;
 static int mod_table[] = {0, 2, 1};
 
-static const string base64_chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    "abcdefghijklmnopqrstuvwxyz"
-    "0123456789+/";
-
 static inline bool is_base64(char c) {
     return (std::isalnum(c) || (c == '+') || (c == '/'));
 }
 string oak::base64_encode(const string& str) {
-    return base64_encode((const uint8_t*)str.data(), str.lengthInBytes());
+    return base64_encode((const uint8_t*)str._buf+str._offset, str._cb);
 }
 string oak::base64_encode(const bytearray& array) {
     return base64_encode(array.data(), array.size());
@@ -59,6 +54,16 @@ string oak::base64_encode(uint8_t const* data, unsigned int input_length) {
     return ret;
 }
 
+static uint8_t __inline decode_char(char ch) {
+    // TODO: replace with a 256-byte LUT
+    if (ch>='A' && ch<='Z') return ch-'A';          // 0 - 25
+    if (ch>='a' && ch<='z') return (ch-'a') + 26;   // 26 - 51
+    if (ch>='0' && ch<='9') return (ch-'0') + 52;   // 52 - 61
+    if (ch == '+') return 62;
+    if (ch == '/') return 63;
+    return -1;
+}
+
 bytearray oak::base64_decode(string const& encoded_string) {
     int in_len = encoded_string.lengthInBytes();
     int i = 0;
@@ -71,7 +76,7 @@ bytearray oak::base64_decode(string const& encoded_string) {
         char_array_4[i++] = encoded_string[in_]; in_++;
         if (i ==4) {
             for (i = 0; i <4; i++)
-                char_array_4[i] = base64_chars.find(char_array_4[i]);
+                char_array_4[i] = decode_char(char_array_4[i]);
             
             char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
             char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
@@ -88,7 +93,7 @@ bytearray oak::base64_decode(string const& encoded_string) {
             char_array_4[j] = 0;
         
         for (j = 0; j <4; j++)
-            char_array_4[j] = base64_chars.find(char_array_4[j]);
+            char_array_4[j] = decode_char(char_array_4[j]);
         
         char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
         char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);

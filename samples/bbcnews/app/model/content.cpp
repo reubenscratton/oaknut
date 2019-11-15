@@ -45,9 +45,12 @@ BNContent::stub::stub(oak::string const& id, oak::string const& name) {
 bool BNContent::stub::operator==(const BNContent::stub& stub) const {
     return modelId == stub.modelId;
 }
+bool BNContent::stub::operator<(const BNContent::stub& stub) const {
+    return modelId < stub.modelId;
+}
 
 string BNContent::stub::url() {
-    return BNEnvironment::URLforResourceSpec(string::format("%s?format=%s&title=%s", modelId.data(), format.data(), name.urlEncode().data()));
+    return BNEnvironment::URLforResourceSpec(string::format("%s?format=%s&title=%s", modelId.c_str(), format.c_str(), name.urlEncode().c_str()));
 }
 
 BNContent::stub BNContent::stub::fromID(const string& id, const string& name) {
@@ -57,25 +60,64 @@ BNContent::stub BNContent::stub::fromID(const string& id, const string& name, co
     return stub(id, name, format);
 }
 
-BNContent::stub BNContent::stub::fromURL(const string& url) {
-    assert(0); // todo
-    // Parse the query string into something usable
-    /*NSArray * pairs = [url.query componentsSeparatedByString:@"&"];
-    NSMutableDictionary * kvPairs = [NSMutableDictionary dictionary];
-    for (NSString * pair in pairs) {
-        NSArray * bits = [pair componentsSeparatedByString:@"="];
-        NSString * key = [[bits objectAtIndex:0] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-        NSString * value = (bits.count<=1) ? @"" : [[bits objectAtIndex:1] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-        [kvPairs setObject:value forKey:key];
+struct url {
+    string scheme;
+    string host;
+    int port;
+    string path;
+    map<string, string> queryparams;
+    
+    url(const string& str) {
+        uint32_t start = 0;
+        uint32_t pos = str.find(":");
+        if (pos < str.lengthInBytes()) {
+            scheme = str.substr(start, pos);
+            start = pos+1;
+        }
+        // Host[+port] specified?
+        if (str.skipString(start, "//")) {
+            host = str.readUpToOneOf(start, ":/");
+            pos = host.find(":");
+            if (pos < host.lengthInBytes()) {
+                port = host.substr(pos+1).asInt();
+                host = host.substr(0, pos);
+            }
+        }
+        pos = str.find("?", 1, start);
+        //uint32_t pathEnd = pos;
+        if (pos < str.lengthInBytes()) {
+            path = str.substr(start, pos);
+            string query = str.substr(pos+1);
+            auto pairs = query.split("&");
+            for (auto pair : pairs) {
+                auto bits = pair.split("=");
+                auto key = bits[0].urlDecode();
+                string value;
+                if (bits.size() > 1) {
+                    value = bits[1].urlDecode();
+                } else {
+                    value = "";
+                }
+                queryparams[key] = value;
+            }
+        } else {
+            path = str.substr(start);
+        }
     }
+};
+
+BNContent::stub BNContent::stub::fromURL(const string& urlstr) {
+    struct url url(urlstr);
     
     // Create a stub for the content we need to show
     string stubID = url.path;
-    if (url.host) {
-        stubID = string::format("/%s%s", url.host, url.path);
+    if (url.host.length()) {
+        stubID.insert(0, url.host);
+        stubID.insert(0, "/");
+        stubID = string::format("/%s%s", url.host.c_str(), url.path.c_str());
     }
     
-    return stub(stubID, kvPairs["title"], kvPairs["format"]);*/
+    return stub(stubID, url.queryparams["title"], url.queryparams["format"]);
 }
 
 BNContent::stub BNContent::getStub() {

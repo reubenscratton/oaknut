@@ -49,8 +49,9 @@ MEASURESPEC MEASURESPEC::fromStyle(const variant* value, View* view) {
     
     // If the val is a string then it is a type & ref declaration
     if (value->isString()) {
-        string str = value->stringVal();
-        string refstr = str.tokenise("(");
+        auto str = value->stringVal();
+        uint32_t it = 0;
+        string refstr = str.readUpTo(it, "(");
         if (refstr == "wrap") {
             spec = Wrap();
         }
@@ -61,7 +62,7 @@ MEASURESPEC MEASURESPEC::fromStyle(const variant* value, View* view) {
             spec.type = TypeAspect;
             spec.mul = 0;
             spec.con = 0;
-            assert(str.length() > 0); // aspect must have supplementary vals
+            assert(it<str.lengthInBytes()); // aspect must have supplementary vals
         }
         else {
             spec.ref = view->getParent()->findViewById(refstr);
@@ -71,10 +72,9 @@ MEASURESPEC MEASURESPEC::fromStyle(const variant* value, View* view) {
         }
         
         // Arguments may be given in a bracketed subexpression
-        if (str.length() > 0) {
-            StringProcessor proc(str);
-            argsval = variant::parse(proc, 0);
-            assert(proc.peek()==')');
+        if (it<str.lengthInBytes()) {
+            string args = str.readUpTo(it, ")");
+            argsval.parse(args, 0);
             value = &argsval;
         }
     }

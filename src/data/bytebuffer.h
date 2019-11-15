@@ -29,7 +29,7 @@ public:
     static ByteBuffer* createFromFile(const string& path);
     void saveToFile(const string& path);
     
-    string toString(bool copy);
+    string toString();
     
     // ISerializable
     virtual bool readSelfFromStream(Stream* stream);

@@ -16,7 +16,7 @@
  If you need to debug with a remote policy file then comment out or change this block.
  */
 #ifndef DEBUG
-#define USE_DOWNLOADED_POLICY
+// #define USE_DOWNLOADED_POLICY
 #endif
 
 
@@ -41,14 +41,14 @@ BNPolicy* BNPolicy::current() {
 #ifdef USE_DOWNLOADED_POLICY
         BNPolicy *cachedPolicy = [NSKeyedUnarchiver unarchiveObjectWithFile:[self mainPolicyFileLocation]];
 #else
-        BNPolicy *cachedPolicy = nil;
+        BNPolicy *cachedPolicy = nullptr;
 #endif
         
         bytearray data;
         app->loadAsset("policy.json", data);
         assert(data.size());
-        StringProcessor it(data.toString());
-        variant json = variant::parse(it, PARSEFLAG_JSON);
+        string str = data.toString();
+        variant json = variant::parse(str, PARSEFLAG_JSON);
 
         s_current = new BNPolicy(json);
         
@@ -262,10 +262,10 @@ string BNPolicy::userAgent() {
 	}
 	
 	
-    return string::format("BBCNews%@/%s (%s; %s %s)",
-            BNEnvironment::currentAppFlavourString().data(),
+    return string::format("BBCNews%s/%s (%s; %s %s)",
+            BNEnvironment::currentAppFlavourString().c_str(),
 			"4.0" /*todo [[environment buildDetails] buildVersionNumber]*/,
-			model.data(),
+			model.c_str(),
 			"iOS" /*todo [[UIDevice currentDevice] systemName]*/,
 			"12" /*todo [[UIDevice currentDevice] systemVersion]]*/
     );

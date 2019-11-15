@@ -18,7 +18,7 @@ AtlasNode::AtlasNode(AtlasPage* page) {
 BitmapProvider* AtlasPage::importAsset(const string& assetPath) {
     BitmapProvider* bitmapProvider = new BitmapProvider();
     bytearray data;
-    if (!app->loadAsset(assetPath.data(), data)) {
+    if (!app->loadAsset(assetPath, data)) {
         assert(0); // oops;
         return NULL;
     };

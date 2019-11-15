@@ -63,9 +63,8 @@ public:
         _nativeView->_window = this;
         _viewController = [[NativeViewController alloc] initWithNibName:nil bundle:nil];
         _viewController.view = _nativeView;
-        _scale = [UIScreen mainScreen].scale;
         CGRect statusBarFrame = [UIApplication sharedApplication].statusBarFrame;
-        setSafeInsets(StatusBar, EDGEINSETS(0, statusBarFrame.size.height * _scale, 0, 0));
+        setSafeInsets(StatusBar, EDGEINSETS(0, statusBarFrame.size.height * app->_defaultDisplay->_scale, 0, 0));
         _renderer->bindToNativeWindow((long)(__bridge void*)_nativeView);
 
     }
@@ -191,6 +190,17 @@ Window* Window::create() {
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+
+    // Create the default Display
+    UIScreen* screen = [UIScreen mainScreen];
+    float dpiX = screen.nativeBounds.size.width / screen.bounds.size.width;
+    float dpiY = screen.nativeBounds.size.height / screen.bounds.size.height;
+    app->_defaultDisplay = new Display(screen.bounds.size.width,
+                                       screen.bounds.size.height,
+                                       dpiX, dpiY,
+                                       screen.scale);
+    
+
     app->_window = Window::create();
     app->loadStyleAsset("styles.res");
     app->main();

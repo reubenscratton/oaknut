@@ -163,7 +163,11 @@ string style::stringVal() const {
     return "";
 }
 string style::stringVal(const char* name) const {
-    return get(name)->stringVal();
+    auto val = get(name);
+    if (!val) {
+        return "";
+    }
+    return val->stringVal();
 }
 
 COLOR style::colorVal(const char* name) const {
@@ -179,7 +183,7 @@ COLOR style::colorVal(const char* name) const {
     assert(val->type == Compound);
     auto val2 = val->compound->find(name);
     if (val2 == val->compound->end()) {
-        app->warn("Value missing for field '%'", name.data());
+        app->warn("Value missing for field '%'", name.c_str());
         return 0;
     }
     return val2->second.intVal();
@@ -261,7 +265,7 @@ COLOR style::colorVal()  const {
         string colorVal = val->stringVal();
         // value is in either '#fff', '#ffffff', '#ffffffff',
         if (colorVal.hadPrefix("#")) {
-            unsigned int val = (unsigned int)strtoul(colorVal.data(), NULL, 16);
+            unsigned int val = (unsigned int)strtoul(colorVal.c_str(), NULL, 16);
             if (colorVal.length() == 3) {
                 int r = (val & 0xF00)>>8;
                 int g = (val & 0xF0)>>4;
@@ -455,7 +459,11 @@ COLOR style::colorVal()  const {
             };
             auto it = htmlColors.find(colorVal.lowercase());
             if (it != htmlColors.end()) {
-                return it->second;
+                uint32_t argb = it->second;
+                uint32_t r = (argb & 0xFF0000)>>16;
+                uint32_t g = (argb & 0xFF00)>>8;
+                uint32_t b = argb & 0xFF;
+                return (argb & 0xFF000000) | (b<<16) | (g<<8) | (r);
             }
         }
         
@@ -468,7 +476,7 @@ COLOR style::colorVal()  const {
 float StyleValue::floatVal(const string& name) const {
     auto field = get(name);
     if (!field) {
-        app->warn("Value missing for field '%'", name.data());
+        app->warn("Value missing for field '%'", name.c_str());
         return 0;
     }
     return field->floatVal();
@@ -567,7 +575,7 @@ const style* style::resolve() const {
                     applies = true;
 #endif
                 } else {
-                    app->warn("Unsupported qualifier '%s'", qual.data());
+                    app->warn("Unsupported qualifier '%s'", qual.c_str());
                 }
                 if (applies) {
                     // TODO: apply precedence that favours higher specificity
@@ -583,10 +591,11 @@ const style* style::resolve() const {
         
         // Follow references for the first time
         else if (val->type == TypeSimple && var.isString() && var.stringVal().hasPrefix("$")) {
-            auto refdstylename = var.stringVal().substr(1);
+            auto refdstylename = var.stringVal();
+            refdstylename.eraseAt(0, 1);
             auto refdstyle = app->getStyle(refdstylename);
             if (!refdstyle) {
-                app->warn("Missing referenced style: $%s", refdstylename.data());
+                app->warn("Missing referenced style: $%s", refdstylename.c_str());
             } else {
                 style* ncval = const_cast<style*>(val);
                 ncval->setType(TypeReference);
@@ -613,22 +622,22 @@ const style* style::get(const string& keypath) const {
         if (!val) {
             return NULL;
         }
-        auto dotIndex = key.find(L'.');
-        if (dotIndex>0) {
-            subkey = key.substr(dotIndex+1, -1);
-            key = key.substr(0, dotIndex);
+        auto dotPos = key.find(".");
+        if (dotPos != 0xFFFFFFFF) {
+            subkey = key.substr(dotPos+1);// key.substr(dotIndex+1).own();
+            key.erase(dotPos);
         } else {
             subkey = "";
         }
         assert(val->type == TypeCompound);
         auto it = val->compound->find(key);
         if (it == val->compound->end()) {
-            //app->warn("Value missing for field '%s'", keypath.data());
+            //app->warn("Value missing for field '%s'", keypath.c_str());
             return NULL;
         }
         val = &it->second;
         key = subkey;
-    } while (key.length() > 0);
+    } while (key.lengthInBytes() > 0);
     return val->resolve();
 }
 
@@ -678,8 +687,8 @@ void style::importNamedValues(const map<string,style>& styleValues) {
     }
 }
 
-bool style::parse(class StringProcessor& it) {
-    variant v = variant::parse(it, 0);
+bool style::parse(const string& str) {
+    variant v = variant::parse(str, 0);
     if (v.isEmpty()) {
         return false;
     }
@@ -701,10 +710,10 @@ void style::fromVariant(const variant& v) {
             styleVal.fromVariant(e.second);
             
             // If field is qualified...
-            int qualifierStartsAt = e.first.find('@');
-            if (qualifierStartsAt > 0) {
-                string qualifier = e.first.substr(qualifierStartsAt+1, -1);
-                string fieldName = e.first.substr(0, qualifierStartsAt);
+            auto qualifierStart = e.first.find("@");
+            if (qualifierStart) {
+                string qualifier = e.first.substr(qualifierStart+1);
+                string fieldName = e.first.substr(0, qualifierStart);
                 auto q = qual_vals.find(fieldName);
                 if (q == qual_vals.end()) {
                     q = qual_vals.insert(make_pair(fieldName, map<string,style>())).first;
@@ -735,7 +744,7 @@ void style::fromVariant(const variant& v) {
     
 }
 /*
-bool StyleValue::parse(StringProcessor& it, int flags) {
+bool StyleValue::parse(string::iterator it, int flags) {
     it.skipWhitespace();
 
     // Parse a compound value
@@ -748,7 +757,7 @@ bool StyleValue::parse(StringProcessor& it, int flags) {
                 it.next();
                 break;
             }
-            string fieldName = it.nextToken();
+            string fieldName = it.readToken();
             if (fieldName.length() == 0) {
                 app->log("Error: expected a field name");
                 return false;
@@ -756,13 +765,13 @@ bool StyleValue::parse(StringProcessor& it, int flags) {
             
             // Comment line
             if (fieldName == "#") {
-                it.nextToEndOfLine();
+                it.readToEndOfLine();
                 continue;
             }
             
             // Split out the qualifier suffix, if there is one
             string fieldNameQualifier = "";
-            int qualifierStartsAt = fieldName.find('@');
+            int qualifierStartsAt = fieldName.find("@");
             if (qualifierStartsAt > 0) {
                 fieldNameQualifier = fieldName.substr(qualifierStartsAt+1, -1);
                 fieldName = fieldName.substr(0, qualifierStartsAt);
@@ -770,7 +779,7 @@ bool StyleValue::parse(StringProcessor& it, int flags) {
             
             it.skipWhitespace();
             if (it.next() != ':') {
-                app->log("Error: expected \':\' after identifier \'%s\'", fieldName.data());
+                app->log("Error: expected \':\' after identifier \'%s\'", fieldName.c_str());
                 return false;
             }
             it.skipWhitespace();
@@ -960,7 +969,7 @@ void Styleable::applyStyle(const style& astyle) {
     for (auto& field : *style->compound) {
         if (field.first == "style") continue;
         if (!applySingleStyle(field.first, field.second)) {
-            app->warn("Ignored unknown attribute '%s'", field.first.data());
+            app->warn("Ignored unknown attribute '%s'", field.first.c_str());
         }
     }
 }

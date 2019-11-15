@@ -121,6 +121,7 @@ void Surface::setSize(const SIZE& size) {
 
 void Surface::detachRenderList(RenderList *list) {
     if (list->_renderListsIndex >= 0) {
+
         for (auto it=list->_ops.begin() ; it!= list->_ops.end() ; it++) {
             detachRenderListOp(*it);
         }
@@ -189,7 +190,7 @@ void Surface::detachRenderListOp(RenderOp* op) {
 }
 
 void Surface::batchRenderOp(RenderOp* op) {
-
+    
     // Find a compatible batch
     RenderBatch* batch = NULL;
     for (auto it : _listBatches) {
@@ -295,27 +296,35 @@ void Surface::renderPhase1(Renderer* renderer, View* view, RECT surfaceRect) {
         return;
     }
     
-    // If view has a private surface, ensure surface has same size as view
-    if (view->_ownsPrivateSurface) {
-        if (!view->_surface) {
-            view->_surface = view->_window->_renderer->createPrivateSurface();
+    // If view has a private surface, do some special stuff
+    if (view->_ownsSurface) {
+
+        // This is pretty fugly... basically check if we're parent-drawing-child or child-drawing-self.
+        if (this != view->_surface) {
+            if (!view->_surface) {
+                view->_surface = view->_window->_renderer->createPrivateSurface();
+            }
+
+            // Render the view tree to its private surface
+            view->_surface->render(view, renderer);
+            return;
         }
-        bool sizeChanged = false;
-        if (_size.width != view->_rect.size.width || _size.height != view->_rect.size.height) {
-            setSize(view->_rect.size);
-            sizeChanged = true;
-        }
-        
-        // Render the view tree to its private surface
-        view->_surface->render(view, renderer);
-        
-        // Create the private surface op, allocating vertex space from the host surface's vbo
-        if (!_op) {
-            RECT rect = view->getOwnRect();
-            _op = new PrivateSurfaceRenderOp(renderer, view, rect);
-        } else {
+        else {
+
+            // This probably belongs in render().
+            bool sizeChanged = (_size.width != view->_rect.size.width || _size.height != view->_rect.size.height);
             if (sizeChanged) {
-                _op->setRect(view->getOwnRect());
+                setSize(view->_rect.size);
+            }
+
+            // Create the private surface op, allocating vertex space from the host surface's vbo
+            if (!_op) {
+                RECT rect = view->getOwnRect();
+                _op = new PrivateSurfaceRenderOp(renderer, view, rect);
+            } else {
+                if (sizeChanged) {
+                    _op->setRect(view->getOwnRect());
+                }
             }
         }
     } else {
@@ -522,31 +531,58 @@ static void debugDump(Surface* surface) {
         for (auto jt : batch->_ops) {
             RenderOp* op = jt;
             string str = op->debugDescription();
-            app->log(" op=%s", str.data());
+            app->log(" op=%s", str.c_str());
         }
     }
     app->log("");
 }
 #endif
 
+void Surface::checkSanity(View* view, bool dump) {
+    list<View*> viewsToCheck = {view};
+    int lastValidRenderIndex = -1;
+    while (viewsToCheck.size()) {
+        View* viewToCheck = *viewsToCheck.begin();
+        viewsToCheck.erase(viewsToCheck.begin());
+        if (dump) {
+            string log = viewToCheck->debugDescription();
+            if (viewToCheck->_renderList) {
+                log.append(string::format(" %d", viewToCheck->_renderList->_renderListsIndex));
+            }
+            app->log(log.c_str());
+        } else {
+            if (viewToCheck->_renderList && -1 != viewToCheck->_renderList->_renderListsIndex) {
+                if (viewToCheck->_renderList->_renderListsIndex <= lastValidRenderIndex) {
+                    checkSanity(view, true);
+                    assert(false);
+                }
+                lastValidRenderIndex = viewToCheck->_renderList->_renderListsIndex;
+            }
+        }
+        /*if (viewToCheck->_renderListDecor && -1 != viewToCheck->_renderListDecor->_renderListsIndex) {
+         assert(viewToCheck->_renderListDecor->_renderListsIndex > lastValidRenderIndex);
+         lastValidRenderIndex = viewToCheck->_renderListDecor->_renderListsIndex;
+         }*/
+        viewsToCheck.insert(viewsToCheck.begin(), viewToCheck->_subviews.begin(), viewToCheck->_subviews.end());
+    }
 
+}
 void Surface::render(View* view, Renderer* renderer) {
 
     _mvpNum = _mvpNumPeak = 0;
-    
+
     /** PHASE 1: ENSURE ALL RENDER LISTS ARE VALID **/
-    //_renderListsCurrentIndex = -1;
     _renderListsLastTouchedIterator = _renderLists.end();
     RECT surfaceRect = {0, 0, _size.width, _size.height};
+    // checkSanity(view, false);
     renderPhase1(renderer, view, surfaceRect);
-    
+    // checkSanity(view, false);
+
     /** PHASE 2: VALIDATE ALL SHADERS, ENSURE VERTEX BUFFER IS UP TO DATE */
     renderPhase2(renderer);
-
+    
     /** PHASE 3: SEND BATCHED RENDEROPS TO GPU **/
     renderPhase3(renderer, view, NULL);
-    
-    //debugDump(this);
 }
 
 

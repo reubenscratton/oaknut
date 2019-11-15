@@ -115,7 +115,7 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
             }, LONG_PRESS_THRESHOLD, false);
         }
         pastTime[pastIndex] = event.time;
-        pastPts[pastIndex] = (event.deviceType==INPUTEVENT::ScrollWheel) ? event.delta : event.pt;
+        pastPts[pastIndex] = event.pt;
         pastIndex = (pastIndex + 1) % NUM_PAST;
         pastCount++;
     }
@@ -132,12 +132,13 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
             }
         }
         pastTime[pastIndex] = event.time;
-        pastPts[pastIndex] = (event.deviceType==INPUTEVENT::ScrollWheel) ? event.delta : event.pt;
+        pastPts[pastIndex] = event.pt;
         pastIndex = (pastIndex + 1) % NUM_PAST;
         pastCount++;
-        if (timeOfDownEvent && !isDragging && event.deviceType!=INPUTEVENT::ScrollWheel) {
-            float dx = event.pt.x - ptDown.x;
-            float dy = event.pt.y - ptDown.y;
+        if (timeOfDownEvent && !isDragging) {
+            float dx,dy;
+            dx = event.pt.x - ptDown.x;
+            dy = event.pt.y - ptDown.y;
             float dist = sqrtf(dx * dx + dy * dy);
             if (app->idp(dist) >= TOUCH_SLOP) {
                 if (touchedView) {
@@ -207,13 +208,8 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
                         }
                         dTime = (int) (event.time - timeFrom);
                         if (dTime <= 0) continue;
-                        if (event.deviceType == INPUTEVENT::ScrollWheel) {
-                            dx += ptFrom.x;
-                            dy += ptFrom.y;
-                        } else {
-                            dx = event.pt.x - ptFrom.x;
-                            dy = event.pt.y - ptFrom.y;
-                        }
+                        dx = event.pt.x - ptFrom.x;
+                        dy = event.pt.y - ptFrom.y;
                     }
                     float thisVeloX = dx * 1000.0f / dTime;
                     float thisVeloY = dy * 1000.0f / dTime;

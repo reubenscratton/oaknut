@@ -32,7 +32,7 @@ void BNCollection::ensureChildItemsAreRelatedToSelf() {
 		
 		// Ensure that there's a relationship between collection and item.
 		if (childObject->isItem()) {
-			BNRelationship* missingRel = nil;
+			BNRelationship* missingRel = nullptr;
             for (BNRelationship* rel : childObject->_childRelationships) {
 				if ((rel->_childObject->_modelId == _modelId) && (rel->_parentObject->_modelId == childObject->_modelId)) {
 					missingRel = rel;

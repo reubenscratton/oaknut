@@ -118,7 +118,7 @@ static map<string,KeyboardInputSpecialKeyCode> s_specialKeys = {
 static void oak_keyEvent(int keyDown, int keyCode, int keynameBuffPtr) {
     if (app->_window->_keyboardHandler) {
         string keyname((char*)keynameBuffPtr);
-        //app->log("key: %s", keyname.data());
+        //app->log("key: %s", keyname.c_str());
         char32_t charCode = 0;
         KeyboardInputSpecialKeyCode specialKey = SpecialKeyNone;
         if (keyname.length()==1) {

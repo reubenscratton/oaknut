@@ -117,7 +117,6 @@ namespace oak {
 #include "data/serializable.h"
 #include "data/bytebuffer.h"
 #include "data/bytebufferstream.h"
-#include "text/stringprocessor.h"
 #include "text/regex.h"
 #include "util/gravity.h"
 #include "graphics/geom.h"
@@ -187,7 +186,9 @@ namespace oak {
 #include "widgets/checkbox.h"
 #include "widgets/pincodeview.h"
 #include "widgets/progressspinner.h"
+#include "widgets/tabbar.h"
 #include "widgets/textfield.h"
+#include "widgets/viewpager.h"
 }
 
 

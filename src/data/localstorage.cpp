@@ -48,8 +48,8 @@ public:
             };
 
         }, this, // $0
-            _name.data(), // $1
-            _primaryKeyName.data(), // $2
+            _name.c_str(), // $1
+            _primaryKeyName.c_str(), // $2
             openCallbackFromJs, // $3
             new std::function<void()>(callback) // $4
         );
@@ -92,7 +92,7 @@ public:
                     Runtime.dynCall('viii', $2, [$0, -1, $3]);
                 }
             };
-        }, this, _name.data(), getAllCallbackFromJs, new std::function<void(variant*)>(callback), gotIndex);
+        }, this, _name.c_str(), getAllCallbackFromJs, new std::function<void(variant*)>(callback), gotIndex);
 
     }
     virtual void getOne(const variant& primaryKeyVal, std::function<void(variant*)> success) {
@@ -118,7 +118,7 @@ public:
             tx.onerror = function(event) {
             };
         }, this, // $0
-            _name.data(), // $1
+            _name.c_str(), // $1
             removeCallbackFromJs, // $2
             new std::function<void()>(callback), // $3
             val::global("gotSet")(_db).as<int>(), // $4
@@ -155,7 +155,7 @@ public:
             var store = tx.objectStore(name);
             store.put(obj);
         }, this, // $0
-           _name.data(), // $1
+           _name.c_str(), // $1
            putCallbackFromJs, // $2
            new std::function<void(void)>(callback), // $3
            val::global("gotSet")(_db).as<int>(), // $4
@@ -340,9 +340,9 @@ public:
 protected:
     void openFile() {
         if (!_file.is_open()) {
-            _file.open(_mainFileName.data(), fstream::in | fstream::out | fstream::binary);
+            _file.open(_mainFileName.c_str(), fstream::in | fstream::out | fstream::binary);
             if (!_file.is_open()) {
-                _file.open(_mainFileName.data(), fstream::in | fstream::out | fstream::binary | fstream::app);
+                _file.open(_mainFileName.c_str(), fstream::in | fstream::out | fstream::binary | fstream::app);
                 assert(_file.is_open());
             }
         }

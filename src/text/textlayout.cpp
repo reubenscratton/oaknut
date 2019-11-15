@@ -80,12 +80,12 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
         auto spanEndIterator = _text._attributes.begin();
         
         // Iterate over text
-        StringProcessor it(_text);
+        uint32_t offset = 0;
         char32_t codepoint='\0', prevCh;
         int32_t i=0;
-        while (true) {
+        while (offset < _text.end()) {
             prevCh = codepoint;
-            codepoint = it.next();
+            codepoint = _text.readChar(offset);
             if (!codepoint) {
                 break;
             }

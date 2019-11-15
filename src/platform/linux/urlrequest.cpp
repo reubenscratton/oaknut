@@ -38,7 +38,7 @@ public:
     static size_t header_cb(char *buffer, size_t size, size_t nitems, URLRequestLinux* req) {
         uint r = size * nitems;
         string hdr(buffer, r);
-        int i = hdr.find(':');
+        int i = hdr.find(":");
         if (i>0) {
             string name = hdr.substr(0, i).lowercase();
             string value = hdr.substr(i+1);

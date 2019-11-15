@@ -181,8 +181,8 @@ protected:
     /** The rendering surface, i.e. where the view's RenderOps are drawn to */
     sp<Surface> _surface;
     
-    /** This flag is true for the view that owns its private surface. (Subviews will draw to it but they don't own it)*/
-    bool _ownsPrivateSurface;
+    /** This flag is true for the view that owns its surface. (Subviews will draw to it but they don't own it)*/
+    bool _ownsSurface;
     
     /** The offset from the top-left of this view to the top left of the surface.
      Set in onWindowAttach() and updated when self or ancestor rect origin changes. */
@@ -318,7 +318,7 @@ public:
     virtual void setGravity(GRAVITY gravity);
 
     virtual POINT getContentOffset() const;
-    virtual void setContentOffset(POINT contentOffset);
+    virtual void setContentOffset(POINT contentOffset, bool animated=false);
     virtual void setScrollInsets(EDGEINSETS scrollInsets);
     virtual bool canScrollHorizontally();
     virtual bool canScrollVertically();

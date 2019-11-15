@@ -21,9 +21,9 @@ bool FileStream::openForRead() {
     if (!app->fileResolve(_path)) {
         return false;
     }
-    _file = fopen(_path.data(), "rb");
+    _file = fopen(_path.c_str(), "rb");
     if (!_file) {
-        app->log("Failed to open file: %s", _path.data());
+        app->log("Failed to open file: %s", _path.c_str());
         return false;
     }
     return true;
@@ -34,9 +34,9 @@ bool FileStream::openForWrite() {
     if (!app->fileResolve(_path)) {
         return false;
     }
-    _file = fopen(_path.data(), "wb");
+    _file = fopen(_path.c_str(), "wb");
     if (!_file) {
-        app->log("Failed to open file: %s", _path.data());
+        app->log("Failed to open file: %s", _path.c_str());
         return false;
     }
     return true;

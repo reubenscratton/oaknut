@@ -7,8 +7,53 @@
 
 #pragma once
 #include <oaknut.h>
-#include "ui/layoutsgroup.h"
+#include "ui/common/layoutsgroup.h"
 
+
+
+class BNViewPagerController : public ViewController {
+public:
+    
+    ViewPager* _viewPager;
+
+    BNViewPagerController();
+    void invalidateNav();
+    void updateNav();
+    bool navigateToUrl(const string& url, bool animated);
+    bool isRootVC();
+    void onCannotRenderContentPleaseShowInBrowserKThxBai(const string& contentUrl);
+};
+
+class BNContentViewPagerController : public BNViewPagerController {
+public:
+    // extern BOOL globalSwipedViewPager;
+
+    vector<BNContent::stub> _contentArray;
+    // View* _editButton;
+
+    void setContent(BNContent::stub stub, vector<BNContent::stub>& collection);
+    // - (void)onFollowStateChanged:(NSNotification*)notification;
+    // - (void)setSelectedModelId:(NSString*)modelId;
+    // - (NSString*)selectedModelId;
+
+};
+
+
+class BNNavController : public NavigationController {
+public:
+    
+    enum OpenFlags {
+        None = 0,
+        DestroyBackStack = 1,
+        ShowAddTopicTip = 2,
+        NoAnimation = 4
+    };
+
+    void openPhotoGallery(vector<BNImage*>& images, BNImage* currentImage);
+    void openItem(BNContent* item, const vector<BNBaseModel*>& withinCollection, const string& title);
+    void openURL(const string& url, const vector<BNBaseModel*>& withinCollection, const string& title, OpenFlags flags=None);
+    
+};
 
 class BBCNewsApp : public App {
 public:

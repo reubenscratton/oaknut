@@ -20,6 +20,9 @@ struct POINT {
 	float x;
 	float y;
 
+    POINT() {}
+    POINT(float ax, float ay) : x(ax), y(ay) {}
+
     bool isZero() const { return x==0.0f && y==0.0f; }
     const POINT operator+(const POINT& rhs) const { return {x+rhs.x, y+rhs.y}; }
     const POINT operator-(const POINT& rhs) const { return {x-rhs.x, y-rhs.y}; }
@@ -49,6 +52,8 @@ struct POINTI {
     int x;
     int y;
     
+    POINTI() {}
+    POINTI(int ax, int ay) : x(ax), y(ay) {}
     bool isZero() const { return x==0 && y==0; }
     const POINTI operator+(const POINTI& rhs) const { return {x+rhs.x, y+rhs.y}; }
     const POINTI operator-(const POINTI& rhs) const { return {x-rhs.x, y-rhs.y}; }

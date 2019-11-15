@@ -7,12 +7,50 @@
 
 #include <oaknut.h>
 
+const uint32_t string::eof = 0xFFFFFFFF;
 
 const unsigned char kFirstBitMask = 128; // 1000000
 //const unsigned char kSecondBitMask = 64; // 0100000
 const unsigned char kThirdBitMask = 32; // 0010000
 const unsigned char kFourthBitMask = 16; // 0001000
 //const unsigned char kFifthBitMask = 8; // 0000100
+
+inline char* string::buf_new(uint32_t cb) {
+    // static int s_strmallocs=0;
+    // static uint32_t s_malloctotal=0;
+    // s_strmallocs++;
+    // s_malloctotal += cb;
+    // app->log("string malloc %d total=%d", s_strmallocs, s_malloctotal);
+    auto hdr = (struct bufhdr*)malloc(sizeof(struct bufhdr) + cb + 1);
+    hdr->cap = cb;
+    hdr->cb = cb;
+    hdr->refs = 1;
+    hdr++;
+    return (char*)hdr;
+}
+inline void string::buf_retain(char* buf) {
+    struct bufhdr* hdr = (struct bufhdr*)(buf-sizeof(struct bufhdr));
+    hdr->refs++;
+}
+inline void string::buf_release(char* buf) {
+    struct bufhdr* hdr = (struct bufhdr*)(buf-sizeof(struct bufhdr));
+    assert(hdr->refs < 1000);
+    if (0==--hdr->refs) {
+        free(hdr);
+    }
+}
+inline void string::buf_realloc(int32_t cbDelta) {
+    auto hdr = bufhdr();
+    uint32_t cbNew = (hdr ? hdr->cap : 0) + cbDelta;
+    auto hdrNew = (struct bufhdr*)realloc(hdr, sizeof(struct bufhdr) + cbNew + 1);
+    hdrNew->cap = cbNew;
+    hdrNew->cb = cbNew;
+    if (!hdr) {
+        hdrNew->refs = 1;
+    }
+    hdrNew++;
+    _buf = (char*)hdrNew;
+}
 
 
 char32_t lower(char32_t c) {
@@ -26,190 +64,13 @@ char32_t lower(char32_t c) {
     return c;
 }
 
-int string::compare(const string& str) const noexcept {
-    int cb = MIN(_cb, str._cb);
-    int r = memcmp(_p, str._p, cb);
-    if (r!=0) {
-        return r;
-    }
-    if (_cb < str._cb) return -1;
-    else if (_cb > str._cb) return 1;
-    return 0;
-}
-int string::compare(const char* s) const {
-    int scb = (int)strlen(s);
-    int cb = MIN(_cb, scb);
-    int r = memcmp(_p, s, cb);
-    if (r!=0) {
-        return r;
-    }
-    if (_cb < scb) return -1;
-    else if (_cb > scb) return 1;
-    return 0;
-
-}
-bool string::operator==(const string& rhs) const {
-    return 0==compare(rhs);
-}
-bool string::operator==(const char* rhs) const {
-    return 0==compare(rhs);
-}
-bool string::operator!=(const string& rhs) const {
-    return 0!=compare(rhs);
-}
-bool string::operator!=(const char* rhs) const {
-    return 0!=compare(rhs);
-}
-bool string::operator<(const string& rhs) const {
-    return compare(rhs)<0;
-}
-bool string::operator<(const char*   rhs) const {
-    return compare(rhs)<0;
-}
-char32_t string::operator[](const int32_t charIndex)  const {
-    return charAt(charIndex);
-}
-char32_t string::charAt(const int32_t charIndex)  const {
-    assert(charIndex < _cc);
-    if (_cc == _cb) return _p[charIndex];
-    int32_t byteIndex = charIndexToByteIndex(charIndex);
-    return readUtf8(byteIndex);
-}
-string string::substr(int32_t charIndexStart, int32_t charIndexEnd /*=-1*/) const {
-    normaliseCharRange(charIndexStart, charIndexEnd);
-    int32_t byteIndexStart = charIndexToByteIndex(charIndexStart);
-    int32_t byteIndexEnd = charIndexToByteIndex(charIndexEnd);
-    int32_t cb =  byteIndexEnd-byteIndexStart;
-    return string(_p+byteIndexStart, cb);
-}
-
-int32_t string::charIndexToByteIndex(int32_t charIndex) const {
-    if (_cc == _cb) return charIndex;
-    char* p = _p;
-    while (charIndex > 0) {
-        if(*p & kFirstBitMask) {
-            if(*p & kThirdBitMask) {
-                p += (*p & kFourthBitMask) ? 4 : 3;
-            }
-            else {
-                p += 2;
-            }
-        }
-        else {
-            p++;
-        }
-        charIndex--;
-    }
-    return int32_t(p - _p);
-}
-char32_t string::readUtf8(int32_t& byteOffset) const {
-    assert(byteOffset >=0);
-    if (byteOffset >= _cb) {
-        byteOffset = -1;
-        return 0;
-    }
-    char* p = _p+byteOffset;
-    char32_t codePoint = 0;
-    char firstByte = *p;
-    if(firstByte & kFirstBitMask) {
-        if(firstByte & kThirdBitMask) { // three-octet code point.
-            if(firstByte & kFourthBitMask) { // four-octet code point
-                byteOffset += 4;
-                codePoint = (firstByte & 0x07) << 18;
-                char secondByte = *(p + 1);
-                codePoint +=  (secondByte & 0x3f) << 12;
-                char thirdByte = *(p + 2);
-                codePoint +=  (thirdByte & 0x3f) << 6;;
-                char fourthByte = *(p + 3);
-                codePoint += (fourthByte & 0x3f);
-            }
-            else {
-                byteOffset += 3;
-                codePoint = (firstByte & 0x0f) << 12;
-                char secondByte = *(p + 1);
-                codePoint += (secondByte & 0x3f) << 6;
-                char thirdByte = *(p + 2);
-                codePoint +=  (thirdByte & 0x3f);
-            }
-        }
-        else {
-            byteOffset += 2;
-            codePoint = (firstByte & 0x1f) << 6;
-            char secondByte = *(p + 1);
-            codePoint +=  (secondByte & 0x3f);
-        }
-    }
-    else {
-        codePoint = firstByte;
-        byteOffset++;
-    }
-    if (byteOffset >= _cb) {
-        byteOffset = -1;
-    }
-    return codePoint;
-}
-
-int32_t string::find(const string& str, bool caseSensitive/*=true*/) const {
-    return find(str, 0, caseSensitive);
-}
-int32_t string::find(const string& str, int32_t start, bool caseSensitive/*=true*/) const {
-    auto oc = start;
-    auto ob = start ? charIndexToByteIndex(start) : 0;
-    if (ob >= _cb) {
-        return -1;
-    }
-    if (!str.length()) {
-        return 0;
-    }
-    
-    int matchCount = 0;
-    while (ob>=0) {
-        char32_t ch = readUtf8(ob); oc++;
-        char32_t compareChar = str.charAt(matchCount);
-        bool match = caseSensitive ? (ch==compareChar) : (lower(ch)==lower(compareChar));
-        if (match) {
-            matchCount++;
-            if (matchCount >= str.length()) {
-                return oc - str.length();
-            }
-        } else {
-            matchCount =0;
-        }
-    }
-    return -1;
-}
-int32_t string::find(const char* s, bool caseSensitive/*=true*/) const {
-    if (!_p) return -1;
-    char* p = strstr(_p, s);
-    return p ? int32_t(p-_p) : -1;
-}
-int32_t string::find(char32_t ch, bool caseSensitive/*=true*/) const {
-    int32_t byteIndex = 0;
-    int32_t charIndex = 0;
-    while (byteIndex >= 0) {
-        if (ch == readUtf8(byteIndex)) {
-            return charIndex;
-        }
-        charIndex++;
-    }
-    return -1;
-}
-bool string::contains(const string& str, bool caseSensitive/*=true*/) const {
-    return find(str, caseSensitive) >=0;
-}
-bool string::contains(const char* s, bool caseSensitive/*=true*/) const {
-    return find(s, caseSensitive) >=0;
-}
-bool string::contains(char32_t ch, bool caseSensitive/*=true*/) const {
-    return find(ch, caseSensitive) >=0;
-}
-
-int32_t countUtf8Chars(const char* p, int32_t cb) {
+int32_t string::length() const noexcept {
     int32_t cc = 0;
-    const char* pp = p;
-    while (pp < p+cb) {
-        if(*pp & kFirstBitMask) {
-            if(*pp & kThirdBitMask) { // three-octet code point.
+    const char* pp = _buf+_offset;
+    auto end = pp + _cb;
+    while (pp < end) {
+        if (*pp & kFirstBitMask) {
+            if (*pp & kThirdBitMask) { // three-octet code point.
                 pp += (*pp & kFourthBitMask) ? 4 : 3;  // four-octet code point
             } else {
                 pp += 2;
@@ -222,23 +83,270 @@ int32_t countUtf8Chars(const char* p, int32_t cb) {
     return cc;
 }
 
+int string::compare(const string& str) const noexcept {
+    int cb = MIN(_cb, str._cb);
+    int r = memcmp(_buf+_offset, str._buf+str._offset, cb);
+    if (r!=0) {
+        return r;
+    }
+    if (_cb < str._cb) return -1;
+    else if (_cb > str._cb) return 1;
+    return 0;
+}
+bool string::operator==(const string& rhs) const {
+    return 0==compare(rhs);
+}
+bool string::operator!=(const string& rhs) const {
+    return 0!=compare(rhs);
+}
+bool string::operator<(const string& rhs) const {
+    return compare(rhs)<0;
+}
 
-void string::append(const string& str) {
-    append(str._p, str._cb);
+char32_t string::peekChar(uint32_t offset) const {
+    auto o = offset;
+    return readUtf8(_buf+_offset, o);
 }
-void string::append(const char* p) {
-    if (!p) return;
-    append(p, (int32_t)strlen(p));
+char32_t string::readChar(uint32_t& offset) const {
+    if (offset>=_cb) {
+        return 0;
+    }
+    return readUtf8(_buf+_offset, offset);
 }
-void string::append(const char* p, int32_t cb) {
-    if (!cb) return;
-    int32_t newCb = _cb+cb;
-    _p = (char*)realloc(_p, newCb+1);
-    memcpy(_p+_cb, p, cb);
-    _cb = newCb;
-    _p[_cb] = 0;
-    _cc += countUtf8Chars(p, cb);
+
+char32_t string::operator[](const int32_t charIndex)  const {
+    return charAt(charIndex);
 }
+char32_t string::charAt(const int32_t charIndex)  const {
+    auto o = charIndexToOffset(charIndex);
+    return readUtf8(_buf+_offset, o);
+}
+
+uint32_t string::charIndexToOffset(int32_t charIndex) const {
+    uint32_t o = 0;
+    auto start = _buf + _offset;
+    while (charIndex > 0) {
+        if(start[o] & kFirstBitMask) {
+            if(start[o] & kThirdBitMask) {
+                o += (start[o] & kFourthBitMask) ? 4 : 3;
+            }
+            else {
+                o += 2;
+            }
+        }
+        else {
+            o++;
+        }
+        charIndex--;
+    }
+    if (charIndex < 0) {
+        o = _cb;
+        while (charIndex<=-1 && o>0) {
+            o--;
+            if (o>0 && (start[o] & 0xC0)==0x80) { // > 1 byte
+                o--;
+                if (o>0 && (start[o] & 0xC0)==0x80) { // > 2 bytes
+                    o--;
+                    if (o>0 && (start[o] & 0xC0)==0x80) { // 4 bytes
+                        o--;
+                        assert(0xF0 == (start[o] & 0xF8));
+                    } else { // 3 bytes
+                        assert(0xE0 == (start[o] & 0xF0));
+                    }
+                } else { // 2-bytes
+                    assert(0xC0 == (start[o] & 0xE0));
+                }
+            } else { // 1-byte
+                assert(!(start[o] & 0x80));
+            }
+            charIndex++;
+        }
+    }
+    return o;
+}
+
+void string::rewind(uint32_t& o) const {
+    if (o > 0) {
+        auto s = start();
+        o--;
+        if (o>0 && (s[o] & 0xC0)==0x80) { // > 1 byte
+            o--;
+            if (o>0 && (s[o] & 0xC0)==0x80) { // > 2 bytes
+                o--;
+                if (o>0 && (s[o] & 0xC0)==0x80) { // 4 bytes
+                    o--;
+                    assert(0xF0 == (s[o] & 0xF8));
+                } else { // 3 bytes
+                    assert(0xE0 == (s[o] & 0xF0));
+                }
+            } else { // 2-bytes
+                assert(0xC0 == (s[o] & 0xE0));
+            }
+        } else { // 1-byte
+            assert(!(s[o] & 0x80));
+        }
+    }
+}
+
+
+string string::substr(uint32_t from, uint32_t to /*=0xFFFFFFFFU*/) const {
+    if (from>to) std::swap(from, to);
+    from = MIN(_cb, MAX(0, from));
+    to = MIN(_cb, MAX(0, to));
+    return string(*this, from, to);
+}
+
+string string::substrAt(int32_t from, int32_t to /*=-1*/) const {
+    auto fromOffset = charIndexToOffset(from);
+    auto toOffset = charIndexToOffset(to);
+    return substr(fromOffset, toOffset);
+}
+
+string string::slice(int32_t charIndex1, int32_t charIndex2 /*=0*/) const {
+    auto cc = length();
+    // Single-arg form, param is the 'stop' point
+    if (charIndex2 == 0) {
+        charIndex2 = charIndex1;
+        charIndex1 = 0;
+    }
+    // Convert -ve indexes into +ve indexes
+    if (charIndex1 < 0) {
+        charIndex1 += cc;
+    }
+    if (charIndex2 < 0) {
+        charIndex2 += cc;
+    }
+    // Ensure right way round
+    if (charIndex1 > charIndex2) {
+        std::swap(charIndex1, charIndex2);
+    }
+    // Clamp
+    charIndex1 = MIN(cc, MAX(0, charIndex1));
+    charIndex2 = MIN(cc, MAX(0, charIndex2));
+    return substr(charIndexToOffset(charIndex1), charIndexToOffset(charIndex2));
+}
+
+
+bool string::skipString(uint32_t& offset, const char* s) const {
+    if (!s) {
+        return false;
+    }
+    auto cb = strlen(s);
+    if (0==memcmp(start()+offset, s, cb)) {
+        offset += cb;
+        return true;
+    }
+    return false;
+}
+
+char32_t string::readUtf8(char* base, uint32_t& offset) {
+    char32_t codePoint = 0;
+    char firstByte = base[offset];
+    if(firstByte & kFirstBitMask) {
+        char secondByte = base[offset+1];
+        if(firstByte & kThirdBitMask) { // three-octet code point.
+            char thirdByte = base[offset+2];
+            if(firstByte & kFourthBitMask) { // four-octet code point
+                char fourthByte = base[offset+3];
+                codePoint = ((firstByte & 0x07) << 18)
+                          | ((secondByte & 0x3f) << 12)
+                          | ((thirdByte & 0x3f) << 6)
+                          | (fourthByte & 0x3f);
+                offset += 4;
+            }
+            else {
+                codePoint = ((firstByte & 0x0f) << 12)
+                          | ((secondByte & 0x3f) << 6)
+                          | (thirdByte & 0x3f);
+                offset += 3;
+            }
+        }
+        else {
+            codePoint = ((firstByte & 0x1f) << 6)
+                      | (secondByte & 0x3f);
+            offset += 2;
+        }
+    }
+    else {
+        codePoint = firstByte;
+        if (firstByte) {
+            offset++;
+        }
+    }
+    return codePoint;
+}
+
+// helper that returns the offset into 'buf' of the first occurrence of 'text'.
+// If 'text' is not found then buflen is returned.
+static inline uint32_t findStr(const char* buf, uint32_t buflen, const char* text, int32_t textLen) {
+    uint32_t o = 0;
+    uint32_t to = MAX(0, (buflen - textLen)+1);
+    while (o < to) {
+        char* match = (char*)memchr(buf+o, text[0], to-o);
+        if (!match) {
+            break;
+        }
+        o = uint32_t(match-buf);
+        if (0==memcmp(match+1, text+1, textLen-1)) {
+            return o;
+        }
+        o++;
+    }
+    return buflen;
+}
+
+uint32_t string::find(const char* szTextToFind, int32_t szTextLen/*=-1*/, uint32_t fromOffset/*=0*/) const {
+    if (!szTextToFind || !szTextToFind[0]) return string::eof; // searching for an empty string
+    if (!_buf) return string::eof;
+    auto o = _offset + fromOffset;
+    if (szTextLen<0) szTextLen = strlen(szTextToFind);
+    return fromOffset + findStr(_buf+o, _cb-fromOffset, szTextToFind, szTextLen);
+}
+
+void string::prepareToModify() {
+    auto hdr = bufhdr();
+    if (hdr->refs > 1) {
+        buf_release(_buf);
+        auto buf = buf_new(_cb);
+        memcpy(buf, _buf+_offset, _cb);
+        _buf = buf;
+        _offset = 0;
+    }
+}
+
+
+void string::erase(uint32_t fromByteOffset, uint32_t toByteOffset/*=0xFFFFFFFFU*/) {
+    if (fromByteOffset>toByteOffset) std::swap(fromByteOffset, toByteOffset);
+    fromByteOffset = MIN(_cb, MAX(0, fromByteOffset));
+    toByteOffset = MIN(_cb, MAX(0, toByteOffset));
+    uint32_t cbToErase = toByteOffset - fromByteOffset;
+    if (cbToErase<=0) {
+        return;
+    }
+    prepareToModify();
+    auto start = _buf + _offset;
+    size_t cbToMove = _cb - toByteOffset;
+    if (cbToMove > 0) {
+        memmove(start + fromByteOffset, start + toByteOffset, cbToMove);
+    }
+    _cb -= cbToErase;
+    _buf[_cb]='\0';
+    buf_realloc(-cbToErase);
+}
+void string::eraseAt(int32_t startIndex, int32_t endIndex/*=-1*/) {
+    auto fromByteOffset = charIndexToOffset(startIndex);
+    if (endIndex == -1) {
+        erase(fromByteOffset);
+    } else {
+        auto toByteOffset = charIndexToOffset(endIndex);
+        erase(fromByteOffset, toByteOffset);
+    }
+}
+void string::eraseLast() {
+    auto lastCharOffset = charIndexToOffset(-1);
+    erase(lastCharOffset);
+}
+
 void string::append(char32_t ch) {
     if (ch <= 0x7F) {
         append((char*)&ch, 1);
@@ -267,57 +375,38 @@ void string::append(char32_t ch) {
     else assert(0);
 }
 
-void string::insert(int32_t charIndex, const string& str) {
-    insert(charIndex, str._p, str._cb);
-}
-void string::insert(int32_t charIndex, const char* p) {
+void string::insert(uint32_t byteOffset, const char* p,  int32_t cb /*=-1*/) {
     if (!p) return;
-    insert(charIndex, p, (int32_t)strlen(p));
-}
-void string::insert(int32_t charIndex, const char* p, int32_t cb) {
+    if (cb < 0) {
+        cb = (int32_t)strlen(p);
+    }
     if (!cb) return;
-    int newCb = _cb+cb;
-    _p = (char*)realloc(_p, newCb+1);
-    auto byteIndex = charIndexToByteIndex(charIndex);
-    char* insertionPoint = _p + byteIndex;
-    auto cbToMove = _cb - byteIndex;
-    memmove(insertionPoint+cb, insertionPoint, cbToMove); // move tail forwards in memory
-    memcpy(insertionPoint, p, cb);
-    _cb = newCb;
-    _p[_cb] = 0;
-    _cc += countUtf8Chars(p, cb);
-}
-void string::erase(int32_t charIndex) {
-    erase(charIndex, charIndex+1);
-}
-void string::normaliseCharRange(int32_t& charIndexStart, int32_t& charIndexEnd) const {
-    if (charIndexEnd < 0) {
-        charIndexEnd = _cc;
+    if (!_buf) {
+        assign(p, cb);
+        return;
     }
-    if (charIndexStart == charIndexEnd) return;
-    if (charIndexStart > charIndexEnd) {
-        auto tmp = charIndexStart;
-        charIndexStart = charIndexEnd;
-        charIndexEnd = tmp;
-    }
+    prepareToModify();
+    buf_realloc(cb);
+    auto cbToMove = _cb - byteOffset;
+    char* insertPoint = this->start() + byteOffset;
+    memmove(insertPoint+cb, insertPoint, cbToMove); // move tail forwards in memory
+    memcpy(insertPoint, p, cb);
+    _cb += cb;
+    this->start()[_cb] = 0;
 }
 
-void string::erase(int32_t charIndexStart, int32_t charIndexEnd) {
-    normaliseCharRange(charIndexStart, charIndexEnd);
-    int32_t byteIndexStart = charIndexToByteIndex(charIndexStart);
-    int32_t byteIndexEnd = charIndexToByteIndex(charIndexEnd);
-    int32_t cb =  byteIndexEnd-byteIndexStart;
-    if (byteIndexEnd < _cb) {
-        memmove(_p+byteIndexStart, _p+byteIndexEnd, _cb - byteIndexEnd);
-    }
-    _cb -= cb;
-    _cc -= (charIndexEnd - charIndexStart);
-    _p = (char*)realloc(_p ,_cb+1);
-    _p[_cb] = 0;
-}
+
 
 string& string::operator=(const string& str) {
-    assign(str._p, str._cb);
+    if (_buf) {
+        buf_release(_buf);
+    }
+    _buf = str._buf;
+    _offset = str._offset;
+    _cb = str._cb;
+    if (_buf) {
+        buf_retain(_buf);
+    }
     return *this;
 }
 string& string::operator=(const char* s) {
@@ -330,37 +419,43 @@ string oak::operator+(const string& lhs, const string& rhs) {
     r.append(rhs);
     return r;
 }
-string oak::operator+(const string& lhs, const char* s) {
+/*string oak::operator+(const string& lhs, const char* s) {
     string r(lhs);
     r.append(s);
     return r;
+}*/
+
+void string::clear() {
+    if (_buf) {
+        buf_release(_buf);
+        _buf = nullptr;
+        _cb = 0;
+        _offset = 0;
+    }
 }
 
 void string::assign(const char* p, int32_t cb) {
-    if (_p) {
-        free(_p);
+    if (_buf) {
+        buf_release(_buf);
     }
+    _offset = 0;
     if (p) {
+        _buf = buf_new(cb);
         _cb = cb;
-        _p = (char*)malloc(_cb + 1);
-        _p[_cb] = 0;
-        memcpy(_p, p, _cb);
+        memcpy(_buf, p, _cb);
+        _buf[cb] = 0;
     } else {
-        _p = NULL;
+        _buf = nullptr;
         _cb = 0;
     }
-    _cc = countUtf8Chars(_p, _cb);
-}
-
-void string::countChars() {
-    _cc = countUtf8Chars(_p, _cb);
 }
 
 void string::trim() {
-    int32_t ci = 0;
     int32_t cLead = 0;
-    while(ci < _cc) {
-        char32_t ch=charAt(ci++);
+    int32_t i = 0;
+    char* start = this->start();
+    while(i < _cb) {
+        char ch = start[i++];
         if (ch==' ' || ch=='\t' || ch=='\r' || ch=='\n') {
             cLead++;
         } else {
@@ -368,120 +463,78 @@ void string::trim() {
         }
     }
     int32_t cTrail = 0;
-    ci = _cc-1;
-    while(ci>=0) {
-        char32_t ch=charAt(ci--);
+    i = _cb-1;
+    while(i>=0) {
+        char ch = start[i--];
         if (ch==' ' || ch=='\t' || ch=='\r' || ch=='\n') {
             cTrail++;
         } else {
             break;
         }
     }
-    if (cTrail) erase(_cc-cTrail, _cc);
-    if (cLead) erase(0, cLead);
+    auto total = cLead+cTrail;
+    if (total > 0) {
+        *this = substr(cLead, -1-cTrail);
+    }
 }
 
 
-bool string::hasPrefix(const string& prefix, bool caseSensitive/*=true*/) const {
-    if (prefix.length()>length()) {
+bool string::hasPrefix(const string& prefix) const {
+    if (prefix._cb > _cb) {
         return false;
     }
-    auto s = begin();
-    auto p = prefix.begin();
-    size_t l = prefix.length();
-    if (caseSensitive) {
-        while (l-- > 0) {
-            if (*s++ != *p++) {
-                return false;
-            }
-        }
-    } else {
-        while (l-- > 0) {
-            if (lower(*s++) != lower(*p++)) {
-                return false;
-            }
-        }
-    }
-    return true;
+    return 0==memcmp(start(), prefix.start(), prefix._cb);
 }
-bool string::hadPrefix(const string& prefix, bool caseSensitive/*=true*/) {
+bool string::hadPrefix(const string& prefix) {
     if (hasPrefix(prefix)) {
-        erase(0, prefix.length());
+        erase(0, prefix._cb);
         return true;
     }
     return false;
 }
-bool string::hasSuffix(const string& suffix, bool caseSensitive/*=true*/) const {
-    int32_t ci = _cc - suffix._cc;
+bool string::hasSuffix(const string& suffix) const {
+    int32_t ci = _cb - suffix._cb;
     if (ci<0) {
         return false;
     }
-    int32_t cs = 0;
-    if (caseSensitive) {
-        while (cs < suffix.length()) {
-            if (charAt(ci++) != suffix.charAt(cs++)) {
-                return false;
-            }
-        }
-    } else {
-        while (cs < suffix.length()) {
-            if (lower(charAt(ci++)) != lower(suffix.charAt(cs++))) {
-                return false;
-            }
-        }
-    }
-    return true;
-
+    auto s = _cb - suffix._cb;
+    return 0 == memcmp(start()+s, suffix.start(), suffix._cb);
 }
-bool string::hadSuffix(const string& suffix, bool caseSensitive/*=true*/) {
+bool string::hadSuffix(const string& suffix) {
     if (hasSuffix(suffix)) {
-        erase(_cc-suffix.length(), _cc);
+        erase(_cb - suffix._cb, _cb);
         return true;
     }
     return false;
 }
 
-bool string::replace(const string& search, const string& replacement, bool caseSensitive) {
+bool string::replace(const string& search, const string& replacement) {
     int c=0;
-    int32_t i;
-    while ((i = find(search)) >= 0) {
-        erase(i, i+replacement.length());
-        insert(i, replacement);
+    uint32_t start = 0;
+    while (_cb > start) {
+        start += findStr(this->start()+start, _cb-start, search.start(), search._cb);
+        if (start>=_cb) {
+            break;
+        }
+        auto pTo = start+search._cb;
+        erase(start, pTo);
+        insert(start, replacement);
+        start += replacement._cb;
         c++;
     }
     return c>0;
 }
 
-string::iterator string::iterator::operator++(int) {
-    string::iterator retval = *this; ++(*this); return retval;
-}
-bool string::iterator::operator==(iterator other) const {
-    return _str == other._str && _byteOffset==other._byteOffset;
-}
-bool string::iterator::operator!=(iterator other) const {
-    return !(*this == other);
-}
-string::iterator::reference string::iterator::operator*() {
-    if (_byteOffset<0) return 0;
-    _byteOffsetNext = _byteOffset;
-    return _str->readUtf8(_byteOffsetNext);
-}
-bool string::iterator::eof() const {return _byteOffset<0;}
-char* string::iterator::data() const { return _str->_p + ((_byteOffset<0) ? _str->_cb :  _byteOffset); }
+/*string::ptr string::ptr::operator++(int) {
+    string::ptr retval = *this; ++(*this); return retval;
+}*/
 
 
 string string::lowercase() const {
     string newstr;
-    for (auto c: *this) {
-        char32_t cl;
-        if (c>=0x0041 && c<=0x5a) cl=c+0x20;
-        else if (c>=0xC0 && c<=0xDE) cl=c+0x20;
-        else if (c==0x0178) cl=0x00FF;
-        else if (!(c&1) && (c>=0x0100 && c<=0x0136)) cl = c+1;
-        else if ((c&1) && (c>=0x0139 && c<=0x0147)) cl = c+1;
-        else if (!(c&1) && (c>=0x014A && c<=0x0176)) cl = c+1;
-        // TODO: finish this https://www.ibm.com/support/knowledgecenter/en/ssw_ibm_i_72/nls/rbagslowtoupmaptable.htm
-        else cl = c;
+    uint32_t o=0;
+    while (o<_cb) {
+        char32_t cl = lower(readChar(o));
         newstr.append(cl);
     }
     return newstr;
@@ -510,30 +563,13 @@ string string::format(const char* fmt, ...) {
     return str;
 }
 
-string string::extractUpTo(const string& sep, bool remove) {
-    auto i = find(sep);
-    if (i < 0) {
-        return "";
-    }
-    string result = substr(0,i);
-    erase(0,i+(remove?sep.length():0));
-    return result;
-}
-string string::tokenise(const string& sep) {
-    string token = extractUpTo(sep, true);
-    if (0 == token.length()) {
-        token = *this;
-        *this = "";
-    }
-    return token;
-}
 
 string string::hex(const void* p, int cb) {
     string str;
-    str._cb = str._cc = cb * 2;
-    str._p = (char*)malloc(str._cb + 1);
+    str._cb = cb * 2;
+    str._buf = buf_new(str._cb);
     const char* bytes = (const char*)p;
-    char* o = (char*)str.data();
+    char* o = str._buf;
     for (size_t i=0 ; i<cb ; i++) {
         uint8_t byte = bytes[i];
         uint8_t hi_nib = (byte>>4);
@@ -541,19 +577,20 @@ string string::hex(const void* p, int cb) {
         *o++ = (hi_nib>=10) ? ((hi_nib-10)+'A') : (hi_nib+'0');
         *o++ = (lo_nib>=10) ? ((lo_nib-10)+'A') : (lo_nib+'0');
     }
-    str._p[str._cb] = 0;
+    *o = '\0';
     return str;
 }
 bytearray string::unhex() {
     bytearray ba((_cb+1)>>1);
     uint8_t* p = (uint8_t*)ba.data();
+    char* start = this->start();
     for (int i=0 ; i<_cb ; i+=2) {
-        char ch = _p[i];
+        char ch = start[i];
         uint8_t byte = (ch>='A'&&ch<='F') ? (10+ch-'A') : (
                       (ch>='a'&&ch<='f') ? (10+ch-'a') : (
                       (ch>='0'&&ch<='9') ? (ch-'0') : 0));
         byte <<= 4;
-        ch = _p[i+1];
+        ch = start[i+1];
         byte |= (ch>='A'&&ch<='F') ? (10+ch-'A') : (
                 (ch>='a'&&ch<='f') ? (10+ch-'a') : (
                 (ch>='0'&&ch<='9') ? (ch-'0') : 0));
@@ -564,54 +601,81 @@ bytearray string::unhex() {
 
 
 string string::urlEncode() {
-    string rv;
-    string str(*this);
-    while (str.length() > 0) {
-        int span = (int)strcspn(str.data(), " :/?#[]@!$&'()*+,;=");
-        rv += str.substr(0, span);
-        str.erase(0, span);
-        if (str.length() > 0) {
-            char ch = str.charAt(0);
-            str.erase(0,1);
-            char fmt[8];
-            sprintf(fmt, "%%%02X", ch);
-            rv.append(fmt);
+    char* buf = (char*)malloc(_cb*3+1);
+    char* out = buf;
+    char* in = start();
+    for (int i=0 ; i<_cb ; i++) {
+        char c = in[i];
+        bool asciiOk = (c>='A'&&c<='Z') || (c>='a'&&c<='z') || (c>='0'&&c<='9')
+                    || (c=='-') || (c=='.') || (c=='_') || (c=='~');
+        if (asciiOk) {
+            *out++ = c;
+        } else if (c==' ') {
+            *out++ = '+';
+        } else {
+            sprintf(out, "%%%02X", c);
+            out += 3;
         }
     }
+    *out='\0';
+    string rv(buf, int32_t(out-buf));
+    free(buf);
     return rv;
 }
 
-vector<string> string::split(const string& delimiter) {
+string string::urlDecode() {
+    char* buf = (char*)malloc(_cb+1);
+    char* out = buf;
+    char* in = start();
+    for (int i=0 ; i<_cb ; i++) {
+        char c = in[i];
+        if (c=='+') {
+            *out++ = '-';
+        } else if (c=='%') {
+            string asciiCode(in+i+1, 2);
+            auto asciiVal = asciiCode.unhex();
+            *out++ = asciiVal.data()[0];
+        } else {
+            *out++ = c;
+        }
+    }
+    *out='\0';
+    string rv(buf, int32_t(out-buf));
+    free(buf);
+    return rv;
+}
+
+vector<string> string::split(const string& delimiter, int maxSplits/*=0*/) const {
     if (delimiter.length()==0) {
         return {*this};
     }
     vector<string> result;
-    int32_t start = 0;
-    while (start >= 0) {
-        int32_t next = start;
-        start = find(delimiter, next);
-        result.push_back(substr(next, start));
-        if (start < 0) {
-            break;
+    uint32_t o = 0;
+    while (o<_cb) {
+        uint32_t next = o;
+        o += findStr(start()+o, _cb-o, delimiter.start(), delimiter._cb);
+        result.push_back(substr(next, o));
+        if (maxSplits>0) {
+            maxSplits--;
+            if (maxSplits <=0) {
+                break;
+            }
         }
-        start += delimiter.length();
+        o += delimiter._cb;
     }
     return result;
 }
 
 int32_t string::asInt() {
-    return atoi(_p);
+    return atoi(_buf+_offset);
+}
+float string::asFloat() {
+    return atof(_buf+_offset);
 }
 
-bytearray string::toByteArray(bool copy) {
+bytearray string::toByteArray() {
     bytearray b;
-    if (copy) {
-        b.assign((uint8_t*)_p, _cb);
-    } else {
-        b.assignNoCopy((uint8_t*)_p, _cb);
-        _p = NULL;
-        _cb = _cc = 0;
-    }
+    b.assign((uint8_t*)start(), _cb);
     return b;
 }
 
@@ -620,9 +684,9 @@ bytearray string::toByteArray(bool copy) {
 
 size_t string::hash() const {
 #if INTPTR_MAX == INT64_MAX
-    return CityHash64(_p, _cb);
+    return CityHash64(start(), _cb);
 #elif INTPTR_MAX == INT32_MAX
-    return CityHash32(_p, _cb);
+    return CityHash32(start(), _cb);
 #else
 #error wtf?
 #endif
@@ -637,4 +701,159 @@ string string::join(const vector<string>& vec, const string& delimiter) {
         s += vec[i];
     }
     return s;
+}
+
+/*
+char32_t string::ptr::peek() {
+    if (_offset >= _cb) {
+        return 0;
+    }
+    auto tmp = _offset;
+    return readUtf8(base(), tmp);
+}
+
+char32_t string::ptr::next() {
+    if (_offset >= _cb) {
+        return 0;
+    }
+    return readUtf8(base(), _offset);
+}*/
+
+
+bool string::skipChar(uint32_t& offset, char ch) const {
+    auto s = start();
+    if (s[offset] == ch) {
+        offset++;
+        return true;
+    }
+    return false;
+}
+
+void string::skipWhitespace(uint32_t& offset) const {
+    auto s = start();
+    while (offset < _cb) {
+        char ch=s[offset];
+        if (ch==' ' || ch=='\r' || ch=='\n' || ch=='\t') {
+            offset++;
+        } else {
+            break;
+        }
+    }
+}
+
+inline bool isDigit(char ch) {
+    return ch>='0'&&ch<='9';
+}
+inline bool isIdentifierChar(char ch) {
+    return (ch>='A'&&ch<='Z')
+        || (ch>='a'&&ch<='z')
+        || isDigit(ch)
+        || ch=='_' || ch=='-' || ch=='@';
+}
+inline bool isPunctuatorChar(char ch) {
+    return (ch>=33 && ch<=47)       // !"#$&'()*+,-./
+        || (ch>=58 && ch<=64)       // :;<=>?@
+        || (ch>=91 && ch<=94)       // [\]^
+        || (ch>=123 && ch<=126);    // {|}
+}
+string string::readToken(uint32_t& offset) const {
+    if (offset<_cb) {
+        char32_t ch = peekChar(offset);
+        if (isDigit(ch)) return readNumber(offset);
+        else if (isIdentifierChar(ch)) return readIdentifier(offset);
+        else if (isPunctuatorChar(ch)) {
+            // wtf is this code doing?
+            assert(0);
+            readChar(offset);
+            string str = "";
+            str.append(ch);
+            return str;
+        } else {
+            app->warn("Invalid char '%c'", ch);
+        }
+    }
+    return "";
+}
+
+
+string string::readIdentifier(uint32_t& o) const {
+    auto start = o;
+    while (o < _cb) {
+        char32_t ch = readChar(o);
+        if (!isIdentifierChar(ch)) {
+            rewind(o);
+            break;
+        }
+    }
+    return string(*this, start, o);
+}
+
+string string::readNumber(uint32_t& o) const {
+    auto start = o;
+    bool seenDecimalPoint = false;
+    while (o < _cb) {
+        char32_t ch = readChar(o);
+        if (isDigit(ch)) {
+            continue;
+        }
+        if (ch=='.') {
+            if (!seenDecimalPoint) {
+                seenDecimalPoint = true;
+                continue;
+            }
+        }
+        rewind(o);
+        break;
+    }
+    return string(*this, start, o);
+}
+
+string string::readToEndOfLine(uint32_t& o) const {
+    auto start = o;
+    while (o < _cb) {
+        char32_t ch = readChar(o);
+        if (ch=='\r' || ch=='\n') {
+            rewind(o);
+            break;
+        }
+    }
+    return string(*this, start, _offset);
+}
+
+string string::readUpTo(uint32_t& offset, const string& str) const {
+    auto o = offset;
+    offset += findStr(start()+o, _cb-o, str.start(), str._cb);
+    return string(_buf, _offset+o, _offset+offset);
+}
+string string::readUpTo(uint32_t& offset, char ch) const {
+    auto o = offset;
+    offset += findStr(start()+o, _cb-o, &ch, 1);
+    return string(_buf, _offset+o, _offset+offset);
+}
+
+string string::readUpToOneOf(uint32_t& offset, const string& str) const {
+    auto s = offset;
+    bool found = false;
+    while (offset<_cb && !found) {
+        auto o = offset;
+        char32_t ch = readChar(offset);
+        uint32_t oo = 0;
+        while (oo<str._cb){
+            if (str.readChar(oo) == ch) {
+                offset = o;
+                found = true;
+                break;
+            }
+        }
+    }
+    return string(_buf, s, offset);
+}
+
+bool string::isOneOf(const vector<string>& vec) const {
+    for (auto& e : vec) {
+        if (*this == e) {
+            return true;
+        }
+    }
+    return false;
 }

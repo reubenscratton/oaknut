@@ -54,24 +54,24 @@ bool Stream::writeByteArray(const bytearray& ba) {
 }
 
 bool Stream::readString(string* str) {
-    str->_cb = 0;
-    if (!readBytes(sizeof(str->_cb), (uint8_t*)&str->_cb)) {
+    uint32_t cb;
+    if (!readBytes(sizeof(cb), (uint8_t*)&cb)) {
+        str->_cb = 0;
         return false;
     }
-    str->_p = (char*)malloc(str->_cb + 1);
-    str->_p[str->_cb] = '\0';
-    bool ok = readBytes(str->_cb, str->_p);
-    if (ok) {
-        str->countChars();
-    }
+    str->_cb = cb;
+    str->_buf = string::buf_new(cb); // (char*)malloc(cb + 1);
+    str->_buf[cb] = '\0';
+    bool ok = readBytes(cb, str->_buf);
     return ok;
 }
 
 bool Stream::writeString(const string& str) {
-    if (!writeBytes(sizeof(str._cb), (uint8_t*)&str._cb)) {
+    uint32_t cb = str._cb;
+    if (!writeBytes(sizeof(cb), (uint8_t*)&cb)) {
         return false;
     }
-    return writeBytes(str._cb, (uint8_t*)str._p);
+    return writeBytes(cb, (uint8_t*)str._buf+str._offset);
 }
 
 bool Stream::readVariant(variant* val) {

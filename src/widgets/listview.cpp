@@ -189,9 +189,9 @@ bool ListView::handleInputEvent(INPUTEVENT* event) {
 }
 
 
-void ListView::setContentOffset(POINT contentOffset) {
+void ListView::setContentOffset(POINT contentOffset, bool animated) {
     float dy = _contentOffset.y - contentOffset.y;
-    View::setContentOffset(contentOffset);
+    View::setContentOffset(contentOffset, animated);
     if (dy) {
         updateVisibleItems();
     }

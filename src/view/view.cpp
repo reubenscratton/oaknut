@@ -56,10 +56,10 @@ bool View::applySingleStyle(const string& name, const style& value) {
         processAlignStyleValue(value, &_alignspecHorz, &_alignspecVert);
         return true;
     } else if (name == "alignX") {
-        _alignspecHorz = ALIGNSPEC(value.variantVal(), this);
+        _alignspecHorz = ALIGNSPEC(value.stringVal(), this);
         return true;
     } else if (name == "alignY") {
-        _alignspecVert = ALIGNSPEC(value.variantVal(), this);
+        _alignspecVert = ALIGNSPEC(value.stringVal(), this);
         return true;
     } else if (name == "background") {
         if (handleStatemapDeclaration(name, value)) {
@@ -79,7 +79,7 @@ bool View::applySingleStyle(const string& name, const style& value) {
         } else if (str == "gone") {
             setVisibility(Gone);
         } else {
-            app->warn("Invalid visibility: '%s'", str.data());
+            app->warn("Invalid visibility: '%s'", str.c_str());
         }
         return true;
     } else if (name=="gravity") {
@@ -216,7 +216,7 @@ RenderOp* View::processDrawable(const style& value) {
                 EDGEINSETS insets = subval.edgeInsetsVal();
                 op->setInset(insets);
             } else {
-                app->warn("Unknown drawable attribute: %s", it.first.data());
+                app->warn("Unknown drawable attribute: %s", it.first.c_str());
             }
         }
     } else {
@@ -377,7 +377,7 @@ void View::invalidateRect(const RECT& rect) {
         // Convert view coords to surface coords. If the view owns a private surface then
         // view coords are same as surface coords, no translation is needed
         RECT surfaceRect = rect;
-        if (!_ownsPrivateSurface) {
+        if (!_ownsSurface) {
             surfaceRect.origin.x += _surfaceOrigin.x;
             surfaceRect.origin.y += _surfaceOrigin.y;
         }
@@ -403,11 +403,11 @@ void View::invalidateRect(const RECT& rect) {
 	}
 }
 void View::setUsePrivateSurface(bool usePrivateSurface) {
-	if (usePrivateSurface != _ownsPrivateSurface) {
+	if (usePrivateSurface != _ownsSurface) {
         if (_surface) {
             detachFromSurface();
         }
-		_ownsPrivateSurface = usePrivateSurface;
+		_ownsSurface = usePrivateSurface;
         _surface = NULL;
         setNeedsFullRedraw();
 	}
@@ -462,7 +462,7 @@ void View::adjustSurfaceOrigin(const POINT& d) {
     _surfaceOrigin += d;
     
     // If this view is a surface owner, no need to propagate the change to renderlist or subviews
-    if (_ownsPrivateSurface) {
+    if (_ownsSurface) {
         if (_surface) {
             _surface->markPrivateRenderQuadDirty();
         }
@@ -679,7 +679,7 @@ void View::layout(RECT constraint) {
         } else {
             refSize.width = constraint.size.width;
         }
-        assert(refSize.width >= 0); // relative-size to content-wrapping parent not allowed!
+        // assert(refSize.width >= 0); // relative-size to content-wrapping parent not allowed!
     }
     else if (_widthMeasureSpec.type==MEASURESPEC::TypeFill) {
         if (_alignspecHorz.anchor) assert(_alignspecHorz.anchor->_layoutValid);
@@ -699,7 +699,7 @@ void View::layout(RECT constraint) {
         } else {
             refSize.height = constraint.size.height;
         }
-        assert(refSize.height >= 0); // relative-size to content-wrapping parent not allowed!
+        // assert(refSize.height >= 0); // relative-size to content-wrapping parent not allowed!
     }
     else if (_heightMeasureSpec.type==MEASURESPEC::TypeFill) {
         if (_alignspecVert.anchor) assert(_alignspecVert.anchor->_layoutValid);
@@ -729,7 +729,7 @@ void View::layout(RECT constraint) {
     }
 #if DEBUG
     if (_debugTag.length()) {
-        app->log("%s: contentSize is %f x %f", _debugTag.data(), _contentSize.width, _contentSize.height);
+        app->log("%s: contentSize is %f x %f", _debugTag.c_str(), _contentSize.width, _contentSize.height);
     }
 #endif
 
@@ -761,7 +761,7 @@ void View::layout(RECT constraint) {
         
 #if DEBUG
         if (_debugTag.length()) {
-            app->log("%s: laying out subviews in %s", _debugTag.data(), constraintForSubviews.toString().data());
+            app->log("%s: laying out subviews in %s", _debugTag.c_str(), constraintForSubviews.toString().c_str());
         }
 #endif
 
@@ -812,7 +812,7 @@ void View::layout(RECT constraint) {
     
 #if DEBUG
     if (_debugTag.length()) {
-        app->log("%s: < layout() _rect is %s", _debugTag.data(), _rect.toString().data());
+        app->log("%s: < layout() _rect is %s", _debugTag.c_str(), _rect.toString().c_str());
     }
 #endif
 
@@ -896,11 +896,17 @@ void View::detachFromSurface() {
         }
     
         // If this view owns its surface, remove the op that renders it from the render target
-        if (_ownsPrivateSurface && _surface->_op) {
+        if (_ownsSurface && _surface->_op) {
             _surface->_op = NULL;
         }
         
         _surface = nullptr;
+
+        // Recurse through subviews
+        for (vector<sp<View>>::iterator it = _subviews.begin(); it!=_subviews.end() ; it++) {
+            sp<View> subview = *it;
+            subview->detachFromSurface();
+        }
 
     }
 
@@ -1184,7 +1190,7 @@ POINT View::getContentOffset() const {
     return _contentOffset;
 }
 
-void View::setContentOffset(POINT contentOffset) {
+void View::setContentOffset(POINT contentOffset, bool animated/*=false*/) {
     POINT d = _contentOffset - contentOffset;
 	if (d.isZero()) {
         return;
@@ -1314,12 +1320,10 @@ View* View::dispatchInputEvent(INPUTEVENT* event) {
 			return hitView;
 		}
         event->ptLocal -= hitView->_contentOffset;
-        hitPoint.x += hitView->_rect.origin.x;
-        hitPoint.y += hitView->_rect.origin.y;
+        hitPoint += hitView->_rect.origin;
 		hitView = hitView->_parent;
         if (hitView) {
-            hitPoint.x -= hitView->_contentOffset.x;
-            hitPoint.y -= hitView->_contentOffset.y;
+            hitPoint -= hitView->_contentOffset;
         }
 	}
 
@@ -1506,7 +1510,7 @@ void View::setTranslate(POINT translation) {
         _matrix->identity();
         _matrix->translate(translation.x, translation.y, 0);
     }
-    if (_ownsPrivateSurface) {
+    if (_ownsSurface) {
         setNeedsFullRedraw();
     }
     if (!_window->_redrawNeeded) {
@@ -1522,7 +1526,7 @@ string View::debugViewType() {
 }
 string View::debugDescription() {
     char ach[256];
-    sprintf(ach, "%lX:%s", (long)this, debugViewType().data());
+    sprintf(ach, "%lX:%s", (long)this, debugViewType().c_str());
     return string(ach);
 }
 void View::debugDumpTree(int depth) {
@@ -1531,7 +1535,7 @@ void View::debugDumpTree(int depth) {
     string line;
     for (int i=0 ; i<depth ; i++) line.append("-");
     line.append(debugDescription());
-    app->log(line.data());
+    app->log(line.c_str());
 
     if (_renderList) {
         for (auto op : _renderList->_ops) {

@@ -21,7 +21,7 @@ public:
         //printf("progress %d/%d\n", done, total);
     }
     static void OnError(URLRequestWeb* req) {
-        printf("error loading url: %s\n", req->_url.data());
+        printf("error loading url: %s\n", req->_url.c_str());
         //todo req->dispatchResult(NULL);
     }
     static void OnImageLoad(URLRequestWeb* req) {
@@ -39,11 +39,11 @@ public:
     static void OnNonImageLoad(URLRequestWeb* req, int httpStatus, uint8_t* data, int data_size, int timestamp, const char* szHeaders) {
         //app->log("status %d len=%d", httpStatus, data_size);
         //string foo((const char*)data, data_size);
-        //app->log("%s", foo.data());
+        //app->log("%s", foo.c_str());
         vector<string> headers = string(szHeaders).split("\r\n");
         map<string,string> headerMap;
         for (auto& header: headers) {
-            int32_t colonPos = header.find(':');
+            int32_t colonPos = header.find(":");
             if (colonPos>0) {
                 string name = header.substr(0, colonPos);
                 string value = header.substr(colonPos+1, -1);
@@ -75,20 +75,20 @@ public:
                 };
                 img.crossOrigin = 'Anonymous';
                 img.src = url;
-            }, this, _url.data(), OnImageLoad, OnError, gotIndex);
+            }, this, _url.c_str(), OnImageLoad, OnError, gotIndex);
         } else {
     
             // Create an XMLHttpRequest
             _val = val::global("XMLHttpRequest").new_();
             
             // Open it
-            _val.call<void>("open", val(_method.data()), val(_url.data()), val(true));
+            _val.call<void>("open", val(_method.c_str()), val(_url.c_str()), val(true));
 
             // Set headers
             for (auto& header : _headers) {
                 const string& headerName = header.first;
                 const string& headerValue = header.second;
-                _val.call<void>("setRequestHeader", val(headerName.data()), val(headerValue.data()));
+                _val.call<void>("setRequestHeader", val(headerName.c_str()), val(headerValue.c_str()));
             }
 
             int gotIndex = val::global("gotSet")(_val).as<int>();
@@ -155,7 +155,7 @@ public:
                 // limit the number of redirections
                 try{if(xhr.channel instanceof Ci.nsIHttpChannel)xhr.channel.redirectionLimit=0;}catch(ex){}
                 
-            }, this, _url.data(), OnProgress, OnNonImageLoad, OnError, gotIndex);
+            }, this, _url.c_str(), OnProgress, OnNonImageLoad, OnError, gotIndex);
 
             // Send
             val body = val::null();

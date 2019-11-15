@@ -32,7 +32,7 @@ public:
         dispatch_async(recordingQueue, ^{
             
             // Create a temporary file to write the asset to
-            NSString* outputPath =  [NSString stringWithUTF8String:_outputPath.data()];
+            NSString* outputPath =  [NSString stringWithUTF8String:_outputPath.c_str()];
             outputURL = [NSURL fileURLWithPath: outputPath];
             [[NSFileManager defaultManager] removeItemAtURL:outputURL error:nil];
             

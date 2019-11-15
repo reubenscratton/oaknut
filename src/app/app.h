@@ -49,7 +49,7 @@ public:
     /** Load a file from the assets directory, synchronously. Since this does IO it's best to
      limit use to app startup and background threads */
     //class ByteBuffer* loadAsset(const char* assetPath);
-    bool loadAsset(const char* assetPath, bytearray& data);
+    bool loadAsset(const string& assetPath, bytearray& data);
 
     /**@}*/
     

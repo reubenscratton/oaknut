@@ -11,6 +11,8 @@ DECLARE_DYNCREATE(ImageView);
 
 ImageView::ImageView() {
     _contentMode = ActualSize;
+    _scrollHorz._disabled = true;
+    _scrollVert._disabled = true;
     applyStyle("ImageView");
     _renderOp = new TextureRenderOp();
     addRenderOp(_renderOp);
@@ -106,7 +108,7 @@ void ImageView::loadImage() {
     if (_assetPath.length() > 0) {
         auto hashVal = _assetPath.hash();
         bytearray data;
-        app->loadAsset(_assetPath.data(), data);
+        app->loadAsset(_assetPath.c_str(), data);
         assert(data.size());
         _imageLoadTask = Bitmap::createFromData(data, [=](Bitmap *bitmap) {
             if (hashVal == _assetPath.hash()) {
@@ -150,8 +152,8 @@ void ImageView::updateContentSize(SIZE constrainingSize) {
             } else {
                 scale = (_contentMode == AspectFit) ? scaleHeight : scaleWidth;
             }
-            _contentSize.width = imageWidth * scale;
-            _contentSize.height = imageHeight * scale;
+            _contentSize.width = ceilf(imageWidth * scale);
+            _contentSize.height = ceilf(imageHeight * scale);
         }
     }
     

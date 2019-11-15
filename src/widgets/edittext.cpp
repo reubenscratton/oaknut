@@ -58,7 +58,7 @@ bool EditText::applySingleStyle(const string& name, const style& value) {
         } else if (softKeyboardType == "general") {
             _softKeyboardType = KeyboardGeneral;
         } else {
-            app->warn("invalid softKeyboardType '%s'", softKeyboardType.data());
+            app->warn("invalid softKeyboardType '%s'", softKeyboardType.c_str());
         }
         return true;
     }
@@ -75,7 +75,7 @@ bool EditText::applySingleStyle(const string& name, const style& value) {
         } else if (actionType == "go") {
             _actionType = ActionGo;
         } else {
-            app->warn("invalid actionType '%s'", actionType.data());
+            app->warn("invalid actionType '%s'", actionType.c_str());
         }
         return true;
     }
@@ -203,9 +203,9 @@ bool EditText::insertText(string insertionText, int replaceStart, int replaceEnd
     }
     string text = getText();
     if (replaceEnd-replaceStart > 0) {
-        text.erase(replaceStart, replaceEnd);
+        text.eraseAt(replaceStart, replaceEnd);
     }
-    text.insert(replaceStart, insertionText);
+    text.insertAt(replaceStart, insertionText);
     if (_maxLength>0 && text.length() > _maxLength) {
         return false;
     }
@@ -218,14 +218,14 @@ void EditText::deleteBackward() {
     if (_selectionStart != _insertionPoint) {
         int s = MIN(_selectionStart, _insertionPoint);
         int e = MAX(_selectionStart, _insertionPoint);
-        text.erase(s, e);
+        text.eraseAt(s, e);
         setText(text);
         int newInsertionPoint = MIN(s, (int)text.length());
         setInsertionPointReal(newInsertionPoint);
         _selectionStart = newInsertionPoint;
     }
     else if (_insertionPoint > 0) {
-        text.erase(_insertionPoint - 1);
+        text.eraseAt(_insertionPoint - 1);
         _insertionPoint--;
         _selectionStart--;
         setText(text);
@@ -358,7 +358,7 @@ void EditText::setMaxLength(int32_t maxLength) {
         auto& text = _textLayout.getText();
         if (text.length() > maxLength) {
             AttributedString truncText = text;
-            truncText.erase(maxLength, -1);
+            truncText.eraseAt(maxLength);
             setText(truncText);
         }
     }

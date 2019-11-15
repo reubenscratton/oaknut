@@ -23,7 +23,7 @@ public:
 
     void open(const string& assetPath) override {
         assert(_status == Unready);
-        NSURL* url = [NSURL fileURLWithPath:[NSString stringWithUTF8String:assetPath.data()]];
+        NSURL* url = [NSURL fileURLWithPath:[NSString stringWithUTF8String:assetPath.c_str()]];
         _player = [[AVPlayer alloc] initWithURL:url];
         _helper = [[AVPlayerHelper alloc] initWithPlayer:this];
         NSDictionary* settings = @{ (id)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA) };

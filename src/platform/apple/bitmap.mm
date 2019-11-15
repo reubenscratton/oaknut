@@ -136,17 +136,25 @@ void BitmapApple::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
 
 BitmapApple* bitmapFromData(bytearray& data) {
     CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, data.data(), data.size(), NULL);
-    CGImageRef cgImage = CGImageCreateWithPNGDataProvider(dataProvider, NULL, NO, kCGRenderingIntentDefault);
-    if (!cgImage) {
+    CGImageRef cgImage;
+    auto hdr = data.data();
+    bool isPNG = (hdr[0]==0x89 && hdr[1]=='P' && hdr[2]=='N' && hdr[3]=='G');
+    if (isPNG) {
+        cgImage = CGImageCreateWithPNGDataProvider(dataProvider, NULL, NO, kCGRenderingIntentDefault);
+    } else if (hdr[0]==0xFF && hdr[1]==0xD8) {
         cgImage = CGImageCreateWithJPEGDataProvider(dataProvider, NULL, NO, kCGRenderingIntentDefault);
-    }
-    if (!cgImage) {
-        return NULL;
+    } else {
+        //NSImage* img = [[NSImage alloc] initWithData:[NSData dataWithBytesNoCopy:data.data() length:data.size()]];
+        //cgImage = [img CGImageForProposedRect:nil context:nil hints: nil];
+        //if (!cgImage) {
+            return NULL;
+        //}
+        //CGImageRetain(cgImage);
     }
     CGColorSpaceRef colorspace = CGImageGetColorSpace(cgImage);
     CGColorSpaceModel colormodel = CGColorSpaceGetModel(colorspace);
     size_t bpp = CGImageGetBitsPerPixel(cgImage);
-    if (bpp < 8 || bpp > 32 || (colormodel != kCGColorSpaceModelMonochrome && colormodel != kCGColorSpaceModelRGB)) {
+    if (bpp < 8 || bpp > 32 /*|| (colormodel != kCGColorSpaceModelMonochrome && colormodel != kCGColorSpaceModelRGB)*/) {
         assert(0 && "unsupported CGImage type");
         return NULL;
     }
@@ -284,11 +292,15 @@ public:
                 return;
             }
             _bitmap = bitmapFromData(data_attached);
-            _bitmap->retain();
+            if (_bitmap) {
+                _bitmap->retain();
+            }
             dispatch_async(dispatch_get_main_queue(), ^() {
                 Bitmap* bitmap = _bitmap;
                 complete(); // calls release(), could destroy this
-                bitmap->release();
+                if (bitmap) {
+                    bitmap->release();
+                }
             });
         });
 

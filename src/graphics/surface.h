@@ -38,7 +38,7 @@ public:
     list<sp<RenderBatch>> _listBatches;
     int _mvpNum, _mvpNumPeak;
     sp<Texture> _texture; // null on primary surface
-    
+
     Surface(Renderer* renderer, bool isPrivate);
 
     virtual void render(View* view, Renderer* renderer);
@@ -60,7 +60,8 @@ public:
     sp<RenderOp> _op;
     void markPrivateRenderQuadDirty();
     
-
+    void checkSanity(View* view, bool dump);
+    
 private:
     void renderPhase1(Renderer* renderer, View* view, RECT surfaceRect);
     void renderPhase2(Renderer* renderer);

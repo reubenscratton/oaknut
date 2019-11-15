@@ -35,7 +35,7 @@ string BNImage::urlForWidth(float width) {
     string fmt = BNPolicy::current()->_endpointImageChef->getHREF();
     fmt.replace("%@", "%s");
     string strWidth = string::format("%d", (int)width);
-    return string::format(fmt.data(), strWidth.data(), _modelId.data());
+    return string::format(fmt.c_str(), strWidth.c_str(), _modelId.c_str());
 }
 
 SIZE BNImage::sizeForImageInView(BNImage* image, View* view) {

@@ -20,6 +20,7 @@ public:
         stub(const string& id, const string& name, const string& format);
         stub(const string& id, const string& name);
         bool operator==(const stub& stub) const;
+        bool operator<(const stub& stub) const;
         
         static stub fromID(const string& id, const string& name, const string& format);
         static stub fromID(const string& id, const string& name);

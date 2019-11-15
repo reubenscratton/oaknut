@@ -83,7 +83,7 @@
     [super layoutSubviews];
     int scale = [UIScreen mainScreen].scale;
     CGRect bounds = self.bounds;
-    _window->resizeSurface(bounds.size.width * scale, bounds.size.height * scale, scale);
+    _window->resizeSurface(bounds.size.width * scale, bounds.size.height * scale);
 }
 
 - (void)handleTouches:(NSSet<UITouch *> *)touches eventType:(int)eventType remove:(BOOL)remove {
@@ -112,8 +112,8 @@
         inputEvent.deviceType = INPUTEVENT::Mouse;
         inputEvent.deviceIndex = 0;
         inputEvent.type = eventType;
-        inputEvent.pt.x = pt.x*_window->_scale;
-        inputEvent.pt.y = pt.y*_window->_scale;
+        inputEvent.pt.x = pt.x*app->_defaultDisplay->_scale;
+        inputEvent.pt.y = pt.y*app->_defaultDisplay->_scale;
         inputEvent.time = touch.timestamp*1000;
         _window->dispatchInputEvent(inputEvent);
         [self setNeedsDisplay];

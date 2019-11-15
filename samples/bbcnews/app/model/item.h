@@ -1,6 +1,6 @@
 #pragma once
 #include "content.h"
-#include "../articles/element.h"
+#include "../ui/articles/element.h"
 
 class BNCollection;
 class BNImage;

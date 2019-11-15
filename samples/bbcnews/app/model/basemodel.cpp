@@ -62,7 +62,7 @@ BNBaseModel* BNBaseModel::createModelObjectFromJson(const variant& json) {
     if (factoryFunc != s_factory.end()) {
         return factoryFunc->second(json);
     }
-    app->warn("Unknown content type '%s'", type.data());
+    app->warn("Unknown content type '%s'", type.c_str());
 	return new BNBaseModel(json);
 }
 
@@ -99,7 +99,7 @@ BNBaseModel* BNBaseModel::findChildObject(const string& primaryType, const strin
             return rel->_childObject;
         }
     }
-    return nil;
+    return nullptr;
 }
 
 static bool contains(const vector<string>& vec, const string& val) {
@@ -109,7 +109,7 @@ static bool contains(const vector<string>& vec, const string& val) {
         // NSRegularExpressionSearch option. Oaknut desperately needs "proper" regex support...
         if (it.hasSuffix("+")) {
             string prefix = it;
-            prefix.erase(prefix.length()-1, prefix.length());
+            prefix.eraseLast();
             if (val == prefix) {
                 return true;
             }

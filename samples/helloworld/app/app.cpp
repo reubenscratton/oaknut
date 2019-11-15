@@ -11,7 +11,7 @@
 class HelloWorldApp : public App {
     void main() override {
         Label* label = new Label();
-        label->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Fill());
+        label->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Fill());
         label->setBackgroundColor(0xFFFFFFFF);
         label->setGravity({GRAVITY_CENTER, GRAVITY_CENTER});
         label->setText("Hello World!");

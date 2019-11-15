@@ -38,7 +38,7 @@ public:
     //void invalidateContentSize() override;
     void layout(RECT constraint) override;
     void onEffectiveTintColorChanged() override;
-    void setContentOffset(POINT contentOffset) override;
+    void setContentOffset(POINT contentOffset, bool animated=false) override;
     void setGravity(GRAVITY gravity) override;
     void updateContentSize(SIZE constrainingSize) override;
     void updateRenderOps() override;

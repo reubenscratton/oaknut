@@ -191,7 +191,7 @@ int variant::intVal() const {
         case UINT64: return _u64;
         case FLOAT32: return (int)_f32;
         case FLOAT64: return (int)_f64;
-        case STRING: return atoi(_str->data());
+        case STRING: return atoi(_str->c_str());
         case MEASUREMENT: return (int)_measurement.val();
         default: break;
     }
@@ -226,6 +226,44 @@ bool variant::boolVal(const char* name) const {
     return get(name).boolVal();
 }
 
+static void skipWhitespaceAndComments(const string& str, uint32_t& it) {
+    bool newLine = false;
+    while (it != str.end()) {
+        char32_t ch = str.peekChar(it);
+        if (ch=='\r' || ch=='\n') {
+            newLine = true;
+            str.readChar(it);
+        } else if (ch==' ' || ch=='\t') {
+            str.readChar(it);
+        } else {
+            if (newLine) {
+                if (ch=='#' || (ch=='/' && str.skipString(it, "//"))) {
+                    while (it != str.end()) {
+                        ch = str.peekChar(it);
+                        if (ch=='\r' || ch=='\n') {
+                            break;
+                        } else {
+                            str.readChar(it);
+                        }
+                    }
+                    continue;
+                }
+            }
+            break;
+        }
+    }
+}
+
+static void skipSpacesAndTabs(const string& str, uint32_t& o) {
+    while(o<str.lengthInBytes()) {
+        char32_t ch = str.peekChar(o);
+        if (ch==' ' || ch=='\t') {
+            str.readChar(o);
+        } else {
+            break;
+        }
+    }
+}
 
 float variant::floatVal() const {
     switch (type) {
@@ -237,7 +275,7 @@ float variant::floatVal() const {
         case FLOAT32: return _f32;
         case FLOAT64: return (float)_f64;
         case MEASUREMENT: return _measurement.val();
-        case STRING: return atof(_str->data());
+        case STRING: return atof(_str->c_str());
         default: break;
     }
     app->warn("floatVal() called on non-numeric Variant");
@@ -257,7 +295,7 @@ double variant::doubleVal() const {
         case FLOAT32: return _f32;
         case FLOAT64: return _f64;
         case MEASUREMENT: _measurement.val();
-        case STRING: return atof(_str->data());
+        case STRING: return atof(_str->c_str());
         default: break;
     }
     app->warn("doubleVal() called on non-numeric Variant");
@@ -457,7 +495,7 @@ void variant::clear() {
 const char* variant::debugString() const {
     string j = toJson();
     char* foo = (char*)malloc(j.lengthInBytes()+1);
-    memcpy(foo, j.data(), j.lengthInBytes()+1);
+    memcpy(foo, j.c_str(), j.lengthInBytes()+1);
     return foo;
 }
 #endif
@@ -471,8 +509,8 @@ string variant::toJson() const {
         case UINT64: return string::format("%lu", _u64);
         case FLOAT32: return string::format("%f", (double)_f32);
         case FLOAT64: return string::format("%f", _f64);
-        case STRING: return string::format("\"%s\"", _str->data());
-        case MEASUREMENT: return string::format("\"%s\"", _measurement.toString().data());
+        case STRING: return string::format("\"%s\"", _str->c_str());
+        case MEASUREMENT: return string::format("\"%s\"", _measurement.toString().c_str());
         case BYTEARRAY: {
             app->warn("TODO! bytearray json representation needed");
             break;
@@ -496,7 +534,7 @@ string variant::toJson() const {
                 for (auto it=_map->begin() ; it != _map->end() ; it++) {
                     if (it != _map->begin()) s.append(",");
                     auto& field = it;
-                    s.append(string::format("\"%s\":", field->first.data()));
+                    s.append(string::format("\"%s\":", field->first.c_str()));
                     s.append(field->second.toJson());
                 }
             }
@@ -508,23 +546,22 @@ string variant::toJson() const {
 }
 
 
-string parseString(StringProcessor& it) {
+static string parseString(const string& s, uint32_t& o) {
     string str;
     bool quoted = false, endquote = false;
-    char32_t ch = it.peek();
+    char32_t ch = s.peekChar(o);
     quoted = (ch == '\"');
     if (quoted) {
-        it.next();
+        s.readChar(o);
     }
-    for (;;) {
-        auto charStart = it.current();
-        ch = it.peek();
+    while (o < s.lengthInBytes()) {
+        ch = s.peekChar(o);
         if (!quoted) {
             if (ch=='\n' || ch=='\r' || ch == ',' || ch==':' || ch=='}') {
                 break;
             }
         }
-        it.next();
+        ch = s.readChar(o);
         if (ch==0) {
             break;
         }
@@ -534,8 +571,8 @@ string parseString(StringProcessor& it) {
         }
         // Escapes
         if (ch=='\\') {
-            charStart++;
-            ch = it.next();
+            // charStart++;
+            ch = s.readChar(o);
             bool legalEscape = (ch=='\"' || ch=='\'' || ch=='\\');
             if (!quoted) {
                 legalEscape |= (ch == ',' || ch==':' || ch=='}');
@@ -558,26 +595,26 @@ string parseString(StringProcessor& it) {
 
 // I cannot get strtol or stoi to work on Emscripten... they return garbage. Hence
 // rolling my own...
-variant variant::parseNumber(StringProcessor& it) {
+variant variant::parseNumber(const string& str, uint32_t& o) {
     variant val = 0ULL;
     
     // Skip leading '+' and '-'
     bool neg = false;
-    while (it.peek()=='+' || it.peek()=='-') {
-        if (it.peek()=='-') {
+    char32_t ch = str.peekChar(o);
+    while (ch=='+' || ch=='-') {
+        if (ch=='-') {
             neg=!neg;
         }
-        it.next();
-        it.skipWhitespace();
+        str.readChar(o);
+        str.skipWhitespace(o);
+        ch = str.peekChar(o);
     }
     
     int base = 10;
     
     // Hex?
-    if (it.peek()=='0') {
-        it.next();
-        if (it.peek()=='x') {
-            it.next();
+    if (str.skipChar(o, '0')) {
+        if (str.skipChar(o, 'x')) {
             base = 16;
         }
     }
@@ -585,7 +622,7 @@ variant variant::parseNumber(StringProcessor& it) {
     bool isFloat = false;
     double fraction=0;
     for (;;) {
-        char32_t ch = it.peek();
+        char32_t ch = str.peekChar(o);
         if ((ch>='0' && ch<='9') || (base==16 && ((ch>='a'&&ch<='f')||(ch>='A'&&ch<='F')))) {
             int digit = (ch-'0');
             if (ch>='a' && ch<='f') digit = (ch+10-'a');
@@ -596,12 +633,12 @@ variant variant::parseNumber(StringProcessor& it) {
                 fraction/=base;
                 val._f64 += digit*fraction;
             }
-            it.next();
+            str.readChar(o);
         } else if (ch=='.') {
             isFloat = true;
             fraction = 1;
             val._f64 = val._i64;
-            it.next();
+            str.readChar(o);
         }
         
         else {
@@ -632,49 +669,54 @@ variant variant::parseNumber(StringProcessor& it) {
 
     
     // Handle measurement suffixes
-    if (it.nextWas("%")) {
+    if (str.skipChar(o, '%')) {
         val._measurement = measurement(val.floatVal(), measurement::PC);
         val.type=variant::MEASUREMENT;
-    } else if (it.nextWas("dp")) {
+    } else if (str.skipString(o, "dp")) {
         val._measurement = measurement(val.floatVal(), measurement::DP);
         val.type=variant::MEASUREMENT;
-    } else if (it.nextWas("sp")) {
+    } else if (str.skipString(o, "sp")) {
         val._measurement = measurement(val.floatVal(), measurement::SP);
         val.type=variant::MEASUREMENT;
-    } else if (it.nextWas("px")) {
+    } else if (str.skipString(o, "px")) {
         val._measurement = measurement(val.floatVal(), measurement::PX);
         val.type=variant::MEASUREMENT;
     }
     return val;
 }
 
+variant variant::parse(const string& str, int flags) {
+    uint32_t it = 0;
+    return parse(str, it, flags);
+}
 
-variant variant::parse(StringProcessor& it, int flags) {
-    variant val;
-    it.skipWhitespaceAndComments();
+variant variant::parse(const string& str, uint32_t& it, int flags) {
     
+    variant val;
+
+    skipWhitespaceAndComments(str, it);
 
     // Parse a compound value
-    char32_t ch = it.peek();
+    char32_t ch = str.peekChar(it);
     if (ch == '{') {
-        it.next();
+        str.readChar(it);
         val.type = MAP;
         val._map = new map<string,variant>();
-        it.skipWhitespaceAndComments();
-        while (it.peek() != '}' && !it.eof()) {
-            it.skipWhitespaceAndComments();
-            string fieldName = parseString(it);
-            //app->log(fieldName.data());
-            if (!fieldName.length()) {
+        skipWhitespaceAndComments(str, it);
+        while (str.peekChar(it) != '}' && it<str.lengthInBytes()) {
+            skipWhitespaceAndComments(str, it);
+            string fieldName = parseString(str, it);
+            // app->log(fieldName.c_str());
+            if (!fieldName) {
                 app->log("Invalid json: field name expected");
                 return val;
             }
-            it.skipWhitespaceAndComments();
-            if (it.next() != ':') {
+            skipWhitespaceAndComments(str, it);
+            if (str.readChar(it) != ':') {
                 app->log("Invalid json: ':' expected");
                 return val;
             }
-            variant fieldValue = parse(it, (flags & ~PARSEFLAG_EXPLICIT_ARRAY));
+            variant fieldValue = parse(str, it, (flags & ~PARSEFLAG_EXPLICIT_ARRAY));
             
             auto tt = val._map->emplace(std::move(fieldName), std::move(fieldValue));
             if (!tt.second) {
@@ -682,13 +724,12 @@ variant variant::parse(StringProcessor& it, int flags) {
                 //it.first = val;
             }
             
-            it.skipWhitespaceAndComments();
+            skipWhitespaceAndComments(str, it);
 
             // JSON object fields are separated by commas
             if (flags & PARSEFLAG_JSON) {
-                if (it.peek() == ',') {
-                    it.next();
-                    it.skipWhitespace();
+                if (str.skipChar(it, ',')) {
+                    str.skipWhitespace(it);
                 }
             }
             //val.set(fieldName, std::move(fieldValue));
@@ -703,22 +744,22 @@ variant variant::parse(StringProcessor& it, int flags) {
                 break;
             }*/
         }
-        it.next();
+        str.readChar(it);
     }
     
     // Parse an explicit array
     else if (ch == '[') {
-        it.next();
+        str.readChar(it);
         val.type = ARRAY;
         val._vec = new vector<variant>();
-        it.skipWhitespaceAndComments();
-        while (it.peek() != ']' && !it.eof()) {
-            variant element = variant::parse(it, flags | PARSEFLAG_EXPLICIT_ARRAY);
+        skipWhitespaceAndComments(str, it);
+        while (str.peekChar(it) != ']' && it<str.lengthInBytes()) {
+            variant element = variant::parse(str, it, flags | PARSEFLAG_EXPLICIT_ARRAY);
             val._vec->push_back(std::move(element));
-            it.skipWhitespaceAndComments();
-            char32_t sep = it.peek();
+            skipWhitespaceAndComments(str, it);
+            char32_t sep = str.peekChar(it);
             if (sep == ',') {
-                it.next();
+                str.readChar(it);
             } else {
                 if (sep != ']') {
                     app->log("Invalid json: ',' or array end expected");
@@ -726,37 +767,34 @@ variant variant::parse(StringProcessor& it, int flags) {
                 break;
             }
         }
-        if (it.peek() == ']') {
-            it.next();
-        }
+        str.skipChar(it, ']');
     }
     
     // Scalar values
     else if ((ch>='0' && ch<='9') || ch=='-' || ch=='.') {
-        val = parseNumber(it);
-    } else if (ch == 'n' && it.nextWas("null")) {
+        val = parseNumber(str, it);
+    } else if (ch == 'n' && str.skipString(it, "null")) {
         val.setType(EMPTY); // should we have null? is it really meaningful?
-    } else if (ch == 't' && it.nextWas("true")) {
+    } else if (ch == 't' && str.skipString(it, "true")) {
         val.setInt32(1);
-    } else if (ch == 'f' && it.nextWas("false")) {
+    } else if (ch == 'f' && str.skipString(it, "false")) {
         val.setInt32(0);
     } else {
-        val = parseString(it);
+        val = parseString(str, it);
     }
 
     // Implicit array value
-    it.skipSpacesAndTabs();
-    char32_t sep = it.peek();
+    skipSpacesAndTabs(str, it);
+    char32_t sep = str.peekChar(it);
     if (sep == ',' && !(flags&(PARSEFLAG_JSON|PARSEFLAG_EXPLICIT_ARRAY))) {
         //it.next();
         variant firstElem(std::move(val));
         val.setType(ARRAY);
         val._vec->push_back(std::move(firstElem));
-        while (it.peek() == ',') {
-            it.next();
-            variant elem = variant::parse(it, PARSEFLAG_EXPLICIT_ARRAY);
+        while (str.skipChar(it, ',')) {
+            variant elem = variant::parse(str, it, PARSEFLAG_EXPLICIT_ARRAY);
             val._vec->push_back(std::move(elem));
-            it.skipSpacesAndTabs();
+            skipSpacesAndTabs(str, it);
         }
 
     }
@@ -801,7 +839,7 @@ val variant::toJavascriptVal() const {
             if (_map) {
                 val obj = val::global("Object").new_();
                 for (auto it : *_map) {
-                    obj.set(val(it.first.data()), it.second.toJavascriptVal());
+                    obj.set(val(it.first.c_str()), it.second.toJavascriptVal());
                 }
                 return obj;
             }

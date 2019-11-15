@@ -20,7 +20,9 @@
 #if RENDERER_METAL
     @public
     CAMetalLayer* _metalLayer;
+    CVDisplayLinkRef _displayLink;
 #endif
+    POINT _deltaAcc;
 }
 
 - (id)initWithWindow:(Window*)window;

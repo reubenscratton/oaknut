@@ -38,7 +38,7 @@ public:
         Always
     } _show;
     bool _bounce;
-    bool _canScroll;
+    bool _disabled;
 
     void updateVisibility(View* view, bool isVertical);
     bool canScroll(View* view, bool isVertical);

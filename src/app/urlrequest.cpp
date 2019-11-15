@@ -89,15 +89,14 @@ void URLRequest::dispatchResult(int httpStatus, const map<string, string>& respo
                         release();
                     });
                 } else {
-                    app->warn("Unexpected bitmap type %s", contentType.data());
+                    app->warn("Unexpected bitmap type %s", contentType.c_str());
                 }
         }
     }
     if (contentType.contains("json")) {
         variant json;
         string str = _responseData.toString();
-        StringProcessor it(str);
-        json = variant::parse(it, PARSEFLAG_JSON);
+        json = variant::parse(str, PARSEFLAG_JSON);
         if (onGotJsonInBackground) {
             if (onGotJsonInBackground(json)) {
                 return;

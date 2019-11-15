@@ -25,15 +25,18 @@ public:
     }
     
     void run() override {
-        NSString* urlstr = [NSString stringWithCString:_url.data() encoding:[NSString defaultCStringEncoding]];
+        // Effectively use cache data ONLY, if available,
+        // fall back to network: NSURLRequestReturnCacheDataElseLoad
+        // Normal NSURLRequestReloadRevalidatingCacheData
+        NSString* urlstr = [NSString stringWithCString:_url.c_str() encoding:[NSString defaultCStringEncoding]];
         NSMutableURLRequest* req = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:urlstr] cachePolicy:NSURLRequestReturnCacheDataElseLoad timeoutInterval:15];
-        req.HTTPMethod = [NSString stringWithUTF8String:_method.data()];
+        req.HTTPMethod = [NSString stringWithUTF8String:_method.c_str()];
         if (_body.length() > 0) {
             req.HTTPBody = [NSData dataWithBytes:_body.data() length:_body.size()];
         }
         for (auto& header : _headers) {
-            NSString* headerName = [NSString stringWithUTF8String:header.first.data()];
-            NSString* headerValue = [NSString stringWithUTF8String:header.second.data()];
+            NSString* headerName = [NSString stringWithUTF8String:header.first.c_str()];
+            NSString* headerValue = [NSString stringWithUTF8String:header.second.c_str()];
             [req setValue:headerValue forHTTPHeaderField:headerName];
         }
         _dataTask = [[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {

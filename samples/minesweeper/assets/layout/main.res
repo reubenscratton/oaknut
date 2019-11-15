@@ -31,6 +31,6 @@
         class: GameView
 		id: game
 		size: wrap
-		align: center, below(topBar)
+		align: center, topBar.below
 	}]
 }

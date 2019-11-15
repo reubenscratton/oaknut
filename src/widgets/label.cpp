@@ -70,7 +70,7 @@ bool Label::applySingleStyle(const string& name, const style& value) {
         setText(value.stringVal());
         return true;
     }
-    if (name=="maxLines") {
+    if (name=="lines") {
         setMaxLines(value.intVal());
         return true;
     }
@@ -157,8 +157,8 @@ void Label::layoutText() {
     }
 }
 
-void Label::setContentOffset(POINT contentOffset) {
-    View::setContentOffset(contentOffset);
+void Label::setContentOffset(POINT contentOffset, bool animated) {
+    View::setContentOffset(contentOffset, animated);
     _textLayout.invalidateOps();
     _updateRenderOpsNeeded = true;
 }
@@ -198,7 +198,7 @@ void Label::updateRenderOps() {
 
     _textLayout.updateRenderOpsForView(this);
     //updateEffectiveAlpha();
-    //app->log("Eff. alpha %f for label '%s'", _effectiveAlpha, _textRenderer._text.data());
+    //app->log("Eff. alpha %f for label '%s'", _effectiveAlpha, _textRenderer._text.c_str());
 }
 
 
@@ -218,7 +218,7 @@ const Attribute* Label::getAttribute(int32_t pos, Attribute::Type type) {
 
 string Label::debugViewType() {
     char ach[256];
-    snprintf(ach, 256, "Label:%s", _textLayout.getText().data());
+    snprintf(ach, 256, "Label:%s", _textLayout.getText().c_str());
     return string(ach);
 }
 
