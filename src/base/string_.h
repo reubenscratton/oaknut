@@ -6,7 +6,6 @@
 //
 
 
-
 /**
  * @ingroup base_group
  * @class string
@@ -43,121 +42,54 @@ class string {
 public:
     
     // Construction
-    string() : _buf(nullptr), _cb(0), _offset(0) {}
+    string() : _buf(nullptr), _cb(0), _offset(0), _type(0) {}
     
     // Constructing from a raw char* creates a new buffer
-    string(const char* p) :  string() { assign(p, p ? (int32_t)strlen(p) : 0);}
+    static inline string static_str(const char* s, uint32_t cb) {
+        string str;
+        str._buf = (char*)s;
+        str._cb = cb;
+        str._type = 1;
+        return str;
+    }
+    template<size_t N>
+    string(const char(&p)[N]) : _buf((char*)p), _cb(N-1), _offset(0), _type(1) { }
+    //string(const char* p) :  string() { assign(p, p ? (int32_t)strlen(p) : 0);}
     string(const char* p, int32_t cb) :  string() { assign(p, cb); }
     
     // Constructing from an existing string does not create a copy
-    string(const string& s) : _buf(s._buf), _cb(s._cb), _offset(s._offset) { if (_buf) buf_retain(_buf);  }
-    string(const string& s, uint32_t offsetFrom, uint32_t offsetTo) : _buf(s._buf), _cb(offsetTo-offsetFrom), _offset(s._offset+offsetFrom) { buf_retain(_buf);  }
-    string(string&& other) noexcept :  _buf(other._buf), _offset(other._offset), _cb(other._cb) {
+    string(const string& s);
+    string(const string& s, uint32_t offsetFrom, uint32_t offsetTo);
+    string(string&& other) noexcept :  _buf(other._buf),  _cb(other._cb), _offset(other._offset), _type(other._type) {
         other._buf = nullptr;
         other._cb = 0;
         other._offset = 0;
+        other._type = 0;
     }
 
-    ~string() {
-        if (_buf) {
-            buf_release(_buf);
-        }
-    }
+    ~string();
     
-    static const uint32_t eof;
+    static const string empty;
     
-    struct bufhdr {
-        uint32_t refs;
-        uint32_t cb;
-        uint32_t cap;
-    };
-    inline struct bufhdr* bufhdr() const {
-        return _buf ? (((struct bufhdr*)_buf)-1) : nullptr;
-    }
     
     // Buffer
-    inline const char* c_str() const {
-        
-        // If this buffer is a substring (i.e. end() is less than the buffer's end) then
-        // create a new buffer/
-        if (_buf) {
-            auto hdr = bufhdr();
-            if (_offset+_cb < hdr->cb) {
-                auto newbuf = buf_new(_cb);
-                memcpy(newbuf, start(), _cb);
-                newbuf[_cb] = '\0';
-                _offset = 0;
-                buf_release(_buf);
-                _buf = newbuf;
-            }
-        }
-        return _buf;
-    }
+    const char* c_str() const;
     int32_t length() const noexcept;
     int32_t lengthInBytes() const noexcept { return _cb; }
 
-    static inline char* buf_new(uint32_t cb);
-    static inline void buf_retain(char* buf);
-    static inline void buf_release(char* buf);
-    inline void buf_realloc(int32_t cbDelta);
     void prepareToModify();
-
-    // Pointer ("ptr") is a UTF-8 iterator with some additional methods for parsing and extracting text
-    /*class ptr : public std::iterator<
-        std::input_iterator_tag,   // iterator_category
-        char32_t,                      // value_type
-        char32_t,                      // difference_type
-        const char32_t*,               // pointer
-        char32_t                       // reference
-        > {
-    public:
-        ptr(const string& s, uint32_t offset) : _buf(s._buf), _offsetBase(s._offset), _offset(offset), _cb(s._cb) { buf_retain(_buf); }
-        ptr(const ptr& p) :  _buf(p._buf), _offsetBase(p._offsetBase), _offset(p._offset), _cb(p._cb) { buf_retain(_buf); }
-        ptr(ptr&& p) noexcept :  _buf(p._buf), _offsetBase(p._offsetBase), _offset(p._offset), _cb(p._cb) { p._buf=nullptr; }
-        ~ptr() { if (_buf) buf_release(_buf); }
-        ptr& operator=(const ptr& p) {
-            buf_release(_buf);
-            _buf = p._buf;
-            buf_retain(_buf);
-            _offsetBase=p._offsetBase;
-            _offset=p._offset;
-            return *this;
-        }
-        ptr& operator++() { readUtf8(base(), _offset); return *this; }
-        ptr operator++(int);
-        friend ptr operator+(ptr lhs, int32_t rhs) { lhs._offset += rhs; return lhs; }
-        friend ptr operator-(ptr lhs, int32_t rhs) { lhs._offset -= rhs; return lhs; }
-        ptr& operator+=(int32_t dBytes) { _offset += dBytes; return *this; }
-        ptr& operator-=(int32_t dBytes) { _offset -= dBytes; return *this; }
-        reference operator*() { auto o=_offset; auto ch = readUtf8(base(), o); return ch; }
-        bool operator==(const ptr& p) const { return (current() == p.current()); }
-        bool operator!=(const ptr& p) const { return !(current() == p.current()); }
-        //operator const char*() const {  return current(); }
-        //operator uint32_t() { return _offset; }
-
-        char32_t next();
-        char32_t peek();
-        bool eof() const { return _offset>=_cb;}
-                                        
-    private:
-        char* _buf;
-        uint32_t _offsetBase;
-        uint32_t _offset;
-        uint32_t _cb;
-
-        friend class string;
-        inline char* base() const { return _buf + _offsetBase; }
-        inline char* current() const { return _buf + _offsetBase + _offset; }
-    };*/
 
     
     // Equality
     bool operator==(const string& rhs) const;
+    bool operator==(const char* rhs) const;
     bool operator!=(const string& rhs) const;
+    bool operator!=(const char* rhs) const;
     explicit operator bool() const { return _cb>0; }
     
     // Collation (NB: locale sensitive)
     int compare(const string& str) const noexcept;
+    int compare(const char* sz, uint32_t szlen=-1) const noexcept;
     bool operator<(const string& rhs) const;
 
     // Reading characters and substrings
@@ -167,8 +99,6 @@ public:
     char32_t operator[](int32_t charIndex) const;
     char32_t charAt(int32_t charIndex) const;
     uint32_t charIndexToOffset(int32_t charIndex) const;
-    // string substr(ptr from) const { return substr(from._offset); }
-    // string substr(ptr from, ptr to) const { return substr(from._offset, to._offset); }
     string substr(uint32_t fromByteOffset, uint32_t toByteOffset=0xFFFFFFFFU) const;
     string substrAt(int32_t fromCharIndex, int32_t toCharIndex=0x7FFFFFFF) const;
     string slice(int32_t fromCharIndex, int32_t toCharIndex=0) const; // Python-style
@@ -204,13 +134,10 @@ public:
     string& operator+=(const string& str) { append(str); return *this; }
     string& operator+=(const char* s) { append(s); return *this; }
     friend string operator+(const string& lhs, const string& rhs);
-    //void insert(ptr p,  const string& str) { assert(p._buf==_buf); insert(p._offset, str); }
     void insert(uint32_t byteOffset, const string& str) { insert(byteOffset, str.start(), str._cb); }
     void insert(uint32_t byteOffset, const char* str, int32_t cb=-1);
     void insertAt(int32_t charIndex, const string& str) { insert(charIndexToOffset(charIndex), str); }
-    //void erase(ptr from) { assert(from._buf==_buf); erase(from._offset); }
-    //void erase(ptr from, ptr to) { assert(from._buf==_buf); assert(to._buf==_buf); erase(from._offset, to._offset); }
-    void erase(uint32_t fromByteOffset, uint32_t toByteOffset=eof);
+    void erase(uint32_t fromByteOffset, uint32_t toByteOffset=0xFFFFFFFF);
     void eraseAt(int32_t fromCharIndex, int32_t toCharIndex=0x7FFFFFFF);
     void eraseLast();
     void trim();
@@ -252,19 +179,20 @@ public:
     
     
 protected:
-    mutable char* _buf;
-    uint32_t _cb;
-    mutable uint32_t _offset;
+    mutable char* _buf; // 8 bytes
+    uint32_t _cb; // 4 bytes
+    struct {
+        mutable uint32_t _offset:24;
+        uint32_t _type:8;
+    };
     inline char* start() const {
         return _buf+_offset;
     }
 
     friend string base64_encode(const string& str);
     
-    /*string(ptr& p, uint32_t offsetFrom, uint32_t offsetTo) : _buf(p._buf) {
-        _offset = p._offsetBase + offsetFrom;
-        _cb = offsetTo-offsetFrom;
-        buf_retain(_buf);
-    }*/
+    void alloc(uint32_t cb);
+    
 };
 
+string operator "" _S(const char *str, std::size_t len);

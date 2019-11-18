@@ -64,11 +64,11 @@ Font* App::defaultFont() {
     return Font::get("", 17.0);
 }
 
-string App::getStyleString(const string& keypath, const char* defaultString) {
+string App::getStyleString(const string& keypath, const string& defaultString) {
     auto value = getStyle(keypath);
     if (!value) {
         if (defaultString) {
-            return string(defaultString);
+            return defaultString;
         }
         app->warn("Missing string style info '%s'", keypath.c_str());
         return "";

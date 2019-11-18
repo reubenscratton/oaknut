@@ -475,7 +475,7 @@ void Window::setSafeInsets(SafeInsetsType type, const EDGEINSETS& insets) {
 
 void Window::updateDecorOp(bool bottom, float height) {
     RectRenderOp*& op = bottom?_renderOpDecorBottom:_renderOpDecorTop;
-    COLOR color = app->getStyleColor(bottom ? "window.safeInsetBackgrounds.bottom" : "window.safeInsetBackgrounds.top");
+    COLOR color = app->getStyleColor(bottom ? "window.safeInsetBackgrounds.bottom"_S : "window.safeInsetBackgrounds.top"_S);
     if (color!=0 && height>0) {
         if (!op) {
             op = new RectRenderOp();

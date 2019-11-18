@@ -54,7 +54,7 @@ public:
         applyStyle("ActionSheet.Group");
     }
     
-    ActionLabel* addAction(const string& text, std::function<void()> action, const string& extraStyle=NULL) {
+    ActionLabel* addAction(const string& text, std::function<void()> action, const string& extraStyle) {
         ActionLabel* actionLabel = new ActionLabel(text);
         if (extraStyle.length()) {
             actionLabel->applyStyle(extraStyle);
@@ -96,7 +96,7 @@ void ActionSheet::onWindowAttached() {
     for (auto& action : _actions) {
         group->addAction(action.first, [=]() {
             dismissWithAction(action.second);
-        });
+        }, "");
     }
  
     // Create the cancel group separately

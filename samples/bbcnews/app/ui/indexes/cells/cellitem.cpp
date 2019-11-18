@@ -232,9 +232,9 @@ void BNCellItem::setItem(BNItem* item) {
     }
 
     _inverseColorScheme = _item->isMediaItem();
-    setBackgroundColor(app->getStyleColor(_inverseColorScheme ? "color.contentBackgroundInv":"color.contentBackground"));
+    setBackgroundColor(app->getStyleColor(_inverseColorScheme ? "color.contentBackgroundInv"_S:"color.contentBackground"_S));
 
-    _headline->setTextColor(app->getStyleColor(_inverseColorScheme ? "color.contentForegroundInv":"color.contentForeground"));
+    _headline->setTextColor(app->getStyleColor(_inverseColorScheme ? "color.contentForegroundInv"_S:"color.contentForeground"_S));
     
     if (_summary) {
         if (_item->_summaryOverride.length()) {

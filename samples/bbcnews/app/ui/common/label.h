@@ -11,8 +11,6 @@ public:
     
     bool applySingleStyle(const string& name, const style& value) override;
 
-    //AttributedString* attributedText;
-    //int numberOfLines;
     float paragraphSpacingBefore;
     float paragraphSpacing;
 

@@ -147,7 +147,7 @@ void App::setIntSetting(const char* key, const int value) {
   getAppEnv()->CallStaticVoidMethod(jclassApp, jmidAppSetPrefsInt,
     (jbyteArray)jstringHelper(key), value);
 }
-string App::getStringSetting(const char *key, const char* defaultValue) {
+string App::getStringSetting(const string& key, const string& defaultValue) {
   jstringHelper ba = (jbyteArray)getAppEnv()->CallStaticObjectMethod(jclassApp, jmidAppGetPrefsString,
     (jbyteArray)jstringHelper(key), (jbyteArray)jstringHelper(defaultValue));
   return ba.toString();

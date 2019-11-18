@@ -7,7 +7,16 @@
 
 #include <oaknut.h>
 
-const uint32_t string::eof = 0xFFFFFFFF;
+const string string::empty;
+
+oak::string oak::operator "" _S(const char *str, std::size_t len) {
+    return oak::string::static_str(str, len);
+}
+
+// Buffer types
+const uint8_t kTypeStandard = 0;
+const uint8_t kTypeStatic = 1;
+const uint8_t kTypeTiny = 2;
 
 const unsigned char kFirstBitMask = 128; // 1000000
 //const unsigned char kSecondBitMask = 64; // 0100000
@@ -15,7 +24,18 @@ const unsigned char kThirdBitMask = 32; // 0010000
 const unsigned char kFourthBitMask = 16; // 0001000
 //const unsigned char kFifthBitMask = 8; // 0000100
 
-inline char* string::buf_new(uint32_t cb) {
+struct bufhdr {
+    uint32_t refs;
+    uint32_t cb;
+    uint32_t cap;
+};
+inline struct bufhdr* BUFHDR(char* _buf) {
+    return _buf ? (((struct bufhdr*)_buf)-1) : nullptr;
+}
+
+
+
+static inline char* buf_new(uint32_t cb) {
     // static int s_strmallocs=0;
     // static uint32_t s_malloctotal=0;
     // s_strmallocs++;
@@ -28,19 +48,19 @@ inline char* string::buf_new(uint32_t cb) {
     hdr++;
     return (char*)hdr;
 }
-inline void string::buf_retain(char* buf) {
+static inline void buf_retain(char* buf) {
     struct bufhdr* hdr = (struct bufhdr*)(buf-sizeof(struct bufhdr));
     hdr->refs++;
 }
-inline void string::buf_release(char* buf) {
+static inline void buf_release(char* buf) {
     struct bufhdr* hdr = (struct bufhdr*)(buf-sizeof(struct bufhdr));
     assert(hdr->refs < 1000);
     if (0==--hdr->refs) {
         free(hdr);
     }
 }
-inline void string::buf_realloc(int32_t cbDelta) {
-    auto hdr = bufhdr();
+static inline void buf_realloc(char*& buf, int32_t cbDelta) {
+    auto hdr = BUFHDR(buf);
     uint32_t cbNew = (hdr ? hdr->cap : 0) + cbDelta;
     auto hdrNew = (struct bufhdr*)realloc(hdr, sizeof(struct bufhdr) + cbNew + 1);
     hdrNew->cap = cbNew;
@@ -49,9 +69,72 @@ inline void string::buf_realloc(int32_t cbDelta) {
         hdrNew->refs = 1;
     }
     hdrNew++;
-    _buf = (char*)hdrNew;
+    buf = (char*)hdrNew;
+}
+void string::prepareToModify() {
+    if (_type == kTypeStatic) {
+        auto buf = buf_new(_cb);
+        memcpy(buf, _buf+_offset, _cb);
+        _buf = buf;
+        _offset = 0;
+        _type = kTypeStandard;
+    } else {
+        auto hdr = BUFHDR(_buf);
+        if (hdr->refs > 1) {
+            buf_release(_buf);
+            auto buf = buf_new(_cb);
+            memcpy(buf, _buf+_offset, _cb);
+            _buf = buf;
+            _offset = 0;
+        }
+    }
 }
 
+
+void string::alloc(uint32_t cb) {
+    clear();
+    _buf = buf_new(cb);
+    _cb = cb;
+    _buf[cb] = '\0';
+    _offset = 0;
+}
+
+
+string::string(const string& s) : _buf(s._buf), _cb(s._cb), _offset(s._offset), _type(s._type) {
+    if (_buf && _type==kTypeStandard) {
+        buf_retain(_buf);
+    }
+}
+string::string(const string& s, uint32_t offsetFrom, uint32_t offsetTo) : _buf(s._buf), _cb(offsetTo-offsetFrom), _offset(s._offset+offsetFrom), _type(s._type) {
+    if (_type == kTypeStandard) {
+        buf_retain(_buf);
+    }
+}
+
+string::~string() {
+   if (_buf && _type == kTypeStandard) {
+       buf_release(_buf);
+   }
+}
+
+
+const char* string::c_str() const {
+    
+    // If this buffer is a substring (i.e. end() is less than the buffer's end) then
+    // create a new buffer/
+    if (_buf && _type==kTypeStandard) {
+        auto hdr = BUFHDR(_buf);
+        if (_offset+_cb < hdr->cb) {
+            auto newbuf = buf_new(_cb);
+            memcpy(newbuf, start(), _cb);
+            newbuf[_cb] = '\0';
+            _offset = 0;
+            buf_release(_buf);
+            _buf = newbuf;
+        }
+    }
+    return _buf;
+}
 
 char32_t lower(char32_t c) {
     if (c>=0x0041 && c<=0x5a) return c+0x20;
@@ -93,11 +176,28 @@ int string::compare(const string& str) const noexcept {
     else if (_cb > str._cb) return 1;
     return 0;
 }
+int string::compare(const char* sz, uint32_t szlen) const noexcept {
+    if (szlen==0xFFFFFFFF) szlen = uint32_t(strlen(sz));
+    int cb = MIN(_cb, szlen);
+    int r = memcmp(_buf+_offset, sz, cb);
+    if (r!=0) {
+        return r;
+    }
+    if (_cb < szlen) return -1;
+    else if (_cb > szlen) return 1;
+    return 0;
+}
 bool string::operator==(const string& rhs) const {
     return 0==compare(rhs);
 }
+bool string::operator==(const char* rhs) const {
+    return 0==compare(rhs, 0xFFFFFFFF);
+}
 bool string::operator!=(const string& rhs) const {
     return 0!=compare(rhs);
+}
+bool string::operator!=(const char* rhs) const {
+    return 0!=compare(rhs, 0xFFFFFFFF);
 }
 bool string::operator<(const string& rhs) const {
     return compare(rhs)<0;
@@ -296,22 +396,10 @@ static inline uint32_t findStr(const char* buf, uint32_t buflen, const char* tex
 }
 
 uint32_t string::find(const char* szTextToFind, int32_t szTextLen/*=-1*/, uint32_t fromOffset/*=0*/) const {
-    if (!szTextToFind || !szTextToFind[0]) return string::eof; // searching for an empty string
-    if (!_buf) return string::eof;
+    if (!szTextToFind || !szTextToFind[0] || !_buf) return 0xFFFFFFFF; // searching for an empty string
     auto o = _offset + fromOffset;
     if (szTextLen<0) szTextLen = strlen(szTextToFind);
     return fromOffset + findStr(_buf+o, _cb-fromOffset, szTextToFind, szTextLen);
-}
-
-void string::prepareToModify() {
-    auto hdr = bufhdr();
-    if (hdr->refs > 1) {
-        buf_release(_buf);
-        auto buf = buf_new(_cb);
-        memcpy(buf, _buf+_offset, _cb);
-        _buf = buf;
-        _offset = 0;
-    }
 }
 
 
@@ -331,7 +419,7 @@ void string::erase(uint32_t fromByteOffset, uint32_t toByteOffset/*=0xFFFFFFFFU*
     }
     _cb -= cbToErase;
     _buf[_cb]='\0';
-    buf_realloc(-cbToErase);
+    buf_realloc(_buf, -cbToErase);
 }
 void string::eraseAt(int32_t startIndex, int32_t endIndex/*=-1*/) {
     auto fromByteOffset = charIndexToOffset(startIndex);
@@ -386,7 +474,7 @@ void string::insert(uint32_t byteOffset, const char* p,  int32_t cb /*=-1*/) {
         return;
     }
     prepareToModify();
-    buf_realloc(cb);
+    buf_realloc(_buf, cb);
     auto cbToMove = _cb - byteOffset;
     char* insertPoint = this->start() + byteOffset;
     memmove(insertPoint+cb, insertPoint, cbToMove); // move tail forwards in memory
@@ -398,13 +486,14 @@ void string::insert(uint32_t byteOffset, const char* p,  int32_t cb /*=-1*/) {
 
 
 string& string::operator=(const string& str) {
-    if (_buf) {
+    if (_buf && _type==kTypeStandard) {
         buf_release(_buf);
     }
     _buf = str._buf;
-    _offset = str._offset;
     _cb = str._cb;
-    if (_buf) {
+    _offset = str._offset;
+    _type = str._type;
+    if (_buf && _type==kTypeStandard) {
         buf_retain(_buf);
     }
     return *this;
@@ -435,7 +524,7 @@ void string::clear() {
 }
 
 void string::assign(const char* p, int32_t cb) {
-    if (_buf) {
+    if (_buf && _type==kTypeStandard) {
         buf_release(_buf);
     }
     _offset = 0;
@@ -823,12 +912,12 @@ string string::readToEndOfLine(uint32_t& o) const {
 string string::readUpTo(uint32_t& offset, const string& str) const {
     auto o = offset;
     offset += findStr(start()+o, _cb-o, str.start(), str._cb);
-    return string(_buf, _offset+o, _offset+offset);
+    return substr(o, offset);
 }
 string string::readUpTo(uint32_t& offset, char ch) const {
     auto o = offset;
     offset += findStr(start()+o, _cb-o, &ch, 1);
-    return string(_buf, _offset+o, _offset+offset);
+    return substr(o, offset);
 }
 
 string string::readUpToOneOf(uint32_t& offset, const string& str) const {
@@ -846,7 +935,7 @@ string string::readUpToOneOf(uint32_t& offset, const string& str) const {
             }
         }
     }
-    return string(_buf, s, offset);
+    return substr(s, offset);
 }
 
 bool string::isOneOf(const vector<string>& vec) const {

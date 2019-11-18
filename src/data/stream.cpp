@@ -59,11 +59,8 @@ bool Stream::readString(string* str) {
         str->_cb = 0;
         return false;
     }
-    str->_cb = cb;
-    str->_buf = string::buf_new(cb); // (char*)malloc(cb + 1);
-    str->_buf[cb] = '\0';
-    bool ok = readBytes(cb, str->_buf);
-    return ok;
+    str->alloc(cb);
+    return readBytes(cb, str->_buf);
 }
 
 bool Stream::writeString(const string& str) {

@@ -6,7 +6,7 @@
 #include "containermodule.h"
 
 // For whatever reason I copied UIEdgeInsetsFromString in BBC News 2014, which Oaknut does not.
-EDGEINSETS BNModule::edgeInsetsVal(const variant& v, const char* field) {
+EDGEINSETS BNModule::edgeInsetsVal(const variant& v, const string& field) {
     string s = v.stringVal(field);
     if (!s.length()) {
         return {0,0,0,0};
@@ -33,7 +33,7 @@ BNModule::BNModule(const variant& json) {
         if (colorstr.charAt(0) == '#') {
             _backgroundColor = s.colorVal("background");
         } else {
-            _backgroundColor = app->getStyleColor("color." + colorstr);
+            _backgroundColor = app->getStyleColor("color."_S + colorstr);
         }
     }
     _textPadding = edgeInsetsVal(json, "textPadding");

@@ -7,10 +7,10 @@
 
 #include "endpoint.h"
 
-static const char* BNEndpointHREFKey = "href";
-static const char* BNEndpointFlagKey = "flag";
-static const char* BNEndpointTTLKey = "ttl";
-static const char* BNEndpointIsPolicyEndpointKey = "isPolicyEndpoint";
+static string BNEndpointHREFKey = "href";
+static string BNEndpointFlagKey = "flag";
+static string BNEndpointTTLKey = "ttl";
+static string BNEndpointIsPolicyEndpointKey = "isPolicyEndpoint";
 
 
 

@@ -69,7 +69,7 @@ public:
  The class must have a public constructor that takes the same argument types as listed after
  the class name.
  */
-#define STRINGIFY_(x) #x
+#define STRINGIFY_(x) #x##_S
 #define STRINGIFY(x) STRINGIFY_(x)
 #define VA_ARGS(...) , ##__VA_ARGS__
 #define DECLARE_DYNCREATE(X, ...) static Object::Registrar<X VA_ARGS(__VA_ARGS__)> s_classReg##X(STRINGIFY(X))

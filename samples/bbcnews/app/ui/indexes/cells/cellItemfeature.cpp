@@ -17,7 +17,7 @@ public:
 
     BNCellItemFeature(BNCellsModule* module) : BNCellItem(module, BNCellStyle::Feature) {
         
-        _headline->applyStyle((module->_cellsPerRow > 1) ? "featureHeadline" : "featureFullWidthHeadline");
+        _headline->applyStyle((module->_cellsPerRow > 1) ? "featureHeadline"_S : "featureFullWidthHeadline"_S);
         _featureAccentStripHeight = app->getStyleFloat("featureAccentStripHeight");
 		_textAreaInsets = app->getStyle("text-insets")->edgeInsetsVal("feature");
 		_showMediaGlyphInHeadline = true;

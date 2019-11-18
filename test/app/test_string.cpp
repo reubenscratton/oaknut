@@ -10,50 +10,52 @@
 
 
 void test_string() {
-
+    
+    string foobar("foosbar");
+    
     // UTF-8 Encoding
-    assert(string("").length() == 0);
-    assert(string("a").length() == 1);
-    assert(string("\u0081").length() == 1);
-    assert(string("\u0081").lengthInBytes() == 2);
-    assert(string("\u1a00").length() == 1);
-    assert(string("\u1a00").lengthInBytes() == 3);
-    assert(string("😀").lengthInBytes() == 4);
-    assert(string("\u0081\u1a00").length() == 2);
-    assert(string("\u0081\u1a00").lengthInBytes() == 5);
-    assert(string("a\u0081\u1a00😀").lengthInBytes() == 10);
+    assert(""_S.length() == 0);
+    assert("a"_S.length() == 1);
+    assert("\u0081"_S.length() == 1);
+    assert("\u0081"_S.lengthInBytes() == 2);
+    assert("\u1a00"_S.length() == 1);
+    assert("\u1a00"_S.lengthInBytes() == 3);
+    assert("😀"_S.lengthInBytes() == 4);
+    assert("\u0081\u1a00"_S.length() == 2);
+    assert("\u0081\u1a00"_S.lengthInBytes() == 5);
+    assert("a\u0081\u1a00😀"_S.lengthInBytes() == 10);
 
     // Character access
     //auto ptr = string("ABCDEF").begin();
     //assert(*ptr++ == 'A');
     //assert(*(ptr+2) == 'D');
-    assert(string("ABCDEF").charAt(-1) == 'F');
-    assert(string("ABCDEF").substr(3).charAt(1) == 'E');
-    assert(string("ABCDEF").substr(100) == "");
-    assert(string("a\u0081bc").charAt(-1) == 'c');
+    assert("ABCDEF"_S.charAt(-1) == 'F');
+    assert("ABCDEF"_S.substr(3).charAt(1) == 'E');
+    assert("ABCDEF"_S.substr(100) == "");
+    assert("a\u0081bc"_S.charAt(-1) == 'c');
     
     // Substring modification
-    string substr = string("ABC").substr(1, 2);
+    string substr = "ABC"_S.substr(1, 2);
     assert(substr.length()==1);
-    substr.append("C");
-    assert(substr == "BC");
+    substr.append("C"_S);
+    assert(substr == "BC"_S);
 
     // Find
-    string foo = "Hello world";
+    string foo = "Hello world"_S;
     assert(6 == foo.find("w"));
     assert(2 == foo.find("l"));
-    assert(3 == foo.find("l", 3));
+    assert(3 == foo.find("l", 1, 3));
     assert(foo.end() == foo.find("x"));
     //assert(-1 == string("").find('A'));
     
     // Split
-    auto sr = string("Hello world").split(" ");
-    assert(sr[0]=="Hello");
-    assert(sr[1]=="world");
-    assert(1 == string("abcdefghijklmnopqrstuvwxyz").split("").size());
+    auto sr = "Hello world"_S.split(" ");
+    assert(sr[0]=="Hello"_S);
+    assert(sr[1]=="world"_S);
+    assert(1 == "abcdefghijklmnopqrstuvwxyz"_S.split(""_S).size());
     assert(1 == string(" ").split(" ").size());
     assert(2 == string("  ").split(" ").size());
-    assert(4 == string("   ").split(" ").size());
+    assert(3 == string("   ").split(" ").size());
     
 
 }

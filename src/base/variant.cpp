@@ -28,7 +28,7 @@ string measurement::toString() const {
 }
 
 template <>
-Bitmap* variant::getObject<Bitmap>(const char* key) const {
+Bitmap* variant::getObject<Bitmap>(const string& key) const {
     auto val = _map->find(key);
     if (val == _map->end() || val->second.type != variant::MAP) {
         return NULL;
@@ -60,8 +60,8 @@ variant::variant(float val) : type(FLOAT32), _f32(val) {
 }
 variant::variant(double val) : type(FLOAT64), _f64(val) {
 }
-variant::variant(const char* val) : type(STRING), _str(new string(val)) {
-}
+//variant::variant(const char* val) : type(STRING), _str(new string(val)) {
+//}
 variant::variant(const string& val) : type(STRING), _str(new string(val)) {
 }
 variant::variant(const measurement& val) : type(MEASUREMENT), _measurement(val) {
@@ -219,10 +219,10 @@ bool variant::boolVal() const {
     return false;
 }
 
-int variant::intVal(const char *name) const {
+int variant::intVal(const string& name) const {
     return get(name).intVal();
 }
-bool variant::boolVal(const char* name) const {
+bool variant::boolVal(const string& name) const {
     return get(name).boolVal();
 }
 
@@ -281,7 +281,7 @@ float variant::floatVal() const {
     app->warn("floatVal() called on non-numeric Variant");
     return 0.f;
 }
-float variant::floatVal(const char *name) const {
+float variant::floatVal(const string& name) const {
     return get(name).floatVal();
 }
 
@@ -301,7 +301,7 @@ double variant::doubleVal() const {
     app->warn("doubleVal() called on non-numeric Variant");
     return 0.;
 }
-double variant::doubleVal(const char *name) const {
+double variant::doubleVal(const string& name) const {
     return get(name).doubleVal();
 }
 
@@ -336,7 +336,7 @@ string variant::stringVal() const {
     app->warn("stringVal() called on non-stringable StyleValue");
     return "";
 }
-string variant::stringVal(const char *name) const {
+string variant::stringVal(const string& name) const {
     return get(name).stringVal();
 }
 vector<string> variant::stringArrayVal() const {
@@ -352,7 +352,7 @@ vector<string> variant::stringArrayVal() const {
     return vec;
 }
 
-vector<string> variant::stringArrayVal(const char* name) const {
+vector<string> variant::stringArrayVal(const string& name) const {
     return get(name).stringArrayVal();
 }
 
@@ -418,10 +418,10 @@ void variant::appendVal(const variant& v) {
     _vec->push_back(std::move(v));
 }
 
-vector<variant>& variant::arrayRef(const char* name) const {
+vector<variant>& variant::arrayRef(const string& name) const {
     return get(name).arrayRef();
 }
-map<string, variant>& variant::compoundRef(const char* name) const {
+map<string, variant>& variant::compoundRef(const string& name) const {
     return get(name).compoundRef();
 }
 
@@ -430,7 +430,7 @@ bytearray& variant::bytearrayRef() const {
     return *_bytearray;
 }
 
-bytearray& variant::bytearrayRef(const char* name) const {
+bytearray& variant::bytearrayRef(const string& name) const {
     return get(name).bytearrayRef();
 }
 

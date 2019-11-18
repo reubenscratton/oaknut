@@ -162,7 +162,7 @@ string style::stringVal() const {
     app->warn("stringVal() type coerce failed");
     return "";
 }
-string style::stringVal(const char* name) const {
+string style::stringVal(const string& name) const {
     auto val = get(name);
     if (!val) {
         return "";
@@ -170,7 +170,7 @@ string style::stringVal(const char* name) const {
     return val->stringVal();
 }
 
-COLOR style::colorVal(const char* name) const {
+COLOR style::colorVal(const string& name) const {
     auto v = get(name);
     if (v) {
         return v->colorVal();
@@ -200,7 +200,7 @@ const vector<style>& style::arrayVal() const {
     app->warn("arrayVal() type coerce failed");
     return s_emptyArray;
 }
-const vector<style>& style::arrayVal(const char* name) const {
+const vector<style>& style::arrayVal(const string& name) const {
     auto val = get(name);
     if (val) {
         return val->arrayVal();
@@ -233,7 +233,7 @@ EDGEINSETS style::edgeInsetsVal() const {
     }
     return insets;
 }
-EDGEINSETS style::edgeInsetsVal(const char* name) const {
+EDGEINSETS style::edgeInsetsVal(const string& name) const {
     auto v = get(name);
     if (v) {
         return v->edgeInsetsVal();

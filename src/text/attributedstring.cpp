@@ -11,7 +11,7 @@
 AttributedString::AttributedString() {
     
 }
-AttributedString::AttributedString(const char* p) : string(p) {
+AttributedString::AttributedString(const char* p) : string(p, strlen(p)) {
 }
 AttributedString::AttributedString(const string& str) : string(str) {
 }

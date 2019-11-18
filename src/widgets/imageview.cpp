@@ -108,7 +108,7 @@ void ImageView::loadImage() {
     if (_assetPath.length() > 0) {
         auto hashVal = _assetPath.hash();
         bytearray data;
-        app->loadAsset(_assetPath.c_str(), data);
+        app->loadAsset(_assetPath, data);
         assert(data.size());
         _imageLoadTask = Bitmap::createFromData(data, [=](Bitmap *bitmap) {
             if (hashVal == _assetPath.hash()) {

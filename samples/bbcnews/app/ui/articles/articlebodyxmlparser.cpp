@@ -86,7 +86,7 @@ class XmlParser : public Object {
 public:
     XmlParser(const string& str);
     
-    // bool eof() { return _ptr != string::eof; }
+    bool eof() { return _ptr >= _str.lengthInBytes(); }
     const string& currentTag() const { return _currentTag; }
     string nextTag();
     string attributeValue(const string& name);
@@ -98,13 +98,13 @@ public:
         while (currentTag() != closingTag) {
             nextTag();
         }
-        auto end = _ptr;
+        auto end = _ptr - (closingTag.lengthInBytes()+2);
         nextTag();
         return XmlParser(_str.substr(start, end));
     }
     
 private:
-    const string& _str;
+    string _str;
     uint32_t _ptr;
     string _currentTag, _currentAttribsStr;
     map<string, string> _currentAttribs;
@@ -153,7 +153,7 @@ private:
 };
 
 XmlParser::XmlParser(const string& str) : _str(str), _ptr(0), _currentTag() {
-    nextTag();
+    // nextTag();
 }
 string XmlParser::nextTag() {
     
@@ -169,6 +169,8 @@ string XmlParser::nextTag() {
             _currentAttribs.clear();
         }
         _ptr++;
+    } else {
+        _currentTag.clear();
     }
     return content;
 }
@@ -198,17 +200,54 @@ string XmlParser::attributeValue(const string& name) {
 
 BNArticleBodyXmlParser::BNArticleBodyXmlParser(const string& str, BNItem* item) {
     
+    vector<string> textElemNames = {"paragraph"_S, "heading"_S, "subheading"_S, "crosshead"_S, "list"_S };
+    bool listIsOrdered = false;
+    int listOrdinal = 1;
+    
     XmlParser xml(str);
+    xml.nextTag();
     if (xml.currentTag() == "body") {
         while (xml.currentTag() != "/body") {
             
             // Text elements
-            if (xml.currentTag().isOneOf({"paragraph", "heading", "subheading", "crosshead", "list" })) {
+            if (xml.currentTag().isOneOf(textElemNames)) {
                 string styleName = xml.currentTag();
                 if (styleName == "paragraph") {
                     styleName = xml.attributeValue("role");
                 }
+                if (xml.currentTag() == "list") {
+                    listIsOrdered = xml.attributeValue("type") == "ordered";
+                    listOrdinal = 1;
+                }
                 XmlParser xmlPara = xml.currentTagContents();
+                while (!xmlPara.eof()) {
+                    string txt = xmlPara.nextTag();
+                    app->log("text: %s", txt.c_str());
+                    if (xmlPara.currentTag() == "listitem") {
+                        
+                        NSString* itemPrefix = nil;
+                        if (self.listIsOrdered) {
+                            itemPrefix = [NSString stringWithFormat:@"%lu.  ", (unsigned long)self.listOrdinal++];
+                        } else {
+                            itemPrefix = @"\u25A0   ";
+                            BNTextTraitForecolor* greyColor = [[BNTextTraitForecolor alloc] initWithStart:textElement.text.length];
+                            greyColor.forecolor = [UIColor lightGrayColor];
+                            greyColor.end = greyColor.start + 1;//itemPrefix.length;
+                            [textElement.traits addObject:greyColor];
+                            BNTextTraitFontScale* shrink = [[BNTextTraitFontScale alloc] initWithStart:textElement.text.length];
+                            shrink.scale = 0.5f;
+                            shrink.end = greyColor.end;
+                            [textElement.traits addObject:shrink];
+                            BNTextTraitBaselineOffset* offset = [[BNTextTraitBaselineOffset alloc] initWithStartAndEnd:shrink.start end:shrink.end];
+                            offset.distance = 0.3f;
+                            [textElement.traits addObject:offset];
+                        }
+                        textElement.headIndentNumChars = itemPrefix.length;
+                        [textElement.text appendString:itemPrefix];
+
+                        //app->log("todo: %s", xmlPara.currentTag().c_str());
+                    }
+                }
             }
             
             // Images and videos

@@ -62,10 +62,10 @@ public:
     const vector<style>& arrayVal() const;
 
     // Compound accessors
-    string stringVal(const char* name) const;
-    COLOR colorVal(const char* name) const;
-    const vector<style>& arrayVal(const char* name) const;
-    EDGEINSETS edgeInsetsVal(const char* name) const;
+    string stringVal(const string& name) const;
+    COLOR colorVal(const string& name) const;
+    const vector<style>& arrayVal(const string& name) const;
+    EDGEINSETS edgeInsetsVal(const string& name) const;
 
     bool parse(const string& str);
     void importNamedValues(const map<string,style>& styleValues);

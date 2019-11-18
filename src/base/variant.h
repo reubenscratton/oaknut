@@ -97,7 +97,8 @@ public:
     variant(float val);
     variant(double val);
     variant(const bytearray& val);
-    variant(const char* val);
+    template<size_t N>
+    variant(const char(&p)[N]) : type(STRING), _str(new string(p)) { }
     variant(const string& val);
     variant(const measurement& val);
     variant(const variant& var);
@@ -125,30 +126,30 @@ public:
     
     // Accessors (by value, some types are coerced)
     int intVal() const;
-    int intVal(const char* name) const;
+    int intVal(const string& name) const;
     string stringVal() const;
-    string stringVal(const char* name) const;
+    string stringVal(const string& name) const;
     bool boolVal() const;
-    bool boolVal(const char* name) const;
+    bool boolVal(const string& name) const;
     float floatVal() const;
-    float floatVal(const char* name) const;
+    float floatVal(const string& name) const;
     double doubleVal() const;
-    double doubleVal(const char* name) const;
+    double doubleVal(const string& name) const;
     measurement measurementVal() const;
     vector<string> stringArrayVal() const;
-    vector<string> stringArrayVal(const char* name) const;
+    vector<string> stringArrayVal(const string& name) const;
 
     // Accessors (by reference, no coercion)
     string& stringRef() const;
     vector<variant>& arrayRef() const;
-    vector<variant>& arrayRef(const char* name) const;
+    vector<variant>& arrayRef(const string& name) const;
     bytearray& bytearrayRef() const;
-    bytearray& bytearrayRef(const char* name) const;
+    bytearray& bytearrayRef(const string& name) const;
     map<string, variant>& compoundRef() const;
-    map<string, variant>& compoundRef(const char* name) const;
+    map<string, variant>& compoundRef(const string& name) const;
 
     template <class T>
-    vector<sp<T>> arrayOf(const char* name) const {
+    vector<sp<T>> arrayOf(const string& name) const {
         static_assert(std::is_base_of<ISerializeToVariant, T>::value, "T must implement ISerializeToVariant");
         vector<sp<T>> vec;
         auto& a = arrayRef(name);
@@ -167,7 +168,7 @@ public:
         return obj;
     }
     template <typename T>
-    T get(const char* key) const {
+    T get(const string& key) const {
         static_assert(std::is_base_of<ISerializeToVariant, T>::value, "T must implement ISerializeToVariant");
         assert(type==MAP);
         auto val = _map->find(key);
@@ -179,7 +180,7 @@ public:
         return obj;
     }
     template <typename T>
-    T* getObject(const char* key) const {
+    T* getObject(const string& key) const {
         static_assert(std::is_base_of<ISerializeToVariant, T>::value, "T must implement ISerializeToVariant");
         static_assert(std::is_base_of<Object, T>::value, "T must extend Object");
         assert(type==MAP);
@@ -201,13 +202,13 @@ public:
          assert(type==MAP);
         return *get(key);
     }*/
-    variant& operator[](const char* key) {
+    variant& operator[](const string& key) {
         if (type==EMPTY) {
             type = MAP;
             _map = new map<string, variant>();
         }
         assert(type==MAP);
-        return (*((_map->insert(std::make_pair(string(key),variant()))).first)).second;
+        return (*((_map->insert(std::make_pair(key,variant()))).first)).second;
     }
 
     variant& get(const string& keypath) const;
@@ -259,4 +260,4 @@ private:
 };
 
 template <>
-class Bitmap* variant::getObject<Bitmap>(const char* key) const;
+class Bitmap* variant::getObject<Bitmap>(const string& key) const;

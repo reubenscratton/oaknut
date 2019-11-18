@@ -39,7 +39,7 @@ TextureRenderOp::TextureRenderOp(const RECT& rect, Bitmap* bitmap, const RECT* r
 /**
  * Constructor for tinted .png icons
  */
-TextureRenderOp::TextureRenderOp(const char* assetPath, int tintColor) : TextureRenderOp() {
+TextureRenderOp::TextureRenderOp(const string& assetPath, int tintColor) : TextureRenderOp() {
     _color = tintColor;
     bytearray data;
     if (!app->loadAsset(assetPath, data)) {

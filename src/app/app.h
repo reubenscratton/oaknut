@@ -66,7 +66,7 @@ public:
     const style* getStyle(const string& keypath);
     
     /** Get a named style value and coerce to a string */
-    string getStyleString(const string& key, const char* defaultString = NULL);
+    string getStyleString(const string& key, const string& defaultString = string::empty);
     
     /** Get a named style value and coerce to a float */
     float getStyleFloat(const string& key);
@@ -131,22 +131,22 @@ public:
      */
     
     /** Gets a named integer setting */
-    int getIntSetting(const char* key, int defaultValue=0);
+    int getIntSetting(const string& key, int defaultValue=0);
 
     /** Sets a named integer setting. */
-    void setIntSetting(const char* key, int value);
+    void setIntSetting(const string& key, int value);
     
     /** Gets a named string setting */
-    string getStringSetting(const char* key, const char* defaultValue="");
+    string getStringSetting(const string& key, const string& defaultValue = string::empty);
 
     /** Sets a named string setting. */
-    void setStringSetting(const char* key, const char* value);
+    void setStringSetting(const string& key, const string& value);
     
     /** Gets a named bool setting */
-    bool getBoolSetting(const char* key, bool defaultValue=false);
+    bool getBoolSetting(const string& key, bool defaultValue=false);
     
     /** Sets a named bool setting. */
-    void setBoolSetting(const char* key, bool value);
+    void setBoolSetting(const string& key, bool value);
 
     /**@}*/
 

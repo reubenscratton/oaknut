@@ -264,7 +264,7 @@ void BNContentView::layout(RECT constraint) {
             _currentLayout = _layout;
         } else {
             bool portrait = _window->getHeight() >= _window->getWidth();
-            string orientationString =  portrait ? "portrait" : "landscape";
+            string orientationString =  portrait ? "portrait"_S : "landscape"_S;
             _currentLayout = ((BBCNewsApp*)app)->layoutWithContent(_contentStub.modelId,
                                                                  _contentObject->_site,
                                                                _contentObject->_format,

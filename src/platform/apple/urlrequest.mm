@@ -15,6 +15,8 @@ static struct loader {
     }
 } s_loader;
 
+extern string nsstr(NSString* s);
+
 class URLRequestApple : public URLRequest {
 public:
     URLRequestApple(const string& url, const string& method, const bytearray& body, int flags)
@@ -48,7 +50,7 @@ public:
                 // Get all response headers into a generic container
                 map<string, string> responseHeaders;
                 for (NSString* headerName in httpResponse.allHeaderFields.allKeys) {
-                    responseHeaders[[[headerName lowercaseString] cStringUsingEncoding:NSUTF8StringEncoding]] = [httpResponse.allHeaderFields[headerName] cStringUsingEncoding:NSUTF8StringEncoding];
+                    responseHeaders[nsstr([headerName lowercaseString])] = nsstr(httpResponse.allHeaderFields[headerName]);
                 }
                 
                 // Slurp the data

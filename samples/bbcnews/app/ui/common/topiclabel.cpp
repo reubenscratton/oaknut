@@ -173,7 +173,7 @@ string dateStringFromTimestamp(TIMESTAMP timestamp, bool useLongFormat) {
     // If article published today
     if (dyear==0 && dmonth==0 && dday==0) {
         if (dsec < 60 && dhour == 0 && dmin == 0) {
-            return useLongFormat ? "1 min ago" : "1m";
+            return useLongFormat ? "1 min ago"_S : "1m"_S;
         } else if (dmin < 2 && dhour == 0) {
             return string::format(useLongFormat ? "%ld min ago" : "%ldm", (long)dmin);
         } else if (dhour < 1) {
@@ -189,7 +189,7 @@ string dateStringFromTimestamp(TIMESTAMP timestamp, bool useLongFormat) {
         if (dyear > 0 || dday > 6 || dmonth > 0) {
             char ach[32];
             strftime(ach, 32, dyear?(useLongFormat?"%e %h %Y":"%e %h %y"):"%e %h", &tm);
-            return string(ach);
+            return string(ach, 32);
             
         } else {
             if (dday < 2) {

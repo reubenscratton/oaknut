@@ -78,5 +78,5 @@ protected:
     bool _isOnScreen;
     COLOR _backgroundColor;
 
-    static EDGEINSETS edgeInsetsVal(const variant& v, const char* field);
+    static EDGEINSETS edgeInsetsVal(const variant& v, const string& field);
 };

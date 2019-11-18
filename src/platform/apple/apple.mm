@@ -8,33 +8,37 @@
 
 #import <oaknut.h>
 
-int App::getIntSetting(const char *key, const int defaultValue) {
-    id val = [[NSUserDefaults standardUserDefaults] objectForKey:[NSString stringWithCString:key encoding:NSUTF8StringEncoding]];
+string nsstr(NSString* s) {
+    auto sz = [s cStringUsingEncoding:NSUTF8StringEncoding];
+    return string(sz, (uint32_t)strlen(sz));
+}
+
+int App::getIntSetting(const string& key, const int defaultValue) {
+    id val = [[NSUserDefaults standardUserDefaults] objectForKey:[NSString stringWithCString:key.c_str() encoding:NSUTF8StringEncoding]];
     return val ? [val intValue] : defaultValue;
 }
-void App::setIntSetting(const char* key, const int value) {
-    [[NSUserDefaults standardUserDefaults] setObject:@(value) forKey:[NSString stringWithCString:key encoding:NSUTF8StringEncoding]];
+void App::setIntSetting(const string& key, const int value) {
+    [[NSUserDefaults standardUserDefaults] setObject:@(value) forKey:[NSString stringWithCString:key.c_str() encoding:NSUTF8StringEncoding]];
 }
 
-bool App::getBoolSetting(const char *key, const bool defaultValue) {
-    id val = [[NSUserDefaults standardUserDefaults] objectForKey:[NSString stringWithCString:key encoding:NSUTF8StringEncoding]];
+bool App::getBoolSetting(const string& key, const bool defaultValue) {
+    id val = [[NSUserDefaults standardUserDefaults] objectForKey:[NSString stringWithCString:key.c_str() encoding:NSUTF8StringEncoding]];
     return val ? [val boolValue] : defaultValue;
 }
-void App::setBoolSetting(const char* key, const bool value) {
-    [[NSUserDefaults standardUserDefaults] setObject:@(value) forKey:[NSString stringWithCString:key encoding:NSUTF8StringEncoding]];
+void App::setBoolSetting(const string& key, const bool value) {
+    [[NSUserDefaults standardUserDefaults] setObject:@(value) forKey:[NSString stringWithCString:key.c_str() encoding:NSUTF8StringEncoding]];
 }
 
-string App::getStringSetting(const char *key, const char* defaultValue) {
-    id val = [[NSUserDefaults standardUserDefaults] objectForKey:[NSString stringWithCString:key encoding:NSUTF8StringEncoding]];
+string App::getStringSetting(const string& key, const string& defaultValue) {
+    id val = [[NSUserDefaults standardUserDefaults] objectForKey:[NSString stringWithCString:key.c_str() encoding:NSUTF8StringEncoding]];
     if (!val) {
         return defaultValue;
     }
-    NSString* nsstring = val;
-    return string([nsstring cStringUsingEncoding:NSUTF8StringEncoding]);
+    return nsstr((NSString*)val);
 }
-void App::setStringSetting(const char* key, const char* value) {
-    NSString* val = [NSString stringWithCString:value encoding:NSUTF8StringEncoding];
-    [[NSUserDefaults standardUserDefaults] setObject:val forKey:[NSString stringWithCString:key encoding:NSUTF8StringEncoding]];
+void App::setStringSetting(const string& key, const string& value) {
+    NSString* val = [NSString stringWithCString:value.c_str() encoding:NSUTF8StringEncoding];
+    [[NSUserDefaults standardUserDefaults] setObject:val forKey:[NSString stringWithCString:key.c_str() encoding:NSUTF8StringEncoding]];
 }
 
 TIMESTAMP App::currentMillis() {
@@ -45,7 +49,8 @@ TIMESTAMP App::currentMillis() {
 }
 
 string App::currentCountryCode() const {
-    return [NSLocale currentLocale].countryCode.UTF8String;
+    auto sz = [NSLocale currentLocale].countryCode.UTF8String;
+    return string(sz, strlen(sz));
 }
 
 
@@ -144,47 +149,51 @@ TaskQueue* TaskQueue::create(const string& name) {
 
 
 bool App::fileResolve(string& path) const {
-    if (!path.hasPrefix("//")) {
+    if (!path.hasPrefix("//"_S)) {
         return true;
     }
     
     //assets/...
-    if (path.hasPrefix("//assets/")) {
+    if (path.hasPrefix("//assets/"_S)) {
         path.erase(0, 1); // remove just the leading slash, leaving the path as '/assets/...'
-        string bundlepath = [NSBundle bundleForClass:NSClassFromString(@"NativeView")].bundlePath.UTF8String;
+        string bundlepath = nsstr([NSBundle bundleForClass:NSClassFromString(@"NativeView")].bundlePath);
 #if TARGET_OS_OSX
-        bundlepath.append("/Contents/Resources/");
+        bundlepath.append("/Contents/Resources/"_S);
 #endif
         path.prepend(bundlepath);
         return true;
     }
     
     //data/... : ~/Library/Application Support/<bundleid>/...
-    if (path.hadPrefix("//data/")) {
+    if (path.hadPrefix("//data/"_S)) {
         NSURL* url = [[[NSFileManager defaultManager] URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask] lastObject];
         url = [url URLByAppendingPathComponent:[[NSBundle mainBundle] bundleIdentifier]];
-        path.prepend(url.fileSystemRepresentation);
+        auto sz = url.fileSystemRepresentation;
+        path.prepend(string(sz, uint32_t(strlen(sz))));
         return true;
     }
     
     //cache/... : ~/Library/Caches/<bundleid>/...
-    if (path.hadPrefix("//cache/")) {
+    if (path.hadPrefix("//cache/"_S)) {
         NSURL* url = [[[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask] lastObject];
         url = [url URLByAppendingPathComponent:[[NSBundle mainBundle] bundleIdentifier]];
-        path.prepend(url.fileSystemRepresentation);
+        auto sz = url.fileSystemRepresentation;
+        path.prepend(string(sz, uint32_t(strlen(sz))));
         return true;
     }
     
     //docs/... : ~/Documents/...
-    if (path.hadPrefix("//docs/")) {
+    if (path.hadPrefix("//docs/"_S)) {
         NSURL* url = [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
-        path.prepend(url.fileSystemRepresentation);
+        auto sz = url.fileSystemRepresentation;
+        path.prepend(string(sz, uint32_t(strlen(sz))));
         return true;
     }
 
     //tmp/... : ~/Documents/...
-    if (path.hadPrefix("//tmp/")) {
-        path.prepend(NSTemporaryDirectory().fileSystemRepresentation);
+    if (path.hadPrefix("//tmp/"_S)) {
+        auto sz = NSTemporaryDirectory().fileSystemRepresentation;
+        path.prepend(string(sz, uint32_t(strlen(sz))));
         return true;
     }
 
@@ -231,7 +240,7 @@ vector<string> App::fileList(string& dir) const {
     assert(!error);
     vector<string> files;
     for (NSString* e : foo) {
-        files.push_back(e.UTF8String);
+        files.push_back(nsstr(e));
     }
     return files;
 
@@ -244,7 +253,8 @@ vector<string> App::fileList(string& dir) const {
 string string::uuid() {
     CFUUIDRef udid = CFUUIDCreate(NULL);
     CFStringRef uuidstr = CFUUIDCreateString(NULL, udid);
-    string str(CFStringGetCStringPtr(uuidstr,kCFStringEncodingUTF8));
+    auto sz = CFStringGetCStringPtr(uuidstr,kCFStringEncodingUTF8);
+    string str(sz, strlen(sz));
     CFRelease(uuidstr);
     CFRelease(udid);
     return str;
