@@ -45,8 +45,8 @@ public:
     TextLayout();
 
     // Text
-    void setText(const AttributedString& text);
-    const AttributedString& getText() { return _text; }
+    void setText(const attributed_string& text);
+    const attributed_string& getText() { return _text; }
     
     // Properties that affect text measurement, layout, and rendering
     void setFont(Font* font);
@@ -119,7 +119,7 @@ protected:
     
     uint32_t _invalid;
 
-    AttributedString _text;
+    attributed_string _text;
     struct RENDER_PARAMS {
         Font* font;
         COLOR forecolor;

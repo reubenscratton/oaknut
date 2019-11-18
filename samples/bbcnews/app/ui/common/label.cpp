@@ -138,8 +138,8 @@ void BNLabel::setBottomRightExclusionSize(const SIZE& size) {
 
 
 
-static AttributedString s_videoPrefixString;
-static AttributedString s_audioPrefixString;
+static attributed_string s_videoPrefixString;
+static attributed_string s_audioPrefixString;
 
 
 

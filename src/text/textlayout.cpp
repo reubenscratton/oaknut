@@ -19,7 +19,7 @@ TextLayout::TextLayout() {
     _defaultParams.forecolor = 0xFF000000; // todo: style
 }
 
-void TextLayout::setText(const AttributedString& text) {
+void TextLayout::setText(const attributed_string& text) {
     _text = text;
     _invalid |= INVALID_GLYPHS;
 }
@@ -93,20 +93,20 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
             // Unapply spans that end at this point
             while (spanEndIterator!=_text._attributes.end() && i>=spanEndIterator->end) {
                 auto endingSpan = (*spanEndIterator);
-                if (endingSpan.attribute._type == Attribute::Type::Font) {
+                if (endingSpan.attribute._type == attributed_string::attribute_type::Font) {
                     currentParams.font = fontStack.top();
                     fontStack.pop();
                     paramsChanged = true;
                 }
-                else if (endingSpan.attribute._type == Attribute::Type::Forecolor) {
+                else if (endingSpan.attribute._type == attributed_string::attribute_type::Forecolor) {
                     currentParams.forecolor = forecolorStack.top();
                     forecolorStack.pop();
                     paramsChanged = true;
                 }
-                else if (endingSpan.attribute._type == Attribute::Type::LeadingSpace) {
+                else if (endingSpan.attribute._type == attributed_string::attribute_type::LeadingSpace) {
                     //leadingSpace = 0;
                 }
-                else if (endingSpan.attribute._type == Attribute::Type::FontWeight) {
+                else if (endingSpan.attribute._type == attributed_string::attribute_type::FontWeight) {
                     currentParams.font = fontWeightStack.top();
                     fontWeightStack.pop();
                     paramsChanged = true;
@@ -117,20 +117,20 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
             // Apply any spans that start at this point
             while (spanStartIterator!=_text._attributes.end() && i>=spanStartIterator->start) {
                 auto startingSpan = (*spanStartIterator);
-                if (startingSpan.attribute._type == Attribute::Type::Font) {
+                if (startingSpan.attribute._type == attributed_string::attribute_type::Font) {
                     fontStack.push(currentParams.font);
                     currentParams.font = startingSpan.attribute._font;
                     paramsChanged = true;
                 }
-                else if (startingSpan.attribute._type == Attribute::Type::Forecolor) {
+                else if (startingSpan.attribute._type == attributed_string::attribute_type::Forecolor) {
                     forecolorStack.push(currentParams.forecolor);
                     currentParams.forecolor = startingSpan.attribute._color;
                     paramsChanged = true;
                 }
-                else if (startingSpan.attribute._type == Attribute::Type::LeadingSpace) {
+                else if (startingSpan.attribute._type == attributed_string::attribute_type::LeadingSpace) {
                     //leadingSpace = startingSpan.attribute._f;
                 }
-                else if (startingSpan.attribute._type == Attribute::Type::FontWeight) {
+                else if (startingSpan.attribute._type == attributed_string::attribute_type::FontWeight) {
                     fontWeightStack.push(currentParams.font);
                     currentParams.font = Font::get(currentParams.font->_name, currentParams.font->_size, startingSpan.attribute._f);
                     paramsChanged = true;

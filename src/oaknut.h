@@ -147,6 +147,7 @@ namespace oak {
 #include "media/videorecorder.h"
 #include "media/videoplayer.h"
 #include "text/attributedstring.h"
+#include "text/xml.h"
 #include "app/styles.h"
 #include "text/textlayout.h"
 #include "graphics/canvas.h"

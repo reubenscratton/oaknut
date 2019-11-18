@@ -15,6 +15,8 @@ public:
     
     vector<BNElement*> _elements;
     string _shortName;
+    vector<attributed_string> _paragraphs;
+
 
     BNImage* getIndexImage();
     BNImage* getPrimaryImage();

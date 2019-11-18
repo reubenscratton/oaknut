@@ -189,6 +189,7 @@ void BNCellsModule::updateLayoutWithContentObject(BNContent* contentObject) {
         cell->_cellIndex = _offset;
         cell->_isOnScreen = _isOnScreen;
         cell->setItem(item);
+        _cells.push_back(cell);
     } else {
         
         for (int i=0 ; i<count ; i++) {

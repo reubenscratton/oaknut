@@ -30,7 +30,7 @@ public:
     /** @name Events
      * @{
      */
-    std::function<void(const AttributedString& before, AttributedString& after)> onTextChange;
+    std::function<void(const attributed_string& before, attributed_string& after)> onTextChange;
     std::function<void(int32_t insertionPointBefore, int32_t& insertionPointAfter)> onInsertionPointChanged;
     std::function<void()> onKeyboardAction;
     /** @} */
@@ -48,7 +48,7 @@ public:
     void updateRenderOps() override;
     void layout(RECT constraint) override;
     void detachFromWindow() override;
-    void setText(const AttributedString& text) override;
+    void setText(const attributed_string& text) override;
     void updateContentSize(SIZE constrainingSize) override;
     /** @} */
 

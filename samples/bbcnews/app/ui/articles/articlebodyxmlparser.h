@@ -5,13 +5,10 @@
 #include "element.h"
 #include "../../model/item.h"
 
-class BNArticleBodyXmlParser : public Object { //<NSXMLParserDelegate>
+class BNArticleBodyXmlParser : public Object {
 public:
     
     BNArticleBodyXmlParser(const string& xml, BNItem* item);
-
-//@property id currentElement;
-//@property int elementDepth;
 
 
 };

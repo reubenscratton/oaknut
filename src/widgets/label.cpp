@@ -77,7 +77,7 @@ bool Label::applySingleStyle(const string& name, const style& value) {
     return View::applySingleStyle(name, value);
 }
 
-void Label::setText(const AttributedString& text) {
+void Label::setText(const attributed_string& text) {
     _textLayout.setText(text);
     invalidateContentSize();
 }
@@ -207,7 +207,7 @@ void Label::setGravity(GRAVITY gravity) {
     _textLayout.setGravity(gravity);
 }
 
-const Attribute* Label::getAttribute(int32_t pos, Attribute::Type type) {
+const attributed_string::attribute* Label::getAttribute(int32_t pos, attributed_string::attribute_type type) {
     return _textLayout._text.getAttribute(pos, type);
 }
 

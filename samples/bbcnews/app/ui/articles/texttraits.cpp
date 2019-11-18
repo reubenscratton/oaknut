@@ -16,7 +16,7 @@ BNTextTrait::BNTextTrait(Type type, uint32_t start, uint32_t end) {
 }
 
 
-void BNTextTrait::applyToString(AttributedString* string) {
+void BNTextTrait::applyToString(attributed_string& string) {
     switch (_type) {
         case Bold:
             app->log("todo: bold trait");

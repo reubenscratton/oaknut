@@ -26,7 +26,7 @@ public:
 
     BNElementText(const string& style);
     void trimTrailingWhitespace();
-    AttributedString toAttributedString(COLOR textColor, EDGEINSETS padding);
+    attributed_string toAttributedString(COLOR textColor, EDGEINSETS padding);
 
     bool isElementText() override { return true; }
 

@@ -147,7 +147,7 @@ void EditText::updateContentSize(SIZE constrainingSize) {
     updateCursor();
 }
 
-void EditText::setText(const AttributedString& text) {
+void EditText::setText(const attributed_string& text) {
     auto tt = text;
     if (onTextChange) {
         onTextChange(_textLayout.getText(), tt);
@@ -357,7 +357,7 @@ void EditText::setMaxLength(int32_t maxLength) {
         _maxLength = maxLength;
         auto& text = _textLayout.getText();
         if (text.length() > maxLength) {
-            AttributedString truncText = text;
+            attributed_string truncText = text;
             truncText.eraseAt(maxLength);
             setText(truncText);
         }

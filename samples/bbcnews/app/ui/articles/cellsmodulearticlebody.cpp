@@ -18,13 +18,26 @@ DECLARE_DYNCREATE(BNCellsModuleArticleBody, const variant&);
 class BNCellArticleText : public BNCell {
 public:
     
-    Label* _label;
+    LinearLayout* _ll;
 
     BNCellArticleText(BNCellsModule* module) : BNCell(module) {
-        _label = new Label();
-        _label->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
-        _label->setText("Ze text goes here");
-        addSubview(_label);
+        setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+        _ll = new LinearLayout();
+        _ll->_orientation = LinearLayout::Vertical;
+        _ll->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+        addSubview(_ll);
+    }
+
+    void setItem(BNItem* item) override {
+        _ll->removeAllSubviews();
+        for (auto& pa: item->_paragraphs) {
+            Label* label = new Label();
+            label->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+            label->setText(pa);
+            _ll->addSubview(label);
+        }
+            
+
     }
 
 };

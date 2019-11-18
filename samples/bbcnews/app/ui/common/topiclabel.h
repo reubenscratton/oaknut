@@ -22,7 +22,7 @@ protected:
     long _timestamp;
     bool _hideTimestamp;
     bool _longTimestamp;
-    AttributedString _topicLinks;
+    attributed_string _topicLinks;
     Timer* _timer;
 
 };

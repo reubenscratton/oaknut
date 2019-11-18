@@ -63,7 +63,7 @@ void SearchBox::onStateChanged(STATESET changes) {
 }
 
 
-void SearchBox::setText(const AttributedString& text) {
+void SearchBox::setText(const attributed_string& text) {
     EditText::setText(text);
     if (_searchTextChangedDelegate) {
         _searchTextChangedDelegate(this, text);

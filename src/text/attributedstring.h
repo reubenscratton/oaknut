@@ -6,99 +6,113 @@
 //
 
 
-class Attribute {
+
+/**
+ String with display attributes, color and size and so on. Whereas the string's text buffer is shared, the attribute buffer is *not* shared between
+ instances and care should be taken to avoid unnessary copying.
+ */
+class attributed_string : public string {
 public:
+    
     typedef enum {
         Forecolor,
         BackgroundColor,
         Font,
         LeadingSpace,
         FontWeight
-    } Type;
-    Type _type;
-    union {
-        COLOR _color;
-        sp<class Font> _font;
-        float _f;
+    } attribute_type;
+
+    // Construction
+    attributed_string() : string() {}
+    template<size_t N>
+    attributed_string(const char(&p)[N]) : string(p) {}
+    attributed_string(const string& str) : string(str) {}
+    attributed_string(const attributed_string& str);
+    
+    
+    class attribute {
+    public:
+        attribute_type _type;
+        union {
+            COLOR _color;
+            sp<class Font> _font;
+            float _f;
+        };
+        
+        attribute(attribute_type type, COLOR color) : _type(type), _color(color) {}
+        attribute(attribute_type type, float f) : _type(type), _f(f) {}
+        attribute(oak::Font* font) : _type(Font), _font(font) {}
+        ~attribute() { if (_type == Font) { _font.~sp(); } }
+        attribute(const attribute& attr) : _type(attr._type) {
+            assign(attr);
+        }
+        attribute& operator=(const attribute& rhs) {
+            assign(rhs);
+            return *this;
+        }
+        bool operator<(const attribute& rhs) const {
+            if (_type<rhs._type) return true;
+            return false;
+        }
+        void setType(attribute_type newType) {
+            if (_type == newType) return;
+            if (_type == Font && newType != Font) {
+                _font.~sp();
+            } else if (_type != Font && newType == Font) {
+                new (&_font) sp<class Font>();
+            }
+            _type = newType;
+        }
+        void assign(const attribute& src) {
+            setType(src._type);
+            switch (src._type) {
+                case Forecolor: _color = src._color; break;
+                case BackgroundColor: _color = src._color; break;
+                case Font: _font = src._font; break;
+                case LeadingSpace: _f = src._f; break;
+                case FontWeight: _f = src._f; break;
+            }
+        }
     };
-    
-    Attribute(Type type, COLOR color) : _type(type), _color(color) {}
-    Attribute(Type type, float f) : _type(type), _f(f) {}
-    Attribute(oak::Font* font) : _type(Font), _font(font) {}
-    ~Attribute() { if (_type == Font) { _font.~sp(); } }
-    Attribute(const Attribute& attr) : _type(attr._type) {
-        assign(attr);
-    }
-    Attribute& operator=(const Attribute& rhs) {
-        assign(rhs);
-        return *this;
-    }
-    bool operator<(const Attribute& rhs) const {
-        if (_type<rhs._type) return true;
-        return false;
-    }
-    void setType(Type newType) {
-        if (_type == newType) return;
-        if (_type == Font && newType != Font) {
-            _font.~sp();
-        } else if (_type != Font && newType == Font) {
-            new (&_font) sp<class Font>();
-        }
-        _type = newType;
-    }
-    void assign(const Attribute& src) {
-        setType(src._type);
-        switch (src._type) {
-            case Forecolor: _color = src._color; break;
-            case BackgroundColor: _color = src._color; break;
-            case Font: _font = src._font; break;
-            case LeadingSpace: _f = src._f; break;
-            case FontWeight: _f = src._f; break;
-        }
-    }
-    static Attribute font(oak::Font* font) { return Attribute(font); }
-    static Attribute bold() { return Attribute(FontWeight, FONT_WEIGHT_BOLD); }
-    static Attribute forecolor(COLOR color) { return Attribute(Forecolor, color); }
-    static Attribute leadingSpace(float space) { return Attribute(LeadingSpace,  space); }
-};
 
+    void setAttribute(const attribute& attribute, int32_t start, int32_t end);
+    const attribute* getAttribute(int32_t pos, attribute_type type);
 
-class AttributedString : public string { // TODO: Should extend Object, not string.
-public:
-    
-    AttributedString();
-    AttributedString(const char* p);
-    AttributedString(const string& str);
-    AttributedString(const AttributedString& str);
-    
-    void setAttribute(const Attribute& attribute, int32_t start, int32_t end);
-    const Attribute* getAttribute(int32_t pos, Attribute::Type type);
-
+    inline void clear() {
+        string::clear();
+        clearAttributes();
+    }
     void clearAttributes();
-    AttributedString& operator=(const AttributedString& str);
+    attributed_string& operator=(const attributed_string& str);
 
     void applyStyle(const class style* s);
     
-    void append(const AttributedString& str);
+    void append(const attributed_string& str);
+
+    // Helpers for standard attributes
+    static attribute font(oak::Font* font) { return attribute(font); }
+    static attribute bold() { return attribute(FontWeight, FONT_WEIGHT_BOLD); }
+    static attribute forecolor(COLOR color) { return attribute(Forecolor, color); }
+    static attribute leadingSpace(float space) { return attribute(LeadingSpace, space); }
 
     friend class TextLayout;
 
 private:
-    struct AttributeUse {
-        Attribute attribute;
+    struct attribute_usage {
+        attribute attribute;
         int32_t start;
         int32_t end;
-        bool operator<(const AttributeUse& rhs) const {
+        bool operator<(const attribute_usage& rhs) const {
             if (start<rhs.start) return true;
             if (attribute<rhs.attribute) return true;
             return false;
         }
-        AttributeUse(const Attribute& aattribute, int32_t start, int32_t end)  : attribute(aattribute) {
+        attribute_usage(const class attribute& aattribute, int32_t start, int32_t end)  : attribute(aattribute) {
             this->start = start;
             this->end = end;
         }
     };
-    set<AttributeUse> _attributes;
+    set<attribute_usage> _attributes;
 };
 
 

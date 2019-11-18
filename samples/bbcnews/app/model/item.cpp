@@ -5,7 +5,6 @@
 #include "_module.h"
 #include "../ui/articles/elementtext.h"
 #include "../ui/articles/elementmedia.h"
-#include "../ui/articles/articlebodyxmlparser.h"
 
 
 
@@ -16,13 +15,109 @@ BNItem::BNItem(const string& type, const string& modelId) : BNContent(type, mode
 BNItem::BNItem(const variant& json) : BNContent(json) {
     _shortName = json.stringVal("shortName");
     auto bodyData = json.stringVal("body");
-    if (bodyData.length()) {
-        bodyData.hadPrefix("<?xml version='1.0'?>"); // strip this cos it buggers up parsing.
-        BNArticleBodyXmlParser *parser = new BNArticleBodyXmlParser(bodyData, this);
-        //parser->parse();
-        configureAfterParsing();
-        delete parser;
+    if (!bodyData.length()) {
+        return;
     }
+    
+    bodyData.hadPrefix("<?xml version='1.0'?>"); // strip this cos it buggers up parsing.
+
+    
+    vector<string> textElemNames = {"paragraph"_S, "heading"_S, "subheading"_S, "crosshead"_S, "list"_S };
+        
+    XmlParser xml(bodyData);
+    xml.nextTag();
+    bool listIsOrdered = false;
+    int listOrdinal = 1;
+    attributed_string currentPara;
+    struct {
+        uint32_t insert_point;
+        string caption;
+        string url;
+        string platform;
+    } link_props;
+    int unknownTagDepth = 0;
+    while (!xml.eof()) {
+        string tag = xml.currentTag();
+        bool isCloseTag = tag.hadPrefix("/");
+        
+        // Body tag
+        if (tag == "body") {
+        }
+        
+        // Paragraphs
+        else if (tag.isOneOf(textElemNames)) {
+            if (isCloseTag) {
+                _paragraphs.push_back(currentPara);
+                currentPara.clear();
+            } else {
+                if (tag == "list") {
+                    listIsOrdered = xml.attributeValue("type") == "ordered";
+                    listOrdinal = 1;
+                }
+                string style_name = tag;
+                if (tag == "paragraph") {
+                    style_name = xml.attributeValue("role");
+                }
+                currentPara.applyStyle(app->getStyle(style_name));
+            }
+        }
+        
+        // Images and videos
+        else if (tag == "image" || tag == "video" || tag == "audio") {
+            string id = xml.attributeValue("id");
+            // todo:
+        }
+        
+        // List items
+        else if (tag == "listItem") {
+            if (isCloseTag) {
+                currentPara.append("\n");
+            } else {
+                string itemPrefix;
+                if (listIsOrdered) {
+                    itemPrefix = string::format("%lu.  ", (unsigned long)listOrdinal++);
+                } else {
+                    itemPrefix = "\u25A0   ";
+                }
+                currentPara.append(itemPrefix);
+            }
+        }
+        
+        // Links, eg. "<link><caption>What is tactical voting?</caption>
+        //             <url platform="newsapps" href="/cps/news/uk-politics-50249649"/></link>"
+        else if (tag == "link") {
+            if (isCloseTag) {
+            }
+        }
+        else if (tag == "caption") {
+            if (!isCloseTag) {
+                link_props.insert_point = currentPara.lengthInBytes();
+            }
+        }
+        else if (tag == "url") {
+            if (!isCloseTag) {
+                link_props.platform = xml.attributeValue("platform");
+                link_props.url = xml.attributeValue("href");
+            }
+        }
+        
+        // Unknown!
+        else {
+            app->warn("Unknown tag: %s", tag.c_str());
+            unknownTagDepth += isCloseTag? (-1) : 1;
+        }
+
+        // Consume text leading up to next tag
+        string text = xml.nextTag();
+        if (!unknownTagDepth) {
+            currentPara.append(text);
+        }
+    }
+    
+
+    
+    configureAfterParsing();
+    
 }
 
 

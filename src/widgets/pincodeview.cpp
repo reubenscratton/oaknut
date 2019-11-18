@@ -76,7 +76,7 @@ bool PinCodeView::applySingleStyle(const string &name, const style& value) {
                 prev->_next = field;
             }
             prev = field;
-            field->onTextChange = [=](const AttributedString& before, AttributedString& after) {
+            field->onTextChange = [=](const attributed_string& before, attributed_string& after) {
                 int index = indexOfSubview(field);
                 if (before.length()==0 && after.length()==1) {
                     if (index < _subviews.size() - 1) {

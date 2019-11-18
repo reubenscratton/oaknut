@@ -28,7 +28,7 @@ public:
     BNTextTrait(Type type, uint32_t start);
     BNTextTrait(Type type, uint32_t start, uint32_t end);
 
-    virtual void applyToString(AttributedString* string);
+    virtual void applyToString(attributed_string& string);
 
 };
 

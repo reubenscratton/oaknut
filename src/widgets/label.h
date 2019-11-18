@@ -20,15 +20,15 @@ public:
     /** @name Properties
      * @{
      */
-    virtual const AttributedString& getText() { return _textLayout.getText(); }
-    virtual void setText(const AttributedString& text);
+    virtual const attributed_string& getText() { return _textLayout.getText(); }
+    virtual void setText(const attributed_string& text);
     virtual void setTextColor(COLOR color);
     virtual void setFont(Font* font);
     virtual void setFontName(const string& fontName);
     virtual void setFontSize(float fontSize);
     virtual void setFontWeight(float fontWeight);
     virtual void setMaxLines(int maxLines);
-    virtual const Attribute* getAttribute(int32_t pos, Attribute::Type type);
+    virtual const attributed_string::attribute* getAttribute(int32_t pos, attributed_string::attribute_type type);
     /** @} */
 
     /** @name Overrides

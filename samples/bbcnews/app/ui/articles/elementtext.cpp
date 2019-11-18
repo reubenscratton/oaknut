@@ -14,13 +14,13 @@ BNElementText::BNElementText(const string& styleName) {
 }
 
 
-AttributedString BNElementText::toAttributedString(COLOR textColor, EDGEINSETS padding) {
+attributed_string BNElementText::toAttributedString(COLOR textColor, EDGEINSETS padding) {
 	string text = _text;
 	text.append('\n');
 	
 	// Create basic string with just the font
-    AttributedString str(text);
-    str.setAttribute(Attribute::forecolor(textColor), 0, -1);
+    attributed_string str(text);
+    str.setAttribute(attributed_string::forecolor(textColor), 0, -1);
     app->log("todo: element attributes");
     /*str.setAttribute(Attribute::font(_style->font), 0, -1);
 

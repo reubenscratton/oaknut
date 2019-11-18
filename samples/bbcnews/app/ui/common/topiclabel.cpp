@@ -13,12 +13,12 @@
 
 #define AUTOREFRESH_INTERVAL 30
 
-static AttributedString* s_separatorString;
+static attributed_string* s_separatorString;
 
 
-static AttributedString& getSeparatorString() {
+static attributed_string& getSeparatorString() {
     if (!s_separatorString) {
-        s_separatorString = new AttributedString("  |  ");
+        s_separatorString = new attributed_string("  |  ");
         s_separatorString->applyStyle(app->getStyle("linkSeparator"));
     }
     return *s_separatorString;
@@ -75,7 +75,7 @@ void BNTopicLabel::setItem(BNItem* item, BNCollection* displayingCollection) {
     //}
     
     // Add topic collections
-    AttributedString topicLinks;
+    attributed_string topicLinks;
     for (BNCollection *collection : collections) {
         if (topicLinks.length()) {
             topicLinks.append(getSeparatorString());
@@ -87,7 +87,7 @@ void BNTopicLabel::setItem(BNItem* item, BNCollection* displayingCollection) {
         //attrs[BNLinkAttributeName] = linkTrait;
         //[topicLinks appendAttributedString:[[NSAttributedString alloc] initWithString:collection.name attributes:attrs]];
         topicLinks += collection->_name;
-        topicLinks.setAttribute(Attribute::forecolor(0xFF0000cc), topicLinks.length()-collection->_name.length(), topicLinks.length());
+        topicLinks.setAttribute(attributed_string::forecolor(0xFF0000cc), topicLinks.length()-collection->_name.length(), topicLinks.length());
     }
     _topicLinks = topicLinks;
     
@@ -107,7 +107,7 @@ void BNTopicLabel::updateText() {
         timestampText = dateStringFromTimestamp(_timestamp, _longTimestamp);
 	}
 
-    AttributedString text = timestampText;
+    attributed_string text = timestampText;
     // TODO text.applyStyle("topicAndTimestamp");
 	if (_topicLinks.length()) {
 		if (timestampText.length()) {

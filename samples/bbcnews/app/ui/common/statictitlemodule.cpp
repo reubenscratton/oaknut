@@ -135,7 +135,7 @@ void BNStaticTitleModule::addToView(View* superview) {
 		
 		//Button* button = _label.as<Button>();
 		//if (showBackgroundForLinks()) {
-        //    AttributedString s = label->getText();
+        //    attributed_string s = label->getText();
         //    s.setAttribute(Attribute::forecolor(0xFFCCCCCC), 0, s.length());
 		//	label->setText(s);
 		//} else {

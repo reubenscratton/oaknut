@@ -8,18 +8,11 @@
 #include <oaknut.h>
 
 
-AttributedString::AttributedString() {
-    
-}
-AttributedString::AttributedString(const char* p) : string(p, strlen(p)) {
-}
-AttributedString::AttributedString(const string& str) : string(str) {
-}
-AttributedString::AttributedString(const AttributedString& str) : string(str) {
+attributed_string::attributed_string(const attributed_string& str) : string(str) {
     _attributes = str._attributes;
 }
 
-void AttributedString::append(const AttributedString& str) {
+void attributed_string::append(const attributed_string& str) {
     int32_t c = length();
     string::append(str);
     for (auto a : str._attributes) {
@@ -27,11 +20,11 @@ void AttributedString::append(const AttributedString& str) {
     }
 }
 
-void AttributedString::setAttribute(const Attribute& attribute, int32_t start, int32_t end) {
+void attributed_string::setAttribute(const attributed_string::attribute& attribute, int32_t start, int32_t end) {
     _attributes.emplace(attribute, start, end);
 }
-const Attribute* AttributedString::getAttribute(int32_t pos, Attribute::Type type) {
-    const Attribute* attr = NULL;
+const attributed_string::attribute* attributed_string::getAttribute(int32_t pos, attributed_string::attribute_type type) {
+    const attributed_string::attribute* attr = NULL;
     for (auto& attribUse : _attributes) {
         if (attribUse.attribute._type == type) {
             if (attribUse.start<= pos && attribUse.end>pos) {
@@ -43,16 +36,16 @@ const Attribute* AttributedString::getAttribute(int32_t pos, Attribute::Type typ
 }
 
 
-void AttributedString::clearAttributes() {
+void attributed_string::clearAttributes() {
     _attributes.clear();
 }
 
-AttributedString& AttributedString::operator=(const AttributedString& str) {
+attributed_string& attributed_string::operator=(const attributed_string& str) {
     string::operator=(str);
     _attributes = str._attributes;
     return *this;
 }
 
-void AttributedString::applyStyle(const style* s) {
+void attributed_string::applyStyle(const style* s) {
     app->log("TODO: AttributedString::applyStyle");
 }

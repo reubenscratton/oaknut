@@ -36,7 +36,7 @@ void BNCellItemTopStory::setItem(BNItem* item) {
     
     Label* tinyTimestampLabel = NULL;
     if (_module->_tinyTimestamps && !_isDummy && !_hideTimestamp) {
-        AttributedString age = "TODO"; //[NSDate tinyTimestampStringFromTimeStamp:_item->_lastUpdated);
+        attributed_string age = "TODO"; //[NSDate tinyTimestampStringFromTimeStamp:_item->_lastUpdated);
         if (age.length()) {
             tinyTimestampLabel = new Label();
             age.applyStyle(app->getStyle("tinyTimestamps"));
