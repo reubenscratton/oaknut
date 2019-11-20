@@ -36,11 +36,11 @@ inline struct bufhdr* BUFHDR(char* _buf) {
 
 
 static inline char* buf_new(uint32_t cb) {
-    // static int s_strmallocs=0;
-    // static uint32_t s_malloctotal=0;
-    // s_strmallocs++;
-    // s_malloctotal += cb;
-    // app->log("string malloc %d total=%d", s_strmallocs, s_malloctotal);
+    /* static int s_strmallocs=0;
+     static uint32_t s_malloctotal=0;
+     s_strmallocs++;
+     s_malloctotal += cb;
+     app->log("string malloc %d total=%d", s_strmallocs, s_malloctotal);*/
     auto hdr = (struct bufhdr*)malloc(sizeof(struct bufhdr) + cb + 1);
     hdr->cap = cb;
     hdr->cb = cb;

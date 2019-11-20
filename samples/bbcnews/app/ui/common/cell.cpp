@@ -34,7 +34,6 @@ void BNCell::layout(RECT constraint) {
     
     // Apply bottom margin
     _rect.size.height += _margins.bottom;
-    _rect.size.height = fmin(_rect.size.height, constraint.size.height);
 }
 
 

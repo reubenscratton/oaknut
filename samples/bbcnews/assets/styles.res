@@ -38,28 +38,31 @@ color: {
 }
 
 H1: {
-    font-name: Helvetica Neue
     font-weight: medium
-    font-size: $font-sizes.H1
-    line-height: $line-heights.H1
+    font-size: 24sp
+    font-size~tablet: 40sp
+    line-height: 30sp
+    line-height~tablet: 48sp
     forecolor: black
     forecolor-inv: white
 }
 
 H2: {
-    font-name: Helvetica Neue
     font-weight: medium
-    font-size: $font-sizes.H2
-    line-height: $line-heights.H2
+    font-size: 15sp
+    font-size~tablet: 24sp
+    line-height: 17.5sp
+    line-height~tablet: 30sp
     forecolor: black
     forecolor-inv: white
 }
 
 H3: {
-    font-name: Helvetica Neue
     font-weight: medium
-    font-size: $font-sizes.H3
-    line-height: $line-heights.H3
+    font-size: 15sp
+    font-size~tablet: 20sp
+    line-height: 17.5sp
+    line-height~tablet: 24sp
     forecolor: black
     forecolor-inv: white
 }
@@ -85,12 +88,6 @@ featureHeadlineFullWidth: {
 }
 
 font-sizes: {
-    H1~tablet: 40sp
-    H1: 24sp
-    H2~tablet: 24sp
-    H2: 15sp
-    H3~tablet: 20sp
-    H3: 15sp
     timestamp~tablet: 17sp
     timestamp: 14sp
     summary~tablet: 18sp
@@ -114,12 +111,6 @@ font-sizes: {
 
 
 line-heights: {
-    H1~tablet: 48sp
-    H1~!tablet: 30sp
-    H2~tablet: 30sp
-    H2~!tablet: 17.5sp
-    H3~tablet: 24sp
-    H3~!tablet: 17.5sp
     timestamp~tablet: 22sp
     timestamp~!tablet: 18sp
     summary~tablet: 24sp
@@ -154,6 +145,7 @@ topicAndTimestamp: {
     forecolor: $color.timestamp
     forecolor-inv: $color.timestampInv
     lines: 1
+    ellipsize: true
 }
 tinyTimestamps: {
     font-weight: light
@@ -368,7 +360,7 @@ keyPoints: {
 }
 
 
-articles: {
+article: {
     font-size: $font-sizes.basic
     line-height: $line-heights.basic
     insets: 0,16dp

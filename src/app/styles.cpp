@@ -19,12 +19,12 @@
 
 */
 
-style::style() : type(TypeSimple), var(), _parent(NULL) {
+style::style() : type(TypeSimple), var() {
 }
-style::style(const style& rval) : type(TypeSimple), var(), _parent(NULL) {
+style::style(const style& rval) : type(TypeSimple), var() {
     copyFrom(&rval);
 }
-style::style(style&& rval) noexcept : type(rval.type), var(), _parent(rval._parent) {
+style::style(style&& rval) noexcept : type(rval.type), var() {
     switch (rval.type) {
         case TypeSimple: var = rval.var; rval.var.clear(); break;
         case TypeReference: reference = rval.reference; rval.reference = NULL; break;
@@ -34,7 +34,6 @@ style::style(style&& rval) noexcept : type(rval.type), var(), _parent(rval._pare
     }
     rval.type = TypeSimple;
     rval.var = variant();
-    rval._parent = NULL;
 }
 style::~style() {
     if (type == TypeArray && array) {
@@ -241,6 +240,13 @@ EDGEINSETS style::edgeInsetsVal(const string& name) const {
     return EDGEINSETS_Zero;
 }
 
+float style::fontWeightVal(const string& name) const {
+    auto v = get(name);
+    if (v) {
+        return v->fontWeightVal();
+    }
+    return 0;
+}
 
 const variant& style::variantVal() const {
     auto val = resolve();
@@ -590,8 +596,8 @@ const style* style::resolve() const {
         }
         
         // Follow references for the first time
-        else if (val->type == TypeSimple && var.isString() && var.stringVal().hasPrefix("$")) {
-            auto refdstylename = var.stringVal();
+        else if (val->type == TypeSimple && val->var.isString() && val->var.stringVal().hasPrefix("$")) {
+            auto refdstylename = val->var.stringVal();
             refdstylename.eraseAt(0, 1);
             auto refdstyle = app->getStyle(refdstylename);
             if (!refdstyle) {

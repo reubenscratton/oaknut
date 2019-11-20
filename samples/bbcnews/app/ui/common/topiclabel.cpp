@@ -24,24 +24,40 @@ static attributed_string& getSeparatorString() {
     return *s_separatorString;
 }
 
-BNTopicLabel::BNTopicLabel(int maxTopics, bool inverseColorScheme, bool hideTimestamp, bool isLongTimestamp) : _hideTimestamp(hideTimestamp), _longTimestamp(isLongTimestamp)
+BNTopicLabel::BNTopicLabel(int maxTopics, bool inverseColorScheme, bool hideTimestamp, bool isLongTimestamp) : _maxTopics(maxTopics), _hideTimestamp(hideTimestamp), _longTimestamp(isLongTimestamp)
 {
     setLayoutSize(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
     applyStyle("topicAndTimestamp");
 }
 
+template<class T>
+static void vector_erase(vector<T>& vec, T& val) {
+    auto it = std::find(vec.begin(), vec.end(), val);
+    if (it != vec.end()) {
+        vec.erase(it);
+    }
+}
+template<class T>
+static void vector_add_unique(vector<T>& vec, T& val) {
+    auto it = std::find(vec.begin(), vec.end(), val);
+    if (it == vec.end()) {
+        vec.push_back(val);
+    }
+}
+
 
 void BNTopicLabel::setItem(BNItem* item, BNCollection* displayingCollection) {
     // Get all collections that this item belongs to, starting with the home collection
-    set<BNCollection*> collections;
-    if (item->getHomedCollection()) {
-        collections.insert(item->getHomedCollection());
+    vector<BNCollection*> collections;
+    BNCollection* homedCollection = item->getHomedCollection();
+    if (homedCollection) {
+        collections.push_back(homedCollection);
     }
     
     for (BNRelationship *parentRelationship : item->_parentRelationships) {
         BNCollection *parentCollection = (BNCollection*)parentRelationship->_parentObject;
         if (parentCollection->canBeTopicLink()) {
-            collections.insert(parentCollection);
+            vector_add_unique(collections, parentCollection);
         }
     }
     
@@ -49,7 +65,7 @@ void BNTopicLabel::setItem(BNItem* item, BNCollection* displayingCollection) {
         if (childRelationship->_childObject->isCollection()) {
             BNCollection *relatedCollection = (BNCollection *)childRelationship->_childObject;
             if (relatedCollection->canBeTopicLink()) {
-                collections.insert(relatedCollection);
+                vector_add_unique(collections, relatedCollection);
             }
         }
     }
@@ -58,21 +74,21 @@ void BNTopicLabel::setItem(BNItem* item, BNCollection* displayingCollection) {
     if (displayingCollection->_modelId.hasPrefix(BNModelIdMyNews)) {
         for (auto c: collections) {
             if (!BNCollections::isFollowed(c->getStub())) {
-                collections.erase(c);
+                vector_erase(collections, c);
             }
         }
     }
     
     // Remove home collection if this is part of the displayed collection
     if (collections.size() > 1) {
-        if (item->getHomedCollection()->_modelId == displayingCollection->_modelId) {
-            collections.erase(item->getHomedCollection());
+        if (homedCollection->_modelId == displayingCollection->_modelId) {
+            vector_erase(collections, homedCollection);
         }
     }
     
-    //if (collections.size() > maxTopics) {
-    //    [collections removeObjectsInRange:NSMakeRange(maxTopics, collections.count-maxTopics)];
-    //}
+    while (collections.size() > _maxTopics) {
+        collections.pop_back();
+    }
     
     // Add topic collections
     attributed_string topicLinks;

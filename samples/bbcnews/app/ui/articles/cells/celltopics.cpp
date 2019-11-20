@@ -17,10 +17,10 @@ public:
 
 
     BNCellTopics(BNCellsModule* module) : BNCell(module) {
-        _label = new BNTopicLabel(module->_maxTopics, false, false, module->_json.boolVal("long_timestamp"));
+        setPadding({32,8,0,8});
+        _label = new BNTopicLabel(1, false, false, true);
         _label->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
         _label->setUseDynamicText(true);
-        //_label->applyStyle("H1");
         addSubview(_label);
     }
 

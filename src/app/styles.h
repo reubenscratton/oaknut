@@ -18,7 +18,6 @@
 
 class style {
 public:
-    style* _parent;
     enum type {
         TypeSimple,
         TypeReference,
@@ -66,6 +65,7 @@ public:
     COLOR colorVal(const string& name) const;
     const vector<style>& arrayVal(const string& name) const;
     EDGEINSETS edgeInsetsVal(const string& name) const;
+    float fontWeightVal(const string& name) const;
 
     bool parse(const string& str);
     void importNamedValues(const map<string,style>& styleValues);

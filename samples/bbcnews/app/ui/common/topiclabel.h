@@ -19,6 +19,7 @@ public:
 protected:
     void updateText();
     
+    int _maxTopics;
     long _timestamp;
     bool _hideTimestamp;
     bool _longTimestamp;

@@ -30,14 +30,16 @@ public:
 
     void setItem(BNItem* item) override {
         _ll->removeAllSubviews();
+        EDGEINSETS insets = {32,24,0,24};
+        const style* s = app->getStyle("articles.introduction");
         for (auto& pa: item->_paragraphs) {
             Label* label = new Label();
             label->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+            label->setPadding(insets);
+            label->setFontWeight(FONT_WEIGHT_THIN);
             label->setText(pa);
             _ll->addSubview(label);
         }
-            
-
     }
 
 };

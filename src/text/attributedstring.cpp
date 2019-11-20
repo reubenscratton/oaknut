@@ -46,6 +46,16 @@ attributed_string& attributed_string::operator=(const attributed_string& str) {
     return *this;
 }
 
+void attributed_string::applyStyle(const string& styleName) {
+    auto s = app->getStyle(styleName);
+    if (s) {
+        applyStyle(s);
+    }
+}
+
 void attributed_string::applyStyle(const style* s) {
-    app->log("TODO: AttributedString::applyStyle");
+    float weight = s->fontWeightVal("font-weight");
+    if (weight>0) {
+        setAttribute(attributed_string::font_weight(weight), 0, -1);
+    }
 }

@@ -19,7 +19,7 @@ BNItem::BNItem(const variant& json) : BNContent(json) {
         return;
     }
     
-    bodyData.hadPrefix("<?xml version='1.0'?>"); // strip this cos it buggers up parsing.
+    bodyData.hadPrefix("<?xml version='1.0'?>"); // TODO: support these things in the xml parser
 
     
     vector<string> textElemNames = {"paragraph"_S, "heading"_S, "subheading"_S, "crosshead"_S, "list"_S };
@@ -58,7 +58,7 @@ BNItem::BNItem(const variant& json) : BNContent(json) {
                 if (tag == "paragraph") {
                     style_name = xml.attributeValue("role");
                 }
-                currentPara.applyStyle(app->getStyle(style_name));
+                currentPara.applyStyle(app->getStyle("article."+style_name));
             }
         }
         
@@ -110,6 +110,7 @@ BNItem::BNItem(const variant& json) : BNContent(json) {
         // Consume text leading up to next tag
         string text = xml.nextTag();
         if (!unknownTagDepth) {
+            text.trim();
             currentPara.append(text);
         }
     }

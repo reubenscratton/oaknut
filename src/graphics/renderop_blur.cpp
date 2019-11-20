@@ -181,7 +181,8 @@ void BlurRenderOp::validateShader(Renderer* renderer) {
     _tex1->_maxMipMapLevel = 2;
     _tex1->_minFilterLinear = true;
     _tex1->_mipFilterLinear = false;
-
+    _dirty = true;
+    
     _surface1 = renderer->createPrivateSurface();
     _surface2 = renderer->createPrivateSurface();
     _surface2->_texture->_magFilterLinear = true;

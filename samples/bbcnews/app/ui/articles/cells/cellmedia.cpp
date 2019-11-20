@@ -21,17 +21,21 @@
 DECLARE_DYNCREATE(BNCellMedia, BNCellsModule*);
 
 BNCellMedia::BNCellMedia(BNCellsModule* module) : BNCellContent(module) {
+    setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
     _parallax = module->_json.boolVal("parallax");
     _imageAspect = module->_json.floatVal("imageAspect");
     
+    
     _imageView = new BNImageView();
+    _imageView->setBackgroundColor(0xFF8080FF);
     addSubview(_imageView);
     
     if (!module->_json.boolVal("hideCaption")) {
         _caption = new BNLabel();
-        _caption->setLayoutSize(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
+        _caption->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
         _caption->setLayoutOrigin(ALIGNSPEC::Left(), ALIGNSPEC::Bottom());
-        //    _caption.label.backgroundColor = [self.module.json[@"inverseColorScheme"] boolValue] ?  [UIColor colorWithWhite:32/255.f alpha:1] : [UIColor colorWithWhite:247/255.f alpha:1];
+        _caption->setBackgroundColor(0xFFf8f8f8);
+        _caption->setFontSize(app->dp(12));
         addSubview(_caption);
     }
     /*
@@ -64,8 +68,13 @@ void BNCellMedia::setMediaObject(BNBaseModel* mediaObject, BNItem* containingIte
         _image = _media->posterImage();
         _caption->setText(_media->_caption);
     }
+
+    if (_imageAspect > 0.f) {
+        setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Aspect(_imageAspect));
+    }
     
     if (_image) {
+        setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
         float actualImageAspect = _image->_height / (float)_image->_width;
         if (_imageAspect > 0.f) {
             _imageAspect = MIN(actualImageAspect, _imageAspect);
@@ -76,6 +85,7 @@ void BNCellMedia::setMediaObject(BNBaseModel* mediaObject, BNItem* containingIte
 
         _imageView->setBNImage(_image);
     }
+    setVisibility(_image ? Visibility::Visible : Visibility::Gone);
     //if (self.imageAspect > 0.f) {
     //    self.imageView.contentMode = UIViewContentModeScaleAspectFit;
     //}

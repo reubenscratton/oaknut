@@ -74,6 +74,10 @@ bool Label::applySingleStyle(const string& name, const style& value) {
         setMaxLines(value.intVal());
         return true;
     }
+    if (name=="ellipsize") {
+        setEllipsize(value.boolVal());
+        return true;
+    }
     return View::applySingleStyle(name, value);
 }
 
@@ -111,6 +115,13 @@ void Label::setMaxLines(int maxLines) {
     invalidateContentSize();
 }
 
+bool Label::getEllipsize() const {
+    return _textLayout.ellipsize();
+}
+void Label::setEllipsize(bool ellipsize) {
+    _textLayout.setEllipsize(ellipsize);
+    invalidateContentSize();
+}
 
 void Label::setTextColor(COLOR color) {
     if (_defaultColor != color) {

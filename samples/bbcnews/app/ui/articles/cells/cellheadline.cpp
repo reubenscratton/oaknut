@@ -16,8 +16,15 @@ public:
         _label->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
         _label->applyStyle("H1");
         _label->setUseDynamicText(true);
+        _label->setPadding(EDGEINSETS(32, 16, 32, 8));
         addSubview(_label);
     }
+    /*
+     label()
+        .style("H1")
+        .useDynamicText()
+        .padding({32,...});
+     */
 
     void setItem(BNItem* item) override {
 		bool invColor = item->isMediaItem() || _module->_json.boolVal("inverseColorScheme");

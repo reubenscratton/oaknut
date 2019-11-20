@@ -1139,19 +1139,6 @@
     },
     "itemTopics":{
         "cellClass":"BNCellTopics",
-        "maxTopics":1,
-        "long_timestamp":true,
-        "mode==phone":{
-            "textPadding":"{8,16,12,16}"
-        },
-        "mode==tablet":{
-            "mode==portrait":{
-                "textPadding":"{8,64,12,64}"
-            },
-            "mode==landscape":{
-                "textPadding":"{8,80,12,80}"
-            }
-        }
     },
     "itemBody":{
         "class":"BNCellsModuleArticleBody",

@@ -28,6 +28,8 @@ public:
     virtual void setFontSize(float fontSize);
     virtual void setFontWeight(float fontWeight);
     virtual void setMaxLines(int maxLines);
+    virtual bool getEllipsize() const;
+    virtual void setEllipsize(bool ellipsize);
     virtual const attributed_string::attribute* getAttribute(int32_t pos, attributed_string::attribute_type type);
     /** @} */
 

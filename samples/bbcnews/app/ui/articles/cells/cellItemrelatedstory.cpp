@@ -1,12 +1,9 @@
 //
-//  BNCellItemRelatedStory.m
-//  BBCNews
-//
-//  Copyright (c) 2014 BBC News. All rights reserved.
+//  Copyright (c) 2019 BBC News. All rights reserved.
 //
 
-#import "BNCellItemTopStory.h"
-#import "BNAManager.h"
+
+#include "../../indexes/cells/cellitemtopstory.h"
 
 
 class BNCellItemRelatedStory : public BNCellItemTopStory {
@@ -19,15 +16,14 @@ public:
     bool isCellItemRelatedStory() override { return true; }
 
 
-    void setRelationship(BNRelationship* relationship) override {
-        BNCellItemTopStory::setRelationship(relationship);
-        BNItem* parentItem = (BNItem*)relationship.parentObject;
-        self.inverseColorScheme = parentItem.isMediaItem;
-        self.orientation = kLandscape;
-        self.headlineAttrs = self.inverseColorScheme ? attrsH3Inv : attrsH3;
+    void setRelationship(BNRelationship* rel) override {
+        BNCellItemTopStory::setRelationship(rel);
+        BNItem* parentItem = (BNItem*)rel->_parentObject;
+        _inverseColorScheme = parentItem->isMediaItem();
+        // self.headlineAttrs = self.inverseColorScheme ? attrsH3Inv : attrsH3;
     }
-
-- (void)measureForContainingRect:(CGRect)rect {
+/*
+    void measureForContainingRect:(CGRect)rect {
 	[super measureForContainingRect:rect];
 	
 	// Add a vertical margin to top and bottom
@@ -56,10 +52,9 @@ public:
 
 }
 
-#pragma mark - BNCellAccessibilityDelegate
-
-- (UIAccessibilityTraits)accessibilityTraits {
-	return UIAccessibilityTraitButton;
-}
-
+*/
+    
+    
 };
+
+DECLARE_DYNCREATE(BNCellItemRelatedStory, BNCellsModule*);

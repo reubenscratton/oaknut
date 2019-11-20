@@ -56,7 +56,9 @@ public:
     void setGravity(GRAVITY gravity);
     void setMaxLines(int maxLines);
     int maxLines() const { return _maxLines; }
-
+    bool ellipsize() const {return _ellipsize; }
+    void setEllipsize(bool ellipsize);
+    
     // Measurement
     SIZE measure(SIZE& constrainingSize);
     int lineCount() const { return (int)_renderLines.size(); };
@@ -125,7 +127,8 @@ protected:
         COLOR forecolor;
     } _defaultParams;
     GRAVITY _gravity;
-    int _maxLines; // 0=as many as needed, >=1 = text will ellipsize on the last line
+    int _maxLines; // 0=as many as needed, >=1 implies _ellipsize=true
+    bool _ellipsize; // Text will ellipsize rather than overflow bounds and become scrollable
     SIZE _constrainingSize;
     RECT _containingRect;
     RECT _rect;

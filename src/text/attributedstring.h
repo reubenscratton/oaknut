@@ -85,12 +85,14 @@ public:
     void clearAttributes();
     attributed_string& operator=(const attributed_string& str);
 
+    void applyStyle(const string& s);
     void applyStyle(const class style* s);
     
     void append(const attributed_string& str);
 
     // Helpers for standard attributes
     static attribute font(oak::Font* font) { return attribute(font); }
+    static attribute font_weight(float weight) { return attribute(FontWeight, weight); }
     static attribute bold() { return attribute(FontWeight, FONT_WEIGHT_BOLD); }
     static attribute forecolor(COLOR color) { return attribute(Forecolor, color); }
     static attribute leadingSpace(float space) { return attribute(LeadingSpace, space); }

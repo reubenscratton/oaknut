@@ -17,6 +17,7 @@
 TextLayout::TextLayout() {
     _defaultParams.font = app->defaultFont();
     _defaultParams.forecolor = 0xFF000000; // todo: style
+    _ellipsize = false;
 }
 
 void TextLayout::setText(const attributed_string& text) {
@@ -45,6 +46,13 @@ void TextLayout::setMaxLines(int maxLines) {
     _invalid |= INVALID_GLYPHS;
 }
 
+void TextLayout::setEllipsize(bool ellipsize) {
+    if (ellipsize != _ellipsize) {
+        _ellipsize = ellipsize;
+        _invalid |= INVALID_GLYPHS;
+    }
+}
+
 void TextLayout::setGravity(GRAVITY gravity) {
     _gravity = gravity;
     _invalid |= INVALID_POSITION;
@@ -67,6 +75,8 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
     // Phase 1: Rebuild _renderGlyphs
     if (_invalid & INVALID_GLYPHS) {
 
+        auto numChars = _text.length();
+        
         // Reset glyphs state
         _renderGlyphs.clear();
         RENDER_PARAMS currentParams = _defaultParams;
@@ -91,7 +101,14 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
             }
 
             // Unapply spans that end at this point
-            while (spanEndIterator!=_text._attributes.end() && i>=spanEndIterator->end) {
+            while (spanEndIterator!=_text._attributes.end()) {
+                int32_t end = spanEndIterator->end;
+                if (end < 0) {
+                    end += numChars;
+                }
+                if (i < end) {
+                    break;
+                }
                 auto endingSpan = (*spanEndIterator);
                 if (endingSpan.attribute._type == attributed_string::attribute_type::Font) {
                     currentParams.font = fontStack.top();
@@ -233,6 +250,33 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
                 
                 // Break the loop if we've reached the maximum number of lines
                 if (_maxLines && _renderLines.size()>=_maxLines) {
+                    
+                    if (_ellipsize) {
+                        
+                        // 'Rewind' the line to fit the ellipsis
+                        auto forecolor = rg.forecolor;
+                        Glyph* dotGlyph = currentFont->getGlyph('.');
+                        float ellipsisWidth = dotGlyph->_advance.width * 2 + dotGlyph->_size.width;
+                        while (currentLine->count > 0
+                               && (currentLine->rect.size.width + ellipsisWidth) > constrainingSize.width) {
+                            currentLine->count--;
+                            auto& lastChar = _renderGlyphs[currentLine->start + currentLine->count];
+                            currentLine->rect.size.width -= lastChar.glyph->_advance.width;
+                        }
+                        
+                        // Append the ellipsis glyphs
+                        _renderGlyphs.erase(_renderGlyphs.begin() + currentLine->start + currentLine->count, _renderGlyphs.end());
+                        _renderGlyphs.emplace_back(RENDER_GLYPH {dotGlyph, forecolor});
+                        currentLine->rect.size.width += dotGlyph->_advance.width;
+                        currentLine->count++;
+                        _renderGlyphs.emplace_back(RENDER_GLYPH {dotGlyph, forecolor});
+                        currentLine->rect.size.width += dotGlyph->_advance.width;
+                        currentLine->count++;
+                        _renderGlyphs.emplace_back(RENDER_GLYPH {dotGlyph, forecolor});
+                        currentLine->rect.size.width += dotGlyph->_size.width;
+                        currentLine->count++;
+
+                    }
                     break;
                 }
 
