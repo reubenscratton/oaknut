@@ -6,6 +6,9 @@
 #include "cellsmodulearticlebody.h"
 #include "elementmedia.h"
 #include "cell.h"
+//#include "../common/imageview.h"
+#include "cellmedia.h"
+
 /*#import "BNElementText.h"
 #import "BNElementAdvert.h"
 #import "BNImage.h"
@@ -31,14 +34,27 @@ public:
     void setItem(BNItem* item) override {
         _ll->removeAllSubviews();
         EDGEINSETS insets = {32,24,0,24};
-        const style* s = app->getStyle("articles.introduction");
-        for (auto& pa: item->_paragraphs) {
-            Label* label = new Label();
-            label->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
-            label->setPadding(insets);
-            label->setFontWeight(FONT_WEIGHT_THIN);
-            label->setText(pa);
-            _ll->addSubview(label);
+        for (auto& elem : item->_elements) {
+            if (elem.text.lengthInBytes()) {
+                Label* label = new Label();
+                label->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+                label->setPadding(insets);
+                label->setFontWeight(FONT_WEIGHT_THIN);
+                label->setLineHeight(1.25,0);
+                label->setText(elem.text);
+                _ll->addSubview(label);
+            }
+            if (elem.image) {
+                /*BNImageView* imageView = new BNImageView();
+                imageView->setBNImage(elem.image);
+                imageView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Aspect(elem.image->_height/(float)elem.image->_width));
+                _ll->addSubview(imageView);*/
+                BNCellMedia* mediaCell = new BNCellMedia(_module);
+                mediaCell->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+                mediaCell->setMediaObject(elem.image, item);
+                _ll->addSubview(mediaCell);
+
+            }
         }
     }
 
@@ -78,9 +94,8 @@ void BNCellsModuleArticleBody::updateLayoutWithContentObject(BNContent* contentO
             primaryImage = (BNImage*)_item->findChildObject(BNModelTypeVideo, BNRelationshipTypePlacementPrimary);
         }
         for (auto e=elements.begin() ; e!=elements.end() ; e++) {
-			if ((*e)->isElementMedia()) {
-				BNElementMedia* mediaElement = (BNElementMedia*)(*e);
-				if (primaryImage && primaryImage->_modelId == mediaElement->_media->_modelId) {
+			if (e->media) {
+				if (primaryImage && primaryImage->_modelId == e->media->_modelId) {
 					elements.erase(e);
 					break;
 				}

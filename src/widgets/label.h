@@ -27,6 +27,7 @@ public:
     virtual void setFontName(const string& fontName);
     virtual void setFontSize(float fontSize);
     virtual void setFontWeight(float fontWeight);
+    virtual void setLineHeight(float mul, float abs);
     virtual void setMaxLines(int maxLines);
     virtual bool getEllipsize() const;
     virtual void setEllipsize(bool ellipsize);

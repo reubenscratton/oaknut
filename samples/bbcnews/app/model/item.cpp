@@ -8,6 +8,16 @@
 
 
 
+static BNRelationship* findRelationshipByModelId(const vector<BNRelationship*>& relationships, const string& modelId) {
+    for (auto rel : relationships) {
+        if (rel->_childObject->_modelId == modelId) {
+            return rel;
+        }
+    }
+    return nullptr;
+}
+
+
 
 BNItem::BNItem(const string& type, const string& modelId) : BNContent(type, modelId) {
 }
@@ -47,7 +57,7 @@ BNItem::BNItem(const variant& json) : BNContent(json) {
         // Paragraphs
         else if (tag.isOneOf(textElemNames)) {
             if (isCloseTag) {
-                _paragraphs.push_back(currentPara);
+                _elements.push_back(Element(currentPara));
                 currentPara.clear();
             } else {
                 if (tag == "list") {
@@ -65,7 +75,17 @@ BNItem::BNItem(const variant& json) : BNContent(json) {
         // Images and videos
         else if (tag == "image" || tag == "video" || tag == "audio") {
             string id = xml.attributeValue("id");
-            // todo:
+            const string modelType = "bbc.mobile.news." + tag;
+            auto rels = findOrderedRelationships({modelType}, {});
+            auto rel = findRelationshipByModelId(rels, id);
+            if (rel) {
+                if (tag == "image") {
+                    _elements.push_back(Element((BNImage*)rel->_childObject));
+                } else {
+                    _elements.push_back(Element((BNAV*)rel->_childObject));
+                }
+
+            }
         }
         
         // List items
@@ -255,15 +275,6 @@ vector<BNBaseModel*> BNItem::primaryAVs() {
 }
 
 
-static BNRelationship* findRelationshipByModelId(const vector<BNRelationship*>& relationships, const string& modelId) {
-    for (auto rel : relationships) {
-		if (rel->_childObject->_modelId == modelId) {
-			return rel;
-		}
-	}
-	return nullptr;
-}
-
 BNRelationship* BNItem::imageForMediaId(const string& mediaId) {
     auto bodyImages = findOrderedRelationships({BNModelTypeImage}, {});
 	return findRelationshipByModelId(bodyImages, mediaId);
@@ -285,22 +296,14 @@ void BNItem::configureAfterParsing() {
 		return;
 	}
 	
-	// Remove any empty text elements (cos they cause crashes)
+	// Count leading images
 	int leadingImageCount = 0;
-	bool seenFirstTextElement = false;
 	for (uint32_t i=0 ; i<_elements.size() ; i++) {
-		BNElement* element = (BNElement*)_elements[i];
-		if (element->isElementText()) {
-			BNElementText* elementText = (BNElementText*)element;
-			if (elementText->_text.length() == 0) {
-                _elements.erase(_elements.begin() + i);
-				i--;
-			}
-			seenFirstTextElement = true;
+		Element& element = _elements[i];
+		if (element.text.lengthInBytes()) {
+            break;
 		} else {
-			if (!seenFirstTextElement) {
-				leadingImageCount++;
-			}
+            leadingImageCount++;
 		}
 	}
 	

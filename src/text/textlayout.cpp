@@ -17,6 +17,8 @@
 TextLayout::TextLayout() {
     _defaultParams.font = app->defaultFont();
     _defaultParams.forecolor = 0xFF000000; // todo: style
+    _defaultParams.lineHeightMul = 1.f;
+    _defaultParams.lineHeightAbs = 0.f;
     _ellipsize = false;
 }
 
@@ -57,6 +59,18 @@ void TextLayout::setGravity(GRAVITY gravity) {
     _gravity = gravity;
     _invalid |= INVALID_POSITION;
 }
+
+void TextLayout::setLineHeight(float mul, float abs) {
+    if (mul != _defaultParams.lineHeightMul) {
+        _defaultParams.lineHeightMul = mul;
+        _invalid |= INVALID_POSITION;
+    }
+    if (abs != _defaultParams.lineHeightAbs) {
+        _defaultParams.lineHeightAbs = abs;
+        _invalid |= INVALID_POSITION;
+    }
+}
+
 
 
 #define isWhitespace(c) (c==' ')
@@ -334,10 +348,13 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
 
         // Calculate line baselines and heights so we know total height
         int numLines = (int)_renderLines.size();
-        //float y = 0;
         for (int i=0 ; i<numLines ; i++) {
             RENDER_LINE& line = _renderLines.at(i);
             float lineHeight = line.tallestFont->_height;
+            lineHeight *= _defaultParams.lineHeightMul;
+            lineHeight += _defaultParams.lineHeightAbs;
+            
+
             float baseline = line.tallestFont->_ascent;
             for (auto charIndex = line.start ; charIndex<line.start+line.count ; charIndex++) {
                 auto& rg = _renderGlyphs[charIndex];
@@ -352,12 +369,11 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
                     baseline = lineHeight + font->_descent;
                 }
             }
-            line.rect.size.height = lineHeight;
-            //line.rect.origin = {0, y};
             line.baseline = baseline;
             _rect.size.width = MAX(_rect.size.width, line.rect.size.width);
+
+            line.rect.size.height = lineHeight;
             _rect.size.height += lineHeight;
-            //y += lineHeight;
         }
     
         // Round measured size up to whole pixels
@@ -429,7 +445,7 @@ void TextLayout::layout(RECT& containingRect) {
                 }
             }
             
-            y += line.rect.size.height;
+            y += line.rect.size.height;;
         }
         
         _invalid &= ~ INVALID_POSITION;

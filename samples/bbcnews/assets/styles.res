@@ -254,12 +254,14 @@ byline: {
     }
 }
 
-imageCaptions: {
+imageCaption: {
+    size: fill, wrap
+    background: #f8f8f8
     font-weight: light
     font-size: $font-sizes.summary
-    color: #666666
-    insets~tablet: 32dp,24dp,32dp,16dp
-    insets~!tablet: 16dp,12dp,16dp,8dp
+    forecolor: #666666
+    padding~tablet: 32dp,24dp,32dp,16dp
+    padding: 16dp,8dp,16dp,8dp
 }
 
 // Top Stories : Photo gallery cell

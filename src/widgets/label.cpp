@@ -110,6 +110,11 @@ void Label::setFontWeight(float weight) {
     invalidateContentSize();
 }
 
+void Label::setLineHeight(float mul, float abs) {
+    _textLayout.setLineHeight(mul, abs);
+    invalidateContentSize();
+}
+
 void Label::setMaxLines(int maxLines) {
     _textLayout.setMaxLines(maxLines);
     invalidateContentSize();

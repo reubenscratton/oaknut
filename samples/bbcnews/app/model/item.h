@@ -13,9 +13,18 @@ public:
     BNItem(const string& type, const string& modelId);
     BNItem(const string& modelId);
     
-    vector<BNElement*> _elements;
+    struct Element {
+        attributed_string text;
+        BNImage* image;
+        BNAV* media;
+        
+        Element(attributed_string& a) : text(a), image(nullptr), media(nullptr) {}
+        Element(BNImage* img) : image(img), media(nullptr) {}
+        Element(BNAV* av) : image(nullptr), media(av) {}
+    };
+    
+    vector<Element> _elements;
     string _shortName;
-    vector<attributed_string> _paragraphs;
 
 
     BNImage* getIndexImage();

@@ -18,8 +18,6 @@ struct ImageCacheKey {
 
 class BNImageView : public ImageView {
 public:
-    bool _determineHeightFromAspect;
-
     void attachToWindow(Window *window) override;
     void layout(RECT constraint) override;
 

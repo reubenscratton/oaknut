@@ -58,6 +58,8 @@ public:
     int maxLines() const { return _maxLines; }
     bool ellipsize() const {return _ellipsize; }
     void setEllipsize(bool ellipsize);
+    // float lineHeight() const { return _defaultParams.lineHeight; }
+    void setLineHeight(float mul, float abs);
     
     // Measurement
     SIZE measure(SIZE& constrainingSize);
@@ -125,6 +127,8 @@ protected:
     struct RENDER_PARAMS {
         Font* font;
         COLOR forecolor;
+        float lineHeightMul;
+        float lineHeightAbs;
     } _defaultParams;
     GRAVITY _gravity;
     int _maxLines; // 0=as many as needed, >=1 implies _ellipsize=true

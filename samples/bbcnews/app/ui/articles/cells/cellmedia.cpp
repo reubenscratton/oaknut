@@ -32,10 +32,8 @@ BNCellMedia::BNCellMedia(BNCellsModule* module) : BNCellContent(module) {
     
     if (!module->_json.boolVal("hideCaption")) {
         _caption = new BNLabel();
-        _caption->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
-        _caption->setLayoutOrigin(ALIGNSPEC::Left(), ALIGNSPEC::Bottom());
-        _caption->setBackgroundColor(0xFFf8f8f8);
-        _caption->setFontSize(app->dp(12));
+        _caption->setLayoutOrigin(ALIGNSPEC::Left(), ALIGNSPEC::Below(_imageView, 0));
+        _caption->applyStyle("imageCaption");
         addSubview(_caption);
     }
     /*
