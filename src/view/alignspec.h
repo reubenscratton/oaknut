@@ -28,7 +28,6 @@ typedef struct ALIGNSPEC {
     ALIGNSPEC(View* anchor, float multiplierAnchor, float multiplierOwn, float margin);
     ALIGNSPEC(const variant& value, View* view);
 
-    static ALIGNSPEC None(); // Use when view positioning is done in code
     static ALIGNSPEC Abs(float x);
     static ALIGNSPEC Left();
     static ALIGNSPEC Center();

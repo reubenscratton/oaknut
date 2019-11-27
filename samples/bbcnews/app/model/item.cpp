@@ -68,7 +68,7 @@ BNItem::BNItem(const variant& json) : BNContent(json) {
                 if (tag == "paragraph") {
                     style_name = xml.attributeValue("role");
                 }
-                currentPara.applyStyle(app->getStyle("article."+style_name));
+                currentPara.applyStyle(app->getStyle("article.text."+style_name));
             }
         }
         
@@ -93,13 +93,22 @@ BNItem::BNItem(const variant& json) : BNContent(json) {
             if (isCloseTag) {
                 currentPara.append("\n");
             } else {
-                string itemPrefix;
                 if (listIsOrdered) {
-                    itemPrefix = string::format("%lu.  ", (unsigned long)listOrdinal++);
+                    string itemPrefix = string::format("%lu.  ", (unsigned long)listOrdinal++);
+                    currentPara.append(itemPrefix);
                 } else {
-                    itemPrefix = "\u25A0   ";
+                    auto traitsStart = currentPara.length();
+                    currentPara.append("\u25A0   ");
+                    currentPara.setAttribute(attributed_string::forecolor(0xFFCCCCCC), traitsStart, traitsStart+1);
+                    /*BNTextTraitFontScale* shrink = [[BNTextTraitFontScale alloc] initWithStart:textElement.text.length];
+                    shrink.scale = 0.5f;
+                    shrink.end = greyColor.end;
+                    [textElement.traits addObject:shrink];
+                    BNTextTraitBaselineOffset* offset = [[BNTextTraitBaselineOffset alloc] initWithStartAndEnd:shrink.start end:shrink.end];
+                    offset.distance = 0.3f;
+                    [textElement.traits addObject:offset];*/
+
                 }
-                currentPara.append(itemPrefix);
             }
         }
         

@@ -60,13 +60,19 @@ void BNCellMedia::setMediaObject(BNBaseModel* mediaObject, BNItem* containingIte
     string captionText;
     if (mediaObject->isImage()) {
         _image = (BNImage*)mediaObject;
-        _caption->setText(_image->_caption);
+        captionText = _image->_caption;
     } else if (mediaObject->isAV()) {
         _media = (BNAV*)mediaObject;
         _image = _media->posterImage();
-        _caption->setText(_media->_caption);
+        captionText = _media->_caption;
     }
-
+    if (captionText.length()) {
+        _caption->setText(captionText);
+        _caption->setVisibility(Visibility::Visible);
+    } else {
+        _caption->setVisibility(Visibility::Gone);
+    }
+    
     if (_imageAspect > 0.f) {
         setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Aspect(_imageAspect));
     }

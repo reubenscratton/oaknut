@@ -223,7 +223,7 @@ public:
     // Parsing from JSON and config files
     static variant parse(const string& str, int flags);
     string toJson() const;
-    static variant parseNumber(const string& str, uint32_t& offset);
+    static variant parseNumber(const string& str, uint32_t& offset, bool convertExpressionsToStrings=false);
 
     // Javascript helpers
 #ifdef PLATFORM_WEB

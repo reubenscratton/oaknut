@@ -95,7 +95,7 @@ static UITextInputStringTokenizer* _tokenizer;
     auto tr = _window->_textInputReceiver;
     int selStart = tr->getSelectionStart();
     int selEnd = tr->getInsertionPoint();
-    if (tr->insertText(cstr, selStart, selEnd)) {
+    if (tr->insertText(string(cstr, -1), selStart, selEnd)) {
         selStart += text.length;
         tr->setSelectedRange(selStart, selStart);
         [_textInputDelegate textDidChange:self];
@@ -243,7 +243,7 @@ static UITextInputStringTokenizer* _tokenizer;
     NSLOG(@"replaceRange %d:%d %@", (int)r->_start.pos, (int)r->_end.pos, text);
     const char* cstr = [text cStringUsingEncoding:NSUTF8StringEncoding];
     [_textInputDelegate textWillChange:self];
-    _window->_textInputReceiver->insertText(cstr, (int)r->_start.pos, (int)r->_end.pos);
+    _window->_textInputReceiver->insertText(string(cstr,-1), (int)r->_start.pos, (int)r->_end.pos);
     if (selShift != 0) {
         _window->_textInputReceiver->setSelectedRange(selStart+selShift, insertionPoint+selShift);
     }
@@ -267,9 +267,9 @@ static UITextInputStringTokenizer* _tokenizer;
     SimpleTextPos* posStart = (SimpleTextPos*)range.start;
     SimpleTextPos* posEnd = (SimpleTextPos*)range.end;
     string text = _window->_textInputReceiver->textInRange((int)posStart.pos, (int)posEnd.pos);
-    if (text.data() == NULL) text = "";
+    if (text.c_str() == NULL) text = "";
     NSLOG(@"textInRange %d:%d -> %s", posStart.pos, posEnd.pos, text.data());
-    return [NSString stringWithUTF8String:text.data()];
+    return [NSString stringWithUTF8String:text.c_str()];
 }
 
 - (nullable UITextRange *)textRangeFromPosition:(nonnull UITextPosition *)fromPosition toPosition:(nonnull UITextPosition *)toPosition {

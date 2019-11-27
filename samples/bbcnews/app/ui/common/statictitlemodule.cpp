@@ -16,26 +16,20 @@ DECLARE_DYNCREATE(BNStaticTitleModule, const variant&);
 BNStaticTitleModule::BNStaticTitleModule(const variant& json) : BNModule(json) {
     _text = json.stringVal("title");
     string titleColor = json.stringVal("titleColor");
-    if (titleColor.length()) {
+    /*if (titleColor.length()) {
         _titleColor = app->getStyleColor(titleColor);
     } else {
         _titleColor = 0xFF000000;
-    }
+    }*/
     _contentId = json.stringVal("contentLink");
-    string styleName = json.stringVal("textAttrs");
-    if (!styleName.length()) {
-        styleName = "title";
-    }
-    _style = app->getStyle(styleName);
-    _numLines = json.intVal("numLines");
+    //_style = app->getStyle(styleName);
 }
 
 BNStaticTitleModule::BNStaticTitleModule(BNStaticTitleModule* source) : BNModule(source) {
 	_text = source->_text;
-	_titleColor = source->_titleColor;
+	//_titleColor = source->_titleColor;
 	_contentId = source->_contentId;
-	_style = source->_style;
-	_numLines = source->_numLines;
+	//_style = source->_style;
 }
 
 BNModule* BNStaticTitleModule::clone() {
@@ -128,7 +122,8 @@ void BNStaticTitleModule::addToView(View* superview) {
     BNLabel* label = new BNLabel();
     label->setLayoutSize(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
     label->setText(_text);
-    label->setTextColor(_titleColor);
+    label->setFontWeight(FONT_WEIGHT_LIGHT);
+    //label->setTextColor(_titleColor);
     label->setPadding(_padding);
 	if (_contentId.length()) {
 		//_labelInfo->createButton(superview);
@@ -145,11 +140,6 @@ void BNStaticTitleModule::addToView(View* superview) {
         label->onClick = [=]() {
             onTitleTapped();
         };
-		
-		//TODO [self.labelInfo.label setAccessibilityTraits:UIAccessibilityTraitHeader | UIAccessibilityTraitButton];
-
-	} else {
-		//TODO [self.labelInfo.label setAccessibilityTraits:UIAccessibilityTraitHeader];
 	}
     superview->addSubview(label);
 }

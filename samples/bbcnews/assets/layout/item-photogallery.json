@@ -5,7 +5,7 @@
 	"modules": [
 		{
 			"class": "BNVerticalStack",
-			"fillParent": "yes",
+			"fillParent": true,
 			"mode!=tablet":{"padding": "{0,0,106,0}"},
 			"mode==tablet":{"padding": "{0,0,256,0}"},
 			"modules": [

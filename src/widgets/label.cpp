@@ -78,6 +78,14 @@ bool Label::applySingleStyle(const string& name, const style& value) {
         setEllipsize(value.boolVal());
         return true;
     }
+    if (name=="line-height") {
+        auto m = value.measurementVal();
+        if (m._unit == measurement::PC) {
+            setLineHeight(m.val(), 0);
+        } else {
+            setLineHeight(0, m.val());
+        }
+    }
     return View::applySingleStyle(name, value);
 }
 

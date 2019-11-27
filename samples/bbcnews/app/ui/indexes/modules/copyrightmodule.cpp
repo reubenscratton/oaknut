@@ -11,7 +11,6 @@ class BNCopyrightModule : public BNStaticTitleModule {
 public:
 
     BNCopyrightModule(const variant& json) : BNStaticTitleModule(json) {
-        _style = app->getStyle("copyrightNotice");
     }
 
     void updateLayoutWithContentObject(BNContent* contentObject) override {

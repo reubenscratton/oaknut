@@ -19,11 +19,10 @@ public:
 
     BNCellRelatedTopic(BNCellsModule* module) : BNCellContent(module) {
         _topicName = new BNLabel();
-        _topicName->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+        _topicName->applyStyle("relatedTopic");        
         addSubview(_topicName);
         View* divider = new View();
-        divider->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Abs(1));
-        divider->setBackgroundColor(0xff00ff00); // self.inverseColorScheme ? [UIColor thinDividerInvColor] : [UIColor thinDividerColor];
+        divider->applyStyle("linkDivider");
         addSubview(divider);
     }
     
@@ -34,16 +33,6 @@ public:
         _inverseColorScheme = parentItem->isMediaItem();
         _topicName->setText(_collection->_name);
     }
-
-/*
-- (void)measureForContainingRect:(CGRect)rect {
-	rect = UIEdgeInsetsInsetRect(rect, self.textAreaInsets);
-	[self.topicName measureForWidth:rect.size.width offset:CGPointMake(self.textAreaInsets.left, self.textAreaInsets.top)];
-	rect.size.height = self.topicName.bounds.size.height;
-	rect = UIEdgeInsetsUninsetRect(rect, self.textAreaInsets);
-	self.frameSize = rect.size;
-}*/
-
 
 
     void onTapped() override {

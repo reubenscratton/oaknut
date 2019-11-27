@@ -492,12 +492,15 @@ public:
     virtual View* hitTest(POINT& pt);
     virtual View* subviewContainingPoint(POINT pt);
     virtual int indexOfSubviewContainingPoint(POINT pt);
+    virtual void setDirectionalLockEnabled(bool enabled);
+    bool getDirectionalLockEnabled() const;
 protected:
     /**  \cond INTERNAL */
     virtual View* dispatchInputEvent(INPUTEVENT* event);
     virtual bool handleInputEvent(INPUTEVENT* event);
 	
     POINT _ptDrag;
+    bool _directionalLockEnabled;
     /**  \endcond */
     /**@}*/
 

@@ -33,18 +33,27 @@ public:
 
     void setItem(BNItem* item) override {
         _ll->removeAllSubviews();
-        EDGEINSETS insets = {32,24,0,24};
+        
+        // Filter out the primary image (as it is usually presented above the article text)
+        BNImage* primaryImage = nullptr;
+        if (!_module->_json.boolVal("includePrimaryMedia")) {
+            primaryImage = (BNImage*)item->findChildObject(BNModelTypeImage, BNRelationshipTypePlacementPrimary);
+            if (!primaryImage) {
+                primaryImage = (BNImage*)item->findChildObject(BNModelTypeVideo, BNRelationshipTypePlacementPrimary);
+            }
+        }
+        
+        auto textStyleDefault = app->getStyle("article.text.default");
+        
         for (auto& elem : item->_elements) {
             if (elem.text.lengthInBytes()) {
                 Label* label = new Label();
+                label->applyStyle(*textStyleDefault);
                 label->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
-                label->setPadding(insets);
-                label->setFontWeight(FONT_WEIGHT_THIN);
-                label->setLineHeight(1.25,0);
                 label->setText(elem.text);
                 _ll->addSubview(label);
             }
-            if (elem.image) {
+            if (elem.image && elem.image!=primaryImage) {
                 /*BNImageView* imageView = new BNImageView();
                 imageView->setBNImage(elem.image);
                 imageView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Aspect(elem.image->_height/(float)elem.image->_width));
@@ -84,24 +93,6 @@ void BNCellsModuleArticleBody::updateLayoutWithContentObject(BNContent* contentO
 	//UIColor* textColor = self.item.isMediaItem ? [UIColor contentForegroundInvColor] : [UIColor contentForegroundColor];
 	
 	
-	// Make a copy of the elements array
-	auto elements = _item->_elements;
-
-	// Remove the primary image from the article body
-	if (!_json.boolVal("includePrimaryMedia")) {
-        BNImage* primaryImage = (BNImage*)_item->findChildObject(BNModelTypeImage, BNRelationshipTypePlacementPrimary);
-        if (!primaryImage) {
-            primaryImage = (BNImage*)_item->findChildObject(BNModelTypeVideo, BNRelationshipTypePlacementPrimary);
-        }
-        for (auto e=elements.begin() ; e!=elements.end() ; e++) {
-			if (e->media) {
-				if (primaryImage && primaryImage->_modelId == e->media->_modelId) {
-					elements.erase(e);
-					break;
-				}
-			}
-		}
-	}
 	
 
 

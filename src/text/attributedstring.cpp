@@ -9,26 +9,32 @@
 
 
 attributed_string::attributed_string(const attributed_string& str) : string(str) {
-    _attributes = str._attributes;
+    for (auto a : str._attributes) {
+        setAttribute(a, a.start, a.end);
+    }
 }
 
 void attributed_string::append(const attributed_string& str) {
     int32_t c = length();
     string::append(str);
     for (auto a : str._attributes) {
-        setAttribute(a.attribute, a.start+c, a.end+c);
+        setAttribute(a, a.start+c, a.end+c);
     }
 }
 
 void attributed_string::setAttribute(const attributed_string::attribute& attribute, int32_t start, int32_t end) {
-    _attributes.emplace(attribute, start, end);
+    list<attribute_usage>::iterator it = _attributes.insert(_attributes.end(), attribute_usage(attribute, start, end));
+    assert(_starts.size() == _ends.size());
+    _starts.insert(it);
+    _ends.insert(it);
+    assert(_starts.size() == _ends.size());
 }
 const attributed_string::attribute* attributed_string::getAttribute(int32_t pos, attributed_string::attribute_type type) {
     const attributed_string::attribute* attr = NULL;
     for (auto& attribUse : _attributes) {
-        if (attribUse.attribute._type == type) {
+        if (attribUse._type == type) {
             if (attribUse.start<= pos && attribUse.end>pos) {
-                attr = &attribUse.attribute;
+                attr = &attribUse;
             }
         }
     }
@@ -38,11 +44,19 @@ const attributed_string::attribute* attributed_string::getAttribute(int32_t pos,
 
 void attributed_string::clearAttributes() {
     _attributes.clear();
+    _starts.clear();
+    _ends.clear();
 }
 
 attributed_string& attributed_string::operator=(const attributed_string& str) {
     string::operator=(str);
+    _starts.clear();
+    _ends.clear();
     _attributes = str._attributes;
+    for (auto it = _attributes.begin() ; it!=_attributes.end() ; it++) {
+        _starts.insert(it);
+        _ends.insert(it);
+    }
     return *this;
 }
 

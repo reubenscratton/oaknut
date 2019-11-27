@@ -100,8 +100,8 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
         stack<Font*> fontStack;
         stack<COLOR> forecolorStack;
         stack<Font*> fontWeightStack;
-        auto spanStartIterator = _text._attributes.begin();
-        auto spanEndIterator = _text._attributes.begin();
+        auto spanStartIterator = _text._starts.begin();
+        auto spanEndIterator = _text._ends.begin();
         
         // Iterate over text
         uint32_t offset = 0;
@@ -115,29 +115,29 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
             }
 
             // Unapply spans that end at this point
-            while (spanEndIterator!=_text._attributes.end()) {
-                int32_t end = spanEndIterator->end;
+            while (spanEndIterator!=_text._ends.end()) {
+                int32_t end = (*spanEndIterator)->end;
                 if (end < 0) {
                     end += numChars;
                 }
                 if (i < end) {
                     break;
                 }
-                auto endingSpan = (*spanEndIterator);
-                if (endingSpan.attribute._type == attributed_string::attribute_type::Font) {
+                auto& attrib = *(spanEndIterator);
+                if (attrib->_type == attributed_string::attribute_type::Font) {
                     currentParams.font = fontStack.top();
                     fontStack.pop();
                     paramsChanged = true;
                 }
-                else if (endingSpan.attribute._type == attributed_string::attribute_type::Forecolor) {
+                else if (attrib->_type == attributed_string::attribute_type::Forecolor) {
                     currentParams.forecolor = forecolorStack.top();
                     forecolorStack.pop();
                     paramsChanged = true;
                 }
-                else if (endingSpan.attribute._type == attributed_string::attribute_type::LeadingSpace) {
+                else if (attrib->_type == attributed_string::attribute_type::LeadingSpace) {
                     //leadingSpace = 0;
                 }
-                else if (endingSpan.attribute._type == attributed_string::attribute_type::FontWeight) {
+                else if (attrib->_type == attributed_string::attribute_type::FontWeight) {
                     currentParams.font = fontWeightStack.top();
                     fontWeightStack.pop();
                     paramsChanged = true;
@@ -146,24 +146,31 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
             }
             
             // Apply any spans that start at this point
-            while (spanStartIterator!=_text._attributes.end() && i>=spanStartIterator->start) {
-                auto startingSpan = (*spanStartIterator);
-                if (startingSpan.attribute._type == attributed_string::attribute_type::Font) {
+            while (spanStartIterator!=_text._starts.end()) {
+                int32_t start = (*spanStartIterator)->start;
+                if (start < 0) {
+                    start += numChars;
+                }
+                if (start > i) {
+                    break;
+                }
+                auto& attrib = *(spanStartIterator);
+                if (attrib->_type == attributed_string::attribute_type::Font) {
                     fontStack.push(currentParams.font);
-                    currentParams.font = startingSpan.attribute._font;
+                    currentParams.font = attrib->_font;
                     paramsChanged = true;
                 }
-                else if (startingSpan.attribute._type == attributed_string::attribute_type::Forecolor) {
+                else if (attrib->_type == attributed_string::attribute_type::Forecolor) {
                     forecolorStack.push(currentParams.forecolor);
-                    currentParams.forecolor = startingSpan.attribute._color;
+                    currentParams.forecolor = attrib->_color;
                     paramsChanged = true;
                 }
-                else if (startingSpan.attribute._type == attributed_string::attribute_type::LeadingSpace) {
+                else if (attrib->_type == attributed_string::attribute_type::LeadingSpace) {
                     //leadingSpace = startingSpan.attribute._f;
                 }
-                else if (startingSpan.attribute._type == attributed_string::attribute_type::FontWeight) {
+                else if (attrib->_type == attributed_string::attribute_type::FontWeight) {
                     fontWeightStack.push(currentParams.font);
-                    currentParams.font = Font::get(currentParams.font->_name, currentParams.font->_size, startingSpan.attribute._f);
+                    currentParams.font = Font::get(currentParams.font->_name, currentParams.font->_size, attrib->_f);
                     paramsChanged = true;
                 } else {
                     app->warn("unrecognized attribute type");

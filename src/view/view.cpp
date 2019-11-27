@@ -14,8 +14,8 @@ DECLARE_DYNCREATE(View);
 View::View() : _alpha(1.0f),
                 _alignspecHorz(ALIGNSPEC::Left()),
                 _alignspecVert(ALIGNSPEC::Top()),
-                _widthMeasureSpec(MEASURESPEC::None()),
-                _heightMeasureSpec(MEASURESPEC::None()),
+                _widthMeasureSpec(MEASURESPEC::Abs(0)),
+                _heightMeasureSpec(MEASURESPEC::Abs(0)),
                 _clipsContents(true)
 {
     _visibility = Visible;
@@ -56,10 +56,10 @@ bool View::applySingleStyle(const string& name, const style& value) {
         processAlignStyleValue(value, &_alignspecHorz, &_alignspecVert);
         return true;
     } else if (name == "alignX") {
-        _alignspecHorz = ALIGNSPEC(value.stringVal(), this);
+        _alignspecHorz = ALIGNSPEC(value.variantVal(), this);
         return true;
     } else if (name == "alignY") {
-        _alignspecVert = ALIGNSPEC(value.stringVal(), this);
+        _alignspecVert = ALIGNSPEC(value.variantVal(), this);
         return true;
     } else if (name == "background") {
         if (handleStatemapDeclaration(name, value)) {
@@ -638,7 +638,7 @@ float View::getAlignspecVal(const ALIGNSPEC& spec, bool isVertical) {
     return val;
 }
 
-void View::layout(RECT constraint) {
+void View::layout(RECT containingRect) {
     if (_visibility == Gone) {
         return;
     }
@@ -653,16 +653,16 @@ void View::layout(RECT constraint) {
         alignRect.origin.x = _alignspecHorz.anchor->_rect.origin.x;
         alignRect.size.width = _alignspecHorz.anchor->_rect.size.width;
     } else {
-        alignRect.origin.x = constraint.origin.x;
-        alignRect.size.width = constraint.size.width;
+        alignRect.origin.x = containingRect.origin.x;
+        alignRect.size.width = containingRect.size.width;
     }
     if (_alignspecVert.anchor) {
         assert(_alignspecVert.anchor->_layoutValid);
         alignRect.origin.y = _alignspecVert.anchor->_rect.origin.y;
         alignRect.size.height = _alignspecVert.anchor->_rect.size.height;
     } else {
-        alignRect.origin.y = constraint.origin.y;
-        alignRect.size.height = constraint.size.height;
+        alignRect.origin.y = containingRect.origin.y;
+        alignRect.size.height = containingRect.size.height;
     }
     
 
@@ -670,48 +670,54 @@ void View::layout(RECT constraint) {
     if (_widthMeasureSpec.type==MEASURESPEC::TypeRelative) {
         if (_widthMeasureSpec.ref) {
             if (!_widthMeasureSpec.ref->_layoutValid) {
-                RECT constraintForSubviews = constraint;
+                RECT constraintForSubviews = containingRect;
                 constraintForSubviews.origin = {0,0};
                 _padding.applyToRect(constraintForSubviews);
                 _widthMeasureSpec.ref->layout(constraintForSubviews);
             }
             refSize.width = _widthMeasureSpec.ref->getWidth();
         } else {
-            refSize.width = constraint.size.width;
+            refSize.width = containingRect.size.width;
+
+            // If aligning to a sibling view AND the reference view is the parent, then
+            // subtract the sibling size so that the obvious intention (fill space not
+            // used by sibling) is easy to do. You're never going to want to match parent
+            // size while aligning to a sibling, and if you ever *do* want that then simply
+            // explicitly set the 'ref'' to the parent.
+            if (_alignspecHorz.anchor) {
+                float x = floorf(_alignspecHorz.calc(containingRect.size.width, alignRect.origin.x, alignRect.size.width));
+                refSize.width -= fabs(x);
+            }
         }
+        
         // assert(refSize.width >= 0); // relative-size to content-wrapping parent not allowed!
-    }
-    else if (_widthMeasureSpec.type==MEASURESPEC::TypeFill) {
-        if (_alignspecHorz.anchor) assert(_alignspecHorz.anchor->_layoutValid);
-        float aa = _alignspecHorz.anchor ? alignRect.origin.x : 0;
-        float x = floorf(_alignspecHorz.calc(constraint.size.width, aa, alignRect.size.width));
-        refSize.width = constraint.size.width - fabs(x);
     }
     if (_heightMeasureSpec.type==MEASURESPEC::TypeRelative) {
         if (_heightMeasureSpec.ref) {
             if (!_heightMeasureSpec.ref->_layoutValid) {
-                RECT constraintForSubviews = constraint;
+                RECT constraintForSubviews = containingRect;
                 constraintForSubviews.origin = {0,0};
                 _padding.applyToRect(constraintForSubviews);
                 _heightMeasureSpec.ref->layout(constraintForSubviews);
             }
             refSize.height = _heightMeasureSpec.ref->getHeight();
         } else {
-            refSize.height = constraint.size.height;
+            refSize.height = containingRect.size.height;
+            
+            // If using a sibling anchor, subtract sibling size
+            if (_alignspecVert.anchor) {
+                float y = floorf(_alignspecVert.calc(containingRect.size.height, alignRect.origin.y, alignRect.size.height));
+                refSize.height -= fabs(y);
+            }
         }
+        
         // assert(refSize.height >= 0); // relative-size to content-wrapping parent not allowed!
-    }
-    else if (_heightMeasureSpec.type==MEASURESPEC::TypeFill) {
-        if (_alignspecVert.anchor) assert(_alignspecVert.anchor->_layoutValid);
-        float aa = _alignspecVert.anchor ? alignRect.origin.y : 0;
-        float y = floorf(_alignspecVert.calc(constraint.size.height, aa, alignRect.size.height));
-        refSize.height = constraint.size.height - fabs(y);
     }
 
     // Work out the constraining size. If our sizespec is relative to parent or sibling then the
     // constraining size is whatever the spec works out to, but if it's content based then the
     // constraining size is the one passed into this function.
-    SIZE constrainingSize = constraint.size;
+    SIZE constrainingSize = containingRect.size;
     if (_widthMeasureSpec.type != MEASURESPEC::TypeContent) {
         constrainingSize.width = ceilf(refSize.width * _widthMeasureSpec.mul + _widthMeasureSpec.con);
     }
@@ -741,16 +747,18 @@ void View::layout(RECT constraint) {
         refSize.height = _padding.top + _contentSize.height + _padding.bottom;
     }
 
+    _layoutValid = true;
+
 
     // Layout subviews
     if (_subviews.size() > 0) {
         
         // If wrapping content but then use the constraint size and update afterwards
         if (_widthMeasureSpec.type==MEASURESPEC::TypeContent && _contentSize.width<=0) {
-            refSize.width = constraint.size.width;
+            refSize.width = containingRect.size.width;
         }
         if (_heightMeasureSpec.type==MEASURESPEC::TypeContent && _contentSize.height<=0) {
-            refSize.height = constraint.size.height;
+            refSize.height = containingRect.size.height;
         }
         
         RECT constraintForSubviews;
@@ -816,7 +824,6 @@ void View::layout(RECT constraint) {
     }
 #endif
 
-    _layoutValid = true;
 }
 
 
@@ -963,7 +970,8 @@ View* View::getRootView() {
 }
 
 void View::insertSubview(View* subview, int index) {
-
+    assert(subview != this);
+    assert(!subview->_parent);
     _subviews.insert(_subviews.begin()+index, subview);
 	subview->_parent = this;
 	if (_window) {
@@ -1003,6 +1011,7 @@ void View::removeSubview(int index) {
 		if (_window) {
 			_subviews[index]->detachFromWindow();
 		}
+        _subviews[index]->_parent = nullptr;
 		_subviews.erase(_subviews.begin() + index);
 	}
 }
@@ -1300,6 +1309,13 @@ View* View::hitTest(POINT& pt) {
 	return NULL;
 }
 
+void View::setDirectionalLockEnabled(bool enabled) {
+    _directionalLockEnabled = enabled;
+}
+bool View::getDirectionalLockEnabled() const {
+    return _directionalLockEnabled;
+}
+
 //
 // dispatches an input event to a view.
 //
@@ -1343,11 +1359,19 @@ bool View::handleInputEvent(INPUTEVENT* event) {
             setPressed(false);
         }
         
-        if (event->type == INPUT_EVENT_DRAG) {
+        if (event->type == INPUT_EVENT_MOVE) {
             if (canScrollVertically() || canScrollHorizontally()) {
                 retVal = true;
             }
         }
+        
+        //if (event->type == INPUT_EVENT_DOWN || event->type == INPUT_EVENT_DRAG) {
+            //app->log("DRAG %X y=%f", this, event->pt.y);
+            bool scrolled = _scrollVert.handleEvent(this, true, event);
+            scrolled |= _scrollHorz.handleEvent(this, false, event);
+            retVal |= scrolled;
+            
+        //}
 
 
         if ((onInputEvent || onClick)) {
@@ -1355,9 +1379,6 @@ bool View::handleInputEvent(INPUTEVENT* event) {
         }
     }
     
-    //app->log("%X y=%f", this, event->pt.y);
-    bool scrolled = _scrollVert.handleEvent(this, true, event);
-    scrolled |= _scrollHorz.handleEvent(this, false, event);
     
     if (onClick) {
         retVal = true;
@@ -1370,7 +1391,7 @@ bool View::handleInputEvent(INPUTEVENT* event) {
 	}
 
 
-	return retVal || scrolled;
+	return retVal;
 }
 
 IKeyboardInputHandler* View::getKeyboardInputHandler() {

@@ -51,7 +51,8 @@ public:
 
 
 protected:
-    float _dragStart, _dragLast, _dragTotal;
+    float _dragLast, _dragTotal;
+    bool _isDragging;
     float _offsetStart;
     float _alpha;
     sp<class Animation> _fadeAnim;

@@ -29,12 +29,13 @@ public:
 
     bool isCellsModule() override { return true; }
 
+    const style* _titleStyle;
+    string _cellClass;
     int _limit;
     int _offset;
     vector<string> _primary;
     vector<string> _secondary;
     vector<string> _format;
-    string _cellClass;
     EDGEINSETS _cellMargins;
     EDGEINSETS _cellPadding;
     vector<BNCell*> _cells;

@@ -18,12 +18,8 @@ public:
     sp<BNLabel> _label;
     string _contentId;
     string _text;
-    COLOR _titleColor;
     const style* _style;
-    int _numLines;
 
-    //virtual void createLabelView(View* superview);
-    //virtual void removeLabelView();
     virtual void onTitleTapped();
     //virtual bool showBackgroundForLinks();
     

@@ -189,13 +189,16 @@ bool ScrollInfo::handleEvent(View* view, bool isVertical, INPUTEVENT* event) {
     val = isVertical ? event->pt.y : event->pt.x;
     
     if (event->type == INPUT_EVENT_DOWN) {
-        _dragStart = _dragLast = val;
-        _offsetStart = offset;
-        _dragTotal = 0;
         flingCancel();
-        rv = scrollableSize > viewSize;
+        // rv = scrollableSize > viewSize;
     }
-    if (event->type == INPUT_EVENT_MOVE) {
+    if (event->type == INPUT_EVENT_DRAG) {
+        if (!_isDragging) {
+            _isDragging = true;
+            _dragLast = val;
+            _offsetStart = offset;
+            _dragTotal = 0;
+        }
         d = (val - _dragLast);
         _dragLast = val;
     }
@@ -229,6 +232,7 @@ bool ScrollInfo::handleEvent(View* view, bool isVertical, INPUTEVENT* event) {
 
 
     if (event->type == INPUT_EVENT_UP) {
+        _isDragging = false;
         if (overscroll) {
             flingCancel();
             _fling = new Bounce(offset, (offset<=0)?0:contentSize-viewSize);

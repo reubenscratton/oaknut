@@ -16,9 +16,8 @@ MEASURESPEC::MEASURESPEC(Type type, View* ref, float mul, float con) {
     this->con = con;
 }
 
-MEASURESPEC MEASURESPEC::None() { return MEASURESPEC(TypeNone, NULL, 0, 0); }
 MEASURESPEC MEASURESPEC::Abs(float x) { return MEASURESPEC(TypeRelative, NULL, 0, x); }
-MEASURESPEC MEASURESPEC::Fill() { return MEASURESPEC(TypeFill, NULL, 1, 0); }
+MEASURESPEC MEASURESPEC::Fill() { return MEASURESPEC(TypeRelative, NULL, 1, 0); }
 MEASURESPEC MEASURESPEC::Wrap() { return MEASURESPEC(TypeContent, NULL, 1, 0); }
 MEASURESPEC MEASURESPEC::Aspect(float x) { return MEASURESPEC(TypeAspect, NULL,  x, 0); }
 MEASURESPEC MEASURESPEC::Match(View* view, float con) { return MEASURESPEC(TypeRelative, view, 1, con); }
@@ -27,7 +26,7 @@ MEASURESPEC MEASURESPEC::Match(View* view, float con) { return MEASURESPEC(TypeR
 float MEASURESPEC::calcConstraint(float parentSize, float otherSize) const {
     if (TypeContent == type) {
         return parentSize;
-    } else if (TypeRelative == type || TypeFill == type) {
+    } else if (TypeRelative == type) {
         float retval = con;
         if (mul != 0.0f) {
             float refWidth = (ref == NULL) ? parentSize : ref->_rect.size.width;
@@ -45,42 +44,66 @@ float MEASURESPEC::calcConstraint(float parentSize, float otherSize) const {
 MEASURESPEC MEASURESPEC::fromStyle(const variant* value, View* view) {
     
     MEASURESPEC spec(TypeRelative, NULL, 0,0);
-    variant argsval;
     
-    // If the val is a string then it is a type & ref declaration
+    // Handle reference names
     if (value->isString()) {
+        uint32_t o = 0;
         auto str = value->stringVal();
-        uint32_t it = 0;
-        string refstr = str.readUpTo(it, "(");
-        if (refstr == "wrap") {
-            spec = Wrap();
+        auto firstChar = str.charAt(0);
+        bool isID = (firstChar>='A'&&firstChar<='Z')
+                 || (firstChar>='a'&&firstChar<='z')
+                 || firstChar=='_';
+        if (isID) {
+            auto ref = str.readUpToOneOf(o, ".*+- \t\r\n");
+            if (ref == "wrap") {
+                spec.type = TypeContent;
+                spec.mul = 1;
+            }
+            else if (ref == "fill") {
+                spec.mul = 1;
+            }
+            else if (ref == "aspect") {
+                spec.type = TypeAspect;
+                spec.mul = 1;
+            }
+            else {
+                spec.ref = view->getParent()->findViewById(ref);
+                spec.mul = 1;
+                assert(spec.ref); // NB: ref view must be sibling.
+            }
+
+            // Eat multiplier delimiter char, if present
+            str.skipSpacesAndTabs(o);
+            auto delim = str.peekChar(o);
+            if (delim == '.' || delim=='*') {
+                o++;
+            }
         }
-        else if (refstr == "fill") {
-            spec = Fill();
+            
+        // Multiplier follows ref
+        str.skipSpacesAndTabs(o);
+        variant num = variant::parseNumber(str, o);
+        auto m = num.measurementVal();
+        if (m._unit == measurement::PC) {
+            spec.mul = m.val();
+        } else {
+            spec.con = m.val();
         }
-        else if (refstr == "aspect") {
-            spec.type = TypeAspect;
-            spec.mul = 0;
-            spec.con = 0;
-            assert(it<str.lengthInBytes()); // aspect must have supplementary vals
-        }
-        else {
-            spec.ref = view->getParent()->findViewById(refstr);
-            spec.mul = 1;
-            spec.con = 0;
-            assert(spec.ref); // NB: ref view must be previously declared. TODO: remove this restriction
-        }
-        
-        // Arguments may be given in a bracketed subexpression
-        if (it<str.lengthInBytes()) {
-            string args = str.readUpTo(it, ")");
-            argsval.parse(args, 0);
-            value = &argsval;
+
+        // Constant follows multiplier
+        str.skipSpacesAndTabs(o);
+        if (str.peekChar(o)) {
+            if (spec.con) { // if a second constant is given the first must have been the multiplier
+                spec.mul = spec.con;
+            }
+            num = variant::parseNumber(str, o);
+            spec.con = num.floatVal();
         }
     }
+
     
-    // Single argument : %age means multiplier, other types of measurement (dp,sp,px) are constant
-    if (value->isMeasurement()) {
+    // Number/measurement : a %age means parent multiplier, other types of measurement (dp,sp,px) are constant
+    else if (value->isMeasurement()) {
         auto m = value->measurementVal();
         if (m._unit == measurement::PC) {
             spec.mul = m.val();
@@ -96,12 +119,8 @@ MEASURESPEC MEASURESPEC::fromStyle(const variant* value, View* view) {
             spec.con = 0;
         }
     }
-    
-    // Array: both mul and constant parts are present
-    else if (value->isArray()) {
-        auto array = value->arrayRef();
-        spec.mul = array[0].floatVal();
-        spec.con = array[1].floatVal();
+    else {
+        assert(0); // invalid variant type for MEASURESPEC
     }
 
     return spec;

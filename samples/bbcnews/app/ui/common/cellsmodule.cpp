@@ -11,6 +11,12 @@
 DECLARE_DYNCREATE(BNCellsModule, const variant&);
 
 BNCellsModule::BNCellsModule(const variant& json) : BNModule(json) {
+    string titleStyle = json.stringVal("titleStyle");
+    if (titleStyle) {
+        _titleStyle = app->getStyle(titleStyle);
+    } else {
+        _titleStyle = nullptr;
+    }
     _limit = json.intVal("limit");
     _offset = json.intVal("offset");
     _primary = json.stringArrayVal("primary");
@@ -43,6 +49,7 @@ BNCellsModule::BNCellsModule(const variant& json) : BNModule(json) {
 
 // Cloning
 BNCellsModule::BNCellsModule(BNCellsModule* source) : BNModule(source) {
+    _titleStyle = source->_titleStyle;
     _limit = source->_limit;
     _offset = source->_offset;
     _primary = source->_primary;
@@ -216,7 +223,47 @@ void BNCellsModule::updateLayoutWithContentObject(BNContent* contentObject) {
 
 }
 
+class CellsModuleHeader : public View {
+public:
+    CellsModuleHeader() {
+        setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+        _divider = new View();
+        _divider->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+        addSubview(_divider);
+        _label = new Label();
+        _label->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+        _label->setLayoutOrigin(ALIGNSPEC::Left(), ALIGNSPEC::Below(_divider,0));
+        addSubview(_label);
+     }
+
+    bool applySingleStyle(const string& name, const style& value) override {
+        if (name=="top-divider-color") {
+            _divider->setBackgroundColor(value.colorVal());
+            return true;
+        }
+        if (name=="top-divider-height") {
+            _divider->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Abs(value.floatVal()));
+            return true;
+        }
+        if (_label->applySingleStyle(name, value)) {
+            return true;
+        }
+        return View::applySingleStyle(name, value);
+    }
+    
+private:
+    View* _divider;
+    Label* _label;
+};
+
 void BNCellsModule::addToView(View* parent) {
+    
+    if (_titleStyle && _cells.size() > 0) {
+        CellsModuleHeader* header = new CellsModuleHeader();
+        header->applyStyle(*_titleStyle);
+        parent->addSubview(header);
+    }
+    
     for (int i=0 ; i<_cells.size() ; i++) {
         BNCell* cell = _cells[i];
         cell->_margins = _cellMargins;

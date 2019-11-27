@@ -595,10 +595,11 @@ static string parseString(const string& s, uint32_t& o) {
 
 // I cannot get strtol or stoi to work on Emscripten... they return garbage. Hence
 // rolling my own...
-variant variant::parseNumber(const string& str, uint32_t& o) {
+variant variant::parseNumber(const string& str, uint32_t& o, bool convertExpressionsToStrings) {
     variant val = 0ULL;
+    uint32_t ostart = o;
     
-    // Skip leading '+' and '-'
+    // Handle leading '+' and '-'
     bool neg = false;
     char32_t ch = str.peekChar(o);
     while (ch=='+' || ch=='-') {
@@ -682,6 +683,20 @@ variant variant::parseNumber(const string& str, uint32_t& o) {
         val._measurement = measurement(val.floatVal(), measurement::PX);
         val.type=variant::MEASUREMENT;
     }
+    
+    // If number val is followed by anything other than ']', '}', ',', '\r' '\n' then
+    // the number is simply the leading part of a more complex domain-specific expression
+    // (such as MEASURESPEC) and is better handled as a string
+    if (convertExpressionsToStrings) {
+        str.skipSpacesAndTabs(o);
+        ch = str.peekChar(o);
+        if (!(ch=='\0' || ch==']' || ch=='}' || ch==',' || ch=='\r' || ch=='\n')) {
+            o = ostart;
+            string complexExpression = str.readUpToOneOf(o, "]},\r\n");
+            val = complexExpression;
+        }
+    }
+    
     return val;
 }
 
@@ -772,7 +787,7 @@ variant variant::parse(const string& str, uint32_t& it, int flags) {
     
     // Scalar values
     else if ((ch>='0' && ch<='9') || ch=='-' || ch=='.') {
-        val = parseNumber(str, it);
+        val = parseNumber(str, it, true);
     } else if (ch == 'n' && str.skipString(it, "null")) {
         val.setType(EMPTY); // should we have null? is it really meaningful?
     } else if (ch == 't' && str.skipString(it, "true")) {

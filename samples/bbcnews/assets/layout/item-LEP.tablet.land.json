@@ -2,7 +2,7 @@
 	"format": ["bbc.mobile.news.format.liveevent"],
 	"modes": ["tablet","landscape"],
 	"class": "BNHorizontalLinearLayout",
-	"disableChildHeightExtension": "yes",
+	"disableChildHeightExtension": true,
 	"modules": [
 	  {
 	  "class": "BNVerticalStack",
@@ -14,16 +14,16 @@
 			"offset": 0,
 			"primary": ["bbc.mobile.news.image","bbc.mobile.news.video","bbc.mobile.news.audio"],
 			"secondary": ["bbc.mobile.news.placement.lmp"],
-			"filterIsAvailable": "yes",
-			"parallax": "yes",
+			"filterIsAvailable": true,
+			"parallax": true,
 			"imageAspect": 0.5625,
-			"inverseColorScheme": "yes"
+			"inverseColorScheme": true
 		  },
 		  {
 			"cellClass": "BNCellHeadline",
 			"textPadding": "{12, 16, 4, 16}",
 			"background": "#1e1e1e",
-			"inverseColorScheme": "yes"
+			"inverseColorScheme": true
 		  },
 		  {
 			"class": "BNKeyPointsModule",
@@ -41,10 +41,6 @@
 							"class": "BNCommentaryModule",
 							"textPadding": "{0, 16, 0, 16}",
 							"contentKey": "commentaryId"
-							},
-							{
-							"class":"BNCopyrightModule",
-							"padding": "{8,16,8,16}"
 							}
 							]
 				}

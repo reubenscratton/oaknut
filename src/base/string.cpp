@@ -9,6 +9,8 @@
 
 const string string::empty;
 
+// TODO: Implement string buffer excess capacity, to reduce number of reallocs.
+
 oak::string oak::operator "" _S(const char *str, std::size_t len) {
     return oak::string::static_str(str, len);
 }
@@ -332,6 +334,9 @@ bool string::skipString(uint32_t& offset, const char* s) const {
         return false;
     }
     auto cb = strlen(s);
+    if (cb > (_cb-offset)) {
+        return false;
+    }
     if (0==memcmp(start()+offset, s, cb)) {
         offset += cb;
         return true;
@@ -816,6 +821,18 @@ bool string::skipChar(uint32_t& offset, char ch) const {
         return true;
     }
     return false;
+}
+
+void string::skipSpacesAndTabs(uint32_t& offset) const {
+    auto s = start();
+    while (offset < _cb) {
+        char ch=s[offset];
+        if (ch==' ' || ch=='\t') {
+            offset++;
+        } else {
+            break;
+        }
+    }
 }
 
 void string::skipWhitespace(uint32_t& offset) const {

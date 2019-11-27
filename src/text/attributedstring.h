@@ -100,21 +100,38 @@ public:
     friend class TextLayout;
 
 private:
-    struct attribute_usage {
-        attribute attribute;
+    struct attribute_usage : public attribute {
         int32_t start;
         int32_t end;
-        bool operator<(const attribute_usage& rhs) const {
-            if (start<rhs.start) return true;
-            if (attribute<rhs.attribute) return true;
-            return false;
-        }
-        attribute_usage(const class attribute& aattribute, int32_t start, int32_t end)  : attribute(aattribute) {
-            this->start = start;
-            this->end = end;
+        
+        attribute_usage(const attribute& a, int32_t astart, int32_t aend) : attribute(a), start(astart), end(aend) {
         }
     };
-    set<attribute_usage> _attributes;
+
+    list<attribute_usage> _attributes;
+
+    struct cmp_start {
+        bool operator() (const list<attribute_usage>::iterator& a, const list<attribute_usage>::iterator& b) const {
+            uint32_t aa = *(uint32_t*)&a->start;
+            uint32_t bb = *(uint32_t*)&b->start;
+            if (aa == bb) {
+                return (char*)&(*a) < (char*)&(*b);
+            }
+            return aa < bb;
+        }
+    };
+    struct cmp_end {
+        bool operator() (const list<attribute_usage>::iterator& a, const list<attribute_usage>::iterator& b) const {
+            uint32_t aa = *(uint32_t*)&a->end;
+            uint32_t bb = *(uint32_t*)&b->end;
+            if (aa == bb) {
+                return (char*)&(*a) < (char*)&(*b);
+            }
+            return aa < bb;
+        }
+    };
+    set<list<attribute_usage>::iterator, cmp_start> _starts;
+    set<list<attribute_usage>::iterator, cmp_end> _ends;
 };
 
 

@@ -47,15 +47,13 @@
         
         {"$":"title", "title": "Also in the News", "contentLink": "/cps/news/also_in_the_news?title=Also%20in%20the%20News"},
         {"$":"tightGroup",        "modes":["!tablet"], "limit":2, "$secondary":"$st_top_stories_also_in_the_news"},
-        {"$":"featureGroup_2col", "modes":["tablet"],  "limit":2, "$secondary":"$st_top_stories_also_in_the_news", "hideTopics": "yes"},
+        {"$":"featureGroup_2col", "modes":["tablet"],  "limit":2, "$secondary":"$st_top_stories_also_in_the_news", "hideTopics": true},
         
         {"$":"title", "title": "Explainers", "contentLink": "/cps/news/explainers?title=Explainers"},
         {"$":"tightGroup",        "modes":["!tablet"], "limit":2, "$secondary":"$st_ts_explainers"},
-        {"$":"featureGroup_2col", "modes":["tablet"],  "limit":2, "$secondary":"$st_ts_explainers", "hideTopics": "yes"},
+        {"$":"featureGroup_2col", "modes":["tablet"],  "limit":2, "$secondary":"$st_ts_explainers", "hideTopics": true},
         
         {"$":"title", "title": "In Pictures", "contentLink": "/cps/news/in_pictures?title=In%20Pictures"},
-        {"$":"photosGroup"},
-        
-        {"$":"copyright"}
+        {"$":"photosGroup"}
         ]
 }

@@ -104,6 +104,7 @@ public:
     string slice(int32_t fromCharIndex, int32_t toCharIndex=0) const; // Python-style
 
     // Parsing
+    void skipSpacesAndTabs(uint32_t& offset) const;
     void skipWhitespace(uint32_t& offset) const;
     bool skipChar(uint32_t& offset, char ch) const;
     bool skipString(uint32_t& offset, const char* s) const;

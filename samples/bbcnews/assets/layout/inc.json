@@ -368,7 +368,7 @@
             "mode==landscape":{
                 "orientation":"landscape"
             },
-            "summaries":"yes"
+            "summaries":true
         }
     },
     "normalGroup":{
@@ -378,7 +378,7 @@
         "mode==tablet":{
             "padding":"{0,8,0,8}",
             "cellMargins":"{16,8,0,8}",
-            "summaries":"yes"
+            "summaries":true
         },
         "mode!=tablet":{
             "padding":"{0,4,0,4}",
@@ -394,10 +394,10 @@
     },
     "featureGroup":{
         "secondary":"$secondary",
-        "summaries":"yes",
+        "summaries":true,
         "mode==compact":{
             "$":"tightGroup",
-            "hideTopics":"yes",
+            "hideTopics":true,
             "cellClass":"BNCellItemTopStory"
         },
         "mode!=compact":{
@@ -833,11 +833,7 @@
         "format":[
                   "bbc.mobile.news.format.video"
                   ],
-        "inverseColorScheme":"YES"
-    },
-    "copyright":{
-        "class":"BNCopyrightModule",
-        "padding":"{24,16,8,16}"
+        "inverseColorScheme":true
     },
     "sportPromo":{
         "class":"BNSportPromo",
@@ -931,56 +927,7 @@
                    }
                    ]
     },
-    "electionBanner":{
-        "modes":[
-                 "election2015"
-                 ],
-        "class":"BNImageLinkModule",
-        "imagePrefix":"Election",
-        "altText":"",
-        "actionText":"",
-        "callToActionText":"",
-        "resetNav":false
-    },
-    "electionBannerChevron":{
-        "$":"electionBanner",
-        "mode!=tablet":{
-            "padding":"{8,8,0,8}"
-        },
-        "mode==tablet":{
-            "padding":"{16,16,0,16}"
-        },
-        "contentLink":"/cps/news/election/2015?title=Election%202015",
-        "imagePrefix":"ElectionChevron",
-        "altText":"Election 2015"
-    },
-    "infoBoxTitle":{
-        "class":"BNModuleTitleDigest",
-        "mode!=tablet":{
-            "padding":"{8,8,0,8}"
-        },
-        "mode==tablet":{
-            "padding":"{16,16,0,16}"
-        },
-        "textPadding":"{8,0,8,0}",
-        "textAttrs":"electionsTitle"
-    },
-    "infoBoxLink":{
-        "class":"BNTextLinkModule",
-        "mode!=tablet":{
-            "padding":"{0,8,0,8}"
-        },
-        "mode==tablet":{
-            "padding":"{0,16,0,16}"
-        },
-        "textAttrs":"electionsLink",
-        "borderSize":1
-    },
-    "infoBoxLinkRed":{
-        "$":"infoBoxLink",
-        "borderSize":0,
-        "textAttrs":"electionsLinkRed"
-    },
+
     "secondaryItems":{
         "$":"normalGroup",
         "secondary":"$secondary",
@@ -1099,7 +1046,7 @@
         "secondary":[
                      "bbc.mobile.news.placement.primary"
                      ],
-        "parallax":"yes",
+        "parallax":true,
         "imageAspect":0.5625
     },
     "itemHeadline":{
@@ -1138,7 +1085,7 @@
         }
     },
     "itemTopics":{
-        "cellClass":"BNCellTopics",
+        "cellClass":"BNCellTopics"
     },
     "itemBody":{
         "class":"BNCellsModuleArticleBody",
@@ -1155,44 +1102,6 @@
             }
         }
     },
-    "relatedTitle":{
-        "class":"BNRelatedContentTitleModule",
-        "mode==phone":{
-            "padding":"{8,16,8,16}"
-        },
-        "mode==tablet":{
-            "mode==portrait":{
-                "padding":"{16,64,12,64}"
-            },
-            "mode==landscape":{
-                "padding":"{16,80,16,80}"
-            }
-        }
-    },
-    "relatedStories":{
-        "cellClass":"BNCellItemRelatedStory",
-        "limit":4,
-        "secondary":[
-                     "bbc.mobile.news.group.see-alsos"
-                     ],
-        "maxTopics":1,
-        "mode==phone":{
-            "padding":"{0,16,8,16}",
-            "textPadding":"{0,8,0,0}",
-            "imageWidth":0.5
-        },
-        "mode==tablet":{
-            "textPadding":"{0,16,0,0}",
-            "mode==portrait":{
-                "padding":"{0,64,0,64}",
-                "imageWidth":0.333
-            },
-            "mode==landscape":{
-                "padding":"{0,80,0,80}",
-                "imageWidth":0.25
-            }
-        }
-    },
     "relatedVideoAndAudio":{
         "$":"relatedStories",
         "limit":-1,
@@ -1203,27 +1112,6 @@
         "primary":[
                    "bbc.mobile.news.item"
                    ]
-    },
-    "relatedTopics":{
-        "cellClass":"BNCellRelatedTopic",
-        "primary":[
-                   "bbc.mobile.news.collection"
-                   ],
-        "secondary":[
-                     "bbc.mobile.news.home_section",
-                     "bbc.mobile.news.topic"
-                     ],
-        "mode==phone":{
-            "padding":"{0,16,24,16}"
-        },
-        "mode==tablet":{
-            "mode==portrait":{
-                "padding":"{0,64,24,64}"
-            },
-            "mode==landscape":{
-                "padding":"{0,80,24,80}"
-            }
-        }
     },
     "advert":{
         "modes":[

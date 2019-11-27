@@ -10,6 +10,7 @@
 DECLARE_DYNCREATE(ViewPager);
 
 ViewPager::ViewPager() : View() {
+    _directionalLockEnabled = true;
 }
 
 ViewPager::Adapter* ViewPager::getAdapter() const {
@@ -22,10 +23,17 @@ void ViewPager::setAdapter(Adapter* adapter) {
         removeAllSubviews();
         updateScrollViewContentSize();
         
-        _pageCenter = _adapter->viewForPage(0);
+        _pageCenter = _adapter->viewForPage(1);
         _pageCenter->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Fill());
         _pageCenter->setLayoutOrigin({NULL,0,0,0}, {NULL,0,0,0});
         addSubview(_pageCenter);
+
+        _pageRight = _adapter->viewForPage(0);
+        //_pageRight->setBackgroundColor(0xFFFF8080);
+        _pageRight->setLayoutSize(MEASURESPEC::Match(this), MEASURESPEC::Fill());
+        _pageRight->setLayoutOrigin({_pageCenter,1,0,0}, {NULL,0,0,0});
+        addSubview(_pageRight);
+
     }
 }
 

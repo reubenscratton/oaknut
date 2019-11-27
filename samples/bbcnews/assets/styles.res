@@ -93,8 +93,6 @@ font-sizes: {
     summary~tablet: 18sp
     summary: 14sp
     summary~4inch: 13sp
-    relatedTopic~tablet: 20sp
-    relatedTopic: 18sp
     titleModule~tablet: 28sp
     titleModule: 22sp
     ribbon~tablet: 20sp
@@ -103,10 +101,6 @@ font-sizes: {
     cornerLabels~!tablet: 24sp
     see-all~tablet: 18sp
     see-all~!tablet:12sp
-    basic~tablet: 20sp
-    basic~!tablet: 18sp
-    crosshead~tablet: 24sp
-    crosshead~!tablet: 22sp
 }
 
 
@@ -116,8 +110,6 @@ line-heights: {
     summary~tablet: 24sp
     summary~!tablet: 18sp
     summary~4inch: 17sp
-    basic~tablet: 26sp
-    basic~!tablet: 24sp
 }
 
 cells: {
@@ -164,16 +156,41 @@ summaryText: {
     insets:0dp
 }
 
+relatedStories: {
+    padding: 16dp,8dp,16dp,8dp
+    text: Related Stories
+    font-weight: light
+    font-size: 20sp
+    top-divider-color: #DDD
+    top-divider-height:4dp
+}
+
+relatedTopicsHeader: {
+    padding: 16dp,16dp,16dp,8dp
+    text: Related Topics
+    font-weight: light
+    font-size: 20sp
+    top-divider-color: #DDD
+    top-divider-height:4dp
+}
 
 relatedTopic: {
+    size: fill,wrap
     font-weight: light
-    font-size: $font-sizes.relatedTopic
+    font-size: 18sp
+    font-size@tablet: 20sp
     line-height: 0
     forecolor: $color.topic
     forecolor-inv: $color.topicInv
-    insets~tablet: 12dp,0
-    insets~!tablet: 8dp,0,6dp,0
+    padding@tablet: 12dp,0
+    padding: 16dp,8dp,16dp,0dp
 }
+linkDivider: {
+    size: 100%-32dp, 1dp
+    alignX: 16dp
+    background: #FFEEEEEE
+}
+
 
 durationSmall: {
     font-weight: light
@@ -363,70 +380,62 @@ keyPoints: {
 
 
 article: {
-    font-size: $font-sizes.basic
-    line-height: $line-heights.basic
-    insets: 0,16dp
 
-    normal: {
-        font-weight: light
+    text: {
+    
+        default: {
+            font-size: 18sp
+            font-weight: light
+            line-height: 24sp
+            padding: 16dp,12dp,0dp,12dp
+            forecolor: #404040
+        }
+        introduction: {
+            font-weight: medium
+            forecolor: black
+        }
+        transmission-info: {
+            font-weight: light
+            font-style: italic
+        }
+        crosshead: {
+            font-weight: medium
+            font-size: 22sp
+        }
+        list: {
+            font-weight: light
+            insets: 0,5dp
+        }
+        question: {
+            font-weight: medium
+        }
+        answer: {
+            font-weight: light
+        }
+        heading: {
+            font-weight: medium
+        }
+        subheading: {
+            font-weight: medium
+        }
+        commentaryHeading: {
+            font-weight: medium
+            font-size: $font-sizes.H1
+            insets:0,4dp
+        }
+        commentarySubheading: {
+            font-weight: medium
+            insets:0,4dp
+        }
+        commentaryTime: {
+            font-weight: medium
+            insets:0,4dp
+        }
     }
-    introduction: {
-        font-weight: medium
-    }
-    transmission-info: {
-        font-weight: light
-        font-style: italic
-    }
-    crosshead: {
-        font-weight: medium
-        font-size: $font-sizes.crosshead
-    }
-    list: {
-        font-weight: light
-        insets: 0,5dp
-    }
-    question: {
-        font-weight: medium
-    }
-    answer: {
-        font-weight: light
-    }
-    heading: {
-        font-weight: medium
-    }
-    subheading: {
-        font-weight: medium
-    }
-    commentaryHeading: {
-        font-weight: medium
-        font-size: $font-sizes.H1
-        insets:0,4dp
-    }
-    commentarySubheading: {
-        font-weight: medium
-        insets:0,4dp
-    }
-    commentaryTime: {
-        font-weight: medium
-        insets:0,4dp
-    }
+
 
 }
 
-sportPromo: {
-    font-size: 16sp
-    insets: 12dp,0
-    blurbLabel: {
-        font-weight: regular
-        color: white
-    }
-    actionLabel: {
-        font-weight: medium
-        color: black
-        gravity: center
-    }
-}
-imageLink: $sportPromo
 
 
 copyrightNotice: {
@@ -446,31 +455,6 @@ web-browser: {
     color: white
     lineHeight:0
     insets:0
-}
-
-elections: {
-    title: {
-        font-weight: medium
-        font-size: 16sp
-        color: black
-        insets~tablet: 16dp,0
-        insets~!tablet: 8dp,0
-    }
-    link: {
-        font-weight: light
-        font-size: $font-sizes.relatedTopic
-        color:black
-        insets~tablet: 16dp
-        insets~!tablet: 8dp
-    }
-    link-red: {
-        font-weight: light
-        font-size: $font-sizes.relatedTopic
-        color: $color.bbcNewsLiveRed
-        insets~tablet: 16dp,8dp
-        insets~!tablet: 8dp,4dp
-    }
-    line-height: 0
 }
 
 

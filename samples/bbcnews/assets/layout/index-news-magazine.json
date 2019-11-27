@@ -11,9 +11,9 @@
                 
 		{"$":"title", "title":    "Magazine Monitor"},
 		{"modes":["!tablet"], "$":"featureGroup",      "$secondary":"$st_magazine_monitor", "limit":1},
-		{"modes":["!tablet"], "$":"featureGroup",      "$secondary":"$st_magazine_monitor", "offset":1, "limit":2, "hideTopics":"yes",
+		{"modes":["!tablet"], "$":"featureGroup",      "$secondary":"$st_magazine_monitor", "offset":1, "limit":2, "hideTopics":true,
 				"cellClass": "BNCellItemTopStory"},
-		{"modes":["tablet"],  "$":"featureGroup_2col", "$secondary":"$st_magazine_monitor", "limit":2, "hideTopics":"yes"},
+		{"modes":["tablet"],  "$":"featureGroup_2col", "$secondary":"$st_magazine_monitor", "limit":2, "hideTopics":true},
 				
 		{"$":"title", "title":    "BBC Trending"},
 		{"modes":["!tablet"],  "$":"featureGroup",      "$secondary":"$st_magazine_trending", "limit":1},
