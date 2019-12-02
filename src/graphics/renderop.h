@@ -60,6 +60,9 @@ public:
     virtual void setColor(COLOR color);
     virtual void setInset(EDGEINSETS inset);
     
+    // Cleanup (TODO: only called by TextLayout at present, should be called whenever detached from surface)
+    virtual void reset();
+    
     // Overrides
 #if DEBUG
     string debugDescription() override;

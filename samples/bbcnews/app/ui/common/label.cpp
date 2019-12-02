@@ -4,7 +4,6 @@
 
 #include "label.h"
 //#import "BNStyles.h"
-//#import "BNTextTraits.h"
 //#import "BNLayoutManager.h"
 
 

@@ -17,7 +17,6 @@ public:
 
 
     void addGlyph(Glyph* glyph, const RECT& rect, COLOR forecolor);
-    void reset();
     
     // Overrides
     bool canMergeWith(const RenderOp* op) override;
@@ -25,6 +24,7 @@ public:
     int numQuads() override;
     void asQuads(QUAD* quad) override;
     void validateShader(Renderer* renderer) override;
+    void reset() override;
 };
 
 

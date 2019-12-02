@@ -8,6 +8,21 @@
 #include <oaknut.h>
 
 
+template <>
+void attributed_string::enumerator<attributed_string::attribute_type::Font, class Font>::handleApplyingAttrib(const attribute_usage& a, int32_t end) {
+    if (a._type == attribute_type::Font) {
+        _stack.push(std::make_pair(end, a._font));
+    }
+    else if (a._type == attribute_type::FontSize) {
+        class Font* prev = _stack.top().second;
+        _stack.push(std::make_pair(end, Font::get(prev->_name, prev->_size * a._mul_add.mul + a._mul_add.add, prev->_weight)));
+    }
+    else if (a._type == attribute_type::FontWeight) {
+        class Font* prev = _stack.top().second;
+        _stack.push(std::make_pair(end, Font::get(prev->_name, prev->_size, a._f)));
+    }
+}
+
 attributed_string::attributed_string(const attributed_string& str) : string(str) {
     for (auto a : str._attributes) {
         setAttribute(a, a.start, a.end);
@@ -23,11 +38,7 @@ void attributed_string::append(const attributed_string& str) {
 }
 
 void attributed_string::setAttribute(const attributed_string::attribute& attribute, int32_t start, int32_t end) {
-    list<attribute_usage>::iterator it = _attributes.insert(_attributes.end(), attribute_usage(attribute, start, end));
-    assert(_starts.size() == _ends.size());
-    _starts.insert(it);
-    _ends.insert(it);
-    assert(_starts.size() == _ends.size());
+    _attributes.insert(attribute_usage(attribute, start, end));
 }
 const attributed_string::attribute* attributed_string::getAttribute(int32_t pos, attributed_string::attribute_type type) {
     const attributed_string::attribute* attr = NULL;
@@ -44,19 +55,11 @@ const attributed_string::attribute* attributed_string::getAttribute(int32_t pos,
 
 void attributed_string::clearAttributes() {
     _attributes.clear();
-    _starts.clear();
-    _ends.clear();
 }
 
 attributed_string& attributed_string::operator=(const attributed_string& str) {
     string::operator=(str);
-    _starts.clear();
-    _ends.clear();
     _attributes = str._attributes;
-    for (auto it = _attributes.begin() ; it!=_attributes.end() ; it++) {
-        _starts.insert(it);
-        _ends.insert(it);
-    }
     return *this;
 }
 

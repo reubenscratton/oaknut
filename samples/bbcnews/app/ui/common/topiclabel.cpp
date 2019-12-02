@@ -5,7 +5,6 @@
 #include "topiclabel.h"
 //#import "NSDate+Formatter.h"
 //#import "BNStyles.h"
-#include "../articles/texttraits.h"
 //#import "BNMyNewsCollection.h"
 //#import "NSString+URLEncoding.h"
 //#import "BNCollections.h"
@@ -96,8 +95,8 @@ void BNTopicLabel::setItem(BNItem* item, BNCollection* displayingCollection) {
         if (topicLinks.length()) {
             topicLinks.append(getSeparatorString());
         }
-        BNTextTrait *linkTrait = new BNTextTrait(BNTextTrait::Type::Link, 0);
-        linkTrait->_url = collection->url();
+        //BNTextTrait *linkTrait = new BNTextTrait(BNTextTrait::Type::Link, 0);
+        //linkTrait->_url = collection->url();
         //NSMutableDictionary *attrs = attrsTopicAndTimestamp.mutableCopy;
         //attrs[NSForegroundColorAttributeName] = inverseColorScheme ? [UIColor whiteColor] : [UIColor bbcNewsLiveRed];
         //attrs[BNLinkAttributeName] = linkTrait;
@@ -205,7 +204,7 @@ string dateStringFromTimestamp(TIMESTAMP timestamp, bool useLongFormat) {
         if (dyear > 0 || dday > 6 || dmonth > 0) {
             char ach[32];
             strftime(ach, 32, dyear?(useLongFormat?"%e %h %Y":"%e %h %y"):"%e %h", &tm);
-            return string(ach, 32);
+            return string(ach, strlen(ach));
             
         } else {
             if (dday < 2) {

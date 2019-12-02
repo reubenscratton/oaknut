@@ -60,6 +60,7 @@ public:
     void setEllipsize(bool ellipsize);
     // float lineHeight() const { return _defaultParams.lineHeight; }
     void setLineHeight(float mul, float abs);
+    void setParagraphMetrics(const PARAGRAPH_METRICS& metrics);
     
     // Measurement
     SIZE measure(SIZE& constrainingSize);
@@ -93,9 +94,17 @@ protected:
     struct RENDER_GLYPH {
         Glyph* glyph;
         COLOR forecolor;  // TODO: this is inefficient, and not even used if text color is in a uniform
+        float baselineOffset; // TODO: very inefficient!
         POINT topLeft;
         int32_t cluster; // 0 for primary glyph in character, 1 for secondary, etc.
         RECT rect() const;
+    };
+    
+    // A section of same-color underline
+    struct UNDERLINE {
+        int32_t start;
+        int32_t count;
+        COLOR color;
     };
 
     // A sequence of consecutive glyphs that are all on the same baseline
@@ -105,21 +114,14 @@ protected:
         RECT rect;
         float baseline;  // distance from layoutRect.top to baseline
         Font* tallestFont;
+        float leftIndent;
+        vector<UNDERLINE> _underlines;
     };
-    
-    // A sequence of consecutive glyphs that can be rendered in a single draw call
-    /*struct RENDER_RUN {
-        int32_t start;
-        int32_t count;
-        Bitmap* bitmap;
-        COLOR forecolor; // not used when forecolor is an attribute rather than a uniform
-    };*/
     
 
     vector<RENDER_GLYPH> _renderGlyphs;
     vector<RENDER_LINE> _renderLines;
-    //vector<RENDER_RUN> _renderRuns;
-    vector<sp<TextRenderOp>> _renderOps;
+    vector<sp<RenderOp>> _renderOps;
     
     uint32_t _invalid;
 
@@ -129,6 +131,8 @@ protected:
         COLOR forecolor;
         float lineHeightMul;
         float lineHeightAbs;
+        PARAGRAPH_METRICS paragraphMetrics;
+        bool underline;
     } _defaultParams;
     GRAVITY _gravity;
     int _maxLines; // 0=as many as needed, >=1 implies _ellipsize=true

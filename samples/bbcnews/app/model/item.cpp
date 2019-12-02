@@ -3,8 +3,6 @@
 //
 
 #include "_module.h"
-#include "../ui/articles/elementtext.h"
-#include "../ui/articles/elementmedia.h"
 
 
 
@@ -100,14 +98,9 @@ BNItem::BNItem(const variant& json) : BNContent(json) {
                     auto traitsStart = currentPara.length();
                     currentPara.append("\u25A0   ");
                     currentPara.setAttribute(attributed_string::forecolor(0xFFCCCCCC), traitsStart, traitsStart+1);
-                    /*BNTextTraitFontScale* shrink = [[BNTextTraitFontScale alloc] initWithStart:textElement.text.length];
-                    shrink.scale = 0.5f;
-                    shrink.end = greyColor.end;
-                    [textElement.traits addObject:shrink];
-                    BNTextTraitBaselineOffset* offset = [[BNTextTraitBaselineOffset alloc] initWithStartAndEnd:shrink.start end:shrink.end];
-                    offset.distance = 0.3f;
-                    [textElement.traits addObject:offset];*/
-
+                    currentPara.setAttribute(attributed_string::fontsize({0.5,0}), traitsStart, traitsStart+1);
+                    currentPara.setAttribute(attributed_string::baselineOffset(0.2), traitsStart, traitsStart+1);
+                    currentPara.setAttribute(attributed_string::paragraphMetrics({{0,0,0,0},4}), traitsStart, traitsStart+1000); // this +1000 won't upset anything but it's a bit crap.
                 }
             }
         }
@@ -120,7 +113,10 @@ BNItem::BNItem(const variant& json) : BNContent(json) {
         }
         else if (tag == "caption") {
             if (!isCloseTag) {
-                link_props.insert_point = currentPara.lengthInBytes();
+                link_props.insert_point = currentPara.length();
+            } else {
+                currentPara.setAttribute(attributed_string::bold(), link_props.insert_point, currentPara.length());
+                currentPara.setAttribute(attributed_string::underline(), link_props.insert_point, currentPara.length());
             }
         }
         else if (tag == "url") {

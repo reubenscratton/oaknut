@@ -77,7 +77,6 @@ void TextLayout::setLineHeight(float mul, float abs) {
 
 
 
-
 SIZE TextLayout::measure(SIZE& constrainingSize) {
 
     // Avoid unnecessary measure()s. Note that changing the constraint does not affect _renderGlyphs.
@@ -88,20 +87,17 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
     
     // Phase 1: Rebuild _renderGlyphs
     if (_invalid & INVALID_GLYPHS) {
-
-        auto numChars = _text.length();
         
         // Reset glyphs state
         _renderGlyphs.clear();
-        RENDER_PARAMS currentParams = _defaultParams;
-        bool paramsChanged = true;
+
+        // Enumerate font and forecolor attributes at this phase
+        attributed_string::enumerator<attributed_string::attribute_type::Font, class Font> eFont(_text, (Font*)_defaultParams.font);
+        attributed_string::enumerator<attributed_string::Forecolor, COLOR> eForecolor(_text, &_defaultParams.forecolor);
         
-        // Prepare to walk the ordered spans collection
-        stack<Font*> fontStack;
-        stack<COLOR> forecolorStack;
-        stack<Font*> fontWeightStack;
-        auto spanStartIterator = _text._starts.begin();
-        auto spanEndIterator = _text._ends.begin();
+
+        float currentBaselineOffset = 0;
+        stack<float> baselineOffsetStack;
         
         // Iterate over text
         uint32_t offset = 0;
@@ -115,74 +111,34 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
             }
 
             // Unapply spans that end at this point
-            while (spanEndIterator!=_text._ends.end()) {
-                int32_t end = (*spanEndIterator)->end;
-                if (end < 0) {
-                    end += numChars;
-                }
-                if (i < end) {
-                    break;
-                }
-                auto& attrib = *(spanEndIterator);
-                if (attrib->_type == attributed_string::attribute_type::Font) {
-                    currentParams.font = fontStack.top();
-                    fontStack.pop();
-                    paramsChanged = true;
-                }
-                else if (attrib->_type == attributed_string::attribute_type::Forecolor) {
-                    currentParams.forecolor = forecolorStack.top();
-                    forecolorStack.pop();
-                    paramsChanged = true;
-                }
-                else if (attrib->_type == attributed_string::attribute_type::LeadingSpace) {
-                    //leadingSpace = 0;
-                }
-                else if (attrib->_type == attributed_string::attribute_type::FontWeight) {
-                    currentParams.font = fontWeightStack.top();
-                    fontWeightStack.pop();
-                    paramsChanged = true;
+            /*while (spanEndIterator!=_text._ends.end()) {
+                switch (attrib->_type) {
+                                                
+                    case attributed_string::attribute_type::BaselineOffset:
+                        currentBaselineOffset = baselineOffsetStack.top();
+                        baselineOffsetStack.pop();
+                        break;
+
                 }
                 spanEndIterator++;
             }
             
             // Apply any spans that start at this point
             while (spanStartIterator!=_text._starts.end()) {
-                int32_t start = (*spanStartIterator)->start;
-                if (start < 0) {
-                    start += numChars;
-                }
-                if (start > i) {
-                    break;
-                }
-                auto& attrib = *(spanStartIterator);
-                if (attrib->_type == attributed_string::attribute_type::Font) {
-                    fontStack.push(currentParams.font);
-                    currentParams.font = attrib->_font;
-                    paramsChanged = true;
-                }
-                else if (attrib->_type == attributed_string::attribute_type::Forecolor) {
-                    forecolorStack.push(currentParams.forecolor);
-                    currentParams.forecolor = attrib->_color;
-                    paramsChanged = true;
-                }
-                else if (attrib->_type == attributed_string::attribute_type::LeadingSpace) {
-                    //leadingSpace = startingSpan.attribute._f;
-                }
-                else if (attrib->_type == attributed_string::attribute_type::FontWeight) {
-                    fontWeightStack.push(currentParams.font);
-                    currentParams.font = Font::get(currentParams.font->_name, currentParams.font->_size, attrib->_f);
-                    paramsChanged = true;
-                } else {
-                    app->warn("unrecognized attribute type");
+                switch (attrib->_type) {
+                    
+                    case attributed_string::attribute_type::BaselineOffset:
+                        baselineOffsetStack.push(currentBaselineOffset);
+                        currentBaselineOffset = attrib->_f;
+                        break;
+                    
+                    case attributed_string::attribute_type::Underline:
+                        break; // Underlines are handled at renderop time
                 }
                 
                 spanStartIterator++;
-            }
-            
-            /*if (paramsChanged) {
-                _textParams.insert(currentParams);
-                paramsChanged = false;
             }*/
+            
             i++;
             
             // Ignore '\r' chars, they have no value
@@ -198,17 +154,20 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
 
             
             // Fetch the glyph for this character
-            Glyph* glyph = currentParams.font->getGlyph(codepoint);
+            eFont.advanceTo(i-1);
+            Font* font = eFont.current();
+            Glyph* glyph = font->getGlyph(codepoint);
             if (!glyph) {
-                glyph = currentParams.font->getGlyph('?'); // todo: should ask the font for it's default character...
+                glyph = font->getGlyph('?'); // todo: should ask the font for it's default character...
                 assert(glyph);
             }
             
+            eForecolor.advanceTo(i-1);
+            
             // Add the glyph to the list
-            _renderGlyphs.emplace_back(RENDER_GLYPH {glyph, currentParams.forecolor});
-        
+            _renderGlyphs.emplace_back(RENDER_GLYPH {glyph, *eForecolor.current(), currentBaselineOffset});
         }
-
+        
         _invalid &= ~ INVALID_GLYPHS;
         _invalid |= INVALID_LINES;
     }
@@ -223,18 +182,69 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
         char32_t codepoint='\0', prevCh;
         _renderLines.clear();
         bool startNewLine = true;
+        bool isNewParagraph = true;
+        int32_t lineNumWithinPara = 0;
         Font* currentFont = _defaultParams.font;
         vector<RENDER_LINE>::iterator currentLine;
-        int i=0;
-        
+        float constrainingWidth = constrainingSize.width;
+        float leftIndent = 0.;
+        float rightIndent = 0.;
+        float hangingIndent = 0.;
+        int i=0,prevI=0;
+        int numPremeasuredChars=0;
+        float premeasuredCharsWidth=0.;
+
+
+        attributed_string::enumerator<attributed_string::ParagraphMetrics, PARAGRAPH_METRICS> eLineAttribs (_text, &_defaultParams.paragraphMetrics);
+
+
         for (;;) {
     
             if (startNewLine) {
                 if (_maxLines && _renderLines.size()>=_maxLines) {
                     break;
                 }
-                currentLine = _renderLines.emplace(_renderLines.end(), RENDER_LINE {i,0,{0,0,0,0},0,currentFont});
+                
+                // Move the attributes enumerator
+                eLineAttribs.advanceTo(i);
+                
+                auto paragraphMetrics = eLineAttribs.current();
+
+                leftIndent = paragraphMetrics->insets.left;
+                rightIndent = paragraphMetrics->insets.right;
+                
+                // Update which-line-is-this state
                 startNewLine = false;
+                if (isNewParagraph) {
+                    lineNumWithinPara = 0;
+                    isNewParagraph = false;
+                } else {
+                    lineNumWithinPara++;
+                }
+                
+                // Calculate hanging indent and add it to the leftIndent
+                if (lineNumWithinPara > 0) {
+                    if (lineNumWithinPara==1) {
+                        hangingIndent = 0;
+                        for (int oi=0 ; oi<paragraphMetrics->hangingIndentChars ; oi++) {
+                            hangingIndent += _renderGlyphs[currentLine->start+oi].glyph->_advance.width;
+                        }
+                    }
+                    leftIndent += hangingIndent;
+                }
+                
+                // Update width constraint and push a new RENDER_LINE struct on the list
+                constrainingWidth = constrainingSize.width - (leftIndent + rightIndent);
+
+                // Push a new line struct
+                currentLine = _renderLines.emplace(_renderLines.end(),
+                        RENDER_LINE { i-numPremeasuredChars, numPremeasuredChars,
+                            {0,0,premeasuredCharsWidth,0},
+                            0,currentFont, leftIndent});
+                breakOpportunity = -1;
+                numPremeasuredChars = 0;
+                prevI = i;
+                
             }
 
             // Get next glyph
@@ -265,8 +275,8 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
                 
             // Current line too full to take glyph?
             auto newFill = currentLine->rect.size.width + advance;
-            bool exceedsBounds = newFill >= constrainingSize.width;
-            if (exceedsBounds && currentLine->count && codepoint!=' ') { // NB: trailing spaces don't trigger soft breaks
+            bool exceedsBounds = newFill >= constrainingWidth;
+            if (exceedsBounds && currentLine->count && i!=prevI && codepoint!=' ') { // NB: trailing spaces don't trigger soft breaks
                 filledHorizontally = true;
                 
                 // Break the loop if we've reached the maximum number of lines
@@ -279,7 +289,7 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
                         Glyph* dotGlyph = currentFont->getGlyph('.');
                         float ellipsisWidth = dotGlyph->_advance.width * 2 + dotGlyph->_size.width;
                         while (currentLine->count > 0
-                               && (currentLine->rect.size.width + ellipsisWidth) > constrainingSize.width) {
+                               && (currentLine->rect.size.width + ellipsisWidth) > constrainingWidth) {
                             currentLine->count--;
                             auto& lastChar = _renderGlyphs[currentLine->start + currentLine->count];
                             currentLine->rect.size.width -= lastChar.glyph->_advance.width;
@@ -307,14 +317,14 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
                 }
                     
                 // 'Rewind' to break point
-                float xx = 0;
-                int32_t charsOnNextLine = i - breakOpportunity;
-                for (int32_t bi=0; bi < charsOnNextLine; bi++) {
+                premeasuredCharsWidth = 0;
+                numPremeasuredChars = i - breakOpportunity;
+                for (int32_t bi=0; bi < numPremeasuredChars; bi++) {
                     auto& character = _renderGlyphs[breakOpportunity + bi];
-                    xx += character.glyph->_advance.width;
+                    premeasuredCharsWidth += character.glyph->_advance.width;
                 }
-                currentLine->count -= charsOnNextLine;
-                currentLine->rect.size.width -= xx;
+                currentLine->count -= numPremeasuredChars;
+                currentLine->rect.size.width -= premeasuredCharsWidth;
                     
                 // Remove any trailing whitespace from the measured line length, it shouldn't
                 // count towards the measured line width.
@@ -327,11 +337,9 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
                     currentLine->rect.size.width -= character.glyph->_advance.width;
                 }
                     
-                // New line
-                currentLine = _renderLines.emplace(_renderLines.end(),
-                                   RENDER_LINE {breakOpportunity,charsOnNextLine,{0,0,0,0},0,currentFont});
-                currentLine->rect.size.width = xx;
-                breakOpportunity = -1;
+                // Restart the loop with a new line
+                startNewLine = true;
+                continue;
             }
             
             // Add the glyph to the current line
@@ -343,10 +351,10 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
                 }
             }
             
-            // If char was a hard break, start a new line
+            // If char was a hard break, start a new line & paragraph
             if (isHardLineBreak) {
                 startNewLine = true;
-                breakOpportunity = -1;
+                isNewParagraph = true;
             }
             
             i++;
@@ -414,6 +422,7 @@ void TextLayout::layout(RECT& containingRect) {
 
     // Phase 3: Position the glyphs and update line rects wrt each other and gravity
     if (_invalid & INVALID_POSITION) {
+        
         float dY = 0;
         if (_gravity.vert != GRAVITY_TOP) {
             dY = containingRect.size.height - _rect.size.height;
@@ -436,6 +445,10 @@ void TextLayout::layout(RECT& containingRect) {
                 x += dX;
             }
 
+            // TODO: enum baseline indents here
+            
+            x += line.leftIndent;
+            
             line.rect.origin.x = x;
             line.rect.origin.y = y;
             for (int32_t charIndex=line.start; charIndex<line.start+line.count ; charIndex++) {
@@ -450,9 +463,12 @@ void TextLayout::layout(RECT& containingRect) {
                     rg.topLeft.y = y + line.baseline - (glyph->_size.height + glyph->_origin.y);
                     x += glyph->_advance.width;
                 }
+                if (rg.baselineOffset) {
+                    rg.topLeft.y -= rg.baselineOffset * line.tallestFont->_height;
+                }
             }
             
-            y += line.rect.size.height;;
+            y += line.rect.size.height;
         }
         
         _invalid &= ~ INVALID_POSITION;
@@ -483,6 +499,9 @@ void TextLayout::updateRenderOpsForView(View* view) {
         // Clear old ops
         resetRenderOps();
         
+        // Set up an underlines enumerator
+        attributed_string::enumerator<attributed_string::Underline, bool> eUnderlines(_text, &_defaultParams.underline);
+        
         // Iterate over the lines to find the visible ones
         map<AtlasPage*,TextRenderOp*> uniqueOps;
         AtlasPage* currentAtlas = NULL;
@@ -509,6 +528,25 @@ void TextLayout::updateRenderOpsForView(View* view) {
                         currentOp->addGlyph(rg.glyph, RECT {rg.topLeft.x,rg.topLeft.y, static_cast<float>(rg.glyph->_size.width), static_cast<float>(rg.glyph->_size.height)}, rg.forecolor);
                     }
                 }
+                
+                // Experimental underline support
+                eUnderlines.enumerate(line.start, line.start+line.count, [=](const attributed_string::attribute_usage& attrib) {
+                    int32_t from = MAX(attrib.start, line.start);
+                    int32_t to = MIN(attrib.end, line.start+line.count);
+                    auto& rgFrom = _renderGlyphs[from];
+                    auto& rgTo = _renderGlyphs[to-1];
+                    float x = rgFrom.rect().origin.x;
+                    RECT underlineRect = {
+                        x,
+                        line.rect.top() + line.baseline + app->dp(2),
+                        rgTo.rect().origin.x+rgTo.glyph->_size.width - x,
+                        app->dp(1)
+                    };
+                    auto underlineOp = new RectRenderOp();
+                    underlineOp->setRect(underlineRect);
+                    underlineOp->setColor(_defaultParams.forecolor);
+                    _renderOps.push_back(underlineOp);
+                });
             }
         }
 

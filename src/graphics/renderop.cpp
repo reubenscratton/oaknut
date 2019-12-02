@@ -185,3 +185,6 @@ void RenderOp::rebatchIfNecessary() {
     }
 }
 
+void RenderOp::reset() {
+    // no-op
+}
