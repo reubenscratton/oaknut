@@ -186,9 +186,9 @@ int variant::intVal() const {
     switch (type) {
         case EMPTY: return 0;
         case INT32: return _i32;
-        case INT64: return _i64;
+        case INT64: return (int)_i64;
         case UINT32: return _u32;
-        case UINT64: return _u64;
+        case UINT64: return (int)_u64;
         case FLOAT32: return (int)_f32;
         case FLOAT64: return (int)_f64;
         case STRING: return atoi(_str->c_str());

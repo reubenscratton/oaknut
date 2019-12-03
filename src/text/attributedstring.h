@@ -6,11 +6,6 @@
 //
 
 
-struct mul_add {
-    float mul;
-    float add;
-};
-
 struct PARAGRAPH_METRICS {
     EDGEINSETS insets;
     int32_t hangingIndentChars;
@@ -23,16 +18,6 @@ struct PARAGRAPH_METRICS {
 class attributed_string : public string {
 public:
     
-    typedef enum {
-        Forecolor,
-        BackgroundColor,
-        Font,
-        FontWeight,
-        FontSize,
-        ParagraphMetrics,
-        BaselineOffset,
-        Underline
-    } attribute_type;
 
     // Construction
     attributed_string() : string() {}
@@ -41,28 +26,44 @@ public:
     attributed_string(const string& str) : string(str) {}
     attributed_string(const attributed_string& str);
     
+
+    struct FONT_CHANGE {
+        sp<oak::Font> font;  // null = inherit, if non-null then other members must be null
+        float sizeMul;  // 0 = use abs, or inherit if abs also 0
+        float sizeAbs;  // 0 = use mul, or inherit if mul also 0
+        float weight;   // 0 = inherit
+        
+        FONT_CHANGE(oak::Font* afont=nullptr, float asizeMul=0, float asizeAbs=0, float aweight=0) : font(afont), sizeMul(asizeMul), sizeAbs(asizeAbs), weight(aweight) {}
+        FONT_CHANGE(const FONT_CHANGE& src) : font(src.font), sizeMul(src.sizeMul), sizeAbs(src.sizeAbs), weight(src.weight) {}
+    };
     
     class attribute {
     public:
-        attribute_type _type;
-        
+        enum type {
+            Forecolor,
+            Backcolor,
+            Font,           // NB: unlike the others, font attributes are cumulative
+            ParagraphMetrics,
+            BaselineOffset,
+            Underline
+        } _type;
 
         union {
             COLOR _color;
-            sp<class Font> _font;
-            float _f;
-            struct mul_add _mul_add;
-            struct PARAGRAPH_METRICS _paragraph_metrics;
+            FONT_CHANGE _font;
+            PARAGRAPH_METRICS _paragraphMetrics;
+            float _floatVal;
+            bool _underline;
         };
         
-        attribute(attribute_type type, COLOR color) : _type(type), _color(color) {}
-        attribute(attribute_type type, float f) : _type(type), _f(f) {}
-        attribute(oak::Font* font) : _type(Font), _font(font) {}
-        attribute(attribute_type type, const mul_add& m) : _type(type), _mul_add(m) {}
-        attribute(const PARAGRAPH_METRICS& metrics) : _type(ParagraphMetrics), _paragraph_metrics(metrics) {}
+        attribute() : _type(Forecolor) {}
+        attribute(type atype, float floatVal) : _type(atype), _floatVal(floatVal) {}
+        attribute(type atype, COLOR color) : _type(atype), _color(color) {}
+        attribute(const FONT_CHANGE& fontChange) : _type(Font), _font(fontChange) {}
+        attribute(const PARAGRAPH_METRICS& metrics) : _type(ParagraphMetrics), _paragraphMetrics(metrics) {}
     
-        ~attribute() { if (_type == Font) { _font.~sp(); } }
-        attribute(const attribute& attr) : _type(attr._type) {
+        ~attribute() { if (_type == Font) { _font.font.~sp(); } }
+        attribute(const attribute& attr) : _type(Forecolor) {
             assign(attr);
         }
         attribute& operator=(const attribute& rhs) {
@@ -73,32 +74,42 @@ public:
             if (_type<rhs._type) return true;
             return false;
         }
-        void setType(attribute_type newType) {
+        void setType(type newType) {
             if (_type == newType) return;
             if (_type == Font && newType != Font) {
-                _font.~sp();
+                _font.font.~sp();
             } else if (_type != Font && newType == Font) {
-                new (&_font) sp<class Font>();
+                new (&_font.font._obj) sp<class Font>();
             }
             _type = newType;
         }
         void assign(const attribute& src) {
             setType(src._type);
             switch (src._type) {
-                case Forecolor:
-                case BackgroundColor: _color = src._color; break;
+                case Forecolor: _color = src._color; break;
+                case Backcolor: _color = src._color; break;
                 case Font: _font = src._font; break;
-                case FontWeight: _f = src._f; break;
-                case FontSize: _mul_add = src._mul_add; break;
-                case ParagraphMetrics: _paragraph_metrics = src._paragraph_metrics; break;
-                case BaselineOffset: _f=src._f; break;
+                case ParagraphMetrics: _paragraphMetrics = src._paragraphMetrics; break;
+                case BaselineOffset: _floatVal = src._floatVal; break;
                 case Underline: break;
             }
         }
     };
 
+    // Helpers for creating standard attributes
+    static attribute font(oak::Font* font);
+    static attribute font_size(float mul, float add);
+    static attribute font_weight(float weight);
+    static attribute bold();
+    static attribute forecolor(COLOR color);
+    static attribute backcolor(COLOR color);
+    static attribute paragraphMetrics(const PARAGRAPH_METRICS& metrics);
+    static attribute baselineOffset(float offset);
+    static attribute underline();
+
+    
     void setAttribute(const attribute& attribute, int32_t start, int32_t end);
-    const attribute* getAttribute(int32_t pos, attribute_type type);
+    const attribute* getAttribute(int32_t pos, attribute::type type);
 
     inline void clear() {
         string::clear();
@@ -112,15 +123,6 @@ public:
     
     void append(const attributed_string& str);
 
-    // Helpers for standard attributes
-    static attribute font(oak::Font* font) { return attribute(font); }
-    static attribute font_weight(float weight) { return attribute(FontWeight, weight); }
-    static attribute bold() { return attribute(FontWeight, FONT_WEIGHT_BOLD); }
-    static attribute forecolor(COLOR color) { return attribute(Forecolor, color); }
-    static attribute fontsize(const mul_add& ma) { return attribute(FontSize, ma); }
-    static attribute paragraphMetrics(const PARAGRAPH_METRICS& metrics) { return attribute(metrics); }
-    static attribute baselineOffset(float offset) { return attribute(BaselineOffset, offset); }
-    static attribute underline() { return attribute(Underline, 0.f); }
 
     friend class TextLayout;
 
@@ -134,91 +136,28 @@ private:
     };
 
     struct cmp_start {
-        bool operator() (const attribute_usage& a, const attribute_usage& b) const {
-            uint32_t aa = *(uint32_t*)&a.start;
-            uint32_t bb = *(uint32_t*)&b.start;
-            if (aa == bb) {
-                return (char*)&a < (char*)&b;
-            }
-            return aa < bb;
-        }
+        bool operator() (const attribute_usage& a, const attribute_usage& b) const;
     };
     set<attribute_usage, cmp_start> _attributes;
 
-    
-    template<attribute_type TYPE, class T>
+
     class enumerator {
     public:
-        enumerator(const attributed_string& str, T* defaultVal) : _str(str), _it(str._attributes.begin()) {
-            _strLength = str.length();
-            _stack.push(std::make_pair(_strLength+1, defaultVal));
-        }
-        
-        void advanceTo(int32_t index) {
-            while (_stack.top().first <= index) {
-                _stack.pop();
-            }
-            while (_it != _str._attributes.end()) {
-                int32_t start = _it->start;
-                if (start<0) start += _strLength;
-                if (start > index) {
-                    break;
-                }
-                int32_t end = _it->end;
-                if (end<0) end += _strLength;
-                if (end > index) {
-                    handleApplyingAttrib(*_it, end);
-                }
-                _it++;
-            }
-        }
-        inline void handleApplyingAttrib(const attribute_usage& a, int32_t end) {
-            if (a._type == TYPE) {
-                _stack.push(std::make_pair(end, (T*)&a._color));
-            }
-        }
-        void enumerate(int32_t from, int32_t to, std::function<void(const attribute_usage& attr)> callback) {
-            while (_it != _str._attributes.end() && from<to) {
-                if (_it->_type != TYPE) {
-                    _it++;
-                    continue;
-                }
-                
-                // Handle -ve char indexes
-                int32_t end = _it->end;
-                if (end<0) end += _strLength;
-                int32_t start = _it->start;
-                if (start<0) start += _strLength;
-                
-                // If span ended before the range of interest, continue
-                if (end<=from) {
-                    _it++;
-                    continue;
-                }
-                
-                // If span starts beyond the range of interest, break
-                if (start>=to) {
-                    break;
-                }
-                
-                start = MAX(start, from);
-                end = MIN(end, to);
-                callback(*_it);
-                
-                //_it++;
-                from=end+1;
-            }
-
-        }
-        
-        T* current() {
-            return _stack.top().second;
-        }
+        enumerator(attribute::type type, const attributed_string& str, void* defaultVal);
+        void advanceTo(int32_t index);
+        void enumerate(int32_t from, int32_t to, std::function<void(const attribute_usage& attr)> callback);
+        void* current();
         
         const attributed_string& _str;
         int32_t _strLength;
+        attribute::type _type;
         set<attribute_usage>::iterator _it;
-        stack<pair<int32_t, T*>> _stack;
+        void* _defaultVal;
+        list<const attribute_usage*> _activeList;
+        bool _activeListChanged;
+        
+        // Cumulative calc: should be in a specialization or subclass
+        sp<class Font> _currentFont;
     };
     
 };

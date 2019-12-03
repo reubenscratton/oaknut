@@ -94,19 +94,12 @@ protected:
     struct RENDER_GLYPH {
         Glyph* glyph;
         COLOR forecolor;  // TODO: this is inefficient, and not even used if text color is in a uniform
-        float baselineOffset; // TODO: very inefficient!
         POINT topLeft;
         int32_t cluster; // 0 for primary glyph in character, 1 for secondary, etc.
         RECT rect() const;
     };
     
-    // A section of same-color underline
-    struct UNDERLINE {
-        int32_t start;
-        int32_t count;
-        COLOR color;
-    };
-
+    
     // A sequence of consecutive glyphs that are all on the same baseline
     struct RENDER_LINE {
         int32_t start;   // offset into _renderGlyphs
@@ -115,7 +108,6 @@ protected:
         float baseline;  // distance from layoutRect.top to baseline
         Font* tallestFont;
         float leftIndent;
-        vector<UNDERLINE> _underlines;
     };
     
 

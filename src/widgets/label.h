@@ -31,7 +31,7 @@ public:
     virtual void setMaxLines(int maxLines);
     virtual bool getEllipsize() const;
     virtual void setEllipsize(bool ellipsize);
-    virtual const attributed_string::attribute* getAttribute(int32_t pos, attributed_string::attribute_type type);
+    virtual const attributed_string::attribute* getAttribute(int32_t pos, attributed_string::attribute::type type);
     /** @} */
 
     /** @name Overrides

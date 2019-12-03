@@ -12,7 +12,7 @@ const string string::empty;
 // TODO: Implement string buffer excess capacity, to reduce number of reallocs.
 
 oak::string oak::operator "" _S(const char *str, std::size_t len) {
-    return oak::string::static_str(str, len);
+    return oak::string::static_str(str, (int32_t)len);
 }
 
 // Buffer types

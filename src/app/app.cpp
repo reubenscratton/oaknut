@@ -185,7 +185,7 @@ bool App::fileLoad(const string& path, bytearray& fileContents) const {
         return false;
     }
     fseek (file, 0, SEEK_END);
-    uint64_t cb = ftell(file);
+    int32_t cb = (int32_t)ftell(file);
     fileContents.resize(cb);
     fseek (file, 0, SEEK_SET);
     size_t read = fread(fileContents.data(), 1, cb, (FILE*)file);

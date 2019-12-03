@@ -92,13 +92,10 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
         _renderGlyphs.clear();
 
         // Enumerate font and forecolor attributes at this phase
-        attributed_string::enumerator<attributed_string::attribute_type::Font, class Font> eFont(_text, (Font*)_defaultParams.font);
-        attributed_string::enumerator<attributed_string::Forecolor, COLOR> eForecolor(_text, &_defaultParams.forecolor);
+        attributed_string::enumerator eFont(attributed_string::attribute::type::Font, _text, _defaultParams.font);
+        attributed_string::enumerator eForecolor(attributed_string::attribute::type::Forecolor, _text, &_defaultParams.forecolor);
         
 
-        float currentBaselineOffset = 0;
-        stack<float> baselineOffsetStack;
-        
         // Iterate over text
         uint32_t offset = 0;
         char32_t codepoint='\0', prevCh;
@@ -110,34 +107,6 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
                 break;
             }
 
-            // Unapply spans that end at this point
-            /*while (spanEndIterator!=_text._ends.end()) {
-                switch (attrib->_type) {
-                                                
-                    case attributed_string::attribute_type::BaselineOffset:
-                        currentBaselineOffset = baselineOffsetStack.top();
-                        baselineOffsetStack.pop();
-                        break;
-
-                }
-                spanEndIterator++;
-            }
-            
-            // Apply any spans that start at this point
-            while (spanStartIterator!=_text._starts.end()) {
-                switch (attrib->_type) {
-                    
-                    case attributed_string::attribute_type::BaselineOffset:
-                        baselineOffsetStack.push(currentBaselineOffset);
-                        currentBaselineOffset = attrib->_f;
-                        break;
-                    
-                    case attributed_string::attribute_type::Underline:
-                        break; // Underlines are handled at renderop time
-                }
-                
-                spanStartIterator++;
-            }*/
             
             i++;
             
@@ -155,7 +124,7 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
             
             // Fetch the glyph for this character
             eFont.advanceTo(i-1);
-            Font* font = eFont.current();
+            Font* font = (Font*)eFont.current();
             Glyph* glyph = font->getGlyph(codepoint);
             if (!glyph) {
                 glyph = font->getGlyph('?'); // todo: should ask the font for it's default character...
@@ -165,7 +134,7 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
             eForecolor.advanceTo(i-1);
             
             // Add the glyph to the list
-            _renderGlyphs.emplace_back(RENDER_GLYPH {glyph, *eForecolor.current(), currentBaselineOffset});
+            _renderGlyphs.emplace_back(RENDER_GLYPH {glyph, *(COLOR*)eForecolor.current()});
         }
         
         _invalid &= ~ INVALID_GLYPHS;
@@ -195,7 +164,7 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
         float premeasuredCharsWidth=0.;
 
 
-        attributed_string::enumerator<attributed_string::ParagraphMetrics, PARAGRAPH_METRICS> eLineAttribs (_text, &_defaultParams.paragraphMetrics);
+        attributed_string::enumerator eParagraphMetrics(attributed_string::attribute::type::ParagraphMetrics, _text, &_defaultParams.paragraphMetrics);
 
 
         for (;;) {
@@ -206,9 +175,9 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
                 }
                 
                 // Move the attributes enumerator
-                eLineAttribs.advanceTo(i);
+                eParagraphMetrics.advanceTo(i);
                 
-                auto paragraphMetrics = eLineAttribs.current();
+                auto paragraphMetrics = (PARAGRAPH_METRICS*)eParagraphMetrics.current();
 
                 leftIndent = paragraphMetrics->insets.left;
                 rightIndent = paragraphMetrics->insets.right;
@@ -431,6 +400,9 @@ void TextLayout::layout(RECT& containingRect) {
             }
         }
 
+        float currentBaselineOffset = 0;
+        attributed_string::enumerator eBaselineOffsets(attributed_string::attribute::type::BaselineOffset, _text, &currentBaselineOffset);
+
         float y =  containingRect.origin.y + dY;
         _rect.origin.y = y;
 
@@ -445,10 +417,8 @@ void TextLayout::layout(RECT& containingRect) {
                 x += dX;
             }
 
-            // TODO: enum baseline indents here
-            
+            // Position all glyphs on the displayed line
             x += line.leftIndent;
-            
             line.rect.origin.x = x;
             line.rect.origin.y = y;
             for (int32_t charIndex=line.start; charIndex<line.start+line.count ; charIndex++) {
@@ -463,11 +433,16 @@ void TextLayout::layout(RECT& containingRect) {
                     rg.topLeft.y = y + line.baseline - (glyph->_size.height + glyph->_origin.y);
                     x += glyph->_advance.width;
                 }
-                if (rg.baselineOffset) {
-                    rg.topLeft.y -= rg.baselineOffset * line.tallestFont->_height;
-                }
             }
             
+            // Apply baseline offsets
+            eBaselineOffsets.enumerate(line.start, line.start+line.count, [&](const attributed_string::attribute_usage& a) {
+                for (int32_t i=a.start ; i<a.end ; i++) {
+                    auto& rg = _renderGlyphs[i];
+                    rg.topLeft.y -= a._floatVal * line.tallestFont->_height;
+                }
+            });
+
             y += line.rect.size.height;
         }
         
@@ -500,7 +475,7 @@ void TextLayout::updateRenderOpsForView(View* view) {
         resetRenderOps();
         
         // Set up an underlines enumerator
-        attributed_string::enumerator<attributed_string::Underline, bool> eUnderlines(_text, &_defaultParams.underline);
+        attributed_string::enumerator eUnderlines(attributed_string::attribute::type::Underline, _text, &_defaultParams.underline);
         
         // Iterate over the lines to find the visible ones
         map<AtlasPage*,TextRenderOp*> uniqueOps;

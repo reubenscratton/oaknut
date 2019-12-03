@@ -74,7 +74,7 @@ void BNContentViewPagerController::setContent(BNContent::stub stub, vector<BNCon
     _contentArray = collection;
     _viewPager->setAdapter(new BNContentAdapter(_contentArray));
     auto it = std::find(_contentArray.begin(), _contentArray.end(), stub);
-    auto index = std::distance(_contentArray.begin(), it);
+    int32_t index = (int32_t)std::distance(_contentArray.begin(), it);
     _viewPager->setSelectedIndex(index, false);
 }
 

@@ -98,7 +98,7 @@ BNItem::BNItem(const variant& json) : BNContent(json) {
                     auto traitsStart = currentPara.length();
                     currentPara.append("\u25A0   ");
                     currentPara.setAttribute(attributed_string::forecolor(0xFFCCCCCC), traitsStart, traitsStart+1);
-                    currentPara.setAttribute(attributed_string::fontsize({0.5,0}), traitsStart, traitsStart+1);
+                    currentPara.setAttribute(attributed_string::font_size(0.5, 0), traitsStart, traitsStart+1);
                     currentPara.setAttribute(attributed_string::baselineOffset(0.2), traitsStart, traitsStart+1);
                     currentPara.setAttribute(attributed_string::paragraphMetrics({{0,0,0,0},4}), traitsStart, traitsStart+1000); // this +1000 won't upset anything but it's a bit crap.
                 }

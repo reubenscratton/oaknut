@@ -204,7 +204,7 @@ string dateStringFromTimestamp(TIMESTAMP timestamp, bool useLongFormat) {
         if (dyear > 0 || dday > 6 || dmonth > 0) {
             char ach[32];
             strftime(ach, 32, dyear?(useLongFormat?"%e %h %Y":"%e %h %y"):"%e %h", &tm);
-            return string(ach, strlen(ach));
+            return string(ach, (int32_t)strlen(ach));
             
         } else {
             if (dday < 2) {
