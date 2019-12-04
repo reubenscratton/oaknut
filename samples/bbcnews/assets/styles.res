@@ -40,9 +40,9 @@ color: {
 H1: {
     font-weight: medium
     font-size: 24sp
-    font-size~tablet: 40sp
+    font-size@tablet: 40sp
     line-height: 30sp
-    line-height~tablet: 48sp
+    line-height@tablet: 48sp
     forecolor: black
     forecolor-inv: white
 }
@@ -50,9 +50,9 @@ H1: {
 H2: {
     font-weight: medium
     font-size: 15sp
-    font-size~tablet: 24sp
+    font-size@tablet: 24sp
     line-height: 17.5sp
-    line-height~tablet: 30sp
+    line-height@tablet: 30sp
     forecolor: black
     forecolor-inv: white
 }
@@ -60,56 +60,56 @@ H2: {
 H3: {
     font-weight: medium
     font-size: 15sp
-    font-size~tablet: 20sp
+    font-size@tablet: 20sp
     line-height: 17.5sp
-    line-height~tablet: 24sp
+    line-height@tablet: 24sp
     forecolor: black
     forecolor-inv: white
 }
 
 featureHeadline: {
     font-weight: medium
-    font-size~tablet: 24sp
-    font-size~!tablet: 15sp
-    lineHeight~tablet: 24sp
-    lineHeight~!tablet: 15sp
+    font-size@tablet: 24sp
+    font-size: 15sp
+    line-height@tablet: 24sp
+    line-height: 15sp
     forecolor: black
     forecolor-inv: white
 }
 
 featureHeadlineFullWidth: {
     font-weight: medium
-    font-size~tablet: 30sp
-    font-size~!tablet: 22sp
-    lineHeight~tablet: 30sp
-    lineHeight~!tablet: 22sp
+    font-size@tablet: 30sp
+    font-size: 22sp
+    line-height@tablet: 30sp
+    line-height: 22sp
     forecolor: black
     forecolor-inv: white
 }
 
 font-sizes: {
-    timestamp~tablet: 17sp
+    timestamp@tablet: 17sp
     timestamp: 14sp
-    summary~tablet: 18sp
+    summary@tablet: 18sp
     summary: 14sp
-    summary~4inch: 13sp
-    titleModule~tablet: 28sp
+    summary@4inch: 13sp
+    titleModule@tablet: 28sp
     titleModule: 22sp
-    ribbon~tablet: 20sp
-    ribbon~!tablet: 16sp
-    cornerLabels~tablet: 20sp
-    cornerLabels~!tablet: 24sp
-    see-all~tablet: 18sp
-    see-all~!tablet:12sp
+    ribbon@tablet: 20sp
+    ribbon: 16sp
+    cornerLabels@tablet: 20sp
+    cornerLabels: 24sp
+    see-all@tablet: 18sp
+    see-all:12sp
 }
 
 
 line-heights: {
-    timestamp~tablet: 22sp
-    timestamp~!tablet: 18sp
-    summary~tablet: 24sp
-    summary~!tablet: 18sp
-    summary~4inch: 17sp
+    timestamp@tablet: 22sp
+    timestamp: 18sp
+    summary@tablet: 24sp
+    summary: 18sp
+    summary@4inch: 17sp
 }
 
 cells: {
@@ -119,13 +119,13 @@ cells: {
 }
 
 text-insets: {
-    top-story~tablet:32dp,20dp,32dp,32dp
+    top-story@tablet:32dp,20dp,32dp,32dp
     top-story:8dp,5dp
-    secondary-top-story~tablet:16dp,10dp
+    secondary-top-story@tablet:16dp,10dp
     secondary-top-story:8dp,5dp,8dp,3dp
-    feature~tablet:16dp,10dp,16dp,12dp
+    feature@tablet:16dp,10dp,16dp,12dp
     feature:12dp,8dp,12dp,24dp
-    related-story~tablet:32dp,16dp,32dp,0
+    related-story@tablet:32dp,16dp,32dp,0
     related-story:16dp,8dp,16dp,0
 }
 
@@ -133,7 +133,7 @@ topicAndTimestamp: {
     font-weight: light
     font-size: $font-sizes.timestamp
     line-height: $line-heights.timestamp
-    insets: 3dp,5dp
+    padding: 3dp,5dp
     forecolor: $color.timestamp
     forecolor-inv: $color.timestampInv
     lines: 1
@@ -143,8 +143,8 @@ tinyTimestamps: {
     font-weight: light
     font-size: 14sp
     color: gray
-    lineHeight: 0
-    insets:0
+    line-height: 0
+    padding:0
 }
 
 summaryText: {
@@ -153,7 +153,7 @@ summaryText: {
     line-height: $line-heights.summary
     forecolor: $color.contentForeground
     forecolor-inv: white
-    insets:0dp
+    padding:0dp
 }
 
 relatedStories: {
@@ -196,72 +196,72 @@ durationSmall: {
     font-weight: light
     font-size: $font-sizes.summary
     line-height: 0
-    insets:8dp,4dp
-    color: white
+    padding:8dp,4dp
+    forecolor: white
 }
 durationTiny: {
     font-weight: light
     font-size: $font-sizes.see-all
     line-height: 0
-    insets:4dp,2dp
-    color: white
+    padding:4dp,2dp
+    forecolor: white
 }
 
 titleModule: {
     font-weight: light
     font-size: $font-sizes.titleModule
-    color: black
+    forecolor: black
 }
 
 digestTitles: {
     font-weight: light
     font-size: $font-sizes.titleModule
-    color: black
+    forecolor: black
     line-height:0
-    insets~tablet: 16dp
-    insets~!tablet: 8dp
+    padding@tablet: 16dp
+    padding: 8dp
 }
 
 cornerLabels: {
-    size~tablet: 40dp
-    size~!tablet: 44dp
+    size@tablet: 40dp
+    size: 44dp
     font-weight: medium
     font-size: $font-sizes.cornerLabels
-    color: white
+    forecolor: white
 }
 
 ribbon: {
     font-weight: medium
     font-size: $font-sizes.ribbon
     color: white
-    height~tablet: 50dp
-    height~!tablet: 44dp
-    insets~tablet: 24dp,0
-    insets~!tablet: 16dp,0
-    min-left~tablet: 64dp
-    min-left~!tablet: 40dp
-    max-left~tablet: 128dp
-    max-left~!tablet: 64dp
+    height@tablet: 50dp
+    height: 44dp
+    padding@tablet: 24dp,0
+    padding: 16dp,0
+    min-left@tablet: 64dp
+    min-left: 40dp
+    max-left@tablet: 128dp
+    max-left: 64dp
 }
 
 sideMenu: {
     section: {
         font-size: 18sp
-        insets: 16dp,0,0,0
-        color: white
+        padding: 16dp,0,0,0
+        forecolor: white
     }
     cell: {
         font-weight: light
         font-size: 18sp
-        insets: 32dp,0,0,0
-        color: white
+        padding: 32dp,0,0,0
+        forecolor: white
     }
 }
 
 byline: {
     thumbnail-size: 38dp
     font-size: $font-sizes.summary
-    color: black
+    forecolor: black
     line-height: $line-heights.summary
     name: {
         font-weight: medium
@@ -277,93 +277,88 @@ imageCaption: {
     font-weight: light
     font-size: $font-sizes.summary
     forecolor: #666666
-    padding~tablet: 32dp,24dp,32dp,16dp
+    padding@tablet: 32dp,24dp,32dp,16dp
     padding: 16dp,8dp,16dp,8dp
 }
 
 // Top Stories : Photo gallery cell
 photoGalleryCell: {
-    color: white
+    forecolor: white
     line-height:0
-    headline: {
-        font-weight: medium
-        font-size: $font-sizes.H2
-        insets~tablet:0,8dp,0,16dp
-        insets~!tablet:0,4dp,0,8dp
-    }
+    headline: $H2
     summary: {
         font-weight: light
         font-size: $font-sizes.summary
-        insets~tablet:0,4dp,0,8dp
-        insets~!tablet:0,2dp,0,4dp
+        padding@tablet:0,4dp,0,8dp
+        padding:0,2dp,0,4dp
     }
-    cameraIconPadding~tablet:80dp,72dp
-    cameraIconPadding~!tablet:40dp,36dp
+    cameraIconPadding@tablet:80dp,72dp
+    cameraIconPadding:40dp,36dp
 }
 
 photoGallery: {
-    color: white
-    lineHeight:0
+    forecolor: white
+    line-height:0
     landingPageHeadline: {
         font-weight: medium
         font-size: $font-sizes.H1
-        insets~tablet:32dp,64dp,32dp,0
-        insets~!tablet:16dp,32dp,16dp,0
+        padding@tablet:32dp,64dp,32dp,0
+        padding:16dp,32dp,16dp,0
     }
     landingPageSummary: {
         font-weight: light
         font-size: $font-sizes.summary
-        insets~tablet:32dp,8dp,32dp,16dp
-        insets~!tablet:16dp,4dp,16dp,8dp
+        padding@tablet:32dp,8dp,32dp,16dp
+        padding:16dp,4dp,16dp,8dp
     }
 }
 
 photoGalleryCaptions: {
     font-weight: light
     font-size: $font-sizes.summary
-    color: white
+    forecolor: white
     line-height: 0
-    insets:16dp,8dp
+    padding:16dp,8dp
 }
 
 followScreen: {
     titleIPad: {
         font-weight: medium
         font-size: 18sp
-        color:bbcNewsLiveRed
-        lineHeight:0
-        insets:0
+        forecolor:bbcNewsLiveRed
+        line-height:0
+        padding:0
     }
     header: {
         font-weight: medium
         font-size: 18sp
-        color: black
-        lineHeight:0
-        insets:16dp,8dp,16dp,2dp
+        forecolor: black
+        line-height:0
+        padding:16dp,8dp,16dp,2dp
     }
     item: {
         font-weight: light
         font-size: 16sp
-        color: black
-        lineHeight:0
-        insets:0
+        forecolor: black
+        line-height:0
+        padding:0
     }
 }
 
 ambientNotification: {
     font-weight: medium
     font-size: 14sp
-    color: white
+    forecolor: white
     line-height: 0
-    insets:8dp,2dp
+    padding:8dp,2dp
 }
 
 seeAllButton: {
     font-weight: light
     font-size: $font-weights.see-all
-    color:$color.contentForeground
-    lineHeight:0
-    insets:0
+    forecolor:$color.contentForeground
+    line-height:0
+    padding:0
 }
 
 // LEPs
@@ -371,10 +366,10 @@ keyPoints: {
     font-weight: light
     font-size: $font-sizes.basic
     line-height: $line-heights.basic
-    color: white
-    insets: 42dp,0,8dp,0
+    forecolor: white
+    padding: 42dp,0,8dp,0
     title: {
-        insets: 16dp,0
+        padding: 16dp,0
     }
 }
 
@@ -404,7 +399,7 @@ article: {
         }
         list: {
             font-weight: light
-            insets: 0,5dp
+            padding: 0,5dp
         }
         question: {
             font-weight: medium
@@ -421,15 +416,15 @@ article: {
         commentaryHeading: {
             font-weight: medium
             font-size: $font-sizes.H1
-            insets:0,4dp
+            padding:0,4dp
         }
         commentarySubheading: {
             font-weight: medium
-            insets:0,4dp
+            padding:0,4dp
         }
         commentaryTime: {
             font-weight: medium
-            insets:0,4dp
+            padding:0,4dp
         }
     }
 
@@ -453,8 +448,8 @@ web-browser: {
         font-size: $font-sizes.summary
     }
     color: white
-    lineHeight:0
-    insets:0
+    line-height:0
+    padding:0
 }
 
 
@@ -463,8 +458,8 @@ dummyText: {
     font-size: 24sp
     color: gray
     line-height:0
-    insets~tablet: 16dp
-    insets~!tablet: 8dp
+    padding@tablet: 16dp
+    padding: 8dp
 }
 
 redButtonTitles: {

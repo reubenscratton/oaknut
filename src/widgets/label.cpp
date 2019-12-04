@@ -85,6 +85,7 @@ bool Label::applySingleStyle(const string& name, const style& value) {
         } else {
             setLineHeight(0, m.val());
         }
+        return true;
     }
     return View::applySingleStyle(name, value);
 }

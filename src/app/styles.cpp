@@ -568,6 +568,8 @@ const style* style::resolve() const {
                 if (qual.length()==0) {
                     applies = true;
                 }
+                
+                // Platform qualifiers
                 else if (qual == "iOS") {
 #if TARGET_OS_IOS
                     applies = true;
@@ -580,6 +582,12 @@ const style* style::resolve() const {
 #ifdef ANDROID
                     applies = true;
 #endif
+
+                // Screen size qualifiers
+                } else if (qual == "tablet") {
+                    applies = app->_defaultDisplay->sizeClass() == Display::Tablet;
+                } else if (qual == "4inch") {
+                    applies = app->_defaultDisplay->size() <= 4;
                 } else {
                     app->warn("Unsupported qualifier '%s'", qual.c_str());
                 }
@@ -711,13 +719,14 @@ void style::fromVariant(const variant& v) {
         map<string,map<string,style>> qual_vals;
         
         // Iterate the compound's fields
-        for (auto e : v.compoundRef()) {
+        auto compoundVal = v.compoundRef();
+        for (auto e : compoundVal) {
             style styleVal;
             styleVal.fromVariant(e.second);
-            
-            // If field is qualified...
+
+            // If field is qualified, put it in qual_vals container
             auto qualifierStart = e.first.find("@");
-            if (qualifierStart) {
+            if (qualifierStart<e.first.lengthInBytes()) {
                 string qualifier = e.first.substr(qualifierStart+1);
                 string fieldName = e.first.substr(0, qualifierStart);
                 auto q = qual_vals.find(fieldName);
@@ -727,8 +736,35 @@ void style::fromVariant(const variant& v) {
                 q->second.operator[](qualifier) = styleVal;
             }
             
-            compound->insert(make_pair(e.first, styleVal));
+            // Non-qualified
+            else {
+                compound->insert(make_pair(e.first, styleVal));
+            }
         }
+        
+        // If the compound contains qualified values...
+        if (qual_vals.size()) {
+            
+            // Move any unqualified default values into the map of qualified
+            // values, using an empty string as the key
+            for (auto& q : qual_vals) {
+                auto defaultValIt = compound->find(q.first);
+                if (defaultValIt != compound->end()) {
+                    q.second.insert(make_pair(string(), (*defaultValIt).second));
+                    compound->erase(defaultValIt);
+                }
+            }
+            
+            // Move the qualified values map into the main compound value
+            for (auto q : qual_vals) {
+                style qualval;
+                qualval.setType(TypeQual);
+                qualval.compound->insert(q.second.begin(), q.second.end());
+                compound->insert(make_pair(q.first, qualval));
+            }
+        }
+            
+        
     }
     
     else if (v.isArray()) {
@@ -745,209 +781,8 @@ void style::fromVariant(const variant& v) {
         setType(TypeSimple);
         var = v;
     }
-    
-    
-    
+
 }
-/*
-bool StyleValue::parse(string::iterator it, int flags) {
-    it.skipWhitespace();
-
-    // Parse a compound value
-    if (it.peek() == '{') {
-        it.next();
-        setType(StyleValue::Type::Compound);
-        while (!it.eof()) {
-            it.skipWhitespace();
-            if (it.peek()=='}') {
-                it.next();
-                break;
-            }
-            string fieldName = it.readToken();
-            if (fieldName.length() == 0) {
-                app->log("Error: expected a field name");
-                return false;
-            }
-            
-            // Comment line
-            if (fieldName == "#") {
-                it.readToEndOfLine();
-                continue;
-            }
-            
-            // Split out the qualifier suffix, if there is one
-            string fieldNameQualifier = "";
-            int qualifierStartsAt = fieldName.find("@");
-            if (qualifierStartsAt > 0) {
-                fieldNameQualifier = fieldName.substr(qualifierStartsAt+1, -1);
-                fieldName = fieldName.substr(0, qualifierStartsAt);
-            }
-            
-            it.skipWhitespace();
-            if (it.next() != ':') {
-                app->log("Error: expected \':\' after identifier \'%s\'", fieldName.c_str());
-                return false;
-            }
-            it.skipWhitespace();
-            
-            // Parse the value
-            StyleValue value;
-            if (!value.parse(it)) {
-                return false;
-            }
-            
-            // If there's no qualifier then set the default value
-            auto existingField = compound->find(fieldName);
-            if (fieldNameQualifier.length() <= 0) {
-                if (existingField == compound->end()) {
-                    compound->insert(std::pair<string, StyleValue>(fieldName, std::move(value)));
-                } else {
-                    if (existingField->second.type == QualifiedCompound) {
-                        existingField->second.compound->insert(make_pair("", std::move(value)));
-                    } else {
-                        if (existingField->second.type == Compound && value.type == Compound) {
-                            for (auto i=value.compound->begin() ; i!=value.compound->end() ; i++) {
-                                existingField->second.compound->operator[](i->first) = std::move(i->second);
-                            }
-                        } else {
-                            existingField->second.copyFrom(&value);
-                        }
-                    }
-                }
-            }
-            
-            // Qualified value
-            else {
-                // If this is the first value (and it has a qualifier) then create the
-                // qualified compound and add the first element to it.
-                if (existingField == compound->end()) {
-                    StyleValue qualCom;
-                    qualCom.setType(QualifiedCompound);
-                    qualCom.compound->insert(make_pair(fieldNameQualifier, std::move(value)));
-                    compound->insert(make_pair(fieldName, std::move(qualCom)));
-                } else {
-                    // This is true if we've parsed the default value only, now we have to
-                    // promote existingField to being a qualified compound
-                    if (existingField->second.type != QualifiedCompound) {
-                        StyleValue defaultValue(std::move(existingField->second));
-                        existingField->second.setType(QualifiedCompound);
-                        existingField->second.compound->insert(make_pair("", std::move(defaultValue)));
-                        existingField->second.compound->insert(make_pair(fieldNameQualifier, std::move(value)));
-                    }
-                    else {
-                        existingField->second.compound->insert(make_pair(fieldNameQualifier, std::move(value)));
-                    }
-                }
-            }
-        }
-    }
-    
-    // Array (explitly declared with square brackets)
-    else if (it.peek() == '[') {
-        it.next();
-        setType(Array);
-        while (!it.eof()) {
-            it.skipWhitespace();
-            if (it.peek()==']') {
-                it.next();
-                break;
-            }
-            
-            // Parse the next element
-            StyleValue elem;
-            if (!elem.parse(it, PARSEFLAG_IN_ARRAY)) {
-                return false;
-            }
-            array->push_back(std::move(elem));
-            
-            // Next non-whitespace char must be a comma or the closing square bracket
-            it.skipWhitespace();
-            if (it.peek()==',') {
-                it.next();
-            } else {
-                if (it.peek()!=']') {
-                    app->warn("expected ']'");
-                    return false;
-                }
-            }
-        }
-    }
-    
-    // Non-compound
-    else {
-        
-        // Parse a measurement. Size expressions allow a number to be followed by another number,
-        // in this case we convert self to an array containing the numbers
-        if (parseNumberOrMeasurement(it)) {
-            it.skipWhitespace();
-            StyleValue secondNumber;
-            if (secondNumber.parseNumberOrMeasurement(it)) {
-                StyleValue firstNumber = *this;
-                setType(Array);
-                array->push_back(firstNumber);
-                array->push_back(secondNumber);
-            }
-        }
-        
-        // String value
-        else {
-            setType(it.nextWas("$") ? Reference : String);
-            bool quotedString = it.nextWas("\"");
-            while (!it.eof()) {
-                auto ch = it.peek();
-                if (!quotedString) {
-                    if ((ch==' '||ch==')') && (flags & PARSEFLAG_IS_ARGUMENT)) {
-                        break;
-                    }
-                    if (ch=='\r' || ch=='\n' || ch==',') {
-                        break;
-                    }
-                    it.next();
-                } else {
-                    it.next();
-                    if (ch=='\"') {
-                        break;
-                    }
-                    if (ch=='\\') {
-                        char32_t escapeChar = it.next();
-                        switch (escapeChar) {
-                            case '\\': ch='\\'; break;
-                            case '\"': ch='\"'; break;
-                            case '\'': ch='\''; break;
-                            case 'n': ch='\n'; break;
-                            case 'r': ch='\r'; break;
-                            case 't': ch='\t'; break;
-                            case 'u': assert(0); // todo! implement unicode escapes
-                            default: app->warn("invalid escape '\\%c'", escapeChar); break;
-                        }
-                    }
-                }
-                str.append(ch);
-            }
-        }
-    }
-
-    // Implicit array (detected when there's a comma after the value)
-    it.skipWhitespace();
-    if (!(flags&PARSEFLAG_IN_ARRAY) && it.peek() == ',') {
-        StyleValue firstElem(std::move(*this));
-        setType(Array);
-        array->push_back(std::move(firstElem));
-        while (it.peek() == ',') {
-            it.next();
-            StyleValue elem;
-            if (!elem.parse(it, PARSEFLAG_IN_ARRAY)) {
-                return false;
-            }
-            array->push_back(std::move(elem));
-        }
-    }
-
-    
-
-    return true;
-}*/
-
 
 
 
