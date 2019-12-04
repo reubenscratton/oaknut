@@ -143,7 +143,7 @@ void BitmapWeb::fromVariant(const variant& v) {
     _pixelData.cb = _pixelData.stride*_height;
     _pixelData.data = malloc(_pixelData.cb);
     _buff = val(typed_memory_view((size_t)_pixelData.cb, (unsigned char*)_pixelData.data));
-    auto& bb = v.bytearrayVal("bb");
+    auto& bb = v.bytearrayRef("bb");
     memcpy(_pixelData.data, bb.data(), _pixelData.cb);
 }
 void BitmapWeb::toVariant(variant& v) {
@@ -156,10 +156,10 @@ void BitmapWeb::toVariant(variant& v) {
 
 class BitmapDecodeTask : public Task {
 public:
-    BitmapDecodeTask(const void* data, int cb, std::function<void(Bitmap*)> callback) : Task([=]() {
+    BitmapDecodeTask(bytearray& data, std::function<void(Bitmap*)> callback) : Task([=]() {
         callback(_bitmap);
     }) {
-        string str = base64_encode((const uint8_t*)data, cb);
+        string str = base64_encode((const uint8_t*)data.data(), data.size());
         string sstr = "data:image/png;base64,"; // TODO: this API needs a MIMEtype
         sstr.append(str);
         
@@ -172,7 +172,7 @@ public:
                 Runtime.dynCall('vii', $1, [task, gotSet(img)]);
             };
             img.src = Pointer_stringify($2);
-        }, this, onImageLoad, sstr.data());
+        }, this, onImageLoad, sstr.c_str());
     }
 
     static void onImageLoad(BitmapDecodeTask* task, int imgGotIndex) {
@@ -201,8 +201,8 @@ public:
 };
 
 
-Task* Bitmap::createFromData(const void* data, int cb, std::function<void(Bitmap*)> callback) {
-    return new BitmapDecodeTask(data, cb, callback);
+Task* Bitmap::createFromData(bytearray& data, std::function<void(Bitmap*)> callback) {
+    return new BitmapDecodeTask(data, callback);
 }
 
 Bitmap* Bitmap::create(int width, int height, int format) {

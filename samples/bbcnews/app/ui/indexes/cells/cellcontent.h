@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "cell.h"
+#include "../../common/cell.h"
 
 class BNCellContent : public BNCell {
 public:

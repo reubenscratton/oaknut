@@ -545,11 +545,13 @@ void Surface::checkSanity(View* view, bool dump) {
         View* viewToCheck = *viewsToCheck.begin();
         viewsToCheck.erase(viewsToCheck.begin());
         if (dump) {
+#if DEBUG
             string log = viewToCheck->debugDescription();
             if (viewToCheck->_renderList) {
                 log.append(string::format(" %d", viewToCheck->_renderList->_renderListsIndex));
             }
             app->log(log.c_str());
+#endif
         } else {
             if (viewToCheck->_renderList && -1 != viewToCheck->_renderList->_renderListsIndex) {
                 if (viewToCheck->_renderList->_renderListsIndex <= lastValidRenderIndex) {

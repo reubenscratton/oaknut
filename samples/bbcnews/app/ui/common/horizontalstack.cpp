@@ -2,9 +2,8 @@
 //  Copyright (c) 2019 BBC News. All rights reserved.
 //
 
-#include "scrollablecontainer.h"
 #include "cell.h"
-
+#include "containermodule.h"
 
 class BNHorizontalStack : public BNContainerModule {
 public:

@@ -40,7 +40,7 @@ public:
         //app->log("status %d len=%d", httpStatus, data_size);
         //string foo((const char*)data, data_size);
         //app->log("%s", foo.c_str());
-        vector<string> headers = string(szHeaders).split("\r\n");
+        vector<string> headers = string(szHeaders,-1).split("\r\n");
         map<string,string> headerMap;
         for (auto& header: headers) {
             int32_t colonPos = header.find(":");

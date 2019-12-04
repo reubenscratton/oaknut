@@ -6,7 +6,7 @@
 #include "containermodule.h"
 #include "../../model/_module.h"
 #include "cell.h"
-#include "cellitem.h"
+#include "../indexes/cells/cellitem.h"
 
 DECLARE_DYNCREATE(BNCellsModule, const variant&);
 

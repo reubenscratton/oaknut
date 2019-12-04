@@ -2,7 +2,7 @@
 //  Copyright (c) 2019 BBC News. All rights reserved.
 //
 
-#include "module.h"
+#include "../../common/module.h"
 
 class BNAdvertModule : public BNModule {
 public:

@@ -252,12 +252,12 @@ BNLayout* BNLayoutsGroup::layoutWithContent(const string& modelId,
 	const string& site, const string& format, const string& orientation) {
 	
 	// Create array of mode strings
-    vector<string> modes = {orientation, "election2015"_S, "new_segmented_container"_S};
-    if (app->_defaultDisplay->size()>=70) {
-        modes.push_back("tablet");
-    } else {
+    vector<string> modes = {orientation};
+    //if (app->_defaultDisplay->sizeDiagonalInches()>=7) {
+    //    modes.push_back("tablet");
+    //} else {
         modes.push_back("phone");
-    }
+    //}
     /*if (app->compactMode()) {
 		modes.push_back("compact");
 	}

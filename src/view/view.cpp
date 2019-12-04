@@ -103,8 +103,23 @@ bool View::applySingleStyle(const string& name, const style& value) {
         float pad = value.floatVal();
         setPadding(EDGEINSETS(_padding.left,pad,_padding.right,pad));
         return true;
+    } else if (name == "padding-left") {
+        setPadding(EDGEINSETS(value.floatVal(),_padding.top,_padding.right,_padding.bottom));
+        return true;
+    } else if (name == "padding-right") {
+        setPadding(EDGEINSETS(_padding.left,_padding.top,value.floatVal(),_padding.bottom));
+        return true;
+    } else if (name == "padding-top") {
+        setPadding(EDGEINSETS(_padding.left,value.floatVal(),_padding.right,_padding.bottom));
+        return true;
+    } else if (name == "padding-bottom") {
+        setPadding(EDGEINSETS(_padding.left,_padding.top,_padding.right,value.floatVal()));
+        return true;
     } else if (name == "tint") {
         setTintColor(value.colorVal());
+        return true;
+    } else if (name == "scroll-insets") {
+        setScrollInsets(value.edgeInsetsVal());
         return true;
     }
 #if DEBUG

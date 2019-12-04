@@ -407,6 +407,25 @@ uint32_t string::find(const char* szTextToFind, int32_t szTextLen/*=-1*/, uint32
     return fromOffset + findStr(_buf+o, _cb-fromOffset, szTextToFind, szTextLen);
 }
 
+uint32_t string::findLast(const char* szTextToFind, int32_t szTextLen/*=-1*/, uint32_t fromOffset/*=0*/) const {
+    if (!szTextToFind || !szTextToFind[0] || !_buf) return 0xFFFFFFFF; // searching for an empty string
+    if (szTextLen<0) szTextLen = strlen(szTextToFind);
+    char* buf = _buf + _offset + fromOffset;
+    uint32_t buflen = _cb-fromOffset;
+    uint32_t r = 0xFFFFFFFF;
+    while (buflen > 0) {
+        uint32_t f = findStr(buf, buflen, szTextToFind, szTextLen);
+        if (f > buflen) {
+            break;
+        }
+        buf += f;
+        r = buf - (_buf+_offset);
+        buf += szTextLen;
+        buflen -= (f+szTextLen);
+    }
+        
+    return r;
+}
 
 void string::erase(uint32_t fromByteOffset, uint32_t toByteOffset/*=0xFFFFFFFFU*/) {
     if (fromByteOffset>toByteOffset) std::swap(fromByteOffset, toByteOffset);
@@ -534,6 +553,9 @@ void string::assign(const char* p, int32_t cb) {
     }
     _offset = 0;
     if (p) {
+        if (cb<0) {
+            cb = strlen(p);
+        }
         _buf = buf_new(cb);
         _cb = cb;
         memcpy(_buf, p, _cb);

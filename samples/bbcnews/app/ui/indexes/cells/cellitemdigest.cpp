@@ -3,7 +3,7 @@
 //
 
 #include "cellitem.h"
-#include "durationlabel.h"
+#include "../../common/durationlabel.h"
 
 class BNCellItemDigest : public BNCellItem {
 public:

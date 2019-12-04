@@ -78,11 +78,16 @@ Timer* Timer::start(const std::function<void()>& del, int intervalMillis, bool r
 }
 
 
+static void oak_initDisplay(int screenWidth, int screenHeight, int screenScale) {
+    app->_defaultDisplay = new Display(screenWidth,
+                                       screenHeight,
+                                       96, 96,
+                                       screenScale);
+}
 
-
-static void oak_setWindowSize(int width, int height, int scale) {
-    app->log("window size %d x %d, scale=%d", width, height, scale);
-    app->_window->resizeSurface(width, height, scale);
+static void oak_setWindowSize(int width, int height) {
+    app->log("window size %d x %d", width, height);
+    app->_window->resizeSurface(width, height);
 }
 
 static void oak_userEvent(int eventType, int eventSourceId, int x, int y) {
@@ -92,8 +97,8 @@ static void oak_userEvent(int eventType, int eventSourceId, int x, int y) {
     inputEvent.deviceType = INPUTEVENT::Mouse;
     inputEvent.deviceIndex = eventSourceId;
     inputEvent.type = eventType;
-    inputEvent.pt.x = x * app->_window->_scale;
-    inputEvent.pt.y = y * app->_window->_scale;
+    inputEvent.pt.x = x * app->_defaultDisplay->_scale;
+    inputEvent.pt.y = y * app->_defaultDisplay->_scale;
     inputEvent.time = app->currentMillis();
     app->_window->dispatchInputEvent(inputEvent);
 }
@@ -117,7 +122,7 @@ static map<string,KeyboardInputSpecialKeyCode> s_specialKeys = {
 
 static void oak_keyEvent(int keyDown, int keyCode, int keynameBuffPtr) {
     if (app->_window->_keyboardHandler) {
-        string keyname((char*)keynameBuffPtr);
+        string keyname((char*)keynameBuffPtr, -1);
         //app->log("key: %s", keyname.c_str());
         char32_t charCode = 0;
         KeyboardInputSpecialKeyCode specialKey = SpecialKeyNone;
@@ -148,6 +153,7 @@ static void oak_main() {
 }
 
 EMSCRIPTEN_BINDINGS(oaknut) {
+    emscripten::function("oak_initDisplay", &oak_initDisplay);
     emscripten::function("oak_setWindowSize", &oak_setWindowSize);
     emscripten::function("oak_userEvent", &oak_userEvent);
     emscripten::function<void,int,int,int>("oak_keyEvent", &oak_keyEvent);

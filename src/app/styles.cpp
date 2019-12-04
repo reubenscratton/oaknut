@@ -587,7 +587,7 @@ const style* style::resolve() const {
                 } else if (qual == "tablet") {
                     applies = app->_defaultDisplay->sizeClass() == Display::Tablet;
                 } else if (qual == "4inch") {
-                    applies = app->_defaultDisplay->size() <= 4;
+                    applies = app->_defaultDisplay->sizeDiagonalInches() <= 4;
                 } else {
                     app->warn("Unsupported qualifier '%s'", qual.c_str());
                 }

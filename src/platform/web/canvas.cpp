@@ -119,12 +119,12 @@ void CanvasWeb::setAffineTransform(AFFINE_TRANSFORM* t) {
 }
 void CanvasWeb::drawRect(RECT rect) {
     if (_fillColor != 0) {
-        _ctxt.set("fillStyle", val(cssColorStr(_fillColor).data()));
+        _ctxt.set("fillStyle", val(cssColorStr(_fillColor).c_str()));
         _ctxt.call<void>("fillRect", val(rect.left()), val(rect.top()), val(rect.size.width), val(rect.size.height));
     }
     if (_strokeWidth > 0) {
         _ctxt.set("lineWidth", val(_strokeWidth));
-        _ctxt.set("strokeStyle", val(cssColorStr(_strokeColor).data()));
+        _ctxt.set("strokeStyle", val(cssColorStr(_strokeColor).c_str()));
         _ctxt.call<void>("strokeRect", val(rect.left()), val(rect.top()), val(rect.size.width), val(rect.size.height));
     }
     _hasChanged = true;
@@ -134,12 +134,12 @@ void CanvasWeb::drawOval(RECT rect) {
     _ctxt.call<void>("beginPath");
     _ctxt.call<void>("ellipse", val(rect.midX()), val(rect.midY()), val(rect.size.width/2), val(rect.size.height/2), val(0), val(0),val(2*M_PI));
     if (_fillColor != 0) {
-        _ctxt.set("fillStyle", val(cssColorStr(_fillColor).data()));
+        _ctxt.set("fillStyle", val(cssColorStr(_fillColor).c_str()));
         _ctxt.call<void>("fill");
     }
     if (_strokeWidth > 0  && _strokeColor != 0) {
         _ctxt.set("lineWidth", val(_strokeWidth));
-        _ctxt.set("strokeStyle", val(cssColorStr(_strokeColor).data()));
+        _ctxt.set("strokeStyle", val(cssColorStr(_strokeColor).c_str()));
         _ctxt.call<void>("stroke");
     }
     _ctxt.call<void>("restore");
@@ -152,7 +152,7 @@ void CanvasWeb::drawPath(Path* apath) {
     _ctxt.set("lineCap", val("round"));
     _ctxt.set("lineJoin", val("round"));
     _ctxt.set("lineWidth", val(_strokeWidth));
-    _ctxt.set("strokeStyle", val(cssColorStr(_strokeColor).data()));
+    _ctxt.set("strokeStyle", val(cssColorStr(_strokeColor).c_str()));
     for (auto it : path->_pathElements) {
         switch (it->type) {
             case TypeMoveTo: {

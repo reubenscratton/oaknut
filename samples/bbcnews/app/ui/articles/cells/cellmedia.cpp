@@ -50,7 +50,7 @@ BNCellMedia::BNCellMedia(BNCellsModule* module) : BNCellContent(module) {
 
 void BNCellMedia::setRelationship(BNRelationship* rel) {
     setMediaObject(rel->_childObject, (BNItem*)rel->_parentObject);
-    _usesScrollviewOffset = YES;
+    _usesScrollviewOffset = true;
     _secondaryType = rel->_secondaryType;
 }
 

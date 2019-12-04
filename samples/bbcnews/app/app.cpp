@@ -250,7 +250,7 @@ void BBCNewsApp::main() {
 }
 
 void BBCNewsApp::setCompactMode(bool compactMode) {
-    if (compactMode == _compactMode || app->_defaultDisplay->size()>=7) {
+    if (compactMode == _compactMode || app->_defaultDisplay->sizeDiagonalInches()>=7) {
         return;
     }
     _compactMode = compactMode;

@@ -29,7 +29,8 @@ public:
         Computer,   //  12" ...  30"
         TV          //  30" ...
     } _sizeClass;
-    float size() const; // inches
+    float sizeDiagonalInches() const;
+    
     enum SizeClass sizeClass();
     
 };

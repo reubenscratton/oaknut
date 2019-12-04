@@ -5,9 +5,9 @@
 
 #include "cellsmodulearticlebody.h"
 #include "elementmedia.h"
-#include "cell.h"
+#include "../common/cell.h"
 //#include "../common/imageview.h"
-#include "cellmedia.h"
+#include "cells/cellmedia.h"
 
 /*#import "BNElementText.h"
 #import "BNElementAdvert.h"

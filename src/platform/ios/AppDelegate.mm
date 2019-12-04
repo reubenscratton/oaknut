@@ -7,6 +7,7 @@
 #if PLATFORM_IOS
 
 #import "AppDelegate.h"
+#import <sys/utsname.h>
 #import "NativeView.h"
 #import "SoftKeyboardTracker.h"
 
@@ -191,13 +192,68 @@ Window* Window::create() {
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 
+    float ppi = 326;
+    
+    string machine;
+#if TARGET_OS_SIMULATOR
+    machine = getenv("SIMULATOR_MODEL_IDENTIFIER");
+#else
+    struct utsname systemInfo;
+    uname(&systemInfo);
+    machine = systemInfo.machine;
+#endif
+    bool iPhone = machine.hadPrefix("iPhone");
+    bool iPad = machine.hadPrefix("iPad");
+    if (iPhone || iPad) {
+        auto verstr = machine.split(",");
+        int ver = (verstr[0].asInt() << 8) | verstr[1].asInt();
+        if (iPhone) {
+            switch (ver) {
+                case 0x701: ppi = 401; break; // iPhone 6+
+                case 0x802: ppi = 401; break; // iPhone 6s+
+                case 0x902: ppi = 401; break; // iPhone 7+
+                case 0x904: ppi = 401; break; // iPhone 7+
+                case 0xA02: ppi = 401; break; // iPhone 8+
+                case 0xA05: ppi = 401; break; // iPhone 8+
+                case 0xA03: ppi = 458; break; // iPhone X
+                case 0xA06: ppi = 458; break; // iPhone X
+                case 0xB02: ppi = 458; break; // iPhone XS
+                case 0xB04: ppi = 458; break; // iPhone XS Max
+                case 0xB06: ppi = 458; break; // iPhone XS Max
+                case 0xC03: ppi = 458; break; // iPhone 11 Pro
+                case 0xC05: ppi = 458; break; // iPhone 11 Pro Max
+                default:
+                    ppi = 326;
+                    break;
+            }
+        }
+        if (iPad) {
+            switch (ver) {
+                case 0x101:                         // iPad 1
+                case 0x201: case 0x202: case 0x203: case 0x204: // iPad 2
+                    ppi = 132; break;
+                case 0x205: case 0x206: case 0x207: // iPad Mini
+                    ppi = 163; break;
+                case 0x404: case 0x405: case 0x406: // iPad Mini 2
+                case 0x407: case 0x408: case 0x409: // iPad Mini 3
+                case 0x501: case 0x502:             // iPad Mini 4
+                case 0xB01: case 0xB02:             // iPad Mini 5
+                    ppi = 326; break;
+                default:
+                    ppi = 264;
+                    break;
+            }
+
+        }
+    }
+    
     // Create the default Display
     UIScreen* screen = [UIScreen mainScreen];
-    float dpiX = screen.nativeBounds.size.width / screen.bounds.size.width;
-    float dpiY = screen.nativeBounds.size.height / screen.bounds.size.height;
+    //float dpiX = screen.nativeBounds.size.width / screen.bounds.size.width;
+    //float dpiY = screen.nativeBounds.size.height / screen.bounds.size.height;
     app->_defaultDisplay = new Display(screen.bounds.size.width,
                                        screen.bounds.size.height,
-                                       dpiX, dpiY,
+                                       ppi, ppi,
                                        screen.scale);
     
 

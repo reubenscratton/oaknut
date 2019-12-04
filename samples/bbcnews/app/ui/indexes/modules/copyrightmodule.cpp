@@ -2,7 +2,7 @@
 //  Copyright (c) 2019 BBC News. All rights reserved.
 //
 
-#include "statictitlemodule.h"
+#include "../../common/statictitlemodule.h"
 //#import "NSDate+Formatter.h"
 //#import "BNStyles.h"
 //#import "BNPolicy.h"

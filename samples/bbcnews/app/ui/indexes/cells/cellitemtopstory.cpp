@@ -17,7 +17,7 @@ BNCellItemTopStory::BNCellItemTopStory(BNCellsModule* module) : BNCellItem(modul
 
 void BNCellItemTopStory::setItem(BNItem* item) {
     BNCellItem::setItem(item);
-	BOOL isLiveEvent = _item->isLiveEvent();
+	bool isLiveEvent = _item->isLiveEvent();
     if (isLiveEvent) {
         _hideTimestamp = true;
     }

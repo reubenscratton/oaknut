@@ -37,6 +37,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
+#include <dirent.h>
 #ifdef __cplusplus
 #include <typeinfo>
 #include <cstring>

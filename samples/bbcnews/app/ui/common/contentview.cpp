@@ -5,7 +5,6 @@
 
 #include "contentview.h"
 #include "layoutsgroupmanager.h"
-#include "scrollablecontainer.h"
 /*
 #import "BNHUDView.h"
 #import "BNCellItem.h"
@@ -74,7 +73,7 @@ void BNContentView::setContentStub(const BNContent::stub& stub, bool onlyShowPla
     setCurrentLayout(NULL);
     setNeedsLayout();
     _onlyShowPlaceholder = onlyShowPlaceholder;
-    _hasRecordedView = NO;
+    _hasRecordedView = false;
     
     requestContent(false);
     _contentStub = stub;
@@ -102,9 +101,9 @@ void BNContentView::requestContent(bool request) {
 }
 
 void BNContentView::updateWithNewContentObject(BNContent* content) {
-    _pendingContentObject = nil;
+    _pendingContentObject = nullptr;
     _contentObject = content;
-    _currentLayout = nil;
+    _currentLayout = nullptr;
     
     removeAllSubviews();
 

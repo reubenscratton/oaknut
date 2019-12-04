@@ -20,48 +20,71 @@ string App::currentCountryCode() const {
     return "GB"; // todo
 }
 
-
-ByteBuffer* App::loadAsset(const char* assetPath) {
-    
-    string str = "/assets/";
-    str.append(assetPath);
-    FILE* asset = fopen(str.data(), "rb");
-    if (!asset) {
-        app->log("Failed to open asset: %s", assetPath);
-        return NULL;
+bool App::fileResolve(string& path) const {
+    if (!path.hasPrefix("//"_S)) {
+        return true;
     }
-    
-    ByteBuffer* data = new ByteBuffer();
-    fseek (asset, 0, SEEK_END);
-    data->cb = ftell(asset);
-    data->data = (uint8_t*) malloc (sizeof(char)*data->cb);
-    fseek ((FILE*)asset, 0, SEEK_SET);
-    size_t read = fread(data->data, 1, data->cb, (FILE*)asset);
-    assert(read == data->cb);
-    fclose(asset);
-    return data;
+    //assets/...
+    if (path.hasPrefix("//assets/"_S)) {
+        path.erase(0, 1); // remove just the leading slash, leaving the path as '/assets/...'
+        return true;
+    }
+
+    app->warn("Could not resolve file path: %s", path.c_str());
+    return false;
 }
+bool App::fileExists(string& path) const {
+    if (!fileResolve(path)) {
+        return false;
+    }
+    if (access(path.c_str(), F_OK) != -1) {
+        return true;
+    }
+    return false;
+}
+vector<string> App::fileList(string& dir) const {
+    fileResolve(dir);
+    vector<string> files;
+    DIR* fd;
+    struct dirent* in_file;
+    if (fd = opendir(dir.c_str())) {
+        while (in_file = readdir(fd)) {
+            if (!strcmp (in_file->d_name, "."))
+                continue;
+            if (!strcmp (in_file->d_name, ".."))
+                continue;
+            files.push_back(string(in_file->d_name, -1));
+        }
+        closedir(fd);
+    }
+    return files;
 
+}
+//fseek(fp, 0L, SEEK_END);
+//sz = ftell(fp);
 
-
-int App::getIntSetting(const char *key, const int defaultValue) {
-    val value = lsGetInt(val(key), val(defaultValue));
+int App::getIntSetting(const string& key, const int defaultValue) {
+    val value = lsGetInt(val(key.c_str()), val(defaultValue));
     return value.as<int>();
 }
-void App::setIntSetting(const char* key, const int value) {
-    ls.call<void>("setItem", val(key), val(value));
+void App::setIntSetting(const string& key, const int value) {
+    ls.call<void>("setItem", val(key.c_str()), val(value));
+}
+bool App::getBoolSetting(const string& key, const bool defaultValue) {
+    val value = lsGetInt(val(key.c_str()), val(defaultValue));
+    return value.as<bool>();
 }
 
-string App::getStringSetting(const char* key, const char* defaultValue) {
-    val value = ls.call<val>("getItem");
+string App::getStringSetting(const string& key, const string& defaultValue) {
+    val value = ls.call<val>("getItem", val(key.c_str()));
     if (value.isUndefined() || value.isNull()) {
         return defaultValue;
     }
     return value.as<string>();
 }
 
-void App::setStringSetting(const char* key, const char* value) {
-    ls.call<void>("setItem", val(key), val(value));
+void App::setStringSetting(const string& key, const string& value) {
+    ls.call<void>("setItem", val(key.c_str()), val(value.c_str()));
 }
 
 

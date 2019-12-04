@@ -21,17 +21,21 @@ FontWeb::FontWeb(const string& fontAssetPath, float size, float weight) : Font(f
         if (it != s_customFonts.end()) {
             fontFamily = it->second;
         } else {
-            ByteBuffer* fontData = app->loadAsset(fontAssetPath);
+            bytearray fontData;
+            app->loadAsset(fontAssetPath, fontData);
             fontFamily = fontAssetPath;
-            auto lastSlashPos = fontAssetPath.findLast('/');
-            fontFamily = lastSlashPos ? (lastSlashPos+1) : fontAssetPath;
+            auto lastSlashPos = fontAssetPath.findLast("/");
+            fontFamily = fontAssetPath.substr(lastSlashPos+1);
+            if (!fontFamily.lengthInBytes()) {
+                fontFamily = fontAssetPath;
+            }
             fontFamily.hadSuffix(".ttf");
             fontFamily.hadSuffix(".otf");
             //app->log("Custom font %s loaded from %s", fontFamily.c_str(), fontAssetPath.c_str());
             string fontDataStr = "@font-face { font-family:\"";
             fontDataStr += fontFamily;
             fontDataStr += "\"; src: url(data:application/font-sfnt;base64,";
-            fontDataStr += base64_encode((const uint8_t*)fontData->data, fontData->cb);
+            fontDataStr += base64_encode((const uint8_t*)fontData.data(), fontData.size());
             fontDataStr += "); }";
             EM_ASM_({
                 var style = document.createElement("style");
@@ -50,7 +54,7 @@ FontWeb::FontWeb(const string& fontAssetPath, float size, float weight) : Font(f
     _height = metrics["h"].as<float>();
 }
     
-Glyph* FontWeb::createGlyph(char32_t ch, Atlas* atlas) {
+Glyph* FontWeb::createGlyph(char32_t ch) {
     
     // Convert the character code to a Javascript string
     val str = val::global("String").call<val>("fromCharCode", val((int)ch));
@@ -59,28 +63,30 @@ Glyph* FontWeb::createGlyph(char32_t ch, Atlas* atlas) {
     val metrics = _fontHelper.call<val>("measure", str);
     
     // Create a glyph object
-    Glyph* glyph = new Glyph(this, ch, 0);
-    glyph->bitmapWidth = metrics["w"].as<int>();
-    glyph->bitmapHeight = metrics["h"].as<int>();
-    glyph->bitmapTop = -metrics["d"].as<int>();
-    glyph->advance.width = glyph->bitmapWidth+1; // todo: fix this terrible hack
+    Glyph* glyph = new Glyph(this, ch);
+    glyph->_size.width = metrics["w"].as<int>();
+    glyph->_size.height = metrics["h"].as<int>();
+    glyph->_origin.y = -metrics["d"].as<int>();
+    glyph->_advance.width = glyph->_size.width+1; // todo: fix this terrible hack
     
+
+    return glyph;
+}
+void FontWeb::rasterizeGlyph(Glyph* glyph, Atlas* atlas) {
     // Reserve a space in the atlas
-    glyph->atlasNode = atlas->reserve(glyph->bitmapWidth, glyph->bitmapHeight, 1);
+    glyph->_atlasNode = atlas->reserve(glyph->_size.width, glyph->_size.height, 1);
     
     // Copy the pixels from the helper into the atlas
-    auto bitmap = glyph->atlasNode->page->_bitmap.as<BitmapWeb>();
+    auto bitmap = glyph->_atlasNode->page->_bitmap.as<BitmapWeb>();
     val targetBuff = val(typed_memory_view((size_t)bitmap->_pixelData.cb, (unsigned char*)bitmap->_pixelData.data));
     _fontHelper.call<void>("copyPixels",
-                           val(glyph->bitmapWidth),
-                           val(glyph->bitmapHeight),
-                           val(glyph->atlasNode->rect.origin.x),
-                           val(glyph->atlasNode->rect.origin.y),
+                           val(glyph->_size.width),
+                           val(glyph->_size.height),
+                           val(glyph->_atlasNode->rect.origin.x),
+                           val(glyph->_atlasNode->rect.origin.y),
                            targetBuff,
                            val(bitmap->_pixelData.stride));
     bitmap->texInvalidate();
-
-    return glyph;
 }
 
 Font* Font::create(const oak::string &fontAssetPath, float size, float weight) {

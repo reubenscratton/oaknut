@@ -117,8 +117,10 @@ Window* Window::create() {
     CGSize displayPhysicalSize = CGDisplayScreenSize(
         [[description objectForKey:@"NSScreenNumber"] unsignedIntValue]
     );
-    float dpiX = (displayPixelSize.width / displayPhysicalSize.width) * 25.4f; // there being 25.4 mm in an inch
-    float dpiY = (displayPixelSize.height / displayPhysicalSize.height) * 25.4f;
+    float inchesX = displayPhysicalSize.width / 25.4f; // there being 25.4 mm in an inch
+    float inchesY = displayPhysicalSize.height / 25.4f;
+    float dpiX = (displayPixelSize.width * screen.backingScaleFactor) / inchesX;
+    float dpiY = (displayPixelSize.height * screen.backingScaleFactor) / inchesY;
     app->_defaultDisplay = new Display(screen.frame.size.width,
                                        screen.frame.size.height,
                                        dpiX, dpiY,

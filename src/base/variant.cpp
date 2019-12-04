@@ -837,7 +837,7 @@ val variant::toJavascriptVal() const {
         case FLOAT32: return val(_f32);
         case FLOAT64:
             return val(_f64);
-        case STRING: return _str ? val(_str->data()) : val::null();
+        case STRING: return _str ? val(_str->c_str()) : val::null();
         case BYTEARRAY: {
             return val(typed_memory_view(_bytearray->size(), _bytearray->data()));
         }
@@ -902,7 +902,7 @@ static void setVariantToString(variant* v, uint8_t* p, int32_t cb) {
 static void setVariantCompoundField(variant* v, char* szFieldName, int fieldGOTindex) {
     variant field;
     field.fromJavascriptVal(fieldGOTindex);
-    v->set(string(szFieldName), field);
+    v->set(string(szFieldName, -1), field);
 }
 static void setVariantToNumber(variant* v, double d) {
     v->setDouble(d);

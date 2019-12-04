@@ -119,6 +119,8 @@ public:
     // Search
     uint32_t find(const char* szToFind, int32_t cb=-1, uint32_t fromByteOffset=0) const;
     uint32_t find(const string& textToFind, uint32_t fromByteOffset=0) const { return find(textToFind.start(), textToFind._cb, fromByteOffset); }
+    uint32_t findLast(const char* szToFind, int32_t cb=-1, uint32_t fromByteOffset=0) const;
+    uint32_t findLast(const string& textToFind, uint32_t fromByteOffset=0) const { return findLast(textToFind.start(), textToFind._cb, fromByteOffset); }
     bool contains(const string& str) const { return find(str)<_cb; }
     bool hasPrefix(const string& prefix) const;
     bool hasSuffix(const string& suffix) const;

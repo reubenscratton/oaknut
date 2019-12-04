@@ -3,7 +3,8 @@
 //
 
 
-#include "scrollablecontainer.h"
+#include "containermodule.h"
+
 
 class BNVerticalStack : public BNContainerModule {
 public:

@@ -69,7 +69,7 @@
 
 
 BNImageView::BNImageView() {
-	_opaque = YES;
+	_opaque = true;
     setContentMode(ContentMode::AspectFill);
 	//_imageKey = [[ImageCacheKey alloc] init];
     setBackgroundColor(0xFFCCCCCC);//todo [UIColor lightGrayColor];
@@ -138,7 +138,7 @@ void BNImageView::setBNImage(BNImage* image) {
 	_imageKey.url = url;
     setBitmap(NULL);
 	_bnimage = image;
-	_errorDisplay = NO;
+	_errorDisplay = false;
 	
 	if (_imageKey.url.length() && _window) {
         tryUpdateImage(true);
@@ -278,11 +278,11 @@ void BNImageView::tryUpdateImage(bool startDownloadIfNotInCache) {
     // No image so fetch from urlcache or remotely
     if (startDownloadIfNotInCache) {
         
-        _isLoading = YES;
+        _isLoading = true;
         
         // Image data has to be downloaded. Schedule the activity view to appear
         //[self performSelector:@selector(setShouldFade:) withObject:@YES afterDelay:0.5];
-        _shouldFade = YES;
+        _shouldFade = true;
         
         // Create or attach to an HTTP request
         _timeImageUrlSet = app->currentMillis();

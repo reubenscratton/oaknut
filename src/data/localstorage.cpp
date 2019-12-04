@@ -137,8 +137,8 @@ public:
         // Serialise object to a variant
         variant v;
         object->toVariant(v);
-        const variant* key = v.get(_primaryKeyName);
-        assert(key && key->type != variant::EMPTY); // key is mandatory! (that might change)
+        const variant& key = v.get(_primaryKeyName);
+        assert(!key.isEmpty()); // key is mandatory! (that might change)
 
         // Convert variant to a JS object
         val jsobj = v.toJavascriptVal();

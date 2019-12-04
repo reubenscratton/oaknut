@@ -6,6 +6,8 @@ subviews: [
     id: content
     class: BNContentView
     size: fill
+    scroll-insets:0,0,0,60dp
+    padding-bottom: 68dp
     },
     {
     id: tabbar
