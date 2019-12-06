@@ -19,7 +19,6 @@ public:
     bool _isOnScreen;
     int _prefetchLevel;
     bool _isDummy;
-    EDGEINSETS _margins;
     
     BNCell(BNCellsModule* module);
     

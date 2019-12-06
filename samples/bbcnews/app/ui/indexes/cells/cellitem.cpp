@@ -30,7 +30,7 @@ BNCellItem::BNCellItem(BNCellsModule* module, BNCellStyle cellStyle) : BNCellCon
     if (_imageAspect<=0.) {
         _imageAspect = 9.f/16.f;
     }
-    if (_module->_summaries) {
+    if (0 && _module->_summaries) {
         _summary = new BNLabel();
         _summary->applyStyle("summaryText");
         _summary->_useFullWidth = true;
@@ -44,6 +44,9 @@ BNCellItem::BNCellItem(BNCellsModule* module, BNCellStyle cellStyle) : BNCellCon
             _hideTimestamp = true;
             hideTopics = true;
         }
+    }
+    if (cellStyle == BNCellStyle::Feature) {
+        _hideTimestamp = true;
     }
 
     if (!hideTopics) {

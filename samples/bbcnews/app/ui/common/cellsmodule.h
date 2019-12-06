@@ -36,7 +36,6 @@ public:
     vector<string> _primary;
     vector<string> _secondary;
     vector<string> _format;
-    EDGEINSETS _cellMargins;
     EDGEINSETS _cellPadding;
     vector<BNCell*> _cells;
     bool _usesScrollviewOffset;
@@ -49,5 +48,5 @@ public:
     bool _showMediaGlyphInHeadline;
     float _imageWidthSpec;
     int _H; // font size, as per H1, H2, H3 notation
-
+    bool _no_margin;
 };

@@ -99,7 +99,7 @@ void LinearLayout::removeSubview(View *subview) {
 	_weights.erase(_weights.begin() + index);
 }
 
-void LinearLayout::setWeight(View* subview, float weight) {
+void LinearLayout::setSubviewWeight(View* subview, float weight) {
 	int index = indexOfSubview(subview);
 	_weightsTotal += weight - _weights[index];
 	_weights[index] = weight;

@@ -17,7 +17,8 @@ public:
         Horizontal,
         Vertical
     } _orientation;
-    
+    void setSubviewWeight(View* subview, float weight);
+
 	// Overrides
     void layoutSubviews(RECT constraint) override;
 	void addSubview(View* subview) override;
@@ -25,7 +26,6 @@ public:
     bool applySingleStyle(const string& name, const style& value) override;
 
 protected:
-    void setWeight(View* subview, float weight);
 
     vector<float> _weights;
     float _weightsTotal;

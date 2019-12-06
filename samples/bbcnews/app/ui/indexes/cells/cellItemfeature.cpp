@@ -9,16 +9,21 @@ class BNCellItemFeature : public BNCellItem {
 public:
     
     RECT _accentFrame;
-    COLOR _featureColor;
     View* _accentView;
     string _imagePos;
-    float _featureAccentStripHeight;
     
 
     BNCellItemFeature(BNCellsModule* module) : BNCellItem(module, BNCellStyle::Feature) {
         
+        _accentView = new View();
+        _accentView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Abs(app->getStyleFloat("featureAccentStripHeight")));
+        _accentView->setLayoutOrigin(ALIGNSPEC::Left(), ALIGNSPEC::Below(_imageView, 0));
+        addSubview(_accentView);
+        
+        _topic->setLayoutOrigin(ALIGNSPEC::Left(), ALIGNSPEC::Top());
+        _topic->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+        _headline->setLayoutOrigin(ALIGNSPEC::Left(), ALIGNSPEC::Abs(app->dp(32)));
         _headline->applyStyle((module->_cellsPerRow > 1) ? "featureHeadline"_S : "featureFullWidthHeadline"_S);
-        _featureAccentStripHeight = app->getStyleFloat("featureAccentStripHeight");
 		_textAreaInsets = app->getStyle("text-insets")->edgeInsetsVal("feature");
 		_showMediaGlyphInHeadline = true;
 		_hideTimestamp = true;
@@ -27,8 +32,6 @@ public:
             //self.summary.numLines = 3;
         }
 
-        _accentView = new View();
-        addSubview(_accentView);
 
 	}
     void setRelationship(BNRelationship* relationship) override {
@@ -48,7 +51,7 @@ public:
         } else {
             colorName = "color.featureFeatures";
         }
-        _featureColor = app->getStyleColor(colorName);
+        _accentView->setBackgroundColor(app->getStyleColor(colorName));
     }
 
     /*
@@ -108,19 +111,7 @@ public:
         _frame.size = {rect.size.width, frameHeight};
 
     }
-
-    void createView(View* superview) override {
-        BNCellItem::createView(superview);
-        _accentView->setRect(_accentFrame);
-        _accentView->setBackgroundColor(_featureColor);
-    }
-
-    void deleteView() override {
-        _accentView->removeFromParent();
-        _accentView = NULL;
-        BNCellItem::deleteView();
-    }*/
-
+*/
 };
 
 DECLARE_DYNCREATE(BNCellItemFeature, BNCellsModule*);

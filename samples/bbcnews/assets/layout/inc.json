@@ -360,6 +360,7 @@
             "$":"normalGroup"
         },
         "mode!=compact":{
+            "no-margin":true,
             "cellClass":"BNCellItemTopStory",
             "H":1,
             "long_timestamp":true
@@ -736,6 +737,7 @@
                              ],
     "avCarousel":{
         "class":"BNHorizontalLinearLayout",
+        "no-margin":true,
         "mode==tablet":{
             "padding":"{16,0,0,0}"
         },

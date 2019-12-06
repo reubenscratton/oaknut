@@ -5,6 +5,7 @@
 
 #include "contentview.h"
 #include "layoutsgroupmanager.h"
+#include "label.h"
 /*
 #import "BNHUDView.h"
 #import "BNCellItem.h"
@@ -280,6 +281,13 @@ void BNContentView::layout(RECT constraint) {
         _currentLayout->_rootContainer->updateLayoutWithContentObject(_contentObject);
         _cachedFrame = RECT::zero();
         _currentLayout->_rootContainer->addToView(this);
+
+
+        // Copyright
+        BNLabel* label = new BNLabel();
+        label->applyStyle("copyright");
+        label->setText("Copyright © 2019 BBC.");
+        _subviews[0]->addSubview(label);
     }
     
     View::layout(constraint);

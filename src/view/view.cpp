@@ -562,7 +562,10 @@ void View::setNeedsLayout() {
 void View::invalidateContentSize() {
 	_contentSizeValid = false;
     if (_widthMeasureSpec.type==MEASURESPEC::TypeContent || _heightMeasureSpec.type==MEASURESPEC::TypeContent) {
-		setNeedsLayout();
+        for (auto subview : _subviews) {
+            subview->invalidateContentSize();
+        }
+        setNeedsLayout();
     } else {
         if (_layoutValid) {
             SIZE constraint = _rect.size;
@@ -657,6 +660,9 @@ void View::layout(RECT containingRect) {
     if (_visibility == Gone) {
         return;
     }
+    
+    // Apply margins
+    containingRect = containingRect.copyWithInsets(_margins);
 
     //assert(!_layoutValid);
     SIZE refSize = {0,0};
@@ -698,15 +704,14 @@ void View::layout(RECT containingRect) {
             // subtract the sibling size so that the obvious intention (fill space not
             // used by sibling) is easy to do. You're never going to want to match parent
             // size while aligning to a sibling, and if you ever *do* want that then simply
-            // explicitly set the 'ref'' to the parent.
+            // explicitly set the 'ref' to the parent.
             if (_alignspecHorz.anchor) {
                 float x = floorf(_alignspecHorz.calc(containingRect.size.width, alignRect.origin.x, alignRect.size.width));
                 refSize.width -= fabs(x);
             }
         }
-        
-        // assert(refSize.width >= 0); // relative-size to content-wrapping parent not allowed!
     }
+    
     if (_heightMeasureSpec.type==MEASURESPEC::TypeRelative) {
         if (_heightMeasureSpec.ref) {
             if (!_heightMeasureSpec.ref->_layoutValid) {
@@ -853,6 +858,10 @@ void View::layoutSubviews(RECT constraint) {
 
 void View::setPadding(EDGEINSETS padding) {
 	this->_padding = padding;
+    setNeedsLayout();
+}
+void View::setMargins(EDGEINSETS margins) {
+    this->_margins = margins;
     setNeedsLayout();
 }
 

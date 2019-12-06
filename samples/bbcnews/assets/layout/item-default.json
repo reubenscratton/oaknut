@@ -21,7 +21,6 @@
           "cellClass":"BNCellRelatedTopic",
           "primary":["bbc.mobile.news.collection"],
           "secondary":["bbc.mobile.news.home_section","bbc.mobile.news.topic"],
-        },
-        {"class":"BNStaticTitleModule", "style":"copyright"}
+        }
     ]
 }

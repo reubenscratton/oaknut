@@ -165,6 +165,22 @@ relatedStories: {
     top-divider-height:4dp
 }
 
+thePapersHeader: {
+    text: The Papers
+    content-link: /cps/news/the_reporters?title=The%20Reporters
+    padding: 8dp,16dp,16dp,8dp
+    font-weight: light
+    font-size: 17sp
+}
+
+longReadsHeader: {
+    text: Long Reads
+    content-link: /cps/news/the_reporters?title=The%20Reporters
+    padding: 8dp,16dp,16dp,8dp
+    font-weight: light
+    font-size: 17sp
+}
+
 relatedTopicsHeader: {
     padding: 16dp,16dp,16dp,8dp
     text: Related Topics
@@ -433,9 +449,12 @@ article: {
 
 
 
-copyrightNotice: {
+copyright: {
+    size: fill,wrap
+    gravity: center
     font-weight: medium
     font-size: 16sp
+    padding:16dp
 }
 
 web-browser: {

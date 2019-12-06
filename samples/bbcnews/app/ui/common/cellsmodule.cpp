@@ -23,7 +23,7 @@ BNCellsModule::BNCellsModule(const variant& json) : BNModule(json) {
     _secondary = json.stringArrayVal("secondary");
     _format = json.stringArrayVal("format");
     _cellClass = json.stringVal("cellClass");
-    _cellMargins = edgeInsetsVal(json, "cellMargins");
+    _no_margin = json.boolVal("no-margin");
     _cellPadding = edgeInsetsVal(json, "cellPadding");
     _usesScrollviewOffset = json.intVal("usesScrollviewOffset")!=0;
     _cellsPerRow = json.intVal("cellsPerRow");
@@ -56,7 +56,6 @@ BNCellsModule::BNCellsModule(BNCellsModule* source) : BNModule(source) {
     _secondary = source->_secondary;
     _format = source->_format;
     _cellClass = source->_cellClass;
-    _cellMargins = source->_cellMargins;
     _cellPadding = source->_cellPadding;
     _usesScrollviewOffset = source->_usesScrollviewOffset;
     _cellsPerRow = source->_cellsPerRow;
@@ -68,6 +67,8 @@ BNCellsModule::BNCellsModule(BNCellsModule* source) : BNModule(source) {
     _imageWidthSpec = source->_imageWidthSpec;
     _H = source->_H;
     _tinyTimestamps = source->_tinyTimestamps;
+    _no_margin = source->_no_margin;
+
 
 }
 BNModule* BNCellsModule::clone() {
@@ -264,109 +265,38 @@ void BNCellsModule::addToView(View* parent) {
         parent->addSubview(header);
     }
     
+    View* rowParent = parent;
+    LinearLayout* rowView = nullptr;
+    
+    float padding = app->dp(8);
+    //if (_cellsPerRow<2 && !_no_margin) {
+    //    parent->setPadding(EDGEINSETS(padding, padding, padding, padding));
+    //}
+    
     for (int i=0 ; i<_cells.size() ; i++) {
+        
+        if (_cellsPerRow>1 && !(i%_cellsPerRow)) {
+            rowView = new LinearLayout();
+            rowView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+            rowView->_orientation = LinearLayout::Horizontal;
+            //rowView->setPadding(EDGEINSETS(padding, padding, padding, padding));
+            //rowView->setSpacing(padding);
+            parent->addSubview(rowView);
+            rowParent = rowView;
+        }
         BNCell* cell = _cells[i];
-        cell->_margins = _cellMargins;
-        parent->addSubview(cell);
-        /*
-        _cellMargins.applyToRect(cellRect);
-        cellRect.size.height = floorf(cellRect.size.height);
-        //cellRect = CGRectIntegral(cellRect);
-        cell->measureForContainingRect(cellRect);
-        cell->_frame.origin = cellRect.origin;
-        cell->_frame.size.height = ceilf(cell->_frame.size.height);
-        rowHeight = MAX(rowHeight, cell->_frame.size.height);
-        cellRect = cell->_frame.copyWithUninsets(_cellMargins);
-        bounds = bounds.unionWith(cellRect);
-        cellsThisRow++;
-        if (--cellsPerRow) {
-            cellRect.origin.x += cellRect.size.width;
-            continue;
+        if (!_no_margin) {
+            cell->setMargins(EDGEINSETS(padding, padding, padding, padding));
         }
-        
-        // End of row. Now ensure all cells in the row have the same height
-        if (cellsThisRow > 1) {
-            for (int j=0 ; j<cellsThisRow ; j++) {
-                BNCell* rowCell = _cells[i-j];
-                rowCell->extendToHeight(rowHeight);
-            }
-            cellRect = cell->_frame.copyWithUninsets(_cellMargins);
+        rowParent->addSubview(cell);
+        if (_cellsPerRow>1) {
+            cell->setLayoutSize(MEASURESPEC::Abs(0), MEASURESPEC::Wrap());
+            rowView->setSubviewWeight(cell, 1);
         }
-        
-        // Advance to next row
-        cellRect = _container->boundsAfter(cellRect);
-        if (_cellsPerRow > 1) {
-            cellRect.origin.x = rect.origin.x;
-        }
-        cellsPerRow = _cellsPerRow;
-        cellsThisRow = 0;
-        rowHeight = 0;*/
     }
-    //bounds.size.width += _padding.right;
-    //bounds.size.height += _padding.bottom;
 
 }
 
-/*
-void BNCellsModule::layoutWithContainingRect(const RECT& arect) {
-    RECT rect = arect;
-    RECT bounds = {rect.origin.x, rect.origin.y, 0,0};
-	if (_cells.size() > 0) {
-		_padding.applyToRect(rect);
-		RECT cellRect = rect;
-		cellRect.size.width /= _cellsPerRow;
-		int cellsPerRow = _cellsPerRow;
-		int cellsThisRow = 0;
-		float rowHeight = 0;
-		for (int i=0 ; i<_cells.size() ; i++) {
-			BNCell* cell = _cells[i];
-			_cellMargins.applyToRect(cellRect);
-			cellRect.size.height = floorf(cellRect.size.height);
-			//cellRect = CGRectIntegral(cellRect);
-			cell->measureForContainingRect(cellRect);
-			cell->_frame.origin = cellRect.origin;
-			cell->_frame.size.height = ceilf(cell->_frame.size.height);
-			rowHeight = MAX(rowHeight, cell->_frame.size.height);
-            cellRect = cell->_frame.copyWithUninsets(_cellMargins);
-			bounds = bounds.unionWith(cellRect);
-			cellsThisRow++;
-			if (--cellsPerRow) {
-				cellRect.origin.x += cellRect.size.width;
-				continue;
-			}
-			
-			// End of row. Now ensure all cells in the row have the same height
-			if (cellsThisRow > 1) {
-				for (int j=0 ; j<cellsThisRow ; j++) {
-					BNCell* rowCell = _cells[i-j];
-					rowCell->extendToHeight(rowHeight);
-				}
-				cellRect = cell->_frame.copyWithUninsets(_cellMargins);
-			}
-			
-			// Advance to next row
-			cellRect = _container->boundsAfter(cellRect);
-			if (_cellsPerRow > 1) {
-				cellRect.origin.x = rect.origin.x;
-			}
-			cellsPerRow = _cellsPerRow;
-			cellsThisRow = 0;
-			rowHeight = 0;
-		}
-		bounds.size.width += _padding.right;
-		bounds.size.height += _padding.bottom;
-	}
-	_frame = bounds;
-}
-
-void BNCellsModule::extendToHeight(float height) {
-	// NB: This is naive in that it assumes all cells are bottom-aligned.
-	height -= _cellMargins.top + _cellMargins.bottom;
-    for (BNCell* cell : _cells) {
-		cell->extendToHeight(height);
-	}
-}
-*/
 void BNCellsModule::setIsOnScreen(bool isOnScreen) {
     BNModule::setIsOnScreen(isOnScreen);
     for (BNCell* cell : _cells) {

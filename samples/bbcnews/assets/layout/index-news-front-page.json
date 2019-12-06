@@ -12,22 +12,18 @@
         
         {"$":"twoStackedVerticallyInPortraitAndHorizontallyInLandscape", "modes":["tablet"],
         "$1":[
-              {"$":"title", "title":"The Papers"},
-              {"$":"featureGroup", "secondary":"$st_in_the_papers", "limit":1, "mode==portrait":{"imageAspect":0.28125}}
+              {"$":"featureGroup", "titleStyle":"thePapersHeader", "secondary":"$st_in_the_papers", "limit":1, "mode==portrait":{"imageAspect":0.28125}}
               ],
         "$2":[
-              {"$":"title", "title":"Long Reads", "contentLink": "/cps/news/the_reporters?title=The%20Reporters"},
-              {"$":"featureGroup_2col", "limit":2, "secondary": "$st_the_reporters"}
+              {"$":"featureGroup_2col", "titleStyle":"longReadsHeader", "limit":2, "secondary": "$st_the_reporters"}
               ]
         },
         
-        {"$":"title",        "modes":["!tablet"], "title": "The Papers"},
-        {"$":"featureGroup", "modes":["!tablet"], "$secondary":"$st_in_the_papers"},
-        {"$":"title",        "modes":["!tablet"], "title": "Long Reads", "contentLink": "/cps/news/the_reporters?title=The%20Reporters"},
-        {"$":"tightGroup",   "modes":["!tablet"], "$secondary":"$st_the_reporters", "limit":2},
+        {"$":"featureGroup", "modes":["!tablet"], "titleStyle":"thePapersHeader", "$secondary":"$st_in_the_papers"},
+        {"$":"tightGroup", "titleStyle":"longReadsHeader", "modes":["!tablet"], "$secondary":"$st_the_reporters", "limit":2},
         
         {"$":"title", "title":"Stories"},
-        {"$":"featureGroup",      "modes":["!tablet"], "$secondary":["bbc.mobile.news.group.stories"], "limit":2},
+        {"$":"tightGroup",      "modes":["!tablet"], "$secondary":["bbc.mobile.news.group.stories"], "limit":2},
         
         
         {"$":"title", "title":"Features & Analysis"},

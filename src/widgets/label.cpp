@@ -152,26 +152,9 @@ void Label::onEffectiveTintColorChanged() {
 
 void Label::layout(RECT constraint) {
     
-    // If the parent width changed and the label size is relative to parent
-    // then force a re-evaluation of content size.
-    /*if (constraint.size.width != _prevParentWidth) {
-        if (_widthMeasureSpec.ref==nullptr && _widthMeasureSpec.mul != 0.0f) {
-            _textRenderer._measuredSizeValid = false;
-            _contentSizeValid = false;
-            _prevParentWidth = constraint.size.width;
-        }
-    }*/
     View::layout(constraint);
     
     layoutText();
-    
-    // Automatically set clipsContent based on whether text overflows bounds
-    // TODO: This is now done via _clipControl for all views, not just Label
-    // Remove this commented out code once its definitely all working
-    //_clipsContent = (_contentSize.height > _rect.size.height)
-    //             || (_contentSize.width > _rect.size.width);
-    
-
 }
 
 void Label::layoutText() {
