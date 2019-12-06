@@ -169,9 +169,9 @@ public:
             var task=$0;
             var img = new Image();
             img.onload = function() {
-                Runtime.dynCall('vii', $1, [task, gotSet(img)]);
+                dynCall('vii', $1, [task, gotSet(img)]);
             };
-            img.src = Pointer_stringify($2);
+            img.src = UTF8ToString($2);
         }, this, onImageLoad, sstr.c_str());
     }
 

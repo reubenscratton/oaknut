@@ -597,9 +597,8 @@ void GLRenderer::prepareToDraw() {
         _doneInit = 1;
 
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, (GLint*)&((GLSurface*)_primarySurface)->_fb);
-
         
-#ifdef GL_IMPLEMENTATION_COLOR_READ_FORMAT
+#if defined(GL_IMPLEMENTATION_COLOR_READ_FORMAT) && !PLATFORM_WEB // No web cos this is broken on Safari 12/13
         GLint pixType, pixFmt;
         check_gl(glGetIntegerv, GL_IMPLEMENTATION_COLOR_READ_TYPE, &pixType);
         assert(GL_UNSIGNED_BYTE==pixType);

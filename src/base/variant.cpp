@@ -925,12 +925,12 @@ void variant::fromJavascriptVal(int valGOTindex) {
         var t = typeof(jsval);
         if (t == "object") {
             if (jsval.constructor === Array) {
-                Runtime.dynCall("vii", $6, [variantPtr, gotSet(jsval)]);
+                dynCall("vii", $6, [variantPtr, gotSet(jsval)]);
             }
             else if (jsval instanceof Uint8Array) {
                 var ptr = _malloc(jsval.length);
                 (new Uint8Array(HEAPU8.buffer, ptr, jsval.length)).set(jsval);
-                Runtime.dynCall("viii", $2, [variantPtr, ptr, jsval.length]);
+                dynCall("viii", $2, [variantPtr, ptr, jsval.length]);
                 _free(ptr);
             } else {
                 for (var f in jsval) {
@@ -938,7 +938,7 @@ void variant::fromJavascriptVal(int valGOTindex) {
                     var ptr=_malloc(len);
                     stringToUTF8(f, ptr, len);
                     var field = jsval[f];
-                    Runtime.dynCall("viii", $4, [variantPtr, ptr, gotSet(field)]);
+                    dynCall("viii", $4, [variantPtr, ptr, gotSet(field)]);
                     _free(ptr);
                 }
             }
@@ -947,10 +947,10 @@ void variant::fromJavascriptVal(int valGOTindex) {
             var len = lengthBytesUTF8(jsval)+1;
             var ptr=_malloc(len);
             stringToUTF8(jsval, ptr, len);
-            Runtime.dynCall("viii", $3, [variantPtr, ptr, len]);
+            dynCall("viii", $3, [variantPtr, ptr, len]);
             _free(ptr);
         } else if (t == "number") {
-            Runtime.dynCall("vid", $5, [variantPtr, jsval]);
+            dynCall("vid", $5, [variantPtr, jsval]);
         } else if (t == "undefined") {
         } else {
             console.log("unsupported JS type " + typeof(jsval));

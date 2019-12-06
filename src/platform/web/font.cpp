@@ -40,7 +40,7 @@ FontWeb::FontWeb(const string& fontAssetPath, float size, float weight) : Font(f
             EM_ASM_({
                 var style = document.createElement("style");
                 style.type = "text/css";
-                style.innerHTML = Pointer_stringify($0);
+                style.innerHTML = UTF8ToString($0);
                 document.getElementsByTagName('head')[0].appendChild(style);
             }, fontDataStr.c_str());
             s_customFonts.insert(std::make_pair(fontAssetPath, fontFamily));
@@ -66,10 +66,16 @@ Glyph* FontWeb::createGlyph(char32_t ch) {
     Glyph* glyph = new Glyph(this, ch);
     glyph->_size.width = metrics["w"].as<int>();
     glyph->_size.height = metrics["h"].as<int>();
+    glyph->_origin.x = 0;
     glyph->_origin.y = -metrics["d"].as<int>();
     glyph->_advance.width = glyph->_size.width+1; // todo: fix this terrible hack
     
-
+    // THIS IS THE BUG! When rasterizeGlyph() was separated from createGlyph() I never tested
+    // web/wasm code... it doesn't bloody work cos rasterization just copies the bitmap used
+    // in measuring. Best to just avoid trouble and rasterize ahead of time by calling
+    // atlasNode() here.
+    auto foo = glyph->atlasNode();
+    
     return glyph;
 }
 void FontWeb::rasterizeGlyph(Glyph* glyph, Atlas* atlas) {

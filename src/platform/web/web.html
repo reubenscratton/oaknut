@@ -83,7 +83,9 @@ function onresize() {
 	//if (scale == 3) scale=2; // 6+ has too many pixels
     s.width = sc.clientWidth * scale;
     s.height = sc.clientHeight * scale;
-    Module.oak_setWindowSize(s.width, s.height);
+    if (Module && Module.oak_setWindowSize) {
+        Module.oak_setWindowSize(s.width, s.height);
+    }
 }
 
 window.addEventListener('resize', onresize);

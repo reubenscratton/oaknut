@@ -27,7 +27,7 @@ string BNImage::urlForWidth(float width) {
 	}
     vector<int> availableWidths = BNPolicy::current()->_imageChefRecipes;
     for (int availableWidth : availableWidths) {
-		if (availableWidth >= width) {
+		if (availableWidth >= width || availableWidth == *availableWidths.rbegin()) {
 			width = availableWidth;
 			break;
 		}

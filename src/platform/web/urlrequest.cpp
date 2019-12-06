@@ -63,15 +63,15 @@ public:
             int gotIndex = val::global("gotSet")(_val).as<int>();
             EM_ASM_ ({
                 var req=$0;
-                var url=Pointer_stringify($1);
+                var url=UTF8ToString($1);
                 var onImageLoad=$2;
                 var onError=$3;
                 var img = gotGet($4);
                 img.onload = function() {
-                    Runtime.dynCall('vi', onImageLoad, [req]);
+                    dynCall('vi', onImageLoad, [req]);
                 };
                 img.onerror = function() {
-                    Runtime.dynCall('vi', onError, [req]);
+                    dynCall('vi', onError, [req]);
                 };
                 img.crossOrigin = 'Anonymous';
                 img.src = url;
@@ -94,7 +94,7 @@ public:
             int gotIndex = val::global("gotSet")(_val).as<int>();
             EM_ASM_ ({
                 var req=$0;
-                var url=Pointer_stringify($1);
+                var url=UTF8ToString($1);
                 var onprogress=$2;
                 var onload=$3;
                 var onerror=$4;
@@ -111,7 +111,7 @@ public:
                         case 302: {
                             var date=xhr.getResponseHeader('Last-Modified');
                             date=((date!=null) ? new Date(date).getTime()/1000 : 0);
-                            Runtime.dynCall('viiii', onprogress, [req, e.loaded, e.total, date]);
+                            dynCall('viiii', onprogress, [req, e.loaded, e.total, date]);
                         }
                             break;
                     }
@@ -137,19 +137,19 @@ public:
                             var byteArray=new Uint8Array(xhr.response);
                             var buffer=_malloc(byteArray.length);
                             HEAPU8.set(byteArray, buffer);
-                            Runtime.dynCall('viiiiii', onload, [req, xhr.status, buffer, byteArray.length, date,headersBuff]);
+                            dynCall('viiiiii', onload, [req, xhr.status, buffer, byteArray.length, date,headersBuff]);
                             Module._free(headersBuff);
                             break;
                             
                         default:
-                            Runtime.dynCall('vi', onerror, [req]);
+                            dynCall('vi', onerror, [req]);
                             break;
                     }
                 };
                 
                 // error
                 xhr.onerror=function http_onerror(e) {
-                    Runtime.dynCall('vi', onerror, [req]);
+                    dynCall('vi', onerror, [req]);
                 };
                 
                 // limit the number of redirections

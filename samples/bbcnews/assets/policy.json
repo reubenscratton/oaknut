@@ -47,6 +47,7 @@
 		},
 		"ichef" : {
 			"href" : "https://ichef.bbci.co.uk/moira/img/ios/v3/%@%@",
+            "href_web" : "https://ichef.bbci.co.uk/news/%@%@",
 			"flag" : "green",
 			"ttl"  : 0
 		}

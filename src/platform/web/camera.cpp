@@ -194,9 +194,9 @@ void CameraWeb::start() {
                     
                     // Set the texture data to be the current video frame (i.e. magic)
                     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
-                    Runtime.dynCall('vii', callback, [camera, gotSet(texture)]);
+                    dynCall('vii', callback, [camera, gotSet(texture)]);
                 }, 1000/opt_frameRate);
-                Runtime.dynCall('vii', callbackStoreIntervalId, [camera, intervalId]);
+                dynCall('vii', callbackStoreIntervalId, [camera, intervalId]);
             };
             if ("srcObject" in video) {
                 video.srcObject = stream;

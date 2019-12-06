@@ -47,7 +47,7 @@ class OSTimer : public Timer {
 public:
     OSTimer(const std::function<void()>& del, int intervalMillis, bool repeats) : Timer(del, intervalMillis, repeats) {
         _timerId = EM_ASM_INT ({
-            return setInterval(function() { Runtime.dynCall('vi', $2, [$0]); }, $1);
+            return setInterval(function() { dynCall('vi', $2, [$0]); }, $1);
         }, this, intervalMillis, dispatch);
     }
     

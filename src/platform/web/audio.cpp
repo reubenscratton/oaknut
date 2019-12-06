@@ -77,12 +77,12 @@ public:
                     if (cb > 0) {
                         var ptr = _malloc(cb);
                         HEAPU8.set(new Uint8Array(data.buffer), ptr, cb);
-                        Runtime.dynCall("viii", $2, [self, ptr, cb]);
+                        dynCall("viii", $2, [self, ptr, cb]);
                     }
                 };
                 input.connect(processor);
                 processor.connect(context.destination);
-                Runtime.dynCall("viiii", $3, [self, gotSet(stream), gotSet(input), gotSet(processor)]);
+                dynCall("viiii", $3, [self, gotSet(stream), gotSet(input), gotSet(processor)]);
             });
         }, this, val::global("gotSet")(_audioContext).as<int>(), thunkNewAudioSamples, thunkStarted);
     }

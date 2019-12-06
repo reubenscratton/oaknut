@@ -38,7 +38,7 @@ public:
             };
             request.onsuccess = function(event) {
                 var db = event.target.result;
-                Runtime.dynCall('viii', $3, [$0, gotSet(db), $4]);
+                dynCall('viii', $3, [$0, gotSet(db), $4]);
             };
             request.onupgradeneeded = function(event) {
                 var db = event.target.result;
@@ -86,10 +86,10 @@ public:
             req.onsuccess = function(event) {
                 var cursor = event.target.result;
                 if (cursor) {
-                    Runtime.dynCall('viii', $2, [$0, gotSet(cursor.value), $3]);
+                    dynCall('viii', $2, [$0, gotSet(cursor.value), $3]);
                     cursor.continue();
                 } else {
-                    Runtime.dynCall('viii', $2, [$0, -1, $3]);
+                    dynCall('viii', $2, [$0, -1, $3]);
                 }
             };
         }, this, _name.c_str(), getAllCallbackFromJs, new std::function<void(variant*)>(callback), gotIndex);
@@ -113,7 +113,7 @@ public:
             var store = tx.objectStore(name);
             var req = store.delete(gotGet($5));
             tx.oncomplete = function(event) {
-                Runtime.dynCall('vii', $2, [$0, $3]);
+                dynCall('vii', $2, [$0, $3]);
             };
             tx.onerror = function(event) {
             };
@@ -150,7 +150,7 @@ public:
             var obj = gotGet($5);
             var tx = db.transaction(name, "readwrite");
             tx.oncomplete = function() {
-                Runtime.dynCall('vii', $2, [$0, $3]);
+                dynCall('vii', $2, [$0, $3]);
             };
             var store = tx.objectStore(name);
             store.put(obj);
