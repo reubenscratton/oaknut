@@ -8,7 +8,7 @@
         {"$":"advert",               "type":"banner", "mode!=compact":{"paddingBottom":8}},
 		{"$":"secondaryItems"},
 		{"$":"otherItems",           "modes":["compact"]},
-		{"$":"avCarousel",           "$secondary":"$st_avcarousel_explainers"},
+		{"$":"avCarousel",           "secondary":"$st_avcarousel_explainers"},
 		
 		{"$":"otherItems",			 "modes":["!compact"]},
     

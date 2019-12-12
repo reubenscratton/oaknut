@@ -1,5 +1,5 @@
 {
-	"format": ["bbc.mobile.news.format.liveevent"],
+	"format": [".format.liveevent"],
 	"modes": ["tablet","landscape"],
 	"class": "BNHorizontalLinearLayout",
 	"disableChildHeightExtension": true,
@@ -12,8 +12,8 @@
 			"cellClass": "BNCellMedia",
 			"limit": 1,
 			"offset": 0,
-			"primary": ["bbc.mobile.news.image","bbc.mobile.news.video","bbc.mobile.news.audio"],
-			"secondary": ["bbc.mobile.news.placement.lmp"],
+			"primary": [".image",".video",".audio"],
+			"secondary": [".placement.lmp"],
 			"filterIsAvailable": true,
 			"parallax": true,
 			"imageAspect": 0.5625,

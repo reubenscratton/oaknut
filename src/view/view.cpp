@@ -549,6 +549,8 @@ void View::setNeedsLayout() {
     if (!_layoutValid) {
         return;
     }
+    
+    // Invalidate all ancestors layouts to ensure next layout pass reaches this view
     View* view = this;
     while (view) {
         view->_layoutValid = false;
@@ -661,9 +663,6 @@ void View::layout(RECT containingRect) {
         return;
     }
     
-    // Apply margins
-    containingRect = containingRect.copyWithInsets(_margins);
-
     //assert(!_layoutValid);
     SIZE refSize = {0,0};
     
@@ -705,7 +704,7 @@ void View::layout(RECT containingRect) {
             // used by sibling) is easy to do. You're never going to want to match parent
             // size while aligning to a sibling, and if you ever *do* want that then simply
             // explicitly set the 'ref' to the parent.
-            if (_alignspecHorz.anchor) {
+            if (_alignspecHorz.anchor && _widthMeasureSpec.mul>=1.0f) {
                 float x = floorf(_alignspecHorz.calc(containingRect.size.width, alignRect.origin.x, alignRect.size.width));
                 refSize.width -= fabs(x);
             }
@@ -725,7 +724,7 @@ void View::layout(RECT containingRect) {
             refSize.height = containingRect.size.height;
             
             // If using a sibling anchor, subtract sibling size
-            if (_alignspecVert.anchor) {
+            if (_alignspecVert.anchor && _heightMeasureSpec.mul>=1.0f) {
                 float y = floorf(_alignspecVert.calc(containingRect.size.height, alignRect.origin.y, alignRect.size.height));
                 refSize.height -= fabs(y);
             }
@@ -858,10 +857,6 @@ void View::layoutSubviews(RECT constraint) {
 
 void View::setPadding(EDGEINSETS padding) {
 	this->_padding = padding;
-    setNeedsLayout();
-}
-void View::setMargins(EDGEINSETS margins) {
-    this->_margins = margins;
     setNeedsLayout();
 }
 

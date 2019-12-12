@@ -11,12 +11,16 @@
 DECLARE_DYNCREATE(BNCellsModule, const variant&);
 
 BNCellsModule::BNCellsModule(const variant& json) : BNModule(json) {
-    string titleStyle = json.stringVal("titleStyle");
-    if (titleStyle) {
+    const auto& title = json.get("title");
+    _titleText = title.stringVal("text");
+    if (_titleText.lengthInBytes()) {
+        string titleStyle = title.stringVal("style");
+        if (!titleStyle.lengthInBytes()) {
+            titleStyle = "indexHeader";
+        }
         _titleStyle = app->getStyle(titleStyle);
-    } else {
-        _titleStyle = nullptr;
     }
+    _titleContentId = title.stringVal("content");
     _limit = json.intVal("limit");
     _offset = json.intVal("offset");
     _primary = json.stringArrayVal("primary");
@@ -50,6 +54,8 @@ BNCellsModule::BNCellsModule(const variant& json) : BNModule(json) {
 // Cloning
 BNCellsModule::BNCellsModule(BNCellsModule* source) : BNModule(source) {
     _titleStyle = source->_titleStyle;
+    _titleText = source->_titleText;
+    _titleContentId = source->_titleContentId;
     _limit = source->_limit;
     _offset = source->_offset;
     _primary = source->_primary;
@@ -68,8 +74,6 @@ BNCellsModule::BNCellsModule(BNCellsModule* source) : BNModule(source) {
     _H = source->_H;
     _tinyTimestamps = source->_tinyTimestamps;
     _no_margin = source->_no_margin;
-
-
 }
 BNModule* BNCellsModule::clone() {
     return new BNCellsModule(this);
@@ -252,7 +256,7 @@ public:
         return View::applySingleStyle(name, value);
     }
     
-private:
+//private:
     View* _divider;
     Label* _label;
 };
@@ -262,37 +266,38 @@ void BNCellsModule::addToView(View* parent) {
     if (_titleStyle && _cells.size() > 0) {
         CellsModuleHeader* header = new CellsModuleHeader();
         header->applyStyle(*_titleStyle);
+        header->_label->setText(_titleText);
         parent->addSubview(header);
     }
+
+    float padding = 0;
+    if (!_no_margin) {
+        padding = app->dp(8);
+    }
     
-    View* rowParent = parent;
-    LinearLayout* rowView = nullptr;
+
+    View* cellsContainer = new View();
+    cellsContainer->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+    cellsContainer->setPadding(EDGEINSETS(padding, padding, padding, padding));
+    parent->addSubview(cellsContainer);
     
-    float padding = app->dp(8);
-    //if (_cellsPerRow<2 && !_no_margin) {
-    //    parent->setPadding(EDGEINSETS(padding, padding, padding, padding));
-    //}
-    
-    for (int i=0 ; i<_cells.size() ; i++) {
-        
-        if (_cellsPerRow>1 && !(i%_cellsPerRow)) {
-            rowView = new LinearLayout();
-            rowView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
-            rowView->_orientation = LinearLayout::Horizontal;
-            //rowView->setPadding(EDGEINSETS(padding, padding, padding, padding));
-            //rowView->setSpacing(padding);
-            parent->addSubview(rowView);
-            rowParent = rowView;
+    View* cellAbove = nullptr;
+    ALIGNSPEC vertAlign = ALIGNSPEC::Top();
+    for (int i=0 ; i<_cells.size() ; ) {
+        View* cellPrev = nullptr;
+        for (int j=0 ; j<_cellsPerRow ; j++, i++) {
+            BNCell* cell = _cells[i];
+            cell->setLayoutSize(MEASURESPEC {MEASURESPEC::TypeRelative, nullptr, 1.0f/_cellsPerRow, -0.5f*padding*(_cellsPerRow-1)}, MEASURESPEC::Wrap());
+            if (j==0) {
+                cell->setLayoutOrigin(ALIGNSPEC::Abs(0), vertAlign);
+                cellAbove = cell;
+            } else {
+                cell->setLayoutOrigin(ALIGNSPEC::ToRightOf(cellPrev, padding), vertAlign);
+            }
+            cellsContainer->addSubview(cell);
+            cellPrev = cell;
         }
-        BNCell* cell = _cells[i];
-        if (!_no_margin) {
-            cell->setMargins(EDGEINSETS(padding, padding, padding, padding));
-        }
-        rowParent->addSubview(cell);
-        if (_cellsPerRow>1) {
-            cell->setLayoutSize(MEASURESPEC::Abs(0), MEASURESPEC::Wrap());
-            rowView->setSubviewWeight(cell, 1);
-        }
+        vertAlign = ALIGNSPEC::Below(cellAbove, padding);
     }
 
 }

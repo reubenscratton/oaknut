@@ -230,7 +230,6 @@ public:
 
     /** Set padding insets, i.e. the space between the view rect and its content */
     virtual void setPadding(EDGEINSETS padding);
-    virtual void setMargins(EDGEINSETS margins);
 
     /** Set the size this view would like to have, given various constraints (see MEASURESPEC and layout()). */
     virtual void setLayoutSize(MEASURESPEC widthSpec, MEASURESPEC heightSpec);
@@ -288,7 +287,6 @@ protected:
     ALIGNSPEC _alignspecHorz;
     ALIGNSPEC _alignspecVert;
     EDGEINSETS _padding;
-    EDGEINSETS _margins;
     Visibility _visibility;
     bool _layoutValid;
     void adjustRectSize(const SIZE& d);

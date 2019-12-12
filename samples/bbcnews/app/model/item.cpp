@@ -73,7 +73,7 @@ BNItem::BNItem(const variant& json) : BNContent(json) {
         // Images and videos
         else if (tag == "image" || tag == "video" || tag == "audio") {
             string id = xml.attributeValue("id");
-            const string modelType = "bbc.mobile.news." + tag;
+            const string modelType = "." + tag;
             auto rels = findOrderedRelationships({modelType}, {});
             auto rel = findRelationshipByModelId(rels, id);
             if (rel) {
@@ -162,7 +162,7 @@ vector<BNRelationship*> BNItem::findRelationships(const vector<string>& primaryT
     // home collection to the top of the list.
 	if (primaryTypes.size()==1 && secondaryTypes.size()==2 && results.size()>0) {
 		if (primaryTypes[0] == BNModelTypeCollection) {
-			if (secondaryTypes[1] == "bbc.mobile.news.topic") {
+			if (secondaryTypes[1] == ".topic") {
                 BNRelationship* lastRel = *results.rbegin();
 				if (lastRel->_secondaryType == BNRelationshipTypeHomeCollection) {
                     results.pop_back();

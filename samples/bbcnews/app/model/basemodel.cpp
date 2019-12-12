@@ -40,6 +40,7 @@ BNRelationship::BNRelationship(const variant& json, BNBaseModel* parentObject) {
 
 static map<string, std::function<BNBaseModel*(const variant&)>> s_factory;
 
+
 BNBaseModel* BNBaseModel::createModelObjectFromJson(const variant& json) {
     if (!s_factory.size()) {
         s_factory[BNModelTypeItem] = [=](const variant& json) -> BNBaseModel* { return new BNItem(json); };
@@ -54,8 +55,9 @@ BNBaseModel* BNBaseModel::createModelObjectFromJson(const variant& json) {
         s_factory[BNModelTypeByline] = [=](const variant& json) -> BNBaseModel* { return new BNByline(json); };
         s_factory[BNModelTypeLink] = [=](const variant& json) -> BNBaseModel* { return new BNItem(json); };
     }
+    
     string type = json.stringVal("type");
-    if (type==BNModelTypeItem && json.stringVal("format")=="bbc.mobile.news.format.commentary") {
+    if (type==BNModelTypeItem && json.stringVal("format")==".format.commentary") {
         type = BNModelTypeCommentary;
     }
     auto factoryFunc = s_factory.find(type);

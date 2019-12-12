@@ -29,6 +29,8 @@ public:
 
     bool isCellsModule() override { return true; }
 
+    string _titleText;
+    string _titleContentId;
     const style* _titleStyle;
     string _cellClass;
     int _limit;

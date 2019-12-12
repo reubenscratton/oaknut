@@ -1,7 +1,7 @@
 {
 	"$":"index",
 	"site":["/naidheachdan"],
-	"format": ["bbc.mobile.news.cps.idx", "bbc.mobile.news.legacy.idx"],
+	"format": [".cps.idx", ".legacy.idx"],
     "modules": [
 		
 		{"$":"primaryItem",        "$secondary":"$st_top_stories"},

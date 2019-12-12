@@ -1,5 +1,5 @@
 {
-	"format": ["bbc.mobile.news.format.audio","bbc.mobile.news.format.video"],
+	"format": [".format.audio",".format.video"],
 	"modes": ["portrait"],
 	"class": "BNVerticalStack",
 	"background": "contentBackgroundInv",
@@ -14,7 +14,7 @@
 		{"$":"relatedTitle", "title": "Related video and audio"},
 		{"$":"relatedVideoAndAudio"},
 		{"$":"relatedTitle", "title": "Related Stories"},
-		{"$":"relatedStories", "format": ["bbc.mobile.news.format.textual"]},
+		{"$":"relatedStories", "format": [".format.textual"]},
 		{"$":"relatedTitle", "title": "Related Topics"},
 		{"$":"relatedTopics"},
 		{"$":"copyright"}

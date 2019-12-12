@@ -1,7 +1,7 @@
 {
 	"$":"index",
 	"site":["/news"],
-	"format": ["bbc.mobile.news.cps.idx", "bbc.mobile.news.legacy.idx"],
+	"format": [".cps.idx", ".legacy.idx"],
 	"$secondary":"$st_top_stories",
     "modules": [
 

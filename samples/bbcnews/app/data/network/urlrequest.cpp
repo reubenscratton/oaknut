@@ -45,6 +45,22 @@ BNURLRequest* BNURLRequest::requestContent(const string& modelId, int flags, int
     return new BNURLRequest(urlForModelId(modelId), flags, priority);
 }
 
+static void fixRedundantJson(variant&json) {
+    if (json.isString()) {
+        string& str = json.stringRef();
+        str.hadPrefix("bbc.mobile.news");
+    } else if (json.isCompound()) {
+        for (auto& e: json.compoundRef()) {
+            fixRedundantJson(e.second);
+        }
+    } else if (json.isArray()) {
+        for (auto& e : json.arrayRef()) {
+            fixRedundantJson(e);
+        }
+    }
+}
+
+
 BNURLRequest::BNURLRequest(const string& url, int flags, int priority) {
 	
 	// Use normal content TTL for everything except LEP commentaries, which should update every minute
@@ -60,6 +76,10 @@ BNURLRequest::BNURLRequest(const string& url, int flags, int priority) {
     // Special background processing
     _req->onGotJsonInBackground = [=] (variant& json) -> bool {
         if (json.hasVal("type")) {
+            
+
+            fixRedundantJson(json);
+
             auto modelObj = BNBaseModel::createModelObjectFromJson(json);
             retain();
             App::postToMainThread([=]() {

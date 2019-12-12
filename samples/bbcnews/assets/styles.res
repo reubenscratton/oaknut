@@ -156,6 +156,13 @@ summaryText: {
     padding:0dp
 }
 
+
+indexHeader: {
+    padding: 16dp,16dp,16dp,0dp
+    font-weight: light
+    font-size: 17sp
+}
+
 relatedStories: {
     padding: 16dp,8dp,16dp,8dp
     text: Related Stories
@@ -165,21 +172,7 @@ relatedStories: {
     top-divider-height:4dp
 }
 
-thePapersHeader: {
-    text: The Papers
-    content-link: /cps/news/the_reporters?title=The%20Reporters
-    padding: 8dp,16dp,16dp,8dp
-    font-weight: light
-    font-size: 17sp
-}
 
-longReadsHeader: {
-    text: Long Reads
-    content-link: /cps/news/the_reporters?title=The%20Reporters
-    padding: 8dp,16dp,16dp,8dp
-    font-weight: light
-    font-size: 17sp
-}
 
 relatedTopicsHeader: {
     padding: 16dp,16dp,16dp,8dp
@@ -203,7 +196,7 @@ relatedTopic: {
 }
 linkDivider: {
     size: 100%-32dp, 1dp
-    alignX: 16dp
+    left: 16dp
     background: #FFEEEEEE
 }
 
@@ -455,6 +448,7 @@ copyright: {
     font-weight: medium
     font-size: 16sp
     padding:16dp
+    forecolor: $color.contentForeground
 }
 
 web-browser: {

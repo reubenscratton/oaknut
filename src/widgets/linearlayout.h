@@ -20,8 +20,9 @@ public:
     void setSubviewWeight(View* subview, float weight);
 
 	// Overrides
+    void layout(RECT constraint) override;
     void layoutSubviews(RECT constraint) override;
-	void addSubview(View* subview) override;
+    void insertSubview(View* subview, int index) override;
 	void removeSubview(View* subview) override;
     bool applySingleStyle(const string& name, const style& value) override;
 
@@ -30,5 +31,6 @@ protected:
     vector<float> _weights;
     float _weightsTotal;
     float _spacing;
+    bool _updateSubviewAligns;
 
 };

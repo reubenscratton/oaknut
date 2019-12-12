@@ -1,357 +1,296 @@
 {
     "$st_primary":[
-                   "bbc.mobile.news.group.top-story+",
-                   "bbc.mobile.news.group.splash-top-story",
-                   "bbc.mobile.news.group.index"
-                   ],
+        ".group.top-story+",
+        ".group.splash-top-story",
+        ".group.index"
+    ],
     "$st_top_stories":[
-                       "$st_primary",
-                       "bbc.mobile.news.group.live-event-1",
-                       "bbc.mobile.news.group.live-event-best-local+",
-                       "bbc.mobile.news.group.live-module+",
-                       "bbc.mobile.news.group.splash-story-2+",
-                       "bbc.mobile.news.group.splash-story-3+",
-                       "bbc.mobile.news.group.secondary-top-story+",
-                       "bbc.mobile.news.group.second-top-story+",
-                       "bbc.mobile.news.group.second-story+",
-                       "bbc.mobile.news.group.third-top-story+",
-                       "bbc.mobile.news.group.third-story+",
-                       "bbc.mobile.news.group.topic-cluster+",
-                       "bbc.mobile.news.group.topic-cluster-2+",
-                       "bbc.mobile.news.group.other-top-stories+",
-                       "bbc.mobile.news.group.splash-other-top-stories+"
-                       ],
+       "$st_primary",
+       ".group.live-event-1",
+       ".group.live-event-best-local+",
+       ".group.live-module+",
+       ".group.splash-story-2+",
+       ".group.splash-story-3+",
+       ".group.secondary-top-story+",
+       ".group.second-top-story+",
+       ".group.second-story+",
+       ".group.third-top-story+",
+       ".group.third-story+",
+       ".group.topic-cluster+",
+       ".group.topic-cluster-2+",
+       ".group.other-top-stories+",
+       ".group.splash-other-top-stories+"
+    ],
     "$st_av_carousel":[
-                       "bbc.mobile.news.group.top-stories-av",
-                       "bbc.mobile.news.group.av-stories-best+",
-                       "bbc.mobile.news.group.av-stories-now+",
-                       "bbc.mobile.news.group.watch-listen+"
-                       ],
+        ".group.top-stories-av",
+        ".group.av-stories-best+",
+        ".group.av-stories-now+",
+        ".group.watch-listen+"
+    ],
     "$st_features":[
-                    "bbc.mobile.news.group.feature-breakout+",
-                    "bbc.mobile.news.group.feature-main+",
-                    "bbc.mobile.news.group.feature-other+",
-                    "bbc.mobile.news.group.features"
-                    ],
+        ".group.feature-breakout+",
+        ".group.feature-main+",
+        ".group.feature-other+",
+        ".group.features"
+    ],
     "$st_in_the_papers":[
-                         "bbc.mobile.news.group.featured-site-top-stories.the-papers",
-                         "bbc.mobile.news.group.featured-site-top-stories-special-event"
-                         ],
+        ".group.featured-site-top-stories.the-papers",
+        ".group.featured-site-top-stories-special-event"
+    ],
     "$st_the_reporters":[
-                         "bbc.mobile.news.group.also-in-news.the-reporters",
-                         "bbc.mobile.news.group.the-reporters"
-                         ],
+        ".group.also-in-news.the-reporters",
+        ".group.the-reporters"
+     ],
     "$st_digest_business_uk":[
-                              "bbc.mobile.news.group.compact-section-digest.business",
-                              "bbc.mobile.news.group.compact-section-digest-1"
-                              ],
+        ".group.compact-section-digest.business",
+        ".group.compact-section-digest-1"
+    ],
     "$st_digest_politics_uk":[
-                              "bbc.mobile.news.group.compact-section-digest.politics",
-                              "bbc.mobile.news.group.compact-section-digest-2"
-                              ],
+        ".group.compact-section-digest.politics",
+        ".group.compact-section-digest-2"
+    ],
     "$st_digest_health_uk":[
-                            "bbc.mobile.news.group.compact-section-digest.health",
-                            "bbc.mobile.news.group.compact-section-digest-3"
-                            ],
+        ".group.compact-section-digest.health",
+        ".group.compact-section-digest-3"
+    ],
     "$st_digest_education_uk":[
-                               "bbc.mobile.news.group.compact-section-digest.education",
-                               "bbc.mobile.news.group.compact-section-digest-4"
-                               ],
+        ".group.compact-section-digest.education",
+        ".group.compact-section-digest-4"
+    ],
     "$st_digest_tech_uk":[
-                          "bbc.mobile.news.group.compact-section-digest.technology",
-                          "bbc.mobile.news.group.compact-section-digest-5"
-                          ],
+        ".group.compact-section-digest.technology",
+        ".group.compact-section-digest-5"
+    ],
     "$st_digest_science_uk":[
-                             "bbc.mobile.news.group.compact-section-digest.sci-environment",
-                             "bbc.mobile.news.group.compact-section-digest-6"
-                             ],
+        ".group.compact-section-digest.sci-environment",
+        ".group.compact-section-digest-6"
+    ],
     "$st_digest_entertain_uk":[
-                               "bbc.mobile.news.group.compact-section-digest.entertainment",
-                               "bbc.mobile.news.group.compact-section-digest-7"
-                               ],
+        ".group.compact-section-digest.entertainment",
+        ".group.compact-section-digest-7"
+    ],
     "$st_digest_magazine_uk":[
-                              "bbc.mobile.news.group.compact-section-digest.magazine",
-                              "bbc.mobile.news.group.compact-section-digest-8"
-                              ],
+        ".group.compact-section-digest.magazine",
+        ".group.compact-section-digest-8"
+    ],
     "$st_digest_sports_uk":[
-                            "bbc.mobile.news.group.featured-site-top-stories.sport",
-                            "bbc.mobile.news.group.featured-site-top-stories-bbc-sport",
-                            "bbc.mobile.news.group.featured-site-top-stories-2-bbc-sport"
-                            ],
-    "$st_digest_business_gnl":[
-                               "bbc.mobile.news.group.compact-section-digest-1"
-                               ],
-    "$st_digest_tech_gnl":[
-                           "bbc.mobile.news.group.compact-section-digest-2"
-                           ],
-    "$st_digest_entertain_gnl":[
-                                "bbc.mobile.news.group.compact-section-digest-3"
-                                ],
-    "$st_digest_science_gnl":[
-                              "bbc.mobile.news.group.compact-section-digest-4"
-                              ],
-    "$st_digest_health_gnl":[
-                             "bbc.mobile.news.group.compact-section-digest-5"
-                             ],
-    "$st_digest_sports_gnl":[
-                            "bbc.mobile.news.group.compact-section-digest-6"
-                            ],
-    "$st_digest_magazine_gnl":[
-                               "bbc.mobile.news.group.compact-section-digest-7"
-                               ],
-    "$st_digest_africa_gnl":[
-                             "bbc.mobile.news.group.compact-geographic-section-digest-1"
-                             ],
-    "$st_digest_asia_gnl":[
-                           "bbc.mobile.news.group.compact-geographic-section-digest-2"
-                           ],
-    "$st_digest_europe_gnl":[
-                             "bbc.mobile.news.group.compact-geographic-section-digest-3"
-                             ],
-    "$st_digest_latin_america_gnl":[
-                                    "bbc.mobile.news.group.compact-geographic-section-digest-4"
-                                    ],
-    "$st_digest_middle_east_gnl":[
-                                  "bbc.mobile.news.group.compact-geographic-section-digest-5"
-                                  ],
-    "$st_digest_us_and_canada_gnl":[
-                                    "bbc.mobile.news.group.compact-geographic-section-digest-6"
-                                    ],
-    "$st_ts_explainers":[
-                         "bbc.mobile.news.group.explainers"
-                         ],
-    "$st_top_stories_also_in_the_news":[
-                                        "bbc.mobile.news.group.also-in-the-news"
-                                        ],
+        ".group.featured-site-top-stories.sport",
+        ".group.featured-site-top-stories-bbc-sport",
+        ".group.featured-site-top-stories-2-bbc-sport"
+    ],
+    "$st_digest_business_gnl":[".group.compact-section-digest-1"],
+    "$st_digest_tech_gnl":[".group.compact-section-digest-2"],
+    "$st_digest_entertain_gnl":[".group.compact-section-digest-3"],
+    "$st_digest_science_gnl":[".group.compact-section-digest-4"],
+    "$st_digest_health_gnl":[".group.compact-section-digest-5"],
+    "$st_digest_sports_gnl":[".group.compact-section-digest-6"],
+    "$st_digest_magazine_gnl":[".group.compact-section-digest-7"],
+    "$st_digest_africa_gnl":[".group.compact-geographic-section-digest-1"],
+    "$st_digest_asia_gnl":[".group.compact-geographic-section-digest-2"],
+    "$st_digest_europe_gnl":[".group.compact-geographic-section-digest-3"],
+    "$st_digest_latin_america_gnl":[".group.compact-geographic-section-digest-4"],
+    "$st_digest_middle_east_gnl":[".group.compact-geographic-section-digest-5"],
+    "$st_digest_us_and_canada_gnl":[".group.compact-geographic-section-digest-6"],
+    "$st_ts_explainers":[".group.explainers"],
+    "$st_top_stories_also_in_the_news":[".group.also-in-the-news"],
     "$st_in_pictures":[
-                       "bbc.mobile.news.group.picture-gallery-stories+",
-                       "bbc.mobile.news.group.picture-galleries+"
-                       ],
+        ".group.picture-gallery-stories+",
+        ".group.picture-galleries+"
+    ],
     "$st_also_in_the_news":[
-                            "bbc.mobile.news.group.secondary-top-story+",
-                            "bbc.mobile.news.group.second-story+",
-                            "bbc.mobile.news.group.third-story+",
-                            "bbc.mobile.news.group.fourth-story+",
-                            "bbc.mobile.news.group.fifth-story+",
-                            "bbc.mobile.news.group.sixth-story+",
-                            "bbc.mobile.news.group.seventh-story+",
-                            "bbc.mobile.news.group.eighth-story+",
-                            "bbc.mobile.news.group.ninth-story+"
-                            ],
+        ".group.secondary-top-story+",
+        ".group.second-story+",
+        ".group.third-story+",
+        ".group.fourth-story+",
+        ".group.fifth-story+",
+        ".group.sixth-story+",
+        ".group.seventh-story+",
+        ".group.eighth-story+",
+        ".group.ninth-story+"
+    ],
     "$st_primary_sport":[
-                         "bbc.mobile.news.group.sport-headlines-list+",
-                         "bbc.mobile.news.group.headlines+",
-                         "bbc.mobile.news.group.type-a-top-story-2+",
-                         "bbc.mobile.news.group.type-a-top-story-1+",
-                         "bbc.mobile.news.group.type-a-top-story-3+",
-                         "bbc.mobile.news.group.wide-top-story+",
-                         "bbc.mobile.news.group.standard-top-story+",
-                         "bbc.mobile.news.group.live-first-story+"
-                         ],
+        ".group.sport-headlines-list+",
+        ".group.headlines+",
+        ".group.type-a-top-story-2+",
+        ".group.type-a-top-story-1+",
+        ".group.type-a-top-story-3+",
+        ".group.wide-top-story+",
+        ".group.standard-top-story+",
+        ".group.live-first-story+"
+    ],
     "$st_top_stories_sport":[
-                             "$st_primary_sport",
-                             "bbc.mobile.news.group.type-a-story-1+",
-                             "bbc.mobile.news.group.type-a-story-2+",
-                             "bbc.mobile.news.group.type-a-story-3+",
-                             "bbc.mobile.news.group.type-a-story-4+",
-                             "bbc.mobile.news.group.story-1+",
-                             "bbc.mobile.news.group.story-2+",
-                             "bbc.mobile.news.group.story-3+",
-                             "bbc.mobile.news.group.story-4+",
-                             "bbc.mobile.news.group.type-a-headline-list-1+",
-                             "bbc.mobile.news.group.type-a-headline-list-4+",
-                             "bbc.mobile.news.group.more-news-headlines+",
-                             "bbc.mobile.news.group.other-site-headline-links+"
-                             ],
+        "$st_primary_sport",
+        ".group.type-a-story-1+",
+        ".group.type-a-story-2+",
+        ".group.type-a-story-3+",
+        ".group.type-a-story-4+",
+        ".group.story-1+",
+        ".group.story-2+",
+        ".group.story-3+",
+        ".group.story-4+",
+        ".group.type-a-headline-list-1+",
+        ".group.type-a-headline-list-4+",
+        ".group.more-news-headlines+",
+        ".group.other-site-headline-links+"
+    ],
     "$st_avcarousel_sport":[
-                            "bbc.mobile.news.group.highlights-reports",
-                            "bbc.mobile.news.group.type-a-media-list-1+",
-                            "bbc.mobile.news.group.av-highlights+",
-                            "bbc.mobile.news.group.sports-media-list+",
-                            "bbc.mobile.news.group.av-1+",
-                            "bbc.mobile.news.group.av-2+",
-                            "bbc.mobile.news.group.av-3+",
-                            "bbc.mobile.news.group.av-4+"
-                            ],
+        ".group.highlights-reports",
+        ".group.type-a-media-list-1+",
+        ".group.av-highlights+",
+        ".group.sports-media-list+",
+        ".group.av-1+",
+        ".group.av-2+",
+        ".group.av-3+",
+        ".group.av-4+"
+    ],
     "$st_features_sport":[
-                          "bbc.mobile.news.group.type-a-comment-list-1+",
-                          "bbc.mobile.news.group.comment-stories+",
-                          "bbc.mobile.news.group.sport-features-and-analysis-list+",
-                          "bbc.mobile.news.group.features-and-analysis+"
-                          ],
+        ".group.type-a-comment-list-1+",
+        ".group.comment-stories+",
+        ".group.sport-features-and-analysis-list+",
+        ".group.features-and-analysis+"
+    ],
     "$st_in_pictures_sport":[
-                             "bbc.mobile.news.group.type-a-gallery-list-1+",
-                             "bbc.mobile.news.group.type-a-gallery-list-2+",
-                             "bbc.mobile.news.group.picture-galleries+"
-                             ],
+        ".group.type-a-gallery-list-1+",
+        ".group.type-a-gallery-list-2+",
+        ".group.picture-galleries+"
+    ],
     "$st_explainers":[
-                      "$st_top_stories",
-                      "bbc.mobile.news.group.secondary-top-story+",
-                      "bbc.mobile.news.group.second-top-story+",
-                      "bbc.mobile.news.group.third-top-story+",
-                      "bbc.mobile.news.group.fourth-top-story+"
-                      ],
-    "$st_avcarousel_explainers":[
-                                 "bbc.mobile.news.group.watch-listen+"
-                                 ],
+        "$st_top_stories",
+        ".group.secondary-top-story+",
+        ".group.second-top-story+",
+        ".group.third-top-story+",
+        ".group.fourth-top-story+"
+    ],
+    "$st_avcarousel_explainers":[".group.watch-listen+"],
     "$st_explainers_feat":[
-                           "bbc.mobile.news.group.feature-main.from-magazine+",
-                           "bbc.mobile.news.group.features+"
-                           ],
+        ".group.feature-main.from-magazine+",
+        ".group.features+"
+    ],
     "$st_explainers_who":[
-                          "bbc.mobile.news.group.guide-content.who-is+",
-                          "bbc.mobile.news.group.guides-content+",
-                          "bbc.mobile.news.group.guides+"
-                          ],
+        ".group.guide-content.who-is+",
+        ".group.guides-content+",
+        ".group.guides+"
+    ],
     "$st_in_pics_primary":[
-                           "bbc.mobile.news.group.lead-feature-now+",
-                           "bbc.mobile.news.group.special-event-promotion-now+"
-                           ],
+        ".group.lead-feature-now+",
+        ".group.special-event-promotion-now+"
+    ],
     "$st_in_pics_your_pics":[
-                             "bbc.mobile.news.group.accordion-horizontal+",
-                             "bbc.mobile.news.group.horizontal-accordion+"
-                             ],
-    "$st_in_pics_more":[
-                        "bbc.mobile.news.group.feature-digest+"
-                        ],
-    "$st_in_pics_we_want":[
-                           "bbc.mobile.news.group.submission-instructions+"
-                           ],
+        ".group.accordion-horizontal+",
+        ".group.horizontal-accordion+"
+    ],
+    "$st_in_pics_more":[".group.feature-digest+"],
+    "$st_in_pics_we_want":[".group.submission-instructions+"],
     "$st_guide_content":[
-                         "bbc.mobile.news.group.guide-content-1",
-                         "bbc.mobile.news.group.guide-content-2",
-                         "bbc.mobile.news.group.guide-content-3",
-                         "bbc.mobile.news.group.guide-content-4",
-                         "bbc.mobile.news.group.guide-content-5",
-                         "bbc.mobile.news.group.guide-content-6"
-                         ],
+        ".group.guide-content-1",
+        ".group.guide-content-2",
+        ".group.guide-content-3",
+        ".group.guide-content-4",
+        ".group.guide-content-5",
+        ".group.guide-content-6"
+    ],
     "$st_local_features":[
-                          "bbc.mobile.news.group.guide-content+",
-                          "bbc.mobile.news.group.local-features-1+",
-                          "bbc.mobile.news.group.local-features-2+"
-                          ],
+        ".group.guide-content+",
+        ".group.local-features-1+",
+        ".group.local-features-2+"
+    ],
     "$st_local_sport":[
-                       "bbc.mobile.news.group.featured-site-top-stories.sport",
-                       "bbc.mobile.news.group.featured-site-top-stories-1"
-                       ],
-    "$st_local_also_in_news":[
-                              "bbc.mobile.news.group.also-in-the-news"
-                              ],
+        ".group.featured-site-top-stories.sport",
+        ".group.featured-site-top-stories-1"
+    ],
+    "$st_local_also_in_news":[".group.also-in-the-news"],
     "$st_magazine_primary":[
-                            "bbc.mobile.news.group.lead-feature-now+",
-                            "bbc.mobile.news.group.special-event-promotion-now+"
-                            ],
+        ".group.lead-feature-now+",
+        ".group.special-event-promotion-now+"
+    ],
     "$st_magazine_avcarousel":[
-                               "bbc.mobile.news.group.feature-digest.watch+",
-                               "bbc.mobile.news.group.feature-digest-4+"
-                               ],
+        ".group.feature-digest.watch+",
+        ".group.feature-digest-4+"
+    ],
     "$st_magazine_monitor":[
-                            "bbc.mobile.news.group.monitor-main+",
-                            "bbc.mobile.news.group.monitor-other"
-                            ],
-    "$st_magazine_trending":[
-                             "bbc.mobile.news.group.feature-main-3+"
-                             ],
-    "$st_magazine_elsewhere":[
-                              "bbc.mobile.news.group.feature-main-2+"
-                              ],
+        ".group.monitor-main+",
+        ".group.monitor-other"
+    ],
+    "$st_magazine_trending":[".group.feature-main-3+"],
+    "$st_magazine_elsewhere":[".group.feature-main-2+"],
     "$st_magazine_more_or_less":[
-                                 "bbc.mobile.news.group.feature-digest.more-or-less+",
-                                 "bbc.mobile.news.group.feature-digest-3+"
-                                 ],
-    "$st_magazine_more_from":[
-                             "bbc.mobile.news.group.feature-digest"
-                             ],
+        ".group.feature-digest.more-or-less+",
+        ".group.feature-digest-3+"
+    ],
+    "$st_magazine_more_from":[".group.feature-digest"],
     "$st_newsbeat":[
-                    "$st_primary",
-                    "bbc.mobile.news.group.secondary-top-story+",
-                    "bbc.mobile.news.group.second-top-story+",
-                    "bbc.mobile.news.group.third-top-story+",
-                    "bbc.mobile.news.group.fourth-top-story+",
-                    "bbc.mobile.news.group.more-stories+",
-                    "bbc.mobile.news.group.other-top-stories+",
-                    "bbc.mobile.news.group.guides-content+",
-                    "bbc.mobile.news.group.guide-content+",
-                    "bbc.mobile.news.group.section-digest+"
-                    ],
+        "$st_primary",
+        ".group.secondary-top-story+",
+        ".group.second-top-story+",
+        ".group.third-top-story+",
+        ".group.fourth-top-story+",
+        ".group.more-stories+",
+        ".group.other-top-stories+",
+        ".group.guides-content+",
+        ".group.guide-content+",
+        ".group.section-digest+"
+    ],
     "$st_newsbeat_avcarousel":[
-                               "bbc.mobile.news.group.av-stories-now+",
-                               "bbc.mobile.news.group.watch-listen"
-                               ],
+        ".group.av-stories-now+",
+        ".group.watch-listen"
+    ],
     "$st_newsbeat_features":[
-                             "bbc.mobile.news.group.feature-main.listen-watch-share+",
-                             "bbc.mobile.news.group.main-feature+",
-                             "bbc.mobile.news.group.extra-features+"
-                             ],
+        ".group.feature-main.listen-watch-share+",
+        ".group.main-feature+",
+        ".group.extra-features+"
+    ],
     "$st_reporters":[
-                     "$st_primary",
-                     "bbc.mobile.news.group.secondary-top-story+",
-                     "bbc.mobile.news.group.second-top-story+",
-                     "bbc.mobile.news.group.third-top-story+",
-                     "bbc.mobile.news.group.fourth-top-story+",
-                     "bbc.mobile.news.group.other-top-stories+",
-                     "bbc.mobile.news.group.guide-content.more-analysis+",
-                     "bbc.mobile.news.group.guides+"
-                     ],
-    "$st_reporters_avcarousel":[
-                                "bbc.mobile.news.group.watch-listen+"
-                                ],
+        "$st_primary",
+        ".group.secondary-top-story+",
+        ".group.second-top-story+",
+        ".group.third-top-story+",
+        ".group.fourth-top-story+",
+        ".group.other-top-stories+",
+        ".group.guide-content.more-analysis+",
+        ".group.guides+"
+    ],
+    "$st_reporters_avcarousel":[".group.watch-listen+"],
     "$st_reporters_your_qs":[
-                             "bbc.mobile.news.group.special-reports.your-questions-answered+",
-                             "bbc.mobile.news.group.special-reports.experts+"
-                             ],
-    "$st_special_reports":[
-                           "bbc.mobile.news.group.feature-main+"
-                           ],
+        ".group.special-reports.your-questions-answered+",
+        ".group.special-reports.experts+"
+    ],
+    "$st_special_reports":[".group.feature-main+"],
     "$st_top_stories_welsh":[
-                             "bbc.mobile.news.group.lead-feature",
-                             "$st_top_stories",
-                             "bbc.mobile.news.group.mwy-o-newyddion-more-from-newyddion+",
-                             "bbc.mobile.news.group.guides-content"
-                             ],
+        ".group.lead-feature",
+        "$st_top_stories",
+        ".group.mwy-o-newyddion-more-from-newyddion+",
+        ".group.guides-content"
+    ],
     "$st_av_carousel_welsh":[
-                             "$st_av_carousel",
-                             "bbc.mobile.news.group.sain-a-fideo-watch-listen+"
-                             ],
-    "$st_welsh_gwleidyddiaeth":[
-                                "bbc.mobile.news.group.gwleidyddiaeth+"
-                                ],
+        "$st_av_carousel",
+        ".group.sain-a-fideo-watch-listen+"
+    ],
+    "$st_welsh_gwleidyddiaeth":[".group.gwleidyddiaeth+"],
     "$st_elections_top":[
-                         "bbc.mobile.news.group.top-story",
-                         "bbc.mobile.news.group.live-event-1",
-                         "bbc.mobile.news.group.news-event-promotion",
-                         "bbc.mobile.news.group.second-story",
-                         "bbc.mobile.news.group.third-story",
-                         "bbc.mobile.news.group.other-top-stories"
-                         ],
+        ".group.top-story",
+        ".group.live-event-1",
+        ".group.news-event-promotion",
+        ".group.second-story",
+        ".group.third-story",
+        ".group.other-top-stories"
+    ],
     "$st_elections_features":[
-                              "bbc.mobile.news.group.feature-breakout+",
-                              "bbc.mobile.news.group.feature-main+",
-                              "bbc.mobile.news.group.feature-other+",
-                              "bbc.mobile.news.group.features+"
-                              ],
+        ".group.feature-breakout+",
+        ".group.feature-main+",
+        ".group.feature-other+",
+        ".group.features+"
+    ],
     "$st_elections_basics":[
-                            "bbc.mobile.news.group.guide-content.who-is+",
-                            "bbc.mobile.news.group.guides-content+"
-                            ],
-    "$st_avcarousel_gaelic":[
-                             "bbc.mobile.news.group.coimhead-ist-watch-listen"
-                             ],
-    "$st_features_gaelic":[
-                           "bbc.mobile.news.group.sgeulachdan-aithriseach-feature+"
-                           ],
+        ".group.guide-content.who-is+",
+        ".group.guides-content+"
+    ],
+    "$st_avcarousel_gaelic":[".group.coimhead-ist-watch-listen"],
+    "$st_features_gaelic":[".group.sgeulachdan-aithriseach-feature+"],
+    
+    
     "index":{
         "class":"BNVerticalStack",
         "background":"window"
-    },
-    "title":{
-        "class":"BNStaticTitleModule",
-        "mode!=tablet":{
-            "padding":"{20,16,4,16}"
-        },
-        "mode==tablet":{
-            "padding":"{48,32,4,16}"
-        }
     },
     "primaryItem":{
         "limit":1,
@@ -376,36 +315,13 @@
         "secondary":"$secondary",
         "cellClass":"BNCellItemTopStory",
         "maxTopics":1,
-        "mode==tablet":{
-            "padding":"{0,8,0,8}",
-            "cellMargins":"{16,8,0,8}",
-            "summaries":true
-        },
-        "mode!=tablet":{
-            "padding":"{0,4,0,4}",
-            "cellMargins":"{8,4,0,4}"
-        }
-    },
-    "tightGroup":{
-        "$":"normalGroup",
-        "mode==compact":{
-            "padding":"{0,8,0,8}",
-            "cellMargins":"{2,0,0,0}"
-        }
     },
     "featureGroup":{
+        "$":"normalGroup",
         "secondary":"$secondary",
+        "imagePosition":"top"
         "summaries":true,
-        "mode==compact":{
-            "$":"tightGroup",
-            "hideTopics":true,
-            "cellClass":"BNCellItemTopStory"
-        },
-        "mode!=compact":{
-            "cellClass":"BNCellItemFeature",
-            "$":"normalGroup",
-            "imagePosition":"top"
-        }
+        "cellClass":"BNCellItemFeature",
     },
     "featureGroup_2col":{
         "$":"featureGroup",
@@ -442,14 +358,6 @@
         "secondary":"$secondary",
         "limit":2,
         "cellClass":"BNCellItemDigest",
-        "mode==tablet":{
-            "padding":"{0,8,0,8}",
-            "cellMargins":"{4,0,0,0}"
-        },
-        "mode!=tablet":{
-            "padding":"{0,8,0,8}",
-            "cellMargins":"{2,0,0,0}"
-        },
         "textPadding":"{8,8,0,0}"
     },
     "twoColumns":{
@@ -504,94 +412,6 @@
                        ]
         }
     },
-    "$digestBusinessUk":[
-                         {
-                         "$":"digestTitle",
-                         "title":"Business",
-                         "contentLink":"/cps/news/business?title=Business"
-                         },
-                         {
-                         "$":"digestGroup",
-                         "$secondary":"$st_digest_business_uk"
-                         }
-                         ],
-    "$digestPoliticsUk":[
-                         {
-                         "$":"digestTitle",
-                         "title":"Politics",
-                         "contentLink":"/cps/news/politics?title=Politics"
-                         },
-                         {
-                         "$":"digestGroup",
-                         "$secondary":"$st_digest_politics_uk"
-                         }
-                         ],
-    "$digestHealthUk":[
-                       {
-                       "$":"digestTitle",
-                       "title":"Health",
-                       "contentLink":"/cps/news/health?title=Health"
-                       },
-                       {
-                       "$":"digestGroup",
-                       "$secondary":"$st_digest_health_uk"
-                       }
-                       ],
-    "$digestEducationUk":[
-                          {
-                          "$":"digestTitle",
-                          "title":"Education",
-                          "contentLink":"/cps/news/education?title=Education"
-                          },
-                          {
-                          "$":"digestGroup",
-                          "$secondary":"$st_digest_education_uk"
-                          }
-                          ],
-    "$digestTechnologyUk":[
-                           {
-                           "$":"digestTitle",
-                           "title":"Technology",
-                           "contentLink":"/cps/news/technology?title=Technology"
-                           },
-                           {
-                           "$":"digestGroup",
-                           "$secondary":"$st_digest_tech_uk"
-                           }
-                           ],
-    "$digestScienceUk":[
-                        {
-                        "$":"digestTitle",
-                        "title":"Science & Environment",
-                        "contentLink":"/cps/news/science_and_environment?title=Science%20%26%20Environment"
-                        },
-                        {
-                        "$":"digestGroup",
-                        "$secondary":"$st_digest_science_uk"
-                        }
-                        ],
-    "$digestEntertainmentUk":[
-                              {
-                              "$":"digestTitle",
-                              "title":"Entertainment & Arts",
-                              "contentLink":"/cps/news/entertainment_and_arts?title=Entertainment%20%26%20Arts"
-                              },
-                              {
-                              "$":"digestGroup",
-                              "$secondary":"$st_digest_entertain_uk"
-                              }
-                              ],
-    "$digestMagazineUk":[
-                         {
-                         "$":"digestTitle",
-                         "title":"Magazine",
-                         "contentLink":"/cps/news/magazine?title=Magazine"
-                         },
-                         {
-                         "$":"digestGroup",
-                         "$secondary":"$st_digest_magazine_uk"
-                         }
-                         ],
     "$digestBusinessGnl":[
                           {
                           "$":"digestTitle",
@@ -736,46 +556,19 @@
                              }
                              ],
     "avCarousel":{
-        "class":"BNHorizontalLinearLayout",
-        "no-margin":true,
-        "mode==tablet":{
-            "padding":"{16,0,0,0}"
-        },
-        "mode!=tablet":{
-            "padding":"{8,0,0,0}"
-        },
-        "$secondary":"$st_av_carousel",
-        "modules":[
-                   {
-                   "class":"BNHorizontalStack",
-                   "background":"#000",
-                   "modules":[
-                              {
-                              "secondary":"$secondary",
-                              "orderBy":"avcarousel",
-                              "cellClass":"BNCellItemAV",
-                              "orientation":"portrait",
-                              "numLines":3,
-                              "mode==tablet":{
-                              "cellMargins":"{32,0,16,2}"
-                              },
-                              "mode!=tablet":{
-                              "cellMargins":"{8,0,8,1}"
-                              },
-                              "format":[
-                                        "bbc.mobile.news.format.video",
-                                        "bbc.mobile.news.format.audio"
-                                        ]
-                              }
-                              ]
-                   }
-                   ]
+        "background":"#000",
+        "secondary":"$st_av_carousel",
+        "orderBy":"avcarousel",
+        "cellClass":"BNCellItemAV",
+        "orientation":"portrait",
+        "numLines":3,
+        "format":[".format.video",".format.audio"]
     },
     "photosGroup":{
         "$secondary":"$st_in_pictures",
         "limit":2,
         "mode==compact":{
-            "$":"tightGroup",
+            "$":"normalGroup",
             "summaries":true,
             "hideTopics":true
         },
@@ -792,7 +585,7 @@
         "cellClass":"BNCellItemMostPopular",
         "limit":10,
         "primary":[
-                   "bbc.mobile.news.item"
+                   ".item"
                    ],
         "mode!=tablet":{
             "padding":"{0,0,0,0}",
@@ -820,20 +613,20 @@
     "mostReadGroup":{
         "$":"mostPopularGroup",
         "secondary":[
-                     "bbc.mobile.news.most_popular.most_read"
+                     ".most_popular.most_read"
                      ],
         "format":[
-                  "bbc.mobile.news.format.textual"
+                  ".format.textual"
                   ],
         "inverseColorScheme":"NO"
     },
     "mostWatchedGroup":{
         "$":"mostPopularGroup",
         "secondary":[
-                     "bbc.mobile.news.most_popular.most_watched"
+                     ".most_popular.most_watched"
                      ],
         "format":[
-                  "bbc.mobile.news.format.video"
+                  ".format.video"
                   ],
         "inverseColorScheme":true
     },
@@ -851,7 +644,7 @@
         "offset":0,
         "limit":-1,
         "primary":[
-                   "bbc.mobile.news.item"
+                   ".item"
                    ],
         "orderBy":"time",
         "mode!=tablet":{
@@ -882,7 +675,7 @@
     "myNewsByTopicOldStyle":{
         "$":"normalGroup",
         "primary":[
-                   "bbc.mobile.news.item"
+                   ".item"
                    ],
         "limit":4,
         "orientation":"portrait",
@@ -899,7 +692,7 @@
     "myNewsByTopicNonCarousel":{
         "$":"normalGroup",
         "primary":[
-                   "bbc.mobile.news.item"
+                   ".item"
                    ],
         "limit":3,
         "hideTopics":true,
@@ -915,7 +708,7 @@
                    "dummyEndCell":"true",
                    "offset":0,
                    "primary":[
-                              "bbc.mobile.news.item"
+                              ".item"
                               ],
                    "orderBy":"avcarousel",
                    "cellClass":"BNCellItemAV",
@@ -1040,66 +833,30 @@
     "itemPrimaryMedia":{
         "cellClass":"BNCellMedia",
         "limit":1,
-        "primary":[
-                   "bbc.mobile.news.image",
-                   "bbc.mobile.news.video",
-                   "bbc.mobile.news.audio"
-                   ],
-        "secondary":[
-                     "bbc.mobile.news.placement.primary"
-                     ],
+        "primary":[".image", ".video", ".audio"],
+        "secondary":[".placement.primary"],
         "parallax":true,
         "imageAspect":0.5625
     },
     "itemHeadline":{
-        "cellClass":"BNCellHeadline",
-        "mode==phone":{
-            "textPadding":"{12,16,0,16}"
-        },
-        "mode==tablet":{
-            "mode==portrait":{
-                "textPadding":"{12,64,0,64}"
-            },
-            "mode==landscape":{
-                "textPadding":"{12,80,0,80}"
-            }
-        }
+        "cellClass":"BNCellHeadline"
     },
     "itemByline":{
         "cellClass":"BNCellByline",
-        "primary":[
-                   "bbc.mobile.news.person"
-                   ],
-        "secondary":[
-                     "bbc.mobile.news.byline"
-                     ],
-        "limit":1,
-        "mode==phone":{
-            "textPadding":"{2,16,2,16}"
-        },
-        "mode==tablet":{
-            "mode==portrait":{
-                "textPadding":"{2,64,2,64}"
-            },
-            "mode==landscape":{
-                "textPadding":"{2,80,2,80}"
-            }
-        }
+        "primary":[".person"],
+        "secondary":[".byline"],
+        "limit":1
     },
     "itemTopics":{
         "cellClass":"BNCellTopics"
     },
     "itemBody":{
         "class":"BNCellsModuleArticleBody",
-        "mode==phone":{
-            "textPadding":"{0,16,0,16}"
-        },
+        "textPadding":"{0,16,0,16}"
         "mode==tablet":{
             "mode==portrait":{
-                "textPadding":"{0,64,0,64}"
             },
             "mode==landscape":{
-                "textPadding":"{0,80,0,80}",
                 "includePrimaryMedia":true
             }
         }
@@ -1107,18 +864,11 @@
     "relatedVideoAndAudio":{
         "$":"relatedStories",
         "limit":-1,
-        "format":[
-                  "bbc.mobile.news.format.audio",
-                  "bbc.mobile.news.format.video"
-                  ],
-        "primary":[
-                   "bbc.mobile.news.item"
-                   ]
+        "format":[".format.audio",".format.video"],
+        "primary":[".item"]
     },
     "advert":{
-        "modes":[
-                 "adverts"
-                 ],
+        "modes":["adverts"],
         "class":"BNAdvertModule",
         "paddingTop":8
     }

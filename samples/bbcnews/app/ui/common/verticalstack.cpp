@@ -22,7 +22,7 @@ BNModule* BNVerticalStack::clone() {
 View* BNVerticalStack::createView() {
     auto ll = new LinearLayout();
     ll->_orientation = LinearLayout::Vertical;
-    ll->setSpacing(app->dp(8));
+    //ll->setSpacing(app->dp(8));
     ll->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
     return ll;
 }
