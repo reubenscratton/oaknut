@@ -357,8 +357,7 @@
     "digestGroup":{
         "secondary":"$secondary",
         "limit":2,
-        "cellClass":"BNCellItemDigest",
-        "textPadding":"{8,8,0,0}"
+        "cellClass":"BNCellItemDigest"
     },
     "twoColumns":{
         "class":"BNHorizontalLinearLayout",
@@ -367,28 +366,6 @@
                    "$1",
                    "$2"
                    ]
-    },
-    "twoDigestGroups":{
-        "mode!=tablet":{
-            "class":"BNVerticalLinearLayout",
-            "modules":[
-                       "$1",
-                       "$2"
-                       ]
-        },
-        "mode==tablet":{
-            "$":"twoColumns",
-            "modules":[
-                       {
-                       "class":"BNVerticalLinearLayout",
-                       "modules":"$1"
-                       },
-                       {
-                       "class":"BNVerticalLinearLayout",
-                       "modules":"$2"
-                       }
-                       ]
-        }
     },
     "twoStackedVerticallyInPortraitAndHorizontallyInLandscape":{
         "mode==landscape":{
@@ -557,6 +534,7 @@
                              ],
     "avCarousel":{
         "background":"#000",
+        "arrange": "horizontal",
         "secondary":"$st_av_carousel",
         "orderBy":"avcarousel",
         "cellClass":"BNCellItemAV",

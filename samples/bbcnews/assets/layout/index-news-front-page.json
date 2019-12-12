@@ -9,68 +9,41 @@
         {"$":"avCarousel"},
         {"$":"otherItems",     "secondary":"$st_top_stories"},
         
-        {"$":"featureGroup", "$secondary":"$st_in_the_papers", "title": { "style":"indexHeader", "text": "The Papers", "content": "/cps/news/the_reporters?title=The%20Reporters" } },
+        {"$":"featureGroup", "$secondary":"$st_in_the_papers", "title": { "text": "The Papers", "content": "/cps/news/the_reporters?title=The%20Reporters" } },
 
-        {"$":"normalGroup", "$secondary":"$st_the_reporters", "title": { "style":"indexHeader", "text": "Long Reads", "content": "/cps/news/the_reporters?title=The%20Reporters"}, "limit":2},
+        {"$":"normalGroup", "$secondary":"$st_the_reporters", "title": { "text": "Long Reads", "content": "/cps/news/the_reporters?title=The%20Reporters"}, "limit":2},
         
-        {"$":"normalGroup",  "$secondary":[".group.stories"], "title": { "style":"indexHeader", "text": "Stories"}, "limit":2},
+        {"$":"normalGroup",  "$secondary":[".group.stories"], "title": { "text": "Stories"}, "limit":2},
         
-        {"$":"featureGroup", "$secondary":"$st_features", "title": { "style":"indexHeader", "text": "Features & Analysis"}, "limit":2},
+        {"$":"featureGroup", "$secondary":"$st_features", "title": { "text": "Features & Analysis"}, "limit":2},
         {"$":"featureGroup", "cellsPerRow":2, "$secondary":"$st_features", "limit":10, "offset":2},
         
         
-        {"$":"twoDigestGroups",
-            "$1": [{
-                "$":"digestGroup",
-                "$secondary":"$st_digest_business_uk",
-                "title": {"text":"Business", "content":"/cps/news/business?title=Business"}
-            }],
-            "$2": [{
-                "$":"digestGroup",
-                "$secondary":"$st_digest_politics_uk",
-                "title":{"text":"Politics","content":"/cps/news/politics?title=Politics"}
-            }]
-        },
+        {"$":"digestGroup", "$secondary":"$st_digest_business_uk",
+            "title": {"text":"Business", "content":"/cps/news/business?title=Business"} },
+         
+        {"$":"digestGroup", "$secondary":"$st_digest_politics_uk",
+            "title":{"text":"Politics","content":"/cps/news/politics?title=Politics"} },
         
-        {"$":"twoDigestGroups",
-            "$1": [{
-                "$":"digestGroup",
-                "$secondary":"$st_digest_health_uk",
-                "title":{"text":"Health","content":"/cps/news/health?title=Health"}
-            }],
-            "$2": [{
-                "$":"digestGroup",
-                "$secondary":"$st_digest_education_uk",
-                "title":{"text":"Education","content":"/cps/news/education?title=Education"}
-            }]
-        },
-        {"$":"twoDigestGroups",
-            "$1":[{
-                "$":"digestGroup",
-                "$secondary":"$st_digest_tech_uk",
-                "title":{"text":"Technology","content":"/cps/news/technology?title=Technology"}
-            }],
-            "$2":[{
-                "$":"digestGroup",
-                "$secondary":"$st_digest_science_uk",
-                "title":{"text":"Science & Environment", "content": "/cps/news/science_and_environment?title=Science%20%26%20Environment"}
-            }]
-        },
+        {"$":"digestGroup", "$secondary":"$st_digest_health_uk",
+            "title":{"text":"Health","content":"/cps/news/health?title=Health"} },
         
-        {"$":"twoDigestGroups",
-            "$1": [{
-                "$":"digestGroup",
-                "$secondary":"$st_digest_entertain_uk",
-                "title":{"text": "Entertainment & Arts", "content": "/cps/news/entertainment_and_arts?title=Entertainment%20%26%20Arts"}
-            }],
-            "$2": [{
-                "$":"digestGroup",
-                "$secondary":"$st_digest_magazine_uk",
-                "title":{"text":"Magazine","content":"/cps/news/magazine?title=Magazine"}
-            }]
-        },
+        {"$":"digestGroup", "$secondary":"$st_digest_education_uk",
+            "title":{"text":"Education","content":"/cps/news/education?title=Education"} },
+
+        {"$":"digestGroup", "$secondary":"$st_digest_tech_uk",
+            "title":{"text":"Technology","content":"/cps/news/technology?title=Technology"} },
+
+        {"$":"digestGroup", "$secondary":"$st_digest_science_uk",
+            "title":{"text":"Science & Environment", "content": "/cps/news/science_and_environment?title=Science%20%26%20Environment"} },
+        
+        {"$":"digestGroup", "$secondary":"$st_digest_entertain_uk",
+            "title":{"text": "Entertainment & Arts", "content": "/cps/news/entertainment_and_arts?title=Entertainment%20%26%20Arts"} },
+        
+        {"$":"digestGroup", "$secondary":"$st_digest_magazine_uk",
+            "title":{"text":"Magazine","content":"/cps/news/magazine?title=Magazine"} },
+        
         {"$":"digestGroup", "$secondary": "$st_digest_sports_uk", "title": { "text": "Sport", "content": "/cps/sport/front-page?title=Sport"} },
-        
         
         {"$":"normalGroup", "$secondary":"$st_top_stories_also_in_the_news", "limit":2,
             "title": { "text": "Also in the News", "content": "/cps/news/also_in_the_news?title=Also%20in%20the%20News"}

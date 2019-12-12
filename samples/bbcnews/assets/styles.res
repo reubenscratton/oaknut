@@ -157,26 +157,15 @@ summaryText: {
 }
 
 
-indexHeader: {
+indexTitle: {
     padding: 16dp,16dp,16dp,0dp
     font-weight: light
     font-size: 17sp
 }
 
-relatedStories: {
-    padding: 16dp,8dp,16dp,8dp
-    text: Related Stories
-    font-weight: light
-    font-size: 20sp
-    top-divider-color: #DDD
-    top-divider-height:4dp
-}
 
-
-
-relatedTopicsHeader: {
+relatedTitle: {
     padding: 16dp,16dp,16dp,8dp
-    text: Related Topics
     font-weight: light
     font-size: 20sp
     top-divider-color: #DDD

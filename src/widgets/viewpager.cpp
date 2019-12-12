@@ -62,11 +62,11 @@ void ViewPager::updateScrollViewContentSize() {
     if (!_adapter) {
         return;
     }
-    invalidateContentSize();
+    invalidateIntrinsicSize();
 }
 
-void ViewPager::updateContentSize(SIZE constrainingSize) {
-    _contentSize.width = constrainingSize.width * _adapter->numberOfPages();
-    _contentSize.height = constrainingSize.height;
+void ViewPager::updateIntrinsicSize(SIZE constrainingSize) {
+    _intrinsicSize.width = constrainingSize.width * _adapter->numberOfPages();
+    _intrinsicSize.height = constrainingSize.height;
     // setContentOffset(POINT(_selectedIndex * constrainingSize.width, 0), animated:NO];
 }

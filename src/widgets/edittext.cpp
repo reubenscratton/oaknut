@@ -112,7 +112,7 @@ void EditText::updateCursor() {
     }
     // If the content size is invalid then we can't update the cursor immediately. This will get
     // called again when updateContentSize() completes.
-    if (!_contentSizeValid) {
+    if (!_intrinsicSizeValid) {
         return;
     }
     POINT cursorOrigin;
@@ -141,8 +141,8 @@ void EditText::setPadding(EDGEINSETS padding) {
     Label::setPadding(padding);
 }
 
-void EditText::updateContentSize(SIZE constrainingSize) {
-    Label::updateContentSize(constrainingSize);
+void EditText::updateIntrinsicSize(SIZE constrainingSize) {
+    Label::updateIntrinsicSize(constrainingSize);
     _cursorOn = true;
     updateCursor();
 }

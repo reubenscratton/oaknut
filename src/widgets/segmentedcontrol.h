@@ -52,7 +52,7 @@ public:
     /** @name Overrides
      * @{ */
     bool applySingleStyle(const string &name, const style& value) override;
-	void updateContentSize(SIZE constrainingSize) override;
+	void updateIntrinsicSize(SIZE constrainingSize) override;
 	void layout(RECT constraint) override;
     void updateRenderOps() override;
 	bool handleInputEvent(INPUTEVENT* event) override;

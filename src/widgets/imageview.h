@@ -33,7 +33,7 @@ public:
 	void onEffectiveTintColorChanged() override;
 	void layout(RECT constraint) override;
     bool applySingleStyle(const string& name, const style& value) override;
-    void updateContentSize(SIZE constrainingSize) override;
+    void updateIntrinsicSize(SIZE constrainingSize) override;
     void updateRenderOps() override;
 
 

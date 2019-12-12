@@ -38,12 +38,12 @@ public:
      * @{
      */
     bool applySingleStyle(const string& name, const style& value) override;
-    //void invalidateContentSize() override;
+    //void invalidateIntrinsicSize() override;
     void layout(RECT constraint) override;
     void onEffectiveTintColorChanged() override;
     void setContentOffset(POINT contentOffset, bool animated=false) override;
     void setGravity(GRAVITY gravity) override;
-    void updateContentSize(SIZE constrainingSize) override;
+    void updateIntrinsicSize(SIZE constrainingSize) override;
     void updateRenderOps() override;
     /** @} */
 

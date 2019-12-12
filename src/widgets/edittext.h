@@ -49,7 +49,7 @@ public:
     void layout(RECT constraint) override;
     void detachFromWindow() override;
     void setText(const attributed_string& text) override;
-    void updateContentSize(SIZE constrainingSize) override;
+    void updateIntrinsicSize(SIZE constrainingSize) override;
     /** @} */
 
     // IKeyboardInputHandler

@@ -31,7 +31,7 @@ public:
     void onViewDidAppear(bool viewControllerIsMovingToParent);
     void onViewDidDisappear(bool viewControllerIsMovingFromParent);
 
-    void updateContentSize(SIZE constrainingSize) override;
+    void updateIntrinsicSize(SIZE constrainingSize) override;
     
     //void layoutSubviews(RECT constraint) override;
 protected:

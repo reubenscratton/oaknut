@@ -561,11 +561,11 @@ void View::setNeedsLayout() {
     }
 }
 
-void View::invalidateContentSize() {
-	_contentSizeValid = false;
+void View::invalidateIntrinsicSize() {
+	_intrinsicSizeValid = false;
     if (_widthMeasureSpec.type==MEASURESPEC::TypeContent || _heightMeasureSpec.type==MEASURESPEC::TypeContent) {
         for (auto subview : _subviews) {
-            subview->invalidateContentSize();
+            subview->invalidateIntrinsicSize();
         }
         setNeedsLayout();
     } else {
@@ -573,20 +573,20 @@ void View::invalidateContentSize() {
             SIZE constraint = _rect.size;
             constraint.width -= (_padding.left + _padding.right);
             constraint.height -= (_padding.top + _padding.bottom);
-            updateContentSize(constraint);
-            _contentSizeValid = true;
+            updateIntrinsicSize(constraint);
+            _intrinsicSizeValid = true;
         }
     }
     setNeedsFullRedraw();
 }
 
-void View::updateContentSize(SIZE constrainingSize) {
-    _contentSize.width = _contentSize.height = 0;
+void View::updateIntrinsicSize(SIZE constrainingSize) {
+    _intrinsicSize.width = _intrinsicSize.height = 0;
 }
 
 void View::sizeToFit(float widthConstraint/*=FLT_MAX*/) {
-    updateContentSize({widthConstraint,FLT_MAX});
-    SIZE size = _contentSize;
+    updateIntrinsicSize({widthConstraint,FLT_MAX});
+    SIZE size = _intrinsicSize;
     size.width += _padding.left + _padding.right;
     size.height += _padding.top + _padding.bottom;
     setRectSize(size);
@@ -738,52 +738,53 @@ void View::layout(RECT containingRect) {
     // constraining size is the one passed into this function.
     SIZE constrainingSize = containingRect.size;
     if (_widthMeasureSpec.type != MEASURESPEC::TypeContent) {
-        constrainingSize.width = ceilf(refSize.width * _widthMeasureSpec.mul + _widthMeasureSpec.con);
+        constrainingSize.width = floorf(refSize.width * _widthMeasureSpec.mul + _widthMeasureSpec.con);
     }
     if (_heightMeasureSpec.type != MEASURESPEC::TypeContent) {
-        constrainingSize.height = ceilf(refSize.height * _heightMeasureSpec.mul + _heightMeasureSpec.con);
+        constrainingSize.height = floorf(refSize.height * _heightMeasureSpec.mul + _heightMeasureSpec.con);
     }
 
     // If content size is currently invalid, now's the time to update it
-    if (!_contentSizeValid) {
+    if (!_intrinsicSizeValid) {
         SIZE constrainingSizeMinusPadding = constrainingSize;
         constrainingSizeMinusPadding.width -= _padding.left+_padding.right;
         constrainingSizeMinusPadding.height -= _padding.top+_padding.bottom;
-        updateContentSize(constrainingSizeMinusPadding);
-        _contentSizeValid = true;
+        updateIntrinsicSize(constrainingSizeMinusPadding);
+        _intrinsicSizeValid = true;
     }
 #if DEBUG
     if (_debugTag.length()) {
-        app->log("%s: contentSize is %f x %f", _debugTag.c_str(), _contentSize.width, _contentSize.height);
+        app->log("%s: _intrinsicSize is %f x %f", _debugTag.c_str(), _intrinsicSize.width, _intrinsicSize.height);
     }
 #endif
 
     // Handle intrinsic content-based width and/or height
-    if (_widthMeasureSpec.type==MEASURESPEC::TypeContent && _contentSize.width>0) {
-        refSize.width = _padding.left + _contentSize.width + _padding.right;
+    if (_widthMeasureSpec.type==MEASURESPEC::TypeContent && _intrinsicSize.width>0) {
+        refSize.width = _padding.left + _intrinsicSize.width + _padding.right;
     }
-    if (_heightMeasureSpec.type==MEASURESPEC::TypeContent && _contentSize.height>0) {
-        refSize.height = _padding.top + _contentSize.height + _padding.bottom;
+    if (_heightMeasureSpec.type==MEASURESPEC::TypeContent && _intrinsicSize.height>0) {
+        refSize.height = _padding.top + _intrinsicSize.height + _padding.bottom;
     }
 
     _layoutValid = true;
 
 
     // Layout subviews
-    if (_subviews.size() > 0) {
-        
+    if (_subviews.size() == 0) {
+        _contentSize = _intrinsicSize;
+    } else {
         // If wrapping content but then use the constraint size and update afterwards
-        if (_widthMeasureSpec.type==MEASURESPEC::TypeContent && _contentSize.width<=0) {
+        if (_widthMeasureSpec.type==MEASURESPEC::TypeContent && _intrinsicSize.width<=0) {
             refSize.width = containingRect.size.width;
         }
-        if (_heightMeasureSpec.type==MEASURESPEC::TypeContent && _contentSize.height<=0) {
+        if (_heightMeasureSpec.type==MEASURESPEC::TypeContent && _intrinsicSize.height<=0) {
             refSize.height = containingRect.size.height;
         }
         
         RECT constraintForSubviews;
         constraintForSubviews.origin = {0,0};
-        constraintForSubviews.size.width = ceilf(refSize.width * _widthMeasureSpec.mul + _widthMeasureSpec.con);
-        constraintForSubviews.size.height = ceilf(refSize.height * _heightMeasureSpec.mul + _heightMeasureSpec.con);
+        constraintForSubviews.size.width = floorf(refSize.width * _widthMeasureSpec.mul + _widthMeasureSpec.con);
+        constraintForSubviews.size.height = floorf(refSize.height * _heightMeasureSpec.mul + _heightMeasureSpec.con);
         _padding.applyToRect(constraintForSubviews);
         
 #if DEBUG
@@ -794,15 +795,15 @@ void View::layout(RECT containingRect) {
 
         layoutSubviews(constraintForSubviews);
         
-        // Update content size to include subviews
+        // Update content size to be the union of the intrinsic content size and the extent of subviews
         SIZE subviewExtent = {0,0};
         for (int i=0 ; i<_subviews.size() ; i++) {
             View* view = _subviews.at(i);
             subviewExtent.width = fmaxf(subviewExtent.width, view->getRight());
             subviewExtent.height = fmaxf(subviewExtent.height, view->getBottom());
         }
-        _contentSize.width = fmaxf(_contentSize.width, subviewExtent.width-_padding.left);
-        _contentSize.height = fmaxf(_contentSize.height, subviewExtent.height-_padding.top);
+        _contentSize.width = fmaxf(_intrinsicSize.width, subviewExtent.width-_padding.left);
+        _contentSize.height = fmaxf(_intrinsicSize.height, subviewExtent.height-_padding.top);
         
         
         // Handle subview-based width and/or height
@@ -826,8 +827,8 @@ void View::layout(RECT containingRect) {
     
     // Calculate the new rect, aligning to pixel grid
     RECT rect;
-    rect.size.width = ceilf(refSize.width * _widthMeasureSpec.mul + _widthMeasureSpec.con);
-    rect.size.height = ceilf(refSize.height * _heightMeasureSpec.mul + _heightMeasureSpec.con);
+    rect.size.width = floorf(refSize.width * _widthMeasureSpec.mul + _widthMeasureSpec.con);
+    rect.size.height = floorf(refSize.height * _heightMeasureSpec.mul + _heightMeasureSpec.con);
     rect.origin.x = floorf(_alignspecHorz.calc(rect.size.width, alignRect.origin.x, alignRect.size.width));
     rect.origin.y = floorf(_alignspecVert.calc(rect.size.height, alignRect.origin.y, alignRect.size.height));
 

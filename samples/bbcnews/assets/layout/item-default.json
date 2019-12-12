@@ -9,7 +9,7 @@
 		{"$":"itemTopics"},
 		{"$":"itemBody"},
 		{
-          "titleStyle":"relatedStories",
+          "title": { "style":"relatedTitle", "text": "Related Stories"},
           "cellClass":"BNCellItemRelatedStory",
           "limit":4,
           "secondary":[".group.see-alsos"],
@@ -17,7 +17,7 @@
           "imageWidth":0.5
         },
         {
-          "titleStyle":"relatedTopicsHeader",
+            "title": { "style":"relatedTitle", "text": "Related Topics"},
           "cellClass":"BNCellRelatedTopic",
           "primary":[".collection"],
           "secondary":[".home_section",".topic"],

@@ -16,11 +16,12 @@ BNCellsModule::BNCellsModule(const variant& json) : BNModule(json) {
     if (_titleText.lengthInBytes()) {
         string titleStyle = title.stringVal("style");
         if (!titleStyle.lengthInBytes()) {
-            titleStyle = "indexHeader";
+            titleStyle = "indexTitle";
         }
         _titleStyle = app->getStyle(titleStyle);
     }
     _titleContentId = title.stringVal("content");
+    _arrange = json.stringVal("arrange");
     _limit = json.intVal("limit");
     _offset = json.intVal("offset");
     _primary = json.stringArrayVal("primary");
@@ -53,6 +54,7 @@ BNCellsModule::BNCellsModule(const variant& json) : BNModule(json) {
 
 // Cloning
 BNCellsModule::BNCellsModule(BNCellsModule* source) : BNModule(source) {
+    _arrange = source->_arrange;
     _titleStyle = source->_titleStyle;
     _titleText = source->_titleText;
     _titleContentId = source->_titleContentId;
@@ -274,20 +276,30 @@ void BNCellsModule::addToView(View* parent) {
     if (!_no_margin) {
         padding = app->dp(8);
     }
-    
+
+    bool isHorizontal = _arrange == "horizontal";
 
     View* cellsContainer = new View();
     cellsContainer->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
     cellsContainer->setPadding(EDGEINSETS(padding, padding, padding, padding));
+    if (_backgroundColor) {
+        cellsContainer->setBackgroundColor(_backgroundColor);
+    }
     parent->addSubview(cellsContainer);
     
     View* cellAbove = nullptr;
+    MEASURESPEC cellWidthSpec = MEASURESPEC {MEASURESPEC::TypeRelative, nullptr, 1.0f/_cellsPerRow, -0.5f*padding*(_cellsPerRow-1)};
+    int cellsPerRow = _cellsPerRow;
+    if (isHorizontal) {
+        cellWidthSpec = MEASURESPEC::Abs(app->dp(140));
+        cellsPerRow = (int)_cells.size();
+    }
     ALIGNSPEC vertAlign = ALIGNSPEC::Top();
     for (int i=0 ; i<_cells.size() ; ) {
         View* cellPrev = nullptr;
-        for (int j=0 ; j<_cellsPerRow ; j++, i++) {
+        for (int j=0 ; j<cellsPerRow ; j++, i++) {
             BNCell* cell = _cells[i];
-            cell->setLayoutSize(MEASURESPEC {MEASURESPEC::TypeRelative, nullptr, 1.0f/_cellsPerRow, -0.5f*padding*(_cellsPerRow-1)}, MEASURESPEC::Wrap());
+            cell->setLayoutSize(cellWidthSpec, MEASURESPEC::Wrap());
             if (j==0) {
                 cell->setLayoutOrigin(ALIGNSPEC::Abs(0), vertAlign);
                 cellAbove = cell;

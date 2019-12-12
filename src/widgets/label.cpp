@@ -92,41 +92,41 @@ bool Label::applySingleStyle(const string& name, const style& value) {
 
 void Label::setText(const attributed_string& text) {
     _textLayout.setText(text);
-    invalidateContentSize();
+    invalidateIntrinsicSize();
 }
 
 void Label::setFont(Font* font) {
     _textLayout.setFont(font);
     _pendingFontChange.pending = false;
-    invalidateContentSize();
+    invalidateIntrinsicSize();
 }
 void Label::setFontName(const string& fontName) {
     _pendingFontChange.name = fontName;
     _pendingFontChange.pending = true;
-    invalidateContentSize();
+    invalidateIntrinsicSize();
 }
 void Label::setFontSize(float size) {
     auto font = _textLayout.getFont();
     if (!font || size != font->_size) {
         _pendingFontChange.size = size;
         _pendingFontChange.pending = true;
-        invalidateContentSize();
+        invalidateIntrinsicSize();
     }
 }
 void Label::setFontWeight(float weight) {
     _pendingFontChange.weight = weight;
     _pendingFontChange.pending = true;
-    invalidateContentSize();
+    invalidateIntrinsicSize();
 }
 
 void Label::setLineHeight(float mul, float abs) {
     _textLayout.setLineHeight(mul, abs);
-    invalidateContentSize();
+    invalidateIntrinsicSize();
 }
 
 void Label::setMaxLines(int maxLines) {
     _textLayout.setMaxLines(maxLines);
-    invalidateContentSize();
+    invalidateIntrinsicSize();
 }
 
 bool Label::getEllipsize() const {
@@ -134,7 +134,7 @@ bool Label::getEllipsize() const {
 }
 void Label::setEllipsize(bool ellipsize) {
     _textLayout.setEllipsize(ellipsize);
-    invalidateContentSize();
+    invalidateIntrinsicSize();
 }
 
 void Label::setTextColor(COLOR color) {
@@ -172,7 +172,7 @@ void Label::setContentOffset(POINT contentOffset, bool animated) {
 }
 
 
-void Label::updateContentSize(SIZE constrainingSize) {
+void Label::updateIntrinsicSize(SIZE constrainingSize) {
 
     // Update font
     if (_pendingFontChange.pending) {
@@ -187,7 +187,7 @@ void Label::updateContentSize(SIZE constrainingSize) {
     // Measure text
     constrainingSize.width -= (_padding.left + _padding.right);
     constrainingSize.height -= (_padding.top + _padding.bottom);
-    _contentSize = _textLayout.measure(constrainingSize);
+    _intrinsicSize = _textLayout.measure(constrainingSize);
     
     // Flag that renderOps will need updating after layout
     _updateRenderOpsNeeded = true;

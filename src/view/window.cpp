@@ -59,7 +59,7 @@ void Window::resizeSurface(int width, int height) {
     if (_surface->_size.width==width && _surface->_size.height==height) {
         return;
     }
-	//app->log("Window::resize %d %d %f", width, height, scale);
+	//app->log("Window::resize %d %d", width, height);
     _rect = RECT(0,0,width,height);
     _surface->setSize({(float)width, (float)height});
     updateDecorOp(false, _safeInsetsTotal.top);

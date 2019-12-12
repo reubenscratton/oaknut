@@ -54,7 +54,7 @@ public:
         void showDeleteConfirmButton(bool show);
         
         void attachToWindow(Window* window) override;
-        void updateContentSize(SIZE constrainingSize) override;
+        void updateIntrinsicSize(SIZE constrainingSize) override;
     };
     
     Bitmap* _bmpDelete;
@@ -93,7 +93,7 @@ public:
 	// Overrides
     bool applySingleStyle(const string &name, const style& value) override;
 	void layout(RECT constraint) override;
-	void updateContentSize(SIZE constrainingSize) override;
+	void updateIntrinsicSize(SIZE constrainingSize) override;
     void setContentOffset(POINT contentOffset, bool animated=false) override;
 	bool handleInputEvent(INPUTEVENT* event) override;
     void removeSubview(View* subview) override;

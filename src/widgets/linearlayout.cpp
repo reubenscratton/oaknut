@@ -86,7 +86,7 @@ void LinearLayout::layoutSubviews(RECT constraint) {
                 spec = MEASURESPEC::Abs(currentSize + excessForThisSubview);
                 view->_layoutValid = false;
                 //view->setNeedsLayout();
-                //view->invalidateContentSize();
+                //view->invalidateIntrinsicSize();
                 view->layout(constraint);
                 spec = realspec;
             } else {

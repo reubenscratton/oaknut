@@ -29,6 +29,7 @@ public:
 
     bool isCellsModule() override { return true; }
 
+    string _arrange;
     string _titleText;
     string _titleContentId;
     const style* _titleStyle;

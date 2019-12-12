@@ -70,7 +70,7 @@ void ListView::reload() {
 }
 
 void ListView::layout(RECT constraint) {
-    invalidateContentSize();
+    invalidateIntrinsicSize();
     View::layout(constraint);
 
     IListAdapter* adapter = _adapter;
@@ -82,20 +82,20 @@ void ListView::layout(RECT constraint) {
     updateVisibleItems();
 }
 
-void ListView::updateContentSize(SIZE constrainingSize) {
-	_contentSize.width = constrainingSize.width;
-	_contentSize.height = _scrollInsets.top;
+void ListView::updateIntrinsicSize(SIZE constrainingSize) {
+	_intrinsicSize.width = constrainingSize.width;
+	_intrinsicSize.height = _scrollInsets.top;
     IListAdapter* adapter = _adapter;
     _sectionMetrics.clear();
     if (_headerView) {
-        _headerView->setLayoutOrigin(ALIGNSPEC::Top(), ALIGNSPEC(NULL, 0, 0, _contentSize.height));
-        _contentSize.height += _headerView->getHeight();
+        _headerView->setLayoutOrigin(ALIGNSPEC::Top(), ALIGNSPEC(NULL, 0, 0, _intrinsicSize.height));
+        _intrinsicSize.height += _headerView->getHeight();
     }
     if (adapter) {
         int numSections = adapter->getSectionCount();
         for (int j=0 ; j<numSections ; j++) {
             SECTION_METRICS sectionMetrics;
-            sectionMetrics.top = _contentSize.height;
+            sectionMetrics.top = _intrinsicSize.height;
             sectionMetrics.headerHeight = adapter->getHeaderHeight(j);
             sectionMetrics.totalHeight = sectionMetrics.headerHeight;
             size_t count = adapter->getItemCount(j);
@@ -103,11 +103,11 @@ void ListView::updateContentSize(SIZE constrainingSize) {
                 float itemHeight = adapter->getItemHeight(LISTINDEX_MAKE(j, i));
                 sectionMetrics.totalHeight += itemHeight;
             }
-            _contentSize.height += sectionMetrics.totalHeight;
+            _intrinsicSize.height += sectionMetrics.totalHeight;
             _sectionMetrics.push_back(sectionMetrics);
         }
     }
-    _contentSize.height += _scrollInsets.bottom;
+    _intrinsicSize.height += _scrollInsets.bottom;
 }
 
 
@@ -210,7 +210,7 @@ void ListView::ItemView::attachToWindow(Window *window) {
     View::attachToWindow(window);
     updateDeleteButton(false);
 }
-void ListView::ItemView::updateContentSize(SIZE constrainingSize) {
+void ListView::ItemView::updateIntrinsicSize(SIZE constrainingSize) {
     
 }
 

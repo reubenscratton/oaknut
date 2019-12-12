@@ -69,7 +69,7 @@ void ImageView::cancelLoad() {
 void ImageView::setBitmap(Bitmap *bitmap) {
     _renderOp->setBitmap(bitmap);
     _rectTex = RECT(0,0,1,1);
-    invalidateContentSize();
+    invalidateIntrinsicSize();
     _loaded = true;
 }
 
@@ -130,19 +130,19 @@ ImageView::ContentMode ImageView::getContentMode() const {
 void ImageView::setContentMode(ContentMode contentMode) {
     if (contentMode != _contentMode) {
         _contentMode = contentMode;
-        invalidateContentSize();
+        invalidateIntrinsicSize();
     }
 }
 
-void ImageView::updateContentSize(SIZE constrainingSize) {
+void ImageView::updateIntrinsicSize(SIZE constrainingSize) {
     if (!_renderOp->_bitmap) {
-        _contentSize = {0,0};
+        _intrinsicSize = {0,0};
     } else {
         float imageWidth = (float)_renderOp->_bitmap->_width;
         float imageHeight = (float)_renderOp->_bitmap->_height;
         if (_contentMode == ActualSize) {
-            _contentSize.width = imageWidth;
-            _contentSize.height = imageHeight;
+            _intrinsicSize.width = imageWidth;
+            _intrinsicSize.height = imageHeight;
         } else {
             float scaleWidth = constrainingSize.width / imageWidth;
             float scaleHeight = constrainingSize.height / imageHeight;
@@ -152,8 +152,8 @@ void ImageView::updateContentSize(SIZE constrainingSize) {
             } else {
                 scale = (_contentMode == AspectFit) ? scaleHeight : scaleWidth;
             }
-            _contentSize.width = ceilf(imageWidth * scale);
-            _contentSize.height = ceilf(imageHeight * scale);
+            _intrinsicSize.width = ceilf(imageWidth * scale);
+            _intrinsicSize.height = ceilf(imageHeight * scale);
         }
     }
     
@@ -163,7 +163,7 @@ void ImageView::updateContentSize(SIZE constrainingSize) {
 
 
 void ImageView::updateRenderOps() {
-    RECT rect = {_padding.left,_padding.top,_contentSize.width,_contentSize.height};
+    RECT rect = {_padding.left,_padding.top,_intrinsicSize.width,_intrinsicSize.height};
     RECT bounds = getOwnRect();
     _padding.applyToRect(bounds);
     float dx = bounds.size.width - rect.size.width;
@@ -182,7 +182,7 @@ void ImageView::updateRenderOps() {
 }
 
 RECT ImageView::getImageRect() const {
-    assert(_contentSizeValid);
+    assert(_intrinsicSizeValid);
     return _renderOp->_rect;
 }
 

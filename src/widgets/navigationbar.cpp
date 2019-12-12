@@ -29,8 +29,8 @@ bool NavigationBar::applySingleStyle(const string& name, const style& value) {
     return View::applySingleStyle(name, value);
 }
 
-void NavigationBar::updateContentSize(SIZE constrainingSize) {
-    _contentSize.height = _preferredContentHeight;
+void NavigationBar::updateIntrinsicSize(SIZE constrainingSize) {
+    _intrinsicSize.height = _preferredContentHeight;
 }
 
 void NavigationBar::addViewControllerNav(ViewController* viewController) {

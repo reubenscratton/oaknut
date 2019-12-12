@@ -45,21 +45,21 @@ void SegmentedControl::setFontName(const string& fontName) {
     if (_fontName != fontName) {
         _fontName = fontName;
         _fontValid = false;
-        invalidateContentSize();
+        invalidateIntrinsicSize();
     }
 }
 void SegmentedControl::setFontSize(float fontSize) {
     if (_fontSize != fontSize) {
         _fontSize = fontSize;
         _fontValid = false;
-        invalidateContentSize();
+        invalidateIntrinsicSize();
     }
 }
 void SegmentedControl::setFontWeight(float fontWeight) {
     if (_fontWeight != fontWeight) {
         _fontWeight = fontWeight;
         _fontValid = false;
-        invalidateContentSize();
+        invalidateIntrinsicSize();
     }
 }
 
@@ -93,7 +93,7 @@ void SegmentedControl::addSegment(const string& labelText) {
     addSubview(segment.label);
 	_segments.push_back(segment);
     updateBorders();
-	invalidateContentSize();
+	invalidateIntrinsicSize();
 }
 
 void SegmentedControl::updateBorders() {
@@ -152,11 +152,11 @@ void SegmentedControl::setSelectedIndex(int segmentIndex) {
             }
         }
 	}
-    invalidateContentSize(); // todo: This is lazy. Size isn't changing.
+    invalidateIntrinsicSize(); // todo: This is lazy. Size isn't changing.
 }
 
 
-void SegmentedControl::updateContentSize(SIZE constrainingSize) {
+void SegmentedControl::updateIntrinsicSize(SIZE constrainingSize) {
     
     if (!_fontValid) {
         _font = Font::get(_fontName, _fontSize);
@@ -166,8 +166,8 @@ void SegmentedControl::updateContentSize(SIZE constrainingSize) {
         _fontValid = true;
     }
     
-	_contentSize.width = 0;
-	_contentSize.height = 0;
+	_intrinsicSize.width = 0;
+	_intrinsicSize.height = 0;
 	// Calculate segment rects. NB: These are pixel-aligned so roundrects look as good as poss.
 	/*for (int i=0 ; i<_segments.size() ; i++) {
         Segment& segment = _segments.at(i);
@@ -175,14 +175,14 @@ void SegmentedControl::updateContentSize(SIZE constrainingSize) {
         //SIZE labelSize = segment.label->measuredSize();
 		segment.rect.size.width = app->dp(8) + labelSize.width + app->dp(8);
 		segment.rect.size.height = app->dp(4) + labelSize.height + app->dp(4);
-		_contentSize.width += segment.rect.size.width;
-		_contentSize.height = MAX(_contentSize.height, segment.rect.size.height);
+		_intrinsicSize.width += segment.rect.size.width;
+		_intrinsicSize.height = MAX(_intrinsicSize.height, segment.rect.size.height);
 	}
 	// Adjust cos rects overlap by a line width
-	_contentSize.width -= (_segments.size()-1) * _lineWidth;
+	_intrinsicSize.width -= (_segments.size()-1) * _lineWidth;
 
-    if (1==(((int)_contentSize.height)&1)) {
-        _contentSize.height+=1;
+    if (1==(((int)_intrinsicSize.height)&1)) {
+        _intrinsicSize.height+=1;
     }*/
 }
 

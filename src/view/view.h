@@ -302,16 +302,16 @@ protected:
      *  scrollable, i.e. displays scrollbars and handles movement events.
      */
 public:
-    /** Returns the current content size, as calculated by updateContentSize() during layout. The content
+    /** Returns the current content size, as calculated during layout. The content
         size is not directly settable, each view should determine it's own.*/
     virtual SIZE getContentSize() const;
 
-    /** Mark the view's contentSize as invalid and call setNeedsLayout() */
-    virtual void invalidateContentSize();
+    /** Mark the view's _intrinsicSize as invalid and call setNeedsLayout() */
+    virtual void invalidateIntrinsicSize();
     
-    /** Called during measure() views should set the _contentSize property here. The
-        defaut implementation does nothing. */
-    virtual void updateContentSize(SIZE constrainingSize);
+    /** Called during measure() views should set the _intrinsicSize property here. The
+        defaut implementation sets _intrinsicSize to zero. */
+    virtual void updateIntrinsicSize(SIZE constrainingSize);
     
     /** Set the gravity flags. Gravity affects how the content is aligned within the view rect
         when the view rect size exceeds the content size. */
@@ -343,9 +343,10 @@ public:
 
 protected:
     /**  \cond INTERNAL */
+    SIZE _intrinsicSize;
+    bool _intrinsicSizeValid;
     SIZE _contentSize;
     POINT _contentOffset, _contentOffsetAccum;
-    bool _contentSizeValid;
     bool _clipsContents;
     GRAVITY _gravity;
     EDGEINSETS _scrollInsets;
