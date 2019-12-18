@@ -7,7 +7,7 @@
 
 #include <oaknut.h>
 
-FaceDetector::FaceDetector() : Worker("FaceDetector")
+FaceDetector::FaceDetector() : Worker("FaceDetectorWorker")
 {
     start(variant());
 }

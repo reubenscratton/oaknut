@@ -19,7 +19,7 @@ DECLARE_DYNCREATE(RecordingView);
 void BarRenderOp::update(float viewHeight, float dx) {
     setFillColor(_addedToBigOps ? 0xFFCc0000 : 0xFF800000);
     float barHeight = _peak * viewHeight;
-    barHeight = fmax(barHeight, app.dp(1));
+    barHeight = fmax(barHeight, app->dp(1));
     setRect({_rect.origin.x + dx, (viewHeight-barHeight)/2, BAR_WIDTH, barHeight});
     invalidateBatchGeometry();
 }
@@ -31,16 +31,16 @@ RecordingView::RecordingView() {
     bind(_label, "label");
     bind(_redo, "redo");
     setState(Empty);
-    BAR_WIDTH = app.dp(3);
-    BAR_SPACING = app.dp(5);
+    BAR_WIDTH = app->dp(3);
+    BAR_SPACING = app->dp(5);
 }
 
-bool RecordingView::applyStyleValue(const string& name, const StyleValue* value) {
+bool RecordingView::applySingleStyle(const string& name, const style& value) {
     if (name=="label") {
-        _label->setText(value->stringVal());
+        _label->setText(value.stringVal());
         return true;
     }
-    return View::applyStyleValue(name, value);
+    return View::applySingleStyle(name, value);
 }
 
 void RecordingView::layout(RECT constraint) {
@@ -94,7 +94,7 @@ void RecordingView::handleNewAudioSamples(const vector<float>& samples, int samp
 bool RecordingView::tick() {
     
     // Determine the time elapsed since the previous tick
-    TIMESTAMP now = app.currentMillis();
+    TIMESTAMP now = app->currentMillis();
     bool isFirst = (_timestamp==0);
     TIMESTAMP elapsed = now - _timestamp;
     _timestamp = now;

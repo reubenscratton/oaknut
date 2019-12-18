@@ -85,13 +85,13 @@ Window::MotionTracker::MotionTracker(int source) {
 
 void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController* topVC) {
     if (touchedView && !touchedView->_window) {
-        touchedView = NULL; // avoid sending events to detached views
+        touchedView = nullptr; // avoid sending events to detached views
     }
     if (event.type == INPUT_EVENT_DOWN) {
         isDragging = false;
         if (multiclickTimer) {
             multiclickTimer->stop();
-            multiclickTimer = NULL;
+            multiclickTimer = nullptr;
             numClicks++;
         }
         pastIndex = pastCount = 0;
@@ -101,8 +101,9 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
         if (!touchedView) {
             touchedView = topVC->getView();
         }
-        if (touchedView && event.deviceType!=INPUTEVENT::ScrollWheel) {
-            _didSendLongpressEvent = false;
+        // app->log("Window DOWN! touchedView=%X", touchedView._obj);
+        _didSendLongpressEvent = false;
+        if (event.deviceType != INPUTEVENT::ScrollWheel) {
             _longpressTimer = Timer::start([=] {
                 if (touchedView && touchedView->_window) {
                     INPUTEVENT lpEv = event;
@@ -111,13 +112,14 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
                     touchedView->dispatchInputEvent(&lpEv);
                     _didSendLongpressEvent = true;
                 }
-                _longpressTimer = NULL;
+                _longpressTimer = nullptr;
             }, LONG_PRESS_THRESHOLD, false);
         }
         pastTime[pastIndex] = event.time;
         pastPts[pastIndex] = event.pt;
         pastIndex = (pastIndex + 1) % NUM_PAST;
         pastCount++;
+        ptPrev = event.pt;
     }
 
     if (event.type == INPUT_EVENT_MOVE) {
@@ -131,48 +133,74 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
                 return;
             }
         }
+        
+        // Store the event in the history (used for fling velocity calculations)
         pastTime[pastIndex] = event.time;
         pastPts[pastIndex] = event.pt;
         pastIndex = (pastIndex + 1) % NUM_PAST;
         pastCount++;
+        event.delta = event.pt - ptPrev;
+        ptPrev = event.pt;
+        
+        // If not dragging, test to see if a drag might have started
         if (timeOfDownEvent && !isDragging) {
             float dx,dy;
             dx = event.pt.x - ptDown.x;
             dy = event.pt.y - ptDown.y;
             float dist = sqrtf(dx * dx + dy * dy);
             if (app->idp(dist) >= TOUCH_SLOP) {
+                // app->log("Drag started");
+                _dragIsVertical = fabsf(dy) >= fabsf(dx);
+                
+                // Dispatch a tap-cancel event to the current touch target
+                // (e.g. button that changes colour when pressed)
                 if (touchedView) {
+                    // app->log("Sending INPUT_EVENT_TAP_CANCEL to %X", touchedView._obj);
                     INPUTEVENT cancelEvent = event;
-                    cancelEvent.type = INPUT_EVENT_CANCEL;
+                    cancelEvent.type = INPUT_EVENT_TAP_CANCEL;
                     touchedView->dispatchInputEvent(&cancelEvent);
-                    touchedView = nullptr;
                 }
-                isDragging = true;
-                /*INPUTEVENT dragEvent = event;
-                dragEvent.type = INPUT_EVENT_DRAG;
-                View *interceptView = topVC->getView()->dispatchInputEvent(&dragEvent);
-                if (interceptView) {
-                    touchedView = interceptView;
-                }*/
+                
+                // Cancel the longpress timer
                 if (_longpressTimer) {
                     _longpressTimer->stop();
-                    _longpressTimer = NULL;
+                    _longpressTimer = nullptr;
+                }
+                
+                // Dispatch a drag-start event and track the view that handles it
+                // app->log("Sending INPUT_EVENT_DRAG_START to top");
+                INPUTEVENT dragStartEvent = event;
+                dragStartEvent.delta = event.pt - ptDown;
+                dragStartEvent.type = INPUT_EVENT_DRAG_START;
+                touchedView = topVC->getView()->dispatchInputEvent(&dragStartEvent);
+ 
+                isDragging = true;
+            }
+        }
+        
+        // If dragging, dispatch a drag-move event
+        if (isDragging && touchedView) {
+            INPUTEVENT dragEvent = event;
+            dragEvent.type = INPUT_EVENT_DRAG_MOVE;
+            if (touchedView->_directionalLockEnabled) {
+                if (_dragIsVertical) {
+                    dragEvent.delta.x = 0;
+                } else {
+                    dragEvent.delta.y = 0;
                 }
             }
+            //app->log("Window sending INPUT_EVENT_DRAG_MOVE to %X", touchedView._obj);
+            touchedView->dispatchInputEvent(&dragEvent);
         }
-        if (isDragging) {
-            if (!touchedView) {
-                touchedView = topVC->getView();
-            }
-            INPUTEVENT dragEvent = event;
-            dragEvent.type = INPUT_EVENT_DRAG;
-            touchedView = touchedView->dispatchInputEvent(&dragEvent);
-        }
+        
+        // TODO: Dispatch a plain old move event (so mousemove mouseover handling can work)
+        
     } else if (event.type == INPUT_EVENT_UP) {
         if (_longpressTimer) {
             _longpressTimer->stop();
-            _longpressTimer = NULL;
+            _longpressTimer = nullptr;
         }
+        //app->log("Window sending INPUT_EVENT_UP to %X", touchedView._obj);
         if (touchedView) {
             touchedView->dispatchInputEvent(&event);
         }
@@ -183,18 +211,18 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
                     INPUTEVENT tapEvent = event;
                     tapEvent.type = INPUT_EVENT_TAP;
                     touchedView->dispatchInputEvent(&tapEvent);
-                    app->log("tap %d", numClicks);
+                    // app->log("tap %d", numClicks);
                 }
+                auto touchedViewCopy = touchedView;
                 multiclickTimer = Timer::start([=] {
-                    if (touchedView && touchedView->_window) {
+                    if (touchedViewCopy && touchedViewCopy->_window) {
                         INPUTEVENT tapEvent = event;
                         tapEvent.type = INPUT_EVENT_TAP_CONFIRMED;
-                        touchedView->dispatchInputEvent(&tapEvent);
+                        touchedViewCopy->dispatchInputEvent(&tapEvent);
                     }
-                    multiclickTimer = NULL;
-                    app->log("tap confirmed at %d", numClicks);
+                    multiclickTimer = nullptr;
+                    // app->log("tap confirmed at %d", numClicks);
                     numClicks = 0;
-                    touchedView = NULL;
                 }, MULTI_CLICK_THRESHOLD, false);
             } else {
                 // FLING!
@@ -230,7 +258,7 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
                 }
             }
         }
-        //touchedView = NULL;
+        touchedView = nullptr;
         timeOfDownEvent = 0;
 
     }
@@ -241,7 +269,7 @@ void Window::dispatchInputEvent(INPUTEVENT event) {
     //if (event->deviceType == INPUTEVENT::Mouse || event->deviceType == INPUTEVENT::Touch) {
 
         // Start or lookup motion tracker
-        MotionTracker *tracker = NULL;
+        MotionTracker *tracker = nullptr;
         for (auto it=_motionTrackers.begin() ; it!=_motionTrackers.end() ; it++) {
             if ((*it)->source == event.deviceIndex) {
                 tracker = *it;

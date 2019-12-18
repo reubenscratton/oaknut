@@ -78,19 +78,6 @@
         ".group.featured-site-top-stories-bbc-sport",
         ".group.featured-site-top-stories-2-bbc-sport"
     ],
-    "$st_digest_business_gnl":[".group.compact-section-digest-1"],
-    "$st_digest_tech_gnl":[".group.compact-section-digest-2"],
-    "$st_digest_entertain_gnl":[".group.compact-section-digest-3"],
-    "$st_digest_science_gnl":[".group.compact-section-digest-4"],
-    "$st_digest_health_gnl":[".group.compact-section-digest-5"],
-    "$st_digest_sports_gnl":[".group.compact-section-digest-6"],
-    "$st_digest_magazine_gnl":[".group.compact-section-digest-7"],
-    "$st_digest_africa_gnl":[".group.compact-geographic-section-digest-1"],
-    "$st_digest_asia_gnl":[".group.compact-geographic-section-digest-2"],
-    "$st_digest_europe_gnl":[".group.compact-geographic-section-digest-3"],
-    "$st_digest_latin_america_gnl":[".group.compact-geographic-section-digest-4"],
-    "$st_digest_middle_east_gnl":[".group.compact-geographic-section-digest-5"],
-    "$st_digest_us_and_canada_gnl":[".group.compact-geographic-section-digest-6"],
     "$st_ts_explainers":[".group.explainers"],
     "$st_top_stories_also_in_the_news":[".group.also-in-the-news"],
     "$st_in_pictures":[
@@ -295,21 +282,10 @@
     "primaryItem":{
         "limit":1,
         "secondary":"$secondary",
-        "mode==compact":{
-            "$":"normalGroup"
-        },
-        "mode!=compact":{
-            "no-margin":true,
-            "cellClass":"BNCellItemTopStory",
-            "H":1,
-            "long_timestamp":true
-        },
-        "mode==tablet":{
-            "mode==landscape":{
-                "orientation":"landscape"
-            },
-            "summaries":true
-        }
+        "cellMargins":"{0,0,0,0}",
+        "cellClass":"BNCellItemTopStory",
+        "H":1,
+        "long_timestamp":true
     },
     "normalGroup":{
         "secondary":"$secondary",
@@ -339,199 +315,24 @@
         "$":"featureGroup",
         "cellClass":"BNCellItemFeatureLarge",
         "limit":1,
-        "cellMargins":"{8,0,8,0}",
         "weight":2
     },
     "featureItemSmall":{
         "$":"featureGroup",
         "limit":1,
-        "cellMargins":"{8,0,8,0}",
         "weight":1
-    },
-    "digestTitle":{
-        "$":"title",
-        "mode==tablet":{
-            "padding":"{40,16,4,16}"
-        }
     },
     "digestGroup":{
         "secondary":"$secondary",
         "limit":2,
-        "cellClass":"BNCellItemDigest"
+        "cellClass":"BNCellItemDigest",
+        "cellMargins":"{0.25,1,0.25,1}",
     },
     "twoColumns":{
         "class":"BNHorizontalLinearLayout",
         "padding":"{0,8,0,8}",
-        "modules":[
-                   "$1",
-                   "$2"
-                   ]
+        "modules":["$1", "$2"]
     },
-    "twoStackedVerticallyInPortraitAndHorizontallyInLandscape":{
-        "mode==landscape":{
-            "$":"twoColumns",
-            "modules":[
-                       {
-                       "class":"BNVerticalLinearLayout",
-                       "modules":"$1"
-                       },
-                       {
-                       "class":"BNVerticalLinearLayout",
-                       "modules":"$2"
-                       }
-                       ]
-        },
-        "mode==portrait":{
-            "class":"BNVerticalLinearLayout",
-            "modules":[
-                       "$1",
-                       "$2"
-                       ]
-        }
-    },
-    "$digestBusinessGnl":[
-                          {
-                          "$":"digestTitle",
-                          "title":"Business",
-                          "contentLink":"/cps/news/business?title=Business"
-                          },
-                          {
-                          "$":"digestGroup",
-                          "$secondary":"$st_digest_business_gnl"
-                          }
-                          ],
-    "$digestHealthGnl":[
-                        {
-                        "$":"digestTitle",
-                        "title":"Health",
-                        "contentLink":"/cps/news/health?title=Health"
-                        },
-                        {
-                        "$":"digestGroup",
-                        "$secondary":"$st_digest_health_gnl"
-                        }
-                        ],
-    "$digestTechnologyGnl":[
-                            {
-                            "$":"digestTitle",
-                            "title":"Technology",
-                            "contentLink":"/cps/news/technology?title=Technology"
-                            },
-                            {
-                            "$":"digestGroup",
-                            "$secondary":"$st_digest_tech_gnl"
-                            }
-                            ],
-    "$digestScienceGnl":[
-                         {
-                         "$":"digestTitle",
-                         "title":"Science & Environment",
-                         "contentLink":"/cps/news/science_and_environment?title=Science%20%26%20Environment"
-                         },
-                         {
-                         "$":"digestGroup",
-                         "$secondary":"$st_digest_science_gnl"
-                         }
-                         ],
-    "$digestEntertainmentGnl":[
-                               {
-                               "$":"digestTitle",
-                               "title":"Entertainment & Arts",
-                               "contentLink":"/cps/news/entertainment_and_arts?title=Entertainment%20%26%20Arts"
-                               },
-                               {
-                               "$":"digestGroup",
-                               "$secondary":"$st_digest_entertain_gnl"
-                               }
-                               ],
-    "$digestMagazineGnl":[
-                          {
-                          "$":"digestTitle",
-                          "title":"Magazine",
-                          "contentLink":"/cps/news/magazine?title=Magazine"
-                          },
-                          {
-                          "$":"digestGroup",
-                          "$secondary":"$st_digest_magazine_gnl"
-                          }
-                          ],
-    "$digestSportGnl":[
-                       {
-                       "$":"digestTitle",
-                       "title":"Education",
-                       "contentLink":"/cps/news/education?title=Education"
-                       },
-                       {
-                       "$":"digestGroup",
-                       "$secondary":"$st_digest_sport_gnl"
-                       }
-                       ],
-    "$digestAfricaGnl":[
-                        {
-                        "$":"digestTitle",
-                        "title":"Africa",
-                        "contentLink":"/cps/news/world/africa?title=Africa"
-                        },
-                        {
-                        "$":"digestGroup",
-                        "$secondary":"$st_digest_africa_gnl"
-                        }
-                        ],
-    "$digestAsiaGnl":[
-                      {
-                      "$":"digestTitle",
-                      "title":"Asia",
-                      "contentLink":"/cps/news/world/asia?title=Asia"
-                      },
-                      {
-                      "$":"digestGroup",
-                      "$secondary":"$st_digest_asia_gnl"
-                      }
-                      ],
-    "$digestEuropeGnl":[
-                        {
-                        "$":"digestTitle",
-                        "title":"Europe",
-                        "contentLink":"/cps/news/world/europe?title=Europe"
-                        },
-                        {
-                        "$":"digestGroup",
-                        "$secondary":"$st_digest_europe_gnl"
-                        }
-                        ],
-    "$digestLatinAmericaGnl":[
-                              {
-                              "$":"digestTitle",
-                              "title":"Latin America",
-                              "contentLink":"/cps/news/world/latin_america?title=Latin%20America"
-                              },
-                              {
-                              "$":"digestGroup",
-                              "$secondary":"$st_digest_latin_america_gnl"
-                              }
-                              ],
-    "$digestMiddleEastGnl":[
-                            {
-                            "$":"digestTitle",
-                            "title":"Middle East",
-                            "contentLink":"/cps/news/world/middle_east?title=Middle%20East"
-                            },
-                            {
-                            "$":"digestGroup",
-                            "$secondary":"$st_digest_middle_east_gnl"
-                            }
-                            ],
-    "$digestUSAndCanadaGnl":[
-                             {
-                             "$":"digestTitle",
-                             "title":"US & Canada",
-                             "contentLink":"/cps/news/world/us_and_canada?title=US%20%26%20Canada"
-                             },
-                             {
-                             "$":"digestGroup",
-                             "$secondary":"$st_digest_us_and_canada_gnl"
-                             }
-                             ],
     "avCarousel":{
         "background":"#000",
         "arrange": "horizontal",
@@ -562,251 +363,88 @@
     "mostPopularGroup":{
         "cellClass":"BNCellItemMostPopular",
         "limit":10,
-        "primary":[
-                   ".item"
-                   ],
-        "mode!=tablet":{
-            "padding":"{0,0,0,0}",
-            "cellMargins":"{8,8,0,8}",
-            "mode==compact":{
-                "orientation":"landscape",
-                "H":2
-            },
-            "mode!=compact":{
-                "orientation":"portrait",
-                "H":1
-            }
-        },
-        "mode==tablet":{
-            "cellMargins":"{8,8,8,8}",
-            "H":3,
-            "mode==portrait":{
-                "orientation":"portrait"
-            },
-            "mode==landscape":{
-                "orientation":"landscape"
-            }
-        }
+        "primary":[".item"],
+        "padding":"{0,0,0,0}",
+        "orientation":"portrait",
+        "H":1
     },
     "mostReadGroup":{
         "$":"mostPopularGroup",
-        "secondary":[
-                     ".most_popular.most_read"
-                     ],
-        "format":[
-                  ".format.textual"
-                  ],
+        "secondary":[".most_popular.most_read"],
+        "format":[".format.textual"],
         "inverseColorScheme":"NO"
     },
     "mostWatchedGroup":{
         "$":"mostPopularGroup",
-        "secondary":[
-                     ".most_popular.most_watched"
-                     ],
-        "format":[
-                  ".format.video"
-                  ],
+        "secondary":[".most_popular.most_watched"],
+        "format":[".format.video"],
         "inverseColorScheme":true
-    },
-    "sportPromo":{
-        "class":"BNSportPromo",
-        "mode!=tablet":{
-            "padding":"{8,8,8,8}"
-        },
-        "mode==tablet":{
-            "padding":"{16,16,0,16}"
-        }
     },
     "myNewsByTimeGroup":{
         "$":"otherItems",
         "offset":0,
         "limit":-1,
-        "primary":[
-                   ".item"
-                   ],
+        "primary":[".item"],
         "orderBy":"time",
-        "mode!=tablet":{
-            "mode!=compact":{
-                "orientation":"portrait",
-                "H":1
-            }
-        },
-        "mode==tablet":{
-            "mode==portrait":{
-                "orientation":"portrait"
-            },
-            "mode==landscape":{
-                "orientation":"landscape"
-            },
-            "cellsPerRow":2
-        }
+        "orientation":"portrait",
+        "H":1
     },
     "myNewsByTopicTitle":{
         "class":"BNContentTitleModule",
-        "mode==compact":{
-            "padding":"{16,16,8,8}"
-        },
-        "mode!=compact":{
-            "padding":"{24,16,4,8}"
-        }
+        "padding":"{24,16,4,8}"
     },
     "myNewsByTopicOldStyle":{
         "$":"normalGroup",
-        "primary":[
-                   ".item"
-                   ],
+        "primary":[".item"],
         "limit":4,
         "orientation":"portrait",
-        "mode==landscape":{
-            "cellsPerRow":4
-        },
-        "mode!=landscape":{
-            "cellsPerRow":2
-        },
+        "cellsPerRow":2,
         "hideTopics":true,
         "summaries":false,
-        "paddingTop":0
     },
     "myNewsByTopicNonCarousel":{
         "$":"normalGroup",
-        "primary":[
-                   ".item"
-                   ],
+        "primary":[".item"],
         "limit":3,
         "hideTopics":true,
         "summaries":false,
-        "paddingTop":0
     },
     "myNewsByTopicCarousel":{
         "class":"BNHorizontalStack",
         "background":"#E6E6E6",
-        "modules":[
-                   {
-                   "limit":12,
-                   "dummyEndCell":"true",
-                   "offset":0,
-                   "primary":[
-                              ".item"
-                              ],
-                   "orderBy":"avcarousel",
-                   "cellClass":"BNCellItemAV",
-                   "orientation":"portrait",
-                   "numLines":3,
-                   "cellMargins":"{0,0,0,1}",
-                   "textPadding":"{8,8,8,8}",
-                   "hideTopics":true,
-                   "openAllItemsOnTap":true,
-                   "tinyTimestamps":true
-                   }
-                   ]
+        "modules":[{
+            "limit":12,
+            "dummyEndCell":"true",
+            "offset":0,
+            "primary":[".item"],
+            "orderBy":"avcarousel",
+            "cellClass":"BNCellItemAV",
+            "orientation":"portrait",
+            "numLines":3,
+            "hideTopics":true,
+            "openAllItemsOnTap":true,
+            "tinyTimestamps":true
+        }]
     },
 
     "secondaryItems":{
         "$":"normalGroup",
         "secondary":"$secondary",
         "limit":2,
-        "offset":1,
-        "mode==tablet":{
-            "H":2,
-            "cellsPerRow":2,
-            "mode==portrait":{
-                "orientation":"portrait"
-            },
-            "mode==landscape":{
-                "orientation":"landscapeWithFullWidthHeadline",
-                "imageWidth":192
-            }
-        }
+        "offset":1
     },
     "otherItems":{
         "$":"normalGroup",
         "secondary":"$secondary",
-        "offset":3,
-        "mode==tablet":{
-            "summaries":"no",
-            "orientation":"portrait",
-            "mode==portrait":{
-                "cellsPerRow":3
-            },
-            "mode==landscape":{
-                "cellsPerRow":4
-            }
-        }
+        "offset":3
     },
     "featuresSection":{
-        "mode==landscape":{
-            "class":"BNVerticalLinearLayout",
-            "modules":[
-                       {
-                       "$":"twoColumns",
-                       "$1":{
-                       "$":"featureItemLarge",
-                       "offset":0,
-                       "textPosition":"left"
-                       },
-                       "$2":{
-                       "$":"featureItemSmall",
-                       "offset":1
-                       }
-                       },
-                       {
-                       "$":"twoColumns",
-                       "$1":{
-                       "$":"featureItemSmall",
-                       "offset":2
-                       },
-                       "$2":{
-                       "$":"featureItemLarge",
-                       "offset":3,
-                       "textPosition":"right"
-                       }
-                       },
-                       {
-                       "$":"twoColumns",
-                       "$1":{
-                       "$":"featureItemLarge",
-                       "offset":4,
-                       "textPosition":"left"
-                       },
-                       "$2":{
-                       "$":"featureItemSmall",
-                       "offset":5
-                       }
-                       },
-                       {
-                       "$":"featureGroup",
-                       "limit":6,
-                       "offset":6,
-                       "cellsPerRow":3
-                       }
-                       ]
-        },
-        "mode==portrait":{
-            "class":"BNVerticalLinearLayout",
-            "modules":[
-                       {
-                       "$":"featureItem",
-                       "imagePosition":"left",
-                       "offset":0
-                       },
-                       {
-                       "$":"featureItem",
-                       "imagePosition":"right",
-                       "offset":1
-                       },
-                       {
-                       "$":"featureGroup_2col",
-                       "offset":2,
-                       "limit":10
-                       }
-                       ]
-        }
-    },
-    "itemBannerAdvert":{
-        "$":"advert",
-        "type":"banner",
-        "paddingBottom":8,
-        "parallax":true
+        "class":"BNVerticalLinearLayout",
+        "modules":[
+           {"$":"featureItem", "imagePosition":"left","offset":0},
+           {"$":"featureItem", "imagePosition":"right", "offset":1},
+           {"$":"featureGroup_2col", "offset":2, "limit":10}
+        ]
     },
     "itemPrimaryMedia":{
         "cellClass":"BNCellMedia",
@@ -830,24 +468,5 @@
     },
     "itemBody":{
         "class":"BNCellsModuleArticleBody",
-        "textPadding":"{0,16,0,16}"
-        "mode==tablet":{
-            "mode==portrait":{
-            },
-            "mode==landscape":{
-                "includePrimaryMedia":true
-            }
-        }
-    },
-    "relatedVideoAndAudio":{
-        "$":"relatedStories",
-        "limit":-1,
-        "format":[".format.audio",".format.video"],
-        "primary":[".item"]
-    },
-    "advert":{
-        "modes":["adverts"],
-        "class":"BNAdvertModule",
-        "paddingTop":8
     }
 }

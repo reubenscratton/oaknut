@@ -13,7 +13,6 @@
 #include "../../../app.h"
 
 
-//@interface BNCellItem () <BNURLRequestDelegate>
 
 BNCellItem::BNCellItem(BNCellsModule* module, BNCellStyle cellStyle) : BNCellContent(module) {
     _imageView = new BNImageView();
@@ -45,7 +44,7 @@ BNCellItem::BNCellItem(BNCellsModule* module, BNCellStyle cellStyle) : BNCellCon
             hideTopics = true;
         }
     }
-    if (cellStyle == BNCellStyle::Feature) {
+    if (cellStyle == BNCellStyle::Feature || cellStyle == BNCellStyle::Digest) {
         _hideTimestamp = true;
     }
 
@@ -71,17 +70,15 @@ BNCellItem::BNCellItem(BNCellsModule* module, BNCellStyle cellStyle) : BNCellCon
         _headline->setMaxLines(_summary ? 0 : 3);
     }
     
-    if (module->_textPadding != EDGEINSETS_Zero) {
+    /*if (module->_textPadding != EDGEINSETS_Zero) {
         _textAreaInsets = module->_textPadding;
-    }
+    }*/
     
     setPadding(_module->_cellPadding);
     
     
     if (cellStyle == BNCellStyle::Digest) {
-        _headline->applyStyle("H3");
         _imageView->setLayoutSize(MEASURESPEC::Abs(144), MEASURESPEC::Abs(81));
-        _textAreaInsets = {0,0,0,0};
         _showMediaGlyphInHeadline = false;
         hideTopics = true;
         _headline->_numLines = _module->_json.intVal("numLines");

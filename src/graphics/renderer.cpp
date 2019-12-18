@@ -168,8 +168,8 @@ string Shader::getFragmentSource() {
             SL_FLOAT2 " d = abs(" SL_VERTEX_OUTPUT(texcoord) ") - size;\n"
             "float dist = min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - radius;\n";
         }
-        fs +=  SL_HALF4_DECL " col = " SL_UNIFORM(strokeColor) ";\n"
-        "   col.a = mix(" SL_HALF1 "(0.0), " SL_UNIFORM(strokeColor) ".a, " SL_HALF1 "(clamp(-dist, 0.0, 1.0)));\n"   // outer edge blend
+        fs +=  SL_HALF4_DECL " col = " SL_HALF4 "(" SL_UNIFORM(strokeColor) ");\n"
+        "   col.a = mix(" SL_HALF1 "(0.0), " SL_HALF1 "(" SL_UNIFORM(strokeColor) ".a), " SL_HALF1 "(clamp(-dist, 0.0, 1.0)));\n"   // outer edge blend
         SL_OUTPIXVAL " = mix(col, c, " SL_HALF4 "(clamp(-(dist + " SL_UNIFORM(u) ".w), 0.0, 1.0)));\n";
     }
     else {
@@ -237,6 +237,10 @@ void Renderer::setUniform<COLOR>(int16_t uniformIndex, const COLOR& val) {
     c[1] = ((val&0xff00)>>8)/255.0f;
     c[0] = (val&0xff)/255.0f;
     setColorUniform(uniformIndex, c);
+}
+template<>
+void Renderer::setUniform<SIZE>(int16_t uniformIndex, const SIZE& val) {
+    setUniformData(uniformIndex, &val, sizeof(val));
 }
 template<>
 void Renderer::setUniform<VECTOR2>(int16_t uniformIndex, const VECTOR2& val) {

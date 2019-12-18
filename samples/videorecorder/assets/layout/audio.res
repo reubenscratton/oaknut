@@ -19,7 +19,7 @@ subviews: [
     id: phrase
     class: Label
     size: wrap
-    align: center, below(32dp)
+    align: center, bottom+32dp
     gravityX: center
     font-weight: bold
     font-size: 32dp
@@ -30,25 +30,25 @@ subviews: [
     id: rec1
     class: RecordingView
     label: "1."
-    align: left, below(16dp)
+    align: left, phrase.bottom+16dp
 },
 {
     id: rec2
     class: RecordingView
     label: "2."
-    align: left, below(16dp)
+    align: left, rec1.bottom+16dp
 },
 {
     id: rec3
     class: RecordingView
     label: "3."
-    align: left, below(16dp)
+    align: left, rec2.bottom+16dp
 },
 {
     id: record
     class: ImageView
     size: 72dp
-    align: center, bottom(-16dp)
+    align: center, bottom-16dp
     image: {
         enabled: images/record_enabled.png
         disabled: images/record_disabled.png
@@ -58,7 +58,7 @@ subviews: [
     id: recordLabel
     class: Label
     size: wrap
-    align: center, below(record 8dp)
+    align: center, record.bottom+8dp
     font-weight: light
     font-size: 12dp
     forecolor: white

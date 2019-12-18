@@ -48,7 +48,7 @@ public:
     bool tick();
     void handleNewAudioSamples(const vector<float>& samples, int sampleRate);
 
-    bool applyStyleValue(const string& name, const StyleValue* value) override;
+    bool applySingleStyle(const string& name, const style& value) override;
     void layout(RECT constraint) override;
 };
 

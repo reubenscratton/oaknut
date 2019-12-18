@@ -54,7 +54,7 @@ protected:
     int flags;
     class BNURLCachedInfo* cacheInfo;
     int retryCount;
-    URLRequest* _req;
+    sp<URLRequest> _req;
     //@property (nonatomic) NSURLSessionDataTask *dataTask;
     //@property (nonatomic) NSMutableArray* delegates;
     //@property (nonatomic) NSHTTPURLResponse* response;

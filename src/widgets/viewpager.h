@@ -21,7 +21,7 @@ public:
     ViewPager();
     Adapter* getAdapter() const;
     void setAdapter(Adapter* adapter);
-    void setSelectedIndex(uint32_t selectedIndex, bool animated);
+    void setCurrentPage(int32_t pageIndex, bool animated);
 
 
     void onPageInserted(uint32_t index);
@@ -31,19 +31,20 @@ public:
     void onViewDidAppear(bool viewControllerIsMovingToParent);
     void onViewDidDisappear(bool viewControllerIsMovingFromParent);
 
+    void setContentOffset(POINT contentOffset, bool animated=false) override;
     void updateIntrinsicSize(SIZE constrainingSize) override;
     
     //void layoutSubviews(RECT constraint) override;
 protected:
     void updateScrollViewContentSize();
     sp<Adapter> _adapter;
+    void ensureFillRectFilled();
     
     //Delegate* _delegate;
-    uint32_t _selectedIndex, _sentSelectedIndex;
-    View* _pageLeft;
-    View* _pageCenter;
-    View* _pageRight;
+    //int32_t _currentPageIndex;
     //TODO savedPageState;
+    
+    map<uint32_t, View*> _loadedPageViews;
 
 
 };

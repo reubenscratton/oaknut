@@ -249,7 +249,7 @@ public:
         int width = data_in.intVal("width");
         int height = data_in.intVal("height");
         int format = data_in.intVal("format");
-        const bytearray& data = data_in.bytearrayVal("data");
+        const bytearray& data = data_in.bytearrayRef("data");
         int comp = 4;//bitmap->getBytesPerPixel();
         const unsigned char *imageData = (const unsigned char *)data.data();
 
@@ -345,7 +345,7 @@ public:
     }
 };
 
-DECLARE_WORKER_IMPL(JpegEncoderWorker, "JpegEncoder");
+DECLARE_WORKER_IMPL(JpegEncoderWorker);
 
 #endif
 #endif

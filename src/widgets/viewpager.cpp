@@ -21,40 +21,72 @@ void ViewPager::setAdapter(Adapter* adapter) {
     if (adapter != _adapter) {
         _adapter = adapter;
         removeAllSubviews();
+        _loadedPageViews.clear();
         updateScrollViewContentSize();
-        
-        _pageCenter = _adapter->viewForPage(1);
-        _pageCenter->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Fill());
-        _pageCenter->setLayoutOrigin({NULL,0,0,0}, {NULL,0,0,0});
-        addSubview(_pageCenter);
-
-        _pageRight = _adapter->viewForPage(0);
-        //_pageRight->setBackgroundColor(0xFFFF8080);
-        _pageRight->setLayoutSize(MEASURESPEC::Match(this), MEASURESPEC::Fill());
-        _pageRight->setLayoutOrigin({_pageCenter,1,0,0}, {NULL,0,0,0});
-        addSubview(_pageRight);
-
+        //_currentPageIndex = -1;
+        ensureFillRectFilled();
     }
 }
 
-/*void ViewPager::layoutSubviews(RECT constraint) {
-    float w = constraint.size.width;
-    float h =constraint.size.height;
-    // _pageLeft->setLayoutSize(MEASURESPEC::Abs(w),MEASURESPEC::Abs(h));
-    // = CGRectMake((self.centerIndex-1) * w, self.pageLeft.frame.origin.y, w, h);
-    // _pageCenter.frame = CGRectMake((self.centerIndex+0) * w, self.pageCenter.frame.origin.y, w, h);
-    // _pageRight.frame = CGRectMake((self.centerIndex+1) * w, self.pageRight.frame.origin.y, w, h);
-}*/
-
-void ViewPager::setSelectedIndex(uint32_t selectedIndex, bool animated) {
-    if (_selectedIndex == selectedIndex) {
+void ViewPager::setContentOffset(POINT contentOffset, bool animated/*=false*/) {
+    POINT d = _contentOffset - contentOffset;
+    if (d.isZero()) {
         return;
     }
-    _selectedIndex = selectedIndex;
-    setContentOffset({selectedIndex * _rect.size.width, 0}, animated);
-    //if (_delegate) {
-    //    _delegate->onPageSelected(selectedIndex);
-    //}
+    int currentPageIndex = (_contentOffset.x / (float)_rect.size.width);
+    int newPageIndex = (contentOffset.x / (float)_rect.size.width);
+    View::setContentOffset(contentOffset, animated);
+    if (currentPageIndex != newPageIndex) {
+        ensureFillRectFilled();
+    }
+}
+
+
+void ViewPager::ensureFillRectFilled() {
+    
+    // Calculate the 'fill' rect, i.e. the client area that must be filled with pages
+    RECT fillRect = getVisibleRect();
+    fillRect.origin.x -= fillRect.size.width;
+    fillRect.size.width *= 3;
+    if (fillRect.isEmpty()) {
+        return;
+    }
+
+    // Remove any pages that don't intersect the fill rect
+    for (auto it = _loadedPageViews.begin() ; it!=_loadedPageViews.end() ; it++) {
+        if (!it->second->getRect().intersects(fillRect)) {
+            it->second->removeFromParent();
+            it = _loadedPageViews.erase(it);
+            if (it == _loadedPageViews.end()) {
+                break;
+            }
+        }
+    }
+
+    // Load any missing pages, starting with the center one (highest priority), then immediate right,
+    // then immediate left, etc.
+    uint32_t index = _contentOffset.x / _rect.size.width;
+    RECT pageRect = getVisibleRect();
+    while (index < _adapter->numberOfPages()) {
+        pageRect.origin.x = index * _rect.size.width;
+        if (!pageRect.intersects(fillRect)) {
+            break;
+        }
+        if (_loadedPageViews.find(index) == _loadedPageViews.end()) {
+            View* page = _adapter->viewForPage(index);
+            page->setLayoutSize(MEASURESPEC::Match(this), MEASURESPEC::Fill());
+            page->setLayoutOrigin({NULL,0,0,_rect.size.width * index}, {NULL,0,0,0});
+            addSubview(page);
+            _loadedPageViews.insert(make_pair(index, page));
+        }
+        index++;
+    }
+    
+    
+}
+
+void ViewPager::setCurrentPage(int32_t pageIndex, bool animated) {
+    setContentOffset({pageIndex * _rect.size.width, 0}, animated);
 }
  
 

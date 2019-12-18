@@ -163,7 +163,7 @@ bool ListView::handleInputEvent(INPUTEVENT* event) {
 		return true;
 		
 	}
-	if (event->type == INPUT_EVENT_DRAG) {
+	if (event->type == INPUT_EVENT_DRAG_MOVE) {
 		setSelectedIndex(LISTINDEX_NONE);
 		return true;
 	}

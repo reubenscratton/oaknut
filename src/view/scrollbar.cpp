@@ -95,7 +95,7 @@ void ScrollInfo::updateVisibility(View* view, bool isVertical) {
         }
         
         // If there's no fade-in animation and the alpha isn't yet one, do the fade-in animation
-        if (_alpha<1 && (!_fadeAnim || _fadeAnim->_toVal != 1.0f)) {
+        if (/*_alpha<1 &&*/ (!_fadeAnim || _fadeAnim->_toVal != 1.0f)) {
             if (_fadeTimer) {
                 _fadeTimer->stop();
             }
@@ -185,28 +185,31 @@ bool ScrollInfo::handleEvent(View* view, bool isVertical, INPUTEVENT* event) {
     float viewSize = isVertical ? view->_rect.size.height : view->_rect.size.width;
     float maxScroll = fmax(0, scrollableSize - viewSize);
 
-    float val, d=0.0f;
-    val = isVertical ? event->pt.y : event->pt.x;
+    // float val, d=0.0f;
+    //val = isVertical ? event->pt.y : event->pt.x;
+    float d = 0;
     
     if (event->type == INPUT_EVENT_DOWN) {
         flingCancel();
-        // rv = scrollableSize > viewSize;
+        rv = scrollableSize > viewSize;
     }
-    if (event->type == INPUT_EVENT_DRAG) {
+    if (event->type == INPUT_EVENT_DRAG_MOVE) {
         if (!_isDragging) {
             _isDragging = true;
-            _dragLast = val;
+            //_dragLast = val;
             _offsetStart = offset;
             _dragTotal = 0;
         }
-        d = (val - _dragLast);
-        _dragLast = val;
+        d = isVertical ? event->delta.y : event->delta.x;
+        //d = (val - _dragLast);
+        //_dragLast = val;
     }
 
     if (d != 0.0) {
         _dragTotal += d;
         bool canScroll = this->canScroll(view, isVertical);
         if (canScroll) {
+            // Calculate where dragged offset WOULD be, if there was no overscroll handling
             POINT newContentOffset = view->_contentOffset;
             float& nco = isVertical ? newContentOffset.y : newContentOffset.x;
             nco = _offsetStart - _dragTotal;
@@ -244,7 +247,7 @@ bool ScrollInfo::handleEvent(View* view, bool isVertical, INPUTEVENT* event) {
         bool canScroll = this->canScroll(view, isVertical);
         if (canScroll) {
             flingCancel();
-            val = isVertical ? event->velocity.y : event->velocity.x;
+            float val = isVertical ? event->velocity.y : event->velocity.x;
             _fling = new Fling(offset, -val, 0, contentSize-viewSize);
             view->setNeedsFullRedraw();
         }

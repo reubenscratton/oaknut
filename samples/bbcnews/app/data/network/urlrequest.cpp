@@ -70,18 +70,16 @@ BNURLRequest::BNURLRequest(const string& url, int flags, int priority) {
 	}
 	
     _req = URLRequest::get(url);
-    
     _req->setHeader("User-Agent", BNPolicy::current()->userAgent());
     
     // Special background processing
+    retain();
     _req->onGotJsonInBackground = [=] (variant& json) -> bool {
         if (json.hasVal("type")) {
             
-
             fixRedundantJson(json);
 
             auto modelObj = BNBaseModel::createModelObjectFromJson(json);
-            retain();
             App::postToMainThread([=]() {
                 if (!_cancelled) {
                     onHandleContent(modelObj);
@@ -90,6 +88,9 @@ BNURLRequest::BNURLRequest(const string& url, int flags, int priority) {
             });
             return true;
         }
+        App::postToMainThread([=]() {
+            release();
+        });
         return false;
     };
 

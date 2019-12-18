@@ -46,10 +46,6 @@ BNModule::BNModule(const variant& json) {
     if (num > 0) {
         _padding.left = _padding.right = num;
     }
-    num = json.floatVal("paddingTop");
-    if (num > 0) {
-        _padding.top = num;
-    }
     num = json.floatVal("paddingBottom");
     if (num > 0) {
         _padding.bottom = num;

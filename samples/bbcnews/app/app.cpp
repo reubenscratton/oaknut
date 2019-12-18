@@ -31,7 +31,7 @@ bool BNViewPagerController::navigateToUrl(const string& url, bool animated) {
         if (url.split("?")[0] == pageUrl.split("?")[0]) {
             // Reset page state (i.e. scroll-to-top)
             // TODO _viewPager.savedPageState removeObjectForKey:[self.viewPager.adapter keyForPage:i]];
-            _viewPager->setSelectedIndex(i, animated);
+            _viewPager->setCurrentPage(i, animated);
             /*if (anim) {
                 [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(scrollAnimFinished) name:BNNotificationViewPagerScrollAnimationFinished  object:nil];
             }*/
@@ -75,7 +75,7 @@ void BNContentViewPagerController::setContent(BNContent::stub stub, vector<BNCon
     _viewPager->setAdapter(new BNContentAdapter(_contentArray));
     auto it = std::find(_contentArray.begin(), _contentArray.end(), stub);
     int32_t index = (int32_t)std::distance(_contentArray.begin(), it);
-    _viewPager->setSelectedIndex(index, false);
+    _viewPager->setCurrentPage(index, false);
 }
 
 class BNPhotosViewPagerController : public ViewController {

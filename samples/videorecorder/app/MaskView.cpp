@@ -75,27 +75,28 @@ class MaskShaderRect : public MaskShader {
 public:
 
     MaskShaderRect(Renderer* renderer) : MaskShader(renderer) {
+        _u_holeSize = declareUniform("holeSize", Shader::VariableType::Float2, Uniform::Fragment);
         _u_holeCornerRadius = declareUniform("holeCornerRadius", Shader::VariableType::Float1, Uniform::Fragment);
     }
     
+    int16_t _u_holeSize;
     int16_t _u_holeCornerRadius;
 
     
     // Round-rect shader adapted from https://www.shadertoy.com/view/ltS3zW
     string getMainProg() override {
         return
-        "    vec2 p=v_texcoord.xy;\n"
-        "    float halfBorder = holeStrokeWidth/2.0;\n"
-        "    float r = holeCornerRadius - halfBorder;\n"
-        "    vec2 d = abs(p) - holeRadii + vec2(r);\n"
-        "    float fDist = min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - r;\n"
-        "    vec4 v4ToColor = backgroundColour;\n"
-        "    if (fDist < 0.0) {\n"
-        "       v4ToColor = vec4(0.0, 0.0, 0.0, 0.0);\n"
-        "       fDist = -fDist;\n"
-        "    }\n"
-        "    float fBlendAmount = smoothstep(-1.0, 1.0, fDist - halfBorder);\n"
-        "    gl_FragColor = mix(holeStrokeColour, v4ToColor, fBlendAmount);\n";
+        SL_FLOAT1 " w=" SL_UNIFORM(holeStrokeWidth)"/2.0;\n"
+        SL_FLOAT2 " p=" SL_VERTEX_OUTPUT(texcoord) ";\n"
+        SL_FLOAT2 " b = " SL_UNIFORM(holeSize) ";\n"
+        SL_FLOAT2 " d2 = abs(p) - b + " SL_FLOAT2 "(" SL_UNIFORM(holeCornerRadius) ");\n"
+        SL_FLOAT1 " d = min(max(d2.x, d2.y), 0.0) + length(max(d2, 0.0)) - " SL_UNIFORM(holeCornerRadius) ";\n"
+        SL_HALF4 " fromColor = " SL_UNIFORM(holeStrokeColour) ";\n"
+        //SL_HALF4 " toColor = (d < 0.0) ? " SL_UNIFORM(fillColour) " : " SL_UNIFORM(backgroundColour) ";\n"
+        SL_HALF4 " toColor = " SL_UNIFORM(backgroundColour) ";\n"
+        "d = abs(d) - w;\n"
+        SL_FLOAT1 " fBlendAmount = smoothstep(-1.0, 1.0, d);\n"
+        SL_OUTPIXVAL " = mix(fromColor, toColor, fBlendAmount);\n";
     }
 };
 
@@ -144,6 +145,10 @@ public:
             renderer->setUniform(((MaskShaderOval*)shader)->_u_holeRadii, VECTOR2(_maskView->_holeRect.size.width/2, _maskView->_holeRect.size.height/2));
         }
         if (_maskView->_holeShape == MaskView::HoleShape::Rect) {
+            SIZE holeSize =  _maskView->_holeRect.size;
+            holeSize.width /= 2;
+            holeSize.height /= 2;
+            renderer->setUniform(((MaskShaderRect*)shader)->_u_holeSize, holeSize);
             renderer->setUniform(((MaskShaderRect*)shader)->_u_holeCornerRadius, _maskView->_holeCornerRadius);
         }
     }
@@ -155,14 +160,14 @@ MaskView::MaskView() : _holeWidthMeasureSpec(MEASURESPEC::Abs(0)), _holeHeightMe
     _holeShape = None;
     setBackground(new MaskRenderOp(this));
 }
-bool MaskView::applyStyleValue(const string& name, const StyleValue* value) {
+bool MaskView::applySingleStyle(const string& name, const style& value) {
     if (name == "background") {
-        _backgroundColour = value->colorVal();
+        _backgroundColour = value.colorVal();
         _backgroundOp->invalidate();
         return true;
     }
     if (name == "hole-shape") {
-        string shape = value->stringVal();
+        string shape = value.stringVal();
         if (shape == "none") {
             setHoleShape(None);
         } else if (shape == "oval") {
@@ -183,18 +188,18 @@ bool MaskView::applyStyleValue(const string& name, const StyleValue* value) {
         return true;
     }
     if (name == "hole-stroke-color") {
-        _holeStrokeColour = value->colorVal();
+        _holeStrokeColour = value.colorVal();
         return true;
     }
     if (name == "hole-stroke-width") {
-        _holeStrokeWidth = value->floatVal();
+        _holeStrokeWidth = value.floatVal();
         return true;
     }
     if (name == "hole-corner-radius") {
-        _holeCornerRadius = value->floatVal();
+        _holeCornerRadius = value.floatVal();
         return true;
     }
-    return View::applyStyleValue(name, value);
+    return View::applySingleStyle(name, value);
 }
 
 void MaskView::setHoleShape(HoleShape shape) {

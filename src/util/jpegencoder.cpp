@@ -7,7 +7,7 @@
 
 #include <oaknut.h>
 
-JpegEncoder::JpegEncoder() : Worker("JpegEncoder") {
+JpegEncoder::JpegEncoder() : Worker("JpegEncoderWorker") {
     start(0);
 }
 

@@ -9,10 +9,11 @@
 #define INPUT_EVENT_DOWN 0
 #define INPUT_EVENT_MOVE 1
 #define INPUT_EVENT_UP   2
-#define INPUT_EVENT_CANCEL 3
-#define INPUT_EVENT_DRAG 4
-#define INPUT_EVENT_TAP 6
-#define INPUT_EVENT_TAP_CONFIRMED 7
+#define INPUT_EVENT_TAP  3
+#define INPUT_EVENT_TAP_CANCEL 4
+#define INPUT_EVENT_TAP_CONFIRMED 5 // Sent when the number of taps is known (e.g. a single tap is definitely just a single tap, not the first part of a double-tap).
+#define INPUT_EVENT_DRAG_START 6
+#define INPUT_EVENT_DRAG_MOVE 7
 #define INPUT_EVENT_FLING 8
 #define INPUT_EVENT_LONG_PRESS 9
 
@@ -40,6 +41,6 @@ struct INPUTEVENT {
     int flags; // see INPUT_FLAG_ values. 
     TIMESTAMP time;
     POINT pt, ptLocal;
-    POINT delta; // specific to ScrollWheel
+    POINT delta; // distance moved since previous event for same device
     POINT velocity; // specific to flings
 };

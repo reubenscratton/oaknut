@@ -89,6 +89,6 @@ public:
 #  define DECLARE_WORKER_IMPL(clazz, name)
 # endif
 #else
-#define DECLARE_WORKER_IMPL(clazz, name) DECLARE_DYNCREATE2(clazz, name)
+#define DECLARE_WORKER_IMPL(clazz) DECLARE_DYNCREATE(clazz)
 #endif
 

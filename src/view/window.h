@@ -42,9 +42,10 @@ public:
         sp<View>  touchedView;
         TIMESTAMP timeOfDownEvent;
         POINT ptDown;
+        POINT ptPrev;
         int numClicks;
         bool isDragging;
-        float dragDirection;
+        bool _dragIsVertical;
         POINT pastPts[NUM_PAST];
         TIMESTAMP pastTime[NUM_PAST];
         int pastIndex, pastCount;

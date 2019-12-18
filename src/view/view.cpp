@@ -1220,6 +1220,7 @@ POINT View::getContentOffset() const {
 }
 
 void View::setContentOffset(POINT contentOffset, bool animated/*=false*/) {
+    assert(!animated); // TODO: implement animation here
     POINT d = _contentOffset - contentOffset;
 	if (d.isZero()) {
         return;
@@ -1375,33 +1376,47 @@ bool View::handleInputEvent(INPUTEVENT* event) {
         if (event->type == INPUT_EVENT_DOWN) {
             setPressed(true);
         }
-        if (event->type == INPUT_EVENT_CANCEL || event->type==INPUT_EVENT_UP) {
+        if (event->type == INPUT_EVENT_TAP_CANCEL || event->type==INPUT_EVENT_UP) {
             setPressed(false);
         }
         
-        if (event->type == INPUT_EVENT_MOVE) {
-            if (canScrollVertically() || canScrollHorizontally()) {
-                retVal = true;
+        if (event->type == INPUT_EVENT_DRAG_START || event->type == INPUT_EVENT_DRAG_MOVE) {
+            if (_directionalLockEnabled) {
+                if (event->delta.y > event->delta.x) {
+                    
+                }
             }
         }
         
-        //if (event->type == INPUT_EVENT_DOWN || event->type == INPUT_EVENT_DRAG) {
-            //app->log("DRAG %X y=%f", this, event->pt.y);
-            bool scrolled = _scrollVert.handleEvent(this, true, event);
-            scrolled |= _scrollHorz.handleEvent(this, false, event);
-            retVal |= scrolled;
-            
-        //}
+        if (event->type == INPUT_EVENT_DRAG_START) {
+            bool v = canScrollVertically();
+            bool h = canScrollHorizontally();
+            if (v || h) {
+                if (_directionalLockEnabled) {
+                    bool vertScroll = fabsf(event->delta.y) >= fabsf(event->delta.x);
+                    if (vertScroll) {
+                        retVal = v;
+                    } else {
+                        retVal = h;
+                    }
+                } else {
+                    retVal = v || h;
+                }
+            }
+        }
+        
+        bool scrolled = _scrollVert.handleEvent(this, true, event);
+        scrolled |= _scrollHorz.handleEvent(this, false, event);
+        retVal |= scrolled;
 
-
-        if ((onInputEvent || onClick)) {
+        if (onInputEvent) {
             retVal = true;
         }
     }
     
     
     if (onClick) {
-        retVal = true;
+        retVal = true; // To prevent it being passed up the view tree
         if (event->type == INPUT_EVENT_TAP) {
             onClick();
         }

@@ -111,6 +111,8 @@ public:
     string readUpTo(uint32_t& offset, const string& str) const;
     string readUpTo(uint32_t& offset, char ch) const;
     string readUpToOneOf(uint32_t& offset, const string& str) const;
+    string readPast(uint32_t& offset, const string& str) const;
+    string readPast(uint32_t& offset, char ch) const;
     string readToken(uint32_t& offset) const;
     string readNumber(uint32_t& offset) const;
     string readIdentifier(uint32_t& offset) const;

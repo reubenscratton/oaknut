@@ -42,10 +42,9 @@ void GameView::setGame(Game* game) {
     }
 }
 
-void GameView::updateContentSize(SIZE constrainingSize) {
-    _contentSize.width = _cellSize*_game->_cols;
-    _contentSize.height = _cellSize*_game->_rows;
-    _contentSizeValid = true;
+void GameView::updateIntrinsicSize(SIZE constrainingSize) {
+    _intrinsicSize.width = _cellSize*_game->_cols;
+    _intrinsicSize.height = _cellSize*_game->_rows;
 }
 
 
@@ -73,7 +72,7 @@ bool GameView::handleInputEvent(INPUTEVENT* event) {
     if (event->type == INPUT_EVENT_DOWN
         || event->type == INPUT_EVENT_DRAG
         || event->type == INPUT_EVENT_UP
-        || event->type == INPUT_EVENT_CANCEL) {
+        || event->type == INPUT_EVENT_TAP_CANCEL) {
         if (_timer) {
             _timer->stop();
             _timer = NULL;

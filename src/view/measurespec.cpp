@@ -84,7 +84,7 @@ MEASURESPEC MEASURESPEC::fromStyle(const variant* value, View* view) {
         str.skipSpacesAndTabs(o);
         variant num = variant::parseNumber(str, o);
         auto m = num.measurementVal();
-        if (m._unit == measurement::PC) {
+        if (m._unit == measurement::PC || spec.type == TypeAspect) {
             spec.mul = m.val();
         } else {
             spec.con = m.val();

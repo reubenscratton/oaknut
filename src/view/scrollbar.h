@@ -51,7 +51,7 @@ public:
 
 
 protected:
-    float _dragLast, _dragTotal;
+    float _dragTotal;
     bool _isDragging;
     float _offsetStart;
     float _alpha;

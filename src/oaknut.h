@@ -102,6 +102,7 @@ namespace oak {
 #include "base/bytearray.h"
 #include "base/hash.h"
 #include "base/string_.h"
+#include "base/url.h"
 #include "base/object.h"
 #include "base/timer.h"
 #include "base/task.h"

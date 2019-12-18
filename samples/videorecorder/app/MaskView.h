@@ -29,7 +29,7 @@ public:
 
 protected:
     
-    bool applyStyleValue(const string& name, const StyleValue* value) override;
+    bool applySingleStyle(const string& name, const style& value) override;
 
     COLOR _backgroundColour;
     HoleShape _holeShape;

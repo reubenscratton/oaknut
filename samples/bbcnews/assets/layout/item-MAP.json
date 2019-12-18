@@ -8,15 +8,28 @@
 		{"$":"itemHeadline"},
 		{"$":"itemByline"},
 		{"$":"itemTopics"},
-		{"$":"itemBody", 		 "mode==adverts": {"insertBannerAdvertAfterParagraph":1,
-                "insertMpuAdvertAfterParagraph":6}},
+		{"$":"itemBody"},
 
-		{"$":"relatedTitle", "title": "Related video and audio"},
-		{"$":"relatedVideoAndAudio"},
-		{"$":"relatedTitle", "title": "Related Stories"},
-		{"$":"relatedStories", "format": [".format.textual"]},
-		{"$":"relatedTitle", "title": "Related Topics"},
-		{"$":"relatedTopics"},
-		{"$":"copyright"}
+        {
+          "title": { "style":"relatedTitle", "text": "Related video and audio"},
+          "cellClass":"BNCellItemRelatedStory",
+          "limit":-1,
+          "format":[".format.audio",".format.video"],
+          "primary":[".item"]
+        },
+        {
+          "title": { "style":"relatedTitle", "text": "Related Stories"},
+          "cellClass":"BNCellItemRelatedStory",
+          "limit":4,
+          "secondary":[".group.see-alsos"],
+          "maxTopics":1,
+          "imageWidth":0.5
+        },
+        {
+          "title": { "style":"relatedTitle", "text": "Related Topics"},
+          "cellClass":"BNCellRelatedTopic",
+          "primary":[".collection"],
+          "secondary":[".home_section",".topic"],
+        }
 	]
 }

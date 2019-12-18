@@ -22,7 +22,7 @@ public:
     void updateCell(Cell& cell);
 
     // Overrides
-    void updateContentSize(SIZE constrainingSize) override;
+    void updateIntrinsicSize(SIZE constrainingSize) override;
     bool handleInputEvent(INPUTEVENT* event) override;
 
 protected:

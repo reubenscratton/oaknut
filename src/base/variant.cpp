@@ -786,7 +786,7 @@ variant variant::parse(const string& str, uint32_t& it, int flags) {
     }
     
     // Scalar values
-    else if ((ch>='0' && ch<='9') || ch=='-' || ch=='.') {
+    else if ((ch>='0' && ch<='9') || ch=='-' || ch=='+' || ch=='.') {
         val = parseNumber(str, it, true);
     } else if (ch == 'n' && str.skipString(it, "null")) {
         val.setType(EMPTY); // should we have null? is it really meaningful?

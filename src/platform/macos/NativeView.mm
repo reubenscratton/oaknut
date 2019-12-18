@@ -86,7 +86,7 @@ static bool s_mouseIsDown;
     } else if (event.phase == NSEventPhaseChanged) {
         type = INPUT_EVENT_MOVE;
     } else if (event.phase == NSEventPhaseCancelled) {
-        type = INPUT_EVENT_CANCEL;
+        type = INPUT_EVENT_TAP_CANCEL;
     } else {
         return;
     }
@@ -104,7 +104,7 @@ static bool s_mouseIsDown;
 //- (void)touchesEndedWithEvent:(NSEvent*)event {
 //}
 - (void)touchesCancelledWithEvent:(NSEvent*)event {
-    [self dispatchInputEvent:event type:INPUT_EVENT_CANCEL isScrollwheel:NO];
+    [self dispatchInputEvent:event type:INPUT_EVENT_TAP_CANCEL isScrollwheel:NO];
 
 }
 

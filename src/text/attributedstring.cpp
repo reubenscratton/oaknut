@@ -38,7 +38,7 @@ attributed_string::enumerator::enumerator(attributed_string::attribute::type typ
 void attributed_string::enumerator::advanceTo(int32_t index) {
     for (auto e=_activeList.begin() ; e!=_activeList.end() ; e++) {
         int32_t end = (*e)->end;
-        if (end<0) end += _strLength;
+        if (end<0) end += _strLength+1;
         if (end <= index) {
             e = _activeList.erase(e);
             _activeListChanged = true;
@@ -46,12 +46,16 @@ void attributed_string::enumerator::advanceTo(int32_t index) {
     }
     while (_it != _str._attributes.end()) {
         int32_t start = _it->start;
-        if (start<0) start += _strLength;
+        if (start<0) {
+            start += _strLength+1;
+        }
         if (start > index) {
             break;
         }
         int32_t end = _it->end;
-        if (end<0) end += _strLength;
+        if (end<0) {
+            end += _strLength+1;
+        }
         if (end > index) {
             if (_it->_type == _type) {
                 _activeList.push_back(&(*_it));
@@ -71,9 +75,9 @@ void attributed_string::enumerator::enumerate(int32_t from, int32_t to, std::fun
         
         // Handle -ve char indexes
         int32_t end = _it->end;
-        if (end<0) end += _strLength;
+        if (end<0) end += _strLength+1;
         int32_t start = _it->start;
-        if (start<0) start += _strLength;
+        if (start<0) start += _strLength+1;
         
         // If span ended before the range of interest, continue
         if (end<=from) {
@@ -145,7 +149,7 @@ void attributed_string::append(const attributed_string& str) {
 
 void attributed_string::setAttribute(const attributed_string::attribute& attribute, int32_t start, int32_t end) {
     auto r = _attributes.insert(attribute_usage(attribute, start, end));
-    assert(r.second);
+    //assert(r.second);
     if (!r.second) {
         _attributes.erase(r.first);
         _attributes.insert(attribute_usage(attribute, start, end));

@@ -60,81 +60,72 @@ void URLRequest::dispatchResult(int httpStatus, const map<string, string>& respo
     // NB: we are on a background thread here. The handlers must be called on main thread.
     
     // Give app code a chance to process the data in the background
-    if (onGotResponseInBackground) {
-        if (onGotResponseInBackground(httpStatus, responseHeaders)) {
-            return;
+    if (onGotResponseInBackground && onGotResponseInBackground(httpStatus, responseHeaders)) {
+    } else {        
+    
+        string contentType;
+        const auto& contentTypeIt = responseHeaders.find("content-type");
+        if (contentTypeIt != responseHeaders.end()) {
+            contentType = contentTypeIt->second;
         }
-    }
-    string contentType;
-    const auto& contentTypeIt = responseHeaders.find("content-type");
-    if (contentTypeIt != responseHeaders.end()) {
-        contentType = contentTypeIt->second;
-    }
-    if (_handlerBitmap) {
-        if (didError()) {
-            retain();
-            App::postToMainThread([=]() {
-                if (!_cancelled) {
-                    _handlerBitmap(this, NULL);
-                }
-                release();
-            });
-        } else {
+        if (_handlerBitmap) {
+            if (didError()) {
+                App::postToMainThread([=]() {
+                    if (!_cancelled) {
+                        _handlerBitmap(this, NULL);
+                    }
+                });
+            } else {
                 if (contentType == "image/jpeg" || contentType == "image/png") {
-                    retain();
                     Bitmap::createFromData(_responseData, [=](Bitmap* bitmap) {
+                        // this runs on main thread
                         if (!_cancelled) {
                             _handlerBitmap(this, bitmap);
                         }
-                        release();
                     });
                 } else {
                     app->warn("Unexpected bitmap type %s", contentType.c_str());
                 }
-        }
-    }
-    if (contentType.contains("json")) {
-        variant json;
-        string str = _responseData.toString();
-        json = variant::parse(str, PARSEFLAG_JSON);
-        if (onGotJsonInBackground) {
-            if (onGotJsonInBackground(json)) {
-                return;
             }
-        } else {
-            if (_handlerJson) {
-                retain();
+        }
+        if (contentType.contains("json")) {
+            variant json;
+            string str = _responseData.toString();
+            json = variant::parse(str, PARSEFLAG_JSON);
+            if (onGotJsonInBackground) {
+                onGotJsonInBackground(json);
+            } else {
+                if (_handlerJson) {
+                    App::postToMainThread([=]() {
+                        if (!_cancelled) {
+                            _handlerJson(this, json);
+                        }
+                    });
+                }
+            }
+        }
+
+        if (_handlerData) {
+            if (didError()) {
+                if (!_cancelled) {
+                    App::postToMainThread([=]() {
+                        _handlerData(this, _responseData);
+                    });
+                }
+            } else {
                 App::postToMainThread([=]() {
                     if (!_cancelled) {
-                        _handlerJson(this, json);
+                        _handlerData(this, _responseData);
                     }
-                    release();
                 });
             }
         }
     }
+    
+    App::postToMainThread([=]() {
+        release();
+    });
 
-    if (_handlerData) {
-        if (didError()) {
-            if (!_cancelled) {
-                retain();
-                App::postToMainThread([=]() {
-                    _handlerData(this, _responseData);
-                    release();
-                });
-                return;
-            }
-        } else {
-            retain();
-            App::postToMainThread([=]() {
-                if (!_cancelled) {
-                    _handlerData(this, _responseData);
-                }
-                release();
-            });
-        }
-    }
-    release();
 }
 
 bool URLRequest::didError() {

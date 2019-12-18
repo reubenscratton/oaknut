@@ -53,7 +53,7 @@ public:
         bind(_recordButton, "record");
         
         // Configure views
-        _maskView->setHoleStrokeColour(app.getStyleColor("colorError"));
+        _maskView->setHoleStrokeColour(app->getStyleColor("colorError"));
         _recordButton->onInputEvent = [=](View* view, INPUTEVENT* event) -> bool {
             if (event->type == INPUT_EVENT_DOWN) {
                 startRecording();
@@ -127,7 +127,7 @@ public:
             _audioResampler = new AudioResampler();
             _audioResampler->onNewAudioSamples = [=](AudioSamples* samples) {
                 variant indata = samples->getData();
-                _encodedAudio.append(indata.bytearrayVal());
+                _encodedAudio.append(indata.bytearrayRef());
             };
             _audioResampler->open(inputAudioFormat, _audioFormat);
         }
@@ -140,7 +140,7 @@ public:
                 _audioResampler->process(samples);
             } else {
                 variant indata = samples->getData();
-                _encodedAudio.append(indata.bytearrayVal());
+                _encodedAudio.append(indata.bytearrayRef());
             }
             /*_audioEncoder->process(indata, [=](const variant& outdata) {
                 const bytearray& outbytes = outdata.bytearrayVal();
@@ -190,7 +190,7 @@ public:
             RECT roiRect = _maskView->getHoleRect();
             roiRect.intersectWith(upscaledImageRect);
             roiRect.origin -= o;
-            roiRect.inset(-app.dp(32),-app.dp(32)); // a small amount of inset cos the haar face cascade cant see faces at the very edges.
+            roiRect.inset(-app->dp(32),-app->dp(32)); // a small amount of inset cos the haar face cascade cant see faces at the very edges.
             float scaleX = upscaledImageRect.size.width / frameBitmap->_width;
             float scaleY = upscaledImageRect.size.height / frameBitmap->_height;
             roiRect.scale(1/scaleX, 1/scaleY);
@@ -198,14 +198,14 @@ public:
             _faceDetector->detectFaces(frameBitmap, roiRect, [=](vector<RECT> faces) {
                 //app.log("Faces: %d", faces.size());
                 if (faces.size() == 0) {
-                    _maskView->setHoleStrokeColour(app.getStyleColor("colorError"));
+                    _maskView->setHoleStrokeColour(app->getStyleColor("colorError"));
                     /*if (_faceRectOp) {
                         _facesOverlayView->removeRenderOp(_faceRectOp);
                         _faceRectOp = NULL;
                     }*/
                     return;
                 }
-                _maskView->setHoleStrokeColour(app.getStyleColor("colorSuccess"));
+                _maskView->setHoleStrokeColour(app->getStyleColor("colorSuccess"));
 
                 /*if (!_faceRectOp) {
                     _faceRectOp = new RectRenderOp();
@@ -232,7 +232,7 @@ public:
             }
 
             _jpegEncoder->encode(frameBitmap, [=](const bytearray& jpeg) {
-                app.log("jpeg size : %d", jpeg.size());
+                app->log("jpeg size : %d", jpeg.size());
                 _riffWriter->writeChunk(jpeg);
 
             });
@@ -250,8 +250,8 @@ public:
         //}
         _riffWriter->close();
         
-        app.log("total avi : %d", _aviData->_data.cb);
-        app.log("total audio: %d", _encodedAudio.size());
+        app->log("total avi : %d", _aviData->_data.cb);
+        app->log("total audio: %d", _encodedAudio.size());
         
 
         
@@ -409,12 +409,16 @@ public:
 
 
 
-void App::main() {
+class SampleApp : public App {
+    
+    void main() override {
     
     //_window->setRootViewController(new AudioRecordingViewController());
     
     _window->setRootViewController(new MainViewController());
     
-}
+    }
+} the_app;
+
 
 

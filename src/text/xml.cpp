@@ -45,20 +45,19 @@ string XmlParser::readQuotedString(const string& s, uint32_t& o) {
     if (s.skipChar(o, '\"')) quoteChar='\"';
     else if (s.skipChar(o, '\'')) quoteChar='\'';
     
-    string q = s.readUpTo(o, quoteChar);
-    s.readChar(o); // todo: need a readPast() api...
+    string q = s.readPast(o, quoteChar);
     
     uint32_t qo=0;
     string r;
     while (qo < q.lengthInBytes()) {
         r += q.readUpTo(qo, "&");
         if (qo < q.lengthInBytes()) {
-            string code = q.readUpTo(qo, ";");
-            if (code == "lt") r+="<";
-            else if (code == "gt") r+=">";
-            else if (code == "quot") r+="\"";
-            else if (code == "apos") r+="\'";
-            else if (code == "amp") r+="&";
+            string code = q.readPast(qo, ";");
+            if (code == "&lt;") r+="<";
+            else if (code == "&gt;") r+=">";
+            else if (code == "&quot;") r+="\"";
+            else if (code == "&apos;") r+="\'";
+            else if (code == "&amp;") r+="&";
             else assert(0); //todo: support char encoding &#60;
         }
     }

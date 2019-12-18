@@ -51,5 +51,5 @@ public:
     bool _showMediaGlyphInHeadline;
     float _imageWidthSpec;
     int _H; // font size, as per H1, H2, H3 notation
-    bool _no_margin;
+    EDGEINSETS _cellMargins;
 };

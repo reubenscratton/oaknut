@@ -28,7 +28,11 @@ BNCellsModule::BNCellsModule(const variant& json) : BNModule(json) {
     _secondary = json.stringArrayVal("secondary");
     _format = json.stringArrayVal("format");
     _cellClass = json.stringVal("cellClass");
-    _no_margin = json.boolVal("no-margin");
+    if (json.hasVal("cellMargins")) {
+        _cellMargins = edgeInsetsVal(json, "cellMargins");
+    } else {
+        _cellMargins = {1,1,1,1};
+    }
     _cellPadding = edgeInsetsVal(json, "cellPadding");
     _usesScrollviewOffset = json.intVal("usesScrollviewOffset")!=0;
     _cellsPerRow = json.intVal("cellsPerRow");
@@ -75,7 +79,7 @@ BNCellsModule::BNCellsModule(BNCellsModule* source) : BNModule(source) {
     _imageWidthSpec = source->_imageWidthSpec;
     _H = source->_H;
     _tinyTimestamps = source->_tinyTimestamps;
-    _no_margin = source->_no_margin;
+    _cellMargins = source->_cellMargins;
 }
 BNModule* BNCellsModule::clone() {
     return new BNCellsModule(this);
@@ -268,27 +272,37 @@ void BNCellsModule::addToView(View* parent) {
     if (_titleStyle && _cells.size() > 0) {
         CellsModuleHeader* header = new CellsModuleHeader();
         header->applyStyle(*_titleStyle);
-        header->_label->setText(_titleText);
+        attributed_string text = _titleText;
+        if (_titleContentId.lengthInBytes()) {
+            text.append(" >"); // TODO: this is not the right glyph
+            text.setAttribute(attributed_string::forecolor(0xFF0000CC), -2, -1);
+            // TODO: make label clickable
+        }
+        header->_label->setText(text);
         parent->addSubview(header);
     }
 
-    float padding = 0;
-    if (!_no_margin) {
-        padding = app->dp(8);
-    }
+    float basic_margin = app->dp(8);
+    EDGEINSETS padding = _cellMargins;
+    padding.left *= basic_margin;
+    padding.top *= basic_margin;
+    padding.right *= basic_margin;
+    padding.bottom *= basic_margin;
+
 
     bool isHorizontal = _arrange == "horizontal";
 
     View* cellsContainer = new View();
     cellsContainer->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
-    cellsContainer->setPadding(EDGEINSETS(padding, padding, padding, padding));
+    cellsContainer->setPadding(padding);
     if (_backgroundColor) {
         cellsContainer->setBackgroundColor(_backgroundColor);
     }
+    cellsContainer->setDirectionalLockEnabled(true);
     parent->addSubview(cellsContainer);
     
     View* cellAbove = nullptr;
-    MEASURESPEC cellWidthSpec = MEASURESPEC {MEASURESPEC::TypeRelative, nullptr, 1.0f/_cellsPerRow, -0.5f*padding*(_cellsPerRow-1)};
+    MEASURESPEC cellWidthSpec = MEASURESPEC {MEASURESPEC::TypeRelative, nullptr, 1.0f/_cellsPerRow, -0.5f*(padding.left+padding.right)*(_cellsPerRow-1)};
     int cellsPerRow = _cellsPerRow;
     if (isHorizontal) {
         cellWidthSpec = MEASURESPEC::Abs(app->dp(140));
@@ -304,12 +318,12 @@ void BNCellsModule::addToView(View* parent) {
                 cell->setLayoutOrigin(ALIGNSPEC::Abs(0), vertAlign);
                 cellAbove = cell;
             } else {
-                cell->setLayoutOrigin(ALIGNSPEC::ToRightOf(cellPrev, padding), vertAlign);
+                cell->setLayoutOrigin(ALIGNSPEC::ToRightOf(cellPrev, padding.left), vertAlign);
             }
             cellsContainer->addSubview(cell);
             cellPrev = cell;
         }
-        vertAlign = ALIGNSPEC::Below(cellAbove, padding);
+        vertAlign = ALIGNSPEC::Below(cellAbove, padding.top);
     }
 
 }

@@ -1,5 +1,5 @@
 //
-// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
+// Copyright © 2019 Sandcastle Software Ltd. All rights reserved.
 //
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
@@ -7,6 +7,7 @@
 
 #include <oaknut.h>
 
+// TODO: This should be in thread-local storage, not global
 static std::list<Object*> s_autodeletePool;
 
 void Object::flushAutodeletePool() {
@@ -19,18 +20,18 @@ void Object::flushAutodeletePool() {
 }
 
 Object::Object() : _refs(0) {
+    // TODO: DEBUG ONLY: track thread ID
 }
 Object::~Object() {
 }
 void Object::retain() {
-    _refs++; // TODO: Should be atomic to cover rare cases where retain/release from background thread
-             // Since we don't have shared access to memory from workers then we shouldn't need it...
-             // the only situation where we need to lock is shared access with in a background
-             // non-web thread, e.g. URLRequest processing.
+    // TODO: DEBUG ONLY: assert thread ownership
+    _refs++;
 }
 void Object::release() {
+    // TODO: DEBUG ONLY: assert thread ownership
 	if (--_refs == 0) {
-        s_autodeletePool.push_back(this); // TODO: protect with mutex
+        s_autodeletePool.push_back(this);
 		//delete this;
 	}
     assert(_refs >= 0);

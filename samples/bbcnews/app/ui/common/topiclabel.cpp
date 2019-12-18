@@ -79,7 +79,7 @@ void BNTopicLabel::setItem(BNItem* item, BNCollection* displayingCollection) {
     }
     
     // Remove home collection if this is part of the displayed collection
-    if (collections.size() > 1) {
+    if (homedCollection && collections.size() > 1) {
         if (homedCollection->_modelId == displayingCollection->_modelId) {
             vector_erase(collections, homedCollection);
         }

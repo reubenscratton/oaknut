@@ -24,7 +24,7 @@ bool BNCellContent::handleInputEvent(INPUTEVENT* event) {
         setNeedsFullRedraw();
         //return true;
     }
-    else if (event->type == INPUT_EVENT_UP || event->type == INPUT_EVENT_CANCEL) {
+    else if (event->type == INPUT_EVENT_UP || event->type == INPUT_EVENT_TAP_CANCEL) {
         if (_highlightOp) {
             removeDecorOp(_highlightOp);
             _highlightOp = NULL;

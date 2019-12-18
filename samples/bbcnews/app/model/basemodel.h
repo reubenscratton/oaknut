@@ -41,13 +41,13 @@ public:
     virtual bool isAV() { return false; }
 
     BNBaseModel* findChildObject(const string& primaryType, const string& secondaryType);
+    vector<BNBaseModel*> findChildren(const vector<string>& primaryTypes, const vector<string>& secondaryTypes, const vector<string>& formats);
 protected:
     BNBaseModel(const string& type, const string& modelId);
     BNBaseModel(const string& modelId);
     BNBaseModel(const variant& json);
 
     virtual vector<BNRelationship*> findRelationships(const vector<string>& primaryTypes, const vector<string>& secondaryTypes, const vector<string>& formats);
-    vector<BNBaseModel*> findChildren(const vector<string>& primaryTypes, const vector<string>& secondaryTypes, const vector<string>& formats);
 
     friend class BNCellsModule;
 };

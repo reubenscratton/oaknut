@@ -383,7 +383,7 @@ char32_t string::readUtf8(char* base, uint32_t& offset) {
 
 // helper that returns the offset into 'buf' of the first occurrence of 'text'.
 // If 'text' is not found then buflen is returned.
-static inline uint32_t findStr(const char* buf, uint32_t buflen, const char* text, int32_t textLen) {
+static inline uint32_t findStr(const char* buf, uint32_t buflen, const char* text, int32_t textLen, bool includeText=false) {
     uint32_t o = 0;
     uint32_t to = MAX(0, (buflen - textLen)+1);
     while (o < to) {
@@ -393,7 +393,7 @@ static inline uint32_t findStr(const char* buf, uint32_t buflen, const char* tex
         }
         o = uint32_t(match-buf);
         if (0==memcmp(match+1, text+1, textLen-1)) {
-            return o;
+            return includeText?(o+textLen):o;
         }
         o++;
     }
@@ -956,6 +956,16 @@ string string::readUpTo(uint32_t& offset, const string& str) const {
 string string::readUpTo(uint32_t& offset, char ch) const {
     auto o = offset;
     offset += findStr(start()+o, _cb-o, &ch, 1);
+    return substr(o, offset);
+}
+string string::readPast(uint32_t& offset, const string& str) const {
+    auto o = offset;
+    offset += findStr(start()+o, _cb-o, str.start(), str._cb, true);
+    return substr(o, offset);
+}
+string string::readPast(uint32_t& offset, char ch) const {
+    auto o = offset;
+    offset += findStr(start()+o, _cb-o, &ch, 1, true);
     return substr(o, offset);
 }
 

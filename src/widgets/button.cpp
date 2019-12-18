@@ -25,7 +25,7 @@ bool ToolbarButton::handleInputEvent(INPUTEVENT* event) {
     if (event->type == INPUT_EVENT_DOWN) {
         setAlpha(0.5f);
     }
-    if (event->type == INPUT_EVENT_CANCEL || event->type==INPUT_EVENT_UP) {
+    if (event->type == INPUT_EVENT_TAP_CANCEL || event->type==INPUT_EVENT_UP) {
         if (_alpha == 0.5f) {
             animateAlpha(1.0, 350);
         }

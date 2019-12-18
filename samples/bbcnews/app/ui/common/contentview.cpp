@@ -55,7 +55,7 @@ DECLARE_DYNCREATE(BNContentView);
 
 
 BNContentView::BNContentView() : View(), _contentStub("","") {
-		
+    _directionalLockEnabled = true;
     // TODO
     //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onNewLayouts:) name:BNNewLayoutsNotification object:nil];
 }

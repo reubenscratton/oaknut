@@ -66,11 +66,13 @@ void BNCellMedia::setMediaObject(BNBaseModel* mediaObject, BNItem* containingIte
         _image = _media->posterImage();
         captionText = _media->_caption;
     }
-    if (captionText.length()) {
-        _caption->setText(captionText);
-        _caption->setVisibility(Visibility::Visible);
-    } else {
-        _caption->setVisibility(Visibility::Gone);
+    if (_caption) {
+        if (captionText.length()) {
+            _caption->setText(captionText);
+            _caption->setVisibility(Visibility::Visible);
+        } else {
+            _caption->setVisibility(Visibility::Gone);
+        }
     }
     
     if (_imageAspect > 0.f) {

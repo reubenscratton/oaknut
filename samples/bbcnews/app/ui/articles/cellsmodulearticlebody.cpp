@@ -96,46 +96,10 @@ void BNCellsModuleArticleBody::updateLayoutWithContentObject(BNContent* contentO
 	
 
 
-	/*int insertMpuAdvertAfterParagraph = _json.intVal("insertMpuAdvertAfterParagraph");
-	int numParagraphs = 0;
-	
-    vector<BNCell*> cells;;
-	//NSMutableAttributedString* text = [[NSMutableAttributedString alloc] init];
-	vector<BNElement*> nontextElements;
-	for (int i=0 ; i<elements.size() ; i++) {
-		BNElement* element = elements[i];
-		if (element->isElementText()) {
-			[text appendAttributedString:[(BNElementText*)element toAttributedString:textColor padding:self.textPadding]];
-			numParagraphs++;
-			if (numParagraphs==insertMpuAdvertAfterParagraph) {
-			//	BNElementAdvert* ad = [[BNElementAdvert alloc] initWithType:@"mpu"];
-			//	ad.charIndex = text.length;
-			//	[nontextElements addObject:ad];
-			}
-		} else {
-			BNElementMedia* mediaElement = (BNElementMedia*)element;
-			BNCellMedia* mediaCell = [mediaElement createMediaCell:self];
-			[cells addObject:mediaCell];
-			[nontextElements addObject:mediaElement];
-		}
-	}
-	self.attributedText = text;
-	self.nontextElements = nontextElements;
-*/
 	BNCellsModule::updateLayoutWithContentObject(contentObject);
-        
-    //_cells.insert(_cells.end(), cells.begin(), cells.end());
-
 }
 
 /*
-- (void)insertSubview:(UIView*)superview newView:(UIView*)newView atIndex:(NSInteger)index {
-	if ([newView isKindOfClass:[BNCellContentView class]]) {
-		[superview addSubview:newView];
-	} else {
-		[superview insertSubview:newView atIndex:index];
-	}
-}
 
 - (void)layoutWithContainingRect:(CGRect)rect {
 	
