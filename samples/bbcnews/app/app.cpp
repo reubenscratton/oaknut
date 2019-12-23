@@ -245,6 +245,7 @@ void BBCNewsApp::main() {
     loadLayouts();
     
     NavigationController* nav = new NavigationController();
+    nav->getNavBar()->setBlurEnabled(true);
     nav->pushViewController(new MainViewController());
     _window->setRootViewController(nav);
 }

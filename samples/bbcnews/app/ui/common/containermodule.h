@@ -11,7 +11,7 @@ public:
     
     View* _view;
     
-    vector<BNModule*> _modules;
+    vector<sp<BNModule>> _modules;
     float _topInset;
     string _displayTitle;
     

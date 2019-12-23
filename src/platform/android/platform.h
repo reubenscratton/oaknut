@@ -43,6 +43,10 @@ typedef float GLfloat;
 extern JavaVM* g_jvm;
 JNIEnv* getJNIEnv();
 
+// Reroute fopen() to a horrible hack that means it can work with compressed assets
+#define fopen(name, mode) oaknut_android_fopen(name, mode)
+FILE* oaknut_android_fopen(const char* fname, const char* mode);
+
 // Utilities for handling Java strings without falling foul of JVM's weird ideas about UTF
 jbyteArray jbyteArrayFromString(JNIEnv* env, const string& str);
 string stringFromJbyteArray(JNIEnv* env, jbyteArray jbytes);

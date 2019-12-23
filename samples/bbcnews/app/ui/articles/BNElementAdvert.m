@@ -1,3 +1,4 @@
+#if 0
 //
 //  BNElementAdvert.m
 //  BBCNews
@@ -73,3 +74,4 @@
 }
 
 @end
+#endif

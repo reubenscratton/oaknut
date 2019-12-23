@@ -26,6 +26,7 @@ Font::~Font() {
 
 
 Font* Font::get(const string& name, float size, float weight/*=FONT_WEIGHT_REGULAR*/) {
+    size = floorf(size);
     string fkey = string::format("%f-%f", size, weight);
     if (name.length() > 0) {
         fkey.insert(0, name);

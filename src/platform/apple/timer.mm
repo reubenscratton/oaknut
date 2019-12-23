@@ -23,7 +23,7 @@ public:
         //del->_osobj = (void*)CFBridgingRetain(timer);
     }
         
-    void stop() {
+    void stop() override {
         if (_timer) {
             [_timer invalidate];
             _timer = NULL;

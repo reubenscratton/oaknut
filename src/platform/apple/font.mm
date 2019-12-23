@@ -26,15 +26,15 @@ float UIFontWeightFromStandardWeight(float weight) {
     return NSUI(FontWeightBlack);
 }
 
-
+static NSString* s_systemFontFamilyName;
 
 static CTFontRef createCTFont(FontApple* font) {
     CGFloat size = font->_size;
     if (font->_name.length()) {
 
         // Treat the name as a font family and ask NSFontManager to get the best match
-        NSString* nsname = [NSString stringWithUTF8String:font->_name.c_str()];
-#if PLATFORM_MAC
+        /*NSString* nsname = [NSString stringWithUTF8String:font->_name.c_str()];
+#if PLATFORM_MACOS
         NSFontTraitMask traits = 0;
         if (font->_italic) {
             traits |= NSFontItalicTrait;
@@ -44,7 +44,7 @@ static CTFontRef createCTFont(FontApple* font) {
         if (nsfont) {
             return (__bridge_retained CTFontRef)nsfont;
         }
-#endif
+#endif*/
         
         // Maybe its the name of an font asset?
         bytearray data;
@@ -60,11 +60,31 @@ static CTFontRef createCTFont(FontApple* font) {
         }
     }
     
-    // Fall back to system font
-    NSUI(Font)* osfont = [NSUI(Font) systemFontOfSize:size weight:UIFontWeightFromStandardWeight(font->_weight)];
-    return (__bridge_retained CTFontRef)osfont;
-
-
+    // Default to the system font if no name given. This is usually ".AppleSystemUIFont" these days.
+    NSString* fontName = nil;
+    if (!font->_name.lengthInBytes()) {
+        if (!s_systemFontFamilyName) {
+            auto sysfont = [NSUI(Font) systemFontOfSize:0 weight:0];
+            s_systemFontFamilyName = sysfont.fontName;
+        }
+        fontName = s_systemFontFamilyName;
+    } else {
+        fontName = [NSString stringWithUTF8String:font->_name.c_str()];
+    }
+    
+    // Get font via Core Text
+    NSDictionary* attrs = @{
+        (NSString*)kCTFontFamilyNameAttribute: fontName,
+        (NSString*)kCTFontSizeAttribute: @(font->_size),
+        (NSString*)kCTFontTraitsAttribute: @{
+                (NSString*)kCTFontSymbolicTrait: @(font->_italic ? kCTFontTraitItalic : 0),
+                (NSString*)kCTFontWeightTrait: @(UIFontWeightFromStandardWeight(font->_weight))
+            }
+        };
+    CTFontDescriptorRef descriptor = CTFontDescriptorCreateWithAttributes((CFDictionaryRef)attrs);
+    CTFontRef ctfont = CTFontCreateWithFontDescriptor(descriptor, 0, NULL);
+    CFRelease(descriptor);
+    return ctfont;
 }
 
 FontApple::FontApple(const string& fontAssetPath, float size, float weight) : Font(fontAssetPath, size, weight) {

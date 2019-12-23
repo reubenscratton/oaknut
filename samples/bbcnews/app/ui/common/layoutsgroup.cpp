@@ -288,13 +288,13 @@ BNLayout* BNLayoutsGroup::layoutWithContent(const string& modelId,
 		list<BNModule*> a;
 		a.push_back(layout->_rootContainer);
 		while (a.size()) {
-            BNModule* module = a.front();
+            sp<BNModule> module = a.front();
             a.pop_front();
 			string contentId = module->_json.stringVal("contentId");
 			string contentLink = module->_json.stringVal("contentLink");
 			if ((contentId.length() && contentId != modelId)
                 || (contentLink.length() && contentLink == modelId)) {
-                vector<BNModule*> ma;
+                vector<sp<BNModule>> ma;
                 for (auto& rm : module->_container->_modules) {
                     if (rm != module) {
                         ma.push_back(rm->clone());
@@ -303,7 +303,7 @@ BNLayout* BNLayoutsGroup::layoutWithContent(const string& modelId,
                 module->_container->_modules  = ma;
 			} else {
 				if (module->isContainer()) {
-                    auto& mods = ((BNContainerModule*)module)->_modules;
+                    auto& mods = module.as<BNContainerModule>()->_modules;
 					a.insert(a.end(), mods.begin(), mods.end());
 				}
 			}

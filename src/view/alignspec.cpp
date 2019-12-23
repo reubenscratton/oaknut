@@ -120,6 +120,8 @@ ALIGNSPEC::ALIGNSPEC(const variant& value, View* view) {
         multiplierAnchor = 0.5f;
         multiplierSelf -=  0.5f;
     } else if (ref=="left" || ref=="top") {
+        multiplierAnchor = 0.0f;
+        multiplierSelf = 0.0f;
     } else if (ref=="right" || ref=="bottom") {
         multiplierAnchor = 1.0f;
         multiplierSelf -=  1.0f;

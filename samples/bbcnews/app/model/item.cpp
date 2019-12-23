@@ -43,6 +43,8 @@ BNItem::BNItem(const variant& json) : BNContent(json) {
         string url;
         string platform;
     } link_props;
+    uint32_t bold_start;
+    uint32_t italic_start;
     int unknownTagDepth = 0;
     while (!xml.eof()) {
         string tag = xml.currentTag();
@@ -125,7 +127,23 @@ BNItem::BNItem(const variant& json) : BNContent(json) {
                 link_props.url = xml.attributeValue("href");
             }
         }
-        
+
+        // Bold & italic
+        else if (tag == "bold") {
+            if (!isCloseTag) {
+                bold_start = currentPara.length();
+            } else {
+                currentPara.setAttribute(attributed_string::bold(), bold_start, currentPara.length());
+            }
+        }
+        else if (tag == "italic") {
+            if (!isCloseTag) {
+                italic_start = currentPara.length();
+            } else {
+                currentPara.setAttribute(attributed_string::italic(), italic_start, currentPara.length());
+            }
+        }
+
         // Unknown!
         else {
             app->warn("Unknown tag: %s", tag.c_str());

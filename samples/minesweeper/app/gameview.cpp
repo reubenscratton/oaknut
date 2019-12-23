@@ -70,7 +70,8 @@ bool GameView::handleInputEvent(INPUTEVENT* event) {
         return false;
     }
     if (event->type == INPUT_EVENT_DOWN
-        || event->type == INPUT_EVENT_DRAG
+        || event->type == INPUT_EVENT_DRAG_START
+        || event->type == INPUT_EVENT_DRAG_MOVE
         || event->type == INPUT_EVENT_UP
         || event->type == INPUT_EVENT_TAP_CANCEL) {
         if (_timer) {

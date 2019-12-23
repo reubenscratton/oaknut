@@ -17,7 +17,189 @@ static string USERNAME = "idaas";
 static string PASSWORD = "password";
 
 
+class RectDetectorWorker : public WorkerImpl {
+public:
+    void start_(const variant& config) override {
+    }
+    
+    variant process_(const variant& data_in) override {
+        int width = data_in.intVal("width");
+        int height = data_in.intVal("height");
+        const bytearray& pixels = data_in.bytearrayRef("data");
+        RECT roi;
+        roi.origin.x = data_in.intVal("roiLeft");
+        roi.origin.y = data_in.intVal("roiTop");
+        roi.size.width = data_in.intVal("roiWidth");
+        roi.size.height = data_in.intVal("roiHeight");
+        vector<RECT> result = detect(pixels, width, height, roi);
+        variant retval;
+        retval.setType(variant::ARRAY);
+        for (int i=0 ; i<result.size() ; i++) {
+            RECT& rect = result[i];
+            variant vrect;
+            vrect.set("x", rect.origin.x);
+            vrect.set("y", rect.origin.y);
+            vrect.set("width", rect.size.width);
+            vrect.set("height", rect.size.height);
+            retval.appendVal(vrect);
+        }
+        return retval;
+    }
 
+    void stop_() override {
+    }
+    
+    
+    vector<RECT> detect(const bytearray& pixels, int width, int height, RECT roi) {
+        vector<RECT> rects;
+
+        // Convert just the ROI to a new greyscale image
+        int roiLeft = (int)roi.origin.x;
+        int roiTop = (int)roi.origin.y;
+        int roiWidth = (int)roi.size.width;
+        int roiHeight = (int)roi.size.height;
+        uint8_t* gray = (uint8_t*)malloc(roiWidth * roiHeight);
+        uint32_t* pixels32 = (uint32_t*)pixels.data();
+        int i=0;
+        for (int y=roiTop; y<roiTop+roiHeight ; y++) {
+            int yy = y*width;
+            for (int x=roiLeft; x<roiLeft+roiWidth ; x++) {
+                uint32_t c = pixels32[yy+x];
+                uint8_t luma = ((c>>16&0xff) * 13933 + (c>>8&0xff) * 46871 + (c&0xff) * 4732)>>16;
+                gray[i++] = luma;
+            }
+        }
+        
+        // From this point we disregard anything outside the ROI
+        width = roiWidth;
+        height = roiHeight;
+        
+        
+        // Create the integral images
+        int32_t* integralImage = (int32_t*) malloc(width * height * 4);
+        int32_t* integralImageSquare = (int32_t*) malloc(width * height * 4);
+        // top row
+        int32_t pixAcc = 0;
+        int32_t pixAccSq = 0;
+        for (int j = 0; j < width; j++) {
+            int32_t pixel = gray[j];
+            pixAcc += pixel;
+            pixAccSq += pixel*pixel;
+            integralImage[j] = pixAcc;
+            integralImageSquare[j] = pixAccSq;
+        }
+        // left column
+        for (int i = 1; i < height; i++) {
+            int w = i * width;
+            int32_t pixel = gray[w];
+            int32_t pixelSq = pixel*pixel;
+            integralImage[w] = pixel + integralImage[w-width];
+            integralImageSquare[w] = pixelSq + integralImageSquare[w-width];
+        }
+        // Remainder of image
+        for (int i = 1; i < height; i++) {
+            for (int j = 1; j < width; j++) {
+                int w = i * width + j;
+                int32_t pixel = gray[w];
+                int32_t pixelSq = pixel * pixel;
+                integralImage[w] = integralImage[w - width]     // 1 pixel above
+                                 + integralImage[w - 1]         // 1 pixel to the left
+                                 + pixel                        // current pixel
+                                 - integralImage[w - width - 1];// minus pixel above-left.
+                integralImageSquare[w] = integralImageSquare[w - width]
+                                    + integralImageSquare[w - 1]
+                                    + pixelSq
+                                    - integralImageSquare[w - width - 1];
+            }
+        }
+        
+        
+        // Apply a sliding rect across the image
+        for (float scale=0.9; scale<=1.0; scale+=0.1) {
+            // Credit cards are 3.370 ×2.125 in
+            const float CARD_ASPECT = 3.370f/2.125f;
+            
+            int blockWidth = (scale * width);
+            int blockHeight = blockWidth / CARD_ASPECT;
+         
+            float step = (blockWidth/8);
+            
+            // Scan the image a block at a time top->bottom, left->right. Blocks overlap a lot.
+            for (int i = 0; i < (height - blockHeight); i += step) {
+                for (int j = 0; j < (width - blockWidth); j += step) {
+                    
+                    float inverseArea = 1.0 / (blockWidth * blockHeight);
+                    int wbA = i * width + j;
+                    int wbB = wbA + blockWidth;
+                    int wbD = wbA + blockHeight * width;
+                    int wbC = wbD + blockWidth;
+                    float mean = (integralImage[wbA] - integralImage[wbB] - integralImage[wbD] + integralImage[wbC]) * inverseArea;
+                    float variance = (integralImageSquare[wbA] - integralImageSquare[wbB] - integralImageSquare[wbD] + integralImageSquare[wbC]) * inverseArea - mean * mean;
+                    
+                    float standardDeviation = 1;
+                    if (variance > 0) {
+                        standardDeviation = sqrt(variance);
+                    }
+
+                    app->log("mean: %f  std: %f", mean, standardDeviation);
+                }
+            }
+        }
+        
+        free(integralImage);
+        free(integralImageSquare);
+        free(gray);
+        
+        return rects;
+    }
+};
+
+DECLARE_WORKER_IMPL(RectDetectorWorker);
+
+
+class RectDetector : public Worker {
+public:
+    RectDetector() : Worker("RectDetectorWorker") {
+        start(variant());
+    }
+    
+    bool isBusy() const {
+        return _isBusy;
+    }
+
+    void detect(class Bitmap* bitmap, const RECT& roiRect, std::function<void(vector<RECT>)> resultCallback) {
+        _isBusy = true;
+        variant data_in;
+        data_in.set("width", bitmap->_width);
+        data_in.set("height", bitmap->_height);
+        data_in.set("roiLeft", roiRect.origin.x);
+        data_in.set("roiTop", roiRect.origin.y);
+        data_in.set("roiWidth", roiRect.size.width);
+        data_in.set("roiHeight", roiRect.size.height);
+        PIXELDATA pixelData;
+        bitmap->lock(&pixelData, false);
+        bytearray bytes((uint8_t*)pixelData.data, pixelData.cb);
+        
+        data_in.set("data", bytes);
+        bitmap->unlock(&pixelData, false);
+        process(data_in, [=](const variant& data_out) {
+            vector<RECT> results;
+            auto& vresults = data_out.arrayRef();
+            for (auto& vrect : vresults) {
+                RECT rect;
+                rect.origin.x = vrect.floatVal("x");
+                rect.origin.y = vrect.floatVal("y");
+                rect.size.width = vrect.floatVal("width");
+                rect.size.height = vrect.floatVal("height");
+                results.push_back(rect);
+            }
+            resultCallback(results);
+            _isBusy = false;
+        });
+    }
+
+    bool _isBusy;
+};
 
 class MainViewController : public ViewController {
 public:
@@ -29,6 +211,7 @@ public:
     Label* _instruction;
     Label* _phrase;
     ImageView* _recordButton;
+    sp<RectDetector> _rectDetector;
     sp<FaceDetector> _faceDetector;
     //View* _facesOverlayView;
     sp<AudioInput> _audioInput;
@@ -65,7 +248,8 @@ public:
         };
         
         _jpegEncoder = new JpegEncoder();
-        _faceDetector = new FaceDetector();
+        _rectDetector = new RectDetector();
+        //_faceDetector = new FaceDetector();
         //_facesOverlayView = new View();
         //_facesOverlayView->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Fill());
         //_view->addSubview(_facesOverlayView);
@@ -177,7 +361,8 @@ public:
         // Update camera preview view
         _cameraView->handleNewCameraFrame(frameBitmap);
         
-        if (!_faceDetector->isBusy()) {
+        if (!_rectDetector->isBusy()) {
+        //if (!_faceDetector->isBusy()) {
             
             // Determine the region of interest (ROI). It's the intersection of the mask hole rect with the
             // image frame (which may exceed the view bounds cos its aspect-fill), then scaled down
@@ -195,29 +380,20 @@ public:
             float scaleY = upscaledImageRect.size.height / frameBitmap->_height;
             roiRect.scale(1/scaleX, 1/scaleY);
             
+            _rectDetector->detect(frameBitmap, roiRect, [=](vector<RECT> rects) {
+                app->log("Rects: %d", rects.size());
+            });
+            /*
             _faceDetector->detectFaces(frameBitmap, roiRect, [=](vector<RECT> faces) {
-                //app.log("Faces: %d", faces.size());
+                //app->log("Faces: %d", faces.size());
                 if (faces.size() == 0) {
                     _maskView->setHoleStrokeColour(app->getStyleColor("colorError"));
-                    /*if (_faceRectOp) {
-                        _facesOverlayView->removeRenderOp(_faceRectOp);
-                        _faceRectOp = NULL;
-                    }*/
                     return;
                 }
                 _maskView->setHoleStrokeColour(app->getStyleColor("colorSuccess"));
 
-                /*if (!_faceRectOp) {
-                    _faceRectOp = new RectRenderOp();
-                    _faceRectOp->setFillColor(0x4000ff00);
-                    _facesOverlayView->addRenderOp(_faceRectOp);
-                }
-                RECT rect = faces[0];
-                rect.scale(scaleX, scaleY);
-                rect.origin += o;
-                _faceRectOp->setRect(rect);
-                _facesOverlayView->setNeedsFullRedraw();*/
-            });
+            });*/
+            
         }
         
         // Frame capture
@@ -422,3 +598,13 @@ class SampleApp : public App {
 
 
 
+/*if (!_faceRectOp) {
+    _faceRectOp = new RectRenderOp();
+    _faceRectOp->setFillColor(0x4000ff00);
+    _facesOverlayView->addRenderOp(_faceRectOp);
+}
+RECT rect = faces[0];
+rect.scale(scaleX, scaleY);
+rect.origin += o;
+_faceRectOp->setRect(rect);
+_facesOverlayView->setNeedsFullRedraw();*/

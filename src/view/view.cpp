@@ -520,8 +520,8 @@ void View::setRectSize(const SIZE& size) {
 void View::updateBackgroundRect() {
     if (_backgroundOp) {
         RECT rect = getOwnRect();
-        rect.origin.x += _contentOffset.x;
-        rect.origin.y += _contentOffset.y;
+        rect.origin.x += (int)_contentOffset.x;
+        rect.origin.y += (int)_contentOffset.y;
         _backgroundOp->_inset.applyToRect(rect);
         _backgroundOp->setRect(rect);
     }

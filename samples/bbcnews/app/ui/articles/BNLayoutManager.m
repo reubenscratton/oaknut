@@ -1,3 +1,4 @@
+#if 0
 //
 //  BNLayoutManager.m
 //  BBCNews
@@ -133,3 +134,4 @@
 	}
 }
 @end
+#endif

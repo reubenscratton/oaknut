@@ -45,8 +45,9 @@ string XmlParser::readQuotedString(const string& s, uint32_t& o) {
     if (s.skipChar(o, '\"')) quoteChar='\"';
     else if (s.skipChar(o, '\'')) quoteChar='\'';
     
-    string q = s.readPast(o, quoteChar);
-    
+    string q = s.readUpTo(o, quoteChar);
+    s.readChar(o); // todo: need a readUpTo() that also goes past...
+
     uint32_t qo=0;
     string r;
     while (qo < q.lengthInBytes()) {

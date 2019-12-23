@@ -71,7 +71,7 @@ bool ScrollInfo::canScroll(View* view, bool isVertical) {
     float scrollableSize = isVertical
                         ? (view->_padding.top + view->_contentSize.height + view->_padding.bottom + (view->_scrollInsets.top+view->_scrollInsets.bottom))
                         :  view->_contentSize.width + (view->_scrollInsets.left+view->_scrollInsets.right);
-    return scrollableSize>0 && visibleSize < scrollableSize;
+    return scrollableSize>0 && visibleSize>0 && (scrollableSize - visibleSize)>=1; // must be at least 1 pixel scrollable
 }
 
 float ScrollInfo::maxScroll(View* view, bool isVertical) {
@@ -89,8 +89,8 @@ void ScrollInfo::updateVisibility(View* view, bool isVertical) {
     if (canScroll(view, isVertical)) {
         if (!_renderOp) {
             _renderOp = new RectRenderOp();
-            _renderOp->setFillColor(0xFF4E4E4E);
-            _renderOp->setCornerRadius(2.5); // todo: STYLE!
+            _renderOp->setFillColor(app->getStyleColor("window.scrollbars.color"));
+            _renderOp->setCornerRadius(app->getStyleFloat("window.scrollbars.corner-radius"));
             view->addDecorOp(_renderOp);
         }
         
@@ -158,6 +158,7 @@ void ScrollInfo::startFadeAnim(float targetAlpha) {
     }
     if (!_fadeAnim) {
         _fadeAnim = Animation::start(view, 300, [=](float val) {
+            //app->log("fade tick %f %X", val, this);
             _alpha = val;
             if (_renderOp) {
                 _renderOp->setAlpha(val);
@@ -185,24 +186,19 @@ bool ScrollInfo::handleEvent(View* view, bool isVertical, INPUTEVENT* event) {
     float viewSize = isVertical ? view->_rect.size.height : view->_rect.size.width;
     float maxScroll = fmax(0, scrollableSize - viewSize);
 
-    // float val, d=0.0f;
-    //val = isVertical ? event->pt.y : event->pt.x;
     float d = 0;
     
     if (event->type == INPUT_EVENT_DOWN) {
         flingCancel();
-        rv = scrollableSize > viewSize;
+        rv = (scrollableSize - viewSize) >= 1;
     }
     if (event->type == INPUT_EVENT_DRAG_MOVE) {
         if (!_isDragging) {
             _isDragging = true;
-            //_dragLast = val;
             _offsetStart = offset;
             _dragTotal = 0;
         }
         d = isVertical ? event->delta.y : event->delta.x;
-        //d = (val - _dragLast);
-        //_dragLast = val;
     }
 
     if (d != 0.0) {

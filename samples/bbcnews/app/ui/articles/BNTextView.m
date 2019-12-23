@@ -1,3 +1,4 @@
+#if 0
 //
 //  BNTextView.m
 //  BBCNews
@@ -318,3 +319,4 @@
 }
 
 @end
+#endif

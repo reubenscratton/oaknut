@@ -98,12 +98,12 @@ JAVA_FN(void, URLRequest, nativeOnGotData)(JNIEnv *env, jobject jobj, jlong cobj
         bytearray httpHeadersUtf8Bytes(cb);
         env->GetByteArrayRegion(httpHeadersUtf8, 0, cb,
                                 reinterpret_cast<jbyte *>(httpHeadersUtf8Bytes.data()));
-        string httpHeadersStr((char *) httpHeadersUtf8Bytes.data());
+        string httpHeadersStr = httpHeadersUtf8Bytes.toString();
         auto httpHeadersVec = httpHeadersStr.split("\n");
         for (auto &it : httpHeadersVec) {
-            auto colonPos = it->find(":");
-            string name = it->substr(0, colonPos);
-            string value = it->substr(colonPos+1);
+            auto colonPos = it.find(":");
+            string name = it.substr(0, colonPos);
+            string value = it.substr(colonPos+1);
             responseHeaders[name.lowercase()] = value;
         }
     }

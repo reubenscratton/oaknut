@@ -4,7 +4,7 @@
 //
 //  Copyright (c) 2015 BBC News. All rights reserved.
 //
-
+#if 0
 #import "BNSuggestedTopics.h"
 #import "BNContentRequest.h"
 #import "BNSuggestionsGroup.h"
@@ -107,3 +107,4 @@ static BNSuggestedTopicsManager *s_sharedInstance;
 
 
 @end
+#endif

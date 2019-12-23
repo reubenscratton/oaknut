@@ -45,7 +45,7 @@ jbyteArray jbyteArrayFromString(JNIEnv* env, const string& str) {
 string stringFromJbyteArray(JNIEnv* env, jbyteArray jbytes) {
     int cb = env->GetArrayLength(jbytes);
     bytearray data(cb);
-    env->GetByteArrayRegion(jbytes, 0, cb, reinterpret_cast<jbyte*>(data.c_str()));
+    env->GetByteArrayRegion(jbytes, 0, cb, reinterpret_cast<jbyte*>(data.data()));
     return data.toString();
 }
 
@@ -204,15 +204,25 @@ Renderer* Renderer::create(Window* window) {
 }
 
 JAVA_FN(jlong, MainActivity, onCreateNative)(JNIEnv *env, jobject obj,
-                                            jobject jassetManager, jfloat screenScale,
-                                             jfloat statusBarHeight, jfloat navigationBarHeight,
+                                            jobject jassetManager,
+                                             jint screenWidth,
+                                             jint screenHeight,
+                                             jfloat xdpi,
+                                             jfloat ydpi,
+                                             jfloat statusBarHeight,
+                                             jfloat navigationBarHeight,
                                             jlong rootVCcreator) {
+
+    app->_defaultDisplay = new Display(screenWidth,
+                                       screenHeight,
+                                       xdpi, ydpi,
+                                       (xdpi/163.0));
+
     WindowAndroid* window = (WindowAndroid*)Window::create();
     window->retain();
     window->activity = env->NewGlobalRef(obj);
     window->setSafeInsets(oak::SafeInsetsType::StatusBar, EDGEINSETS(0, statusBarHeight, 0, 0));
     window->setSafeInsets(oak::SafeInsetsType::BottomNavBar, EDGEINSETS(0,0,0,navigationBarHeight));
-    window->_scale = screenScale;
     window->assetManager = AAssetManager_fromJava(env, jassetManager);
 
     app->loadStyleAsset("styles.res");
@@ -334,7 +344,7 @@ JAVA_FN(void, MainActivity, onSurfaceCreatedNative)(JNIEnv* env, jobject obj, jl
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
 
-    window->resizeSurface(w, h, window->_scale);
+    window->resizeSurface(w, h);
     window->draw();
 }
 
@@ -379,11 +389,11 @@ JAVA_FN(void, MainActivity, onTouchEventNative)(JNIEnv* env, jobject obj, jlong 
         case AMOTION_EVENT_ACTION_DOWN: event.type=INPUT_EVENT_DOWN; break;
         case AMOTION_EVENT_ACTION_MOVE: event.type=INPUT_EVENT_MOVE; break;
         case AMOTION_EVENT_ACTION_UP: event.type=INPUT_EVENT_UP; break;
-        case AMOTION_EVENT_ACTION_CANCEL: event.type=INPUT_EVENT_CANCEL; break;
+        case AMOTION_EVENT_ACTION_CANCEL: event.type=INPUT_EVENT_TAP_CANCEL; break;
     }
-    //LOGI("ev %d %f,%f scale=%f", em_action, x, y, window->_scale);
-    event.pt.x = x; //* window->_scale;
-    event.pt.y = y;// * window->_scale;
+    // LOGI("ev %d %f,%f", event.type, x, y);
+    event.pt.x = x;
+    event.pt.y = y;
     event.time = time;
     window->dispatchInputEvent(event);
 }

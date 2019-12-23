@@ -1,3 +1,4 @@
+#if 0
 //
 //  BNJSONRequest.m
 //  BBCNews
@@ -129,3 +130,4 @@
 #endif
 
 @end
+#endif

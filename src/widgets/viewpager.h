@@ -31,6 +31,7 @@ public:
     void onViewDidAppear(bool viewControllerIsMovingToParent);
     void onViewDidDisappear(bool viewControllerIsMovingFromParent);
 
+    void layout(RECT constraint) override;
     void setContentOffset(POINT contentOffset, bool animated=false) override;
     void updateIntrinsicSize(SIZE constrainingSize) override;
     

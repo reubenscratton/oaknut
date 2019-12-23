@@ -1,12 +1,11 @@
 package org.oaknut.main;
 
-import android.app->Application;
+import android.app.Application;
 import android.content.SharedPreferences;
+import android.content.res.AssetManager;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.UUID;
 
@@ -30,10 +29,13 @@ public class App extends Application {
       prefs = PreferenceManager.getDefaultSharedPreferences(this);
     }
 
-
+    public static AssetManager getAssetManager() {
+        return app.getAssets();
+    }
+/*
     public static byte[] loadAsset(String assetPath) {
         try {
-            InputStream inputStream = app->getAssets().open(assetPath);
+            InputStream inputStream = app.getAssets().open(assetPath);
             byte[] buffer = new byte[8192];
             int bytesRead;
             ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -48,12 +50,44 @@ public class App extends Application {
         }
         return null;
     }
+*/
+    public static byte[] resolvePath(byte[] aPath) {
+        String path = new String(aPath, UTF_8);
 
-    public static byte[] getPath(int i) {
-        return app->getFilesDir().getAbsolutePath().getBytes(UTF_8);
+        //assets/...
+        if (path.startsWith("//assets/")) {
+            // do nothing, this is handled in a hideous C hack
+        }
+
+        //data/... : /data/data/package/files
+        else if (path.startsWith("//data/")) {
+            path = app.getFilesDir().getAbsolutePath() + path.substring(7);
+        }
+
+        //cache/... : /data/data/package/cache
+        else if (path.startsWith("//cache/")) {
+            path = app.getCacheDir().getAbsolutePath() + path.substring(8);
+        }
+
+        //docs/... : ~/Documents/...
+        else if (path.startsWith("//docs/")) {
+            path = app.getFilesDir().getAbsolutePath() + path.substring(7);
+        }
+
+        //tmp/... : /data/data/package/
+        else if (path.startsWith("//tmp/")) {
+            path = app.getFilesDir().getParent() + "/tmp/" + path.substring(7);
+        }
+
+        // :-(
+        else {
+            Log.w("Oaknut", "Unknown path: " + path);
+        }
+
+        return path.getBytes(UTF_8);
     }
     public static byte[] getCurrentCountryCode() {
-        return app->getResources().getConfiguration().locale.getCountry().getBytes(UTF_8);
+        return app.getResources().getConfiguration().locale.getCountry().getBytes(UTF_8);
     }
 
     public static int getPrefsInt(byte[] key, int defaultVal) {

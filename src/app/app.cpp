@@ -57,7 +57,14 @@ void App::loadStyleAsset(const string& assetPath) {
 
 
 const style* App::getStyle(const string& keypath) {
-    return _styles.get(keypath);
+    static map<string,const style*> styleCache;
+    auto cacheVal = styleCache.find(keypath);
+    if (cacheVal != styleCache.end()) {
+        return cacheVal->second;
+    }
+    const style* val = _styles.get(keypath);
+    styleCache.insert(std::make_pair(keypath, val));
+    return val;
 }
 
 Font* App::defaultFont() {
@@ -174,6 +181,13 @@ string App::friendlyTimeString(TIMESTAMP timestamp) {
 
 
 // Generic file handling
+bool App::fileExists(string& path) const {
+    if (!fileResolve(path)) {
+        return false;
+    }
+    struct stat buf;
+    return 0==stat(path.c_str(), &buf); // TODO: this can fail for many reasons. Consider renaming API.
+}
 bool App::fileLoad(const string& path, bytearray& fileContents) const {
     string rpath = path;
     if (!fileResolve(rpath)) {

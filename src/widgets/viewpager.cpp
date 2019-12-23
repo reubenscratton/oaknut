@@ -41,6 +41,11 @@ void ViewPager::setContentOffset(POINT contentOffset, bool animated/*=false*/) {
     }
 }
 
+void ViewPager::layout(RECT constraint) {
+    View::layout(constraint);
+    
+    ensureFillRectFilled();
+}
 
 void ViewPager::ensureFillRectFilled() {
     

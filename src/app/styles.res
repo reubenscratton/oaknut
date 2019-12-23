@@ -9,6 +9,10 @@ window: {
         top:0
     }
     scrim: #80000000
+    scrollbars: {
+        color: #777
+        corner-radius: 2.5dp
+    }
 }
 
 colors: {

@@ -211,12 +211,6 @@ bool App::fileEnsureFolderExists(string& path) const {
 }
 
 
-bool App::fileExists(string& path) const {
-    if (!fileResolve(path)) {
-        return false;
-    }
-    return [[NSFileManager defaultManager] fileExistsAtPath:[NSString stringWithUTF8String:path.c_str()]];
-}
 uint64_t App::fileSize(string& path) const {
     if (!fileResolve(path)) {
         return 0;

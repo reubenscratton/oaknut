@@ -282,13 +282,13 @@
     "primaryItem":{
         "limit":1,
         "secondary":"$secondary",
-        "cellMargins":"{0,0,0,0}",
         "cellClass":"BNCellItemTopStory",
         "H":1,
         "long_timestamp":true
     },
     "normalGroup":{
         "secondary":"$secondary",
+        "cellMargins":"{1,1,1,1}",
         "cellClass":"BNCellItemTopStory",
         "maxTopics":1,
     },
@@ -335,6 +335,7 @@
     },
     "avCarousel":{
         "background":"#000",
+        "cellMargins":"{1,1,1,1}",
         "arrange": "horizontal",
         "secondary":"$st_av_carousel",
         "orderBy":"avcarousel",

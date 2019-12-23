@@ -206,6 +206,9 @@ attributed_string::attribute attributed_string::font_weight(float weight) {
 attributed_string::attribute attributed_string::bold() {
     return attribute( FONT_CHANGE(nullptr,0,0,FONT_WEIGHT_BOLD));
 }
+attributed_string::attribute attributed_string::italic() {
+    return attribute( FONT_CHANGE(nullptr,0,0,0,1));
+}
 attributed_string::attribute attributed_string::forecolor(COLOR color) {
     return attribute(attribute::type::Forecolor, color);
 }

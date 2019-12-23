@@ -27,11 +27,12 @@ public:
     }
     
     void run() override {
-        // Effectively use cache data ONLY, if available,
-        // fall back to network: NSURLRequestReturnCacheDataElseLoad
-        // Normal NSURLRequestReloadRevalidatingCacheData
+        // Default:    NSURLRequestUseProtocolCachePolicy
+        // Cache ONLY: NSURLRequestReturnCacheDataDontLoad
+        // Cache always, only load if not there: NSURLRequestReturnCacheDataElseLoad
+        // Cache AND reload: NSURLRequestReloadRevalidatingCacheData
         NSString* urlstr = [NSString stringWithCString:_url.c_str() encoding:[NSString defaultCStringEncoding]];
-        NSMutableURLRequest* req = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:urlstr] cachePolicy:NSURLRequestReturnCacheDataElseLoad timeoutInterval:15];
+        NSMutableURLRequest* req = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:urlstr] cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:15];
         req.HTTPMethod = [NSString stringWithUTF8String:_method.c_str()];
         if (_body.length() > 0) {
             req.HTTPBody = [NSData dataWithBytes:_body.data() length:_body.size()];

@@ -1,3 +1,4 @@
+#if 0
 //
 //  BNURLCache.m
 //  BBCNews
@@ -300,3 +301,4 @@ NSString* encodeString(NSString* s) {
 @end
 
 
+#endif

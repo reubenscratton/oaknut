@@ -11,7 +11,7 @@
 static jclass s_jclass;
 static jmethodID s_jmidConstructor;
 static jmethodID s_jmidCreateGlyph;
-static jmethodID s_jmidDrawGlyph;
+static jmethodID s_jmidRasterizeGlyph;
 
 FontAndroid::FontAndroid(const string& fontAssetPath, float size, float weight) : Font(fontAssetPath, size, weight) {
     JNIEnv *env = getJNIEnv();
@@ -19,26 +19,50 @@ FontAndroid::FontAndroid(const string& fontAssetPath, float size, float weight) 
         s_jclass = env->FindClass(PACKAGE "/Font");
         s_jclass = (jclass) env->NewGlobalRef(s_jclass);
         s_jmidConstructor = env->GetMethodID(s_jclass, "<init>", "(JLjava/lang/String;FF)V");
-        s_jmidCreateGlyph = env->GetMethodID(s_jclass, "createGlyph", "(JI)J");
-        s_jmidDrawGlyph = env->GetMethodID(s_jclass, "drawGlyph", "(ILandroid/graphics/Bitmap;FF)V");
+        s_jmidCreateGlyph = env->GetMethodID(s_jclass, "createGlyph", "(I)J");
+        s_jmidRasterizeGlyph = env->GetMethodID(s_jclass, "rasterizeGlyph", "(ILandroid/graphics/Bitmap;FF)V");
     }
     jstring strAssetPath = env->NewStringUTF(fontAssetPath.c_str());
     _obj = env->NewObject(s_jclass, s_jmidConstructor, (jlong)this, strAssetPath, size, weight);
     _obj = env->NewGlobalRef(_obj);
 }
-    
-Glyph* FontAndroid::createGlyph(char32_t ch, Atlas* atlas) {
-    JNIEnv *env = getJNIEnv();
-    Glyph* glyph = (Glyph*)env->CallLongMethod(_obj, s_jmidCreateGlyph, (jlong)atlas, (jint)ch);
-    if (glyph) {
-        glyph->charCode = ch;
-        POINT pt = glyph->atlasNode->rect.origin;
-        auto bitmap = glyph->atlasNode->page->_bitmap.as<BitmapAndroid>();
-        env->CallVoidMethod(_obj, s_jmidDrawGlyph, (jint)ch, bitmap->_androidBitmap, pt.x-glyph->bitmapLeft, pt.y+glyph->bitmapHeight+glyph->bitmapTop);
-        bitmap->texInvalidate();
+
+class GlyphAndroid : public Glyph {
+public:
+    GlyphAndroid(FontAndroid* font, char32_t ch) : Glyph(font, ch) {
     }
-    return glyph;
+
+};
+
+Glyph* FontAndroid::createGlyph(char32_t ch) {
+    JNIEnv *env = getJNIEnv();
+    return (Glyph*)env->CallLongMethod(_obj, s_jmidCreateGlyph, (jint)ch);
 }
+JAVA_FN(jlong, Font, nativeCreateGlyph)(JNIEnv *env, jobject jfont, jlong cfont, jint charcode, jint left, jint descent, jint width, jint height, jfloat advance) {
+    FontAndroid* font = (FontAndroid*)cfont;
+    Glyph *glyph = new GlyphAndroid(font, charcode);
+    glyph->_advance.width = advance;
+    glyph->_origin.x = left;
+    glyph->_origin.y = descent;
+    glyph->_size = {width, height};
+    return (jlong)glyph;
+}
+
+void FontAndroid::rasterizeGlyph(Glyph *glyph, Atlas *atlas) {
+
+    // Reserve a space in the glyph atlas
+    glyph->_atlasNode = atlas->reserve(glyph->_size.width, glyph->_size.height, 1);
+
+    // Get the atlas bitmap context
+    auto bitmap = glyph->_atlasNode->page->_bitmap.as<BitmapAndroid>();
+    POINT pt = glyph->_atlasNode->rect.origin;
+
+    //  env->CallVoidMethod(_obj, s_jmidDrawGlyph, (jint)ch, bitmap->_androidBitmap, pt.x-glyph->bitmapLeft, pt.y+glyph->bitmapHeight+glyph->bitmapTop);
+    JNIEnv *env = getJNIEnv();
+    env->CallVoidMethod(_obj, s_jmidRasterizeGlyph, (jint)glyph->_codepoint, bitmap->_androidBitmap, pt.x-glyph->_origin.x, pt.y+glyph->_size.height+glyph->_origin.y);
+    bitmap->texInvalidate();
+}
+
 Font* Font::create(const string& fontAssetPath, float size, float weight) {
     return new FontAndroid(fontAssetPath, size, weight);
 }
@@ -53,18 +77,10 @@ JAVA_FN(void, Font, nativeSetMetrics)(JNIEnv *env, jobject jfont, jlong cobj, jf
     font->_height = (ascent-descent) + leading;
 }
 
-JAVA_FN(jlong, Font, nativeCreateGlyph)(JNIEnv *env, jobject jfont, jlong cfont, jlong cAtlas, jint charcode, jint left, jint descent, jint width, jint height, jfloat advance) {
-    Font* font = (Font*)cfont;
-    Glyph *glyph = new Glyph(font, charcode, 0);
-    glyph->advance.width = advance;
-    glyph->bitmapLeft = left;
-    glyph->bitmapTop = descent;
-    glyph->bitmapWidth = width;
-    glyph->bitmapHeight = height;
-    Atlas* atlas = (Atlas*)cAtlas;
-    glyph->atlasNode = atlas->reserve(glyph->bitmapWidth, glyph->bitmapHeight, 1);
-    return (jlong)glyph;
+JAVA_FN(void, Font, nativeRasterizeGlyph)(JNIEnv *env, jobject jfont, jlong cglyph, jlong catlas) {
+    Glyph *glyph = (Glyph *) cglyph;
+    Atlas *atlas = (Atlas *) catlas;
+    glyph->_atlasNode = atlas->reserve(glyph->_size.width, glyph->_size.height, 1);
 }
-
 
 #endif

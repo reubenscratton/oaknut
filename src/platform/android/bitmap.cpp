@@ -119,9 +119,9 @@ public:
                                                               "(J[B)V");
             jmidCancel = env->GetMethodID(jclassBitmapDecodeTask, "cancel", "()V");
         }
-        jbyteArray jbuff = env->NewByteArray(cb);
-        env->SetByteArrayRegion(jbuff, 0, cb, (jbyte*)data);
-        _jtask = env->NewObject(jclassBitmapDecodeTask, jmidBitmapDecodeTaskInit, this, jbuff);
+        jbyteArray jbuff = env->NewByteArray(data.length());
+        env->SetByteArrayRegion(jbuff, 0, data.length(), (jbyte*)data.data());
+        _jtask = env->NewObject(jclassBitmapDecodeTask, jmidBitmapDecodeTaskInit, (jlong)this, jbuff);
         _jtask = env->NewGlobalRef(_jtask);
     }
     ~BitmapDecodeTask() {
@@ -162,7 +162,7 @@ JAVA_FN(void, BitmapDecodeTask, nativeHandleDecodedBitmap)(JNIEnv *env, jobject 
 }
 
 Task* Bitmap::createFromData(bytearray& data, std::function<void(Bitmap*)> callback) {
-    return new BitmapDecodeTask(data, cb, callback);
+    return new BitmapDecodeTask(data, callback);
 }
 
 Bitmap* Bitmap::create(int width, int height, int format) {
@@ -210,7 +210,7 @@ void BitmapAndroid::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
 
 void BitmapAndroid::fromVariant(const variant& v) {
     Bitmap::fromVariant(v);
-    auto bb = v.bytearrayVal("bb");
+    auto bb = v.bytearrayRef("bb");
     _androidBitmap = createAndroidBitmap(_width, _height, _format, &bb);
     texInvalidate();
 }

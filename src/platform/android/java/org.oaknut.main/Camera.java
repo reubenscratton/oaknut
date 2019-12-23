@@ -101,7 +101,7 @@ public class Camera extends Object implements SurfaceTexture.OnFrameAvailableLis
         camera.setParameters(parameters);
         //camera.setDisplayOrientation(360 - cameraOrientation);
 
-        WindowManager windowManager = (WindowManager)App.app->getSystemService(Context.WINDOW_SERVICE);
+        WindowManager windowManager = (WindowManager)App.app.getSystemService(Context.WINDOW_SERVICE);
         int rotation = windowManager.getDefaultDisplay().getRotation();
         int degrees = 0;
         switch (rotation) {

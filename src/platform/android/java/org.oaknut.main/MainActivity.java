@@ -1,6 +1,6 @@
 package org.oaknut.main;
 
-import android.app->Activity;
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
@@ -57,7 +57,7 @@ public class MainActivity extends Activity implements InputConnection, SurfaceHo
 
     private boolean mDestroyed;
 
-    private native long onCreateNative(AssetManager assetManager, float screenScale, float statusBarHeight, float navigationBarHeight, long rootVC);
+    private native long onCreateNative(AssetManager assetManager, int screenWidth, int screenHeight, float xdpi, float ydpi, float statusBarHeight, float navigationBarHeight, long rootVC);
     private native void onStartNative(long nativePtr);
     private native void onResumeNative(long nativePtr);
     private native byte[] onSaveInstanceStateNative(long nativePtr);
@@ -453,7 +453,12 @@ public class MainActivity extends Activity implements InputConnection, SurfaceHo
 
 
         long rootVC = getIntent().getLongExtra("rootVC", 0);
-        nativePtr = onCreateNative(getAssets(), realDisplayMetrics.density, statusBarHeight, navigationBarHeight, rootVC);
+        nativePtr = onCreateNative(getAssets(),
+                realDisplayMetrics.widthPixels,
+                realDisplayMetrics.heightPixels,
+                realDisplayMetrics.xdpi,
+                realDisplayMetrics.ydpi,
+                statusBarHeight, navigationBarHeight, rootVC);
 
         super.onCreate(savedInstanceState);
 

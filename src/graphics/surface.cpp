@@ -439,7 +439,7 @@ void Surface::renderPhase3(Renderer* renderer, View* view, Surface* prevsurf) {
     }
     if (!view->_contentOffset.isZero()) {
         MATRIX4 tm;
-        tm.translate(-view->_contentOffset.x, -view->_contentOffset.y, 0);
+        tm.translate(-(int)view->_contentOffset.x, -(int)view->_contentOffset.y, 0);
         surface->_mvp *= tm;
     }
     

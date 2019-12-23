@@ -32,9 +32,10 @@ public:
         float sizeMul;  // 0 = use abs, or inherit if abs also 0
         float sizeAbs;  // 0 = use mul, or inherit if mul also 0
         float weight;   // 0 = inherit
+        int italic;     // 0 = inherit
         
-        FONT_CHANGE(oak::Font* afont=nullptr, float asizeMul=0, float asizeAbs=0, float aweight=0) : font(afont), sizeMul(asizeMul), sizeAbs(asizeAbs), weight(aweight) {}
-        FONT_CHANGE(const FONT_CHANGE& src) : font(src.font), sizeMul(src.sizeMul), sizeAbs(src.sizeAbs), weight(src.weight) {}
+        FONT_CHANGE(oak::Font* afont=nullptr, float asizeMul=0, float asizeAbs=0, float aweight=0, int aitalic=0) : font(afont), sizeMul(asizeMul), sizeAbs(asizeAbs), weight(aweight), italic(aitalic) {}
+        FONT_CHANGE(const FONT_CHANGE& src) : font(src.font), sizeMul(src.sizeMul), sizeAbs(src.sizeAbs), weight(src.weight), italic(src.italic) {}
     };
     
     class attribute {
@@ -101,6 +102,7 @@ public:
     static attribute font_size(float mul, float add);
     static attribute font_weight(float weight);
     static attribute bold();
+    static attribute italic();
     static attribute forecolor(COLOR color);
     static attribute backcolor(COLOR color);
     static attribute paragraphMetrics(const PARAGRAPH_METRICS& metrics);

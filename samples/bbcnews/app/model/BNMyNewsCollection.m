@@ -1,3 +1,4 @@
+#if 0
 //
 //  BNMyNewsCollection.m
 //  BBCNews
@@ -206,3 +207,4 @@ static BNMyNewsCollection *s_sharedInstance;
 }
 
 @end
+#endif

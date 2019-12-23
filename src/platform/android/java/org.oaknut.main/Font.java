@@ -32,7 +32,7 @@ public class Font {
             else {suffix = "-medium"; if (weight>800) fakeBold=true;}
             typeface = Typeface.create("sans-serif" + suffix, fakeBold?Typeface.BOLD:Typeface.NORMAL);
         } else {
-            typeface = Typeface.createFromAsset(App.app->getAssets(), name);
+            typeface = Typeface.createFromAsset(App.app.getAssets(), name);
         }
         this.size = size;
         textPaint = new TextPaint();
@@ -46,17 +46,19 @@ public class Font {
 
         nativeSetMetrics(cobj, -ascent, -descent, 0);
     }
+    native void nativeSetMetrics(long cobj, float ascent, float descent, float leading);
 
 
-    public long createGlyph(long atlas, int charcode) {
+    public long createGlyph(int charcode) {
         char[] ach = Character.toChars(charcode);
         float advance = textPaint.measureText(ach, 0, 1);
         textPaint.getTextBounds(ach, 0, 1, rect);
         rect.top--; // textBounds often rounds down the true glyph height, add a pixel in height to compensate
-        return nativeCreateGlyph(cobj, atlas, charcode, rect.left, -rect.bottom, rect.width(), rect.height(), advance);
+        return nativeCreateGlyph(cobj, charcode, rect.left, -rect.bottom, rect.width(), rect.height(), advance);
     }
+    native long nativeCreateGlyph(long cobj, int charcode, int left, int descent, int width, int height, float advance);
 
-    public void drawGlyph(int charcode, Bitmap atlasBitmap, float x, float y) {
+    public void rasterizeGlyph(int charcode, Bitmap atlasBitmap, float x, float y) {
         char[] ach = Character.toChars(charcode);
         canvas.setBitmap(atlasBitmap);
         canvas.drawText(ach, 0, 1, x, y, textPaint);
@@ -64,6 +66,4 @@ public class Font {
     }
 
 
-    native void nativeSetMetrics(long cobj, float ascent, float descent, float leading);
-    native long nativeCreateGlyph(long cobj, long cAtlas, int charcode, int left, int descent, int width, int height, float advance);
 }

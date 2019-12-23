@@ -11,6 +11,7 @@
 		{
           "title": { "style":"relatedTitle", "text": "Related Stories"},
           "cellClass":"BNCellItemRelatedStory",
+          "cellMargins":"{1,1,1,1}",
           "limit":4,
           "secondary":[".group.see-alsos"],
           "maxTopics":1,
@@ -19,6 +20,7 @@
         {
             "title": { "style":"relatedTitle", "text": "Related Topics"},
           "cellClass":"BNCellRelatedTopic",
+          "cellMargins":"{1,1,1,1}",
           "primary":[".collection"],
           "secondary":[".home_section",".topic"],
         }

@@ -596,7 +596,7 @@ static string parseString(const string& s, uint32_t& o) {
 // I cannot get strtol or stoi to work on Emscripten... they return garbage. Hence
 // rolling my own...
 variant variant::parseNumber(const string& str, uint32_t& o, bool convertExpressionsToStrings) {
-    variant val = 0ULL;
+    variant val = uint64_t(0ULL);
     uint32_t ostart = o;
     
     // Handle leading '+' and '-'

@@ -4,7 +4,7 @@
 //
 //  Copyright (c) 2014 BBC News. All rights reserved.
 //
-
+#if 0
 #import "BNURLRequestManager.h"
 #import "BNURLCachedInfo.h"
 #import "BNOfflineManager.h"
@@ -507,3 +507,4 @@ static BNURLRequestManager *s_sharedInstance;
 @end
 
 
+#endif

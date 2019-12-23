@@ -31,7 +31,7 @@ BNCellsModule::BNCellsModule(const variant& json) : BNModule(json) {
     if (json.hasVal("cellMargins")) {
         _cellMargins = edgeInsetsVal(json, "cellMargins");
     } else {
-        _cellMargins = {1,1,1,1};
+        _cellMargins = {0,0,0,0};
     }
     _cellPadding = edgeInsetsVal(json, "cellPadding");
     _usesScrollviewOffset = json.intVal("usesScrollviewOffset")!=0;

@@ -1,3 +1,4 @@
+#if 0
 //
 //  BNCellItemMostPopular.m
 //  BBCNews
@@ -62,6 +63,7 @@
 
 @end
 
+#endif
 
 
 

@@ -4,6 +4,7 @@
 //
 //  Copyright (c) 2014 BBC News. All rights reserved.
 //
+#if 0
 #import "BBCNEndpoint.h"
 #import "BNEnvironment.h"
 
@@ -285,3 +286,4 @@ static NSURLSession* s_session;
 
 
 @end
+#endif
