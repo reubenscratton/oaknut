@@ -504,8 +504,9 @@ const map<string, StyleValue>& StyleValue::compoundVal() const {
 
 
 measurement style::measurementVal() const {
-    if (type == TypeSimple && var.isMeasurement()) {
-        return var.measurementVal();
+    auto val = resolve();
+    if (val->type == TypeSimple && val->var.isMeasurement()) {
+        return val->var.measurementVal();
     }
     return measurement(0,measurement::PX);
 }

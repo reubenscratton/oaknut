@@ -42,6 +42,10 @@ void TextLayout::setColor(COLOR color) {
     }
 }
 
+void TextLayout::setMinLines(int minLines) {
+    _minLines = minLines;
+    _invalid |= INVALID_GLYPHS;
+}
 
 void TextLayout::setMaxLines(int maxLines) {
     _maxLines = maxLines;
@@ -358,6 +362,18 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
 
             line.rect.size.height = lineHeight;
             _rect.size.height += lineHeight;
+        }
+        
+        // Ensure minimum line number is met
+        if (_minLines > 0) {
+            int numLinesToMeetMinimum = _minLines - numLines;
+            if (numLinesToMeetMinimum > 0) {
+                RENDER_LINE& line = _renderLines.at(_renderLines.size()-1);
+                float lineHeight = line.tallestFont->_height;
+                lineHeight *= _defaultParams.lineHeightMul;
+                lineHeight += _defaultParams.lineHeightAbs;
+                _rect.size.height += lineHeight * numLinesToMeetMinimum;
+            }
         }
     
         // Round measured size up to whole pixels

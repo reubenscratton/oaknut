@@ -40,14 +40,6 @@
 	[self.layoutManager setTextStorage:self.textStorage];
 }
 
-- (NSInteger)numberOfLines {
-	return self.textContainer.maximumNumberOfLines;
-}
-
-- (void)setNumberOfLines:(NSInteger)numberOfLines {
-	self.textContainer.maximumNumberOfLines = numberOfLines;
-}
-
 
 - (NSAttributedString*)attributedText {
 	return self.textStorage;

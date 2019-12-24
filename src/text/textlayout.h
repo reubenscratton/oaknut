@@ -54,6 +54,8 @@ public:
     void setColor(COLOR color);
     COLOR color() const { return _defaultParams.forecolor; }
     void setGravity(GRAVITY gravity);
+    void setMinLines(int minLines);
+    int minLines() const { return _minLines; }
     void setMaxLines(int maxLines);
     int maxLines() const { return _maxLines; }
     bool ellipsize() const {return _ellipsize; }
@@ -127,6 +129,7 @@ protected:
         bool underline;
     } _defaultParams;
     GRAVITY _gravity;
+    int _minLines;
     int _maxLines; // 0=as many as needed, >=1 implies _ellipsize=true
     bool _ellipsize; // Text will ellipsize rather than overflow bounds and become scrollable
     SIZE _constrainingSize;

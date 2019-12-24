@@ -23,13 +23,9 @@ public:
         kAudio=2
     };
     
-    //BNLabelInfo(const string& str, const style* style, int numLines, BNMediaGlyph mediaGlyph = BNMediaGlyph::kNone);
-    //virtual void measureForWidth(float width, POINT offset);
-    
     bool getUseDynamicText() const;
     void setUseDynamicText(bool val);
     
-    int _numLines;
     bool _useFullWidth;
     SIZE _bottomRightExclusionSize;
     COLOR _textColorOverride;

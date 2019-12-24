@@ -341,7 +341,7 @@
         "orderBy":"avcarousel",
         "cellClass":"BNCellItemAV",
         "orientation":"portrait",
-        "numLines":3,
+        "lines":3,
         "format":[".format.video",".format.audio"]
     },
     "photosGroup":{
@@ -421,7 +421,7 @@
             "orderBy":"avcarousel",
             "cellClass":"BNCellItemAV",
             "orientation":"portrait",
-            "numLines":3,
+            "lines":3,
             "hideTopics":true,
             "openAllItemsOnTap":true,
             "tinyTimestamps":true

@@ -21,8 +21,11 @@ BNCellItem::BNCellItem(BNCellsModule* module, BNCellStyle cellStyle) : BNCellCon
     addSubview(_textFrame);
     _headline = new BNLabel();
     _textFrame->addSubview(_headline);
-    int numLines = _module->_json.intVal("numLines");
-    _headline->setMaxLines(numLines);
+    int numLines = _module->_json.intVal("lines");
+    if (numLines) {
+        _headline->setMinLines(numLines);
+        _headline->setMaxLines(numLines);
+    }
     _headline->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
     _showMediaGlyphInHeadline = _module->_showMediaGlyphInHeadline;
     _imageAspect = _module->_json.floatVal("imageAspect");
@@ -81,7 +84,7 @@ BNCellItem::BNCellItem(BNCellsModule* module, BNCellStyle cellStyle) : BNCellCon
         _imageView->setLayoutSize(MEASURESPEC::Abs(144), MEASURESPEC::Abs(81));
         _showMediaGlyphInHeadline = false;
         hideTopics = true;
-        _headline->_numLines = _module->_json.intVal("numLines");
+        //_headline->_numLines = _module->_json.intVal("numLines");
         _inverseColorScheme = false;
     }
     

@@ -89,7 +89,7 @@ SearchBox: {
         stroke-width: 1px
         corner-radii: 8dp
     }
-    maxLines: 1
+    lines: 1
     gravity: left, center
     padding: 16dp, 2dp, 16dp, 2dp
     forecolor: #000

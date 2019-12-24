@@ -71,6 +71,16 @@ bool Label::applySingleStyle(const string& name, const style& value) {
         return true;
     }
     if (name=="lines") {
+        int numLines = value.intVal();
+        setMinLines(numLines);
+        setMaxLines(numLines);
+        return true;
+    }
+    if (name=="min-lines") {
+        setMinLines(value.intVal());
+        return true;
+    }
+    if (name=="max-lines") {
         setMaxLines(value.intVal());
         return true;
     }
@@ -121,6 +131,11 @@ void Label::setFontWeight(float weight) {
 
 void Label::setLineHeight(float mul, float abs) {
     _textLayout.setLineHeight(mul, abs);
+    invalidateIntrinsicSize();
+}
+
+void Label::setMinLines(int minLines) {
+    _textLayout.setMinLines(minLines);
     invalidateIntrinsicSize();
 }
 
