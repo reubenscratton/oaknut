@@ -124,6 +124,7 @@ public:
     void applyStyle(const class style* s);
     
     void append(const attributed_string& str);
+    void trim(const char* chars=WHITESPACE_CHARS);
 
 
     friend class TextLayout;
@@ -161,7 +162,8 @@ private:
         // Cumulative calc: should be in a specialization or subclass
         sp<class Font> _currentFont;
     };
-    
+  
+
 };
 
 

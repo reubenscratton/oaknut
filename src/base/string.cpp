@@ -566,31 +566,29 @@ void string::assign(const char* p, int32_t cb) {
     }
 }
 
-void string::trim() {
+const char* string::WHITESPACE_CHARS=" \t\r\n";
+
+void string::trim(const char* chars/*=WHITESPACE_CHARS*/) {
     int32_t cLead = 0;
     int32_t i = 0;
     char* start = this->start();
     while(i < _cb) {
-        char ch = start[i++];
-        if (ch==' ' || ch=='\t' || ch=='\r' || ch=='\n') {
-            cLead++;
-        } else {
+        if (!strchr(chars, start[i++])) {
             break;
         }
+        cLead++;
     }
     int32_t cTrail = 0;
-    i = _cb-1;
-    while(i>=0) {
-        char ch = start[i--];
-        if (ch==' ' || ch=='\t' || ch=='\r' || ch=='\n') {
-            cTrail++;
-        } else {
+    int32_t ii = _cb-1;
+    while(ii>=i) {
+        if (!strchr(chars, start[ii--])) {
             break;
         }
+        cTrail++;
     }
     auto total = cLead+cTrail;
     if (total > 0) {
-        *this = substr(cLead, -1-cTrail);
+        *this = substr(cLead, _cb-cTrail);
     }
 }
 

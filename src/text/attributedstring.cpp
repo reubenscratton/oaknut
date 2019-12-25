@@ -221,3 +221,18 @@ attributed_string::attribute attributed_string::baselineOffset(float offset) {
 attributed_string::attribute attributed_string::underline() {
     return attribute(attribute::type::Underline, 0.f);
 }
+
+void attributed_string::trim(const char* chars) {
+    auto o = _offset;
+    string::trim(chars);
+    auto sd = _offset - o;
+    if (sd) {
+        auto cpy = _attributes;
+        _attributes.clear();
+        for (auto attr : cpy) {
+            attr.start += sd;
+            attr.end += sd;
+            _attributes.insert(attr);
+        }
+    }
+}

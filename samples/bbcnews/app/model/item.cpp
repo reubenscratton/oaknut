@@ -43,8 +43,8 @@ BNItem::BNItem(const variant& json) : BNContent(json) {
         string url;
         string platform;
     } link_props;
-    uint32_t bold_start;
-    uint32_t italic_start;
+    uint32_t bold_start = 0;
+    uint32_t italic_start = 0;
     int unknownTagDepth = 0;
     while (!xml.eof()) {
         string tag = xml.currentTag();
@@ -97,6 +97,7 @@ BNItem::BNItem(const variant& json) : BNContent(json) {
                     string itemPrefix = string::format("%lu.  ", (unsigned long)listOrdinal++);
                     currentPara.append(itemPrefix);
                 } else {
+                    currentPara.trim(" \t");
                     auto traitsStart = currentPara.length();
                     currentPara.append("\u25A0   ");
                     currentPara.setAttribute(attributed_string::forecolor(0xFFCCCCCC), traitsStart, traitsStart+1);
@@ -153,7 +154,6 @@ BNItem::BNItem(const variant& json) : BNContent(json) {
         // Consume text leading up to next tag
         string text = xml.nextTag();
         if (!unknownTagDepth) {
-            text.trim();
             currentPara.append(text);
         }
     }

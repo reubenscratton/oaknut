@@ -145,7 +145,9 @@ public:
     void erase(uint32_t fromByteOffset, uint32_t toByteOffset=0xFFFFFFFF);
     void eraseAt(int32_t fromCharIndex, int32_t toCharIndex=0x7FFFFFFF);
     void eraseLast();
-    void trim();
+    static const char* WHITESPACE_CHARS;
+
+    void trim(const char* chars=WHITESPACE_CHARS);
     bool hadPrefix(const string& prefix);
     bool hadSuffix(const string& suffix);
     bool replace(const string& search, const string& replacement);
@@ -199,5 +201,6 @@ protected:
     void alloc(uint32_t cb);
     
 };
+
 
 string operator "" _S(const char *str, std::size_t len);
