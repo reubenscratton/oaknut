@@ -27,7 +27,7 @@ public:
      */
 
     void setItem(BNItem* item) override {
-		bool invColor = item->isMediaItem() || _module->_json.boolVal("inverseColorScheme");
+		// bool invColor = item->isMediaItem() || _module->_json.boolVal("inverseColorScheme");
         _label->setText(item->_name);
     }
 

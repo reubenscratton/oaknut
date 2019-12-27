@@ -403,13 +403,13 @@ static inline uint32_t findStr(const char* buf, uint32_t buflen, const char* tex
 uint32_t string::find(const char* szTextToFind, int32_t szTextLen/*=-1*/, uint32_t fromOffset/*=0*/) const {
     if (!szTextToFind || !szTextToFind[0] || !_buf) return 0xFFFFFFFF; // searching for an empty string
     auto o = _offset + fromOffset;
-    if (szTextLen<0) szTextLen = strlen(szTextToFind);
+    if (szTextLen<0) szTextLen = (int32_t)strlen(szTextToFind);
     return fromOffset + findStr(_buf+o, _cb-fromOffset, szTextToFind, szTextLen);
 }
 
 uint32_t string::findLast(const char* szTextToFind, int32_t szTextLen/*=-1*/, uint32_t fromOffset/*=0*/) const {
     if (!szTextToFind || !szTextToFind[0] || !_buf) return 0xFFFFFFFF; // searching for an empty string
-    if (szTextLen<0) szTextLen = strlen(szTextToFind);
+    if (szTextLen<0) szTextLen = (uint32_t)strlen(szTextToFind);
     char* buf = _buf + _offset + fromOffset;
     uint32_t buflen = _cb-fromOffset;
     uint32_t r = 0xFFFFFFFF;
@@ -419,7 +419,7 @@ uint32_t string::findLast(const char* szTextToFind, int32_t szTextLen/*=-1*/, ui
             break;
         }
         buf += f;
-        r = buf - (_buf+_offset);
+        r = (uint32_t)(buf - (_buf+_offset));
         buf += szTextLen;
         buflen -= (f+szTextLen);
     }
@@ -554,7 +554,7 @@ void string::assign(const char* p, int32_t cb) {
     _offset = 0;
     if (p) {
         if (cb<0) {
-            cb = strlen(p);
+            cb = (int32_t)strlen(p);
         }
         _buf = buf_new(cb);
         _cb = cb;

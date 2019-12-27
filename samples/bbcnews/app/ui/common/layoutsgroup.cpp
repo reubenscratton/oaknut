@@ -133,7 +133,7 @@ void BNOptimizedLayout::expandJson(variant& json, const variant& inc, variant& i
             // (and it wasn't one to start with) then unify them.
             else if (!valueWasArray && value.isArray()) {
                 vector<variant>& valueArray = value.arrayRef();
-                int c = valueArray.size();
+                int c = (int)valueArray.size();
                 array.insert(array.begin()+i, valueArray.begin(), valueArray.end());
                 array.erase(array.begin()+i + c);
                 i += c - 1;

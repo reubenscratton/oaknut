@@ -38,11 +38,11 @@ string BNPolicyUpdatedNotification = "BNPolicyUpdatedNotification";
 
 BNPolicy* BNPolicy::current() {
     if (!s_current) {
-#ifdef USE_DOWNLOADED_POLICY
+/*#ifdef USE_DOWNLOADED_POLICY
         BNPolicy *cachedPolicy = [NSKeyedUnarchiver unarchiveObjectWithFile:[self mainPolicyFileLocation]];
 #else
         BNPolicy *cachedPolicy = nullptr;
-#endif
+#endif*/
         
         bytearray data;
         app->loadAsset("policy.json", data);

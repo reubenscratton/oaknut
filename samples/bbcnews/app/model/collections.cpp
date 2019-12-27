@@ -19,12 +19,12 @@ vector<BNContent::stub> BNCollections::rootCollections = [] {
         BNContent::stub(BNModelIdTopStories, "Top Stories"),
         BNContent::stub(BNModelIdMyNews, "My News"),
     };
-    if (0/*app->isTablet()*/) {
+    /*if (app->_defaultDisplay->sizeClass() == Display::SizeClass::Tablet) {
         roots.push_back(BNContent::stub(BNModelIdMostPopular, "Most Popular"));
-    } else {
+    } else {*/
         roots.push_back(BNContent::stub(BNModelIdMostRead, "Most Read"));
         roots.push_back(BNContent::stub(BNModelIdMostWatched, "Most Watched"));
-    }
+    //}
     return roots;
 }();
 

@@ -18,7 +18,6 @@ static bool s_mouseIsDown;
 - (id)initWithWindow:(Window*)window {
     if (self = [super initWithFrame:CGRectMake(0,0,300,300)]) {
         _oaknutWindow = window;
-        CVDisplayLinkCreateWithActiveCGDisplays(&_displayLink);
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                 selector:@selector(windowWillClose:)
                                                     name:NSWindowWillCloseNotification
@@ -56,13 +55,13 @@ static bool s_mouseIsDown;
             _deltaAcc = {0,0};
         }
         _deltaAcc += delta;
-        inputEvent.delta = delta;
+        //inputEvent.delta = delta;
         inputEvent.pt += _deltaAcc;
     } else {
         inputEvent.deviceType = INPUTEVENT::Mouse;
     }
     _oaknutWindow->dispatchInputEvent(inputEvent);
-    [self setNeedsDisplay:YES];
+    // [self setNeedsDisplay:YES];
 }
 - (void)mouseDown:(NSEvent *)event {
     s_mouseIsDown = true;
@@ -113,37 +112,25 @@ static bool s_mouseIsDown;
 
 #if RENDERER_METAL
 
-// This is the renderer output callback function
-static CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeStamp* now, const CVTimeStamp* outputTime, CVOptionFlags flagsIn, CVOptionFlags* flagsOut, void* displayLinkContext)
-{
-    NativeView* view = (__bridge NativeView*)displayLinkContext;
-    dispatch_async(dispatch_get_main_queue(), ^() {
-        [view->_metalLayer setNeedsDisplay];
-    });
-    return noErr;
-}
-
 
 
 - (void)awake {
     
-    self.acceptsTouchEvents = YES;
+    self.allowedTouchTypes = NSTouchTypeIndirect;
     
-    CVDisplayLinkSetOutputCallback(_displayLink, &DisplayLinkCallback, (__bridge void*)self);
-    
-    // NSViewLayerContentsRedrawOnSetNeedsDisplay
+    // This tells AppKit to not interfere with or otherwise try to manage our layer. It won't waste time
+    // clearing, or scaling, etc.
     [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawNever];
-
-    CVDisplayLinkStart(_displayLink);
+    self.wantsLayer = YES;
+    
 }
 
 
 - (CALayer*)makeBackingLayer {
+    if (!_metalLayer) {
+        _metalLayer = [CAMetalLayer layer];
+    }
     return _metalLayer;
-}
-
-- (void)displayLayer:(CALayer *)layer {
-    _oaknutWindow->draw();
 }
 
 - (void)setFrameSize:(NSSize)newSize {
@@ -152,19 +139,15 @@ static CVReturn DisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeSt
     NSRect viewRectPoints = [self bounds];
     NSRect viewRectPixels = [self convertRectToBacking:viewRectPoints];
     
-    //CGFloat scale = viewRectPixels.size.width / viewRectPoints.size.width;
-    
     self.layer.bounds = self.bounds;
     _metalLayer.bounds = self.bounds;
     _metalLayer.drawableSize = viewRectPixels.size;
 
     _oaknutWindow->resizeSurface(viewRectPixels.size.width, viewRectPixels.size.height);
-    
-    [self setNeedsDisplay:YES];
+    _oaknutWindow->setNeedsFullRedraw();
 }
 
 - (void)_windowWillClose:(NSNotification*)notification {
-    CVDisplayLinkStop(_displayLink);
 }
 #endif
 

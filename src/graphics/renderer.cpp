@@ -129,6 +129,8 @@ string Shader::getFragmentSource() {
     string fs = "c = ";
     if (useTexSampler) {
         switch (_features.textures[0]) {
+            case Texture::Type::None:
+                break;
             case Texture::Type::Normal:
                 fs += SL_TEXSAMPLE_2D("texture",  SL_VERTEX_OUTPUT(texcoord));
                 break;

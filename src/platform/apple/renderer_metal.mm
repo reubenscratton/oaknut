@@ -387,19 +387,14 @@ public:
     
     void bindToNativeWindow(long nativeWindowHandle) override {
         NativeView* nativeView = (__bridge NativeView*)(void*)nativeWindowHandle;
-#if PLATFORM_MACOS
-        _metalLayer = [CAMetalLayer layer];
-        nativeView->_metalLayer =_metalLayer;
-#else
         _metalLayer = (CAMetalLayer*)nativeView.layer;
-#endif
         _metalLayer.opaque = YES;
         _metalLayer.device = _device;
         _metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
         _metalLayer.framebufferOnly = false;//true;
         _metalLayer.contentsScale = app->_defaultDisplay->_scale;// [NSScreen mainScreen].backingScaleFactor;
 #if PLATFORM_MACOS
-        _metalLayer.displaySyncEnabled = 0;
+        _metalLayer.displaySyncEnabled = 1;
         nativeView.wantsLayer = YES;
 #endif
         _commandQueue = [_device newCommandQueue];

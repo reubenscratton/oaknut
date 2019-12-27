@@ -50,7 +50,7 @@ TIMESTAMP App::currentMillis() {
 
 string App::currentCountryCode() const {
     auto sz = [NSLocale currentLocale].countryCode.UTF8String;
-    return string(sz, strlen(sz));
+    return string(sz, (int32_t)strlen(sz));
 }
 
 
@@ -248,7 +248,7 @@ string string::uuid() {
     CFUUIDRef udid = CFUUIDCreate(NULL);
     CFStringRef uuidstr = CFUUIDCreateString(NULL, udid);
     auto sz = CFStringGetCStringPtr(uuidstr,kCFStringEncodingUTF8);
-    string str(sz, strlen(sz));
+    string str(sz, (int32_t)strlen(sz));
     CFRelease(uuidstr);
     CFRelease(udid);
     return str;

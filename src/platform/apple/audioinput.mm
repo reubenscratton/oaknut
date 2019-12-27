@@ -23,7 +23,7 @@ AudioSamplesApple::~AudioSamplesApple() {
 
 bytearray AudioSamplesApple::getData() {
     CMBlockBufferRef buf = CMSampleBufferGetDataBuffer(_sampleBuffer);
-    auto cb = CMBlockBufferGetDataLength(buf);
+    uint32_t cb = (uint32_t)CMBlockBufferGetDataLength(buf);
     bytearray bytes(cb);
     CMBlockBufferCopyDataBytes(buf, 0, cb, bytes.data());
     return bytes;

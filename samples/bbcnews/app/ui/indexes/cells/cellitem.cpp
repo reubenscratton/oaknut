@@ -32,12 +32,12 @@ BNCellItem::BNCellItem(BNCellsModule* module, BNCellStyle cellStyle) : BNCellCon
     if (_imageAspect<=0.) {
         _imageAspect = 9.f/16.f;
     }
-    if (0 && _module->_summaries) {
+    /*if (0 && _module->_summaries) {
         _summary = new BNLabel();
         _summary->applyStyle("summaryText");
         _summary->_useFullWidth = true;
         _textFrame->addSubview(_summary);
-    }
+    }*/
     
     bool hideTopics = _module->_hideTopics;
     
@@ -256,7 +256,7 @@ void BNCellItem::setItem(BNItem* item) {
     _headline->_useFullWidth = true;
     
     if (_topic) {
-        bool isLong = _module->_json.boolVal("long_timestamp");
+        // bool isLong = _module->_json.boolVal("long_timestamp");
         _topic->_useFullWidth = true;
         _topic->setItem(_item, _module->_contentObject.as<BNCollection>());
     }

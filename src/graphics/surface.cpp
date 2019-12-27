@@ -515,9 +515,8 @@ skipDraw:
 }
 
 
+/*
 #if DEBUG
-
-
 static void debugDump(Surface* surface) {
     static int s_frame=0;
     app->log("Frame %d lists=%d batches=%d", ++s_frame, (int)surface->_renderLists.size(), (int)surface->_listBatches.size());
@@ -537,7 +536,7 @@ static void debugDump(Surface* surface) {
     app->log("");
 }
 #endif
-
+*/
 void Surface::checkSanity(View* view, bool dump) {
     list<View*> viewsToCheck = {view};
     int lastValidRenderIndex = -1;

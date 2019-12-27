@@ -59,8 +59,6 @@
 class WindowOSX : public Window {
 public:
     WindowOSX() {
-        //_scale = [NSScreen mainScreen].backingScaleFactor;
-
         _nativeView =  [[NativeView alloc] initWithWindow:this];
         [_nativeView awake];
         _renderer->bindToNativeWindow((long)(__bridge void*)_nativeView);
@@ -87,7 +85,7 @@ public:
     void requestRedrawNative() override {
         dispatch_async(dispatch_get_main_queue(), ^{
             _redrawNeeded = NO;
-            [_nativeView setNeedsDisplay:YES];
+            _nativeView->_oaknutWindow->draw();
         });
     }
     

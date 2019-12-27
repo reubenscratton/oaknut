@@ -15,12 +15,12 @@
     NSView //MTKView
 #endif
 {
+    @public
     Window* _oaknutWindow;
     NSTouch* _touches[10];
 #if RENDERER_METAL
     @public
     CAMetalLayer* _metalLayer;
-    CVDisplayLinkRef _displayLink;
 #endif
     POINT _deltaAcc;
 }
