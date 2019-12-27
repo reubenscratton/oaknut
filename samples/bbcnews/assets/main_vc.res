@@ -18,28 +18,28 @@ subviews: [
     subviews: [
     {
         class: BNTabBarButton
-        image: images/top_stories@2x.png
+        image: images/top_stories.png
         text: Top stories
         tint: $color.bbcNewsRed
     },
     {
         class: BNTabBarButton
-        image: images/my_news@2x.png
+        image: images/my_news.png
         text: My news
     },
     {
         class: BNTabBarButton
-        image: images/popular@2x.png
+        image: images/popular.png
         text: Popular
     },
     {
         class: BNTabBarButton
-        image: images/video@2x.png
+        image: images/video.png
         text: Video
     },
     {
         class: BNTabBarButton
-        image: images/search@2x.png
+        image: images/search.png
         text: Search
     }
     ]

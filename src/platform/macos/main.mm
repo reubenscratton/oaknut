@@ -85,7 +85,7 @@ public:
     void requestRedrawNative() override {
         dispatch_async(dispatch_get_main_queue(), ^{
             _redrawNeeded = NO;
-            _nativeView->_oaknutWindow->draw();
+            draw();
         });
     }
     

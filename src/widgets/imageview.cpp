@@ -86,14 +86,16 @@ void ImageView::setImageNode(AtlasNode* node) {
     setNeedsFullRedraw();
 }
 
-void ImageView::attachToWindow(Window* window) {
-	View::attachToWindow(window);
+//void ImageView::attachToWindow(Window* window) {
+void ImageView::attachToSurface() {
+    View::attachToSurface();
     loadImage();
 }
 
-void ImageView::detachFromWindow() {
-	View::detachFromWindow();
+void ImageView::detachFromSurface() {
+	View::detachFromSurface();
     cancelLoad();
+    _renderOp->setBitmap((Bitmap*)NULL);
 }
 
 void ImageView::loadImage() {
@@ -118,8 +120,10 @@ void ImageView::loadImage() {
         });
     } else if (_url.length() > 0) {
         _request = URLRequest::get(_url, URL_FLAG_BITMAP);
+        retain();
         _request->handleBitmap([=](URLRequest* req, Bitmap* bitmap) {
             setBitmap(bitmap);
+            release();
         });
     }
 }

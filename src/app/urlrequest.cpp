@@ -57,6 +57,8 @@ void URLRequest::handleBitmap(std::function<void (URLRequest*, Bitmap *)> handle
 
 void URLRequest::dispatchResult(int httpStatus, const map<string, string>& responseHeaders) {
     _httpStatus = httpStatus;
+    bool noRelease = false;
+    
     // NB: we are on a background thread here. The handlers must be called on main thread.
     
     // Give app code a chance to process the data in the background
@@ -77,12 +79,23 @@ void URLRequest::dispatchResult(int httpStatus, const map<string, string>& respo
                 });
             } else {
                 if (contentType == "image/jpeg" || contentType == "image/png") {
-                    Bitmap::createFromData(_responseData, [=](Bitmap* bitmap) {
-                        // this runs on main thread
-                        if (!_cancelled) {
-                            _handlerBitmap(this, bitmap);
-                        }
-                    });
+                    noRelease = true;
+                    if (!_responseData.length()) {
+                        App::postToMainThread([=]() {
+                            _handlerBitmap(this, nullptr);
+                            release();
+                        });
+                    } else {
+                        Bitmap::createFromData(_responseData, [=](Bitmap* bitmap) {
+                            // this runs on main thread
+                            if (!_cancelled) {
+                                _handlerBitmap(this, bitmap);
+                            }
+                            App::postToMainThread([=]() {
+                                release();
+                            });
+                        });
+                    }
                 } else {
                     app->warn("Unexpected bitmap type %s", contentType.c_str());
                 }
@@ -122,9 +135,11 @@ void URLRequest::dispatchResult(int httpStatus, const map<string, string>& respo
         }
     }
     
-    App::postToMainThread([=]() {
-        release();
-    });
+    if (!noRelease) {
+        App::postToMainThread([=]() {
+            release();
+        });
+    }
 
 }
 

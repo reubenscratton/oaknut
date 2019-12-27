@@ -136,11 +136,11 @@ void Surface::detachRenderList(RenderList *list) {
         list->_renderListsPos = _renderLists.end();
         list->_renderListsIndex = -1;
     }
-    int i=0;
+    /*int i=0;
     for (auto& it : _renderLists) {
         assert(i == it->_renderListsIndex);
         i++;
-    }
+    }*/
 }
 
 
@@ -303,6 +303,7 @@ void Surface::renderPhase1(Renderer* renderer, View* view, RECT surfaceRect) {
         if (this != view->_surface) {
             if (!view->_surface) {
                 view->_surface = view->_window->_renderer->createPrivateSurface();
+                view->attachToSurface();
             }
 
             // Render the view tree to its private surface
@@ -330,6 +331,7 @@ void Surface::renderPhase1(Renderer* renderer, View* view, RECT surfaceRect) {
     } else {
         if (!view->_surface) {
             view->_surface = this;
+            view->attachToSurface();
         }
     }
     

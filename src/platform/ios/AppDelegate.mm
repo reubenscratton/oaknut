@@ -80,11 +80,15 @@ public:
     }
     
     void requestRedrawNative() override {
-        if (!_nativeView->_renderNeeded) {
-            _nativeView->_renderNeeded = YES;
-            [_nativeView setNeedsDisplay];
-        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            draw();
+#if RENDERER_GL
+            [_nativeView swapBuffers];
+#endif
+        });
     }
+    
+
     
     void keyboardShow(bool show) override {
         if (show) {

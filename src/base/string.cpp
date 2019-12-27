@@ -415,7 +415,7 @@ uint32_t string::findLast(const char* szTextToFind, int32_t szTextLen/*=-1*/, ui
     uint32_t r = 0xFFFFFFFF;
     while (buflen > 0) {
         uint32_t f = findStr(buf, buflen, szTextToFind, szTextLen);
-        if (f > buflen) {
+        if (f >= buflen) {
             break;
         }
         buf += f;

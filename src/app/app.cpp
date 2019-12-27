@@ -208,9 +208,68 @@ bool App::fileLoad(const string& path, bytearray& fileContents) const {
     return true;
 }
 
+static bool qualifierIsScale(const string& q) {
+    return (q=="1x" || q=="2x" || q=="3x");
+}
+
 bool App::loadAsset(const string& assetPath, bytearray& data) {
     string path = "//assets/";
     path += assetPath;
+    
+    // If the file exists as named then that's the easy path
+    if (fileExists(path)) {
+        return fileLoad(path, data);
+    }
+
+    // Otherwise try to find a config-specific asset
+    auto dirpos = path.findLast("/");
+    string dirname = path.substr(0, dirpos);
+    string filename = path.substr(dirpos+1);
+    vector<string> files = fileList(dirname);
+
+    // Filter out irrelevant files
+    auto extpos = filename.findLast(".");
+    string ext = filename.substr(extpos);
+    filename = filename.substr(0, extpos) + "@";
+    for (int i=0 ; i<files.size() ; i++) {
+        string& f = files[i];
+        if (!f.hadSuffix(ext)) {
+            files.erase(files.begin()+i--);
+            continue;
+        }
+        if (!f.hadPrefix(filename)) {
+            files.erase(files.begin()+i--);
+            continue;
+        }
+    }
+    
+    // Weed out qualifiers that don't apply
+    // TODO: share code with styles here
+    for (int i=0 ; i<files.size() ; i++) {
+        string& f = files[i];
+        bool qualFail = false;
+        qualFail |= (f == "3x" && app->_defaultDisplay->_scale < 3);
+        qualFail |= (f == "2x" && app->_defaultDisplay->_scale < 2);
+        if (qualFail) {
+            files.erase(files.begin()+i--);
+        }
+    }
+    
+    // If there's still multiple options, filter down to a single "best" or most-specific qualified file
+    while (files.size() > 1) {
+        for (int i=1 ; i<files.size() ; i++) {
+            if (qualifierIsScale(files[0]) && qualifierIsScale(files[i])) {
+                bool keepFirst = files[0].charAt(0) > files[i].charAt(0);
+                files.erase(files.begin()+ (keepFirst?i:0));
+                break;
+            } else {
+                assert(0); // TODO: finish tie-breaker code
+            }
+        }
+    }
+
+    // Load the winning qualified file
+    path = dirname + "/" + filename + files[0] + ext;
     return fileLoad(path, data);
 }
 

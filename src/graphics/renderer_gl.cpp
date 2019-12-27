@@ -313,6 +313,7 @@ void GLTexture::realloc(int width, int height, void* pixelData, bool sizeChanged
     
     assert(_format != PIXELFORMAT_UNKNOWN);
     
+    int unpackAlignment = 4;
     switch (_format) {
         case PIXELFORMAT_RGBA32: {
             pixelType = GL_UNSIGNED_BYTE;
@@ -330,12 +331,14 @@ void GLTexture::realloc(int width, int height, void* pixelData, bool sizeChanged
             pixelType = GL_UNSIGNED_BYTE;
             format = GL_RGB;
             internalFormat = GL_RGB;
+            unpackAlignment = 1;
             break;
         }
         case PIXELFORMAT_RGB565: {
             pixelType = GL_UNSIGNED_SHORT_5_6_5;
             format = GL_RGB;
             internalFormat = GL_RGB;
+            unpackAlignment = 2;
             break;
         }
         case PIXELFORMAT_A8: {
@@ -347,6 +350,9 @@ void GLTexture::realloc(int width, int height, void* pixelData, bool sizeChanged
             format = GL_ALPHA;
             internalFormat = GL_ALPHA;
 #endif
+            if (width&3) {
+                unpackAlignment = (width&1)?1:2;
+            }
             break;
         }
         default: assert(0);
@@ -370,7 +376,10 @@ void GLTexture::realloc(int width, int height, void* pixelData, bool sizeChanged
     if (format == GL_BGRA) format = GL_RGBA; // WebGL doesn't accept BGRA
 #endif
 
-    
+    if (unpackAlignment != ((GLRenderer*)_renderer)->_unpackAlignment) {
+        ((GLRenderer*)_renderer)->_unpackAlignment = unpackAlignment;
+        glPixelStorei(GL_UNPACK_ALIGNMENT, unpackAlignment);
+    }
     if (sizeChanged || !pixelData) {
         check_gl(glTexImage2D, _texTarget, 0, internalFormat, width, height, 0, format, pixelType, pixelData);
     } else {
@@ -506,6 +515,7 @@ GLRenderer::GLRenderer(Window* window) : Renderer(window) {
         _fullBufferUploadNeeded =true;
 
     };
+    _unpackAlignment = 4;
 }
 
 Texture* GLRenderer::createTexture(int format) {

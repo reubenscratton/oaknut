@@ -254,6 +254,15 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
                     INPUTEVENT flingEvent = event;
                     flingEvent.type = INPUT_EVENT_FLING;
                     flingEvent.velocity = velocity;
+                    if (touchedView->_directionalLockEnabled) {
+                        if (_dragIsVertical) {
+                            flingEvent.delta.x = 0;
+                            flingEvent.velocity.x = 0;
+                        } else {
+                            flingEvent.delta.y = 0;
+                            flingEvent.velocity.y = 0;
+                        }
+                    }
                     touchedView->dispatchInputEvent(&flingEvent);
                 }
             }

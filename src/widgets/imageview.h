@@ -28,8 +28,9 @@ public:
     RECT getImageRect() const;
 	
 	// Overrides
-	void attachToWindow(Window* window) override;
-	void detachFromWindow() override;
+	//void attachToWindow(Window* window) override;
+    void attachToSurface() override;
+	void detachFromSurface() override;
 	void onEffectiveTintColorChanged() override;
 	void layout(RECT constraint) override;
     bool applySingleStyle(const string& name, const style& value) override;

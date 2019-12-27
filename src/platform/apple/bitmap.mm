@@ -280,6 +280,7 @@ public:
         // Detach the compressed image data so nothing owns it
         uint8_t* pd = data.data();
         uint32_t cb = data.size();
+        assert(pd && cb);
         data.detach();
         
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{

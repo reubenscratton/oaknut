@@ -171,6 +171,7 @@ protected:
     /** Called when the view is detached from the application Window */
     virtual void detachFromWindow();
 
+    virtual void attachToSurface();
     virtual void detachFromSurface();
     
     /**  \cond INTERNAL */

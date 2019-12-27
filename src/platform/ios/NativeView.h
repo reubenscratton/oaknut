@@ -18,12 +18,14 @@
     EAGLContext* glContext;
     GLuint renderbuffer;
 #endif
-    CADisplayLink* displayLink;
     UITouch* _touches[10];
     bool _renderNeeded;
     id<UITextInputDelegate> _textInputDelegate;
     Window* _window;
 }
+#if RENDERER_GL
+- (void)swapBuffers;
+#endif
 @end
 @interface NativeView (TextInput) <UITextInput, UITextInputTraits>
 @end

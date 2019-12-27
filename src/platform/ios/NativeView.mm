@@ -11,17 +11,23 @@
 
 @implementation NativeView
 
-#if RENDERER_GL
 + (Class)layerClass {
+#if RENDERER_GL
     return [CAEAGLLayer class];
-}
 #endif
 #if RENDERER_METAL
-+ (Class)layerClass {
     return [CAMetalLayer class];
+#endif
+}
+
+#if RENDERER_GL
+- (void)swapBuffers {
+    [glContext presentRenderbuffer:GL_RENDERBUFFER];
+    // GLKView does this for us
+    //GLenum discards = GL_COLOR_ATTACHMENT0;
+    //glDiscardFramebufferEXT(GL_FRAMEBUFFER, 1, &discards); // aka glInvalidateFramebuffer in ES 3.0
 }
 #endif
-
 
 - (id)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
@@ -52,28 +58,11 @@
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderbuffer);
 #endif
-        displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(render)];
-        [displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-    
     }
     return self;
 }
 
-- (void)render {
-    if (!_renderNeeded) {
-        return;
-    }
-    _renderNeeded = NO;
-    
-    _window->draw();
-    
-#if RENDERER_GL
-    [glContext presentRenderbuffer:GL_RENDERBUFFER];
-    // GLKView does this for us
-    //GLenum discards = GL_COLOR_ATTACHMENT0;
-    //glDiscardFramebufferEXT(GL_FRAMEBUFFER, 1, &discards); // aka glInvalidateFramebuffer in ES 3.0
-#endif
-}
+
 
 - (BOOL)canBecomeFirstResponder {
     return YES;
@@ -135,7 +124,7 @@
 }
 
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
-    [self handleTouches:touches eventType:INPUT_EVENT_CANCEL remove:YES];
+    [self handleTouches:touches eventType:INPUT_EVENT_TAP_CANCEL remove:YES];
 }
 
 

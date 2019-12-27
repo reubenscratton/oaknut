@@ -911,6 +911,9 @@ void View::detachFromWindow() {
     _contentOffsetAccum = _contentOffset;
 }
 
+void View::attachToSurface() {
+    
+}
 void View::detachFromSurface() {
     
     // Unbatch our ops

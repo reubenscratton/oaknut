@@ -12,7 +12,7 @@ NavigationBar: {
 }
 
 color: {
-    bbcNewsRed: #C20026
+    bbcNewsRed: #CC0000
     bbcNewsLiveRed: #CC0000
     window: #e4e4e4
     windowBackground: #e4e4e4

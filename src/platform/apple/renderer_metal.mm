@@ -391,8 +391,10 @@ public:
         _metalLayer.opaque = YES;
         _metalLayer.device = _device;
         _metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-        _metalLayer.framebufferOnly = false;//true;
+        _metalLayer.framebufferOnly = false;
         _metalLayer.contentsScale = app->_defaultDisplay->_scale;// [NSScreen mainScreen].backingScaleFactor;
+        // _metalLayer.maximumDrawableCount = 3;
+        _metalLayer.drawsAsynchronously = YES;
 #if PLATFORM_MACOS
         _metalLayer.displaySyncEnabled = 1;
         nativeView.wantsLayer = YES;
@@ -586,11 +588,14 @@ public:
         _renderCommandEncoder = nil;
         [_commandBuffer presentDrawable:_drawable];
         [_commandBuffer commit];
+        //[_commandBuffer waitUntilScheduled];
+        //[_drawable present];
         
         // NB! Here we stall the CPU until the GPU has processed the command buffer.
         // This will be unsatisfactory if the app needs more CPU time and we should
         // cook up a multibuffer approach for that.
         [_commandBuffer waitUntilCompleted];
+        //[_commandBuffer waitUntilScheduled];
     }
     
     enum EncoderType {

@@ -53,6 +53,7 @@ public:
     
     int getIntProperty(IntProperty property) override;
     
+    GLuint _unpackAlignment;
 protected:
     GLRenderer(Window* window);
 
