@@ -11,14 +11,6 @@ enum Permission {
     PermissionMic,
 };
 
-enum SafeInsetsType {
-    StatusBar=0,
-    BottomNavBar=1,
-    SoftKeyboard=2,
-    LeftDragEdge=3,
-    RightDragEdge=4
-};
-
 /** @class Window
  *  @brief A window is the top level container for app UI. There is usually only one Window instance, globally
    accessible through `app->window`. It usually wraps a native window in some way.
@@ -105,9 +97,12 @@ public:
     
     void layout(RECT constraint) override;
     
-    EDGEINSETS _safeInsetsTotal;
-    EDGEINSETS _safeInsets[5];
-    void setSafeInsets(SafeInsetsType type, const EDGEINSETS& insets);
+    EDGEINSETS _systemSafeInsets;
+    EDGEINSETS _softKeyboardInsets;
+    void setSafeInsets(const EDGEINSETS& insets);
+    void setSoftKeyboardInsets(const EDGEINSETS& insets);
+    EDGEINSETS getSafeInsets() const;
+    void applySafeInsetsChange(bool updateFocusedView);
     void ensureFocusedViewIsInSafeArea();
     
     RectRenderOp* _renderOpDecorTop;

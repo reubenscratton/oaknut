@@ -46,7 +46,7 @@
     keyboardTop *= app->_defaultDisplay->_scale;
     float keyboardHeight = app->_window->getHeight() - keyboardTop;
     
-    app->_window->setSafeInsets(oak::SafeInsetsType::SoftKeyboard, EDGEINSETS(0,0,0,keyboardHeight));
+    app->_window->setSoftKeyboardInsets(EDGEINSETS(0,0,0,keyboardHeight));
     
     if (finished) {
         [displayLink invalidate];

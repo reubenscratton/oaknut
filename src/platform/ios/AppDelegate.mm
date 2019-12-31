@@ -11,6 +11,8 @@
 #import "NativeView.h"
 #import "SoftKeyboardTracker.h"
 
+#define USE_DISPLAY_LINK 1
+
 @interface NativeViewController : UIViewController {
     SoftKeyboardTracker* currentKeyboardTracker;
 }
@@ -55,19 +57,36 @@ void ensureNativeWindowExists() {
     }
 }
 
+#if USE_DISPLAY_LINK
+@interface DisplayLinkHelper : NSObject {
+    CADisplayLink* _displayLink;
+    Window* _window;
+}
+- (id)initWithWindow:(Window*)window;
+@end
+#endif
+
+
 class WindowIOS : public Window {
 public:
-    
+#if USE_DISPLAY_LINK
+    DisplayLinkHelper* _displayLinkHelper;
+#endif
     WindowIOS() {
         ensureNativeWindowExists();
         _nativeView = [[NativeView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
         _nativeView->_window = this;
+        UIEdgeInsets osInsets = _nativeWindow.safeAreaInsets;
         _viewController = [[NativeViewController alloc] initWithNibName:nil bundle:nil];
         _viewController.view = _nativeView;
-        CGRect statusBarFrame = [UIApplication sharedApplication].statusBarFrame;
-        setSafeInsets(StatusBar, EDGEINSETS(0, statusBarFrame.size.height * app->_defaultDisplay->_scale, 0, 0));
+        setSafeInsets(EDGEINSETS(osInsets.left * app->_defaultDisplay->_scale,
+                                 osInsets.top * app->_defaultDisplay->_scale,
+                                 osInsets.right * app->_defaultDisplay->_scale,
+                                 osInsets.bottom * app->_defaultDisplay->_scale));
         _renderer->bindToNativeWindow((long)(__bridge void*)_nativeView);
-
+#if USE_DISPLAY_LINK
+        _displayLinkHelper = [[DisplayLinkHelper alloc] initWithWindow:this];
+#endif
     }
     
     void show() override {
@@ -80,12 +99,16 @@ public:
     }
     
     void requestRedrawNative() override {
+#if USE_DISPLAY_LINK
+        // TODO: start link if not active and stop when inactive. At present link runs continually, wasting CPU.
+#else
         dispatch_async(dispatch_get_main_queue(), ^{
             draw();
 #if RENDERER_GL
             [_nativeView swapBuffers];
 #endif
         });
+#endif
     }
     
 
@@ -285,5 +308,27 @@ Window* Window::create() {
 }
 
 @end
+
+#if USE_DISPLAY_LINK
+@implementation DisplayLinkHelper
+- (id)initWithWindow:(Window*)window {
+    if (self = [super init]) {
+        _window = window;
+        _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(tick)];
+        [_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+    }
+    return self;
+}
+- (void)tick {
+    if (_window->_redrawNeeded) {
+        _window->_redrawNeeded = false;
+        _window->draw();
+#if RENDERER_GL
+        [((WindowIOS*)_window)->_nativeView swapBuffers];
+#endif
+    }
+}
+@end
+#endif
 
 #endif

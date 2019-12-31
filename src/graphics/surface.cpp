@@ -455,7 +455,6 @@ void Surface::renderPhase3(Renderer* renderer, View* view, Surface* prevsurf) {
     if (clips) {
         RECT clip = view->getOwnRect();
         clip.origin = view->_surfaceOrigin;
-        // clip.origin += view->_contentOffsetAccum;
 #if RENDERER_GL
         clip.origin.y = surface->_size.height - clip.bottom(); /* flip Y */
 #endif

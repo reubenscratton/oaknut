@@ -94,8 +94,6 @@ public:
 
 protected:
     sp<View> _view;
-    bool _viewHasSafeAreaPaddingApplied;
-    EDGEINSETS _safeAreaInsets;
     
     // Navigation data
     string _title;

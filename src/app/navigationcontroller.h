@@ -57,7 +57,8 @@ protected:
     sp<NavigationBar> _navBar;
     sp<View> _contentView;
     AnimationState _animationState;
-    
+    EDGEINSETS _safeAreaInsets;
+
 
 };
 

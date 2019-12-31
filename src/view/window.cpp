@@ -36,7 +36,7 @@ void Window::attachViewController(ViewController* viewController) {
     assert(!viewController->getView()->getWindow());
     _viewControllers.push_back(viewController);
     addSubview(viewController->getView());
-    viewController->applySafeInsets(_safeInsetsTotal);
+    viewController->applySafeInsets(getSafeInsets());
     viewController->onWindowAttached();
 }
 void Window::detachViewController(ViewController* viewController) {
@@ -62,11 +62,7 @@ void Window::resizeSurface(int width, int height) {
 	//app->log("Window::resize %d %d", width, height);
     _rect = RECT(0,0,width,height);
     _surface->setSize({(float)width, (float)height});
-    updateDecorOp(false, _safeInsetsTotal.top);
-    updateDecorOp(true, _safeInsetsTotal.bottom);
-    for (auto vc : _viewControllers) {
-        vc->applySafeInsets(_safeInsetsTotal);
-    }
+    applySafeInsetsChange(false);
     setNeedsLayout();
 }
 void Window::destroySurface() {
@@ -486,35 +482,47 @@ bool Window::setFocusedView(View* view) {
 
 
 
-void Window::setSafeInsets(SafeInsetsType type, const EDGEINSETS& insets) {
-    if (_safeInsets[type] != insets) {
-        _safeInsets[type] = insets;
-        _safeInsetsTotal = {0,0,0,0};
-        for (int i=0 ; i<sizeof(_safeInsets)/sizeof(_safeInsets[0]) ; i++) {
-            const EDGEINSETS& inset = _safeInsets[i];
-            _safeInsetsTotal.left = MAX(_safeInsetsTotal.left, inset.left);
-            _safeInsetsTotal.right = MAX(_safeInsetsTotal.right, inset.right);
-            _safeInsetsTotal.top = MAX(_safeInsetsTotal.top, inset.top);
-            _safeInsetsTotal.bottom = MAX(_safeInsetsTotal.bottom, inset.bottom);
-        }
-        
-        // Window decor
-        if (type==SafeInsetsType::BottomNavBar) {
-            updateDecorOp(true, insets.bottom);
-        }
-        if (type==SafeInsetsType::StatusBar) {
-            updateDecorOp(false, insets.top);
-        }
+void Window::setSafeInsets(const EDGEINSETS& insets) {
+    if (_systemSafeInsets != insets) {
+        _systemSafeInsets = insets;
+        applySafeInsetsChange(true);
+    }
+}
 
-        
-        
-        for (auto vc : _viewControllers) {
-            vc->applySafeInsets(_safeInsetsTotal);
-        }
+void Window::setSoftKeyboardInsets(const EDGEINSETS& insets) {
+    if (_softKeyboardInsets != insets) {
+        _softKeyboardInsets = insets;
+        applySafeInsetsChange(true);
+    }
+}
+
+EDGEINSETS Window::getSafeInsets() const {
+    EDGEINSETS insets;
+    insets.left = MAX(_systemSafeInsets.left, _softKeyboardInsets.left);
+    insets.top = MAX(_systemSafeInsets.top, _softKeyboardInsets.top);
+    insets.right = MAX(_systemSafeInsets.right, _softKeyboardInsets.right);
+    insets.bottom = MAX(_systemSafeInsets.bottom, _softKeyboardInsets.bottom);
+    return insets;
+}
+
+void Window::applySafeInsetsChange(bool updateFocusedView) {
+    
+    EDGEINSETS insets = getSafeInsets();
+
+    // Window decor
+    updateDecorOp(true, insets.bottom);
+    updateDecorOp(false, insets.top);
+    
+    for (auto vc : _viewControllers) {
+        vc->applySafeInsets(insets);
+    }
+    
+    if (updateFocusedView) {
         ensureFocusedViewIsInSafeArea();
         requestRedraw();
     }
 }
+
 
 void Window::updateDecorOp(bool bottom, float height) {
     RectRenderOp*& op = bottom?_renderOpDecorBottom:_renderOpDecorTop;
@@ -607,7 +615,8 @@ void Window::ensureFocusedViewIsInSafeArea() {
         // Calculate the extent it is below the safe area
         float dx=0,dy=0;
         RECT safeArea = _rect;
-        _safeInsetsTotal.applyToRect(safeArea);
+        EDGEINSETS safeInsets = getSafeInsets();
+        safeInsets.applyToRect(safeArea);
         float d = rect.bottom() - safeArea.bottom();
         if (d > 0) {
             dy = -d;

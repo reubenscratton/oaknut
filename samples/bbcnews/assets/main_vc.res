@@ -12,7 +12,7 @@ subviews: [
     {
     id: tabbar
     class: TabBar
-    size: fill, 60dp
+    size: fill, wrap
     align: left, bottom
     background: #fff
     subviews: [

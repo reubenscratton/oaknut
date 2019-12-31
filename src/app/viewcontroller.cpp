@@ -35,7 +35,6 @@ void ViewController::setView(View* view) {
 		_view->detachFromWindow();
 	}
 	_view = view;
-    _viewHasSafeAreaPaddingApplied = false;
 	if (view) {
         view->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Fill());
 		if (window) {
@@ -69,31 +68,6 @@ void ViewController::onBackButtonClicked() {
 }
 
 void ViewController::applySafeInsets(const EDGEINSETS& safeInsets) {
-    if (_safeAreaInsets == safeInsets) {
-        return;
-    }
-    
-    // Get view padding and unapply previous safe area
-    EDGEINSETS padding = _view->_padding;
-    if (_viewHasSafeAreaPaddingApplied) {
-        padding.left -= _safeAreaInsets.left;
-        padding.right -= _safeAreaInsets.right;
-        padding.top -= _safeAreaInsets.top;
-        padding.bottom -= _safeAreaInsets.bottom;
-    }
-    
-    _safeAreaInsets = safeInsets;
-    
-
-    // Add safe area insets to view padding
-    padding.left += _safeAreaInsets.left;
-    padding.top += _safeAreaInsets.top;
-    padding.right += _safeAreaInsets.right;
-    padding.bottom += _safeAreaInsets.bottom;
-
-    _viewHasSafeAreaPaddingApplied = true;
-    _view->setPadding(padding);
-    
 }
 
 bool ViewController::navigateBack() {

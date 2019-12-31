@@ -65,14 +65,14 @@ void NavigationController::applySafeInsets(const EDGEINSETS& safeInsets) {
 void NavigationController::applySafeInsetsToChild(ViewController* childVC) {
     EDGEINSETS childInsets = _safeAreaInsets;
     childInsets.top += _navBar->getPreferredContentHeight();
-    app->log("applySafeInsetsToChild %f %f", childInsets.top, childInsets.bottom);
+    //app->log("applySafeInsetsToChild %f %f", childInsets.top, childInsets.bottom);
     childVC->applySafeInsets(childInsets);
 }
 
 void NavigationController::pushViewController(ViewController* vc) {
     if (_currentViewController) {
         if (!vc->_leftButtonsFrame) {
-            vc->addNavButton(false, "images/back@2x.png", [=] () { vc->onBackButtonClicked(); });
+            vc->addNavButton(false, "images/back.png", [=] () { vc->onBackButtonClicked(); });
         }
     }
 

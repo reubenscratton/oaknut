@@ -27,7 +27,7 @@ BNCellMedia::BNCellMedia(BNCellsModule* module) : BNCellContent(module) {
     
     
     _imageView = new BNImageView();
-    _imageView->setBackgroundColor(0xFF8080FF);
+    //_imageView->setBackgroundColor(0xFF8080FF);
     addSubview(_imageView);
     
     if (!module->_json.boolVal("hideCaption")) {

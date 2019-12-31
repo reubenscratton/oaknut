@@ -210,9 +210,11 @@ public:
         bind(_contentView, "content");
         bind(_tabBar, "tabbar");
         
+        
         RenderOp* op = new BlurRenderOp();
         op->setColor(0xFFFFFF);
         _tabBar->setBackground(op);
+        //_tabBar->setBackgroundColor(0x3f000000);
 
         ImageView* logo = new ImageView();
         logo->setImageAsset("images/logo.png");
@@ -232,6 +234,12 @@ public:
             }
         });*/
     }
+    
+    void applySafeInsets(const EDGEINSETS& safeInsets) override {
+        _contentView->setPadding({0, safeInsets.top, 0, safeInsets.bottom + app->dp(60)});
+        _tabBar->setPadding({0,0,0, safeInsets.bottom});
+    }
+
 };
 
 

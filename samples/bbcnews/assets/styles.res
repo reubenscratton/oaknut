@@ -93,8 +93,6 @@ font-sizes: {
     summary@tablet: 18sp
     summary: 14sp
     summary@4inch: 13sp
-    titleModule@tablet: 28sp
-    titleModule: 22sp
     ribbon@tablet: 20sp
     ribbon: 16sp
     cornerLabels@tablet: 20sp
@@ -158,9 +156,9 @@ summaryText: {
 
 
 indexTitle: {
-    padding: 16dp,16dp,16dp,0dp
+    padding: 16dp,24dp,16dp,8dp
     font-weight: light
-    font-size: 17sp
+    font-size: 22sp
 }
 
 
@@ -205,15 +203,10 @@ durationTiny: {
     forecolor: white
 }
 
-titleModule: {
-    font-weight: light
-    font-size: $font-sizes.titleModule
-    forecolor: black
-}
 
 digestTitles: {
     font-weight: light
-    font-size: $font-sizes.titleModule
+    font-size: 22dp
     forecolor: black
     line-height:0
     padding@tablet: 16dp
