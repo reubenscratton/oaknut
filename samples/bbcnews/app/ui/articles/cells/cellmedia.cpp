@@ -21,7 +21,7 @@
 DECLARE_DYNCREATE(BNCellMedia, BNCellsModule*);
 
 BNCellMedia::BNCellMedia(BNCellsModule* module) : BNCellContent(module) {
-    setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+    setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
     _parallax = module->_json.boolVal("parallax");
     _imageAspect = module->_json.floatVal("imageAspect");
     
@@ -32,7 +32,7 @@ BNCellMedia::BNCellMedia(BNCellsModule* module) : BNCellContent(module) {
     
     if (!module->_json.boolVal("hideCaption")) {
         _caption = new BNLabel();
-        _caption->setLayoutOrigin(ALIGNSPEC::Left(), ALIGNSPEC::Below(_imageView, 0));
+        _caption->setLayoutOrigin(LAYOUTSPEC::Left(), LAYOUTSPEC::Below(_imageView, 0));
         _caption->applyStyle("imageCaption");
         addSubview(_caption);
     }
@@ -76,17 +76,17 @@ void BNCellMedia::setMediaObject(BNBaseModel* mediaObject, BNItem* containingIte
     }
     
     if (_imageAspect > 0.f) {
-        setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Aspect(_imageAspect));
+        setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Aspect(this, _imageAspect));
     }
     
     if (_image) {
-        setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+        setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
         float actualImageAspect = _image->_height / (float)_image->_width;
         if (_imageAspect > 0.f) {
             _imageAspect = MIN(actualImageAspect, _imageAspect);
-            _imageView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Aspect(_imageAspect));
+            _imageView->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Aspect(_imageView, _imageAspect));
         } else {
-            _imageView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Aspect(actualImageAspect));
+            _imageView->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Aspect(_imageView, actualImageAspect));
         }
 
         _imageView->setBNImage(_image);

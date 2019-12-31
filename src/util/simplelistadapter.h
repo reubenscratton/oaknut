@@ -57,7 +57,7 @@ public:
     }
     virtual View* createHeaderView(int section) {
         Label* label = new Label();
-        label->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+        label->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
         label->setPadding(EDGEINSETS(app->dp(16),app->dp(4),app->dp(16),app->dp(4)));
         label->setText(getSectionTitle(section));
         label->setBackgroundColor(0xFFeeeeee); // TODO: style

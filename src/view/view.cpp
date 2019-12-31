@@ -12,13 +12,12 @@ DECLARE_DYNCREATE(View);
 
 
 View::View() : _alpha(1.0f),
-                _alignspecHorz(ALIGNSPEC::Left()),
-                _alignspecVert(ALIGNSPEC::Top()),
-                _widthMeasureSpec(MEASURESPEC::Abs(0)),
-                _heightMeasureSpec(MEASURESPEC::Abs(0)),
-                _clipsContents(true)
-{
-    _visibility = Visible;
+                _leftSpec(LAYOUTSPEC::Left()),
+                _topSpec(LAYOUTSPEC::Top()),
+                _rightSpec(LAYOUTSPEC::Wrap()),
+                _bottomSpec(LAYOUTSPEC::Wrap()),
+                _clipsContents(true),
+                _visibility(Visible) {
 }
 
 View::~View() {
@@ -44,22 +43,22 @@ bool View::applySingleStyle(const string& name, const style& value) {
         _id = value.stringVal();
         return true;
     } else if (name == "size") {
-        processSizeStyleValue(value, &_widthMeasureSpec, &_heightMeasureSpec);
+        processSizeStyleValue(value, &_rightSpec, &_bottomSpec);
         return true;
     } else if (name == "height") {
-        _heightMeasureSpec = MEASURESPEC::fromStyle(&value.variantVal(), this);
+        _heightMeasureSpec = LAYOUTSPEC::fromSizeStyle(&value.variantVal(), this);
         return true;
     } else if (name == "width") {
-        _widthMeasureSpec = MEASURESPEC::fromStyle(&value.variantVal(), this);
+        _widthMeasureSpec = LAYOUTSPEC::fromSizeStyle(&value.variantVal(), this);
         return true;
     } else if (name == "align") {
         processAlignStyleValue(value, &_alignspecHorz, &_alignspecVert);
         return true;
     } else if (name == "alignX") {
-        _alignspecHorz = ALIGNSPEC(value.variantVal(), this);
+        _alignspecHorz = LAYOUTSPEC::fromAlignStyle(&value.variantVal(), this);
         return true;
     } else if (name == "alignY") {
-        _alignspecVert = ALIGNSPEC(value.variantVal(), this);
+        _alignspecVert = LAYOUTSPEC::fromAlignStyle(&value.variantVal(), this);
         return true;
     } else if (name == "background") {
         if (handleStatemapDeclaration(name, value)) {
@@ -131,15 +130,15 @@ bool View::applySingleStyle(const string& name, const style& value) {
     return false;
 }
 
-void View::processSizeStyleValue(const style& sizeValue, MEASURESPEC* widthspec, MEASURESPEC* heightspec) {
+void View::processSizeStyleValue(const style& sizeValue, LAYOUTSPEC* widthspec, LAYOUTSPEC* heightspec) {
     if (sizeValue.isArray()) {
         auto arrayVal = sizeValue.arrayVal();
         assert(arrayVal.size()==2);
-        *widthspec = MEASURESPEC::fromStyle(&arrayVal[0].variantVal(), this);
-        *heightspec = MEASURESPEC::fromStyle(&arrayVal[1].variantVal(), this);
+        *widthspec = LAYOUTSPEC::fromSizeStyle(&arrayVal[0].variantVal(), this);
+        *heightspec = LAYOUTSPEC::fromSizeStyle(&arrayVal[1].variantVal(), this);
     } else {
-        *widthspec = MEASURESPEC::fromStyle(&sizeValue.variantVal(), this);
-        *heightspec = MEASURESPEC::fromStyle(&sizeValue.variantVal(), this);
+        *widthspec = LAYOUTSPEC::fromSizeStyle(&sizeValue.variantVal(), this);
+        *heightspec = *widthspec; //LAYOUTSPEC::fromSizeStyle(&sizeValue.variantVal(), this);
     }
 }
 

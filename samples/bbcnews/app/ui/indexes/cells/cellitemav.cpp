@@ -12,7 +12,7 @@ class BNCellItemAV : public BNCellItemTopStory {
 public:
 
     BNCellItemAV(BNCellsModule* module) : BNCellItemTopStory(module) {
-        _widthMeasureSpec = MEASURESPEC::Abs(app->dp(ITEM_WIDTH_IPHONE));
+        _rightSpec = LAYOUTSPEC::Abs(app->dp(ITEM_WIDTH_IPHONE));
     }
 
 

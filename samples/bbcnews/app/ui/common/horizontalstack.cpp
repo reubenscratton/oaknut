@@ -22,8 +22,7 @@ public:
         auto ll = new LinearLayout();
         ll->setBackgroundColor(_backgroundColor);
         ll->_orientation = LinearLayout::Horizontal;
-        //ll->setSpacing(app->dp(8));
-        ll->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+        ll->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
         return ll;
     }
     

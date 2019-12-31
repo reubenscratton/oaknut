@@ -232,14 +232,15 @@ public:
     /** Set padding insets, i.e. the space between the view rect and its content */
     virtual void setPadding(EDGEINSETS padding);
 
-    /** Set the size this view would like to have, given various constraints (see MEASURESPEC and layout()). */
-    virtual void setLayoutSize(MEASURESPEC widthSpec, MEASURESPEC heightSpec);
+    /** Set the preferred alignment within the parent view. See LAYOUTSPEC and layout() **/
+    virtual void setLayoutOrigin(LAYOUTSPEC leftSpec, LAYOUTSPEC topSpec);
+
+    /** Set the size this view would like to have, given various constraints (see LAYOUTSPEC and layout()). */
+    virtual void setLayoutSize(LAYOUTSPEC widthSpec, LAYOUTSPEC heightSpec);
     
     /** Set an absolute view size, in pixels. */
     virtual void setLayoutSize(const SIZE& size);
     
-    /** Set the preferred alignment within the parent view. See ALIGNSPEC and layout() **/
-    virtual void setLayoutOrigin(ALIGNSPEC alignspecHorz, ALIGNSPEC alignspecVert);
     
     /** Signal that the view needs to recalculate its size and position */
     virtual void setNeedsLayout();
@@ -274,25 +275,21 @@ protected:
     /**  \cond INTERNAL */
 
     virtual void layoutSubviews(RECT constraint);
-    /** Determines the view rect size, given the parent size constraint. The default implementation
-     uses the MEASURESPECs passed to setLayoutSize() to calculate the view rect size. */
-    //virtual void measure(SIZE constrainingSize);
-    
 
     /** The visible area covered by the view, in parent view coords */
     RECT _rect;
     
     // TODO: internal docs
-    MEASURESPEC _widthMeasureSpec;
-    MEASURESPEC _heightMeasureSpec;
-    ALIGNSPEC _alignspecHorz;
-    ALIGNSPEC _alignspecVert;
+    LAYOUTSPEC _leftSpec;
+    LAYOUTSPEC _topSpec;
+    LAYOUTSPEC _rightSpec;
+    LAYOUTSPEC _bottomSpec;
     EDGEINSETS _padding;
     Visibility _visibility;
     bool _layoutValid;
     void adjustRectSize(const SIZE& d);
     void adjustSurfaceOrigin(const POINT& d);
-    float getAlignspecVal(const ALIGNSPEC& spec, bool isVertical);
+    // float getAlignspecVal(const ALIGNSPEC& spec, bool isVertical);
     /**  \endcond */
     /**@}*/
 
@@ -478,8 +475,8 @@ protected:
     virtual void applyStatemapStyleValue(const string& name, const style& value);
     map<string, style*>* _statemapStyleValues;
     RenderOp* processDrawable(const style& value);
-    void processSizeStyleValue(const style& sizeValue, MEASURESPEC* widthspec, MEASURESPEC* heightspec);
-    void processAlignStyleValue(const style& alignValue, ALIGNSPEC* horzspec, ALIGNSPEC* vertspec);
+    void processSizeStyleValue(const style& sizeValue, LAYOUTSPEC* widthspec, LAYOUTSPEC* heightspec);
+    void processAlignStyleValue(const style& alignValue, LAYOUTSPEC* horzspec, LAYOUTSPEC* vertspec);
     void processGravityStyleValue(const style& gravityValue, bool horz, bool vert);
     /**  \endcond */
     /**@}*/

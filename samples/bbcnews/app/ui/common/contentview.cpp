@@ -205,7 +205,7 @@ void BNContentView::layout(RECT constraint) {
     if (!_contentObject && !_onlyShowPlaceholder) {
         if (!_loadingImageView) {
             _loadingImageView = new ImageView();
-            _loadingImageView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Fill());
+            _loadingImageView->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Fill());
             addSubview(_loadingImageView);
         }
         

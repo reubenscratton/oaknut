@@ -25,7 +25,7 @@ static attributed_string& getSeparatorString() {
 
 BNTopicLabel::BNTopicLabel(int maxTopics, bool inverseColorScheme, bool hideTimestamp, bool isLongTimestamp) : _maxTopics(maxTopics), _hideTimestamp(hideTimestamp), _longTimestamp(isLongTimestamp)
 {
-    setLayoutSize(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
+    setLayoutSize(LAYOUTSPEC::Wrap(), LAYOUTSPEC::Wrap());
     applyStyle("topicAndTimestamp");
 }
 

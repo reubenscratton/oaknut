@@ -72,7 +72,7 @@ public:
     View* createView() override {
         LinearLayout* view = new LinearLayout();
         view->_orientation = LinearLayout::Horizontal;
-        view->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+        view->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
         return view;
     }
     /*

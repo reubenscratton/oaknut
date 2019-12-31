@@ -16,7 +16,7 @@ static BBCNewsApp the_app;
 
 BNViewPagerController::BNViewPagerController() {
     _view = _viewPager = new ViewPager();
-    _view->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Fill());
+    _view->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Fill());
 }
 
 

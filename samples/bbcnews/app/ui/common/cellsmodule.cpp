@@ -237,13 +237,13 @@ void BNCellsModule::updateLayoutWithContentObject(BNContent* contentObject) {
 class CellsModuleHeader : public View {
 public:
     CellsModuleHeader() {
-        setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+        setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
         _divider = new View();
-        _divider->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+        _divider->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
         addSubview(_divider);
         _label = new Label();
-        _label->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
-        _label->setLayoutOrigin(ALIGNSPEC::Left(), ALIGNSPEC::Below(_divider,0));
+        _label->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
+        _label->setLayoutOrigin(LAYOUTSPEC::Left(), LAYOUTSPEC::Below(_divider,0));
         addSubview(_label);
      }
 
@@ -253,7 +253,7 @@ public:
             return true;
         }
         if (name=="top-divider-height") {
-            _divider->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Abs(value.floatVal()));
+            _divider->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Abs(value.floatVal()));
             return true;
         }
         if (_label->applySingleStyle(name, value)) {
@@ -293,7 +293,7 @@ void BNCellsModule::addToView(View* parent) {
     bool isHorizontal = _arrange == "horizontal";
 
     View* cellsContainer = new View();
-    cellsContainer->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+    cellsContainer->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
     cellsContainer->setPadding(padding);
     if (_backgroundColor) {
         cellsContainer->setBackgroundColor(_backgroundColor);
@@ -302,28 +302,28 @@ void BNCellsModule::addToView(View* parent) {
     parent->addSubview(cellsContainer);
     
     View* cellAbove = nullptr;
-    MEASURESPEC cellWidthSpec = MEASURESPEC {MEASURESPEC::TypeRelative, nullptr, 1.0f/_cellsPerRow, -0.5f*(padding.left+padding.right)*(_cellsPerRow-1)};
+    LAYOUTSPEC cellWidthSpec(nullptr, LAYOUTSPEC::PropWidthOrHeight, 1.0f/_cellsPerRow, -0.5f*(padding.left+padding.right)*(_cellsPerRow-1),0);
     int cellsPerRow = _cellsPerRow;
     if (isHorizontal) {
-        cellWidthSpec = MEASURESPEC::Abs(app->dp(140));
+        cellWidthSpec = LAYOUTSPEC::Abs(app->dp(140));
         cellsPerRow = (int)_cells.size();
     }
-    ALIGNSPEC vertAlign = ALIGNSPEC::Top();
+    LAYOUTSPEC vertAlign = LAYOUTSPEC::Top();
     for (int i=0 ; i<_cells.size() ; ) {
         View* cellPrev = nullptr;
         for (int j=0 ; j<cellsPerRow ; j++, i++) {
             BNCell* cell = _cells[i];
-            cell->setLayoutSize(cellWidthSpec, MEASURESPEC::Wrap());
+            cell->setLayoutSize(cellWidthSpec, LAYOUTSPEC::Wrap());
             if (j==0) {
-                cell->setLayoutOrigin(ALIGNSPEC::Abs(0), vertAlign);
+                cell->setLayoutOrigin(LAYOUTSPEC::Abs(0), vertAlign);
                 cellAbove = cell;
             } else {
-                cell->setLayoutOrigin(ALIGNSPEC::ToRightOf(cellPrev, padding.left), vertAlign);
+                cell->setLayoutOrigin(LAYOUTSPEC::ToRightOf(cellPrev, padding.left), vertAlign);
             }
             cellsContainer->addSubview(cell);
             cellPrev = cell;
         }
-        vertAlign = ALIGNSPEC::Below(cellAbove, padding.top);
+        vertAlign = LAYOUTSPEC::Below(cellAbove, padding.top);
     }
 
 }

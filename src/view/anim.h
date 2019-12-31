@@ -115,18 +115,18 @@ public:
 class LayoutAnimation : public Animation {
 public:
     
-    static LayoutAnimation* startHorizontal(View* view, ALIGNSPEC newAlignspec, int duration, InterpolateFunc interpolator = linear);
-    static LayoutAnimation* startVertical(View* view, ALIGNSPEC newAlignspec, int duration, InterpolateFunc interpolator = linear);
-    static LayoutAnimation* startPositional(View* view, ALIGNSPEC newAlignspecHorz, ALIGNSPEC newAlignspecVert, int duration, InterpolateFunc interpolator = linear);
+    static LayoutAnimation* startHorizontal(View* view, LAYOUTSPEC newLeftSpec, int duration, InterpolateFunc interpolator = linear);
+    static LayoutAnimation* startVertical(View* view, LAYOUTSPEC newLeftSpec, int duration, InterpolateFunc interpolator = linear);
+    static LayoutAnimation* startPositional(View* view, LAYOUTSPEC newLeftSpec, LAYOUTSPEC newTopSpec, int duration, InterpolateFunc interpolator = linear);
     
 protected:
     
     LayoutAnimation(View* view, InterpolateFunc interpolator = linear);
     
-    bool _affectsAlignspecHorz;
-    bool _affectsAlignspecVert;
-    ALIGNSPEC _newAlignspecHorz;
-    ALIGNSPEC _newAlignspecVert;
+    bool _affectsPosHorz;
+    bool _affectsPosVert;
+    LAYOUTSPEC _newLayoutspecHorz;
+    LAYOUTSPEC _newLayoutspecVert;
     float _originHorzStart;
     float _originHorzEnd;
     float _originVertStart;

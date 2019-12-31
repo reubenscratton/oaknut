@@ -39,7 +39,7 @@ public:
         _headline->applyStyle("photoGalleryCell.headline");
         _summary->applyStyle("photoGalleryCell.summary");
         
-        _summary->setLayoutSize(MEASURESPEC::Fill(),MEASURESPEC::Wrap());
+        _summary->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
     }
     
 /*

@@ -26,7 +26,7 @@ public:
         if (!_isTop) {
             if (!_divider) {
                 _divider = new View();
-                _divider->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Abs(1));
+                _divider->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Abs(1));
                 _divider->setBackgroundColor(app->getStyleColor("ActionSheet.divider-color"));
                 addSubview(_divider);
             }

@@ -26,7 +26,7 @@ BNCellItem::BNCellItem(BNCellsModule* module, BNCellStyle cellStyle) : BNCellCon
         _headline->setMinLines(numLines);
         _headline->setMaxLines(numLines);
     }
-    _headline->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+    _headline->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
     _showMediaGlyphInHeadline = _module->_showMediaGlyphInHeadline;
     _imageAspect = _module->_json.floatVal("imageAspect");
     if (_imageAspect<=0.) {
@@ -81,7 +81,7 @@ BNCellItem::BNCellItem(BNCellsModule* module, BNCellStyle cellStyle) : BNCellCon
     
     
     if (cellStyle == BNCellStyle::Digest) {
-        _imageView->setLayoutSize(MEASURESPEC::Abs(144), MEASURESPEC::Abs(81));
+        _imageView->setLayoutSize(LAYOUTSPEC::Abs(144), LAYOUTSPEC::Abs(81));
         _showMediaGlyphInHeadline = false;
         hideTopics = true;
         //_headline->_numLines = _module->_json.intVal("numLines");
@@ -114,7 +114,7 @@ BNCellItem::BNCellItem(BNCellsModule* module, BNCellStyle cellStyle) : BNCellCon
     
     if (orientation == LandscapeWithFullWidthHeadline) {
         setPadding(_textAreaInsets);
-        _headline->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+        _headline->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
         /*_imageOrigin.x = _textAreaInsets.left;
          _imageOrigin.y = _textAreaInsets.top + _headline->_bounds.size.height + _textAreaInsets.bottom;
          
@@ -148,25 +148,25 @@ BNCellItem::BNCellItem(BNCellsModule* module, BNCellStyle cellStyle) : BNCellCon
         //_imageOrigin = {_module->_cellPadding.left, _module->_cellPadding.top};
         if (app->_defaultDisplay->sizeClass() == Display::Tablet) {
             if (_module->_imageWidthSpec <= 1) {
-                _imageView->setLayoutSize({MEASURESPEC::TypeRelative,NULL,_module->_imageWidthSpec,  - _textAreaInsets.left/4}, MEASURESPEC::Aspect(9.f/16.f));
+                _imageView->setLayoutSize(LAYOUTSPEC::Fill(_module->_imageWidthSpec, -_textAreaInsets.left/4), LAYOUTSPEC::Aspect(_imageView, 9.f/16.f));
             } else {
-                _imageView->setLayoutSize({MEASURESPEC::TypeRelative,NULL,_module->_imageWidthSpec,0}, MEASURESPEC::Aspect(9.f/16.f));
+                _imageView->setLayoutSize(LAYOUTSPEC::Fill(_module->_imageWidthSpec), LAYOUTSPEC::Aspect(_imageView, 9.f/16.f));
             }
-            _imageView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Aspect(9.f/16.f));
+            _imageView->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Aspect(_imageView, 9.f/16.f));
             
         } else {
-            _imageView->setLayoutSize(MEASURESPEC::Abs(app->dp(144)), MEASURESPEC::Abs(app->dp(81)));
+            _imageView->setLayoutSize(LAYOUTSPEC::Abs(app->dp(144)), LAYOUTSPEC::Abs(app->dp(81)));
         }
         
-        _textFrame->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Match(_imageView));
-        _textFrame->setLayoutOrigin(ALIGNSPEC::ToRightOf(_imageView, 0),ALIGNSPEC::Top());
+        _textFrame->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Match(_imageView));
+        _textFrame->setLayoutOrigin(LAYOUTSPEC::ToRightOf(_imageView, 0), LAYOUTSPEC::Top());
         
         // Image fills left half (actually slightly less than half)
         
         
         // Headline first
-        _headline->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
-        _headline->setLayoutOrigin(ALIGNSPEC::Left(), ALIGNSPEC::Top());
+        _headline->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
+        _headline->setLayoutOrigin(LAYOUTSPEC::Left(), LAYOUTSPEC::Top());
         
         // Summary beneath headline
         /*if (_showSummary) {
@@ -176,7 +176,7 @@ BNCellItem::BNCellItem(BNCellsModule* module, BNCellStyle cellStyle) : BNCellCon
         
         // Topic at bottom
         if (_topic) {
-            _topic->setLayoutOrigin(ALIGNSPEC::Left(), ALIGNSPEC::Bottom());
+            _topic->setLayoutOrigin(LAYOUTSPEC::Left(), LAYOUTSPEC::Bottom());
         }
         /*
          // If bottom of topic is higher than bottom of image, shift topic down so they're aligned
@@ -198,16 +198,16 @@ BNCellItem::BNCellItem(BNCellsModule* module, BNCellStyle cellStyle) : BNCellCon
          _frame.size = rect.size;*/
     } else {
         
-        _imageView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Aspect(9.f/16.f));
-        _textFrame->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
-        _textFrame->setLayoutOrigin(ALIGNSPEC::Left(), ALIGNSPEC::Below(_imageView, 0));
+        _imageView->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Aspect(_imageView, 9.f/16.f));
+        _textFrame->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
+        _textFrame->setLayoutOrigin(LAYOUTSPEC::Left(), LAYOUTSPEC::Below(_imageView, 0));
         
-        _headline->setLayoutOrigin(ALIGNSPEC::Left(), ALIGNSPEC::Top());
+        _headline->setLayoutOrigin(LAYOUTSPEC::Left(), LAYOUTSPEC::Top());
         if (_summary) {
-            _summary->setLayoutOrigin(ALIGNSPEC::Left(), ALIGNSPEC::Below(_headline, 0));
+            _summary->setLayoutOrigin(LAYOUTSPEC::Left(), LAYOUTSPEC::Below(_headline, 0));
         }
         if (_topic) {
-            _topic->setLayoutOrigin(ALIGNSPEC::Left(), ALIGNSPEC::Below(_headline, 0));
+            _topic->setLayoutOrigin(LAYOUTSPEC::Left(), LAYOUTSPEC::Below(_headline, 0));
         }
         
     }

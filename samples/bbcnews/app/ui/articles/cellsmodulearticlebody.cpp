@@ -24,10 +24,10 @@ public:
     LinearLayout* _ll;
 
     BNCellArticleText(BNCellsModule* module) : BNCell(module) {
-        setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+        setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
         _ll = new LinearLayout();
         _ll->_orientation = LinearLayout::Vertical;
-        _ll->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+        _ll->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
         addSubview(_ll);
     }
 
@@ -49,7 +49,7 @@ public:
             if (elem.text.lengthInBytes()) {
                 Label* label = new Label();
                 label->applyStyle(*textStyleDefault);
-                label->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+                label->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
                 label->setText(elem.text);
                 _ll->addSubview(label);
             }
@@ -59,7 +59,7 @@ public:
                 imageView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Aspect(elem.image->_height/(float)elem.image->_width));
                 _ll->addSubview(imageView);*/
                 BNCellMedia* mediaCell = new BNCellMedia(_module);
-                mediaCell->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+                mediaCell->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
                 mediaCell->setMediaObject(elem.image, item);
                 _ll->addSubview(mediaCell);
 

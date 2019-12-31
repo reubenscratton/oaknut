@@ -36,7 +36,7 @@ void ViewController::setView(View* view) {
 	}
 	_view = view;
 	if (view) {
-        view->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Fill());
+        view->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Fill());
 		if (window) {
 			view->attachToWindow(window);
 		}
@@ -83,8 +83,8 @@ ToolbarButton* ViewController::addNavButton(bool rightSide, const string& assetP
     if (!frame) {
         frame = new LinearLayout();
         frame->_orientation = LinearLayout::Horizontal;
-        frame->setLayoutSize(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
-        frame->setLayoutOrigin(rightSide ? ALIGNSPEC::Right() : ALIGNSPEC::Left(), ALIGNSPEC::Center());
+        frame->setLayoutSize(LAYOUTSPEC::Wrap(), LAYOUTSPEC::Wrap());
+        frame->setLayoutOrigin(rightSide ? LAYOUTSPEC::Right() : LAYOUTSPEC::Left(), LAYOUTSPEC::Center());
     }
     ToolbarButton* button = new ToolbarButton();
     button->setImageAsset(assetPath);
@@ -108,8 +108,8 @@ void ViewController::setTitleView(View* titleView) {
     if (_titleView) {
         _titleView->removeFromParent();
     }
-    titleView->setLayoutSize(MEASURESPEC::Wrap(), MEASURESPEC::Wrap());
-    titleView->setLayoutOrigin(ALIGNSPEC::Center(), ALIGNSPEC(NULL, 0.5f, -0.5f, 0));
+    titleView->setLayoutSize(LAYOUTSPEC::Wrap(), LAYOUTSPEC::Wrap());
+    titleView->setLayoutOrigin(LAYOUTSPEC::Center(), LAYOUTSPEC::Center());
     _titleView = titleView;
     _title = "";
 }

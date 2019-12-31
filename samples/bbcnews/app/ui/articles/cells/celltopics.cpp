@@ -19,7 +19,7 @@ public:
     BNCellTopics(BNCellsModule* module) : BNCell(module) {
         setPadding({32,8,0,8});
         _label = new BNTopicLabel(1, false, false, true);
-        _label->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+        _label->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
         _label->setUseDynamicText(true);
         addSubview(_label);
     }

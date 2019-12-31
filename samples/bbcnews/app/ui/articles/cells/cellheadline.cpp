@@ -13,7 +13,7 @@ public:
 
     BNCellHeadline(BNCellsModule* module) : BNCell(module) {
         _label = new BNLabel();
-        _label->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+        _label->setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
         _label->applyStyle("H1");
         _label->setUseDynamicText(true);
         _label->setPadding(EDGEINSETS(32, 16, 32, 8));

@@ -16,7 +16,7 @@ BNCell::BNCell(BNCellsModule *module) {
     if (color) {
         setBackgroundColor(color);
     }
-    setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
+    setLayoutSize(LAYOUTSPEC::Fill(), LAYOUTSPEC::Wrap());
 }
 
 void BNCell::setItem(BNItem* item) {
