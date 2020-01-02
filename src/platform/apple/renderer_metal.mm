@@ -65,9 +65,7 @@ public:
 
     }
 
-    
 };
-
 
 class MetalSurface : public Surface {
 public:
@@ -321,6 +319,7 @@ public:
     
     id<MTLRenderCommandEncoder> _renderCommandEncoder;
     id<MTLBlitCommandEncoder> _blitCommandEncoder;
+    dispatch_queue_t _uploaderQueue;
 
     RendererApple(Window* window) : Renderer(window) {
         _device = MTLCreateSystemDefaultDevice();
@@ -372,7 +371,7 @@ public:
             _fullBufferUploadNeeded =true;
 
         };
-
+        _uploaderQueue = dispatch_queue_create("TextureUploads", DISPATCH_QUEUE_SERIAL);
     }
     
     int getIntProperty(IntProperty property) override {
@@ -535,10 +534,17 @@ public:
             
             if (metalTexture->_needsUpload) {
                 metalTexture->_needsUpload = false;
-                PIXELDATA pixeldata;
-                metalTexture->_bitmap->lock(&pixeldata, false);
-                [metalTexture->_tex replaceRegion:MTLRegionMake2D(0,0,metalTexture->_bitmap->_width,metalTexture->_bitmap->_height) mipmapLevel:0 withBytes:pixeldata.data bytesPerRow:pixeldata.stride];
-                metalTexture->_bitmap->unlock(&pixeldata, false);
+                metalTexture->retain();
+                dispatch_async(_uploaderQueue, ^{
+                    PIXELDATA pixeldata;
+                    metalTexture->_bitmap->lock(&pixeldata, false);
+                    //app->log("texture upload %d x %d", _bitmap->_width, _bitmap->_height);
+                    [metalTexture->_tex replaceRegion:MTLRegionMake2D(0,0,metalTexture->_bitmap->_width,metalTexture->_bitmap->_height) mipmapLevel:0 withBytes:pixeldata.data bytesPerRow:pixeldata.stride];
+                    metalTexture->_bitmap->unlock(&pixeldata, false);
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        metalTexture->release();
+                    });
+                });
             }
             [_renderCommandEncoder setFragmentTexture:metalTexture->_tex atIndex:0];
             [_renderCommandEncoder setFragmentSamplerState:metalTexture->_sampler atIndex:0];

@@ -34,6 +34,47 @@ def __lldb_init_module(debugger, dict):
     debugger.HandleCommand('type summary add -F lldb_oaknut.sp_SummaryProvider -x "^oak::sp<.*>"')
     debugger.HandleCommand('type synthetic add -x "^oak::sp<.*>" --python-class lldb_oaknut.sp_SynthProvider')
 
+    #debugger.HandleCommand('type summary add -F lldb_oaknut.listit_SummaryProvider -x "^std::__1::__list_iterator<.*>::__link_pointer"')
+    #debugger.HandleCommand('type synthetic add -x "^std::__1::__list_iterator<.*>::__link_pointer" --python-class lldb_oaknut.listit_SynthProvider')
+
+def listit_SummaryProvider(valobj, dict):
+    # Get the address of the list item value which follows the prev + next pointers
+    valobj = valobj.GetNonSyntheticValue()
+    ptrsize = valobj.GetType().GetByteSize()
+    valaddr = valobj.GetValueAsUnsigned() + ptrsize * 2
+    # Get the list item type via the template type text
+    templateTypeNames = valobj.GetTypeName()[26:-17]
+    itemTypeName = templateTypeNames.split(',', 1)[0]
+    itemType = valobj.GetTarget().FindFirstType(itemTypeName)
+    # Create value
+    obj = valobj.GetTarget().EvaluateExpression('*(' + itemTypeName + ' *){:#x}'.format(valaddr))
+    return nicetype(obj.GetType().GetDisplayTypeName()) + " " + obj.GetValue()
+
+class listit_SynthProvider:
+    def __init__(self, valobj, dict):
+        self.valobj = valobj
+    def num_children(self):
+        if self.obj is None:
+            return 0
+        return 1
+    def get_child_index(self, name):
+        if self.obj is None:
+            return -1
+        return 0
+    def get_child_at_index(self, index):
+        return self.obj
+    def has_children(self):
+        return True
+    def update(self):
+        #*(void**)(_renderListsLastTouchedIterator.__ptr_ + 1)
+        ptr = self.valobj.GetValueAsUnsigned()
+        target = self.valobj.GetTarget()
+        addr = lldb.SBAddress(ptr, target)
+        ty = target.FindFirstType('void*')
+        self.obj = self.valobj.CreateValueFromAddress('item', addr, ty)
+        #self.obj = self.valobj.CreateValueFromExpression('item', '*(void**)"' + ptr + '"')
+        return
+
 def nicetype(t):
     t = t.strip('oak::')
     t = t.replace(' *', '*')

@@ -97,7 +97,6 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
 
         // Enumerate font and forecolor attributes at this phase
         attributed_string::enumerator eFont(attributed_string::attribute::type::Font, _text, _defaultParams.font);
-        attributed_string::enumerator eForecolor(attributed_string::attribute::type::Forecolor, _text, &_defaultParams.forecolor);
         
 
         // Iterate over text
@@ -135,10 +134,8 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
                 assert(glyph);
             }
             
-            eForecolor.advanceTo(i-1);
-            
-            // Add the glyph to the list
-            _renderGlyphs.emplace_back(RENDER_GLYPH {glyph, *(COLOR*)eForecolor.current()});
+            // Add the glyph to the list (using the default forecolor)
+            _renderGlyphs.emplace_back(RENDER_GLYPH {glyph, _defaultParams.forecolor});
         }
         
         _invalid &= ~ INVALID_GLYPHS;
@@ -497,6 +494,7 @@ void TextLayout::updateRenderOpsForView(View* view) {
         map<AtlasPage*,TextRenderOp*> uniqueOps;
         AtlasPage* currentAtlas = NULL;
         TextRenderOp* currentOp = NULL;
+        attributed_string::enumerator eForecolor(attributed_string::attribute::type::Forecolor, _text, &_defaultParams.forecolor);
         for (int i=0 ; i<_renderLines.size() ; i++) {
             auto& line = _renderLines.at(i);
             if (visibleRect.intersects(line.rect)) {
@@ -516,9 +514,12 @@ void TextLayout::updateRenderOpsForView(View* view) {
                         currentOp = it.first->second;
                     }
                     if (rg.glyph->_codepoint != ' ') {
+                        eForecolor.advanceTo(g);
+                        rg.forecolor = *(COLOR*)eForecolor.current();
                         currentOp->addGlyph(rg.glyph, RECT {rg.topLeft.x,rg.topLeft.y, static_cast<float>(rg.glyph->_size.width), static_cast<float>(rg.glyph->_size.height)}, rg.forecolor);
                     }
                 }
+                
                 
                 // Experimental underline support
                 eUnderlines.enumerate(line.start, line.start+line.count, [=](const attributed_string::attribute_usage& attrib) {

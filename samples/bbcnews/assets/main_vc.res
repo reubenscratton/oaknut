@@ -4,10 +4,33 @@ size: fill
 subviews: [
     {
     id: content
-    class: BNContentView
     size: fill
-    scroll-insets:0,0,0,60dp
-    padding-bottom: 68dp
+    subviews: [
+        {
+        id: top-stories
+        class: BNContentView
+        size: fill
+        },
+        {
+        id: my-news
+        class: BNContentView
+        size: fill
+        },
+        {
+        id: popular
+        class: BNContentView
+        size: fill
+        },
+        {
+        id: video
+        class: BNContentView
+        size: fill
+        },
+        {
+        id: search
+        size: fill
+        }
+    ]
     },
     {
     id: tabbar
@@ -15,30 +38,27 @@ subviews: [
     size: fill, wrap
     align: left, bottom
     background: #fff
-    subviews: [
+    button-class: BNTabBarButton
+    tint: #444
+    selected-tint: $color.bbcNewsRed
+    buttons: [
     {
-        class: BNTabBarButton
         image: images/top_stories.png
         text: Top stories
-        tint: $color.bbcNewsRed
     },
     {
-        class: BNTabBarButton
         image: images/my_news.png
         text: My news
     },
     {
-        class: BNTabBarButton
         image: images/popular.png
         text: Popular
     },
     {
-        class: BNTabBarButton
         image: images/video.png
         text: Video
     },
     {
-        class: BNTabBarButton
         image: images/search.png
         text: Search
     }

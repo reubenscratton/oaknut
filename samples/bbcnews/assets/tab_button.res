@@ -2,7 +2,6 @@
     size: 20%, 60dp
     padding: 8dp
     gravity: center
-    tint: #444
     subviews: [
         {
             id: label

@@ -184,6 +184,9 @@ void BNContentView::setCurrentLayout(BNLayout* layout) {
 void BNContentView::attachToWindow(Window *window) {
     View::attachToWindow(window);
     requestContent(true);
+    auto safeInsets = window->_rootViewController->getSafeInsets();
+    setPadding(safeInsets);
+    setScrollInsets(safeInsets);
     /*if (!self.onlyShowPlaceholder) {
         if (self.superview) {
             //NSLog(@"Page request for %@", self.contentStub.modelId);
@@ -286,7 +289,7 @@ void BNContentView::layout(RECT constraint) {
         // Copyright
         BNLabel* label = new BNLabel();
         label->applyStyle("copyright");
-        label->setText("Copyright © 2019 BBC.");
+        label->setText("Copyright © 2020 BBC.");
         _subviews[0]->addSubview(label);
     }
     

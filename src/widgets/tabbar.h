@@ -25,14 +25,22 @@ public:
      * @{
      */
     /** @} */
-    
-    
-    
+    bool applySingleStyle(const string& name, const style& value) override;
+
+    virtual void setSelectedIndex(int buttonIndex);
+    std::function<void(int)> onSelectedIndexSet;
+    std::function<void(int,View*)> onButtonClick;
+
 #ifdef DEBUG
     string debugViewType() override;
 #endif
     
 protected:
+    virtual void handleButtonClick(int buttonIndex);
+    
+    string _buttonClassName;
+    COLOR _selectedTint;
+    int _selectedIndex;
 };
 
 

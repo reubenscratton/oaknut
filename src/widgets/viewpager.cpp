@@ -11,6 +11,7 @@ DECLARE_DYNCREATE(ViewPager);
 
 ViewPager::ViewPager() : View() {
     _directionalLockEnabled = true;
+    _pendingCurrentPageIndex = -1;
 }
 
 ViewPager::Adapter* ViewPager::getAdapter() const {
@@ -44,6 +45,10 @@ void ViewPager::setContentOffset(POINT contentOffset, bool animated/*=false*/) {
 void ViewPager::layout(RECT constraint) {
     View::layout(constraint);
     
+    if (_pendingCurrentPageIndex >= 0) {
+        setContentOffset({_pendingCurrentPageIndex * _rect.size.width, 0});
+        _pendingCurrentPageIndex = -1;
+    }
     ensureFillRectFilled();
 }
 
@@ -91,7 +96,10 @@ void ViewPager::ensureFillRectFilled() {
 }
 
 void ViewPager::setCurrentPage(int32_t pageIndex, bool animated) {
-    setContentOffset({pageIndex * _rect.size.width, 0}, animated);
+    _pendingCurrentPageIndex = pageIndex;
+    if (_window) {
+        setContentOffset({pageIndex * _rect.size.width, 0}, animated);
+    }
 }
  
 

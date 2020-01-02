@@ -19,6 +19,9 @@ BNViewPagerController::BNViewPagerController() {
     _view->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Fill());
 }
 
+void BNViewPagerController::applySafeInsets(const EDGEINSETS& safeInsets) {
+    
+}
 
 bool BNViewPagerController::navigateToUrl(const string& url, bool animated) {
 
@@ -202,26 +205,41 @@ DECLARE_DYNCREATE(BNTabBarButton);
 
 class MainViewController : public ViewController {
 public:
-    BNContentView* _contentView;
+    BNContentView* _topStories;
+    BNContentView* _myNews;
+    BNContentView* _popular;
+    BNContentView* _videos;
+    View* _search;
     TabBar* _tabBar;
     
     MainViewController() {
         inflate("main_vc.res");
-        bind(_contentView, "content");
+        bind(_topStories, "top-stories");
+        bind(_myNews, "my-news");
+        bind(_popular, "popular");
+        bind(_videos, "video");
+        bind(_search, "search");
         bind(_tabBar, "tabbar");
         
         
         RenderOp* op = new BlurRenderOp();
         op->setColor(0xFFFFFF);
         _tabBar->setBackground(op);
-        //_tabBar->setBackgroundColor(0x3f000000);
+        _tabBar->onSelectedIndexSet = [=](int index) {
+            _topStories->setVisibility((index==0)?Visibility::Visible : Visibility::Gone);
+            _myNews->setVisibility((index==1)?Visibility::Visible : Visibility::Gone);
+            _popular->setVisibility((index==2)?Visibility::Visible : Visibility::Gone);
+            _videos->setVisibility((index==3)?Visibility::Visible : Visibility::Gone);
+            _search->setVisibility((index==4)?Visibility::Visible : Visibility::Gone);
+        };
+        _tabBar->setSelectedIndex(0);
 
         ImageView* logo = new ImageView();
         logo->setImageAsset("images/logo.png");
         setTitleView(logo);
         
         auto stub = BNContent::stub::fromID("/cps/news/front_page", "Front Page");
-        _contentView->setContentStub(stub);
+        _topStories->setContentStub(stub);
         
         /*auto req = URLRequest::get(URLBASE_CONTENT + "/cps/news/front_page");
         req->handleJson([=] (URLRequest* req, const variant& data) {
@@ -233,10 +251,13 @@ public:
                 
             }
         });*/
+        
+
     }
     
     void applySafeInsets(const EDGEINSETS& safeInsets) override {
-        _contentView->setPadding({0, safeInsets.top, 0, safeInsets.bottom + app->dp(60)});
+        _topStories->setPadding({0, safeInsets.top, 0, safeInsets.bottom + app->dp(60)});
+        _topStories->setScrollInsets({0, safeInsets.top, 0, safeInsets.bottom + app->dp(60)});
         _tabBar->setPadding({0,0,0, safeInsets.bottom});
     }
 

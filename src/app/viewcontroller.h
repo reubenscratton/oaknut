@@ -85,6 +85,7 @@ public:
     /** @name Misc
      * @{
      */
+    virtual EDGEINSETS getSafeInsets() const;
     virtual void applySafeInsets(const EDGEINSETS& safeInsets);
 
     virtual bool navigateBack();
@@ -94,6 +95,7 @@ public:
 
 protected:
     sp<View> _view;
+    EDGEINSETS _safeInsets;
     
     // Navigation data
     string _title;

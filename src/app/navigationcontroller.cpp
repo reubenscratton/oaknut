@@ -51,7 +51,7 @@ void NavigationController::onWindowDetached() {
 
 void NavigationController::applySafeInsets(const EDGEINSETS& safeInsets) {
 
-    _safeAreaInsets = safeInsets;
+    _safeInsets = safeInsets;
     _navBar->setPadding({0,safeInsets.top,0,0});
     
     if (_currentViewController) {
@@ -62,11 +62,14 @@ void NavigationController::applySafeInsets(const EDGEINSETS& safeInsets) {
     }
 }
 
+EDGEINSETS NavigationController::getSafeInsets() const {
+    EDGEINSETS insets = _safeInsets;
+    insets.top += _navBar->getPreferredContentHeight();
+    return insets;
+}
+
 void NavigationController::applySafeInsetsToChild(ViewController* childVC) {
-    EDGEINSETS childInsets = _safeAreaInsets;
-    childInsets.top += _navBar->getPreferredContentHeight();
-    //app->log("applySafeInsetsToChild %f %f", childInsets.top, childInsets.bottom);
-    childVC->applySafeInsets(childInsets);
+    childVC->applySafeInsets(getSafeInsets());
 }
 
 void NavigationController::pushViewController(ViewController* vc) {

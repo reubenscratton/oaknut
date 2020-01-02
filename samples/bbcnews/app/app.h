@@ -22,6 +22,9 @@ public:
     bool navigateToUrl(const string& url, bool animated);
     bool isRootVC();
     void onCannotRenderContentPleaseShowInBrowserKThxBai(const string& contentUrl);
+    
+    void applySafeInsets(const EDGEINSETS& safeInsets) override;
+
 };
 
 class BNContentViewPagerController : public BNViewPagerController {

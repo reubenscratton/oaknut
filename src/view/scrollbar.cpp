@@ -244,8 +244,11 @@ bool ScrollInfo::handleEvent(View* view, bool isVertical, INPUTEVENT* event) {
         if (canScroll) {
             flingCancel();
             float val = isVertical ? event->velocity.y : event->velocity.x;
-            _fling = new Fling(offset, -val, 0, contentSize-viewSize);
-            view->setNeedsFullRedraw();
+            if (fabsf(val)!=0.0f) {
+                _fling = new Fling(offset, -val, 0, contentSize-viewSize);
+                view->setNeedsFullRedraw();
+                rv = true;
+            }
         }
     }
     return rv;

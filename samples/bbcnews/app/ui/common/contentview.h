@@ -17,7 +17,6 @@ public:
     
     BNContentView();
     void setContentStub(const BNContent::stub& contentStub, bool onlyShowPlaceholder=false);
-    //- (void)recordAnalyticForPageView;
 
     float _topInset; // only set after construction
 

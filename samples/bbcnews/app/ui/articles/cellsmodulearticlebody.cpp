@@ -35,13 +35,17 @@ public:
         _ll->removeAllSubviews();
         
         // Filter out the primary image (as it is usually presented above the article text)
-        BNImage* primaryImage = nullptr;
+        BNImage* primaryImageToExclude = nullptr;
         if (!_module->_json.boolVal("includePrimaryMedia")) {
-            primaryImage = (BNImage*)item->findChildObject(BNModelTypeImage, BNRelationshipTypePlacementPrimary);
-            if (!primaryImage) {
-                primaryImage = (BNImage*)item->findChildObject(BNModelTypeVideo, BNRelationshipTypePlacementPrimary);
+            primaryImageToExclude = (BNImage*)item->findChildObject(BNModelTypeImage, BNRelationshipTypePlacementPrimary);
+            if (!primaryImageToExclude) {
+                BNVideo* primaryVideo = (BNVideo*)item->findChildObject(BNModelTypeVideo, BNRelationshipTypePlacementPrimary);
+                if (primaryVideo) {
+                    primaryImageToExclude = primaryVideo->posterImage();
+                }
             }
         }
+        
         
         auto textStyleDefault = app->getStyle("article.text.default");
         
@@ -53,7 +57,7 @@ public:
                 label->setText(elem.text);
                 _ll->addSubview(label);
             }
-            if (elem.image && elem.image!=primaryImage) {
+            if (elem.image && (primaryImageToExclude && (elem.image->_modelId !=primaryImageToExclude->_modelId))) {
                 /*BNImageView* imageView = new BNImageView();
                 imageView->setBNImage(elem.image);
                 imageView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Aspect(elem.image->_height/(float)elem.image->_width));

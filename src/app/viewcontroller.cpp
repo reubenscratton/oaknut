@@ -67,7 +67,12 @@ void ViewController::onBackButtonClicked() {
 	}
 }
 
+EDGEINSETS ViewController::getSafeInsets() const {
+    return _safeInsets;
+}
+
 void ViewController::applySafeInsets(const EDGEINSETS& safeInsets) {
+    _safeInsets = safeInsets;
 }
 
 bool ViewController::navigateBack() {

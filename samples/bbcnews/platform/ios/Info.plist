@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>BBCNews</string>
+	<string>BBC News</string>
 	<key>CFBundleExecutable</key>
 	<string>BBCNews</string>
 	<key>CFBundleIcons</key>
@@ -47,7 +47,7 @@
 		<integer>2</integer>
 	</array>
 	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
+	<string>launch_screen</string>
 	<key>UIStatusBarStyle</key>
 	<string>UIStatusBarStyleLightContent</string>
 	<key>UISupportedInterfaceOrientations</key>

@@ -34,6 +34,7 @@ public:
 	bool navigateBack() override;
     void requestScroll(float dx, float dy) override;
     void applySafeInsets(const EDGEINSETS& safeInsets) override;
+    EDGEINSETS getSafeInsets() const override;
     /**@}*/
 
 
@@ -57,7 +58,6 @@ protected:
     sp<NavigationBar> _navBar;
     sp<View> _contentView;
     AnimationState _animationState;
-    EDGEINSETS _safeAreaInsets;
 
 
 };

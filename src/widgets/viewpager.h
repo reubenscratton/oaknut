@@ -35,6 +35,7 @@ public:
     void setContentOffset(POINT contentOffset, bool animated=false) override;
     void updateIntrinsicSize(SIZE constrainingSize) override;
     
+    
     //void layoutSubviews(RECT constraint) override;
 protected:
     void updateScrollViewContentSize();
@@ -43,6 +44,7 @@ protected:
     
     //Delegate* _delegate;
     //int32_t _currentPageIndex;
+    int32_t _pendingCurrentPageIndex;
     //TODO savedPageState;
     
     map<uint32_t, View*> _loadedPageViews;

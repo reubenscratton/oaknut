@@ -71,7 +71,6 @@
 BNImageView::BNImageView() {
 	_opaque = true;
     setContentMode(ContentMode::AspectFill);
-	//_imageKey = [[ImageCacheKey alloc] init];
     setBackgroundColor(0xFFCCCCCC);//todo [UIColor lightGrayColor];
 
 }
@@ -123,24 +122,27 @@ BNImage* BNImageView::getBNImage() {
 }
 
 void BNImageView::setBNImage(BNImage* image) {
+    if (!image) {
+        cancelLoad();
+        _imageKey.url = "";
+        _bnimage = nullptr;
+        setBitmap(nullptr);
+        _errorDisplay = false;
+        return;
+    }
+
     
-	float width = app->_window->getWidth();
-	string url = image->urlForWidth(width);
-	if (url == _imageKey.url && _renderOp->_bitmap) {
-		return;
-	}
-	
     // Cancel any extant HTTP request. Note that the request will only really get cancelled
     // if this is the only UIImageView that wants the current _imageURL.
     cancelLoad();
     
 	// Update URL and reset image
-	_imageKey.url = url;
+	//_imageKey.url = url;
     setBitmap(NULL);
 	_bnimage = image;
 	_errorDisplay = false;
 	
-	if (_imageKey.url.length() && _window) {
+	if (/*_imageKey.url.length() &&*/ _window) {
         tryUpdateImage(true);
 	}
 	
@@ -225,35 +227,15 @@ void BNImageView::setBNImage(BNImage* image) {
 }
 */
 
-/*
-- (void)showActivityView:(NSObject*)ignored {
-	if (self.activityView == nil) {
-		self.activityView = [[UIActivityIndicatorView alloc] initWithFrame:self.bounds];
-		self.activityView.hidesWhenStopped = YES;
-		self.activityView.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
-		self.activityView.translatesAutoresizingMaskIntoConstraints = YES;
-		[self addSubview:self.activityView];
-		[self bringSubviewToFront:self.activityView];
-		[self.activityView startAnimating];
-	}
-}
-- (void)hideActivityView {
-	if (self.activityView != nil) {
-		[self.activityView stopAnimating];
-		[self.activityView removeFromSuperview];
-		self.activityView = nil;
-	}
-}*/
 
 
 void BNImageView::updateImageKeyDimensions() {
-    float scale = app->_defaultDisplay->_scale;
-    if (_contentMode == ContentMode::AspectFit) {
+    if (_contentMode == ContentMode::AspectFit) { // used in photogalleries where user can pinch-zoom
         _imageKey.width = _bnimage->_width;
         _imageKey.height = _bnimage->_height;
     } else {
-        _imageKey.width = (int)(_rect.size.width * scale);
-        _imageKey.height = (int)(_rect.size.height * scale);
+        _imageKey.width = (int)(_rect.size.width);
+        _imageKey.height = (int)(_rect.size.height);
     }
 }
 
@@ -263,9 +245,17 @@ void BNImageView::tryUpdateImage(bool startDownloadIfNotInCache) {
     updateImageKeyDimensions();
     
     // If view is invisible, exit
-    if (_imageKey.width <=0 || _imageKey.height <=0) {
+    if (!_bnimage || _imageKey.width <=0 || _imageKey.height <=0) {
         return;
     }
+
+    float width = _imageKey.width; // app->_window->getWidth();
+    string url = _bnimage->urlForWidth(width);
+    if (url == _imageKey.url && _renderOp->_bitmap) {
+        return;
+    }
+    _imageKey.url = url;
+    
     
     // Look in image cache first
     app->log("todo: implement image cache lookup");
@@ -288,9 +278,6 @@ void BNImageView::tryUpdateImage(bool startDownloadIfNotInCache) {
         _timeImageUrlSet = app->currentMillis();
         string url = _imageKey.url;
         setImageUrl(url);
-        /*[[BNURLRequestManager sharedInstance] requestURL:url delegate:self flags:0 priority:BNDownloadPriorityHigh ttl:0 creatorBlock:^BNURLRequest *{
-         return [[BNURLRequest alloc] initWithURL:url];
-         }];*/
     }
 }
 
@@ -333,43 +320,5 @@ void BNImageView::tryUpdateImage(bool startDownloadIfNotInCache) {
 }
 
 
-- (void)onRequestLoadedObject:(BNURLRequest *)request object:(id)object isCacheData:(BOOL)isCacheData {
-	NSAssert([NSThread isMainThread], @"Wrong thread");
 
-	self.isLoading = NO;
-	
-	if (object) {
-		__block NSData* data = (NSData*)object;
-		if([self.imageKey.url isEqual:request.URL]) {
-			ImageCacheKey* keyCopy = [self.imageKey copy];
-			dispatch_async(imageDecodeQueue, ^() {
-#ifndef DEBUG
-				@try {
-#endif
-				[self decodeImageInBackground:data forKey:keyCopy];
-#ifndef DEBUG
-				}
-				@catch (NSException* ex) {
-					NSLog(@"Exception decoding image: %@", ex);
-				}
-#endif
-			});
-		}
-	}
-	
-	
-}
-
-// Cancel any extant HTTP request. Note that the request will only really get cancelled
-// if this is the only UIImageView that wants this particular URL.
-- (void)cancelRequest {
-	self.isLoading = NO;
-	self.shouldFade = NO;
-	[NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(setShouldFade:) object:@YES];
-	[[BNURLRequestManager sharedInstance] unrequestURL:self.imageKey.url delegate:self];
-}
-
-- (NSString *)accessibilityIdentifier {
-    return @"bn-image-view";
-}
 */
