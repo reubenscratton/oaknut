@@ -1,7 +1,6 @@
 {
 	"$":"index",
 	"content": ["/most_popular/news"],
-	"padding": "{0,56,0,56}",
 	"modules": [
 		{
 			"class": "BNHorizontalLinearLayout",

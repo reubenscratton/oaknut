@@ -34,9 +34,7 @@ public:
     void layout(RECT constraint) override;
     void setContentOffset(POINT contentOffset, bool animated=false) override;
     void updateIntrinsicSize(SIZE constrainingSize) override;
-    
-    
-    //void layoutSubviews(RECT constraint) override;
+
 protected:
     void updateScrollViewContentSize();
     sp<Adapter> _adapter;

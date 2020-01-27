@@ -146,7 +146,7 @@ void oakMessageLoop() {
 }
 
 static void oak_main() {
-    app->loadStyleAsset("styles.res");
+    app->loadStyleAssetSync("styles.res");
     app->main();
     app->_window->show();
     app->_window->requestRedraw();

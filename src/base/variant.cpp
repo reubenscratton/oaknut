@@ -68,12 +68,16 @@ variant::variant(const measurement& val) : type(MEASUREMENT), _measurement(val) 
 }
 variant::variant(const class bytearray& val) : type(BYTEARRAY), _bytearray(new class bytearray(val)) {
 }
-variant::variant(ISerializeToVariant* val) : type(val?MAP:EMPTY) {
+/*variant::variant(ISerializeToVariant* val) : type(val?MAP:EMPTY) {
     if (val) {
         _map = new map<string, variant>();
         val->toVariant(*this);
     }
+}*/
+variant::variant(Object* obj) : type(OBJPTR), _obj(obj) {
+    obj->retain();
 }
+
 variant::variant(const vector<variant>& val) : type(ARRAY) {
     _vec = new vector<variant>(val.begin(), val.end());
 }
@@ -84,6 +88,10 @@ variant::variant(const vector<pair<string,variant>>& vals) : type(MAP) {
         _map->insert(it);
     }
 }
+variant::variant(const error& val) : type(ERROR) {
+    _err = new error(val);
+}
+
 
 variant::~variant() {
     if (type == STRING) {
@@ -94,6 +102,10 @@ variant::~variant() {
         delete _vec;
     } else if (type == MAP) {
         delete _map;
+    } else if (type == OBJPTR) {
+        _obj->release();
+    } else if (type == ERROR) {
+        delete _err;
     }
 }
 void variant::setType(enum type newType) {
@@ -112,6 +124,12 @@ void variant::setType(enum type newType) {
     } else if (type == MAP) {
         delete _map;
         _map = NULL;
+    } else if (type == OBJPTR) {
+        _obj->release();
+        _obj = NULL;
+    } else if (type == ERROR) {
+        delete _err;
+        _err = NULL;
     }
     
     
@@ -123,6 +141,8 @@ void variant::setType(enum type newType) {
         _vec = new vector<variant>();
     } else if (newType == MAP) {
         _map = new map<string,variant>();
+    } else if (newType == ERROR) {
+        _err = new error();
     }
     
     type = newType;
@@ -143,6 +163,8 @@ void variant::assign(const variant& src) {
         case BYTEARRAY: _bytearray = new class bytearray(*src._bytearray); break;
         case ARRAY: _vec = new vector<variant>(src._vec->begin(), src._vec->end()); break;
         case MAP: _map = new map<string,variant>(*src._map); break;
+        case OBJPTR: _obj = src._obj; _obj->retain(); break;
+        case ERROR: _err = new error(*src._err); break;
     }
     type = src.type;
 }
@@ -177,6 +199,8 @@ bool variant::operator<(const variant& rhs) const {
             return _vec->size() < rhs._vec->size();
         }
         case MAP: assert(0); break; // how would this work??
+        case OBJPTR: assert(0); break; // how would this work??
+        case ERROR: return *_err < *rhs._err;
     }
 
 }
@@ -375,16 +399,26 @@ bool variant::isArray() const {
 bool variant::isString() const {
     return type == STRING;
 }
+bool variant::isByteArray() const {
+    return type == BYTEARRAY;
+}
 bool variant::isMeasurement() const {
     return type == MEASUREMENT;
 }
 bool variant::isCompound() const {
     return type == MAP;
 }
+bool variant::isPtr() const {
+    return type == OBJPTR;
+}
+bool variant::isError() const {
+    return type == ERROR;
+}
 
 static vector<variant> s_emptyVec;
 static map<string, variant> s_emptyCompound;
 static string s_emptyStr;
+static error s_defaultError = error::none();
 
 string& variant::stringRef() const {
     if (type == STRING) {
@@ -408,6 +442,14 @@ map<string, variant>& variant::compoundRef() const {
     }
     app->warn("compoundRef() called on non-compound type");
     return s_emptyCompound;
+}
+
+error& variant::errorRef() const {
+    if (type==ERROR) {
+        return *_err;
+    }
+    app->warn("errorRef() called on incompatible type");
+    return s_defaultError;
 }
 
 void variant::appendVal(const variant& v) {
@@ -436,7 +478,9 @@ bytearray& variant::bytearrayRef(const string& name) const {
 
 
 bool variant::hasVal(const string& name) const {
-    assert(type==MAP);
+    if (type!=MAP) {
+        return false;
+    }
     return _map->find(name)!=_map->end();
 }
 
@@ -541,6 +585,9 @@ string variant::toJson() const {
             s.append("}");
             return s;
         }
+        default:
+            assert(0); // Non-JSONable type
+            break;
     }
     return "";
 }
@@ -706,9 +753,12 @@ variant variant::parse(const string& str, int flags) {
 }
 
 variant variant::parse(const string& str, uint32_t& it, int flags) {
-    
-    variant val;
+    if (it>=str.end()) {
+        return variant();
+    }
 
+    variant val;
+    
     skipWhitespaceAndComments(str, it);
 
     // Parse a compound value
@@ -858,6 +908,9 @@ val variant::toJavascriptVal() const {
                 }
                 return obj;
             }
+        }
+        case OBJECT: {
+            return val(_obj); // the ptr is of course just a JS int
         }
     }
     return val::null();

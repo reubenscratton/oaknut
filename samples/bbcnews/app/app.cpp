@@ -19,8 +19,9 @@ BNViewPagerController::BNViewPagerController() {
     _view->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Fill());
 }
 
-void BNViewPagerController::applySafeInsets(const EDGEINSETS& safeInsets) {
-    
+void BNViewPagerController::applySafeInsets(const EDGEINSETS& insets) {
+    _view->setPadding(insets);
+    _view->setScrollInsets(insets);
 }
 
 bool BNViewPagerController::navigateToUrl(const string& url, bool animated) {
@@ -238,26 +239,15 @@ public:
         logo->setImageAsset("images/logo.png");
         setTitleView(logo);
         
-        auto stub = BNContent::stub::fromID("/cps/news/front_page", "Front Page");
-        _topStories->setContentStub(stub);
+        _topStories->setContentStub(BNContent::stub::fromID("/cps/news/front_page", "Front Page"));
+        _popular->setContentStub(BNContent::stub::fromID(BNModelIdMostPopular, "Popular"));
         
-        /*auto req = URLRequest::get(URLBASE_CONTENT + "/cps/news/front_page");
-        req->handleJson([=] (URLRequest* req, const variant& data) {
-            if (req->didError()) {
-                app->log("boo!");
-            } else {
-                auto content = BNBaseModel::createModelObjectFromJson(data);
-                app->log("yay!");
-                
-            }
-        });*/
-        
-
     }
     
     void applySafeInsets(const EDGEINSETS& safeInsets) override {
-        _topStories->setPadding({0, safeInsets.top, 0, safeInsets.bottom + app->dp(60)});
-        _topStories->setScrollInsets({0, safeInsets.top, 0, safeInsets.bottom + app->dp(60)});
+        EDGEINSETS insets = {0, safeInsets.top, 0, safeInsets.bottom + app->dp(60)};
+        _topStories->setPadding(insets);
+        _topStories->setScrollInsets(insets);
         _tabBar->setPadding({0,0,0, safeInsets.bottom});
     }
 

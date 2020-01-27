@@ -180,11 +180,13 @@ public:
     bytearray toByteArray();
     static char32_t readUtf8(char* base, uint32_t& offset);
 
-    friend class Stream;
-    friend class ByteBuffer;
     friend class bytearray;
-    
-    
+    friend class bytestream;
+
+    inline char* start() const {
+        return _buf+_offset;
+    }
+
 protected:
     mutable char* _buf; // 8 bytes
     uint32_t _cb; // 4 bytes
@@ -192,9 +194,6 @@ protected:
         mutable uint32_t _offset:24;
         uint32_t _type:8;
     };
-    inline char* start() const {
-        return _buf+_offset;
-    }
 
     friend string base64_encode(const string& str);
     

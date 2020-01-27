@@ -86,7 +86,6 @@ void ImageView::setImageNode(AtlasNode* node) {
     setNeedsFullRedraw();
 }
 
-//void ImageView::attachToWindow(Window* window) {
 void ImageView::attachToSurface() {
     View::attachToSurface();
     loadImage();
@@ -109,21 +108,36 @@ void ImageView::loadImage() {
 	_startLoadTime = app->currentMillis();
     if (_assetPath.length() > 0) {
         auto hashVal = _assetPath.hash();
-        bytearray data;
-        app->loadAsset(_assetPath, data);
-        assert(data.size());
-        _imageLoadTask = Bitmap::createFromData(data, [=](Bitmap *bitmap) {
-            if (hashVal == _assetPath.hash()) {
-                setBitmap(bitmap);
-            }
-            _imageLoadTask = NULL;
+        _imageLoadTask = Task::enqueue({
+            {Task::IO, [=] (variant&) -> variant {
+                return app->loadAssetSync(_assetPath);
+            }},
+            {Task::Background, [=] (variant& loadResult) -> variant  {
+                if (loadResult.isError()) {
+                    return loadResult;
+                }
+                bytearray& data = loadResult.bytearrayRef();
+                assert(data.size());
+                Bitmap* bitmap = Bitmap::createFromData(data);
+                return variant(bitmap);
+            }},
+            {Task::MainThread, [=] (variant& loadResult) -> variant  {
+                if (loadResult.isError()) {
+                    // TODO: show error image or something
+                } else {
+                    Bitmap* bitmap = loadResult.ptr<Bitmap>();
+                    if (hashVal == _assetPath.hash()) {
+                        setBitmap(bitmap);
+                    }
+                }
+                _imageLoadTask = NULL;
+                return variant();
+            }}
         });
     } else if (_url.length() > 0) {
         _request = URLRequest::get(_url, URL_FLAG_BITMAP);
-        retain();
-        _request->handleBitmap([=](URLRequest* req, Bitmap* bitmap) {
-            setBitmap(bitmap);
-            release();
+        _request->handle([=](URLRequest* req, URLRequest::Status status, const URLRequest::Response& res) {
+            setBitmap(res.decodedBitmap);
         });
     }
 }

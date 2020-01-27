@@ -43,23 +43,24 @@ public:
             [req setValue:headerValue forHTTPHeaderField:headerName];
         }
         _dataTask = [[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-            if (_cancelled || error.code == -999) { // cancelled, just abort.
-                dispatchResult(0, {});
+            if (_status==Cancelled || error.code == -999) { // cancelled, just abort.
+                dispatch();
             } else {
                 NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
                 
+                _response._httpStatus = (int)httpResponse.statusCode;
+                
                 // Get all response headers into a generic container
-                map<string, string> responseHeaders;
                 for (NSString* headerName in httpResponse.allHeaderFields.allKeys) {
-                    responseHeaders[nsstr([headerName lowercaseString])] = nsstr(httpResponse.allHeaderFields[headerName]);
+                    _response.headers[nsstr([headerName lowercaseString])] = nsstr(httpResponse.allHeaderFields[headerName]);
                 }
                 
                 // Slurp the data
                 [data enumerateByteRangesUsingBlock:^(const void * _Nonnull bytes, NSRange byteRange, BOOL * _Nonnull stop) {
-                    _responseData.append((uint8_t*)bytes, (int32_t)byteRange.length);
+                    _response.data.append((uint8_t*)bytes, (int32_t)byteRange.length);
                 }];
 
-                dispatchResult((int)httpResponse.statusCode, responseHeaders);
+                processResponse();
             }
         }];
         [_dataTask resume];
@@ -67,7 +68,7 @@ public:
     }
     
     void cancel() override {
-        _cancelled = true;
+        _status = Status::Cancelled;
         if (_dataTask.state == NSURLSessionTaskStateRunning) {
             [_dataTask cancel];
         }

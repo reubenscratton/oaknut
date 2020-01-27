@@ -13,6 +13,7 @@ class BNCellByline : public BNCell {
 public:
     
     BNCellByline(BNCellsModule* module) : BNCell(module) {
+        setPadding(EDGEINSETS(32,16,32,16));
         _thumbnail = new BNImageView();
         _thumbnail->setLayoutSize(MEASURESPEC::Abs(app->dp(50)), MEASURESPEC::Abs(app->dp(50)));
         _thumbnail->setBackgroundColor(0xFFCCCCCC);

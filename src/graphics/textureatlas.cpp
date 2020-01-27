@@ -14,13 +14,14 @@ AtlasNode::AtlasNode(AtlasPage* page) {
     filled = false;
 }
 
-
+/* TODO: restore this
 BitmapProvider* AtlasPage::importAsset(const string& assetPath) {
-    bytearray data;
-    if (!app->loadAsset(assetPath, data)) {
+    variant v = app->loadAssetSync(assetPath);
+    if (v.isError()) {
         assert(0); // oops;
         return NULL;
     };
+    bytearray& data = v.bytearrayRef();
     BitmapProvider* bitmapProvider = new BitmapProvider();
     Bitmap::createFromData(data, [=](Bitmap* bitmap) {
         assert(bitmap);
@@ -46,7 +47,7 @@ BitmapProvider* AtlasPage::importAsset(const string& assetPath) {
     });
     return bitmapProvider;
 }
-
+*/
 
 //
 // Adapted from: https://github.com/mackstann/binpack/blob/master/livedemo.html

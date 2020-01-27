@@ -21,40 +21,7 @@ void Worker::start(const variant& config) {
     emscripten_call_worker(_worker, "ww_start", (char*)configData.data, configData.cb, NULL, 0);
 }
 
-static void callback_process(char* data, int size, void* arg) {
-    ByteBufferStream bb;
-    bb._data.attach((uint8_t*)data, size);
-    variant data_out;
-    bb.readVariant(&data_out);
-    bb._data.detach();
-    ((Worker*)arg)->dispatchProcessResult(data_out);
-}
 
-void Worker::process(const variant& data_in, std::function<void(const variant&)> callback) {
-    ByteBufferStream bb;
-    bb.writeVariant(data_in);
-    _pending.push_back(callback);
-    emscripten_call_worker(_worker, "ww_process", (char*)bb._data.data, bb._data.cb, callback_process, this);
-}
-
-void Worker::dispatchProcessResult(const variant& data_out) {
-    auto callback = _pending.front();
-    callback(data_out);
-    _pending.pop_front();
-}
-
-void Worker::dispatchStopped() {
-    _onStop();
-}
-
-static void callback_stop(char* data, int size, void* arg) {
-    ((Worker*)arg)->dispatchStopped();
-}
-
-void Worker::stop(std::function<void()> onStop) {
-    _onStop = onStop;
-    emscripten_call_worker(_worker, "ww_stop", 0, 0, callback_stop, this);
-}
 
 
 #endif

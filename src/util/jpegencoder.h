@@ -6,11 +6,12 @@
 //
 
 
-class JpegEncoder : public Worker {
+class JpegEncoder : public Object {
 public:
-    
-    JpegEncoder();
     
     virtual void encode(class Bitmap* bitmap, std::function<void(const bytearray&)> result);
     
+protected:
+    
+    Worker* _worker;
 };

@@ -57,7 +57,6 @@ public:
         void updateIntrinsicSize(SIZE constrainingSize) override;
     };
     
-    Bitmap* _bmpDelete;
     bool _editMode;
 
     vector<pair<LISTINDEX,ItemView*>> _itemViews;

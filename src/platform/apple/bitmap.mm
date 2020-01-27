@@ -134,10 +134,45 @@ void BitmapApple::unlock(PIXELDATA* pixelData, bool pixelDataChanged) {
 
 
 
-BitmapApple* bitmapFromData(bytearray& data) {
-    CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, data.data(), data.size(), NULL);
+
+void BitmapApple::fromVariant(const variant& v) {
+    Bitmap::fromVariant(v);
+    int32_t stride = v.intVal("s");
+    auto& bb = v.bytearrayRef("bb");
+    CGColorSpaceRef colorspace = (_format==PIXELFORMAT_A8) ? CGColorSpaceCreateDeviceGray() : CGColorSpaceCreateDeviceRGB();
+    _context = CGBitmapContextCreateWithData(NULL, _width, _height, 8, stride, colorspace, bitmapInfoForFormat(_format), nil, nil);
+    void* pixels = CGBitmapContextGetData(_context);
+    memcpy(pixels, bb.data(), bb.size());
+
+    // Flip Y. CoreGraphics bitmaps have origin at lower left but Oaknut coords are top left.
+    CGContextScaleCTM(_context, 1, -1);
+    CGContextTranslateCTM(_context, 0, -_height);
+    assert(_context);
+}
+void BitmapApple::toVariant(variant& v) {
+    Bitmap::toVariant(v);
+    
+    PIXELDATA pixelData;
+    lock(&pixelData, false);
+    v.set("s", pixelData.stride);
+    v["bb"] = bytearray((uint8_t*)pixelData.data, pixelData.cb);
+    unlock(&pixelData, false);
+}
+
+
+
+Bitmap* Bitmap::createFromData(bytearray& data) {
+    
+    // Detach the compressed image data so nothing owns it
+    uint8_t* pd = data.data();
+    uint32_t cb = data.size();
+    assert(pd && cb);
+    data.detach();
+    
+
+    CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, pd, cb, NULL);
     CGImageRef cgImage;
-    auto hdr = data.data();
+    auto hdr = pd;
     bool isPNG = (hdr[0]==0x89 && hdr[1]=='P' && hdr[2]=='N' && hdr[3]=='G');
     if (isPNG) {
         cgImage = CGImageCreateWithPNGDataProvider(dataProvider, NULL, NO, kCGRenderingIntentDefault);
@@ -245,73 +280,7 @@ BitmapApple* bitmapFromData(bytearray& data) {
     BitmapApple* bitmap = new BitmapApple(width, height, format, pixels, (int)cbUncompressed/height);
     bitmap->_cfData = dataRef;
     return bitmap;
-}
 
-void BitmapApple::fromVariant(const variant& v) {
-    Bitmap::fromVariant(v);
-    int32_t stride = v.intVal("s");
-    auto& bb = v.bytearrayRef("bb");
-    CGColorSpaceRef colorspace = (_format==PIXELFORMAT_A8) ? CGColorSpaceCreateDeviceGray() : CGColorSpaceCreateDeviceRGB();
-    _context = CGBitmapContextCreateWithData(NULL, _width, _height, 8, stride, colorspace, bitmapInfoForFormat(_format), nil, nil);
-    void* pixels = CGBitmapContextGetData(_context);
-    memcpy(pixels, bb.data(), bb.size());
-
-    // Flip Y. CoreGraphics bitmaps have origin at lower left but Oaknut coords are top left.
-    CGContextScaleCTM(_context, 1, -1);
-    CGContextTranslateCTM(_context, 0, -_height);
-    assert(_context);
-}
-void BitmapApple::toVariant(variant& v) {
-    Bitmap::toVariant(v);
-    
-    PIXELDATA pixelData;
-    lock(&pixelData, false);
-    v.set("s", pixelData.stride);
-    v["bb"] = bytearray((uint8_t*)pixelData.data, pixelData.cb);
-    unlock(&pixelData, false);
-}
-
-class BitmapDecodeTask : public Task {
-public:
-    BitmapDecodeTask(bytearray& data, std::function<void(Bitmap*)> callback) : Task([=]() {
-        callback(_bitmap);
-    }) {
-        
-        // Detach the compressed image data so nothing owns it
-        uint8_t* pd = data.data();
-        uint32_t cb = data.size();
-        assert(pd && cb);
-        data.detach();
-        
-        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
-            
-            // Take ownership of compressed image data on this background thread
-            bytearray data_attached;
-            data_attached.assignNoCopy(pd, cb);
-            
-            if (isCancelled()) {
-                return;
-            }
-            _bitmap = bitmapFromData(data_attached);
-            if (_bitmap) {
-                _bitmap->retain();
-            }
-            dispatch_async(dispatch_get_main_queue(), ^() {
-                Bitmap* bitmap = _bitmap;
-                complete(); // calls release(), could destroy this
-                if (bitmap) {
-                    bitmap->release();
-                }
-            });
-        });
-
-    }
-    
-    Bitmap* _bitmap;
-};
-
-Task* Bitmap::createFromData(bytearray& data, std::function<void(Bitmap*)> callback) {
-    return new BitmapDecodeTask(data, callback);
 }
 
 Bitmap* Bitmap::create(int width, int height, int format) {

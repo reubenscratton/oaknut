@@ -234,10 +234,10 @@ static int jo_processDU(ByteBufferStream& out, int &bitBuf, int &bitCnt, float *
     
 
         
-class JpegEncoderWorker : public WorkerImpl {
+class JpegEncoderWorker : public Worker {
 public:
     
-    JpegEncoderWorker() : WorkerImpl() {
+    JpegEncoderWorker() : Worker() {
     }
     
     void start_(const variant& config) override {

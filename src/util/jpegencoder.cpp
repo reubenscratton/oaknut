@@ -7,11 +7,11 @@
 
 #include <oaknut.h>
 
-JpegEncoder::JpegEncoder() : Worker("JpegEncoderWorker") {
-    start(0);
-}
 
 void JpegEncoder::encode(class Bitmap* bitmap, std::function<void(const bytearray&)> resultCallback) {
+    if (!_worker) {
+        _worker = new Worker("JpegEncoderWorker");
+    }
     variant data_in;
     data_in.set("quality", 90);
     data_in.set("width", bitmap->_width);
@@ -21,7 +21,7 @@ void JpegEncoder::encode(class Bitmap* bitmap, std::function<void(const bytearra
     bitmap->lock(&pixelData, false);
     data_in.set("data", bytearray((uint8_t*)pixelData.data, pixelData.cb));
 
-    process(data_in, [=](const variant& data_out) {
+    _worker->enqueue(0, data_in, [=](const variant& data_out) {
         resultCallback(data_out.bytearrayRef());
     });
 }

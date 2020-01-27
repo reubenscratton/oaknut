@@ -88,6 +88,10 @@ bool EditText::applySingleStyle(const string& name, const style& value) {
         setMaxLength(value.intVal());
         return true;
     }
+    if (name == "iconTint") {
+        _iconTint = value.colorVal();
+        return true;
+    }
     return Label::applySingleStyle(name, value);
 }
 
@@ -170,7 +174,11 @@ void EditText::updateClearButton() {
     } else {
         if (_showClearButtonWhenNotEmpty) {
             if (!_clearButtonOp) {
-                _clearButtonOp = new TextureRenderOp("images/edittext_clear.png", 0xff999999);
+                _clearButtonOp = new TextureRenderOp(nullptr, _iconTint);
+                app->loadBitmapAsset("images/edittext_clear.png", [=](Bitmap* bitmap) {
+                    _clearButtonOp->setBitmap(bitmap);
+                });
+
                 RECT rect = getOwnRectPadded();
                 _clearButtonOp->_rect.origin.x = rect.origin.x+rect.size.width-app->dp(22);
                 _clearButtonOp->_rect.origin.y = rect.origin.y+(rect.size.height-app->dp(22)) / 2;

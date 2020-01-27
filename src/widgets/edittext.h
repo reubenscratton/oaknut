@@ -81,6 +81,7 @@ protected:
     SoftKeyboardType _softKeyboardType = KeyboardGeneral;
     ActionType _actionType = ActionNone;
     string _next; // id of next field
+    COLOR _iconTint;
     
     void updateCursor();
     void updateClearButton();

@@ -8,7 +8,7 @@
 
 class RIFFWriter {
 public:
-    RIFFWriter(Stream* stream);
+    RIFFWriter(bytestream& stream);
     ~RIFFWriter();
 
     enum StreamType { db, dc, pc, wb };
@@ -40,7 +40,7 @@ public:
     static const FOURCC MJPG_CC;
 
 private:
-    Stream* strm;
+    bytestream& _strm;
     int outfps;
     int _width, _height, channels;
     size_t moviPointer;

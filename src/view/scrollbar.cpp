@@ -194,6 +194,7 @@ bool ScrollInfo::handleEvent(View* view, bool isVertical, INPUTEVENT* event) {
     }
     if (event->type == INPUT_EVENT_DRAG_MOVE) {
         if (!_isDragging) {
+            flingCancel();
             _isDragging = true;
             _offsetStart = offset;
             _dragTotal = 0;

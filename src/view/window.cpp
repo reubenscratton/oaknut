@@ -97,7 +97,7 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
         if (!touchedView) {
             touchedView = topVC->getView();
         }
-        // app->log("Window DOWN! touchedView=%X", touchedView._obj);
+        //app->log("Window DOWN! touchedView=%X", touchedView._obj);
         _didSendLongpressEvent = false;
         if (event.deviceType != INPUTEVENT::ScrollWheel) {
             _longpressTimer = Timer::start([=] {

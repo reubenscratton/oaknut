@@ -12,9 +12,13 @@ DECLARE_DYNCREATE(SearchBox);
 
 SearchBox::SearchBox() {
     applyStyle("SearchBox");
-    _searchIconOp = new TextureRenderOp("images/search.png", 0xff555555);
-    addRenderOp(_searchIconOp);
-    _showClearButtonWhenNotEmpty = true;    
+    
+    _iconTask = app->loadBitmapAsset("images/search.png", [=](Bitmap* bitmap) {
+        _searchIconOp = new TextureRenderOp(bitmap, _iconTint);
+        addRenderOp(_searchIconOp);
+    });
+
+    _showClearButtonWhenNotEmpty = true;
 }
 
 void SearchBox::setSearchTextChangedDelegate(SEARCHTEXTCHANGED delegate) {

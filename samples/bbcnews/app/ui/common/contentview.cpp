@@ -4,7 +4,6 @@
 
 
 #include "contentview.h"
-#include "layoutsgroupmanager.h"
 #include "label.h"
 /*
 #import "BNHUDView.h"
@@ -181,12 +180,10 @@ void BNContentView::setCurrentLayout(BNLayout* layout) {
 	_currentLayout = layout;
 }
 
+
 void BNContentView::attachToWindow(Window *window) {
     View::attachToWindow(window);
     requestContent(true);
-    auto safeInsets = window->_rootViewController->getSafeInsets();
-    setPadding(safeInsets);
-    setScrollInsets(safeInsets);
     /*if (!self.onlyShowPlaceholder) {
         if (self.superview) {
             //NSLog(@"Page request for %@", self.contentStub.modelId);

@@ -3,7 +3,6 @@
 //
 
 #include "layoutsgroup.h"
-#include "layoutsgroupmanager.h"
 #include "../../model/_module.h"
 #include "../../policy/policy.h"
 //#import "BNStyles.h"
@@ -192,7 +191,8 @@ BNLayoutsGroup::BNLayoutsGroup(string layoutsDir) {
     // If the layouts file contains a 'layout' subfolder, that's the real layout root folder
     string subfolder = layoutsDir;
     subfolder.append("/layout");
-    if (app->fileExists(subfolder)) {
+    struct stat buf;
+    if (0==stat(subfolder.c_str(), &buf)) {
         layoutsDir = subfolder;
     }
 
@@ -231,13 +231,13 @@ variant BNLayoutsGroup::loadJson(const string& layoutsDir, const string& fileNam
     filePath.append("/");
     filePath.append(fileName);
     
-    bytearray data;
-    if (!app->fileLoad(filePath, data)) {
-        return variant();
+    variant v = app->fileLoadSync(filePath);
+    if (v.isError()) {
+        return v;
     }
+    auto& data = v.bytearrayRef();
     string str = data.toString();
-    variant v = variant::parse(str, PARSEFLAG_JSON);
-    return v;
+    return variant::parse(str, PARSEFLAG_JSON);
 }
 
 

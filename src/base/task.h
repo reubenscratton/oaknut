@@ -8,30 +8,57 @@
 /**
  * @ingroup base_group
  * @class Task
- * @brief Any cancelable operation that performs a callback
- * on the main thread when finished, unless the operation was cancelled.
+ * @brief Base class for a cancelable background operation
  *
- * NB: Task is *not* an API for scheduling background app work, see `Worker` for that.
- *
- * `Task` is not intended for instantiation in app code, Tasks are
- * typically created and returned by platform APIs. For example
- * `Bitmap::createFromData()` returns a Task representing a background
- * operation that decodes a bitmap from PNG or JPG data.
  */
 
 class Task : public Object {
 public:
     
-    // API
-    Task(std::function<void(void)> oncomplete);
-    bool isCancelled() const;
-    virtual void complete();
+    enum RunContext {
+        MainThread,
+        Background,
+        IO
+    };
+    
+    Task(RunContext context, std::function<variant(variant&)> func);
+
+    void dispatch();
+    
+    typedef pair<RunContext, std::function<variant(variant&)>> spec;
+    
+    static Task* enqueue(const vector<spec>& s);
+    static void enqueue(Task* task);
+
+    static bool isMainThread();
+
+    enum status {
+        Created,
+        Queued,
+        Executing,
+        Cancelled,
+        Complete
+    };
+
+    bool isCancelled() const {
+        return _status == status::Cancelled;
+    }
+
     virtual void cancel();
     
 
+    // File helpers
+    static variant fileLoad(const string& path);
+    static error fileSave(const string& path, const bytearray& data);
+
 protected:
 
-    std::function<void(void)> _oncomplete;
-    bool _cancelled;
+    RunContext _runContext;
+    variant _input, _output;
+    std::function<variant(variant&)> _func;
+    std::atomic<status> _status;
+    sp<Task> _nextTask;
 };
+
+
 

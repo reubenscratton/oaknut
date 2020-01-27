@@ -20,10 +20,6 @@ void Worker::start(const variant& config) {
     _started = true;
 }
 
-void Worker::dispatchProcessResult(const variant& data_out) {
-    // not used
-}
-
 void Worker::process(const variant& data_in, std::function<void(const variant&)> callback) {
     if (!_started) {
         app->log("Warning! process() called on stopped worker");
@@ -39,24 +35,6 @@ void Worker::process(const variant& data_in, std::function<void(const variant&)>
             release();
         });
     });
-}
-
-void Worker::dispatchStopped() {
-    // not used
-}
-
-void Worker::stop(std::function<void()> onStop) {
-    _started = false;
-    assert(_queue); // not started!
-    retain();
-    _queue->enqueueTask([=]() {
-        _impl->stop_();
-        App::postToMainThread([=]() {
-            onStop();
-            release();
-        });
-    });
-
 }
 
 

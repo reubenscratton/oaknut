@@ -48,9 +48,9 @@ static CTFontRef createCTFont(FontApple* font) {
 #endif*/
         
         // Maybe its the name of an font asset?
-        bytearray data;
-        app->loadAsset(font->_name, data);
-        if (data.size()) {
+        variant v = app->loadAssetSync(font->_name);
+        if (!v.isError()) {
+            bytearray& data = v.bytearrayRef();
             CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, data.data(), data.size(), NULL);
             CGFontRef cgfont = CGFontCreateWithDataProvider(dataProvider);
             assert(cgfont);

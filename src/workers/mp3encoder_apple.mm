@@ -18,7 +18,7 @@ public:
     bytearray _inbuf;
     
     
-    void start_(const variant& config) override {
+    void start_(const variant& config) {
         _sampleRate = config.intVal("sampleRate");
         FillOutASBDForLPCM(_inFormat, _sampleRate, 1, 16, 16, false, false);
         memset(&_outFormat, 0, sizeof(_outFormat));
@@ -35,7 +35,7 @@ public:
         OSStatus status = AudioConverterNew(&_inFormat, &_outFormat, &_converter);
         assert(status == 0);
     }
-    variant process_(const variant& data_in) override {
+    variant process_(const variant& data_in) {
         const bytearray& bytes = data_in.bytearrayRef();
         _inbuf.append(bytes);
         bytearray output;
@@ -116,7 +116,7 @@ public:
         Mp3Encoder* worker = (Mp3Encoder*)inUserData;
         return worker->inputDataProc(ioNumberDataPackets, ioData);
     }
-    void stop_() override {
+    void stop_() {
         AudioConverterDispose(_converter);
     }
 

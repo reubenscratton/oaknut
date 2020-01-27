@@ -30,7 +30,7 @@ public:
     AtlasPage(int width, int height, int bitmapFormat);
     //AtlasNode* pack(Bitmap* bmp);
     AtlasNode* reserve(int w, int h);
-    class BitmapProvider* importAsset(const string& assetPath);
+    //class BitmapProvider* importAsset(const string& assetPath);
     void sendToGpu();
     
 };

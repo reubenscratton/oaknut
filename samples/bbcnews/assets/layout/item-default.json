@@ -4,10 +4,21 @@
 	"background": "#fff",
     "modules": [
 		{"$":"itemPrimaryMedia", "modes":["portrait"]},
-		{"$":"itemHeadline"},
-		{"$":"itemByline"},
-		{"$":"itemTopics"},
-		{"$":"itemBody"},
+        {
+            "cellClass":"BNCellHeadline"
+        },
+        {
+            "cellClass":"BNCellByline",
+            "primary":[".person"],
+            "secondary":[".byline"],
+            "limit":1
+        },
+        {
+            "cellClass":"BNCellTopics"
+        },
+        {
+            "class":"BNCellsModuleArticleBody",
+        },
 		{
           "title": { "style":"relatedTitle", "text": "Related Stories"},
           "cellClass":"BNCellItemRelatedStory",

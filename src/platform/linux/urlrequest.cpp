@@ -30,7 +30,6 @@ public:
     : URLRequest(url, method, body, flags) {
     }
 
-    map<string,string> _responseHeaders; // todo: this is really generic
     PosixTaskQueue* _queue;
     int _task_id;
 
@@ -43,13 +42,13 @@ public:
             string name = hdr.substr(0, i).lowercase();
             string value = hdr.substr(i+1);
             value.trim();
-            req->_responseHeaders[name] = value;
+            req->_response.headers[name] = value;
         }
         return r;
     } 
     static uint write_cb(char *in, uint size, uint nmemb, URLRequestLinux* req) {
         uint r = size * nmemb;
-        req->_responseData.append((uint8_t*)in, r);
+        req->_response.data.append((uint8_t*)in, r);
         return r;
     }
 
@@ -83,13 +82,13 @@ public:
             curl_easy_cleanup(curl);
 
             if (_cancelled || res != CURLE_OK) { // cancelled, just abort.
-                dispatchResult(0, {});
             } else {
                 long status=0;
                 curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
-                dispatchResult(status, _responseHeaders);
+                _response.httpStatus = status;
             }
 
+            processResponse();
         }
     
     }

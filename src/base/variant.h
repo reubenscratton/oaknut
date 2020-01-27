@@ -73,6 +73,8 @@ private:
         bytearray* _bytearray;
         vector<variant>* _vec;
         map<string, variant>* _map;
+        Object* _obj;
+        error* _err;
     };
 public:
     enum type {
@@ -84,7 +86,9 @@ public:
         STRING,
         BYTEARRAY,
         ARRAY,
-        MAP
+        MAP,
+        OBJPTR,
+        ERROR,
     } type;
     
     void setType(enum type newType);
@@ -103,9 +107,11 @@ public:
     variant(const measurement& val);
     variant(const variant& var);
     variant(variant&& var) noexcept;
-    variant(class ISerializeToVariant* val);
+    //variant(class ISerializeToVariant* val);
     variant(const vector<variant>& val);
     variant(const vector<pair<string,variant>>& vals);
+    variant(Object* obj);
+    variant(const error& val);
     variant& operator=(const variant& rhs);
     bool operator<(const variant& rhs) const;
     ~variant();
@@ -115,9 +121,12 @@ public:
     bool isNumeric() const;
     bool isFloatingPoint() const;
     bool isString() const;
+    bool isByteArray() const;
     bool isMeasurement() const;
     bool isArray() const;
     bool isCompound() const;
+    bool isPtr() const;
+    bool isError() const;
 
     // Comparison
     bool operator ==(float val) {return type==FLOAT32 && _f32==val; }
@@ -138,6 +147,11 @@ public:
     measurement measurementVal() const;
     vector<string> stringArrayVal() const;
     vector<string> stringArrayVal(const string& name) const;
+    template <typename T>
+    T* ptr() const {
+        static_assert(std::is_base_of<Object, T>::value, "type must be Object-derived");
+        return (type==OBJPTR) ? static_cast<T*>(_obj) : nullptr;
+    }
 
     // Accessors (by reference, no coercion)
     string& stringRef() const;
@@ -147,6 +161,7 @@ public:
     bytearray& bytearrayRef(const string& name) const;
     map<string, variant>& compoundRef() const;
     map<string, variant>& compoundRef(const string& name) const;
+    error& errorRef() const;
 
     template <class T>
     vector<sp<T>> arrayOf(const string& name) const {
@@ -248,7 +263,7 @@ public:
         _f64 = d;
     }
 
-    friend class Stream;
+    friend class bytestream;
     
 #if DEBUG
     const char* debugString() const;

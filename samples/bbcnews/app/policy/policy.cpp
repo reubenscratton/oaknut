@@ -38,47 +38,15 @@ string BNPolicyUpdatedNotification = "BNPolicyUpdatedNotification";
 
 BNPolicy* BNPolicy::current() {
     if (!s_current) {
-/*#ifdef USE_DOWNLOADED_POLICY
-        BNPolicy *cachedPolicy = [NSKeyedUnarchiver unarchiveObjectWithFile:[self mainPolicyFileLocation]];
-#else
-        BNPolicy *cachedPolicy = nullptr;
-#endif*/
         
-        bytearray data;
-        app->loadAsset("policy.json", data);
+        variant v = app->loadAssetSync("policy.json");
+        auto& data = v.bytearrayRef();
         assert(data.size());
         string str = data.toString();
-        variant json = variant::parse(str, PARSEFLAG_JSON);
+        variant json = variant::parse(str, PARSEFLAG_JSON); // urg. Should never be on main thread.
 
         s_current = new BNPolicy(json);
         
-#ifdef USE_DOWNLOADED_POLICY
-        /*
-         // Request policy file updates
-         
-         BNDeviceSpec * deviceSpec = [BNDeviceSpec sharedInstance];
-         
-         string policyContentId = [NSString stringWithFormat:@"?OSVersion=%@&OSPlatform=iOS&DeviceType=%@&DeviceLocale=%@&AppFlavour=UK&AppVersion=%@&AppBuildVersion=%@&NetworkMCC=%@&NetworkMNC=%@",
-         [[UIDevice currentDevice] systemVersion],
-         IS_IPAD?@"tablet":@"phone",
-         [[NSLocale currentLocale] localeIdentifier],
-         [[[[BNEnvironment alloc] init] buildDetails] publicVersionNumber],
-         [[[[BNEnvironment alloc] init] buildDetails] buildVersionNumber],
-         [deviceSpec networkMCC]?[deviceSpec networkMCC]:@"",
-         [deviceSpec networkMNC]?[deviceSpec networkMNC]:@""];
-
-         
-         dispatch_async(dispatch_get_main_queue(), ^{
-         NSURL * policyURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@%@", [s_current->endpointPolicy getHREF], policyContentId]];
-         [[BNURLRequestManager sharedInstance] requestURL:policyURL delegate:self flags:0 priority:BNDownloadPriorityHigh ttl:[[_currentPolicy endpointPolicy] ttl] creatorBlock:^BNURLRequest *{
-         BNJSONRequest* req = [[BNJSONRequest alloc] initWithURL:policyURL];
-         return req;
-         }];
-         
-         });
-         */
- #endif
-
     }
     return s_current;
 }

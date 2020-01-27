@@ -14,7 +14,7 @@ static AAssetManager* assetManager;
 
 vector<string> App::fileList(oak::string& path) const {
     vector<string> results;
-    if (path.hasPrefix("//assets/")) {
+    if (path.hasPrefix("//assets")) {
         AAssetDir* dir = AAssetManager_openDir(assetManager, path.c_str()+9);
         while(const char * fileName = AAssetDir_getNextFileName(dir)) {
             results.push_back(string(fileName,-1));
@@ -126,10 +126,28 @@ FILE* oaknut_android_fopen(const char* fname, const char* mode) {
     if (0!=strncmp(fname, "//assets", 8)) {
         return fopen(fname, mode);
     }
+    JNIEnv* env = getAppEnv();
     AAsset* asset = AAssetManager_open(assetManager, fname+9, 0);
     if(!asset) return NULL;
     return funopen(asset, oaknut_android_fread, oaknut_android_fwrite, oaknut_android_fseek, oaknut_android_fclose);
 }
+
+
+bool App::fileExists(string& path) const {
+    if (!path.hasPrefix("//assets")) {
+        if (!fileResolve(path)) {
+            return false;
+        }
+        struct stat buf;
+        return 0==stat(path.c_str(), &buf); // TODO: this can fail for many reasons. Consider renaming API.
+    }
+    JNIEnv* env = getAppEnv();
+    AAsset* asset = AAssetManager_open(assetManager, path.c_str()+9, 0);
+    if(!asset) return false;
+    AAsset_close(asset);
+    return true;
+}
+
 
 
 bool App::fileResolve(string& path) const {

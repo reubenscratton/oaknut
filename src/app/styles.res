@@ -93,6 +93,7 @@ SearchBox: {
     gravity: left, center
     padding: 16dp, 2dp, 16dp, 2dp
     forecolor: #000
+    iconTint: #555
 }
 
 SegmentedControl: {

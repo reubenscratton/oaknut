@@ -10,3 +10,9 @@
 uint32_t CityHash32(const char *s, uint32_t len);
 uint64_t CityHash64(const char *s, uint32_t len);
 
+typedef struct sha1_t {
+    uint8_t bytes[20];
+    
+    bool operator<(const struct sha1_t &s1) const;
+} sha1_t;
+sha1_t sha1(const string& str);

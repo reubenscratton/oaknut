@@ -221,16 +221,9 @@ void ListView::ItemView::updateDeleteButton(bool animate) {
         _deleteButton->setLayoutSize(MEASURESPEC::Abs(deleteButtonWidth), MEASURESPEC::Abs(8+45+8));
         _deleteButton->setPadding(EDGEINSETS(16, 8, 16, 8));
         _deleteButton->setLayoutOrigin(ALIGNSPEC(NULL, 0, animate?-1:0, 0), ALIGNSPEC::Center());
-        if (!_listView->_bmpDelete) {
-            bytearray data;
-            app->loadAsset("images/delete.png", data); // TODO: need a different way to do platform assets
-            Bitmap::createFromData(data, [=](Bitmap* bitmap) {
-                _listView->_bmpDelete = bitmap;
-                _deleteButton->setBitmap(bitmap);
-            });
-        } else {
-            _deleteButton->setBitmap(_listView->_bmpDelete);
-        }
+        app->loadBitmapAsset("images/delete.png", [=](Bitmap* bitmap) {
+            _deleteButton->setBitmap(bitmap);
+        });
         _deleteButton->onInputEvent = [&] (View* view, INPUTEVENT* event)  -> bool {
             if (event->type == INPUT_EVENT_TAP) {
                 _listView->showDeleteConfirmButton(this);

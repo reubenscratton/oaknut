@@ -38,7 +38,6 @@ public:
     // Open & close methods.
     virtual void open(std::function<void()> callback)=0;
     virtual void close()=0;
-    virtual void flush()=0;
     
     // Querying
     virtual void getCount(std::function<void(int)> success)=0;

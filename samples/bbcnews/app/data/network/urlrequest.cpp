@@ -72,26 +72,20 @@ BNURLRequest::BNURLRequest(const string& url, int flags, int priority) {
     _req = URLRequest::get(url);
     _req->setHeader("User-Agent", BNPolicy::current()->userAgent());
     
-    // Special background processing
-    retain();
-    _req->onGotJsonInBackground = [=] (variant& json) -> bool {
+    // Special background processing used to trim the BBC's highly redundant JSON and to convert into a model obj
+    _req->customDecoder = [=] (URLRequest::Response& response) -> void {
+        variant json = variant::parse(response.data.toString(), PARSEFLAG_JSON);
         if (json.hasVal("type")) {
-            
             fixRedundantJson(json);
-
-            auto modelObj = BNBaseModel::createModelObjectFromJson(json);
+            BNBaseModel* modelObj = BNBaseModel::createModelObjectFromJson(json);
+            modelObj->retain();
             App::postToMainThread([=]() {
                 if (!_cancelled) {
                     onHandleContent(modelObj);
                 }
-                release();
+                modelObj->release();
             });
-            return true;
         }
-        App::postToMainThread([=]() {
-            release();
-        });
-        return false;
     };
 
 }

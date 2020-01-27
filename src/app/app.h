@@ -48,8 +48,13 @@ public:
     
     /** Load a file from the assets directory, synchronously. Since this does IO it's best to
      limit use to app startup and background threads */
-    //class ByteBuffer* loadAsset(const char* assetPath);
-    bool loadAsset(const string& assetPath, bytearray& data);
+    variant loadAssetSync(const string& assetPath);
+    
+    /** Load a file from the assets directory, asynchronously. */
+    Task* loadAsset(const string& assetPath, std::function<void(variant&)> callback);
+
+    /** Load and decompress a bitmap from the assets directory, asynchronously. */
+    Task* loadBitmapAsset(const string& assetPath, std::function<void(Bitmap*)> callback);
 
     /**@}*/
     
@@ -60,7 +65,7 @@ public:
      */
     
     /** Load a style asset from the assets directory. Generally used in App::main() */
-    void loadStyleAsset(const string& assetPath);
+    void loadStyleAssetSync(const string& assetPath);
     
     /** Get a named style value */
     const style* getStyle(const string& keypath);
@@ -100,7 +105,7 @@ public:
      * @{
      */
     /** Schedule a function to run on the main thread loop, optionally after a delay (in milliseconds). */
-    static Task* postToMainThread(std::function<void(void)> func, int delay=0);
+    static void postToMainThread(std::function<void(void)> func, int delay=0);
     /**@}*/
     
     
@@ -184,12 +189,13 @@ public:
      * Note that Oaknut has a separate API for structured, database-like storage. See LocalStorage.
      */
     bool fileResolve(string& path) const;
-    bool fileExists(string& path) const;
+    void fileExists(string& path, std::function<void(bool)> callback) const;
     bool fileEnsureFolderExists(string& path) const;
-    uint64_t fileSize(string& path) const;
     vector<string> fileList(string& path) const;
-    bool fileLoad(const string& path, bytearray& fileContents) const;
-    
+    void fileLoad(const string& filePath, std::function<void(variant&)> callback);
+    variant fileLoadSync(const string& path);
+    variant fileLoadSync(int fd);
+
     /**@}*/
     
     /** The default display. Usually there is only one. */
@@ -212,3 +218,4 @@ protected:
 };
 
 extern App* app;
+

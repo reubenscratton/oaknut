@@ -5,11 +5,21 @@
 	"background": "contentBackgroundInv",
     "modules": [
 		{"$":"itemPrimaryMedia", "hideCaption":true, "autoplay":true},
-		{"$":"itemHeadline"},
-		{"$":"itemByline"},
-		{"$":"itemTopics"},
-		{"$":"itemBody"},
-
+        {
+            "cellClass":"BNCellHeadline"
+        },
+        {
+            "cellClass":"BNCellByline",
+            "primary":[".person"],
+            "secondary":[".byline"],
+            "limit":1
+        },
+        {
+            "cellClass":"BNCellTopics"
+        },
+        {
+            "class":"BNCellsModuleArticleBody",
+        },
         {
           "title": { "style":"relatedTitle", "text": "Related video and audio"},
           "cellClass":"BNCellItemRelatedStory",

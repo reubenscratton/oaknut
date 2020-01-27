@@ -6,10 +6,7 @@
 //
 
 #include <oaknut.h>
-#include <fstream>
 
-using std::ios_base;
-using std::fstream;
 
 #ifdef PLATFORM_WEB
 
@@ -55,9 +52,6 @@ public:
         );
     }
     virtual void close() {
-    }
-    
-    virtual void flush() {
     }
     
     
@@ -200,119 +194,200 @@ public:
     FILEOFFSET _deadSpace;
     
     FileLocalStore(const string& name, const string& primaryKeyName) : LocalStore(name, primaryKeyName) {
-        _mainFileName = name;
-        _mainFileName.append(".dat");
-        _indexFileName = name;
-        _indexFileName.append(".idx");
     }
     
     // Open & close methods.
-    virtual void open(std::function<void()> callback) {
+    void open(std::function<void()> callback) override {
         _deadSpace = 0;
-        FileStream idxstrm(_indexFileName);
-        if (idxstrm.openForRead()) {
-            idxstrm.readBytes(sizeof(_deadSpace), &_deadSpace);
-            while (idxstrm.hasMoreToRead()) {
-                variant key;
-                INDEX_ENTRY entry;
-                if (!idxstrm.readVariant(&key)) {
-                    break;
+        Task::enqueue({
+                            
+            // Task 1: Open main file and load index file contents on IO thread
+            {Task::IO, [=](variant&) -> variant {
+                string mainFileName = _name + ".dat";
+                _mainFd = ::open(mainFileName.c_str(), O_RDWR, O_CREAT);
+                return Task::fileLoad(_name + ".idx");
+            }},
+            
+            // Task 2: Process index file contents into usable form
+            {Task::Background, [=](variant& indexFileContents) -> variant {
+                bytestream strm(indexFileContents.bytearrayRef());
+                strm.read(_deadSpace);
+                while (!strm.eof()) {
+                    variant key;
+                    INDEX_ENTRY entry;
+                    strm.read(key);
+                    strm.readBytes(sizeof(entry), &entry);
+                    _index.insert(make_pair(key,entry));
                 }
-                idxstrm.readBytes(sizeof(entry), &entry);
-                _index.insert(make_pair(key,entry));
-            }
-            idxstrm.close();
-        }
-        callback();
-    }
-    virtual void close() {
-        flush();
-        _index.clear();
-        _file.close();
+                return variant(true);
+            }},
+            
+            // Task 3: Run main thread callback to advertise we're ready for read/write
+            {Task::MainThread, [=](variant& result) -> variant {
+                callback();
+                return variant();
+            }}
+        });
     }
     
-    virtual void flush() {
+    void close() override {
+        commitChanges(true);
+    }
+    
+    
+    virtual void commitChanges(bool close) {
+        vector<Task::spec> tasks;
         if (_indexDirty) {
-            FileStream idxstrm(_indexFileName);
-            idxstrm.openForWrite();
-            idxstrm.writeBytes(sizeof(_deadSpace), &_deadSpace);
-            for (auto it : _index) {
-                idxstrm.writeVariant(it.first);
-                idxstrm.writeBytes(sizeof(it.second), &it.second);
-            }
-            idxstrm.close();
             _indexDirty = false;
+            tasks.push_back({Task::Background, [=](variant&) -> variant {
+                _indexMutex.lock();
+                auto indexCopy = _index;
+                _indexMutex.unlock();
+                bytestream strm;
+                strm.writeBytes(sizeof(_deadSpace), &_deadSpace);
+                for (auto it : indexCopy) {
+                    strm.write(it.first);
+                    strm.write(it.second);
+                }
+                return variant(strm);
+            }});
+            tasks.push_back({Task::IO, [=](variant& indexFileContents) -> variant {
+                return Task::fileSave(_name + ".idx", indexFileContents.bytearrayRef());
+            }});
+        };
+        if (close) {
+            auto fd = _mainFd;
+            _mainFd = 0;
+            tasks.push_back({Task::IO, [=](variant&) -> variant {
+                ::close(fd);
+                return variant();
+            }});
+            tasks.push_back({Task::MainThread, [=](variant&) -> variant {
+                _index.clear();
+                return variant();
+            }});
         }
+        Task::enqueue(tasks);
     }
 
-    virtual void getCount(std::function<void(int)> success) {
+    void getCount(std::function<void(int)> success) override {
         success((int)_index.size());
     }
-    virtual void getAll(std::function<void(variant*)> callback) {
+    
+    void getAll(std::function<void(variant*)> callback) override {
+        vector<Task::spec> tasks;
         auto it = _index.begin();
         while (it != _index.end()) {
-            variant item = readItem(it->second);
-            callback(&item);
+            auto index_entry = it->second;
+            tasks.push_back(
+                {Task::IO, [=](variant&) -> variant {
+                    if (-1 == ::lseek(_mainFd, index_entry.offset, SEEK_SET)) {
+                        return variant(error::fromErrno());
+                    }
+                    bytearray bytes(index_entry.size);
+                    ssize_t sz = ::read(_mainFd, bytes.data(), index_entry.size);
+                    if (sz == -1) {
+                        return variant(error::fromErrno());
+                    }
+                    assert(index_entry.size == sz);
+                    return variant(bytes);
+                }
+            });
+            tasks.push_back(
+                {Task::MainThread, [=](variant& result) -> variant {
+                    callback(&result);
+                    return variant();
+                }
+            });
             it++;
         }
-        callback(NULL);
+        tasks.push_back(
+            {Task::MainThread, [=](variant&) -> variant {
+                callback(NULL);
+                return variant();
+            }
+        });
+        Task::enqueue(tasks);
     }
-    virtual void getOne(const variant& primaryKeyVal, std::function<void(variant*)> callback) {
-        auto it = _index.find(primaryKeyVal);
-        if (it != _index.end()) {
-            variant item = readItem(it->second);
-            callback(&item);
-        }
-        callback(NULL);
-    }
-
-    variant readItem(const INDEX_ENTRY& indexEntry) {
-        ByteBufferStream bbs(indexEntry.size);
-        openFile();
-        _file.seekp(indexEntry.offset);
-        _file.read((char*)bbs._data.data, indexEntry.size);
-        assert(_file.gcount() == indexEntry.size);
-        variant v;
-        bbs.readVariant(&v);
-        return v;
-    }
-
-
     
-    void remove(const variant& primaryKeyVal, std::function<void()> callback) {
+    void getOne(const variant& primaryKeyVal, std::function<void(variant*)> callback) override {
+        assert(callback);
+        auto it = _index.find(primaryKeyVal);
+        if (it == _index.end()) {
+            callback(NULL);
+            return;
+        }
+        auto index_entry = it->second;
+        Task::enqueue({
+            {Task::IO, [=](variant&) -> variant {
+                if (-1 == ::lseek(_mainFd, index_entry.offset, SEEK_SET)) {
+                    return variant(error::fromErrno());
+                }
+                bytearray bytes(index_entry.size);
+                ssize_t sz = ::read(_mainFd, bytes.data(), index_entry.size);
+                if (sz == -1) {
+                    return variant(error::fromErrno());
+                }
+                assert(index_entry.size == sz);
+                return variant(bytes);
+            }},
+            {Task::MainThread, [=](variant& result) -> variant {
+                callback(&result);
+                return variant();
+            }},
+
+        });
+    }
+
+    void remove(const variant& primaryKeyVal, std::function<void()> callback) override {
         auto it = _index.find(primaryKeyVal);
         if (it != _index.end()) {
             _deadSpace += it->second.size;
+            _indexMutex.lock();
             _index.erase(it);
+            _indexMutex.unlock();
             _indexDirty = true;
-            flush();
+            commitChanges(false);
         }
         callback();
     }
-    virtual void put(ISerializeToVariant* object, std::function<void(void)> callback) {
+    
+    void put(ISerializeToVariant* object, std::function<void(void)> callback) override {
         variant v;
         object->toVariant(v);
         
         auto key = v.get(_primaryKeyName);
         assert(!key.isEmpty()); // key is mandatory! (that might change)
         _indexDirty = true;
-        openFile();
 
         // Serialize the map to a byte array
-        ByteBufferStream bbs;
-        bbs.writeVariant(v);
-        int cb = (int)bbs.offsetWrite;
+        bytestream strm;
+        strm.write(v);
+        int cb = (int)strm.offsetWrite;
         
-        // If there's an existing object with this key...
+        // See if there's an existing object with this key...
         auto it = _index.find(key);
         if (it != _index.end()) {
             
             // If the new object is same size or smaller then we can overwrite the existing record
             int sizeChange = cb - it->second.size;
             if (sizeChange <= 0) {
-                _file.seekp(it->second.offset);
-                _file.write((char*)bbs._data.data, cb);
-                //assert(written == cb);
+                Task::enqueue({
+                    {Task::IO, [=](variant&) -> variant {
+                        if (-1 == ::lseek(_mainFd, it->second.offset, SEEK_SET)) {
+                            return error::fromErrno();
+                        }
+                        ssize_t sz = ::write(_mainFd, strm.data(), strm.size());
+                        if (sz == -1) {
+                            return error::fromErrno();
+                        }
+                        return variant(strm.size() == sz);
+                    }},
+                    {Task::MainThread, [=](variant&) -> variant {
+                        callback();
+                        return variant();
+                    }}
+                });
                 it->second.size = cb;
                 _deadSpace += -sizeChange;
                 return;
@@ -320,41 +395,47 @@ public:
             
             // Remove the old object
             _deadSpace += it->second.size;
+            _indexMutex.lock();
             _index.erase(it);
+            _indexMutex.unlock();
         }
         
         // Append new record to end of file
-        _file.seekp(0, ios_base::end);
-        INDEX_ENTRY entry;
-        entry.offset = (FILEOFFSET)_file.tellp();
-        entry.size = cb;
-        auto result = _index.insert(make_pair(key, entry));
-        //_it = result.first;
-        _file.write((char*)bbs._data.data, cb);
-        //assert(written == cb);
+        Task::enqueue({
+            {Task::IO, [=](variant&) -> variant {
+                if (-1 == ::lseek(_mainFd, 0, SEEK_END)) {
+                    return error::fromErrno();
+                }
+                ssize_t sz = ::write(_mainFd, strm.data(), strm.size());
+                if (sz == -1) {
+                    return error::fromErrno();
+                }
+                return variant(strm.size() == sz);
+            }},
+            {Task::MainThread, [=](variant& result) -> variant {
+                if (!result.isError()) {
+                    INDEX_ENTRY entry;
+                    entry.offset = result.intVal();
+                    entry.size = cb;
+                    _indexMutex.lock();
+                    _index.insert(make_pair(key, entry));
+                    _indexMutex.unlock();
+                }
+                callback();
+                return variant();
+            }}
+        });
         
-        callback();
     }
 
     
 protected:
-    void openFile() {
-        if (!_file.is_open()) {
-            _file.open(_mainFileName.c_str(), fstream::in | fstream::out | fstream::binary);
-            if (!_file.is_open()) {
-                _file.open(_mainFileName.c_str(), fstream::in | fstream::out | fstream::binary | fstream::app);
-                assert(_file.is_open());
-            }
-        }
-    }
-    
-protected:
-    string _mainFileName;
-    string _indexFileName;
-    std::fstream _file;
+    int _mainFd;
+    bool _isOpening;
     bool _fileOpenForWrite;
     INDEX _index;
-    bool _indexDirty;
+    std::mutex _indexMutex;
+    std::atomic<bool> _indexDirty;
     
     
 };

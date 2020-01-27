@@ -7,9 +7,12 @@
 
 #include <oaknut.h>
 
+#define MSG_START 0
+#define MSG_PROCESS_FRAME 1
+
 FaceDetector::FaceDetector() : Worker("FaceDetectorWorker")
 {
-    start(variant());
+    enqueue(MSG_START, variant(), nullptr);
 }
 
 bool FaceDetector::isBusy() {
@@ -31,7 +34,7 @@ void FaceDetector::detectFaces(class Bitmap* bitmap, const RECT& roiRect, std::f
     
     data_in.set("data", bytes);
     bitmap->unlock(&pixelData, false);
-    process(data_in, [=](const variant& data_out) {
+    enqueue(MSG_PROCESS_FRAME, data_in, [=](const variant& data_out) {
         vector<RECT> results;
         auto& vresults = data_out.arrayRef();
         for (auto& vrect : vresults) {

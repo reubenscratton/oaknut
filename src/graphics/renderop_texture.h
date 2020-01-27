@@ -28,7 +28,7 @@ public:
     
     TextureRenderOp();
     TextureRenderOp(const RECT& rect, Bitmap* texture, const RECT* rectTex, COLOR tintColor);
-    TextureRenderOp(const string& assetPath, int tintColor);
+    TextureRenderOp(Bitmap* bitmap, int tintColor);
     
     // API
     virtual void setBitmap(Bitmap* bitmap);

@@ -285,7 +285,7 @@ Window* Window::create() {
     
 
     app->_window = Window::create();
-    app->loadStyleAsset("styles.res");
+    app->loadStyleAssetSync("styles.res");
     app->main();
     app->_window->show();
     return YES;

@@ -54,98 +54,20 @@ string App::currentCountryCode() const {
 }
 
 
-/*#if TARGET_OS_IOS
-static EAGLSharegroup* s_mainEAGLSharegroup;
-#else
-static CGLContextObj s_mainContext;
-#endif
 
-void Task::ensureSharedGLContext() {
-#if TARGET_OS_IOS
-    if (![EAGLContext currentContext]) {
-        EAGLContext* eaglcontext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2 sharegroup: s_mainEAGLSharegroup];
-        assert(eaglcontext);
-        [EAGLContext setCurrentContext:eaglcontext];
-    }
-#else
-    if (!CGLGetCurrentContext()) {
-        CGLContextObj ctx;
-        CGLCreateContext(CGLGetPixelFormat(s_mainContext), s_mainContext, &ctx);
-        CGLSetCurrentContext(ctx);
-    }
-#endif
-}
-*/
-Task* App::postToMainThread(std::function<void(void)> func, int delay) {
-    Task* task = new Task(func);
+void App::postToMainThread(std::function<void(void)> func, int delay) {
     if (delay <= 0) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            task->complete();
+            func();
         });
     } else {
         float delayInSeconds = (float)delay / 1000.f;
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            task->complete();
+            func();
         });
     }
-    return task;
 }
 
-/*
-class AppleTask : public Task {
-public:
-    NSBlockOperation* _op;
-
-    AppleTask(std::function<void(void)> func) : Task(func) {
-        _op = [NSBlockOperation blockOperationWithBlock:^() {
-            _func();
-        }];
-    }
-    
-    bool cancel() override {
-        if (!_op.isCancelled && !_op.isFinished && !_op.isExecuting) {
-            [_op cancel];
-            return _op.isCancelled;
-        }
-        return false;
-    }
-
-};
-
-class AppleTaskQueue : public TaskQueue {
-public:
-
-    NSOperationQueue* _queue;
-
-    AppleTaskQueue(const string& name) : TaskQueue(name) {
-#if TARGET_OS_IOS
-        if (!s_mainEAGLSharegroup) {
-            s_mainEAGLSharegroup = [EAGLContext currentContext].sharegroup;
-        }
-#else
-        if (!s_mainContext) {
-             s_mainContext = CGLGetCurrentContext();
-        }
-#endif
-        _queue = [NSOperationQueue new];
-        _queue.name = [[NSString alloc] initWithUTF8String:name.c_str()];
-    }
-    ~AppleTaskQueue() {
-        _queue = nil;
-    }
-
-    Task* enqueueTask(std::function<void(void)> func) {
-        AppleTask* task = new AppleTask(func);
-        [_queue addOperation:task->_op];
-        return task;
-    }
-
-};
-
-TaskQueue* TaskQueue::create(const string& name) {
-    return new AppleTaskQueue(name);
-}
-*/
 
 
 bool App::fileResolve(string& path) const {
@@ -211,21 +133,10 @@ bool App::fileEnsureFolderExists(string& path) const {
 }
 
 
-uint64_t App::fileSize(string& path) const {
-    if (!fileResolve(path)) {
-        return 0;
-    }
-    NSError* err = nil;
-    NSDictionary* fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[NSString stringWithUTF8String:path.c_str()] error:&err];
-    if (err) {
-        app->warn("Error getting attributes for file at %s", path.c_str());
-        return 0;
-    }
-    
-    NSNumber *fileSizeNumber = [fileAttributes objectForKey:NSFileSize];
-    return [fileSizeNumber longLongValue];
+bool Task::isMainThread() {
+    return [NSThread isMainThread] != 0;
 }
-//    return fopen(str.c_str(), "rb");
+
 
 vector<string> App::fileList(string& dir) const {
     fileResolve(dir);

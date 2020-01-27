@@ -39,6 +39,8 @@
 #include <time.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <semaphore.h>
+#include <poll.h>
 #ifdef __cplusplus
 #include <typeinfo>
 #include <cstring>
@@ -48,12 +50,14 @@
 #include <vector>
 #include <list>
 #include <stack>
+#include <queue>
 #include <algorithm>
 #include <set>
 #include <functional>
 #include <assert.h>
 #include <chrono>
 #include <thread>
+//#include <atomic>
 
 #ifndef MIN
 #define MIN(a,b) (((a)<(b)) ? (a) : (b))
@@ -101,11 +105,14 @@ typedef uint64_t TIMESTAMP;
 #endif
 namespace oak {
 #include "base/bytearray.h"
+#include "base/bytestream.h"
 #include "base/hash.h"
 #include "base/string_.h"
+#include "base/error.h"
 #include "base/url.h"
 #include "base/object.h"
 #include "base/timer.h"
+#include "base/variant.h"
 #include "base/task.h"
 }
 
@@ -115,15 +122,10 @@ using namespace oak;
 
 // Oaknut types
 namespace oak {
-#include "data/stream.h"
 #include "data/base64.h"
-#include "data/serializable.h"
-#include "data/bytebuffer.h"
-#include "data/bytebufferstream.h"
 #include "text/regex.h"
 #include "util/gravity.h"
 #include "graphics/geom.h"
-#include "base/variant.h"
 #include "data/localstorage.h"
 #include "graphics/color.h"
 #include "graphics/vectors.h"
@@ -131,7 +133,6 @@ namespace oak {
 #include "util/itempool.h"
 #include "graphics/renderer.h"
 #include "graphics/bitmap.h"
-#include "util/posixtaskqueue.h"
 #include "app/worker.h"
 #include "media/camera.h"
 #include "media/audioinput.h"
@@ -156,7 +157,6 @@ namespace oak {
 #include "graphics/canvas.h"
 #include "app/display.h"
 #include "app/app.h"
-#include "data/filestream.h"
 #include "app/urlrequest.h"
 #include "util/cache.h"
 #include "util/circularbuffer.h"

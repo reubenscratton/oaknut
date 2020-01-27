@@ -25,6 +25,7 @@ protected:
     float spaceForSearchIcon();
     
     SEARCHTEXTCHANGED _searchTextChangedDelegate;
+    sp<Task> _iconTask;
     TextureRenderOp* _searchIconOp;
 
 };

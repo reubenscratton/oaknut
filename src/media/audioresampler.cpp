@@ -8,7 +8,8 @@
 
 #include <oaknut.h>
 
-
+#define MSG_OPEN 0
+#define MSG_PROCESS 1
 
 AudioResampler::AudioResampler() : Worker("AudioResamplerWorker") {
     
@@ -19,11 +20,11 @@ void AudioResampler::open(const AudioFormat& formatIn, const AudioFormat& format
     variant config;
     config.set("formatIn", formatIn.toVariant());
     config.set("formatOut", formatOut.toVariant());
-    start(config);
+    enqueue(MSG_OPEN, config, nullptr);
 }
 
 void AudioResampler::process(AudioSamples* samples) {
-    Worker::process(samples->getData(), [=](const variant& outdata) {
+    enqueue(MSG_PROCESS, samples->getData(), [=](const variant& outdata) {
         sp<AudioSamples> outSamples = new AudioSamples(outdata.bytearrayRef());
         onNewAudioSamples(outSamples);
     });

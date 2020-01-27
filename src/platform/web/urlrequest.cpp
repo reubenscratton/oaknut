@@ -22,36 +22,34 @@ public:
     }
     static void OnError(URLRequestWeb* req) {
         printf("error loading url: %s\n", req->_url.c_str());
-        //todo req->dispatchResult(NULL);
+        req->_status = Status::Error;
+        req->dispatch();
     }
     static void OnImageLoad(URLRequestWeb* req) {
         
-        // This is a rather special case. Instead of calling dispatchResult() we use
-        // a special web-only Bitmap constructor and call the handler manually.
-        sp<Bitmap> bitmap = new BitmapWeb(req->_val);
-        req->_httpStatus = 200;
+        // This is a rather special case. Instead of calling processResponse() we use
+        // a special web-only Bitmap constructor and dispatch from here.
+        req->_response.httpStatus = 200;
+        req->_response.decodedBitmap = new BitmapWeb(req->_val);
         req->_val = val::null();
-        if (req->_handlerBitmap) {
-            req->_handlerBitmap(req, bitmap);
-        }
-        req->release();
+        req->dispatch();
     }
     static void OnNonImageLoad(URLRequestWeb* req, int httpStatus, uint8_t* data, int data_size, int timestamp, const char* szHeaders) {
         //app->log("status %d len=%d", httpStatus, data_size);
         //string foo((const char*)data, data_size);
         //app->log("%s", foo.c_str());
+        req->_response.httpStatus = httpStatus;
         vector<string> headers = string(szHeaders,-1).split("\r\n");
-        map<string,string> headerMap;
         for (auto& header: headers) {
             int32_t colonPos = header.find(":");
             if (colonPos>0) {
                 string name = header.substr(0, colonPos);
                 string value = header.substr(colonPos+1, -1);
-                headerMap[name] = value;
+                req->_response.headers[name] = value;
             }
         }
         req->_responseData.assignNoCopy(data, data_size);
-        req->dispatchResult(httpStatus, headerMap);
+        req->processResponse();
     }
 
     virtual void run() {

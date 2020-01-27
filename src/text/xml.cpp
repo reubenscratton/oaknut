@@ -40,20 +40,13 @@ string XmlParser::readAttributeName(const string& s, uint32_t& o) {
     return string(s, start, o);
 }
 
-string XmlParser::readQuotedString(const string& s, uint32_t& o) {
-    char quoteChar = '\0';
-    if (s.skipChar(o, '\"')) quoteChar='\"';
-    else if (s.skipChar(o, '\'')) quoteChar='\'';
-    
-    string q = s.readUpTo(o, quoteChar);
-    s.readChar(o); // todo: need a readUpTo() that also goes past...
-
+static string readText(string& str) {
     uint32_t qo=0;
     string r;
-    while (qo < q.lengthInBytes()) {
-        r += q.readUpTo(qo, "&");
-        if (qo < q.lengthInBytes()) {
-            string code = q.readPast(qo, ";");
+    while (qo < str.lengthInBytes()) {
+        r += str.readUpTo(qo, "&");
+        if (qo < str.lengthInBytes()) {
+            string code = str.readPast(qo, ";");
             if (code == "&lt;") r+="<";
             else if (code == "&gt;") r+=">";
             else if (code == "&quot;") r+="\"";
@@ -63,6 +56,17 @@ string XmlParser::readQuotedString(const string& s, uint32_t& o) {
         }
     }
     return r;
+}
+
+string XmlParser::readQuotedString(const string& s, uint32_t& o) {
+    char quoteChar = '\0';
+    if (s.skipChar(o, '\"')) quoteChar='\"';
+    else if (s.skipChar(o, '\'')) quoteChar='\'';
+    
+    string q = s.readUpTo(o, quoteChar);
+    s.readChar(o); // todo: need a readUpTo() that also goes past...
+
+    return readText(q);
 }
 
 string XmlParser::nextTag() {
@@ -82,7 +86,7 @@ string XmlParser::nextTag() {
     } else {
         _currentTag.clear();
     }
-    return content;
+    return readText(content);
 }
 
 string XmlParser::attributeValue(const string& name) {

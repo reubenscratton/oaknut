@@ -74,8 +74,10 @@ public:
     }
 
     void dispatchResult(int httpStatus, const map<string,string>& responseHeaders, const bytearray& data) {
-      _responseData = data;
-      URLRequest::dispatchResult(httpStatus, responseHeaders);
+        _response.httpStatus = httpStatus;
+        _response.responseHeaders = responseHeaders;
+        _response.data = data;
+        URLRequest::processResponse();
     }
 
 protected:

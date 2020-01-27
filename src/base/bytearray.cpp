@@ -87,3 +87,11 @@ void bytearray::detach() {
     _cb = 0;
 }
 
+void bytearray::clear() {
+    if (_p) {
+        free(_p);
+        _p = nullptr;
+        _cb = 0;
+    }
+}
+

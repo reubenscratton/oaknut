@@ -9,23 +9,23 @@
 #include <oaknut.h>
 
 
-static void mainThreadThunk(Task* task) {
-    task->complete();
+static void mainThreadThunk(std::function<void(void)>* pfunc) {
+    (*pfunc)();
+    delete pfunc;
 }
 
 
 
-Task* App::postToMainThread(std::function<void(void)> func, int delay) {
-    Task* task = new Task(func);
+void App::postToMainThread(std::function<void(void)> func, int delay) {
+    std::function<void(void)>* pfunc = new std::function<void(void)>(func);
     if (emscripten_is_main_runtime_thread()) {
         EM_ASM({
             window.setTimeout(function() { dynCall('vi', $0, [$1]); }, $2);
-        }, mainThreadThunk, task, delay);
+        }, mainThreadThunk, pfunc, delay);
     } else {
         assert(0); // below func is missing, its part of pthread support. What do we do??
         // emscripten_async_run_in_main_runtime_thread(EM_FUNC_SIG_VI, mainThreadThunk, task);
     }
-    return task;
 }
 
 #endif

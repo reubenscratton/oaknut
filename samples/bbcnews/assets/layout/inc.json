@@ -365,7 +365,6 @@
         "cellClass":"BNCellItemMostPopular",
         "limit":10,
         "primary":[".item"],
-        "padding":"{0,0,0,0}",
         "orientation":"portrait",
         "H":1
     },
@@ -373,13 +372,11 @@
         "$":"mostPopularGroup",
         "secondary":[".most_popular.most_read"],
         "format":[".format.textual"],
-        "inverseColorScheme":"NO"
     },
     "mostWatchedGroup":{
         "$":"mostPopularGroup",
         "secondary":[".most_popular.most_watched"],
         "format":[".format.video"],
-        "inverseColorScheme":true
     },
     "myNewsByTimeGroup":{
         "$":"otherItems",
@@ -454,20 +451,5 @@
         "secondary":[".placement.primary"],
         "parallax":true,
         "imageAspect":0.5625
-    },
-    "itemHeadline":{
-        "cellClass":"BNCellHeadline"
-    },
-    "itemByline":{
-        "cellClass":"BNCellByline",
-        "primary":[".person"],
-        "secondary":[".byline"],
-        "limit":1
-    },
-    "itemTopics":{
-        "cellClass":"BNCellTopics"
-    },
-    "itemBody":{
-        "class":"BNCellsModuleArticleBody",
     }
 }

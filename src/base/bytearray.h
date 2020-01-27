@@ -61,6 +61,7 @@ public:
     void erase(int32_t offsetStart, int32_t cb);
     void resize(int32_t newSize);
     void detach();
+    void clear();
     
     class string toString();
     
