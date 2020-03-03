@@ -8,77 +8,74 @@
 
 #import "oaknut.h"
 
-static struct loader {
-    loader() {
-        NSURLCache* cache = [[NSURLCache alloc] initWithMemoryCapacity:16*1024*1024 diskCapacity:32*1024*1024 diskPath:nil];
-        NSURLCache.sharedURLCache = cache;
-    }
-} s_loader;
+static NSURLSession* s_session;
+
 
 extern string nsstr(NSString* s);
+extern error nserr(NSError* e);
 
-class URLRequestApple : public URLRequest {
-public:
-    URLRequestApple(const string& url, const string& method, const bytearray& body, int flags)
-        : URLRequest(url, method, body, flags) {
+
+
+error URLRequest::ioLoadRemote(URLResponse* response) {
+
+    // One-off init of session object
+    if (!s_session) {
+        NSURLSessionConfiguration* config = [NSURLSessionConfiguration defaultSessionConfiguration];
+        s_session = [NSURLSession sessionWithConfiguration:config];
     }
-    ~URLRequestApple() {
-        _dataTask = NULL;
+        
+    // Build the native request
+    NSString* urlstr = [NSString stringWithCString:_url.c_str() encoding:[NSString defaultCStringEncoding]];
+    NSMutableURLRequest* req = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:urlstr]];
+    req.HTTPMethod = [NSString stringWithUTF8String:_method.c_str()];
+    req.timeoutInterval = 15;
+    if (_body.length() > 0) {
+        req.HTTPBody = [NSData dataWithBytes:_body.data() length:_body.size()];
     }
+    for (auto& header : _headers) {
+        NSString* headerName = [NSString stringWithUTF8String:header.first.c_str()];
+        NSString* headerValue = [NSString stringWithUTF8String:header.second.c_str()];
+        [req setValue:headerValue forHTTPHeaderField:headerName];
+    }
+    req.cachePolicy = NSURLRequestReloadIgnoringCacheData;
     
-    void run() override {
-        // Default:    NSURLRequestUseProtocolCachePolicy
-        // Cache ONLY: NSURLRequestReturnCacheDataDontLoad
-        // Cache always, only load if not there: NSURLRequestReturnCacheDataElseLoad
-        // Cache AND reload: NSURLRequestReloadRevalidatingCacheData
-        NSString* urlstr = [NSString stringWithCString:_url.c_str() encoding:[NSString defaultCStringEncoding]];
-        NSMutableURLRequest* req = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:urlstr] cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:15];
-        req.HTTPMethod = [NSString stringWithUTF8String:_method.c_str()];
-        if (_body.length() > 0) {
-            req.HTTPBody = [NSData dataWithBytes:_body.data() length:_body.size()];
-        }
-        for (auto& header : _headers) {
-            NSString* headerName = [NSString stringWithUTF8String:header.first.c_str()];
-            NSString* headerValue = [NSString stringWithUTF8String:header.second.c_str()];
-            [req setValue:headerValue forHTTPHeaderField:headerName];
-        }
-        _dataTask = [[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-            if (_status==Cancelled || error.code == -999) { // cancelled, just abort.
-                dispatch();
+    // Execute the native request and block this IO thread on our semaphore until it's signalled
+    __block error err = error::none();
+    NSURLSessionDataTask* dataTask = [s_session dataTaskWithRequest:req completionHandler:^(NSData* data, NSURLResponse* res, NSError* error) {
+        if (_status!=Cancelled) {
+            if (error) {
+                _status = Status::Error;
+                err = nserr(error);
             } else {
-                NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
-                
-                _response._httpStatus = (int)httpResponse.statusCode;
+                NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)res;
+                response->httpStatus = (int)httpResponse.statusCode;
                 
                 // Get all response headers into a generic container
+                //  Cache-Control: public, max-age=31536000
+                response->headers.clear();
                 for (NSString* headerName in httpResponse.allHeaderFields.allKeys) {
-                    _response.headers[nsstr([headerName lowercaseString])] = nsstr(httpResponse.allHeaderFields[headerName]);
+                    response->headers[nsstr([headerName lowercaseString])] = nsstr(httpResponse.allHeaderFields[headerName]);
                 }
-                
-                // Slurp the data
+
+                // Read the response data into contiguous memory
+                __block bytearray responseData;
                 [data enumerateByteRangesUsingBlock:^(const void * _Nonnull bytes, NSRange byteRange, BOOL * _Nonnull stop) {
-                    _response.data.append((uint8_t*)bytes, (int32_t)byteRange.length);
+                    responseData.append((uint8_t*)bytes, (int32_t)byteRange.length);
                 }];
-
-                processResponse();
+                response->data = responseData;
             }
-        }];
-        [_dataTask resume];
-
-    }
-    
-    void cancel() override {
-        _status = Status::Cancelled;
-        if (_dataTask.state == NSURLSessionTaskStateRunning) {
-            [_dataTask cancel];
         }
+        os_sem_signal(_sem);
+    }];
+    [dataTask resume];
+    os_sem_wait(_sem);
+    
+    // If semaphore signalled by cancel(), the data task has not completed so cancel it.
+    if (_status == Status::Cancelled) {
+        [dataTask cancel];
     }
     
-    NSURLSessionDataTask* _dataTask;
-};
-
-URLRequest* URLRequest::create(const string& url, const string& method, const bytearray& body, int flags) {
-    return new URLRequestApple(url, method, body, flags);
+    return err;
 }
 
 

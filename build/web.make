@@ -69,7 +69,6 @@ $$($(1)_JS) : $$($(1)_SOURCES)
 		$(OAKNUT_DIR)/src/app/worker.cpp \
 		$(OAKNUT_DIR)/src/base/*.cpp \
 		$(OAKNUT_DIR)/src/data/*.cpp \
-		$(OAKNUT_DIR)/src/text/stringprocessor.cpp \
 		-o $$@
 
 endef

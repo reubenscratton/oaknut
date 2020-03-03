@@ -5,6 +5,20 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+class BlurShader : public Shader {
+public:
+    BlurShader(Renderer* renderer, int radius=4);
+    
+    string getFragmentSource() override;
+    
+    int _blurRadius;
+    float _sigma;
+    vector<float> _standardGaussianWeights;
+    vector<float> _optimizedOffsets;
+
+    int16_t _u_texOffset;
+};
+
 class BlurRenderOp : public RenderOp {
 public:
 	BlurRenderOp();
@@ -13,8 +27,8 @@ public:
     // Overrides
     void setRect(const RECT& rect) override;
     void asQuads(QUAD *quad) override;
-    void validateShader(Renderer* renderer) override;
-    void prepareToRender(Renderer* renderer, Surface* surface) override;
+    void validateShader(RenderTask* r) override;
+    void prepareToRender(RenderTask* r, Surface* surface) override;
     
     // These are also in PrivateSurfaceRenderOp...
     bool _dirty;

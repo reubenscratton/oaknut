@@ -140,7 +140,12 @@ struct RECT {
     POINT bottomRight() const { return {origin.x+size.width, origin.y+size.height}; }
 
     bool contains(const RECT& r) const {
-        return contains(r.origin) && contains(r.bottomRight());
+        if (!contains(r.origin)) {
+            return false;
+        }
+        auto br=r.bottomRight();
+        return (br.x>=origin.x && br.x<=(origin.x+size.width)) && (br.y>=origin.y && br.y<=(origin.y+size.height));
+        //contains(r.bottomRight());
     }
     bool contains(const POINT& p) const {
         return (p.x>=origin.x && p.x<(origin.x+size.width)) && (p.y>=origin.y && p.y<(origin.y+size.height));

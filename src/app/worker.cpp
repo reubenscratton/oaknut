@@ -50,14 +50,35 @@ extern "C" void ww_work(char* bytes, int cb) {
 
 
 Task* Worker::enqueue(int32_t msg, const variant& data_in, std::function<void(const variant&)> callback) {
+    
+    if (isBusy()) {
+        return nullptr;
+    }
+    _queuedTasks++;
     Task* task = Task::enqueue({
         {Task::Background, [=](variant& data) -> variant {
-            return _impl->process_(data_in);
-        }}
+            return _impl->process_(msg, data_in);
+        }},
+        {Task::MainThread, [=](variant& result) -> variant {
+            if (callback) {
+                callback(result);
+            }
+            _queuedTasks--;
+            return variant();
+        }},
     });
     return task;
 }
 
+bool Worker::isBusy() {
+    if (_maxQueueSize > 0) {
+        int numQueued = _queuedTasks.fetch_add(0);
+        if (numQueued >= _maxQueueSize) {
+            return true;
+        }
+    }
+    return false;
+}
 
 /*void Worker::drain() {
     if (_current.load()) {

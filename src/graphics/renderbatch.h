@@ -18,7 +18,7 @@ public:
     
     RenderBatch();
     ~RenderBatch();
-    void render(Renderer* renderer, Surface* surface, RenderOp* firstOp);
+    void render(RenderTask* r, Surface* surface, RenderOp* firstOp, int renderCounter);
     
     void invalidateGeometry(RenderOp* op);
     void updateQuads(Renderer* renderer);

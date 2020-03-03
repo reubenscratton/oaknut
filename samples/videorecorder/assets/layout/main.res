@@ -16,7 +16,7 @@ subviews: [
     size: fill
     background: #80000000
     hole-shape: rect
-    hole-size: 66%, aspect*1.333
+    hole-size: 66%, aspect*1.586
     hole-align: center
     hole-stroke-width: 2dp
     hole-corner-radius: 8dp

@@ -120,6 +120,47 @@ namespace oak {
 using namespace oak;
 #include __incstr(platform/PLATFORM/platform.h)
 
+#ifdef __APPLE__
+typedef dispatch_semaphore_t os_sem;
+#else
+typedef sem_t os_sem;
+#endif
+
+inline void os_sem_init(os_sem *sem, uint32_t value) {
+#ifdef __APPLE__
+    *sem = dispatch_semaphore_create(value);
+#else
+    sem_init(sem, 0, value);
+#endif
+}
+
+inline void os_sem_delete(os_sem sem) {
+#ifdef __APPLE__
+    sem = nil;
+#else
+    sem_destroy(sem);
+#endif
+}
+
+inline void os_sem_wait(os_sem sem) {
+#ifdef __APPLE__
+    dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+#else
+    int r;
+    do {
+            r = sem_wait(&sem);
+    } while (r == -1 && errno == EINTR);
+#endif
+}
+
+inline void os_sem_signal(os_sem sem) {
+#ifdef __APPLE__
+    dispatch_semaphore_signal(sem);
+#else
+    sem_post(&sem);
+#endif
+}
+
 // Oaknut types
 namespace oak {
 #include "data/base64.h"
@@ -205,6 +246,15 @@ namespace std {
 template <>
 struct hash<oak::string> {
     size_t operator()( const oak::string& k ) const {
+        return k.hash();
+    }
+};
+}
+
+namespace std {
+template <>
+struct hash<oak::BlendParams> {
+    size_t operator()( const oak::BlendParams& k ) const {
         return k.hash();
     }
 };

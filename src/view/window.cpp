@@ -9,8 +9,8 @@
 
 
 Window::Window() : _rootViewController(NULL) {
-    _renderer = Renderer::create(this);
-    _surface = _renderer->getPrimarySurface();
+    _renderer = Renderer::create();
+    _surface = _renderer->createSurface( false);
     _window = this;
     _effectiveAlpha = 1;
 }
@@ -315,16 +315,22 @@ void incFrames() {
 void Window::draw() {
     _redrawNeeded = false;
 
-	_renderer->prepareToDraw();
-
     if (!_layoutValid) {
         _layoutValid = true;
         layout(_rect);
         ensureFocusedViewIsInSafeArea();
     }
-    _surface->render(this, _renderer);
 
-    _renderer->commit();
+    // Draw the window to it's surface
+    _renderCounter++;
+	sp<RenderTask> renderTask = _renderer->createRenderTask();
+    if (_backgroundColor) {
+        _surface->_clearColor = _backgroundColor;
+        _surface->_clearNeeded = true;
+    }
+    renderTask->bindToNativeSurface(_surface);
+    _surface->render(this, renderTask);
+    renderTask->commit(nullptr);
 	
 	incFrames();
 
@@ -346,7 +352,7 @@ void Window::draw() {
         }
     }
     
-    Object::flushAutodeletePool();
+    Task::flushCurrentThread();
 
     // If there are any animations running, request a redraw immediately
     if (_animations.size()) {

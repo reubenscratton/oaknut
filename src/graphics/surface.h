@@ -29,6 +29,8 @@ public:
 class Surface : public RenderResource {
 public:
 	SIZE _size;
+    COLOR _clearColor;
+    bool _clearNeeded;
     REGION _invalidRegion; // unused on primary surface
     MATRIX4 _mvp;
     POINT _savedOrigin;
@@ -41,7 +43,9 @@ public:
 
     Surface(Renderer* renderer, bool isPrivate);
 
-    virtual void render(View* view, Renderer* renderer);
+    virtual void bindToNativeWindow(long nativeWindowHandle) =0;
+
+    virtual void render(View* view, RenderTask* r);
     virtual void setSize(const SIZE& size);
 
     void ensureRenderListAttached(RenderList* list);
@@ -50,7 +54,7 @@ public:
     void addRenderOp(RenderOp* op);
     void detachRenderListOp(RenderOp* op);
     
-    void validateRenderOps(Renderer* renderer);
+    void validateRenderOps(RenderTask* r);
     void batchRenderOp(RenderOp* op);
     void unbatchRenderOp(RenderOp* op);
     
@@ -63,9 +67,9 @@ public:
     void checkSanity(View* view, bool dump);
     
 private:
-    void renderPhase1(Renderer* renderer, View* view, RECT surfaceRect);
-    void renderPhase2(Renderer* renderer);
-    void renderPhase3(Renderer* renderer, View* view, Surface* prevsurf);
+    void renderPhase1(RenderTask* r, View* view, RECT surfaceRect);
+    void renderPhase2(RenderTask* r);
+    void renderPhase3(RenderTask* r, View* view, Surface* prevsurf);
 
 #ifdef DEBUG
     string _renderLog;

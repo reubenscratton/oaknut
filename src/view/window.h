@@ -92,7 +92,7 @@ public:
 
 	// Render state
     Renderer* _renderer;
-
+    int _renderCounter;
     COLOR _backgroundColor;
     
     void layout(RECT constraint) override;

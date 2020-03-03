@@ -37,7 +37,9 @@ int RenderOp::numQuads() {
 RECT RenderOp::surfaceRect() {
     RECT rect = _rect;
     rect.origin += _view->_surfaceOrigin;
-    rect.origin += _view->_contentOffsetAccum;
+    if (_view->_parent) {
+        rect.origin -= _view->_parent->_contentOffsetAccum;
+    }
     return rect;
 }
 bool RenderOp::intersects(RenderOp *op) {
@@ -114,11 +116,23 @@ string RenderOp::debugDescription() {
 }
 #endif
 
-void RenderOp::prepareToRender(Renderer* renderer, Surface* surface) {
+void RenderOp::prepareToRender(RenderTask* r, Surface* surface) {
     assert(_shader);
-    renderer->setCurrentShader(_shader);
-    renderer->setCurrentBlendMode(_blendMode);
-    renderer->setUniform(_shader->_u_mvp, surface->_mvp);
+    r->setCurrentShader(_shader);
+    switch (_blendMode) {
+        case BLENDMODE_NONE:
+            r->setBlendNone();
+            break;
+        case BLENDMODE_NORMAL:
+            r->setBlendNormal();
+            break;
+        case BLENDMODE_PREMULTIPLIED:
+            r->setBlendPremultiplied();
+            break;
+        default:
+            assert(0);
+    }
+    r->setUniform(_shader->_u_mvp, surface->_mvp);
 }
 
 void RenderOp::invalidateBatchGeometry() {

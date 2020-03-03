@@ -1202,6 +1202,19 @@ void View::removeRenderOpFromList(RenderOp* renderOp, sp<RenderList>& list) {
 RECT View::getOwnRect() {
 	return RECT(0, 0, _rect.size.width, _rect.size.height);
 }
+RECT View::getSurfaceRect() {
+    if (_parent) {
+        return RECT(_surfaceOrigin.x - _parent->_contentOffsetAccum.x,
+                    _surfaceOrigin.y - _parent->_contentOffsetAccum.y,
+                    _rect.size.width,
+                    _rect.size.height);
+
+    }
+    return RECT(_surfaceOrigin.x,
+                _surfaceOrigin.y,
+                _rect.size.width,
+                _rect.size.height);
+}
 RECT View::getOwnRectPadded() {
     return RECT(_padding.left,_padding.top, _rect.size.width-(_padding.left+_padding.right), _rect.size.height - (_padding.top+_padding.bottom));
 }
@@ -1224,7 +1237,7 @@ POINT View::getContentOffset() const {
 
 void View::setContentOffset(POINT contentOffset, bool animated/*=false*/) {
     assert(!animated); // TODO: implement animation here
-    POINT d = _contentOffset - contentOffset;
+    POINT d = contentOffset - _contentOffset;
 	if (d.isZero()) {
         return;
     }

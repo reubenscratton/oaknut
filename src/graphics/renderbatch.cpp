@@ -53,7 +53,7 @@ void RenderBatch::updateQuads(Renderer* renderer) {
 }
 
 
-void RenderBatch::render(Renderer* renderer, Surface* surface, RenderOp* firstOp) {
+void RenderBatch::render(RenderTask* r, Surface* surface, RenderOp* firstOp, int renderCounter) {
     
     // Determine how many ops we can draw right now without breaking render order by
     // walking the render tree in render order. For each op after the given one we need to look
@@ -68,6 +68,7 @@ void RenderBatch::render(Renderer* renderer, Surface* surface, RenderOp* firstOp
 
         // If we've found the next batch op
         if (currentOp == nextOpInBatch) {
+            
             
             // Cannot draw nextOpInBatch now, it clips something earlier in the render tree
             if (region.intersects(currentOp->surfaceRect())) {
@@ -84,11 +85,18 @@ void RenderBatch::render(Renderer* renderer, Surface* surface, RenderOp* firstOp
                 break;
             }
 
+            // Don't draw next op now unless it's entirely in the current clip.
+            if (numQuadsThisChunk) {
+                if (!r->_currentClip.contains(nextOpInBatch->surfaceRect())) {
+                    break;
+                }
+            }
+
             // This batch op can be rendered now!
             numQuadsThisChunk += currentOp->numQuads();
             currentOp->_mustRedraw = false;
-            assert(currentOp->_renderCounter != renderer->_renderCounter);
-            currentOp->_renderCounter = renderer->_renderCounter;
+            assert(currentOp->_renderCounter != renderCounter);
+            currentOp->_renderCounter = renderCounter;
 
             // Update nextOpInBatch to point to the next one
             if (++it == _ops.end()) {
@@ -97,7 +105,7 @@ void RenderBatch::render(Renderer* renderer, Surface* surface, RenderOp* firstOp
             nextOpInBatch = *it;
         } else {
             // Add op to region of stuff thats yet to render, unless of course it already has been rendered
-            if (currentOp->_renderCounter != renderer->_renderCounter) {
+            if (currentOp->_renderCounter != renderCounter) {
                 region.addRect(currentOp->surfaceRect());
             }
         }
@@ -119,7 +127,7 @@ void RenderBatch::render(Renderer* renderer, Surface* surface, RenderOp* firstOp
     }
 
     // Use and configure the shader for this batch
-    firstOp->prepareToRender(renderer, surface);
+    firstOp->prepareToRender(r, surface);
     
     // If redrawing an invalid region, start iterating the region rects here
     RECT rect;
@@ -134,15 +142,15 @@ void RenderBatch::render(Renderer* renderer, Surface* surface, RenderOp* firstOp
 #if RENDERER_GL
         rect.origin.y = surface->_size.height - rect.bottom(); /* flip Y */
 #endif
-        renderer->pushClip(rect);
+        r->pushClip(rect);
     }
 
     // Draw!
-    renderer->drawQuads(numQuadsThisChunk, _alloc->offset + firstOp->_renderBase);
+    r->draw(Quad, numQuadsThisChunk, _alloc->offset + firstOp->_renderBase);
 
     // Iterate next rect of invalid region, if there is any
     if (surface->_supportsPartialRedraw) {
-        renderer->popClip();
+        r->popClip();
         if (++invalidRectIt != surface->_invalidRegion.rects.end()) {
             goto nextInvalidRect;
         }

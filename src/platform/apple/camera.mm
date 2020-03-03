@@ -65,7 +65,7 @@ public:
             CMVideoDimensions dims = CMVideoFormatDescriptionGetDimensions(format.formatDescription);
             int shortSize = MIN(dims.width, dims.height);
             int longSize = MAX(dims.width, dims.height);
-            
+            app->log("short:%d long:%d", shortSize, longSize);
             // Calculate the size diff
             auto shortDiff = shortSize - _options.frameSizeShort;
             auto longDiff = longSize - _options.frameSizeLong;
@@ -86,40 +86,32 @@ public:
             }*/
         }
         
-        [videoDevice lockForConfiguration:nil];
-        videoDevice.activeFormat = bestFormat;
-        [videoDevice unlockForConfiguration];
-
         
-        captureSession = [[AVCaptureSession alloc] init];
-        assert(captureSession);
-        [captureSession beginConfiguration];
-        
-
-        // Device input
+        // Create input
         NSError* error = nil;
         AVCaptureDeviceInput *deviceInput = [AVCaptureDeviceInput deviceInputWithDevice:videoDevice error:&error];
         assert(!error);
-        [captureSession addInput:deviceInput];
         
-#if TARGET_OS_IOS
-        [videoDevice lockForConfiguration:nil];
-        videoDevice.videoZoomFactor = 1.0f;
-        [videoDevice unlockForConfiguration];
-#endif
-      
-        // Data output
+        // Create output
         videoOutput = [[AVCaptureVideoDataOutput alloc] init];
         [videoOutput setAlwaysDiscardsLateVideoFrames:YES];
         [videoOutput setVideoSettings:@{
 #if RENDERER_METAL
             (NSString *)kCVPixelBufferMetalCompatibilityKey: @YES,
 #endif
-            (NSString*)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_32BGRA)
+            (NSString*)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_32BGRA),
         }];
         [videoOutput setSampleBufferDelegate:_helper queue:dispatch_get_main_queue()];
         
+        // Create session and add input and output. There is conflicting information on t'web
+        // as to the right order to do these things.
+        captureSession = [[AVCaptureSession alloc] init];
+        assert(captureSession);
+        [captureSession beginConfiguration];
+        [captureSession addInput:deviceInput];
         [captureSession addOutput:videoOutput];
+        [captureSession commitConfiguration];
+
         for (AVCaptureConnection *connection in [videoOutput connections]) {
             if([connection isVideoOrientationSupported]) {
                 [connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
@@ -128,9 +120,7 @@ public:
                 [connection setVideoMirrored:YES];
             }
         }
-        
-        [captureSession commitConfiguration];
-        
+
         _portrait = true; // todo!
         
         auto formatDescription = [videoDevice activeFormat].formatDescription;
@@ -138,6 +128,16 @@ public:
         _previewWidth = _portrait ? dimensions.height : dimensions.width;
         _previewHeight = _portrait ? dimensions.width : dimensions.height;
         [captureSession startRunning];
+        
+        // Configure input
+        NSError* err = nil;
+        BOOL ok = [videoDevice lockForConfiguration:&err];
+        assert(ok && !err);
+        videoDevice.activeFormat = bestFormat;
+#if TARGET_OS_IOS
+        videoDevice.videoZoomFactor = 1.0f;
+#endif
+        [videoDevice unlockForConfiguration];
     }
     
     void handleNewSampleBuffer(CMSampleBufferRef sampleBuffer) {

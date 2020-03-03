@@ -27,6 +27,41 @@ public:
     template <typename T>
     bool write(const T& val) { return writeBytes(sizeof(T), &val); }
     
+    template <typename K, typename V>
+    bool read(map<K,V>& val) {
+        size_t c=0;
+        if (!read(c)) {
+            return false;
+        }
+        for (int i=0 ; i<c ; i++) {
+            pair<K,V> e;
+            if (!read(e.first)) {
+                return false;
+            }
+            if (!read(e.second)) {
+                return false;
+            }
+            val.insert(e);
+        }
+        return true;
+    }
+
+    template <typename K, typename V>
+    bool write(const map<K,V>& val) {
+        if (!write(val.size())) {
+            return false;
+        }
+        for (auto& it: val) {
+            if (!write(it.first)) {
+                return false;
+            }
+            if (!write(it.second)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     bool writeBytes(size_t cb, const void* bytes);
     bool readBytes(size_t cb, void* bytes);
     void setWriteOffset(size_t offset);

@@ -620,7 +620,7 @@ static string parseString(const string& s, uint32_t& o) {
         if (ch=='\\') {
             // charStart++;
             ch = s.readChar(o);
-            bool legalEscape = (ch=='\"' || ch=='\'' || ch=='\\');
+            bool legalEscape = (ch=='\"' || ch=='\'' || ch=='\\' || ch=='n');
             if (!quoted) {
                 legalEscape |= (ch == ',' || ch==':' || ch=='}');
             }
@@ -628,6 +628,7 @@ static string parseString(const string& s, uint32_t& o) {
                 app->warn("Illegal escape \'\\%c\'", ch);
                 continue;
             }
+            if (ch == 'n') ch='\n';
         }
         //str.append(string(charStart, it.current()));
         str.append(ch);

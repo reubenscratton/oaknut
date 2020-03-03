@@ -76,16 +76,17 @@ BNImageView::BNImageView() {
 }
 
 
-void BNImageView::attachToWindow(Window *window) {
-    ImageView::attachToWindow(window);
-    if (!_window) {
-        cancelLoad();
-        setBitmap(NULL);
-	} else {
-		if (_imageKey.url.length() && !_isLoading) {
-            tryUpdateImage(true);
-		}
-	}
+void BNImageView::detachFromSurface() {
+    ImageView::detachFromSurface();
+    cancelLoad();
+    setBitmap(NULL);
+}
+
+void BNImageView::attachToSurface() {
+    ImageView::attachToSurface();
+    if (_imageKey.url.length()) {
+        tryUpdateImage(true);
+    }
 }
 
 void BNImageView::layout(RECT constraint) {
@@ -142,7 +143,7 @@ void BNImageView::setBNImage(BNImage* image) {
 	_bnimage = image;
 	_errorDisplay = false;
 	
-	if (/*_imageKey.url.length() &&*/ _window) {
+	if (/*_imageKey.url.length() &&*/ _surface) {
         tryUpdateImage(true);
 	}
 	
@@ -267,8 +268,6 @@ void BNImageView::tryUpdateImage(bool startDownloadIfNotInCache) {
     
     // No image so fetch from urlcache or remotely
     if (startDownloadIfNotInCache) {
-        
-        _isLoading = true;
         
         // Image data has to be downloaded. Schedule the activity view to appear
         //[self performSelector:@selector(setShouldFade:) withObject:@YES afterDelay:0.5];

@@ -34,9 +34,13 @@ public:
     Task* enqueue(int32_t msg, const variant& data_in,
                          std::function<void(const variant&)> callback);
     
+    bool isBusy();
     
 protected:
     
+    int _maxQueueSize;
+    std::atomic_int _queuedTasks;
+
 #if PLATFORM_WEB
     worker_handle _worker;
     std::function<void()> _onStop;
@@ -58,8 +62,9 @@ protected:
 
 class WorkerImpl : public Object {
 public:
+    int _maxConcurrentTasks;
     
-    virtual variant process_(const variant& data_in)=0;
+    virtual variant process_(int msg, const variant& data_in)=0;
 
 };
 

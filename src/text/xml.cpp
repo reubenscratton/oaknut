@@ -11,7 +11,7 @@
 XmlParser::XmlParser(const string& str) : _str(str), _ptr(0), _currentTag() {
 }
 
-XmlParser XmlParser::currentTagContents() {
+/*XmlParser XmlParser::currentTagContents() {
     auto start = _ptr;
     auto openingTag = currentTag();
     string closingTag = "/"+openingTag;
@@ -21,7 +21,7 @@ XmlParser XmlParser::currentTagContents() {
     auto end = _ptr - (closingTag.lengthInBytes()+2);
     nextTag();
     return XmlParser(_str.substr(start, end));
-}
+}*/
 
 string XmlParser::readAttributeName(const string& s, uint32_t& o) {
     s.skipWhitespace(o);

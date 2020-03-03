@@ -236,7 +236,7 @@ public:
     
     
     virtual void commitChanges(bool close) {
-        vector<Task::spec> tasks;
+        vector<Task::subtask> tasks;
         if (_indexDirty) {
             _indexDirty = false;
             tasks.push_back({Task::Background, [=](variant&) -> variant {
@@ -275,7 +275,7 @@ public:
     }
     
     void getAll(std::function<void(variant*)> callback) override {
-        vector<Task::spec> tasks;
+        vector<Task::subtask> tasks;
         auto it = _index.begin();
         while (it != _index.end()) {
             auto index_entry = it->second;

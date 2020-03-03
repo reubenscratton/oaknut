@@ -5,6 +5,8 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+#define WANT_ATOMIC_REFCOUNTS 1
+
 /**
  * @ingroup base_group
  * @class Object
@@ -12,19 +14,27 @@
  */
 class Object {
 public:
-	int _refs;
-
+#if WANT_ATOMIC_REFCOUNTS
+    std::atomic<int> _refs;
+#else
+	int _refs; // intentionally not std::atomic
+#if DEBUG
+    std::thread::id _owningThreadId;
+#endif
+#endif
 	Object();
-	virtual ~Object();
+
+    virtual ~Object();
     
     /**
-     Increments the internal reference counter. NB: Not threadsafe, cos we don't have threads.
+     Increments the internal reference counter. Must only be called on the owning thread, i.e.
+     the thread that calls the first retain().
      */
 	void retain();
     
     /**
      Decrements the internal reference counter. If the counter reaches zero the object is moved
-     to a queue of objects that will be free()d between frames. NB: Not threadsafe.
+     to a thread-local queue of objects to be free()d.
      */
 	void release();
 	
@@ -33,8 +43,6 @@ public:
 #ifdef DEBUG
     virtual string debugDescription();
 #endif
-    
-    static void flushAutodeletePool();
     
     static std::map<string, Object* (*)()>* s_classRegister;
 
@@ -62,6 +70,8 @@ public:
     template<class ReturnType, class... Ts>
     ReturnType callFunction(void *function, const Ts&... args) {
     }
+    
+    friend class Task;
 };
 
 /**
@@ -75,10 +85,6 @@ public:
 #define DECLARE_DYNCREATE(X, ...) static Object::Registrar<X VA_ARGS(__VA_ARGS__)> s_classReg##X(STRINGIFY(X))
 
 
-#if DEBUG
-extern void* DBGOBJ;
-#endif
-
 /**
  * @ingroup base_group
  * @class sp<T>
@@ -88,39 +94,27 @@ template<class T>
 class sp {
 public:
 	T* _obj;
-    
+
     template<class TC>
     TC* as() const {
         return static_cast<TC*>(_obj);
     }
-/*#if DEBUG
-    void dbgLog(bool retain) {
-        if (_obj && _obj==DBGOBJ) {
-            app->log("DBGOBJ:%s=%d", retain?"+1":"-1", _obj->_refs);
-        }
-    }
-#else*/
-#define dbgLog(x)
-//#endif
 
     sp() : _obj(NULL) {
     }
     sp(T* obj) : _obj(obj) {
 		if (obj) {
 			obj->retain();
-            dbgLog(true);
 		}
     }
     sp(const sp<T>& sp) : _obj(sp._obj) { // Copy constructor
 		if (_obj) {
 			_obj->retain();
-            dbgLog(true);
 		}
     }
     ~sp() {
 		if (_obj) {
 			_obj->release();
-            dbgLog(false);
 		}
     }
     T& operator* () {
@@ -137,12 +131,10 @@ public:
 		if (obj != _obj) {
 			if (_obj) {
 				_obj->release();
-                dbgLog(false);
 			}
 			_obj = obj;
 			if (_obj) {
 				_obj->retain();
-                dbgLog(true);
 			}
 		}
 	}
@@ -164,7 +156,59 @@ public:
     
 };
 
+/**
+ sp_threadsafe lets other threads safely access an Object owned by a different thread.
+ thread, then pass it to another thread where it can safely be used as if it were an sp<T>. When the SharedObject
+ is destroyed it dispatches a callback to the owning thread that releases the reference.
+ */
+/*
+template <class T>
+class sp_threadsafe {
+public:
+    static_assert(std::is_base_of<Object, T>::value, "type must be Object-derived");
 
+    sp_threadsafe() : _obj(nullptr), _thread(nullptr) {
+    }
+    sp_threadsafe(T* obj) : _obj(obj) {
+        obj->retain();
+        _thread = Thread::current();
+    }
+    sp_threadsafe(sp_threadsafe&& rhs) {
+       _obj = rhs._obj;
+       rhs._obj = nullptr;
+       _thread = Thread::current();
+       assert(_thread == rhs._thread);
+    }
+    sp_threadsafe& operator=(sp_threadsafe&& rhs) {
+        _obj = rhs._obj;
+        rhs._obj = nullptr;
+        _thread = Thread::current();
+        //assert(_thread == rhs._thread);
+        return *this;
+    }
+    ~sp_threadsafe() {
+        if (_obj) {
+            if (_thread == Thread::current()) {
+                _obj->release();
+            } else {
+                Object* obj = _obj;
+                _thread->post([=]() {
+                    obj->release();
+                });
+            }
+        }
+    }
+
+    T& operator* () { return *(T*)_obj; }
+    T* operator->() const { return (T*)_obj; }
+    T* operator& () const { return (T*)_obj; }
+    operator T*() const { return (T*)_obj; }
+    
+    T* _obj;
+    class Thread* _thread;
+
+};
+*/
 
 
 

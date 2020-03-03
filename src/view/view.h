@@ -222,6 +222,9 @@ public:
 
     /** Get the visible view rect, i.e. own coordinate system but with content offset applied */
     virtual RECT getVisibleRect();
+    
+    /** Get the view rect in surface coordinates */
+    virtual RECT getSurfaceRect();
 
     /** Same as getOwnRect() but with current padding insets applied */
     virtual RECT getOwnRectPadded();

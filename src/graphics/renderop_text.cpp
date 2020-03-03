@@ -17,17 +17,17 @@ TextRenderOp::TextRenderOp(AtlasPage* atlasPage) : RenderOp() {
     _mergeType = MERGETYPE_TEXT;
 }
 
-void TextRenderOp::validateShader(Renderer* renderer) {
+void TextRenderOp::validateShader(RenderTask* r) {
     Bitmap* bitmap = _atlasPage->_bitmap;
     if (bitmap) {
         if (!bitmap->_texture) {
-            renderer->createTextureForBitmap(bitmap);
+            r->_renderer->createTextureForBitmap(bitmap);
         }
         Shader::Features features;        
         features.textures[0] = bitmap->_texture->_type;
         features.tint = 1;
         features.alpha = _alpha<1.0f;
-        _shader = renderer->getStandardShader(features);
+        _shader = r->_renderer->getStandardShader(features);
     }
 }
 
@@ -63,9 +63,9 @@ int TextRenderOp::numQuads() {
     return (int)_rects.size();
 }
 
-void TextRenderOp::prepareToRender(Renderer* renderer, Surface* surface) {
-    RenderOp::prepareToRender(renderer, surface);
-    renderer->bindBitmap(_atlasPage->_bitmap);
+void TextRenderOp::prepareToRender(RenderTask* r, Surface* surface) {
+    RenderOp::prepareToRender(r, surface);
+    r->bindBitmap(_atlasPage->_bitmap);
 }
 
 void TextRenderOp::asQuads(QUAD *quad) {

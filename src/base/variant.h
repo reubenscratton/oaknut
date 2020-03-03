@@ -264,6 +264,7 @@ public:
     }
 
     friend class bytestream;
+    friend class Task;
     
 #if DEBUG
     const char* debugString() const;

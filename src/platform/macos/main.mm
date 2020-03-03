@@ -61,7 +61,7 @@ public:
     WindowOSX() {
         _nativeView =  [[NativeView alloc] initWithWindow:this];
         [_nativeView awake];
-        _renderer->bindToNativeWindow((long)(__bridge void*)_nativeView);
+        _surface->bindToNativeWindow((long)(__bridge void*)_nativeView);
     }
     
     void show() override {

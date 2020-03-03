@@ -13,8 +13,12 @@ bytestream::bytestream() {
     offsetWrite = 0;
 }
 bytestream::bytestream(int cb) : bytearray(cb) {
+    offsetRead = 0;
+    offsetWrite = 0;
 }
 bytestream::bytestream(bytearray& src) : bytearray(src) {
+    offsetRead = 0;
+    offsetWrite = 0;
 }
 
 void bytestream::setWriteOffset(size_t offset) {
@@ -92,6 +96,7 @@ bool bytestream::write(const string& val) {
     }
     return writeBytes(cb, (uint8_t*)val.start());
 }
+
 template <>
 bool bytestream::read(variant& val) {
     enum variant::type type;

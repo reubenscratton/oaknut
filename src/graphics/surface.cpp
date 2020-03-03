@@ -14,11 +14,11 @@ public:
     ItemPool::Alloc* _alloc;
     bool _dirty;
     
-    PrivateSurfaceRenderOp(Renderer* renderer, View* view, const RECT& rect) : TextureRenderOp(rect, NULL, NULL, 0) {
+    PrivateSurfaceRenderOp(RenderTask* r, View* view, const RECT& rect) : TextureRenderOp(rect, NULL, NULL, 0) {
         _view = view;
-        _alloc = renderer->allocQuads(1, NULL);
+        _alloc = r->_renderer->allocQuads(1, NULL);
         _dirty = true;
-        validateShader(renderer);
+        validateShader(r);
     }
     ~PrivateSurfaceRenderOp() {
         _alloc->pool->free(_alloc);
@@ -42,27 +42,27 @@ public:
         quad->bl.t = quad->br.t = _rectTex.bottom();
 #endif
     }
-    void validateShader(Renderer* renderer) override {
+    void validateShader(RenderTask* r) override {
         //TextureRenderOp::validateShader(renderer);
         Shader::Features features;
         features.textures[0] = Texture::Type::Normal;
         features.alpha = (_alpha<1.0f);
         features.tint = (_color!=0);
-        _shader = renderer->getStandardShader(features);
+        _shader = r->_renderer->getStandardShader(features);
     }
-    void prepareToRender(Renderer* renderer, Surface* surface) override {
-        RenderOp::prepareToRender(renderer, surface);
+    void prepareToRender(RenderTask* r, Surface* surface) override {
+        RenderOp::prepareToRender(r, surface);
 
         if (_dirty) {
             _dirty = false;
             QUAD* quad = (QUAD*)_alloc->addr();
             asQuads(quad);
-            renderer->uploadQuad(_alloc);
-            renderer->invalidateQuads(_alloc);
+            r->_renderer->uploadQuad(_alloc);
+            r->_renderer->invalidateQuads(_alloc);
         }
 
-        renderer->setCurrentTexture(_view->_surface->_texture);
-        renderer->drawQuads(1, _alloc->offset);
+        r->setCurrentTexture(_view->_surface->_texture);
+        r->draw(Quad, 1, _alloc->offset);
     }
     
 };
@@ -89,16 +89,6 @@ public:
  
  */
 
-MATRIX4 setOrthoFrustum(float l, float r, float b, float t, float n, float f) {
-    MATRIX4 mat;
-    mat[0]  = 2 / (r - l);
-    mat[5]  = 2 / (t - b);
-    mat[10] = -2 / (f - n);
-    mat[12] = -(r + l) / (r - l);
-    mat[13] = -(t + b) / (t - b);
-    mat[14] = -(f + n) / (f - n);
-    return mat;
-}
 
 RenderList::RenderList() : _renderListsIndex(-1) {
 }
@@ -111,7 +101,7 @@ Surface::Surface(Renderer* renderer, bool isPrivate) : RenderResource(renderer) 
 
 void Surface::setSize(const SIZE& size) {
     _size = size;
-    _mvp = setOrthoFrustum(0, size.width, size.height, 0, -1, 1);
+    _mvp = MATRIX4::ortho(0, size.width, size.height, 0, -1, 1);
     if (_supportsPartialRedraw) {
         _invalidRegion.rects.clear();
         _invalidRegion.addRect(RECT(0,0,size.width,size.height));
@@ -152,7 +142,7 @@ void Surface::addRenderOp(RenderOp* op) {
     _opsNeedingValidation.push_back(op);
 }
 
-void Surface::validateRenderOps(Renderer* renderer) {
+void Surface::validateRenderOps(RenderTask* r) {
     if (!_opsNeedingValidation.size()) {
         return;
     }
@@ -162,7 +152,7 @@ void Surface::validateRenderOps(Renderer* renderer) {
     auto i = _opsNeedingValidation.begin();
     while (i != _opsNeedingValidation.end()) {
         RenderOp* op = (*i);
-        op->validateShader(renderer);
+        op->validateShader(r);
         if (op->_shader) {
             opsValid.push_back(op);
             i = _opsNeedingValidation.erase(i);
@@ -289,7 +279,7 @@ void Surface::ensureRenderListAttached(RenderList* list) {
 }
 
 
-void Surface::renderPhase1(Renderer* renderer, View* view, RECT surfaceRect) {
+void Surface::renderPhase1(RenderTask* r, View* view, RECT surfaceRect) {
 
     // If view not visible, early exit
     if (view->_visibility != Visible) {
@@ -302,12 +292,12 @@ void Surface::renderPhase1(Renderer* renderer, View* view, RECT surfaceRect) {
         // This is pretty fugly... basically check if we're parent-drawing-child or child-drawing-self.
         if (this != view->_surface) {
             if (!view->_surface) {
-                view->_surface = view->_window->_renderer->createPrivateSurface();
+                view->_surface = view->_window->_renderer->createSurface(true);
                 view->attachToSurface();
             }
 
             // Render the view tree to its private surface
-            view->_surface->render(view, renderer);
+            view->_surface->render(view, r);
             return;
         }
         else {
@@ -321,7 +311,7 @@ void Surface::renderPhase1(Renderer* renderer, View* view, RECT surfaceRect) {
             // Create the private surface op, allocating vertex space from the host surface's vbo
             if (!_op) {
                 RECT rect = view->getOwnRect();
-                _op = new PrivateSurfaceRenderOp(renderer, view, rect);
+                _op = new PrivateSurfaceRenderOp(r, view, rect);
             } else {
                 if (sizeChanged) {
                     _op->setRect(view->getOwnRect());
@@ -369,7 +359,7 @@ void Surface::renderPhase1(Renderer* renderer, View* view, RECT surfaceRect) {
             }
             continue;
         }
-        renderPhase1(renderer, subview, subviewRect);
+        renderPhase1(r, subview, subviewRect);
     }
     
     // Ensure view decor renderlist is in the surface list
@@ -384,15 +374,15 @@ void Surface::renderPhase1(Renderer* renderer, View* view, RECT surfaceRect) {
 
 }
 
-void Surface::renderPhase2(Renderer* renderer) {
-    validateRenderOps(renderer);
+void Surface::renderPhase2(RenderTask* r) {
+    validateRenderOps(r);
     for (RenderBatch* batch : _listBatches) {
-        batch->updateQuads(renderer);
+        batch->updateQuads(r->_renderer);
     }
-    renderer->flushQuadBuffer();
+    r->_renderer->flushQuadBuffer();
 }
 
-static inline void renderRenderList(RenderList* renderList, Surface* surface, Renderer* renderer) {
+static inline void renderRenderList(RenderList* renderList, Surface* surface, RenderTask* r, int renderCounter) {
     for (auto it=renderList->_ops.begin() ; it!=renderList->_ops.end() ; it++) {
         RenderOp* op = *it;
         if (!op->_shader) {
@@ -405,21 +395,18 @@ static inline void renderRenderList(RenderList* renderList, Surface* surface, Re
         }
         
         // If op not drawn yet, draw it (and as many others in the batch as can be done now)
-        if (op->_renderCounter != renderer->_renderCounter) {
-            if (surface != renderer->_currentSurface) {
-                renderer->setCurrentSurface(surface);
-                renderer->_currentSurface = surface;
-            }
+        if (op->_renderCounter != renderCounter) {
+            r->setCurrentSurface(surface);
             RenderBatch* batch = op->_batch;
             assert(batch);
-            batch->render(renderer, surface, op);
+            batch->render(r, surface, op, renderCounter);
         }
     }
 
 }
 
 
-void Surface::renderPhase3(Renderer* renderer, View* view, Surface* prevsurf) {
+void Surface::renderPhase3(RenderTask* r, View* view, Surface* prevsurf) {
     if (view->_visibility != Visible) {
         return;
     }
@@ -451,10 +438,9 @@ void Surface::renderPhase3(Renderer* renderer, View* view, Surface* prevsurf) {
         clips = (view->_contentSize.height > view->_rect.size.height)
              || (view->_contentSize.width > view->_rect.size.width);
     }
-    clips = false;
+    //clips = false;
     if (clips) {
-        RECT clip = view->getOwnRect();
-        clip.origin = view->_surfaceOrigin;
+        RECT clip = view->getSurfaceRect();
 #if RENDERER_GL
         clip.origin.y = surface->_size.height - clip.bottom(); /* flip Y */
 #endif
@@ -462,31 +448,31 @@ void Surface::renderPhase3(Renderer* renderer, View* view, Surface* prevsurf) {
         if (clip.size.width <= 0 || clip.size.height <= 0) {
             goto skipDraw;
         }
-        renderer->pushClip(clip);
+        r->pushClip(clip);
         didClip = true;
     }
     
     // Draw view content, if there is any
     if (view->_renderList) {
-        renderRenderList(view->_renderList, surface, renderer);
+        renderRenderList(view->_renderList, surface, r, view->_window->_renderCounter);
     }
     
     // Recurse subviews
     for (auto it=view->_subviews.begin() ; it != view->_subviews.end() ; it++) {
         if ((*it)->_surface) {
-            surface->renderPhase3(renderer, *it, surface);
+            surface->renderPhase3(r, *it, surface);
         }
     }
 skipDraw:
     
     // Draw view decor content, if there is any
     if (view->_renderListDecor) {
-        renderRenderList(view->_renderListDecor, surface, renderer);
+        renderRenderList(view->_renderListDecor, surface, r, view->_window->_renderCounter);
     }
 
     // Pop draw state
     if (didClip) {
-        renderer->popClip();
+        r->popClip();
     }
     if (changesMvp) {
         surface->_mvp = savedMatrix;
@@ -495,11 +481,8 @@ skipDraw:
     // If rendered a child surface then we must now render the child surface onto its parent
     if (!surfaceIsCurrent) {
         if (prevsurf) {
-            if (prevsurf != renderer->_currentSurface) {
-                renderer->setCurrentSurface(prevsurf);
-                renderer->_currentSurface = prevsurf;
-            }
-            surface->_op->prepareToRender(renderer, prevsurf);
+            r->setCurrentSurface(prevsurf);
+            surface->_op->prepareToRender(r, prevsurf);
             if (surface->_supportsPartialRedraw) {
                 surface->_invalidRegion.rects.clear();
             }
@@ -569,7 +552,7 @@ void Surface::checkSanity(View* view, bool dump) {
     }
 
 }
-void Surface::render(View* view, Renderer* renderer) {
+void Surface::render(View* view, RenderTask* r) {
 
     _mvpNum = _mvpNumPeak = 0;
 
@@ -577,14 +560,14 @@ void Surface::render(View* view, Renderer* renderer) {
     _renderListsLastTouchedIterator = _renderLists.end();
     RECT surfaceRect = {0, 0, _size.width, _size.height};
     // checkSanity(view, false);
-    renderPhase1(renderer, view, surfaceRect);
+    renderPhase1(r, view, surfaceRect);
     // checkSanity(view, false);
 
     /** PHASE 2: VALIDATE ALL SHADERS, ENSURE VERTEX BUFFER IS UP TO DATE */
-    renderPhase2(renderer);
+    renderPhase2(r);
     
     /** PHASE 3: SEND BATCHED RENDEROPS TO GPU **/
-    renderPhase3(renderer, view, NULL);
+    renderPhase3(r, view, NULL);
 }
 
 

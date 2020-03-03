@@ -12,26 +12,17 @@
  *
  */
 
+
 class Task : public Object {
 public:
-    
-    enum RunContext {
+    int priority;
+
+    enum exec_context {
         MainThread,
         Background,
         IO
     };
     
-    Task(RunContext context, std::function<variant(variant&)> func);
-
-    void dispatch();
-    
-    typedef pair<RunContext, std::function<variant(variant&)>> spec;
-    
-    static Task* enqueue(const vector<spec>& s);
-    static void enqueue(Task* task);
-
-    static bool isMainThread();
-
     enum status {
         Created,
         Queued,
@@ -40,24 +31,47 @@ public:
         Complete
     };
 
+    struct subtask {
+        exec_context _threadType;
+        std::function<variant(variant&)> _func;
+        variant _input, _output;
+        sp<Task> task;
+        bool operator<(const subtask& rhs) const {
+            return task->priority<rhs.task->priority;
+        }
+    private:
+        void exec();
+        friend class ThreadPool;
+        friend class Task;
+    };
+
+    // API
+    Task(const vector<subtask>& subtasks);
+    void enqueueNextSubtask(const variant& input);
+    void cancel();
     bool isCancelled() const {
         return _status == status::Cancelled;
     }
-
-    virtual void cancel();
+    ~Task();
     
+    // Helpers
+    static Task* enqueue(const vector<subtask>& subtasks);
+    static bool isMainThread();
+    static void postToMainThread(std::function<void()> callback, int delay=0);
+    static void flushCurrentThread();
+    static void addObjectToCurrentThreadDeletePool(Object*);
 
     // File helpers
     static variant fileLoad(const string& path);
+    static variant fileLoad(int fd);
     static error fileSave(const string& path, const bytearray& data);
 
 protected:
 
-    RunContext _runContext;
-    variant _input, _output;
-    std::function<variant(variant&)> _func;
     std::atomic<status> _status;
-    sp<Task> _nextTask;
+    vector<subtask> _subtasks;
+    
+    friend class ThreadPool;
 };
 
 

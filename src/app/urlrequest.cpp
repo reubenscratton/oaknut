@@ -7,80 +7,150 @@
 
 #include <oaknut.h>
 
-
-
 //static MruCache<string> s_urldataCache(4*1024*1024);
-namespace oak {
 
-class URLRequestManager {
+class URLCache : public Object {
 public:
-    void enqueue(URLRequest* req) {
-        req->_it = _queue.insert(_queue.end(), req);
-        reschedule();
-    }
-    void unqueue(URLRequest* req) {
-        if (req->_it != _queue.end()) {
-            _queue.erase(req->_it);
-            req->_it = _queue.end();
-        }
-        if (req == _active) {
-            req->cancel();
-            _active = nullptr;
-            reschedule();
-        }
-    }
+    struct index_entry {
+       TIMESTAMP downloadTime;
+       TIMESTAMP expiryTime;
+       string etag;
+       sp<URLResponse> response;
+     };
 
-    void reschedule() {
-        App::postToMainThread([=]() {
-            drain();
+    URLCache() {
+        Task::enqueue({
+            {Task::IO, [=](variant&) -> variant {
+                return app->fileLoadSync("//cache/url/index.dat");
+            }},
+            {Task::Background, [=](variant& v) -> variant {
+                if (v.isByteArray()) {
+                    bytestream strm(v.bytearrayRef());
+                    while (strm.hasMoreToRead()) {
+                        pair<sha1_t, index_entry> e;
+                        strm.readBytes(sizeof(e.first), &e.first);
+                        strm.readBytes(sizeof(e.second.downloadTime), &e.second.downloadTime);
+                        strm.readBytes(sizeof(e.second.expiryTime), &e.second.expiryTime);
+                        strm.read(e.second.etag);
+                        auto p = _map.emplace(e);
+                        const pair<sha1_t, index_entry>& pp = *p.first;
+                        _list.push_back(&pp);
+                    }
+                    v = true;
+                }
+                _hasLoaded = true;
+                return v;
+            }}
         });
     }
-    void drain() {
-        if (!_active) {
-            _active = _queue.front();
-            if (_active) {
-                _queue.erase(_active->_it);
-                _active->_it = _queue.end();
-                _active->load();
-            }
+
+ 
+
+    bool containsItem(const sha1_t& hash, index_entry* item) {
+        if (!_hasLoaded) {
+            return false;
         }
-    }
-    void complete(URLRequest* req) {
-        if (req == _active) {
-            _active = nullptr;
+        auto it = _map.find(hash);
+        if (it == _map.end()) {
+            return false;
         }
-        drain();
+        *item = it->second;
+        return true;
     }
     
-//protected:
-    list<URLRequest*> _queue;
-    URLRequest* _active;
+    string pathForHash(const sha1_t& hash) {
+        string path = string::format("//cache/url/%02X/%02X/", hash.bytes[0], hash.bytes[1]);
+        path += string::hex(hash.bytes+2, sizeof(hash.bytes)-2);
+        app->fileResolve(path);
+        return path;
+    }
     
-    URLCache _cache;
+    URLResponse* loadRawResponse(const sha1_t& hash) {
+        assert(!Task::isMainThread()); // todo: assert is IO thread
+        string path = pathForHash(hash);
+        int fd = open(path.c_str(), O_RDONLY, 0);
+        if (fd == -1) {
+            return nullptr;
+        }
+        variant data = Task::fileLoad(fd);
+        if (!data.isByteArray()) {
+            // TODO: if we opened it but couldn't read it, maybe delete the file?
+            return nullptr;
+        }
+        bytestream strm(data.bytearrayRef());
+        URLResponse* response = new URLResponse();
+        strm.read(response->httpStatus);
+        strm.read(response->headers);
+        strm.read(response->data);
+        return response;
+    }
+    void storeRawResponse(const sha1_t& hash, URLResponse* response) {
+        response->retain();
+        Task::enqueue({
+            {Task::IO, [=](variant&) -> variant {
+                string path = pathForHash(hash);
+                bytestream strm;
+                strm.write(response->httpStatus);
+                strm.write(response->headers);
+                strm.write(response->data);
+                Task::fileSave(path, strm.getWrittenBytes());
+                return variant();
+            }},
+            {Task::MainThread, [=](variant&) -> variant {
+                auto it = _map.find(hash);
+                if (it == _map.end()) {
+                    index_entry new_entry;
+                    it = _map.emplace(hash, new_entry).first;
+                }
+                it->second.downloadTime = app->currentMillis();
+                response->release();
+
+                return variant();
+            }}
+        });
+    }
+    void setProcessedResponse(const sha1_t& hash, URLResponse* processedResponse) {
+        auto it = _map.find(hash);
+        if (it != _map.end()) {
+            it->second.response = processedResponse;
+        }
+    }
+
+//    void save();
+
+
 protected:
+
+    bool _hasLoaded;
+    map<sha1_t, index_entry> _map;
+    list<const pair<sha1_t, index_entry>*> _list;
 };
 
+static URLCache* s_cache;
 
-
-static URLRequestManager s_manager;
-
-};
 
 URLRequest::URLRequest(const string& url, const string& method, const bytearray& body, int flags) : _url(url) {
+    if (!s_cache) {
+        s_cache = new URLCache();
+    }
 	_method = method;
     _body = body;
     _flags = flags;
     _cachePolicy = CachePolicy::Default;
     _status = Status::Queued;
+    os_sem_init(&_sem, 0);
 }
 
 URLRequest* URLRequest::createAndStart(const string& url, const string& method, const bytearray& body, int flags) {
     
     // TODO: lookup existing request by url?
     
-    auto req = create(url, method, body, flags);
-    // req->retain(); // paired with a release() in URLRequest::dispatch(). This keeps the request alive until completed.
-    s_manager.enqueue(req);
+    auto req = new URLRequest(url, method, body, flags);
+    req->retain();
+    Task::postToMainThread([=]() {
+        req->start();
+        req->release();
+    });
     return req;
 }
 URLRequest* URLRequest::get(const string& url, int flags/*=0*/) {
@@ -94,116 +164,165 @@ URLRequest* URLRequest::patch(const string& url, const bytearray& body) {
 }
 
 URLRequest::~URLRequest() {
-    s_manager.unqueue(this);
+    os_sem_delete(_sem);
 }
 
 void URLRequest::setHeader(const string &headerName, const string &headerValue) {
     _headers[headerName] = headerValue;
 }
-void URLRequest::handle(std::function<void (URLRequest*, Status status, const Response&)> handler) {
+void URLRequest::handle(std::function<void(const URLResponse*,bool)> handler) {
     _handler = handler;
 }
 
 void URLRequest::start() {
-}
-void URLRequest::dispatch() {
-    if (_handler && _status != Cancelled) {
-        _handler(this, _status, _response);
+    //app->log("start: %s", _url.c_str());
+    
+    const sha1_t sha = sha1(_url);
+
+    // See if response is in RAM cache, if so we can avoid a cache load.
+    bool cacheLoadWanted = (_cachePolicy != CachePolicy::RemoteOnly);
+    URLCache::index_entry item;
+    if (cacheLoadWanted) {
+        if (s_cache->containsItem(sha, &item)) {
+            if (item.response) {
+                dispatchResponse(item.response, true);
+                cacheLoadWanted = false;
+            }
+        } else {
+            cacheLoadWanted = false;
+        }
     }
-    s_manager.complete(this);
-    // release();
+    
+    // Enqueue the cache load
+    if (cacheLoadWanted) {
+        retain();
+        _cacheTask = Task::enqueue({
+            {Task::IO, [=](variant&)->variant {
+                return s_cache->loadRawResponse(sha);
+            }},
+            {Task::Background, [=](variant& result)->variant {
+                // If the cache load failed OR the remote load already
+                // completed, OR the whole request was cancelled then just return empty
+                if (!result.isPtr() || _remoteLoadComplete || _status==Cancelled) {
+                    return variant();
+                }
+                URLResponse* response = result.ptr<URLResponse>();
+                processRawResponse(response);
+                return response;
+            }},
+            {Task::MainThread, [=](variant& result)->variant {
+                if (!(!result.isPtr() || _remoteLoadComplete || _status==Cancelled)) {
+                    URLResponse* processedResponse = result.ptr<URLResponse>();
+                    s_cache->setProcessedResponse(sha, processedResponse);
+                    dispatchResponse(processedResponse, true);
+                }
+                release();
+                return variant();
+            }}
+        });
+    }
+    
+    // Queue remote load
+    if (_cachePolicy != CachePolicy::CacheOnly) {
+        retain();
+        _remoteTask = Task::enqueue({
+            {Task::IO, [=](variant&) -> variant {
+                URLResponse* remoteResponse = new URLResponse();
+                error err = ioLoadRemote(remoteResponse);
+                if (err) {
+                    delete remoteResponse;
+                    return err;
+                }
+                return remoteResponse;
+            }},
+            {Task::Background, [=](variant& result) -> variant {
+                if (!result.isPtr() || _status==Cancelled) {
+                    return variant();
+                }
+                _remoteLoadComplete = true;
+                URLResponse* response = result.ptr<URLResponse>();
+                s_cache->storeRawResponse(sha, response);
+                processRawResponse(response);
+                return response;
+            }},
+            {Task::MainThread, [=](variant& result) -> variant {
+                if (!result.isPtr() || _status==Cancelled) {
+                    release();
+                    return variant();
+                }
+                sp<URLResponse> processedResponse = result.ptr<URLResponse>();
+                s_cache->setProcessedResponse(sha, processedResponse);
+                dispatchResponse(processedResponse, false);
+                release();
+                return variant();
+            }},
+        });
+    }
 }
 
-void URLRequest::processResponse() {
-    bool noDispatch = false;
-    
-    bool didError = (_httpStatus>=400) || _status==Status::Error;
-    
-    // NB: we are on a background thread here. The handler and the release() on this object
-    // must be called on the main thread.
-    
-    s_manager._cache.updateItem(sha1(_url), 0, _response.data);
+
+
+void URLRequest::cancel() {
+    _status = Status::Cancelled;
+    if (_cacheTask) {
+        _cacheTask->cancel();
+        _cacheTask = nullptr;
+    }
+    if (_remoteTask) {
+        _remoteTask->cancel();
+        _remoteTask = nullptr;
+    }
+}
+
+void URLRequest::dispatchResponse(const URLResponse* response, bool isFromCache) {
+    if (_handler && _status != Cancelled) {
+        _handler(response, isFromCache);
+    }
+}
+
+/**
+ processResponse is called on the background to perform decoding of the raw byte response into
+ a usable form, e.g. decoding a bitmap or parsing a JSON object, etc.
+ */
+void URLRequest::processRawResponse(URLResponse* response) {
+    bool didError = (response->httpStatus>=400) || _status==Status::Error;
     
     // Give app code a chance to process the response in the background.
     if (customDecoder) {
-        customDecoder(_response);
-    } else {
-            
-        // Default decoding
-        if (!didError) {
-            string contentType;
-            const auto& contentTypeIt = _response.headers.find("content-type");
-            if (contentTypeIt != _response.headers.end()) {
-                contentType = contentTypeIt->second;
-            }
-            
-            // Bitmaps
-            if (contentType.hasPrefix("image/") && _response.data.length()) {
-                noDispatch = true; // cos bitmap decode happens on another background thread.
-                Bitmap* bitmap = Bitmap::createFromData(_response.data);
-                // this runs on main thread
-                _response.data.clear(); // don't need this anymore.
-                if (_status != Cancelled) {
-                    _response.decodedBitmap = bitmap;
-                }
-                dispatch();
-            }
-
-            // JSON
-            else if (contentType.contains("json")) {
-                string str = _response.data.toString();
-                _response.decodedJson = variant::parse(str, PARSEFLAG_JSON);
-                _response.data.clear();
-            }
-            
-            // Other text form
-            else if (contentType.hasPrefix("text/")) {
-                // TODO: Handle charset encodings here. At present we just presume UTF-8.
-                _response.decodedText = _response.data.toString();
-            }
+        if (customDecoder(response)) {
+            return;
         }
     }
-    // Unless we went via some other background thread, dispatch the result to the main thread.
-    if (!noDispatch) {
-        App::postToMainThread([=]() {
-            dispatch();
-        });
+
+    // Default decoding
+    if (!didError) {
+        string contentType;
+        const auto& contentTypeIt = response->headers.find("content-type");
+        if (contentTypeIt != response->headers.end()) {
+            contentType = contentTypeIt->second;
+        }
+        
+        // Bitmaps
+        if (contentType.hasPrefix("image/") && response->data.length()) {
+            response->decoded.bitmap = Bitmap::createFromData(response->data);
+        }
+
+        // JSON
+        else if (contentType.contains("json")) {
+            string str = response->data.toString();
+            response->decoded.json = variant::parse(str, PARSEFLAG_JSON);
+        }
+        
+        // Other text form
+        else if (contentType.hasPrefix("text/")) {
+            // TODO: Handle charset encodings here. At present we just presume UTF-8.
+            response->decoded.text = response->data.toString();
+        }
     }
 
 }
 
 
-
-URLCache::URLCache() {
     
-    Task::enqueue({
-        {Task::IO, [=](variant&) -> variant {
-            return app->fileLoadSync("//cache/url/index.dat");
-        }},
-        {Task::Background, [=](variant& v) -> variant {
-            if (v.isByteArray()) {
-                bytestream strm(v.bytearrayRef());
-                while (strm.hasMoreToRead()) {
-                    pair<sha1_t, item> e;
-                    strm.readBytes(sizeof(e.first), &e.first);
-                    strm.readBytes(sizeof(e.second.downloadTime), &e.second.downloadTime);
-                    strm.readBytes(sizeof(e.second.expiryTime), &e.second.expiryTime);
-                    strm.read(e.second.etag);
-                    auto p = _map.emplace(e);
-                    const pair<sha1_t, item>& pp = *p.first;
-                    _list.push_back(&pp);
-                }
-                v = true;
-            }
-            _hasLoaded = true;
-            return v;
-        }}
-    });
-}
 
-void URLCache::updateItem(const sha1_t& hash, TIMESTAMP expiryTime, const bytearray& data) {
-    auto it = _map.find(hash);
-}
-void URLCache::save() {
-    
-}
+

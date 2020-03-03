@@ -34,16 +34,16 @@ class ListViewApp : public App {
         rootView->setBackgroundColor(0xFFFFFFFF);
         rootView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Fill());
         //rootView->setClipsContents(false);
-        const int COLS=500;
-        const int ROWS=20;
+        const int COLS=100;
+        const int ROWS=100;
         for (int x=0 ; x<COLS ; x++) {
             for (int y=0 ; y<ROWS ; y++) {
                 Label* label = new Label();
-                label->setLayoutOrigin(ALIGNSPEC::Abs(x*400), ALIGNSPEC::Abs(y*180));
-                label->setLayoutSize(MEASURESPEC::Abs(400), MEASURESPEC::Abs(180));
+                label->setLayoutOrigin(ALIGNSPEC::Abs(x*180), ALIGNSPEC::Abs(y*100));
+                label->setLayoutSize(MEASURESPEC::Abs(180), MEASURESPEC::Abs(100));
                 label->setPadding(EDGEINSETS(16, 16, 16, 8));
                 label->setGravity({GRAVITY_LEFT, GRAVITY_CENTER});
-                label->setText(string::format("Item %d,%d", x, y));
+                label->setText(string::format("%d,%d", x, y));
                 label->setBackgroundColor(0xFFFF0000 + (((uint32_t)(y*(255/(float)ROWS)))<<8) + ((uint32_t)(x*(255/(float)COLS))));
                 View* v = new View();
                 v->setLayoutSize(MEASURESPEC::Abs(24), MEASURESPEC::Abs(24));

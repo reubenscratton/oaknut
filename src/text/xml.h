@@ -27,7 +27,7 @@ public:
     string nextTag();
     string attributeValue(const string& name);
     
-    XmlParser currentTagContents();
+    //XmlParser currentTagContents();
     
 private:
     string _str;

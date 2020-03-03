@@ -21,6 +21,7 @@ public:
 	ImageView();
 	void setImageUrl(const string& url);
     void setImageAsset(const string& assetPath);
+    void setTexture(Texture* texture);
     void setBitmap(Bitmap* bitmap);
     void setImageNode(AtlasNode* node);
     ContentMode getContentMode() const;

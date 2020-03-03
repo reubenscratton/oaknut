@@ -36,14 +36,14 @@
 
 static const unsigned char s_jo_ZigZag[] = { 0,1,5,6,14,15,27,28,2,4,7,13,16,26,29,42,3,8,12,17,25,30,41,43,9,11,18,24,31,40,44,53,10,19,23,32,39,45,52,54,20,22,33,38,46,51,55,60,21,34,37,47,50,56,59,61,35,36,48,49,57,58,62,63 };
 
-static void jo_writeBits(ByteBufferStream& out, int &bitBuf, int &bitCnt, const unsigned short *bs) {
+static void jo_writeBits(bytestream& out, int &bitBuf, int &bitCnt, const unsigned short *bs) {
     bitCnt += bs[1];
     bitBuf |= bs[0] << (24 - bitCnt);
     while(bitCnt >= 8) {
-        unsigned char c = (bitBuf >> 16) & 255;
-        out.writeInt8(c);
+        uint8_t c = (bitBuf >> 16) & 255;
+        out.write(c);
         if(c == 255) {
-            out.writeInt8(0);
+            out.write(0);
         }
         bitBuf <<= 8;
         bitCnt -= 8;
@@ -103,7 +103,7 @@ static void jo_calcBits(int val, unsigned short bits[2]) {
     bits[0] = val & ((1<<bits[1])-1);
 }
 
-static int jo_processDU(ByteBufferStream& out, int &bitBuf, int &bitCnt, float *CDU, float *fdtbl, int DC, const unsigned short HTDC[256][2], const unsigned short HTAC[256][2]) {
+static int jo_processDU(bytestream& out, int &bitBuf, int &bitCnt, float *CDU, float *fdtbl, int DC, const unsigned short HTDC[256][2], const unsigned short HTAC[256][2]) {
     const unsigned short EOB[2] = { HTAC[0x00][0], HTAC[0x00][1] };
     const unsigned short M16zeroes[2] = { HTAC[0xF0][0], HTAC[0xF0][1] };
     
@@ -237,13 +237,11 @@ static int jo_processDU(ByteBufferStream& out, int &bitBuf, int &bitCnt, float *
 class JpegEncoderWorker : public Worker {
 public:
     
-    JpegEncoderWorker() : Worker() {
+    JpegEncoderWorker() : Worker("JpegEncoderWorker") {
     }
     
-    void start_(const variant& config) override {
-    }
-    
-    variant process_(const variant& data_in) override {
+
+    variant process(const variant& data_in) {
         
         int quality = 100 * data_in.floatVal("quality");
         int width = data_in.intVal("width");
@@ -274,25 +272,25 @@ public:
             }
         }
         
-        ByteBufferStream out;
+        bytestream out;
 
         // Write Headers
         static const unsigned char head0[] = { 0xFF,0xD8,0xFF,0xE0,0,0x10,'J','F','I','F',0,1,1,0,0,1,0,1,0,0,0xFF,0xDB,0,0x84,0 };
         out.writeBytes(sizeof(head0), head0);
         out.writeBytes(sizeof(YTable), YTable);
-        out.writeInt8(1);
+        out.write(uint8_t(1));
         out.writeBytes(sizeof(UVTable), UVTable);
         const unsigned char head1[] = { 0xFF,0xC0,0,0x11,8,static_cast<unsigned char>(height>>8),static_cast<unsigned char>(height&0xFF),static_cast<unsigned char>(width>>8),static_cast<unsigned char>(width&0xFF),3,1,0x11,0,2,0x11,1,3,0x11,1,0xFF,0xC4,0x01,0xA2,0 };
         out.writeBytes(sizeof(head1), head1);
         out.writeBytes(sizeof(std_dc_luminance_nrcodes)-1, std_dc_luminance_nrcodes+1);
         out.writeBytes(sizeof(std_dc_luminance_values), std_dc_luminance_values);
-        out.writeInt8(0x10); // HTYACinfo
+        out.write(uint8_t(0x10)); // HTYACinfo
         out.writeBytes(sizeof(std_ac_luminance_nrcodes)-1, std_ac_luminance_nrcodes+1);
         out.writeBytes(sizeof(std_ac_luminance_values), std_ac_luminance_values);
-        out.writeInt8(1); // HTUDCinfo
+        out.write(uint8_t(1)); // HTUDCinfo
         out.writeBytes(sizeof(std_dc_chrominance_nrcodes)-1, std_dc_chrominance_nrcodes+1);
         out.writeBytes(sizeof(std_dc_chrominance_values), std_dc_chrominance_values);
-        out.writeInt8(0x11); // HTUACinfo
+        out.write(uint8_t(0x11)); // HTUACinfo
         out.writeBytes(sizeof(std_ac_chrominance_nrcodes)-1, std_ac_chrominance_nrcodes+1);
         out.writeBytes(sizeof(std_ac_chrominance_values), std_ac_chrominance_values);
         static const unsigned char head2[] = { 0xFF,0xDA,0,0xC,3,1,0,2,0x11,3,0x11,0,0x3F,0 };
@@ -338,8 +336,8 @@ public:
     jo_writeBits(out, bitBuf, bitCnt, fillBits);
     
     // EOI
-    out.writeInt8(0xFF);
-    out.writeInt8(0xD9);
+    out.write(uint8_t(0xFF));
+    out.write(uint8_t(0xD9));
     
         return out.getWrittenBytes();
     }

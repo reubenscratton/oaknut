@@ -94,7 +94,7 @@ public:
 
     // Platform-specific instantiation
     static Bitmap* create(int width, int height, int format);
-    static Bitmap* createFromData(bytearray& data);
+    static Bitmap* createFromData(const bytearray& data);
 
 };
 

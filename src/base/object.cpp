@@ -7,31 +7,28 @@
 
 #include <oaknut.h>
 
-// TODO: This should be in thread-local storage, not global
-static std::list<Object*> s_autodeletePool;
 
-void Object::flushAutodeletePool() {
-    if (s_autodeletePool.size() > 0) {
-        for (auto it=s_autodeletePool.begin() ; it!=s_autodeletePool.end() ; it++) {
-            delete *it;
-        }
-        s_autodeletePool.clear();
-    }
-}
-
-Object::Object() : _refs(0) {
-    // TODO: DEBUG ONLY: track thread ID
+Object::Object() : _refs(0)
+{
 }
 Object::~Object() {
 }
 void Object::retain() {
-    // TODO: DEBUG ONLY: assert thread ownership
+#if DEBUG && !WANT_ATOMIC_REFCOUNTS
+    if (!_refs) {
+        _owningThreadId = std::this_thread::get_id();
+    } else {
+        assert(_owningThreadId == std::this_thread::get_id());
+    }
+#endif
     _refs++;
 }
 void Object::release() {
-    // TODO: DEBUG ONLY: assert thread ownership
+#if DEBUG && !WANT_ATOMIC_REFCOUNTS
+    assert(_owningThreadId == std::this_thread::get_id());
+#endif
 	if (--_refs == 0) {
-        s_autodeletePool.push_back(this);
+        Task::addObjectToCurrentThreadDeletePool(this);
 		//delete this;
 	}
     assert(_refs >= 0);
@@ -53,11 +50,4 @@ string Object::debugDescription() {
 
 map<string, Object* (*)()>* Object::s_classRegister;
 
-/*
-
-template<>
-Object* Object::createByName(const string& className) {
-    return s_classRegister->find(className)->second();
-}
-*/
 

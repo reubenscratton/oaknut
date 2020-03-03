@@ -66,6 +66,13 @@ void ImageView::cancelLoad() {
 }
 
 
+void ImageView::setTexture(Texture* texture) {
+    _renderOp->setTexture(texture);
+    _rectTex = RECT(0,0,1,1);
+    invalidateIntrinsicSize();
+    _loaded = true;
+}
+
 void ImageView::setBitmap(Bitmap *bitmap) {
     _renderOp->setBitmap(bitmap);
     _rectTex = RECT(0,0,1,1);
@@ -136,8 +143,8 @@ void ImageView::loadImage() {
         });
     } else if (_url.length() > 0) {
         _request = URLRequest::get(_url, URL_FLAG_BITMAP);
-        _request->handle([=](URLRequest* req, URLRequest::Status status, const URLRequest::Response& res) {
-            setBitmap(res.decodedBitmap);
+        _request->handle([=](const URLResponse* res, bool isFromCache) {
+            setBitmap(res->decoded.bitmap);
         });
     }
 }
@@ -153,26 +160,31 @@ void ImageView::setContentMode(ContentMode contentMode) {
 }
 
 void ImageView::updateIntrinsicSize(SIZE constrainingSize) {
-    if (!_renderOp->_bitmap) {
+    if (!_renderOp->_bitmap && !_renderOp->_texture) {
         _intrinsicSize = {0,0};
+        return;
+    }
+    SIZE imageSize;
+    if (_renderOp->_bitmap) {
+        imageSize.width = (float)_renderOp->_bitmap->_width;
+        imageSize.height = (float)_renderOp->_bitmap->_height;
     } else {
-        float imageWidth = (float)_renderOp->_bitmap->_width;
-        float imageHeight = (float)_renderOp->_bitmap->_height;
-        if (_contentMode == ActualSize) {
-            _intrinsicSize.width = imageWidth;
-            _intrinsicSize.height = imageHeight;
+        imageSize = _renderOp->_texture->size();
+    }
+    if (_contentMode == ActualSize) {
+        _intrinsicSize.width = imageSize.width;
+        _intrinsicSize.height = imageSize.height;
+    } else {
+        float scaleWidth = constrainingSize.width / imageSize.width;
+        float scaleHeight = constrainingSize.height / imageSize.height;
+        float scale;
+        if (scaleHeight >= scaleWidth) {
+            scale = (_contentMode == AspectFit) ? scaleWidth : scaleHeight;
         } else {
-            float scaleWidth = constrainingSize.width / imageWidth;
-            float scaleHeight = constrainingSize.height / imageHeight;
-            float scale;
-            if (scaleHeight >= scaleWidth) {
-                scale = (_contentMode == AspectFit) ? scaleWidth : scaleHeight;
-            } else {
-                scale = (_contentMode == AspectFit) ? scaleHeight : scaleWidth;
-            }
-            _intrinsicSize.width = ceilf(imageWidth * scale);
-            _intrinsicSize.height = ceilf(imageHeight * scale);
+            scale = (_contentMode == AspectFit) ? scaleHeight : scaleWidth;
         }
+        _intrinsicSize.width = ceilf(imageSize.width * scale);
+        _intrinsicSize.height = ceilf(imageSize.height * scale);
     }
     
     // Updating content size must trigger a renderop update

@@ -15,6 +15,8 @@
 
 
 static id<MTLDevice> s_device;
+static dispatch_queue_t s_uploaderQueue;
+
 
 
 class MetalTexture : public Texture {
@@ -30,6 +32,12 @@ public:
         _sampler = NULL;
     }
     void resize(int width, int height) override {
+        if (_tex) {
+            SIZE currentSize = size();
+            if (width == (int)currentSize.width  &&  height==(int)currentSize.height) {
+                return;
+            }
+        }
         MTLPixelFormat pixelFormat = MTLPixelFormatBGRA8Unorm;
         switch (_format) {
             case PIXELFORMAT_RGBA32:
@@ -62,14 +70,33 @@ public:
             samplerDesc.mipFilter = _mipFilterLinear ? MTLSamplerMipFilterLinear : MTLSamplerMipFilterNearest;
         }
         _sampler = [s_device newSamplerStateWithDescriptor:samplerDesc];
-
+        
+    }
+    
+    bool readPixels(RECT rect, bytearray& target) const override {
+        int stride = rect.size.width * 4;
+        int cp = stride * rect.size.height;
+        if (target.size() < cp) {
+            target.resize(cp);
+        }
+        [_tex getBytes:(void *)target.data()
+           bytesPerRow:stride
+            fromRegion:MTLRegionMake2D(rect.origin.x,rect.origin.y, rect.size.width, rect.size.height)
+                   mipmapLevel:0];
+        return true;
     }
 
+
+    SIZE size() override {
+        return SIZE(_tex.width, _tex.height);
+    }
 };
 
 class MetalSurface : public Surface {
 public:
+    CAMetalLayer* _metalLayer; // nil for private surface
     MTLViewport _viewport;
+    
     id<MTLTexture> getTexture() {
         return _texture.as<MetalTexture>()->_tex;
     };
@@ -82,6 +109,22 @@ public:
         _texture = new MetalTexture(renderer, renderer->_primarySurfaceFormat);
     }
     
+    void bindToNativeWindow(long nativeWindowHandle) override {
+        NativeView* nativeView = (__bridge NativeView*)(void*)nativeWindowHandle;
+        _metalLayer = (CAMetalLayer*)nativeView.layer;
+        _metalLayer.opaque = YES;
+        _metalLayer.device = s_device;
+        _metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+        _metalLayer.framebufferOnly = false;
+        _metalLayer.contentsScale = app->_defaultDisplay->_scale;// [NSScreen mainScreen].backingScaleFactor;
+        // _metalLayer.maximumDrawableCount = 3;
+        _metalLayer.drawsAsynchronously = YES;
+#if PLATFORM_MACOS
+        _metalLayer.displaySyncEnabled = 1;
+        nativeView.wantsLayer = YES;
+#endif
+    }
+
     void setSize(const SIZE& size) override {
         Surface::setSize(size);
         _viewport.width = size.width;
@@ -91,7 +134,11 @@ public:
         }
         _texture->resize(size.width, size.height);
     }
+    
+    
+
 };
+
 
 static void alignInt(int32_t& i, int32_t alignment) {
     int32_t mod = i % alignment;
@@ -116,12 +163,12 @@ static string getUniformFields(Shader* shader, Shader::Uniform::Usage usage) {
 struct ShaderState {
     id<MTLFunction> _vertexShader;
     id<MTLFunction> _fragShader;
-    id<MTLRenderPipelineState> _pipelineState[3]; // one per blend mode
     bytearray _vertexUniformData;
     bytearray _fragUniformData;
     bool _vertexUniformsValid;
     bool _fragUniformsValid;
-
+    unordered_map<BlendParams, id<MTLRenderPipelineState>> _pipelineStates;
+    
     ShaderState(Shader* shader, id<MTLDevice> device) {
         
         _vertexUniformsValid = false;
@@ -169,7 +216,7 @@ struct ShaderState {
         "};\n"
         "struct VertexOutput {\n"
         "   float4 position [[position]];\n";
-        for (auto& attribute : shader->_attributes) {
+        for (auto& attribute : shader->_vertexShaderOutputs) {
             if (0!=attribute.name.compare("position")) {
                 s += sl_getTypeString(attribute.type);
                 s += " ";
@@ -190,7 +237,7 @@ struct ShaderState {
         "   output.position = uniforms->mvp * float4(v_in[vid].position,0,1);\n";
         
         // All non-position attributes
-        for (auto& attribute : shader->_attributes) {
+        for (auto& attribute : shader->_vertexShaderOutputs) {
             if (0!=attribute.name.compare("position")) {
                 auto szname = attribute.name.c_str();
                 s += string::format("output.%s = ", szname);
@@ -206,6 +253,7 @@ struct ShaderState {
                 s += ";\n";
             }
         }
+        
 
         s+= "   return output;\n"
             "}\n";
@@ -217,6 +265,9 @@ struct ShaderState {
             s+= fragUniforms;
             s+= "};\n";
         }
+        
+        s += shader->getSupportingSource();
+        
         s+= "fragment half4 frag_shader(VertexOutput in [[stage_in]]\n";
         if (fragUniforms.length() > 0) {
             s += ",constant FragUniforms* uniforms [[buffer(0)]]\n";
@@ -239,30 +290,6 @@ struct ShaderState {
         assert(library);
         _vertexShader = [library newFunctionWithName: @"vertex_shader"];
         _fragShader = [library newFunctionWithName: @"frag_shader"];
-        
-        MTLRenderPipelineDescriptor *pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
-        pipelineStateDescriptor.vertexFunction = _vertexShader;
-        pipelineStateDescriptor.fragmentFunction = _fragShader;
-        pipelineStateDescriptor.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
-        pipelineStateDescriptor.colorAttachments[0].blendingEnabled = NO;
-        _pipelineState[BLENDMODE_NONE] = [device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor
-                                                                                error:&error];
-        
-        pipelineStateDescriptor.colorAttachments[0].blendingEnabled = YES;
-        pipelineStateDescriptor.colorAttachments[0].rgbBlendOperation = MTLBlendOperationAdd;
-        pipelineStateDescriptor.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
-        pipelineStateDescriptor.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
-        pipelineStateDescriptor.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorSourceAlpha;
-        pipelineStateDescriptor.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
-        pipelineStateDescriptor.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
-        _pipelineState[BLENDMODE_NORMAL] = [device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor
-                                                                                  error:&error];
-        
-        pipelineStateDescriptor.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorOne;
-        pipelineStateDescriptor.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorOne;
-        _pipelineState[BLENDMODE_PREMULTIPLIED] = [device newRenderPipelineStateWithDescriptor:pipelineStateDescriptor
-                                                                                         error:&error];
-
     }
     
 };
@@ -291,6 +318,7 @@ public:
     }
     ~CoreVideoTexture() {
         if (_cvTexture) {
+            CFRelease(_cvTexture);
             _cvTexture = NULL;
             CVMetalTextureCacheFlush(_cvTextureCache, 0);
             _cvTextureCache = NULL;
@@ -303,29 +331,351 @@ public:
 };
 
 
+class RenderTaskApple : public RenderTask {
+public:
+    id<MTLCommandBuffer> _commandBuffer;
+    MTLRenderPassDescriptor* _renderPassDescriptor;
+    MTLRenderPipelineDescriptor* _pipelineStateDescriptor;
+    id<MTLRenderCommandEncoder> _renderCommandEncoder;
+    id<MTLBlitCommandEncoder> _blitCommandEncoder;
+    Texture* _currentTextureBound;
+    id<MTLRenderPipelineState> _currentPipelineState;
+    id<MTLBuffer> __strong* _vertexBuffer;
+    id<MTLBuffer> __strong* _indexBuffer;
+    id<CAMetalDrawable> _drawable;
+
+    RenderTaskApple(Renderer* renderer, id<MTLCommandBuffer> commandBuffer, id<MTLBuffer> __strong * vertexBuffer, id<MTLBuffer> __strong* indexBuffer) : RenderTask(renderer) {
+        _commandBuffer = commandBuffer;
+        _renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+        _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionDontCare;
+        _vertexBuffer = vertexBuffer;
+        _indexBuffer = indexBuffer;
+        _pipelineStateDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
+    }
+  
+    bool bindToNativeSurface(Surface* surface) override {
+        MetalSurface* metalSurface = (MetalSurface*)surface;
+        MetalTexture* metalTex = metalSurface->_texture.as<MetalTexture>();
+        assert(metalSurface->_metalLayer);
+        _drawable = [metalSurface->_metalLayer nextDrawable];
+        if (!_drawable) {
+            return false;
+        }
+        metalTex->_tex = _drawable.texture;
+        return true;
+    }
+    
+    void setCurrentSurface(Surface* surface) override {
+        if (surface == _currentSurface) {
+            return;
+        }
+        _currentSurface = surface;
+        _currentSurfaceValid = false;
+    }
+    
+    static inline uint16_t make_half(float f) {
+        uint32_t x = *((uint32_t*)&f);
+        int e = ((x&0x7f800000U) >> 23) -127; // undo 32-bit bias to get the real exponent
+        e = MIN(15, MAX(-15,e)) + 15; // clamp to 5-bit range and add the 16-bit bias
+        uint16_t h = ((x>>16)&0x8000U)
+                   | (e<<10) // exponent is 5 bits, down from 8
+                   | ((x>>13)&0x03ffU); // significand is 10 bits, truncated from 23
+        return h;
+    }
+    
+    void setColorUniform(int16_t uniformIndex, const float* rgba) override {
+        uint16_t halfs[4];
+        halfs[0] = make_half(rgba[0]);
+        halfs[1] = make_half(rgba[1]);
+        halfs[2] = make_half(rgba[2]);
+        halfs[3] = make_half(rgba[3]);
+        setUniformData(uniformIndex, halfs, sizeof(halfs));
+    }
+
+    void setUniformData(int16_t uniformIndex, const void* data, int32_t cb) override {
+        auto& uniform = _currentShader->_uniforms[uniformIndex];
+        bool isVertexUniform = (uniform.usage==Shader::Uniform::Usage::Vertex);
+        ShaderState* state = (ShaderState*)_currentShader->_shaderState;
+        bytearray& uniformData = isVertexUniform ? state->_vertexUniformData : state->_fragUniformData;
+        auto currentData = (uniformData.data() + uniform.offset);
+        if (0 == memcmp(currentData, data, cb)) {
+            return;
+        }
+        memcpy(currentData, data, cb);
+        if (isVertexUniform) {
+            state->_vertexUniformsValid = false;
+        } else {
+            state->_fragUniformsValid = false;
+        }
+    }
+
+
+    void setCurrentTexture(Texture* texture) override {
+        _currentTexture = texture;
+        // defer texture update to blit
+    }
+
+
+
+    inline static MTLBlendFactor convertMTLBlendFactor(BlendFactor blendFactor) {
+        switch (blendFactor) {
+            case BlendFactor::Zero: return MTLBlendFactorZero;
+            case BlendFactor::SourceColor: return MTLBlendFactorSourceColor;
+            case BlendFactor::SourceAlpha: return MTLBlendFactorSourceAlpha;
+            case BlendFactor::DestinationColor: return MTLBlendFactorDestinationColor;
+            case BlendFactor::DestinationAlpha: return MTLBlendFactorDestinationAlpha;
+            case BlendFactor::One: return MTLBlendFactorOne;
+            case BlendFactor::OneMinusSourceColor: return MTLBlendFactorOneMinusSourceColor;
+            case BlendFactor::OneMinusSourceAlpha: return MTLBlendFactorOneMinusSourceAlpha;
+            case BlendFactor::OneMinusDestinationColor: return MTLBlendFactorOneMinusDestinationColor;
+            case BlendFactor::OneMinusDestinationAlpha: return MTLBlendFactorOneMinusDestinationAlpha;
+        }
+        assert(0);
+    }
+    void draw(PrimitiveType type, int count, int index) override {
+
+        // If the surface being drawn to is "invalid", a new 'render command encoder' is required
+        if (!_currentSurfaceValid) {
+            _currentSurfaceValid = true;
+            
+            // Close the current encoder if there is one
+            if (_renderCommandEncoder) {
+                [_renderCommandEncoder endEncoding];
+                _renderCommandEncoder = nil;
+            }
+            if (_blitCommandEncoder) {
+                [_blitCommandEncoder endEncoding];
+                _blitCommandEncoder = nil;
+            }
+
+            // Configure new encoder to use the current surface
+            MetalSurface* metalSurface = (MetalSurface*)_currentSurface;
+            MetalTexture* metalTex = metalSurface->_texture.as<MetalTexture>();
+            _renderPassDescriptor.colorAttachments[0].texture = metalTex->_tex;
+            if (_currentSurface->_clearNeeded) {
+                float f[4] = {
+                    (_currentSurface->_clearColor & 0xFF) / 255.0f,
+                    ((_currentSurface->_clearColor & 0xFF00)>>8) / 255.0f,
+                    ((_currentSurface->_clearColor & 0xFF0000)>>16) / 255.0f,
+                    ((_currentSurface->_clearColor & 0xFF000000)>>24) / 255.0f
+                };
+                _currentSurface->_clearNeeded = false;
+                _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
+                _renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(f[0], f[1], f[2], f[3]);
+            } else {
+                _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionLoad;
+            }
+            
+            // Create new encoder
+            _renderCommandEncoder = [_commandBuffer renderCommandEncoderWithDescriptor:_renderPassDescriptor];
+            
+            // Bind vertex buffer which never changes
+            [_renderCommandEncoder setVertexBuffer:*_vertexBuffer offset:0 atIndex:0];
+            _currentTextureBound = nullptr;
+            _currentPipelineState = nullptr;
+            
+            // When starting a new render command encoder, all shaders need to resend their
+            // uniform data even if it hasn't changed
+            for (auto& resource : _renderer->_shaders) { // TODO: this feels wrong. We only want to iterate "shaders currently used by this task, not all known shaders"
+                Shader* shader = (Shader*)resource;
+                ShaderState* state = (ShaderState*)shader->_shaderState;
+                if (state) {
+                    state->_vertexUniformsValid = false;
+                    state->_fragUniformsValid = false;
+                }
+            }
+
+            // Update the viewport
+            [_renderCommandEncoder setViewport:metalSurface->_viewport];
+        };
+        
+
+        ShaderState* state = (ShaderState*)_currentShader->_shaderState;
+        
+        // If shader or blend has changed, need a new pipeline state
+        if (!_currentPipelineState || !_currentShaderValid || !_blendParamsValid) {
+            _currentShaderValid = true;
+            _blendParamsValid = true;
+
+            // TODO: special case no-blend and normal blend to avoid the hash lookup here
+            auto it = state->_pipelineStates.find(_blendParams);
+            if (it != state->_pipelineStates.end()) {
+                _currentPipelineState = it->second;
+            } else {
+                _pipelineStateDescriptor.vertexFunction = state->_vertexShader;
+                _pipelineStateDescriptor.fragmentFunction = state->_fragShader;
+                MTLRenderPipelineColorAttachmentDescriptor* att = _pipelineStateDescriptor.colorAttachments[0];
+                att.pixelFormat = _currentSurface->_texture.as<MetalTexture>()->_tex.pixelFormat;
+                if (_blendParams.op == BlendOp::None) {
+                    att.blendingEnabled = NO;
+                } else {
+                    att.blendingEnabled = YES;
+                    MTLBlendOperation op = (_blendParams.op == BlendOp::Add) ? MTLBlendOperationAdd : MTLBlendOperationSubtract;
+                    att.rgbBlendOperation = op;
+                    att.alphaBlendOperation = op;
+                    att.sourceRGBBlendFactor = convertMTLBlendFactor(_blendParams.srcRGB);
+                    att.sourceAlphaBlendFactor = convertMTLBlendFactor(_blendParams.srcA);
+                    att.destinationRGBBlendFactor = convertMTLBlendFactor(_blendParams.dstRGB);
+                    att.destinationAlphaBlendFactor = convertMTLBlendFactor(_blendParams.dstA);
+                }
+                
+                NSError* error = nil;
+                _currentPipelineState = [s_device newRenderPipelineStateWithDescriptor:_pipelineStateDescriptor
+                                                                                        error:&error];
+                state->_pipelineStates.emplace(_blendParams, _currentPipelineState);
+            }
+
+            [_renderCommandEncoder setRenderPipelineState:_currentPipelineState];
+            
+            // Texture needs rebinding after pipeline state change
+            _currentTextureBound = NULL;
+        }
+        
+        // Ensure uniforms are up to date
+        if (!state->_vertexUniformsValid) {
+            state->_vertexUniformsValid = true;
+            [_renderCommandEncoder setVertexBytes:state->_vertexUniformData.data() length:state->_vertexUniformData.size() atIndex:1];
+        }
+        if (!state->_fragUniformsValid) {
+            state->_fragUniformsValid = true;
+            [_renderCommandEncoder setFragmentBytes:state->_fragUniformData.data() length:state->_fragUniformData.size() atIndex:0];
+        }
+
+        // Bind to texture if there is one
+        if (_currentTexture && _currentTexture != _currentTextureBound) {
+            _currentTextureBound = _currentTexture;
+            MetalTexture* metalTexture = (MetalTexture*)_currentTexture;
+            
+            if (metalTexture->_needsUpload) {
+                metalTexture->_needsUpload = false;
+                metalTexture->retain();
+                dispatch_async(s_uploaderQueue, ^{
+                    PIXELDATA pixeldata;
+                    metalTexture->_bitmap->lock(&pixeldata, false);
+                    //app->log("texture upload %d x %d", _bitmap->_width, _bitmap->_height);
+                    [metalTexture->_tex replaceRegion:MTLRegionMake2D(0,0,metalTexture->_bitmap->_width,metalTexture->_bitmap->_height) mipmapLevel:0 withBytes:pixeldata.data bytesPerRow:pixeldata.stride];
+                    metalTexture->_bitmap->unlock(&pixeldata, false);
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        /* EXPERIMENT: Some bitmaps don't need to hang around after upload...
+                         if (metalTexture->_format != PIXELFORMAT_A8) {
+                            metalTexture->_bitmap = nullptr;
+                        }*/
+                        metalTexture->release();
+                    });
+                });
+            }
+            [_renderCommandEncoder setFragmentTexture:metalTexture->_tex atIndex:0];
+            [_renderCommandEncoder setFragmentSamplerState:metalTexture->_sampler atIndex:0];
+        }
+        
+        // Clip
+        if (!_currentClipValid) {
+            _currentClipValid = true;
+            MTLScissorRect rect;
+            rect.x = _currentClip.left();
+            rect.y = _currentClip.top();
+            rect.width = _currentClip.size.width;
+            rect.height = _currentClip.size.height;
+            // app->log("push: %ld,%ld x %ld,%ld", rect.x,rect.y, rect.width, rect.height);
+            [_renderCommandEncoder setScissorRect:rect];
+        }
+
+        if (type == Quad) {
+            [_renderCommandEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
+                                              indexCount:count*6
+                                               indexType:MTLIndexTypeUInt16
+                                             indexBuffer:*_indexBuffer
+                                       indexBufferOffset:index*6*sizeof(uint16_t)];
+        } else if (type == Line) {
+            [_renderCommandEncoder drawPrimitives:MTLPrimitiveTypeLine
+                                      vertexStart:index
+                                      vertexCount:count*4];
+        } else {
+            assert(false);
+        }
+    }
+
+    
+    void useBlitEncoder() {
+        if (_blitCommandEncoder) {
+            return;
+        }
+        if (_renderCommandEncoder) {
+            [_renderCommandEncoder endEncoding];
+            _renderCommandEncoder = nil;
+            _currentTextureBound = NULL;
+        }
+        _blitCommandEncoder = [_commandBuffer blitCommandEncoder];
+    }
+    
+    void copyFromCurrent(const RECT& rect, Texture* destTex, const POINT& destOrigin) override {
+        MetalSurface* metalSurface = (MetalSurface*)_currentSurface;
+        MetalTexture* metalDestTex = (MetalTexture*)destTex;
+
+        useBlitEncoder();
+        
+        [_blitCommandEncoder copyFromTexture:metalSurface->getTexture()
+               sourceSlice:0 sourceLevel:0
+              sourceOrigin:{static_cast<NSUInteger>(rect.origin.x),static_cast<NSUInteger>(rect.origin.y),0}
+                sourceSize:{static_cast<NSUInteger>(rect.size.width),static_cast<NSUInteger>(rect.size.height),1}
+                 toTexture:metalDestTex->_tex
+          destinationSlice:0 destinationLevel:0
+         destinationOrigin:{static_cast<NSUInteger>(destOrigin.x),static_cast<NSUInteger>(destOrigin.y),0}];
+
+    }
+
+    void generateMipmaps(Texture* tex) override {
+        useBlitEncoder();
+        MetalTexture* metalTex = (MetalTexture*)tex;
+        [_blitCommandEncoder generateMipmapsForTexture:metalTex->_tex];
+    }
+
+
+    void commit(std::function<void()> onComplete) override {
+        [_renderCommandEncoder endEncoding];
+        _renderCommandEncoder = nil;
+        if (_drawable) {
+            [_commandBuffer presentDrawable:_drawable];
+        }
+        if (onComplete) {
+            [_commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> _Nonnull) {
+                // on a random metal thread here, handle event on main thread
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    onComplete();
+                });
+            }];
+        }
+        [_commandBuffer commit];
+
+        
+        // NB! Here we stall the CPU until the GPU has processed the command buffer.
+        // This will be unsatisfactory if the app needs more CPU time and we should
+        // cook up a multibuffer approach for that.
+        if (_drawable) {
+            [_commandBuffer waitUntilCompleted];
+            //[_commandBuffer waitUntilScheduled];
+        }
+        
+        _commandBuffer = nil;
+    }
+    
+    
+
+
+};
+
 class RendererApple : public Renderer {
 public:
 
     id<MTLDevice> _device;
-    CAMetalLayer* _metalLayer;
     id<MTLBuffer> _vertexBuffer;
     id<MTLBuffer> _indexBuffer;
     id<MTLCommandQueue> _commandQueue;
-    id<MTLCommandBuffer> _commandBuffer;
-    id<CAMetalDrawable> _drawable;
-    MTLRenderPassDescriptor* _renderPassDescriptor;
-    Texture* _currentTextureBound;
-    id<MTLRenderPipelineState> _currentPipelineState;
     
-    id<MTLRenderCommandEncoder> _renderCommandEncoder;
-    id<MTLBlitCommandEncoder> _blitCommandEncoder;
-    dispatch_queue_t _uploaderQueue;
-
-    RendererApple(Window* window) : Renderer(window) {
+    RendererApple() : Renderer() {
         _device = MTLCreateSystemDefaultDevice();
         s_device = _device;
-        _renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-        _primarySurface = new MetalSurface(this, false);
+        _commandQueue = [_device newCommandQueue];
 
         _quadBuffer._resizeFunc = [=](int oldItemCount, int newItemCount) {
             long cb = newItemCount * _quadBuffer._itemSize;
@@ -371,7 +721,10 @@ public:
             _fullBufferUploadNeeded =true;
 
         };
-        _uploaderQueue = dispatch_queue_create("TextureUploads", DISPATCH_QUEUE_SERIAL);
+        s_uploaderQueue = dispatch_queue_create("TextureUploads", DISPATCH_QUEUE_SERIAL);
+        /*if (@available(macOS 10.14, *)) {
+            _uploaderEvent = [_device newEvent];
+        }*/
     }
     
     int getIntProperty(IntProperty property) override {
@@ -384,28 +737,8 @@ public:
         return 0;
     }
     
-    void bindToNativeWindow(long nativeWindowHandle) override {
-        NativeView* nativeView = (__bridge NativeView*)(void*)nativeWindowHandle;
-        _metalLayer = (CAMetalLayer*)nativeView.layer;
-        _metalLayer.opaque = YES;
-        _metalLayer.device = _device;
-        _metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-        _metalLayer.framebufferOnly = false;
-        _metalLayer.contentsScale = app->_defaultDisplay->_scale;// [NSScreen mainScreen].backingScaleFactor;
-        // _metalLayer.maximumDrawableCount = 3;
-        _metalLayer.drawsAsynchronously = YES;
-#if PLATFORM_MACOS
-        _metalLayer.displaySyncEnabled = 1;
-        nativeView.wantsLayer = YES;
-#endif
-        _commandQueue = [_device newCommandQueue];
-    }
-    Surface* getPrimarySurface() override {
-        return _primarySurface;
-    }
-    Surface* createPrivateSurface() override {
-        return new MetalSurface(this, true);
-
+    Surface* createSurface(bool isPrivate) override {
+        return new MetalSurface(this, isPrivate);
     }
     
     
@@ -418,42 +751,6 @@ public:
     }
 
     
-    void pushClip(RECT clip) override {
-        if (clip.size.width<0) clip.size.width = 0;
-        if (clip.size.height<0) clip.size.height = 0;
-        bool firstClip = _clips.size()==0;
-        if (!firstClip) {
-            clip.intersectWith(_clips.top());
-        }
-        _clips.push(clip);
-        MTLScissorRect rect;
-        rect.x = clip.left();
-        rect.y = clip.top();
-        rect.width = clip.size.width;
-        rect.height = clip.size.height;
-        // app->log("push: %ld,%ld x %ld,%ld", rect.x,rect.y, rect.width, rect.height);
-        [_renderCommandEncoder setScissorRect:rect];
-    }
-    void popClip() override {
-        MetalSurface* metalSurface = (MetalSurface*)_currentSurface;
-        assert(_clips.size()>0);
-        _clips.pop();
-        MTLScissorRect rect;
-        if (!_clips.size()) {
-            rect.x = 0;
-            rect.y = 0;
-            rect.width = metalSurface->_size.width;
-            rect.height = metalSurface->_size.height;
-        } else {
-            RECT clip = _clips.top();
-            rect.x = clip.left();
-            rect.y = clip.top();
-            rect.width = clip.size.width;
-            rect.height = clip.size.height;
-        }
-        // app->log("pop: %ld,%ld x %ld,%ld", rect.x,rect.y, rect.width, rect.height);
-        [_renderCommandEncoder setScissorRect:rect];
-    }
 
     Texture* createTexture(int format) override {
         return new MetalTexture(this, format);
@@ -465,244 +762,20 @@ public:
         
     }
     
-    void setCurrentBlendMode(int blendMode) override {
-        _blendMode = blendMode;
-    }
-
-    static inline uint16_t make_half(float f) {
-        uint32_t x = *((uint32_t*)&f);
-        int e = ((x&0x7f800000U) >> 23) -127; // undo 32-bit bias to get the real exponent
-        e = MIN(15, MAX(-15,e)) + 15; // clamp to 5-bit range and add the 16-bit bias
-        uint16_t h = ((x>>16)&0x8000U)
-                   | (e<<10) // exponent is 5 bits, down from 8
-                   | ((x>>13)&0x03ffU); // significand is 10 bits, truncated from 23
-        return h;
-    }
     
-    void setColorUniform(int16_t uniformIndex, const float* rgba) override {
-        uint16_t halfs[4];
-        halfs[0] = make_half(rgba[0]);
-        halfs[1] = make_half(rgba[1]);
-        halfs[2] = make_half(rgba[2]);
-        halfs[3] = make_half(rgba[3]);
-        setUniformData(uniformIndex, halfs, sizeof(halfs));
-    }
-
-    void setUniformData(int16_t uniformIndex, const void* data, int32_t cb) override {
-        auto& uniform = _currentShader->_uniforms[uniformIndex];
-        bool isVertexUniform = (uniform.usage==Shader::Uniform::Usage::Vertex);
-        ShaderState* state = (ShaderState*)_currentShader->_shaderState;
-        bytearray& uniformData = isVertexUniform ? state->_vertexUniformData : state->_fragUniformData;
-        auto currentData = (uniformData.data() + uniform.offset);
-        if (0 == memcmp(currentData, data, cb)) {
-            return;
-        }
-        memcpy(currentData, data, cb);
-        if (isVertexUniform) {
-            state->_vertexUniformsValid = false;
-        } else {
-            state->_fragUniformsValid = false;
-        }
-    }
-
-    void drawQuads(int numQuads, int index) override {
-        
-        ShaderState* state = (ShaderState*)_currentShader->_shaderState;
-        
-
-        // Bind pipeline state
-        if (_currentPipelineState != state->_pipelineState[_blendMode]) {
-            _currentPipelineState = state->_pipelineState[_blendMode];
-            [_renderCommandEncoder setRenderPipelineState:_currentPipelineState];
-            _currentTextureBound = NULL;
-        }
-        
-        // Ensure uniforms are up to date
-        if (!state->_vertexUniformsValid) {
-            state->_vertexUniformsValid = true;
-            [_renderCommandEncoder setVertexBytes:state->_vertexUniformData.data() length:state->_vertexUniformData.size() atIndex:1];
-        }
-        if (!state->_fragUniformsValid) {
-            state->_fragUniformsValid = true;
-            [_renderCommandEncoder setFragmentBytes:state->_fragUniformData.data() length:state->_fragUniformData.size() atIndex:0];
-        }
-
-        // Bind to texture if there is one
-        if (_currentTexture && _currentTexture != _currentTextureBound) {
-            _currentTextureBound = _currentTexture;
-            MetalTexture* metalTexture = (MetalTexture*)_currentTexture;
-            
-            if (metalTexture->_needsUpload) {
-                metalTexture->_needsUpload = false;
-                metalTexture->retain();
-                dispatch_async(_uploaderQueue, ^{
-                    PIXELDATA pixeldata;
-                    metalTexture->_bitmap->lock(&pixeldata, false);
-                    //app->log("texture upload %d x %d", _bitmap->_width, _bitmap->_height);
-                    [metalTexture->_tex replaceRegion:MTLRegionMake2D(0,0,metalTexture->_bitmap->_width,metalTexture->_bitmap->_height) mipmapLevel:0 withBytes:pixeldata.data bytesPerRow:pixeldata.stride];
-                    metalTexture->_bitmap->unlock(&pixeldata, false);
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        metalTexture->release();
-                    });
-                });
-            }
-            [_renderCommandEncoder setFragmentTexture:metalTexture->_tex atIndex:0];
-            [_renderCommandEncoder setFragmentSamplerState:metalTexture->_sampler atIndex:0];
-        }
-
-        [_renderCommandEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
-                                          indexCount:numQuads*6
-                                           indexType:MTLIndexTypeUInt16
-                                         indexBuffer:_indexBuffer
-                                   indexBufferOffset:index*6*sizeof(uint16_t)];
-    }
-    void prepareToDraw() override {
-        _drawable = [_metalLayer nextDrawable];
-        if (!_drawable) {
-            return;
-        }
-
-        _commandBuffer = [_commandQueue commandBuffer];
-        _primarySurface->_texture.as<MetalTexture>()->_tex = _drawable.texture;
-        
-        if (_window->_backgroundColor) {
-            float f[4] = {
-                (_window->_backgroundColor & 0xFF) / 255.0f,
-                ((_window->_backgroundColor & 0xFF00)>>8) / 255.0f,
-                ((_window->_backgroundColor & 0xFF0000)>>16) / 255.0f,
-                ((_window->_backgroundColor & 0xFF000000)>>24) / 255.0f
-            };
-            _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-            _renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(f[0], f[1], f[2], f[3]);
-        } else {
-            _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionDontCare;
-        }
-
-        _renderCounter++;
-        _currentSurface = NULL;
-        _currentTexture = NULL;
-        _currentTextureBound = NULL;
-        _currentPipelineState = NULL;
-        _currentShader = NULL;
-    }
-
-    void commit() override {
-        if (!_drawable) {
-            return;
-        }
-        [_renderCommandEncoder endEncoding];
-        _renderCommandEncoder = nil;
-        [_commandBuffer presentDrawable:_drawable];
-        [_commandBuffer commit];
-        //[_commandBuffer waitUntilScheduled];
-        //[_drawable present];
-        
-        // NB! Here we stall the CPU until the GPU has processed the command buffer.
-        // This will be unsatisfactory if the app needs more CPU time and we should
-        // cook up a multibuffer approach for that.
-        [_commandBuffer waitUntilCompleted];
-        //[_commandBuffer waitUntilScheduled];
-    }
     
-    enum EncoderType {
-        Render,
-        Blit,
-        None
-    };
     
-    void updateEncoder(EncoderType type) {
-        if (type==Render && _renderCommandEncoder) {
-            return;
-        }
-        if (type==Blit && _blitCommandEncoder) {
-            return;
-        }
-        if (_renderCommandEncoder) {
-            [_renderCommandEncoder endEncoding];
-            _renderCommandEncoder = nil;
-            _currentTextureBound = NULL;
-        }
-        if (_blitCommandEncoder) {
-            [_blitCommandEncoder endEncoding];
-            _blitCommandEncoder = nil;
-        }
-        if (type==Render) {
-            _renderCommandEncoder = [_commandBuffer renderCommandEncoderWithDescriptor:_renderPassDescriptor];
-            // Bind vertex buffer which never changes
-            [_renderCommandEncoder setVertexBuffer:_vertexBuffer offset:0 atIndex:0];
-            _currentTextureBound = NULL;
-            _currentPipelineState = NULL;
-            
-            // When starting a new render command encoder, all shaders need to resend their
-            // uniform data even if it hasn't changed
-            for (auto& resource : _shaders) {
-                Shader* shader = (Shader*)resource;
-                ShaderState* state = (ShaderState*)shader->_shaderState;
-                if (state) {
-                    state->_vertexUniformsValid = false;
-                    state->_fragUniformsValid = false;
-                }
-            }
-        }
-        else if (type==Blit) {
-            _blitCommandEncoder = [_commandBuffer blitCommandEncoder];
-        }
+    RenderTask* createRenderTask() override {
+        return new RenderTaskApple(this, [_commandQueue commandBuffer], &_vertexBuffer, &_indexBuffer);
     }
 
-    void setCurrentSurface(Surface* surface) override {
-
-        // Terminate the current encoder if there is one
-        updateEncoder(None);
-        
-        // Create new encoder
-        MetalSurface* metalSurface = (MetalSurface*)surface;
-        _renderPassDescriptor.colorAttachments[0].texture = metalSurface->_texture.as<MetalTexture>()->_tex;
-        updateEncoder(Render);
-        //if (surface == _primarySurface) {
-        //    _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionDontCare;
-        //} else {
-            _renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionLoad;
-        //}
-
-        // Update the viewport
-        [_renderCommandEncoder setViewport:metalSurface->_viewport];
-    }
-    
-    void setCurrentTexture(Texture* texture) override {
-        _currentTexture = texture;
-        // defer texture update to blit
-    }
 
     
-    void bindCurrentShader() override {
-        // no-op, binding is deferred to drawQuads
-    }
-    
+
     void uploadQuad(ItemPool::Alloc* alloc) override {
         // no-op cos vertex buffer is shared between CPU and GPU
     }
     
-    void copyFromCurrent(const RECT& rect, Texture* destTex, const POINT& destOrigin) override {
-        MetalSurface* metalSurface = (MetalSurface*)_currentSurface;
-        MetalTexture* metalDestTex = (MetalTexture*)destTex;
-
-        updateEncoder(Blit);
-        
-        [_blitCommandEncoder copyFromTexture:metalSurface->getTexture()
-                  sourceSlice:0 sourceLevel:0
-                 sourceOrigin:{static_cast<NSUInteger>(rect.origin.x),static_cast<NSUInteger>(rect.origin.y),0}
-                   sourceSize:{static_cast<NSUInteger>(rect.size.width),static_cast<NSUInteger>(rect.size.height),1}
-                    toTexture:metalDestTex->_tex
-             destinationSlice:0 destinationLevel:0
-            destinationOrigin:{static_cast<NSUInteger>(destOrigin.x),static_cast<NSUInteger>(destOrigin.y),0}];
-
-    }
-
-    void generateMipmaps(Texture* tex) override {
-        updateEncoder(Blit);
-        MetalTexture* metalTex = (MetalTexture*)tex;
-        [_blitCommandEncoder generateMipmapsForTexture:metalTex->_tex];
-    }
     
     CVMetalTextureCacheRef _cvTextureCache;
     
@@ -722,8 +795,8 @@ public:
 };
 
 
-Renderer* Renderer::create(Window* window) {
-    return new RendererApple(window);
+Renderer* Renderer::create() {
+    return new RendererApple();
 }
 
 

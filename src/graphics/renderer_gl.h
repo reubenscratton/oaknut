@@ -34,7 +34,6 @@ public:
     void setCurrentSurface(Surface* surface) override;
     void* createShaderState(Shader* shader) override;
     void deleteShaderState(void* state) override;
-    void bindCurrentShader() override;
     void setCurrentTexture(Texture* texture) override;
     void setCurrentBlendMode(int blendMode) override;
     Texture* createTexture(int format) override;
@@ -44,7 +43,7 @@ public:
     void popClip() override;
     void flushQuadBuffer() override;
     void uploadQuad(ItemPool::Alloc* alloc) override;
-    void drawQuads(int numQuads, int index) override;
+    void draw(PrimitiveType type, int count, int index) override;
     void copyFromCurrent(const RECT& rect, Texture* destTex, const POINT& destOrigin) override;
     void generateMipmaps(Texture* tex) override;
     

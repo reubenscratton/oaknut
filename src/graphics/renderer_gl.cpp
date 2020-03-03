@@ -99,7 +99,7 @@ struct GLShaderState {
         }
         
         
-        for (auto& attribute : shader->_attributes) {
+        for (auto& attribute : shader->_vertexShaderOutputs) {
             vs += "attribute ";
             vs += sl_getTypeString(attribute.type);
             vs += " ";
@@ -127,7 +127,7 @@ struct GLShaderState {
               "  gl_Position = mvp * vec4(position,0,1);\n";
         
         // All other attributes
-        for (auto& attribute : shader->_attributes) {
+        for (auto& attribute : shader->_vertexShaderOutputs) {
             if (0!=attribute.name.compare("position")) {
                 vs += string::format("v_%s = ", attribute.name.c_str());
                 if (attribute.outValue.length() > 0) {
@@ -141,11 +141,9 @@ struct GLShaderState {
         
         vs += "}\n";
 
-        //vs += shader->getVertexSource();
-        
         // Attributes and uniforms for fragshader
         string fs = "";
-        for (auto& attribute : shader->_attributes) {
+        for (auto& attribute : shader->_vertexShaderOutputs) {
             if (0!=attribute.name.compare("position")) {
                 fs += "varying ";
                 fs += sl_getTypeString(attribute.type);
@@ -456,23 +454,6 @@ void GLRenderer::deleteShaderState(void* state) {
     delete (GLShaderState*)state;
 }
 
-void GLRenderer::bindCurrentShader() {
-    GLShaderState* shaderState = (GLShaderState*)_currentShader->_shaderState;
-    check_gl(glUseProgram, shaderState->_program);
-    
-    // These are program-specific...
-    if (_currentVertexConfig != shaderState->_vertexConfig) {
-        _currentVertexConfig = shaderState->_vertexConfig;
-        check_gl(glVertexAttribPointer, VERTEXATTRIB_POSITION, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), 0);
-        check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), (void*)8);
-        //    check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_UNSIGNED_SHORT, GL_TRUE, sizeof(VERTEX), (void*)8);
-        check_gl(glVertexAttribPointer, VERTEXATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(VERTEX), (void*)16);
-        
-        check_gl(glEnableVertexAttribArray, VERTEXATTRIB_POSITION);
-        check_gl(glEnableVertexAttribArray, VERTEXATTRIB_TEXCOORD);
-        check_gl(glEnableVertexAttribArray, VERTEXATTRIB_COLOR);
-    }
-}
 
 
 GLRenderer::GLRenderer(Window* window) : Renderer(window) {
@@ -596,12 +577,38 @@ void GLRenderer::flushQuadBuffer() {
 
 
 
-void GLRenderer::drawQuads(int numQuads, int index) {
+void GLRenderer::draw(PrimitiveType type, int count, int index) {
+    
+    if (!_currentShaderValid) {
+        _currentShaderValid = true;
+        GLShaderState* shaderState = (GLShaderState*)_currentShader->_shaderState;
+        check_gl(glUseProgram, shaderState->_program);
+        
+        // These are program-specific...
+        if (_currentVertexConfig != shaderState->_vertexConfig) {
+            _currentVertexConfig = shaderState->_vertexConfig;
+            check_gl(glVertexAttribPointer, VERTEXATTRIB_POSITION, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), 0);
+            check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), (void*)8);
+            //    check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_UNSIGNED_SHORT, GL_TRUE, sizeof(VERTEX), (void*)8);
+            check_gl(glVertexAttribPointer, VERTEXATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(VERTEX), (void*)16);
+            
+            check_gl(glEnableVertexAttribArray, VERTEXATTRIB_POSITION);
+            check_gl(glEnableVertexAttribArray, VERTEXATTRIB_TEXCOORD);
+            check_gl(glEnableVertexAttribArray, VERTEXATTRIB_COLOR);
+        }
+    }
+
     //   app->log("Drawing %d quads at once", numQuads);
-    check_gl(glDrawElements, GL_TRIANGLES, 6 * numQuads, GL_UNSIGNED_SHORT, (void*)((index)*6*sizeof(GLshort)));
+    if (type == Quad) {
+        check_gl(glDrawElements, GL_TRIANGLES, 6 * count, GL_UNSIGNED_SHORT, (void*)((index)*6*sizeof(GLshort)));
+    } else if (type == Line) {
+        check_gl(glDrawElements, GL_LINES, 4 * count, GL_UNSIGNED_SHORT, (void*)((index)*4*sizeof(GLshort)));
+    } else {
+        assert(false);
+    }
 }
 
-void GLRenderer::prepareToDraw() {
+void GLRenderer::startFrame(COLOR clearColor) {
     // GL context init
     if (!_doneInit) {
         _doneInit = 1;
@@ -656,10 +663,10 @@ void GLRenderer::prepareToDraw() {
 #endif
         _currentVertexConfig = 0;
         
-        _backgroundColor[0] = (_window->_backgroundColor & 0xFF) / 255.0f;
-        _backgroundColor[1] = ((_window->_backgroundColor & 0xFF00)>>8) / 255.0f;
-        _backgroundColor[2] = ((_window->_backgroundColor & 0xFF0000)>>16) / 255.0f;
-        _backgroundColor[3] = ((_window->_backgroundColor & 0xFF000000)>>24) / 255.0f;
+        _backgroundColor[0] = (clearColor & 0xFF) / 255.0f;
+        _backgroundColor[1] = ((clearColor & 0xFF00)>>8) / 255.0f;
+        _backgroundColor[2] = ((clearColor & 0xFF0000)>>16) / 255.0f;
+        _backgroundColor[3] = ((clearColor & 0xFF000000)>>24) / 255.0f;
         check_gl(glClearColor, _backgroundColor[0],_backgroundColor[1],_backgroundColor[2],_backgroundColor[3]);
     }
     if (_backgroundColor[3] > 0.f) {

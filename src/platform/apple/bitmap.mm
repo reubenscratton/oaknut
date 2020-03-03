@@ -161,15 +161,13 @@ void BitmapApple::toVariant(variant& v) {
 
 
 
-Bitmap* Bitmap::createFromData(bytearray& data) {
+Bitmap* Bitmap::createFromData(const bytearray& data) {
     
-    // Detach the compressed image data so nothing owns it
+    // Get compressed data pointer and length
     uint8_t* pd = data.data();
     uint32_t cb = data.size();
     assert(pd && cb);
-    data.detach();
     
-
     CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL, pd, cb, NULL);
     CGImageRef cgImage;
     auto hdr = pd;
@@ -179,6 +177,7 @@ Bitmap* Bitmap::createFromData(bytearray& data) {
     } else if (hdr[0]==0xFF && hdr[1]==0xD8) {
         cgImage = CGImageCreateWithJPEGDataProvider(dataProvider, NULL, NO, kCGRenderingIntentDefault);
     } else {
+        // TODO: need GIF support...
         //NSImage* img = [[NSImage alloc] initWithData:[NSData dataWithBytesNoCopy:data.data() length:data.size()]];
         //cgImage = [img CGImageForProposedRect:nil context:nil hints: nil];
         //if (!cgImage) {
@@ -211,6 +210,8 @@ Bitmap* Bitmap::createFromData(bytearray& data) {
     size_t cbUncompressed = CFDataGetLength(dataRef);
     CGImageRelease(cgImage);
 
+    // Don't need compressed data any more
+    CGDataProviderRelease(dataProvider);
     
     // Conversions from unsupported pixel formats
     int format = PIXELFORMAT_UNKNOWN;

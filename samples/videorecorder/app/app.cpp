@@ -19,10 +19,8 @@ static string PASSWORD = "password";
 
 class RectDetectorWorker : public WorkerImpl {
 public:
-    void start_(const variant& config) override {
-    }
-    
-    variant process_(const variant& data_in) override {
+
+    variant process_(int msg, const variant& data_in) {
         int width = data_in.intVal("width");
         int height = data_in.intVal("height");
         const bytearray& pixels = data_in.bytearrayRef("data");
@@ -46,9 +44,6 @@ public:
         return retval;
     }
 
-    void stop_() override {
-    }
-    
     
     vector<RECT> detect(const bytearray& pixels, int width, int height, RECT roi) {
         vector<RECT> rects;
@@ -141,7 +136,7 @@ public:
                         standardDeviation = sqrt(variance);
                     }
 
-                    app->log("mean: %f  std: %f", mean, standardDeviation);
+                    // app->log("mean: %f  std: %f", mean, standardDeviation);
                 }
             }
         }
@@ -160,15 +155,10 @@ DECLARE_WORKER_IMPL(RectDetectorWorker);
 class RectDetector : public Worker {
 public:
     RectDetector() : Worker("RectDetectorWorker") {
-        start(variant());
-    }
-    
-    bool isBusy() const {
-        return _isBusy;
+        _maxQueueSize = 1;
     }
 
     void detect(class Bitmap* bitmap, const RECT& roiRect, std::function<void(vector<RECT>)> resultCallback) {
-        _isBusy = true;
         variant data_in;
         data_in.set("width", bitmap->_width);
         data_in.set("height", bitmap->_height);
@@ -182,7 +172,7 @@ public:
         
         data_in.set("data", bytes);
         bitmap->unlock(&pixelData, false);
-        process(data_in, [=](const variant& data_out) {
+        enqueue(0, data_in, [=](const variant& data_out) {
             vector<RECT> results;
             auto& vresults = data_out.arrayRef();
             for (auto& vrect : vresults) {
@@ -194,11 +184,8 @@ public:
                 results.push_back(rect);
             }
             resultCallback(results);
-            _isBusy = false;
         });
     }
-
-    bool _isBusy;
 };
 
 class MainViewController : public ViewController {
@@ -211,7 +198,7 @@ public:
     Label* _instruction;
     Label* _phrase;
     ImageView* _recordButton;
-    sp<RectDetector> _rectDetector;
+    //sp<RectDetector> _rectDetector;
     sp<FaceDetector> _faceDetector;
     //View* _facesOverlayView;
     sp<AudioInput> _audioInput;
@@ -220,7 +207,7 @@ public:
     Timer* _frameCaptureTimer;
     bool _frameCaptureNeeded;
     RIFFWriter* _riffWriter;
-    ByteBufferStream* _aviData;
+    bytestream* _aviData;
     RectRenderOp* _faceRectOp;
     AudioFormat _audioFormat;
     sp<AudioResampler> _audioResampler;
@@ -248,8 +235,8 @@ public:
         };
         
         _jpegEncoder = new JpegEncoder();
-        _rectDetector = new RectDetector();
-        //_faceDetector = new FaceDetector();
+        //_rectDetector = new RectDetector();
+        _faceDetector = new FaceDetector();
         //_facesOverlayView = new View();
         //_facesOverlayView->setMeasureSpecs(MEASURESPEC::Fill(), MEASURESPEC::Fill());
         //_view->addSubview(_facesOverlayView);
@@ -342,9 +329,9 @@ public:
         _audioInput->stop();
         _audioInput->close();
         if (_audioResampler) {
-            _audioResampler->stop([=]() {
+            /*_audioResampler->stop([=]() {
                 uploadRecording();
-            });
+            });*/
         } else {
             uploadRecording();
         }
@@ -361,8 +348,8 @@ public:
         // Update camera preview view
         _cameraView->handleNewCameraFrame(frameBitmap);
         
-        if (!_rectDetector->isBusy()) {
-        //if (!_faceDetector->isBusy()) {
+        //if (!_rectDetector->isBusy()) {
+        if (!_faceDetector->isBusy()) {
             
             // Determine the region of interest (ROI). It's the intersection of the mask hole rect with the
             // image frame (which may exceed the view bounds cos its aspect-fill), then scaled down
@@ -380,10 +367,10 @@ public:
             float scaleY = upscaledImageRect.size.height / frameBitmap->_height;
             roiRect.scale(1/scaleX, 1/scaleY);
             
-            _rectDetector->detect(frameBitmap, roiRect, [=](vector<RECT> rects) {
+            /*_rectDetector->detect(frameBitmap, roiRect, [=](vector<RECT> rects) {
                 app->log("Rects: %d", rects.size());
-            });
-            /*
+            });*/
+            
             _faceDetector->detectFaces(frameBitmap, roiRect, [=](vector<RECT> faces) {
                 //app->log("Faces: %d", faces.size());
                 if (faces.size() == 0) {
@@ -391,8 +378,7 @@ public:
                     return;
                 }
                 _maskView->setHoleStrokeColour(app->getStyleColor("colorSuccess"));
-
-            });*/
+            });
             
         }
         
@@ -401,8 +387,8 @@ public:
             
             // Can only instantiate the AVI writer once the frame size is known
             if (!_riffWriter) {
-                _aviData = new ByteBufferStream(256*1024);
-                _riffWriter = new RIFFWriter(_aviData);
+                _aviData = new bytestream(256*1024);
+                _riffWriter = new RIFFWriter(*_aviData);
                 _riffWriter->startWriteAVI(1, frameBitmap->_width, frameBitmap->_height, 1);
                 _riffWriter->writeStreamHeader(RIFFWriter::MJPG_CC);
             }
@@ -426,7 +412,7 @@ public:
         //}
         _riffWriter->close();
         
-        app->log("total avi : %d", _aviData->_data.cb);
+        app->log("total avi : %d", _aviData->size());
         app->log("total audio: %d", _encodedAudio.size());
         
 
@@ -514,7 +500,7 @@ public:
          
 #else
          FILE* tmp = fopen("foo.avi", "wb");
-         fwrite(_aviData->_data.data, _aviData->offsetWrite, 1, tmp );
+         fwrite(_aviData->data(), _aviData->offsetWrite, 1, tmp );
          //FILE* tmp = fopen("foo.aac", "wb");
          //fwrite(_encodedAudio.data(), _encodedAudio.size(), 1, tmp );
          fclose(tmp);

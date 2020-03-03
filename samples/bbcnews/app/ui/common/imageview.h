@@ -18,7 +18,9 @@ struct ImageCacheKey {
 
 class BNImageView : public ImageView {
 public:
-    void attachToWindow(Window *window) override;
+    //void attachToWindow(Window *window) override;
+    void attachToSurface() override;
+    void detachFromSurface() override;
     void layout(RECT constraint) override;
 
     BNImageView();
@@ -30,7 +32,6 @@ public:
     TIMESTAMP _timeImageUrlSet;
     BNImage* _bnimage;
     ImageCacheKey _imageKey;
-    bool _isLoading;
     bool _shouldFade;
     bool _errorDisplay;
     ImageView* _errorView;

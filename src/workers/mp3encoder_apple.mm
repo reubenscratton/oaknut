@@ -35,7 +35,7 @@ public:
         OSStatus status = AudioConverterNew(&_inFormat, &_outFormat, &_converter);
         assert(status == 0);
     }
-    variant process_(const variant& data_in) {
+    variant process_(int msg, const variant& data_in) override {
         const bytearray& bytes = data_in.bytearrayRef();
         _inbuf.append(bytes);
         bytearray output;

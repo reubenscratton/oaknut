@@ -100,15 +100,7 @@ public:
     
     /**@}*/
 
-    
-    /** @name Scheduling
-     * @{
-     */
-    /** Schedule a function to run on the main thread loop, optionally after a delay (in milliseconds). */
-    static void postToMainThread(std::function<void(void)> func, int delay=0);
-    /**@}*/
-    
-    
+
     /** @name Time
      * @{
      */

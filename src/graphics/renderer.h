@@ -11,12 +11,15 @@
 #define SL_CONST "constant"
 #define SL_HALF1 "half"
 #define SL_HALF1_DECL "half"
+#define SL_HALF2 "half2"
+#define SL_HALF2_DECL "half2"
 #define SL_HALF3 "half3"
 #define SL_HALF3_DECL "half3"
 #define SL_HALF4 "half4"
 #define SL_HALF4_DECL "half4"
 #define SL_FLOAT1 "float"
 #define SL_FLOAT2 "float2"
+#define SL_FLOAT3 "float3"
 #define SL_FLOAT4 "float4"
 #define SL_MATRIX4 "float4x4"
 #define SL_OUTPIXVAL "c"
@@ -52,13 +55,52 @@
 #error todo
 #endif
 
-
+// TODO: This is GL-specific, should be moved
 #define VERTEXATTRIB_POSITION 0
 #define VERTEXATTRIB_TEXCOORD 1
 #define VERTEXATTRIB_COLOR 2
 
 #define VERTEXATTRIBS_CONFIG_NORMAL     1 // float x,y; uint16 s,t; uint32 color = 16 bytes
-#define VERTEXATTRIBS_CONFIG_ROUNDRECT  2 // float x,y; uint16 dist_xy; uint32 fillColor; uint32 strokeColor; strokeWidth; radii
+
+enum BlendOp {
+    None,
+    Add,
+    Subtract
+};
+enum BlendFactor {
+    Zero,
+    SourceColor,
+    SourceAlpha,
+    DestinationColor,
+    DestinationAlpha,
+    One,
+    OneMinusSourceColor,
+    OneMinusSourceAlpha,
+    OneMinusDestinationColor,
+    OneMinusDestinationAlpha
+};
+struct BlendParams {
+    BlendOp op;
+    BlendFactor srcRGB;
+    BlendFactor srcA;
+    BlendFactor dstRGB;
+    BlendFactor dstA;
+    
+    bool operator==(const BlendParams& other) const {
+        return op==other.op &&
+            srcRGB==other.srcRGB &&
+            srcA==other.srcA &&
+            dstRGB==other.dstRGB &&
+            dstA==other.dstA;
+    }
+    inline size_t hash() const {
+        return (size_t)op
+            || (((size_t)srcRGB)<<2)
+            || (((size_t)srcA)<<6)
+            || (((size_t)dstRGB)<<10)
+            || (((size_t)dstA)<<14);
+    }
+};
 
 /**
  Base class for Renderer-allocated objects such as Textures and Shaders. It manages
@@ -69,10 +111,11 @@ class RenderResource : public Object {
 public:
     RenderResource(class Renderer* renderer);
 
+    Renderer* _renderer; // should ideally be protected, but derived app-level classes need fast access so meh
 protected:
-    Renderer* _renderer;
     list<RenderResource*>::iterator _it;
     friend class Renderer;
+    friend class RenderBatch;
 };
 
 class Texture : public RenderResource {
@@ -81,7 +124,9 @@ public:
     ~Texture();
     
     virtual void resize(int width, int height)=0;
-    
+    virtual SIZE size() =0;
+    virtual bool readPixels(RECT rect, bytearray& target) const =0;
+
     class Bitmap* _bitmap; // NB: can be null
     enum Type {
         None,
@@ -174,14 +219,13 @@ public:
         Matrix4,
     };
 
-    struct Attribute {
+    struct VertexShaderOutput {
+        bool isVertexAttribute;
         VariableType type;
         string name;
         string outValue;
     };
-    vector<Attribute> _attributes;
-    
-    
+    vector<VertexShaderOutput> _vertexShaderOutputs;
 
 
     
@@ -201,7 +245,7 @@ public:
     void* _shaderState; // opaque data managed by renderer. Non-null while shader is loaded.
 
     // Generic shader language APIs. The outer program structure is provided by the renderer.
-    virtual string getVertexSource();
+    virtual string getSupportingSource();
     virtual string getFragmentSource();
 
     // Uniforms
@@ -221,51 +265,128 @@ protected:
 
 
 string sl_getTypeString(Shader::VariableType type);
+   
+enum PrimitiveType {
+    Point,
+    Line,
+    Quad
+};
+
+/**
+ A batch of GPU instructions to be executed asynchronously to the CPU.
+ Metal: MTLCommandBuffer
+ OpenGL: emulated
+ */
+class RenderTask : public RenderResource {
+public:
+
+    RenderTask(Renderer* renderer);
+    void bindBitmap(Bitmap* bitmap);
+    virtual bool bindToNativeSurface(class Surface* surface)=0;
+    virtual void setCurrentSurface(Surface* surface)=0;
+    virtual void setCurrentTexture(Texture* texture)=0;
+    inline void setBlendNone() {
+        setBlendParams({
+            .op     = None,
+            .srcRGB = SourceColor,
+            .srcA   = SourceAlpha,
+            .dstRGB = Zero,
+            .dstA   = Zero
+       });
+    }
+    inline void setBlendNormal() {
+         setBlendParams({
+             .op     = Add,
+             .srcRGB = SourceAlpha,
+             .srcA   = SourceAlpha,
+             .dstRGB = OneMinusSourceAlpha,
+             .dstA   = OneMinusSourceAlpha
+        });
+    }
+    inline void setBlendPremultiplied() {
+         setBlendParams({
+             .op     = Add,
+             .srcRGB = One,
+             .srcA   = One,
+             .dstRGB = OneMinusSourceAlpha,
+             .dstA   = OneMinusSourceAlpha
+        });
+    }
+    inline void setBlendAccumulate() {
+         setBlendParams({
+             .op     = Add,
+             .srcRGB = One,
+             .srcA   = One,
+             .dstRGB = One,
+             .dstA   = One
+        });
+    }
+    void setBlendParams(const BlendParams& blendParams) {
+        if (_blendParams.op==blendParams.op &&
+            _blendParams.srcRGB==blendParams.srcRGB &&
+            _blendParams.srcA==blendParams.srcA &&
+            _blendParams.dstRGB==blendParams.dstRGB &&
+            _blendParams.dstA==blendParams.dstA) {
+            return;
+        }
+        _blendParams = blendParams;
+        _blendParamsValid = false;
+    }
+    virtual void setUniformData(int16_t uniformIndex, const void* data, int32_t cb) =0;
+    virtual void setColorUniform(int16_t uniformIndex, const float* rgba) =0;
+    void setCurrentShader(Shader* shader);
+    template<class T>
+    void setUniform(int16_t uniformIndex, const T& val);
+    void pushClip(const RECT& clip);
+    void popClip();
+    virtual void draw(PrimitiveType type, int num, int index) =0;
+    virtual void copyFromCurrent(const RECT& rect, Texture* destTex, const POINT& destOrigin)=0;
+    virtual void generateMipmaps(Texture* tex) =0;
+    virtual void commit(std::function<void()> onComplete)=0;
+
+protected:
+
     
-
-
+    Shader* _currentShader;
+    bool _currentShaderValid;
+    int _currentVertexConfig;
+    BlendParams _blendParams;
+    bool _blendParamsValid;
+    Texture* _currentTexture;
+    Surface* _currentSurface;
+    bool _currentSurfaceValid;
+    stack<RECT> _clips;
+    RECT _currentClip;
+    bool _currentClipValid;
+    
+    friend class RenderBatch;
+};
 
 /**
  Abstract base class for hardware-accelerated rendering.
  */
 class Renderer : public Object {
 public:
-    class Window* _window;
     list<RenderResource*> _textures;
     list<RenderResource*> _shaders;
     map<Shader::Features, sp<Shader>> _standardShaders; // standard shaders, not custom ones
-    class Surface* _primarySurface;
     int _primarySurfaceFormat;
 
     // Render state (used during render loop)
     bool _doneInit;
-    Shader* _currentShader;
-    int _currentVertexConfig;
-    int _blendMode;
-    stack<RECT> _clips;
-    Texture* _currentTexture;
-    int _renderCounter;
-    class Surface* _currentSurface;
 
     void reset();
     ItemPool::Alloc* allocQuads(int num, ItemPool::Alloc* existingAlloc);
     virtual void createTextureForBitmap(Bitmap* bitmap);
     Shader* getStandardShader(Shader::Features features);
-    void bindBitmap(Bitmap* bitmap);
     virtual void releaseTexture(Texture* tex);
     virtual void releaseShader(Shader* shader);
 
-    void setCurrentShader(Shader* shader);
     void invalidateQuads(ItemPool::Alloc* alloc);
-
-    template<class T>
-    void setUniform(int16_t uniformIndex, const T& val);
     
 
     // Non-drawing interface, ie use these outside the render loop
-    virtual void bindToNativeWindow(long nativeWindowHandle) =0;
-    virtual Surface* getPrimarySurface() =0;
-    virtual Surface* createPrivateSurface() =0;
+    virtual Surface* createSurface(bool isPrivate) =0;
     virtual Texture* createTexture(int format) =0;
     enum IntProperty {
         MaxVaryingFloats,
@@ -273,31 +394,19 @@ public:
     virtual int getIntProperty(IntProperty property) =0;
 
     // Drawing interface, i.e. for use of RenderOps
-    virtual void prepareToDraw() =0;
-    virtual void setCurrentSurface(Surface* surface)=0;
-    virtual void setCurrentTexture(Texture* texture)=0;
-    virtual void setCurrentBlendMode(int blendMode)=0;
-    virtual void setUniformData(int16_t uniformIndex, const void* data, int32_t cb) =0;
-    virtual void setColorUniform(int16_t uniformIndex, const float* rgba) =0;
-    virtual void copyFromCurrent(const RECT& rect, Texture* destTex, const POINT& destOrigin)=0;
-    virtual void generateMipmaps(Texture* tex) =0;
-    virtual void pushClip(RECT clip) =0;
-    virtual void popClip() =0;
+    virtual RenderTask* createRenderTask() =0;
     virtual void flushQuadBuffer() =0;
     virtual void uploadQuad(ItemPool::Alloc* alloc) =0;
-    virtual void drawQuads(int numQuads, int index) =0;
-    virtual void commit() =0;
     
     
 
-    static Renderer* create(Window* window);
+    static Renderer* create();
     
 protected:
-    Renderer(Window* window);
+    Renderer();
 
     virtual void* createShaderState(Shader* shader) =0;
     virtual void deleteShaderState(void* state) =0;
-    virtual void bindCurrentShader() =0;
 
 
     // QuadBuffer data
@@ -306,4 +415,5 @@ protected:
     uint8_t* _quadBufferDirtyLo;
     uint8_t* _quadBufferDirtyHi;
 
+    friend class RenderTask;
 };

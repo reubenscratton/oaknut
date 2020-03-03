@@ -12,6 +12,12 @@ string nsstr(NSString* s) {
     auto sz = [s cStringUsingEncoding:NSUTF8StringEncoding];
     return string(sz, (uint32_t)strlen(sz));
 }
+error nserr(NSError* e) {
+    if (!e) {
+        return error::none();
+    }
+    return error((int)e.code, nsstr(e.localizedDescription));
+}
 
 int App::getIntSetting(const string& key, const int defaultValue) {
     id val = [[NSUserDefaults standardUserDefaults] objectForKey:[NSString stringWithCString:key.c_str() encoding:NSUTF8StringEncoding]];
@@ -55,7 +61,8 @@ string App::currentCountryCode() const {
 
 
 
-void App::postToMainThread(std::function<void(void)> func, int delay) {
+void Task::postToMainThread(std::function<void(void)> func, int delay) {
+    assert(func);
     if (delay <= 0) {
         dispatch_async(dispatch_get_main_queue(), ^{
             func();
@@ -90,8 +97,9 @@ bool App::fileResolve(string& path) const {
     if (path.hadPrefix("//data/"_S)) {
         NSURL* url = [[[NSFileManager defaultManager] URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask] lastObject];
         url = [url URLByAppendingPathComponent:[[NSBundle mainBundle] bundleIdentifier]];
-        auto sz = url.fileSystemRepresentation;
-        path.prepend(string(sz, uint32_t(strlen(sz))));
+        string fsr(url.fileSystemRepresentation, -1);
+        fsr.append("/");
+        path.prepend(fsr);
         return true;
     }
     
@@ -99,23 +107,26 @@ bool App::fileResolve(string& path) const {
     if (path.hadPrefix("//cache/"_S)) {
         NSURL* url = [[[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask] lastObject];
         url = [url URLByAppendingPathComponent:[[NSBundle mainBundle] bundleIdentifier]];
-        auto sz = url.fileSystemRepresentation;
-        path.prepend(string(sz, uint32_t(strlen(sz))));
+        string fsr(url.fileSystemRepresentation, -1);
+        fsr.append("/");
+        path.prepend(fsr);
         return true;
     }
     
     //docs/... : ~/Documents/...
     if (path.hadPrefix("//docs/"_S)) {
         NSURL* url = [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
-        auto sz = url.fileSystemRepresentation;
-        path.prepend(string(sz, uint32_t(strlen(sz))));
+        string fsr(url.fileSystemRepresentation, -1);
+        fsr.append("/");
+        path.prepend(fsr);
         return true;
     }
 
     //tmp/... : ~/Documents/...
     if (path.hadPrefix("//tmp/"_S)) {
-        auto sz = NSTemporaryDirectory().fileSystemRepresentation;
-        path.prepend(string(sz, uint32_t(strlen(sz))));
+        string fsr(NSTemporaryDirectory().fileSystemRepresentation, -1);
+        fsr.append("/");
+        path.prepend(fsr);
         return true;
     }
 
@@ -132,10 +143,6 @@ bool App::fileEnsureFolderExists(string& path) const {
     return true;
 }
 
-
-bool Task::isMainThread() {
-    return [NSThread isMainThread] != 0;
-}
 
 
 vector<string> App::fileList(string& dir) const {

@@ -15,7 +15,7 @@
  * Simple example:\n
  * ````\n
  * URLRequest::get("http://www.foo.com/bar.json")\n
- *    ->handle([=](URLRequest* req, const Response& response) {\n
+ *    ->handle([=](URLResponse* res) {\n
  *        // handle the json here\n
  *    });\n
  * ````\n
@@ -69,24 +69,14 @@ public:
     };
 
     
-    struct Response {
-        bool isFromCache;
-        TIMESTAMP cacheExpiryTime;
-        int _httpStatus;
-        map<string,string> headers;
-        bytearray data;
-        string decodedText;
-        variant decodedJson;
-        sp<class Bitmap> decodedBitmap;
-    };
-    
+
     /** @name Response handling
      * @{
      */
-    void handle(std::function<void(URLRequest*, Status status, const Response&)> handler);
+    void handle(std::function<void(const class URLResponse* res, bool isFromCache)> handler);
     
-    /** Decode the response on the downloading thread and maybe dispatch some other kind of handler. */
-    std::function<void(Response&)> customDecoder;
+    /** Decode the response on a background thread. Return true to prevent default decoding. */
+    std::function<bool(URLResponse*)> customDecoder;
     
     /**@}*/
 
@@ -96,21 +86,30 @@ public:
      * @{
      */
     /** Cancels the request, ensuring that response handlers won't run. */
-    virtual void cancel() =0;
+    virtual void cancel();
     /**@}*/
     
 protected:
-    virtual void start();
-    virtual void load() =0;
 
     URLRequest(const string& url, const string& method, const bytearray& body, int flags);
     ~URLRequest();
     
+    virtual void start();
+    virtual void processRawResponse(URLResponse* response);
+    virtual void dispatchResponse(const URLResponse* response, bool isFromCache);
+
+    // Platform-implemented methods
+    error ioLoadRemote(URLResponse* response); // runs on an IO thread, ie should block
+
     // General data
     Status _status;
     int _flags;
     CachePolicy _cachePolicy;
-    std::function<void(URLRequest*, Status status, const Response& response)> _handler;
+    std::function<void(const URLResponse*, bool)> _handler;
+    sp<Task> _cacheTask;
+    sp<Task> _remoteTask;
+    os_sem _sem;
+    std::atomic<bool> _remoteLoadComplete;
 
     // Request data
     string _url;
@@ -118,43 +117,25 @@ protected:
     map<string,string> _headers;
     bytearray _body;
     
-    // Response data
-    Response _response;
-    int _httpStatus;
     
-    // Queue data
-    list<URLRequest*>::iterator _it;
-
-    static URLRequest* create(const string& url, const string& method, const bytearray& body, int flags);
-
-    virtual void dispatch();
-    virtual void processResponse();
     
-    friend class URLRequestManager;
     friend class URLCache;
-    friend class URLLoader;
 };
 
-class URLCache : public Object {
+class URLResponse : public Object {
 public:
-
-    URLCache();
-
-    struct item {
-      TIMESTAMP downloadTime;
-      TIMESTAMP expiryTime;
-      string etag;
-    };
-
-    bool containsItem(const sha1_t& hash, struct item* item);
-    void loadItem(const sha1_t& hash, std::function<void(const bytearray&)> callback);
-    void updateItem(const sha1_t& hash, TIMESTAMP expiry, const bytearray& data);
-    void save();
-
-
-protected:
-
-    bool _hasLoaded;
-    map<sha1_t, item> _map;
-    list<const pair<sha1_t, item>*> _list;
+    int httpStatus;
+    map<string,string> headers;
+    
+    // Raw bytes. This may be zero length if the
+    // response has been decoded.
+    bytearray data;
+    
+    // Decoded forms. At most one of these will be set.
+    struct {
+        string text;
+        variant json;
+        sp<class Bitmap> bitmap;
+    } decoded;
 };
+

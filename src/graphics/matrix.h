@@ -21,6 +21,10 @@
 
 class MATRIX4 {
 public:
+    
+    // helpers
+    static MATRIX4 ortho(float l, float r, float b, float t, float n, float f);
+    
     // constructors
     MATRIX4();  // init with identity
     MATRIX4(const float src[16]);

@@ -45,16 +45,22 @@ TextureRenderOp::TextureRenderOp(Bitmap* bitmap, int tintColor) : TextureRenderO
     setBlendMode(BLENDMODE_NORMAL);
 }
 
-void TextureRenderOp::validateShader(Renderer* renderer) {
-    if (_bitmap) {
-        if (!_bitmap->_texture) {
-            renderer->createTextureForBitmap(_bitmap);
+void TextureRenderOp::validateShader(RenderTask* r) {
+    Texture* tex = _texture;
+    if (!tex) {
+        if (_bitmap) {
+            if (!_bitmap->_texture) {
+                r->_renderer->createTextureForBitmap(_bitmap);
+            }
+            tex = _bitmap->_texture;
         }
+    }
+    if (tex) {
         Shader::Features features;
-        features.textures[0] = _bitmap->_texture->_type;
+        features.textures[0] = tex->_type;
         features.alpha = (_alpha<1.0f);
         features.tint = (_color!=0);
-        _shader = renderer->getStandardShader(features);
+        _shader = r->_renderer->getStandardShader(features);
     }
 }
 void TextureRenderOp::setTexRect(const RECT& texRect) {
@@ -64,7 +70,8 @@ void TextureRenderOp::setTexRect(const RECT& texRect) {
 
 void TextureRenderOp::asQuads(QUAD *quad) {
     rectToSurfaceQuad(_rect, quad);
-    if (_bitmap->_texture->_denormalizedCoords) {
+    Texture* tex = _texture ? _texture : _bitmap->_texture;
+    if (tex->_denormalizedCoords) {
         quad->tl.s = quad->bl.s = _rectTex.left() * _bitmap->_width;
         quad->tl.t = quad->tr.t = _rectTex.top()  * _bitmap->_height;
         quad->tr.s = quad->br.s = _rectTex.right() * _bitmap->_width;
@@ -79,17 +86,35 @@ void TextureRenderOp::asQuads(QUAD *quad) {
 
 bool TextureRenderOp::canMergeWith(const RenderOp* op) {
     return RenderOp::canMergeWith(op)
-        && _bitmap==((const TextureRenderOp*)op)->_bitmap;
+        && ((_bitmap && _bitmap==((const TextureRenderOp*)op)->_bitmap)
+        || (_texture && _texture==((const TextureRenderOp*)op)->_texture));
 }
 
-void TextureRenderOp::prepareToRender(Renderer* renderer, Surface* surface) {
-    RenderOp::prepareToRender(renderer, surface);
+void TextureRenderOp::prepareToRender(RenderTask* r, Surface* surface) {
+    RenderOp::prepareToRender(r, surface);
     if (_alpha < 1) {
-        renderer->setUniform(_shader->_u_alpha, _alpha);
+        r->setUniform(_shader->_u_alpha, _alpha);
     }
-    renderer->bindBitmap(_bitmap);
+    if (_texture) {
+        r->setCurrentTexture(_texture);
+    } else {
+        r->bindBitmap(_bitmap);
+    }
 }
 
+void TextureRenderOp::setTexture(Texture* texture) {
+    if (_bitmapProvider) {
+        _bitmapProvider = NULL;
+    }
+    if (_bitmap) {
+        _bitmap = nullptr;
+    }
+    _texture = texture;
+    invalidate();
+    if (_view) {
+        _view->setNeedsFullRedraw(); // lazy
+    }
+}
 
 void TextureRenderOp::setBitmap(Bitmap *bitmap) {
     if (_bitmapProvider) {
@@ -103,7 +128,7 @@ void TextureRenderOp::setBitmap(Bitmap *bitmap) {
                 if (bitmap->hasPremultipliedAlpha()) {
                     setBlendMode(BLENDMODE_PREMULTIPLIED);
                  } else {
-                     setBlendMode(BLENDMODE_NORMAL);
+                    setBlendMode(BLENDMODE_NORMAL);
                  }
             } else {
                 setBlendMode(BLENDMODE_NONE);

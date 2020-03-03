@@ -73,11 +73,12 @@ int16_t Shader::Uniform::length() {
 
 
 int16_t Shader::declareAttribute(const string& name, VariableType type, string outValue) {
-    Attribute attribute;
+    VertexShaderOutput attribute;
+    attribute.isVertexAttribute = true;
     attribute.name = name;
     attribute.type = type;
     attribute.outValue = outValue;
-    _attributes.push_back(attribute);
+    _vertexShaderOutputs.push_back(attribute);
     return 0;
 }
 
@@ -89,7 +90,6 @@ int16_t Shader::declareUniform(const string& name, VariableType type, Uniform::U
     _uniforms.push_back(uniform);
     return (int16_t)(_uniforms.size()-1);
 }
-
 
 
 string oak::sl_getTypeString(Shader::VariableType type) {
@@ -104,7 +104,7 @@ string oak::sl_getTypeString(Shader::VariableType type) {
 }
 
 
-string Shader::getVertexSource() {
+string Shader::getSupportingSource() {
     return "";
 }
 
@@ -187,8 +187,11 @@ string Shader::getFragmentSource() {
 }
 
 
+RenderTask::RenderTask(Renderer* r) : RenderResource(r) {
+    _currentClipValid = true;
+}
 
-Renderer::Renderer(Window* window) : _window(window), _quadBuffer(sizeof(QUAD), 256) {
+Renderer::Renderer() : _quadBuffer(sizeof(QUAD), 256) {
     _primarySurfaceFormat = PIXELFORMAT_DEFAULT32;
 }
 
@@ -201,6 +204,28 @@ Shader* Renderer::getStandardShader(Shader::Features features) {
     return shader;    
 }
 
+void RenderTask::pushClip(const RECT& clip) {
+    _currentClip = clip;
+    if (_currentClip.size.width<0) _currentClip.size.width = 0;
+    if (_currentClip.size.height<0) _currentClip.size.height = 0;
+    if (_clips.size()) {
+        _currentClip.intersectWith(_clips.top());
+    }
+    _clips.push(_currentClip);
+    _currentClipValid = false;
+    //app->log(">clip %d,%d %dx%d", (int)_currentClip.origin.x,(int)_currentClip.origin.y, (int)_currentClip.size.width, (int)_currentClip.size.height);
+}
+void RenderTask::popClip() {
+    assert(_clips.size()>0);
+    _clips.pop();
+    if (!_clips.size()) {
+        _currentClip = {0,0, _currentSurface->_size.width, _currentSurface->_size.height};
+    } else {
+        _currentClip = _clips.top();
+    }
+    _currentClipValid = false;
+    //app->log("<clip %d,%d %dx%d", (int)_currentClip.origin.x,(int)_currentClip.origin.y, (int)_currentClip.size.width, (int)_currentClip.size.height);
+}
 
 void Renderer::reset() {
     _doneInit = false;
@@ -215,19 +240,19 @@ void Renderer::reset() {
 
 
 template<>
-void Renderer::setUniform<int>(int16_t uniformIndex, const int& val) {
+void RenderTask::setUniform<int>(int16_t uniformIndex, const int& val) {
     setUniformData(uniformIndex, &val, sizeof(val));
 }
 template<>
-void Renderer::setUniform<float>(int16_t uniformIndex, const float& val) {
+void RenderTask::setUniform<float>(int16_t uniformIndex, const float& val) {
     setUniformData(uniformIndex, &val, sizeof(val));
 }
 template<>
-void Renderer::setUniform<MATRIX4>(int16_t uniformIndex, const MATRIX4& val) {
+void RenderTask::setUniform<MATRIX4>(int16_t uniformIndex, const MATRIX4& val) {
     setUniformData(uniformIndex, val.get(), 16*sizeof(float));
 }
 template<>
-void Renderer::setUniform<COLOR>(int16_t uniformIndex, const COLOR& val) {
+void RenderTask::setUniform<COLOR>(int16_t uniformIndex, const COLOR& val) {
     auto& uniform = _currentShader->_uniforms[uniformIndex];
     if (uniform.cachedColorVal == val) {
         return;
@@ -241,15 +266,15 @@ void Renderer::setUniform<COLOR>(int16_t uniformIndex, const COLOR& val) {
     setColorUniform(uniformIndex, c);
 }
 template<>
-void Renderer::setUniform<SIZE>(int16_t uniformIndex, const SIZE& val) {
+void RenderTask::setUniform<SIZE>(int16_t uniformIndex, const SIZE& val) {
     setUniformData(uniformIndex, &val, sizeof(val));
 }
 template<>
-void Renderer::setUniform<VECTOR2>(int16_t uniformIndex, const VECTOR2& val) {
+void RenderTask::setUniform<VECTOR2>(int16_t uniformIndex, const VECTOR2& val) {
     setUniformData(uniformIndex, &val, sizeof(val));
 }
 template<>
-void Renderer::setUniform<VECTOR4>(int16_t uniformIndex, const VECTOR4& val) {
+void RenderTask::setUniform<VECTOR4>(int16_t uniformIndex, const VECTOR4& val) {
     setUniformData(uniformIndex, &val, sizeof(val));
 }
 
@@ -284,21 +309,21 @@ void Renderer::createTextureForBitmap(Bitmap* bitmap) {
     bitmap->_texture->_needsUpload = true;
 }
 
-void Renderer::bindBitmap(Bitmap* bitmap) {
+void RenderTask::bindBitmap(Bitmap* bitmap) {
     assert(bitmap);
     if (!bitmap->_texture) {
-        createTextureForBitmap(bitmap);
+        _renderer->createTextureForBitmap(bitmap);
     }
     setCurrentTexture(bitmap->_texture);
 }
 
-void Renderer::setCurrentShader(Shader *shader) {
+void RenderTask::setCurrentShader(Shader *shader) {
     if (_currentShader != shader) {
         if (!shader->_shaderState) {
-            shader->_shaderState = createShaderState(shader);
+            shader->_shaderState = _renderer->createShaderState(shader);
         }
         _currentShader = shader;
-        bindCurrentShader();
+        _currentShaderValid = false;
     }
 }
 

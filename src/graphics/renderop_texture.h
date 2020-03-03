@@ -22,6 +22,7 @@ private:
 
 class TextureRenderOp : public RenderOp {
 public:
+    sp<Texture> _texture;
     sp<Bitmap> _bitmap;
     sp<BitmapProvider> _bitmapProvider;
     RECT _rectTex;
@@ -31,6 +32,7 @@ public:
     TextureRenderOp(Bitmap* bitmap, int tintColor);
     
     // API
+    virtual void setTexture(Texture* texture);
     virtual void setBitmap(Bitmap* bitmap);
     virtual void setBitmap(AtlasNode* node);
     virtual void setBitmap(BitmapProvider* bitmapProvider);
@@ -39,9 +41,9 @@ public:
 
     // Overrides
     bool canMergeWith(const RenderOp* op) override;
-    void prepareToRender(Renderer* renderer, Surface* surface) override;
+    void prepareToRender(RenderTask* r, Surface* surface) override;
     void asQuads(QUAD* quad) override;
-    void validateShader(Renderer* renderer) override;
+    void validateShader(RenderTask* r) override;
     
     
 };

@@ -62,7 +62,7 @@ void RectRenderOp::setCornerRadii(const VECTOR4& radii) {
     }
 }
 
-void RectRenderOp::validateShader(Renderer* renderer) {
+void RectRenderOp::validateShader(RenderTask* r) {
     Shader::Features features;
     if (_alpha<1.0f) {
         features.alpha = 1;
@@ -88,21 +88,21 @@ void RectRenderOp::validateShader(Renderer* renderer) {
         }
     }
     _blendMode = BLENDMODE_NORMAL;
-    _shader = renderer->getStandardShader(features);
+    _shader = r->_renderer->getStandardShader(features);
 }
 
-void RectRenderOp::prepareToRender(Renderer* renderer, class Surface* surface) {
-    RenderOp::prepareToRender(renderer, surface);
+void RectRenderOp::prepareToRender(RenderTask* r, class Surface* surface) {
+    RenderOp::prepareToRender(r, surface);
     if (_shader->_features.alpha) {
-        renderer->setUniform(_shader->_u_alpha, _alpha);
+        r->setUniform(_shader->_u_alpha, _alpha);
     }
     if (_shader->_features.roundRect) {
-        renderer->setUniform(_shader->_u_strokeColor, _strokeColor);
-        renderer->setUniform(_shader->_u_u, VECTOR4(_rect.size.width/2, _rect.size.height/2,0, _strokeWidth));
+        r->setUniform(_shader->_u_strokeColor, _strokeColor);
+        r->setUniform(_shader->_u_u, VECTOR4(_rect.size.width/2, _rect.size.height/2,0, _strokeWidth));
         if (_shader->_features.roundRect == SHADER_ROUNDRECT_1) {
-            renderer->setUniform(_shader->_u_radius, _radii[0]);
+            r->setUniform(_shader->_u_radius, _radii[0]);
         } else {
-            renderer->setUniform(_shader->_u_radii, _radii);
+            r->setUniform(_shader->_u_radii, _radii);
         }
     }
 }

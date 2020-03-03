@@ -12,15 +12,11 @@
 
 FaceDetector::FaceDetector() : Worker("FaceDetectorWorker")
 {
+    _maxQueueSize = 1;
     enqueue(MSG_START, variant(), nullptr);
 }
 
-bool FaceDetector::isBusy() {
-    return _isBusy;
-}
-
 void FaceDetector::detectFaces(class Bitmap* bitmap, const RECT& roiRect, std::function<void(vector<RECT>)> resultCallback) {
-    _isBusy = true;
     variant data_in;
     data_in.set("width", bitmap->_width);
     data_in.set("height", bitmap->_height);
@@ -45,8 +41,6 @@ void FaceDetector::detectFaces(class Bitmap* bitmap, const RECT& roiRect, std::f
             rect.size.height = vrect.floatVal("height");
             results.push_back(rect);
         }
-        //app->log("Found %d faces!", results.size());
         resultCallback(results);
-        _isBusy = false;
     });
 }

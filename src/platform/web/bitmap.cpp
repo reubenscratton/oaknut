@@ -201,7 +201,7 @@ public:
 };
 
 
-Task* Bitmap::createFromData(bytearray& data, std::function<void(Bitmap*)> callback) {
+Task* Bitmap::createFromData(const bytearray& data, std::function<void(Bitmap*)> callback) {
     return new BitmapDecodeTask(data, callback);
 }
 
