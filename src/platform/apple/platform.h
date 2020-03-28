@@ -31,6 +31,7 @@
 
 #if RENDERER_GL
  #if TARGET_OS_IOS
+  #define GLES_SILENCE_DEPRECATION 1
   #include <OpenGLES/gltypes.h>
   #include <OpenGLES/ES3/gl.h>
   #include <OpenGLES/ES3/glext.h>

@@ -34,13 +34,13 @@ public:
         rectToSurfaceQuad(_rect, quad);
         quad->tl.s = quad->bl.s = _rectTex.left();
         quad->tr.s = quad->br.s = _rectTex.right();
-#if RENDERER_GL
-        quad->tl.t = quad->tr.t = _rectTex.bottom();
-        quad->bl.t = quad->br.t = _rectTex.top();
-#else
+//#if RENDERER_GL
+//        quad->tl.t = quad->tr.t = _rectTex.bottom();
+//        quad->bl.t = quad->br.t = _rectTex.top();
+//#else
         quad->tl.t = quad->tr.t = _rectTex.top();
         quad->bl.t = quad->br.t = _rectTex.bottom();
-#endif
+//#endif
     }
     void validateShader(RenderTask* r) override {
         //TextureRenderOp::validateShader(renderer);
@@ -105,6 +105,9 @@ void Surface::setSize(const SIZE& size) {
     if (_supportsPartialRedraw) {
         _invalidRegion.rects.clear();
         _invalidRegion.addRect(RECT(0,0,size.width,size.height));
+    }
+    if (_texture) {
+        _texture->setSize({static_cast<int>(size.width), static_cast<int>(size.height)});
     }
 }
 
@@ -441,9 +444,9 @@ void Surface::renderPhase3(RenderTask* r, View* view, Surface* prevsurf) {
     //clips = false;
     if (clips) {
         RECT clip = view->getSurfaceRect();
-#if RENDERER_GL
-        clip.origin.y = surface->_size.height - clip.bottom(); /* flip Y */
-#endif
+//#if RENDERER_GL
+//        clip.origin.y = surface->_size.height - clip.bottom(); /* flip Y */
+//#endif
         clip.intersectWith({0,0,_size.width,_size.height});
         if (clip.size.width <= 0 || clip.size.height <= 0) {
             goto skipDraw;

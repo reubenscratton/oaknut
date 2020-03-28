@@ -84,11 +84,11 @@ struct SIZE {
 	float height;
     SIZE() {}
     SIZE(float w, float h) : width(w), height(h) {}
-    bool operator==(const SIZE& r) {
+    bool operator==(const SIZE& r) const {
         return width==r.width
             && height==r.height;
     }
-    bool operator!=(const SIZE& r) {
+    bool operator!=(const SIZE& r) const {
         return !(width==r.width
                  && height==r.height);
     }
@@ -363,6 +363,22 @@ public:
         this->tx = tx;
         this->ty = ty;
     }
+    void rotate(float theta) {
+        float ct = cos(theta);
+        float st = sin(theta);
+        float n00 = a *  ct + b * st;
+        float n01 = a * -st + b * ct;
+        float n10 = c *  ct + d * st;
+        float n11 = c * -st + d * ct;
+        a = n00;
+        b = n01;
+        c = n10;
+        d = n11;
+    }
+    void translate(float dx, float dy) {
+        tx += dx * a + dy * c;
+        ty += dx * b + dy * d;
+    }
     POINT applyToPoint(const POINT& point) const {
         POINT p;
         p.x = (float)((double)a * point.x + (double)c * point.y + tx);
@@ -372,6 +388,7 @@ public:
 
     static AFFINE_TRANSFORM makeScale(float sx, float sy);
     static AFFINE_TRANSFORM makeTranslate(float tx, float ty);
+    static AFFINE_TRANSFORM makeRotate(float rad);
 };
 
 

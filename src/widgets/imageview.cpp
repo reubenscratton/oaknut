@@ -164,12 +164,12 @@ void ImageView::updateIntrinsicSize(SIZE constrainingSize) {
         _intrinsicSize = {0,0};
         return;
     }
-    SIZE imageSize;
+    SIZEI imageSize;
     if (_renderOp->_bitmap) {
-        imageSize.width = (float)_renderOp->_bitmap->_width;
-        imageSize.height = (float)_renderOp->_bitmap->_height;
+        imageSize.width = _renderOp->_bitmap->_width;
+        imageSize.height = _renderOp->_bitmap->_height;
     } else {
-        imageSize = _renderOp->_texture->size();
+        imageSize = _renderOp->_texture->_size;
     }
     if (_contentMode == ActualSize) {
         _intrinsicSize.width = imageSize.width;

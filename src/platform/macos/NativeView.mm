@@ -1,5 +1,5 @@
 //
-// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
+// Copyright © 2014-2020 Sandcastle Software Ltd. All rights reserved.
 //
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
@@ -12,6 +12,83 @@
 static bool s_mouseIsDown;
 
 
+@implementation NativeLayer
+
+- (id)initWithWindow:(Window*)window {
+    if (self=[super init]) {
+        _window = window;
+        self.contentsScale = app->_defaultDisplay->_scale;
+        self.opaque = YES;
+        
+#if RENDERER_GL
+        // Create and set a CGL context immediately
+        CGLPixelFormatAttribute attributes[] = {
+            kCGLPFAAccelerated,
+            kCGLPFADoubleBuffer,
+            kCGLPFADepthSize, CGLPixelFormatAttribute(0),
+            kCGLPFAOpenGLProfile, CGLPixelFormatAttribute(kCGLOGLPVersion_Legacy),
+            CGLPixelFormatAttribute(0)
+        };
+        CGLPixelFormatObj pixelFormat = NULL;
+        GLint numPixelFormats = 0;
+        CGLChoosePixelFormat(attributes, &pixelFormat, &numPixelFormats);
+        assert(pixelFormat);
+        CGLContextObj ctx = NULL;
+        CGLCreateContext(pixelFormat, NULL, &ctx);
+        assert(ctx);
+        GLint swapInt = 1;
+        CGLSetParameter(ctx, kCGLCPSwapInterval, &swapInt);
+        CGLSetCurrentContext(ctx);
+#endif
+    }
+    return self;
+}
+
+#if RENDERER_GL
+/*- (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {
+    CGLPixelFormatAttribute attributes[] = {
+        kCGLPFADisplayMask, CGLPixelFormatAttribute(mask),
+        kCGLPFAAccelerated,
+        kCGLPFADoubleBuffer,
+        kCGLPFADepthSize, CGLPixelFormatAttribute(0),
+        kCGLPFAOpenGLProfile, CGLPixelFormatAttribute(kCGLOGLPVersion_Legacy),
+        CGLPixelFormatAttribute(0)
+    };
+    CGLPixelFormatObj pixelFormatObj = NULL;
+    GLint numPixelFormats = 0;
+    CGLChoosePixelFormat(attributes, &pixelFormatObj, &numPixelFormats);
+    assert(pixelFormatObj);
+    return pixelFormatObj;
+}*/
+
+- (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pf {
+    //CGLContextObj ctx = [super copyCGLContextForPixelFormat:pf];
+    return  CGLGetCurrentContext();
+}
+
+- (BOOL)isAsynchronous {
+    return YES;
+}
+
+- (BOOL)canDrawInCGLContext:(CGLContextObj)ctx
+                pixelFormat:(CGLPixelFormatObj)pf
+               forLayerTime:(CFTimeInterval)t
+                displayTime:(const CVTimeStamp *)ts {
+    return _window->_redrawNeeded;
+}
+
+- (void)drawInCGLContext:(CGLContextObj)ctx
+ pixelFormat:(CGLPixelFormatObj)pf
+forLayerTime:(CFTimeInterval)t
+             displayTime:(const CVTimeStamp *)ts {
+    _window->draw();
+    [super drawInCGLContext:ctx pixelFormat:pf forLayerTime:t displayTime:ts];
+}
+#endif
+
+@end
+
+
 
 @implementation NativeView
 
@@ -22,7 +99,8 @@ static bool s_mouseIsDown;
                                                 selector:@selector(windowWillClose:)
                                                     name:NSWindowWillCloseNotification
                                                         object:[self window]];
-
+        
+        [self setWantsBestResolutionOpenGLSurface:YES];
     }
     return self;
 }
@@ -110,27 +188,15 @@ static bool s_mouseIsDown;
 - (void)windowWillClose:(NSNotification*)notification {
 }
 
-#if RENDERER_METAL
-
-
-
 - (void)awake {
     
     self.allowedTouchTypes = NSTouchTypeIndirect;
-    
+
     // This tells AppKit to not interfere with or otherwise try to manage our layer. It won't waste time
     // clearing, or scaling, etc.
     [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawNever];
     self.wantsLayer = YES;
     
-}
-
-
-- (CALayer*)makeBackingLayer {
-    if (!_metalLayer) {
-        _metalLayer = [CAMetalLayer layer];
-    }
-    return _metalLayer;
 }
 
 - (void)setFrameSize:(NSSize)newSize {
@@ -140,75 +206,23 @@ static bool s_mouseIsDown;
     NSRect viewRectPixels = [self convertRectToBacking:viewRectPoints];
     
     self.layer.bounds = self.bounds;
-    _metalLayer.bounds = self.bounds;
-    _metalLayer.drawableSize = viewRectPixels.size;
-
+    _nativeLayer.bounds = self.bounds;
+#if RENDERER_METAL
+    _nativeLayer.drawableSize = viewRectPixels.size;
+#endif
     _oaknutWindow->resizeSurface(viewRectPixels.size.width, viewRectPixels.size.height);
     _oaknutWindow->setNeedsFullRedraw();
 }
 
-- (void)_windowWillClose:(NSNotification*)notification {
-}
-#endif
 
-
-#if RENDERER_GL
-- (void)awake {
-    
-    self.acceptsTouchEvents = YES;
-    
-    [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawNever];
-
-    NSOpenGLPixelFormatAttribute attrs[] = {
-        NSOpenGLPFADoubleBuffer,
-        NSOpenGLPFADepthSize, 0,
-        NSOpenGLPFAOpenGLProfile,  NSOpenGLProfileVersionLegacy,//NSOpenGLProfileVersion3_2Core,
-        0
-    };
-
-    NSOpenGLPixelFormat *pf = [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs];
-    if (!pf) {
-        NSLog(@"No OpenGL pixel format");
+- (CALayer*)makeBackingLayer {
+    if (!_nativeLayer) {
+        _nativeLayer = [[NativeLayer alloc] initWithWindow:_oaknutWindow];
     }
-    
-    NSOpenGLContext* context = [[NSOpenGLContext alloc] initWithFormat:pf shareContext:nil];
-
-#if ESSENTIAL_GL_PRACTICES_SUPPORT_GL3 && defined(DEBUG)
-    CGLEnable([context CGLContextObj], kCGLCECrashOnRemovedFunctions);
-#endif
-    
-    [self setPixelFormat:pf];
-    [self setOpenGLContext:context];
-    [self setWantsBestResolutionOpenGLSurface:YES];
-    
-    [context makeCurrentContext];
-
+    return _nativeLayer;
 }
 
-
-- (void) prepareOpenGL {
-    [super prepareOpenGL];
-    [[self openGLContext] makeCurrentContext];
-    GLint swapInt = 1;
-    [[self openGLContext] setValues:&swapInt forParameter:NSOpenGLCPSwapInterval];
-
-    [self setNeedsDisplay:YES];
-}
-
-
-
-- (void)reshape {
-    [super reshape];
-    CGLLockContext([[self openGLContext] CGLContextObj]);
-
-    NSRect viewRectPoints = [self bounds];
-    NSRect viewRectPixels = [self convertRectToBacking:viewRectPoints];
-    
-    CGFloat scale = viewRectPixels.size.width / viewRectPoints.size.width;
-    
-    _oaknutWindow->resizeSurface(viewRectPixels.size.width, viewRectPixels.size.height);
-
-    CGLUnlockContext([[self openGLContext] CGLContextObj]);
+- (void)_windowWillClose:(NSNotification*)notification {
 }
 
 
@@ -217,15 +231,6 @@ static bool s_mouseIsDown;
     [super renewGState];
 }
 
-- (void)drawRect:(NSRect)dirtyRect {
-    NSOpenGLContext* context = [self openGLContext];
-    [context makeCurrentContext];
-    CGLLockContext([context CGLContextObj]);
-    _oaknutWindow->draw();
-    CGLFlushDrawable([context CGLContextObj]);
-    CGLUnlockContext([context CGLContextObj]);
-}
-#endif
 
 
 @end

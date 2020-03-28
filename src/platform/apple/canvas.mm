@@ -51,8 +51,8 @@ public:
     CGColorRef _fillColor;
     CGColorRef _strokeColor;
     CGFloat _strokeWidth;
-    const AFFINE_TRANSFORM* _transform;
-
+    AFFINE_TRANSFORM _transform;
+    bool _transformSet;
 
     Bitmap* getBitmap() {
         return _bitmap;
@@ -85,11 +85,28 @@ public:
         _strokeWidth = strokeWidth;
         CGContextSetLineWidth(_bitmap->_context, strokeWidth);
     }
-    void setAffineTransform(AFFINE_TRANSFORM* t) {
+    void setTransform(const AFFINE_TRANSFORM& t) {
         _transform = t;
+        _transformSet = true;
+    }
+    void clearTransform() {
+        _transformSet = false;
     }
 
     void drawRect(RECT rect) {
+        //CGAffineTransform oldtransform;
+        if (_transformSet) {
+            //oldtransform = CGContextGetCTM(_bitmap->_context);
+            CGContextSaveGState(_bitmap->_context);
+            CGAffineTransform cgtransform;
+            cgtransform.a = _transform.a;
+            cgtransform.b = _transform.b;
+            cgtransform.c = _transform.c;
+            cgtransform.d = _transform.d;
+            cgtransform.tx = _transform.tx;
+            cgtransform.ty = _transform.ty;
+            CGContextConcatCTM(_bitmap->_context, cgtransform);
+        }
         CGRect cgrect = CGRectMake(rect.origin.x,rect.origin.y,rect.size.width,rect.size.height);
         if (_fillColor) {
             CGContextFillRect(_bitmap->_context, cgrect);
@@ -98,6 +115,9 @@ public:
             CGContextStrokeRect(_bitmap->_context, cgrect);
         }
         _bitmap->texInvalidate();
+        if (_transformSet) {
+            CGContextRestoreGState(_bitmap->_context);
+        }
     }
 
     void drawOval(RECT rect) {
@@ -118,14 +138,14 @@ public:
     void drawPath(Path* path) {
         ApplePath* applePath = (ApplePath*)path;
         CGPathRef cgpath = applePath->_path;
-        if (_transform) {
+        if (_transformSet) {
             CGAffineTransform cgtransform;
-            cgtransform.a = _transform->a;
-            cgtransform.b = _transform->b;
-            cgtransform.c = _transform->c;
-            cgtransform.d = _transform->d;
-            cgtransform.tx = _transform->tx;
-            cgtransform.ty = _transform->ty;
+            cgtransform.a = _transform.a;
+            cgtransform.b = _transform.b;
+            cgtransform.c = _transform.c;
+            cgtransform.d = _transform.d;
+            cgtransform.tx = _transform.tx;
+            cgtransform.ty = _transform.ty;
             cgpath = CGPathCreateCopyByTransformingPath(cgpath, &cgtransform);
         }
         CGContextBeginPath(_bitmap->_context);
@@ -138,7 +158,7 @@ public:
             CGContextStrokePath(_bitmap->_context);
         }
         _bitmap->texInvalidate();
-        if (_transform) {
+        if (_transformSet) {
             CGPathRelease(cgpath);
         }
     }

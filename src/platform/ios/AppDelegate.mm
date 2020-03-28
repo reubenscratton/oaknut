@@ -83,7 +83,7 @@ public:
                                  osInsets.top * app->_defaultDisplay->_scale,
                                  osInsets.right * app->_defaultDisplay->_scale,
                                  osInsets.bottom * app->_defaultDisplay->_scale));
-        _renderer->bindToNativeWindow((long)(__bridge void*)_nativeView);
+        _surface->bindToNativeWindow((long)(__bridge void*)_nativeView);
 #if USE_DISPLAY_LINK
         _displayLinkHelper = [[DisplayLinkHelper alloc] initWithWindow:this];
 #endif

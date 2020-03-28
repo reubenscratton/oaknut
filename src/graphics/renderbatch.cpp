@@ -139,9 +139,9 @@ void RenderBatch::render(RenderTask* r, Surface* surface, RenderOp* firstOp, int
         }
     nextInvalidRect:
         rect = *invalidRectIt;
-#if RENDERER_GL
-        rect.origin.y = surface->_size.height - rect.bottom(); /* flip Y */
-#endif
+//#if RENDERER_GL
+//        rect.origin.y = surface->_size.height - rect.bottom(); /* flip Y */
+//#endif
         r->pushClip(rect);
     }
 

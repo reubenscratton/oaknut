@@ -11,56 +11,55 @@ class GLTexture : public Texture {
 public:
     GLuint _texTarget;       // default GL_TEXTURE_2D
     GLuint _textureId;
-    bool _paramsValid = false;
-    
+    bool _allocd;
+    bool _samplingConfigValid;
+    bool _usesSharedMem; // i.e. GPU reads directly from memory, no need to glTexture2D() every time pixels change.
     
     GLTexture(Renderer* renderer, int format);
-    virtual void updateParams();
-    virtual void upload();
 
-    void resize(int width, int height) override;
+    bool readPixels(RECT rect, bytearray& target) const override;
+
+};
+
+class GLSurface : public Surface {
+public:
+    GLuint _fb;
+    bool _doneInit;
+    bool _fbAttachmentsValid;
+
+    GLSurface(Renderer* renderer, bool isPrivate);
+    ~GLSurface();
     
-protected:
-    void realloc(int width, int height, void* pixelData, bool sizeChanged);
+    void setSize(const SIZE& size) override;
+
 };
 
 
 class GLRenderer : public Renderer {
 public:
+    GLRenderer();
 
     // Overrides
-    Surface* getPrimarySurface() override;
-    Surface* createPrivateSurface() override;
-    void setCurrentSurface(Surface* surface) override;
-    void* createShaderState(Shader* shader) override;
-    void deleteShaderState(void* state) override;
-    void setCurrentTexture(Texture* texture) override;
-    void setCurrentBlendMode(int blendMode) override;
     Texture* createTexture(int format) override;
     void releaseTexture(Texture* texture) override;
-    void prepareToDraw() override;
-    void pushClip(RECT clip) override;
-    void popClip() override;
-    void flushQuadBuffer() override;
-    void uploadQuad(ItemPool::Alloc* alloc) override;
-    void draw(PrimitiveType type, int count, int index) override;
-    void copyFromCurrent(const RECT& rect, Texture* destTex, const POINT& destOrigin) override;
-    void generateMipmaps(Texture* tex) override;
-    
-    void setColorUniform(int16_t uniformIndex, const float* rgba) override;
-    void setUniformData(int16_t uniformIndex, const void* data, int32_t cb) override;
+    RenderTask* createRenderTask() override;
+    void* createShaderState(Shader* shader) override;
     
     int getIntProperty(IntProperty property) override;
+    void deleteShaderState(void* state) override;
+    void flushQuadBuffer() override;
+    void uploadQuad(ItemPool::Alloc* alloc) override;
     
-    GLuint _unpackAlignment;
+    void bindVertexBuffer();
+    
 protected:
-    GLRenderer(Window* window);
 
-    GLfloat _backgroundColor[4]; // TODO: this belongs on GLSurface...
     GLuint _indexBufferId;
     GLuint _vertexBufferId;
     GLuint _vao;
     GLshort* _indexes;
+  
+    void initVertexBuffers();
 };
 
 #endif

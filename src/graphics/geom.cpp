@@ -54,4 +54,9 @@ AFFINE_TRANSFORM AFFINE_TRANSFORM::makeScale(float sx, float sy) {
 AFFINE_TRANSFORM AFFINE_TRANSFORM::makeTranslate(float tx, float ty) {
     return AFFINE_TRANSFORM(1,0,0,1,tx,ty);
 }
+AFFINE_TRANSFORM AFFINE_TRANSFORM::makeRotate(float rad) {
+    float s = sin(rad);
+    float c = cos(rad);
+    return AFFINE_TRANSFORM(c,-s,s,c,0,0);
+}
 

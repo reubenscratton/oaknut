@@ -14,22 +14,25 @@
 #define GLGetCurrentContext() CGLGetCurrentContext()
 #define CVOpenGLESTextureRef CVOpenGLTextureRef
 #define CVOpenGLESTextureCacheRef CVOpenGLTextureCacheRef
-#define CVOpenGLESTextureGetTarget CVOpenGLTextureGetTarget
 #define CVOpenGLESTextureGetName CVOpenGLTextureGetName
 #define CVOpenGLESTextureCacheFlush CVOpenGLTextureCacheFlush
 #define CVOpenGLESTextureCacheCreate CVOpenGLTextureCacheCreate
 #endif
 
 
-class CoreVideoTexture : public GLTexture {
+class GLTextureCoreVideo : public GLTexture {
 public:
 
     CVOpenGLESTextureRef _cvTexture;
     CVOpenGLESTextureCacheRef _cvTextureCache;
     
-    CoreVideoTexture(BitmapApple* bitmap, GLRenderer* renderer, CVOpenGLESTextureCacheRef cvTextureCache) : GLTexture(renderer, bitmap->_format) {
+    GLTextureCoreVideo(BitmapApple* bitmap, GLRenderer* renderer, CVOpenGLESTextureCacheRef cvTextureCache) : GLTexture(renderer, bitmap->_format) {
         _cvTextureCache = cvTextureCache;
-
+        _size.width = bitmap->_width;
+        _size.height = bitmap->_height;
+        _usesSharedMem = true;
+        _isNativeTextureValid = true;
+        
 #if TARGET_OS_IOS
         CVReturn err = CVOpenGLESTextureCacheCreateTextureFromImage(kCFAllocatorDefault, _cvTextureCache, bitmap->_cvImageBuffer, NULL, GL_TEXTURE_2D, GL_RGBA , bitmap->_width, bitmap->_height, GL_BGRA, GL_UNSIGNED_BYTE, 0, &_cvTexture);
         assert(err==0);
@@ -40,13 +43,13 @@ public:
                                                                   bitmap->_cvImageBuffer, NULL, &_cvTexture);
         assert(err==0);
         _textureId = CVOpenGLTextureGetName(_cvTexture);
-        _texTarget = CVOpenGLESTextureGetTarget(_cvTexture); // GL_TEXTURE_RECTANGLE
+        _texTarget = CVOpenGLTextureGetTarget(_cvTexture); // GL_TEXTURE_RECTANGLE
         _type = Rect;
         _denormalizedCoords = true;
 #endif
 
     }
-    ~CoreVideoTexture() {
+    ~GLTextureCoreVideo() {
         if (_cvTexture) {
             _textureId = 0;
             auto t = _cvTexture;
@@ -57,81 +60,49 @@ public:
             CVOpenGLESTextureCacheFlush(tc, 0);
         }
     }
-    /*
-    void bind() override {
-        
-        if (!_textureId) {
-            CVReturn err;
-            if (!_cvTextureCache) {
-                _cvTextureCache = getTextureCache(false);
-            }
-#if TARGET_OS_IOS
-            err = CVOpenGLESTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
-                                                               _cvTextureCache, _cvImageBuffer, NULL, GL_TEXTURE_2D,
-                                                               (_format==4) ? GL_ALPHA : GL_RGBA,
-                                                               _width, _height, (_format==4) ? GL_ALPHA :
-#if TARGET_OS_SIMULATOR
-                                                               GL_RGBA
-#else
-                                                               GL_BGRA
-#endif
-                                                               , GL_UNSIGNED_BYTE, 0, &_cvTexture);
-#else
-            err = CVOpenGLTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
-                                                             _cvTextureCache,
-                                                             _cvImageBuffer,
-                                                             NULL,
-                                                             &_cvTexture);
-#endif
-            assert(_cvTexture && err == kCVReturnSuccess);
-            _texTarget = CVOpenGLESTextureGetTarget(_cvTexture);
-            _textureId = CVOpenGLESTextureGetName(_cvTexture);
-        }
-        
-        GLTexture::bind();
-    }*/
     
-    void upload() override {
-        if (!_cvTexture) { // CoreVideo textures are direct access, no upload needed
-            GLTexture::upload();
-        }
-    }
-
-    /*void unload() override {
-        GLTexture::unload();
-        if (_cvTexture) {
-#if TARGET_OS_OSX
-            CVOpenGLTextureRelease(_cvTexture);
-#else
-            CFRelease(_cvTexture);
-#endif
-            CVOpenGLESTextureCacheFlush(_cvTextureCache, 0);
-            _cvTexture = NULL;
-            _cvTextureCache = NULL;
-        }
-    }*/
-    
-
-
 };
 
 
+class GLSurfaceApple : public GLSurface {
+public:
+    
+    GLSurfaceApple(Renderer* r, bool isPrivate) : GLSurface(r, isPrivate) {
+    }
+    //NativeView* nativeView = (__bridge NativeView*)(void*)nativeWindowHandle;
+    // todo: move Apple-specific EAGL setup code here
 
-class RendererApple : public GLRenderer {
+    void bindToNativeWindow(long nativeWindowHandle) override {
+        //assert(0); // todo: move the gl setup here
+        /*
+        NativeView* nativeView = (__bridge NativeView*)(void*)nativeWindowHandle;
+        _metalLayer = (CAMetalLayer*)nativeView.layer;
+        _metalLayer.opaque = YES;
+        _metalLayer.device = s_device;
+        _metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+        _metalLayer.framebufferOnly = false;
+        _metalLayer.contentsScale = app->_defaultDisplay->_scale;// [NSScreen mainScreen].backingScaleFactor;
+        _metalLayer.drawsAsynchronously = YES;
+#if PLATFORM_MACOS
+        _metalLayer.displaySyncEnabled = 1;
+        nativeView.wantsLayer = YES;
+#endif
+         */
+    }
+};
+
+
+class GLRendererApple : public GLRenderer {
 public:
     CVOpenGLESTextureCacheRef _cvTextureCache;
 
-
-    RendererApple(Window* window) : GLRenderer(window) {
+    Surface* createSurface(bool isPrivate) override {
+        return new GLSurfaceApple(this, isPrivate);
     }
 
-    void bindToNativeWindow(long nativeWindowHandle) override {
-        //NativeView* nativeView = (__bridge NativeView*)(void*)nativeWindowHandle;
-        // todo: move Apple-specific EAGL setup code here
-    }
-    void commit() override {
+//    void commit() override {
         // todo: move Apple-specific swapBuffer stuff here
-    }
+//    }
     
     void createTextureForBitmap(Bitmap* abitmap) override {
         BitmapApple* bitmap = (BitmapApple*)abitmap;
@@ -146,7 +117,7 @@ public:
                 assert(err==0);
                 CFRetain(_cvTextureCache);
             }
-            bitmap->_texture = new CoreVideoTexture(bitmap, this, _cvTextureCache);
+            bitmap->_texture = new GLTextureCoreVideo(bitmap, this, _cvTextureCache);
         } else {
             Renderer::createTextureForBitmap(abitmap);
         }
@@ -155,8 +126,8 @@ public:
 
 };
 
-Renderer* Renderer::create(Window* window) {
-    return new RendererApple(window);
+Renderer* Renderer::create() {
+    return new GLRendererApple();
 }
 
 

@@ -174,13 +174,13 @@ void BlurRenderOp::asQuads(QUAD *quad) {
     rectToSurfaceQuad(_rect, quad);
     quad->tl.s = quad->bl.s = 0;
     quad->tr.s = quad->br.s = _rect.size.width / _fullSizePow2.width;
-#if RENDERER_GL
-    quad->tl.t = quad->tr.t =  _rect.size.height / _fullSizePow2.height;
-    quad->bl.t = quad->br.t = 0;
-#else
+//#if RENDERER_GL
+//    quad->tl.t = quad->tr.t =  _rect.size.height / _fullSizePow2.height;
+//    quad->bl.t = quad->br.t = 0;
+//#else
     quad->tl.t = quad->tr.t = 0 ;
     quad->bl.t = quad->br.t = _rect.size.height / _fullSizePow2.height; // 0;
-#endif
+//#endif
 }
 
 
@@ -212,7 +212,7 @@ void BlurRenderOp::prepareToRender(RenderTask* r, Surface* surface) {
     if (_dirty) {
         _dirty = false;
 
-        _tex1->resize(_fullSizePow2.width, _fullSizePow2.height);
+        _tex1->setSize({_fullSizePow2.width, _fullSizePow2.height});
         _surface1->setSize({static_cast<float>(_downsampledSize.width), static_cast<float>(_downsampledSize.height)});
         _surface2->setSize({static_cast<float>(_downsampledSize.width), static_cast<float>(_downsampledSize.height)});
         

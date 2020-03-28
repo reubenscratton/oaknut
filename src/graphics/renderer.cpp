@@ -204,6 +204,22 @@ Shader* Renderer::getStandardShader(Shader::Features features) {
     return shader;    
 }
 
+void RenderTask::setCurrentSurface(Surface* surface) {
+    if (surface == _currentSurface) {
+        return;
+    }
+    _currentSurface = surface;
+    _currentSurfaceValid = false;
+}
+void RenderTask::setCurrentTexture(Texture* texture) {
+    if (texture == _currentTexture) {
+        return;
+    }
+    _currentTexture = texture;
+    _currentTextureValid = false;
+}
+
+
 void RenderTask::pushClip(const RECT& clip) {
     _currentClip = clip;
     if (_currentClip.size.width<0) _currentClip.size.width = 0;
@@ -228,7 +244,6 @@ void RenderTask::popClip() {
 }
 
 void Renderer::reset() {
-    _doneInit = false;
     //delete _quadBuffer; todo: fix this leak
     while (_textures.size() > 0) {
         releaseTexture((Texture*)*_textures.begin());
@@ -251,6 +266,16 @@ template<>
 void RenderTask::setUniform<MATRIX4>(int16_t uniformIndex, const MATRIX4& val) {
     setUniformData(uniformIndex, val.get(), 16*sizeof(float));
 }
+static inline uint16_t make_half(float f) {
+    uint32_t x = *((uint32_t*)&f);
+    int e = ((x&0x7f800000U) >> 23) -127; // undo 32-bit bias to get the real exponent
+    e = MIN(15, MAX(-15,e)) + 15; // clamp to 5-bit range and add the 16-bit bias
+    uint16_t h = ((x>>16)&0x8000U)
+               | (e<<10) // exponent is 5 bits, down from 8
+               | ((x>>13)&0x03ffU); // significand is 10 bits, truncated from 23
+    return h;
+}
+
 template<>
 void RenderTask::setUniform<COLOR>(int16_t uniformIndex, const COLOR& val) {
     auto& uniform = _currentShader->_uniforms[uniformIndex];
@@ -258,12 +283,22 @@ void RenderTask::setUniform<COLOR>(int16_t uniformIndex, const COLOR& val) {
         return;
     }
     uniform.cachedColorVal = val;
+#if RENDERER_METAL
+    uint16_t halfs[4];
+    halfs[0] = make_half((val&0xff)/255.0f);
+    halfs[1] = make_half(((val&0xff00)>>8)/255.0f);
+    halfs[2] = make_half(((val&0xff0000)>>16)/255.0f);
+    halfs[3] = make_half(((val&0xff000000)>>24)/255.0f);
+    setUniformData(uniformIndex, halfs, sizeof(halfs));
+#else
     float c[4];
-    c[3] = ((val&0xff000000)>>24)/255.0f;
-    c[2] = ((val&0xff0000)>>16)/255.0f;
-    c[1] = ((val&0xff00)>>8)/255.0f;
     c[0] = (val&0xff)/255.0f;
-    setColorUniform(uniformIndex, c);
+    c[1] = ((val&0xff00)>>8)/255.0f;
+    c[2] = ((val&0xff0000)>>16)/255.0f;
+    c[3] = ((val&0xff000000)>>24)/255.0f;
+    setUniformData(uniformIndex, c, sizeof(c));
+#endif
+    
 }
 template<>
 void RenderTask::setUniform<SIZE>(int16_t uniformIndex, const SIZE& val) {
@@ -305,7 +340,7 @@ void Renderer::createTextureForBitmap(Bitmap* bitmap) {
     bitmap->_texture->_bitmap = bitmap;
     bitmap->_texture->_minFilterLinear = !bitmap->_sampleNearest;
     bitmap->_texture->_magFilterLinear = !bitmap->_sampleNearest;
-    bitmap->_texture->resize(bitmap->_width, bitmap->_height);
+    bitmap->_texture->setSize({bitmap->_width, bitmap->_height});
     bitmap->_texture->_needsUpload = true;
 }
 

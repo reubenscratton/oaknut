@@ -83,10 +83,16 @@ public:
     }
     
     void requestRedrawNative() override {
+#if RENDERER_GL
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [_nativeView setNeedsDisplay:YES];
+        });
+#else
         dispatch_async(dispatch_get_main_queue(), ^{
             _redrawNeeded = NO;
             draw();
         });
+#endif
     }
     
     NativeView* _nativeView;

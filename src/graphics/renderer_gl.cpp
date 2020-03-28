@@ -9,7 +9,6 @@
 
 #if RENDERER_GL
 
-
 #ifndef GL_BGRA
 #define GL_BGRA 0x80E1
 #endif
@@ -27,13 +26,14 @@
 
 // NB: NEVER leave GL error checking in release builds! Each API will stall the CPU
 //     until the GPU catches up... very slow!
-#if 1
+#if 0
 #define check_gl(cmd, ...) cmd(__VA_ARGS__)
 #else
 static void checkGlErr(const char* file, int line, const char* cmd) {
     for (GLint error = glGetError(); error; error = glGetError()) {
         app->log("GL ERROR: %s(%d) %s() err=0x%x", file, line, cmd, error);
     }
+    // GL_INVALID_VALUE 0x501
 }
 #define check_gl(cmd, ...) cmd(__VA_ARGS__); checkGlErr(__FILE__, __LINE__, #cmd);
 #endif
@@ -51,9 +51,9 @@ static GLuint loadShader(GLenum shaderType, const char* pSource) {
 #if TARGET_OS_OSX || PLATFORM_LINUX
         // Surely to god there's a better way than this...!
         int x;
-        while ((x = (int)source.find("highp")) >= 0) source.erase(x, x+5);
-        while ((x = (int)source.find("lowp")) >= 0) source.erase(x, x+4);
-        while ((x = (int)source.find("mediump")) >= 0) source.erase(x, x+7);
+        while ((x = (int)source.find("highp")) < source.lengthInBytes()) source.erase(x, x+5);
+        while ((x = (int)source.find("lowp")) < source.lengthInBytes()) source.erase(x, x+4);
+        while ((x = (int)source.find("mediump")) < source.lengthInBytes()) source.erase(x, x+7);
 #endif
         
         pSource = source.c_str();
@@ -85,7 +85,9 @@ struct GLShaderState {
     GLuint _program;
     GLuint _vertexConfig;
     vector<GLuint> _uniformLocations;
+    vector<bool> _validity;
     bytearray _uniformData;
+    bool _uniformsValid;
 
 
     GLShaderState(Shader* shader) {
@@ -221,6 +223,7 @@ struct GLShaderState {
         }
         
         _uniformLocations.resize(shader->_uniforms.size());
+        _validity.resize(shader->_uniforms.size());
         int i=0;
         int32_t cb = 0;
         for (auto& uniform: shader->_uniforms) {
@@ -240,212 +243,464 @@ struct GLShaderState {
 };
 
 
-class GLSurface : public Surface {
-public:
-    GLuint _fb;
-    
-    GLSurface(Renderer* renderer, bool isPrivate) : Surface(renderer, isPrivate) {
-        if (isPrivate) {
-            check_gl(glGenFramebuffers, 1, &_fb);
-            assert(_fb > 0);
-        }
+GLSurface::GLSurface(Renderer* renderer, bool isPrivate) : Surface(renderer, isPrivate) {
+    _texture = new GLTexture(renderer, renderer->_primarySurfaceFormat);
+}
+GLSurface::~GLSurface() {
+    if (_isPrivate && _fb) {
+        check_gl(glDeleteFramebuffers, 1, &_fb);
+        _fb = 0;
     }
-    ~GLSurface() {
-        if (_isPrivate && _fb) {
-            check_gl(glDeleteFramebuffers, 1, &_fb);
-            _fb = 0;
-        }
-    }
-
-    void setSize(const SIZE& size) override {
+}
+void GLSurface::setSize(const SIZE& size) {
+    if (size != _size) {
         Surface::setSize(size);
-        if (!_isPrivate) {
-            return;
-        }
-        _texture->resize(size.width, size.height);
-
-        check_gl(glBindFramebuffer, GL_FRAMEBUFFER, _fb);
-        check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _texture.as<GLTexture>()->_textureId, 0);
-        check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
-        check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
-        //GLenum x = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        //assert(x==GL_FRAMEBUFFER_COMPLETE);
-
-        GLSurface* currentGlSurface = (GLSurface*)_renderer->_currentSurface;
-        if (currentGlSurface) {
-            check_gl(glBindFramebuffer, GL_FRAMEBUFFER, currentGlSurface->_fb);
-        }
+        _fbAttachmentsValid = false; // TODO: not sure this is necessary...
     }
-    
-
-    
-};
-
-
-Surface* GLRenderer::getPrimarySurface() {
-    return _primarySurface; 
 }
 
-Surface* GLRenderer::createPrivateSurface() {
-    GLSurface* surface = new GLSurface(this, true);
-    surface->_texture = new GLTexture(this, _primarySurfaceFormat);
-    return surface;
-
-}
-
-
+    
 
 GLTexture::GLTexture(Renderer* renderer, int format) : Texture(renderer, format) {
     _texTarget = GL_TEXTURE_2D;
-    check_gl(glGenTextures, 1, &_textureId);
 }
 
-void GLTexture::resize(int width, int height) {
-    realloc(width, height, NULL, true);
-}
-
-
-void GLTexture::realloc(int width, int height, void* pixelData, bool sizeChanged) {
+struct GLTextureFormat {
     int pixelType;
     GLenum format, internalFormat;
-    
-    assert(_format != PIXELFORMAT_UNKNOWN);
-    
-    int unpackAlignment = 4;
-    switch (_format) {
-        case PIXELFORMAT_RGBA32: {
-            pixelType = GL_UNSIGNED_BYTE;
-            format = GL_RGBA;
-            internalFormat = GL_RGBA;
-            break;
-        }
-        case PIXELFORMAT_BGRA32: {
-            pixelType = GL_UNSIGNED_BYTE;
-            format = GL_BGRA;
-            internalFormat = GL_RGBA;
-            break;
-        }
-        case PIXELFORMAT_RGB24: {
-            pixelType = GL_UNSIGNED_BYTE;
-            format = GL_RGB;
-            internalFormat = GL_RGB;
-            unpackAlignment = 1;
-            break;
-        }
-        case PIXELFORMAT_RGB565: {
-            pixelType = GL_UNSIGNED_SHORT_5_6_5;
-            format = GL_RGB;
-            internalFormat = GL_RGB;
-            unpackAlignment = 2;
-            break;
-        }
-        case PIXELFORMAT_A8: {
-            pixelType = GL_UNSIGNED_BYTE;
-#ifdef PLATFORM_LINUX   // TODO: 'red' vs 'alpha' is probably not a Linux thing, it's more likely to be GL vs GL ES
-            format = GL_RED;
-            internalFormat = GL_RED;
+};
+
+
+static GLTextureFormat textureFormatFromPixelFormat(int pixelFormat) {
+    switch (pixelFormat) {
+        case PIXELFORMAT_RGBA32:
+            return {
+                .pixelType= GL_UNSIGNED_BYTE,
+                .format= GL_RGBA,
+                .internalFormat= GL_RGBA
+            };
+
+        case PIXELFORMAT_BGRA32:
+            return {
+                .pixelType= GL_UNSIGNED_BYTE,
+                .format= GL_BGRA,
+                .internalFormat= GL_RGBA
+            };
+
+        case PIXELFORMAT_RGB24:
+            return {
+                .pixelType = GL_UNSIGNED_BYTE,
+                .format = GL_RGB,
+                .internalFormat = GL_RGB
+            };
+            
+        case PIXELFORMAT_RGB565:
+            return {
+                .pixelType = GL_UNSIGNED_SHORT_5_6_5,
+                .format = GL_RGB,
+                .internalFormat = GL_RGB
+            };
+            
+        case PIXELFORMAT_A8:
+            return {
+                .pixelType = GL_UNSIGNED_BYTE,
+#if PLATFORM_LINUX   // TODO: 'red' vs 'alpha' is probably not a Linux thing, it's more likely to be GL vs GL ES
+                .format = GL_RED,
+                .internalFormat = GL_RED
 #else
-            format = GL_ALPHA;
-            internalFormat = GL_ALPHA;
+                .format = GL_ALPHA,
+                .internalFormat = GL_ALPHA
 #endif
-            if (width&3) {
-                unpackAlignment = (width&1)?1:2;
-            }
-            break;
-        }
-        default: assert(0);
+            };
     }
 
-    check_gl(glBindTexture, _texTarget, _textureId);
-    if (!_paramsValid) {
-        updateParams();
-    }
-
-// WebGL has some special APIs for converting certain JS objects into textures
-#if PLATFORM_WEB
-    if (_bitmap) {
-        BitmapWeb* webBmp = (BitmapWeb*)_bitmap;
-        webBmp->glTexImage2D(width, height);
-        if (_renderer->_currentTexture && _renderer->_currentTexture != this) {
-            check_gl(glBindTexture, GL_TEXTURE_2D, ((GLTexture*)_renderer->_currentTexture)->_textureId);
-        }
-        return;
-    }
-    if (format == GL_BGRA) format = GL_RGBA; // WebGL doesn't accept BGRA
-#endif
-
-    if (unpackAlignment != ((GLRenderer*)_renderer)->_unpackAlignment) {
-        ((GLRenderer*)_renderer)->_unpackAlignment = unpackAlignment;
-        glPixelStorei(GL_UNPACK_ALIGNMENT, unpackAlignment);
-    }
-    if (sizeChanged || !pixelData) {
-        check_gl(glTexImage2D, _texTarget, 0, internalFormat, width, height, 0, format, pixelType, pixelData);
-    } else {
-        check_gl(glTexSubImage2D, _texTarget, 0, 0, 0, width, height, format, pixelType, pixelData);
-    }
-    if (_renderer->_currentTexture && _renderer->_currentTexture != this) {
-        check_gl(glBindTexture, GL_TEXTURE_2D, ((GLTexture*)_renderer->_currentTexture)->_textureId);
-    }
+    assert(0);
 }
 
-void GLTexture::updateParams() {
-    GLuint minFilter;
-    if (_maxMipMapLevel<=0) {
-        minFilter = _minFilterLinear ? GL_LINEAR : GL_NEAREST;
-    } else {
-        if (_minFilterLinear) {
-            minFilter = _mipFilterLinear ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR_MIPMAP_NEAREST;
-        } else {
-            minFilter = _mipFilterLinear ? GL_NEAREST_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_NEAREST;
-        }
+
+bool GLTexture::readPixels(RECT rect, bytearray& target) const {
+    
+    GLuint fb, old_fb;
+    check_gl(glGetIntegerv, GL_FRAMEBUFFER_BINDING, (GLint*)&old_fb);
+    check_gl(glGenFramebuffers, 1, &fb);
+    check_gl(glBindFramebuffer, GL_FRAMEBUFFER, fb);
+    check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, _texTarget, _textureId, 0);
+    int stride = rect.size.width * 4;
+    int cp = stride * rect.size.height;
+    if (target.size() < cp) {
+        target.resize(cp);
     }
-    GLuint maxFilter = _magFilterLinear ? GL_LINEAR : GL_NEAREST;
-    check_gl(glTexParameterf, _texTarget, GL_TEXTURE_MIN_FILTER, minFilter);
-    check_gl(glTexParameterf, _texTarget, GL_TEXTURE_MAG_FILTER, maxFilter);
-    check_gl(glTexParameteri, _texTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    check_gl(glTexParameteri, _texTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    if (_maxMipMapLevel > 0) {
-#if !PLATFORM_WEB // todo: should be if !WebGL 1.0.  This works in WebGL 2.
-        check_gl(glTexParameteri, _texTarget, GL_TEXTURE_MAX_LEVEL, _maxMipMapLevel);
-#endif
-    }
-    _paramsValid = true;
+    check_gl(glReadPixels, rect.origin.x, rect.origin.y,
+                 rect.size.width, rect.size.height, GL_RGBA, GL_UNSIGNED_BYTE, target.data());
+    check_gl(glBindFramebuffer, GL_FRAMEBUFFER, old_fb);
+    check_gl(glDeleteFramebuffers, 1, &fb);
+    return true;
 }
 
-void GLTexture::upload() {
-    PIXELDATA pixeldata;
-    _bitmap->lock(&pixeldata, false);
-    realloc(_bitmap->_width, _bitmap->_height, pixeldata.data, false);
-    _bitmap->unlock(&pixeldata, false);
-}
 
 
 
     
+class GLRenderTask : public RenderTask {
+public:
 
+    GLuint _unpackAlignment;
 
-void GLRenderer::setCurrentSurface(Surface* surface) {
-    GLSurface* glsurface = (GLSurface*)surface;
-    check_gl(glBindFramebuffer, GL_FRAMEBUFFER, glsurface->_fb);
-    check_gl(glViewport, 0, 0, surface->_size.width, surface->_size.height);
-}
-
-
-void GLRenderer::setCurrentTexture(Texture* texture) {
-    if (_currentTexture == texture) {
-        return;
+    GLRenderTask(Renderer* renderer) : RenderTask(renderer) {
     }
-    _currentTexture = texture;
-    GLTexture* gltex = (GLTexture*)texture;
-    check_gl(glBindTexture, gltex->_texTarget, gltex->_textureId);
-    if (!gltex->_paramsValid) {
-        gltex->updateParams();
+  
+    bool bindToNativeSurface(Surface* surface) override {
+        GLSurface* glsurf = (GLSurface*)surface;
+
+        check_gl(glGetIntegerv, GL_FRAMEBUFFER_BINDING, (GLint*)&glsurf->_fb);
+        
+
+        // GL context init
+        if (!glsurf->_doneInit) {
+            glsurf->_doneInit = 1;
+
+#if defined(GL_IMPLEMENTATION_COLOR_READ_FORMAT) && !PLATFORM_WEB // No web cos this is broken on Safari 12/13
+            GLint pixType, pixFmt;
+            check_gl(glGetIntegerv, GL_IMPLEMENTATION_COLOR_READ_TYPE, &pixType);
+            assert(GL_UNSIGNED_BYTE==pixType);
+            check_gl(glGetIntegerv, GL_IMPLEMENTATION_COLOR_READ_FORMAT, &pixFmt);
+            if (pixFmt == GL_RGB) {
+                _renderer->_primarySurfaceFormat = PIXELFORMAT_RGB24;
+            } else if (pixFmt == GL_RGBA) {
+                _renderer->_primarySurfaceFormat = PIXELFORMAT_RGBA32;
+            } else if (pixFmt == GL_BGRA) {
+                _renderer->_primarySurfaceFormat = PIXELFORMAT_BGRA32;
+            } else {
+                assert(0); //???
+            }
+#endif
+            check_gl(glDepthMask, GL_TRUE);
+            check_gl(glClear, GL_DEPTH_BUFFER_BIT);
+            check_gl(glDepthMask, GL_FALSE);
+            check_gl(glDisable, GL_DEPTH_TEST);
+
+        }
+
+        check_gl(glActiveTexture, GL_TEXTURE0);
+        check_gl(glDisable, GL_SCISSOR_TEST);
+
+        GLRenderer* r = (GLRenderer*)_renderer;
+        r->bindVertexBuffer();
+
+        _currentVertexConfig = 123;
+        _currentShaderValid = false;
+        _currentSurfaceValid = false;
+        _blendParamsValid = false;
+        _currentClipValid = false;
+        _currentTextureValid = false;
+        return true;
     }
-    if (gltex->_needsUpload) {
-        gltex->_needsUpload = false;
-        gltex->upload();
+    
+ 
+    void setUniformData(int16_t uniformIndex, const void* data, int32_t cb) override {
+        GLShaderState* state = (GLShaderState*)_currentShader->_shaderState;
+        auto& uniform = _currentShader->_uniforms[uniformIndex];
+        auto currentData = (state->_uniformData.data() + uniform.offset);
+        if (0 == memcmp(currentData, data, cb)) {
+            return;
+        }
+        memcpy(currentData, data, cb);
+        state->_validity[uniformIndex] = false;
+        state->_uniformsValid = false;
     }
-}
+    
+
+    inline static GLint convertGLBlendFactor(BlendFactor blendFactor) {
+        switch (blendFactor) {
+            case BlendFactor::Zero: return GL_ZERO;
+            case BlendFactor::SourceColor: return GL_SRC_COLOR;
+            case BlendFactor::SourceAlpha: return GL_SRC_ALPHA;
+            case BlendFactor::DestinationColor: return GL_DST_COLOR;
+            case BlendFactor::DestinationAlpha: return GL_DST_ALPHA;
+            case BlendFactor::One: return GL_ONE;
+            case BlendFactor::OneMinusSourceColor: return GL_ONE_MINUS_SRC_COLOR;
+            case BlendFactor::OneMinusSourceAlpha: return GL_ONE_MINUS_SRC_ALPHA;
+            case BlendFactor::OneMinusDestinationColor: return GL_ONE_MINUS_DST_COLOR;
+            case BlendFactor::OneMinusDestinationAlpha: return GL_ONE_MINUS_DST_ALPHA;
+        }
+        assert(0);
+    }
+
+    void prepareTexture(Texture* tex, bool isRenderInput) {
+        GLTexture* gltex = (GLTexture*)tex;
+        
+        // Always need a texture ID!
+        if (!gltex->_textureId) {
+            check_gl(glGenTextures, 1, &gltex->_textureId);
+        }
+                
+        // Bind
+        if (!_currentTextureValid || (_currentTexture != tex)) {
+            check_gl(glBindTexture, gltex->_texTarget, gltex->_textureId);
+            _currentTexture = tex;
+            _currentTextureValid = true;
+        }
+        
+        // Configure texture sampling config
+        if (isRenderInput && !gltex->_samplingConfigValid) {
+            gltex->_samplingConfigValid = true;
+
+            GLuint minFilter;
+            if (gltex->_maxMipMapLevel<=0) {
+                minFilter = gltex->_minFilterLinear ? GL_LINEAR : GL_NEAREST;
+            } else {
+                if (gltex->_minFilterLinear) {
+                    minFilter = gltex->_mipFilterLinear ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR_MIPMAP_NEAREST;
+                } else {
+                    minFilter = gltex->_mipFilterLinear ? GL_NEAREST_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_NEAREST;
+                }
+            }
+            GLuint maxFilter = gltex->_magFilterLinear ? GL_LINEAR : GL_NEAREST;
+            check_gl(glTexParameterf, gltex->_texTarget, GL_TEXTURE_MIN_FILTER, minFilter);
+            check_gl(glTexParameterf, gltex->_texTarget, GL_TEXTURE_MAG_FILTER, maxFilter);
+            check_gl(glTexParameteri, gltex->_texTarget, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            check_gl(glTexParameteri, gltex->_texTarget, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            if (gltex->_maxMipMapLevel > 0) {
+        #if !PLATFORM_WEB // todo: should be if !WebGL 1.0.  This works in WebGL 2.
+                check_gl(glTexParameteri, gltex->_texTarget, GL_TEXTURE_MAX_LEVEL, gltex->_maxMipMapLevel);
+        #endif
+            }
+        }
+
+        // Allocate and/or upload texture data
+        if ((!gltex->_allocd || gltex->_needsUpload) && !gltex->_usesSharedMem) {
+        
+            GLTextureFormat texFormat = textureFormatFromPixelFormat(gltex->_format);
+            
+            // If there's no backing bitmap, just allocate texture RAM without a source to copy from
+            if (!gltex->_bitmap) {
+        #if PLATFORM_WEB
+                if (texFormat.format == GL_BGRA) texFormat.format = GL_RGBA; // WebGL doesn't accept BGRA
+        #endif
+                check_gl(glTexImage2D, gltex->_texTarget, 0, texFormat.internalFormat, gltex->_size.width, gltex->_size.height, 0, texFormat.format, texFormat.pixelType, nullptr);
+                gltex->_allocd = true;
+                return;
+            }
+
+            // If there is a backing bitmap (and the texture RAM either hasn't been allocated or needs updating...)
+            if (gltex->_bitmap) {
+
+                // WebGL has some special APIs for fast uploading certain JS objects
+        #if PLATFORM_WEB
+                BitmapWeb* webBmp = (BitmapWeb*)gltex->_bitmap;
+                webBmp->glTexImage2D(width, height); // TODO: move this function here where it belongs
+        #else
+                
+                // Before we glTexImage2D() we have to tell it how rows are aligned
+                int unpackAlignment;
+                switch (gltex->_format) {
+                    case PIXELFORMAT_RGB24: unpackAlignment = 1; break;
+                    case PIXELFORMAT_RGB565: unpackAlignment = 2; break;
+                    case PIXELFORMAT_A8: unpackAlignment = (gltex->_size.width&3) ? ((gltex->_size.width&1)?1:2) : 4; break;
+                    default: unpackAlignment = 4; break;
+                }
+                if (unpackAlignment != _unpackAlignment) {
+                    _unpackAlignment = unpackAlignment;
+                    check_gl(glPixelStorei, GL_UNPACK_ALIGNMENT, unpackAlignment);
+                }
+
+                // TODO: Move to background thread! IMPORTANT!
+                PIXELDATA pixeldata;
+                gltex->_bitmap->lock(&pixeldata, false);
+                if (!gltex->_allocd) {
+                    check_gl(glTexImage2D, gltex->_texTarget, 0, texFormat.internalFormat, gltex->_size.width, gltex->_size.height, 0, texFormat.format, texFormat.pixelType, pixeldata.data);
+                    gltex->_allocd = true;
+                } else {
+                    check_gl(glTexSubImage2D, gltex->_texTarget, 0, 0, 0, gltex->_size.width, gltex->_size.height, texFormat.format, texFormat.pixelType, pixeldata.data);
+                }
+                gltex->_bitmap->unlock(&pixeldata, false);
+                
+                gltex->_needsUpload = false;
+            
+        #endif
+
+            }
+        }
+    }
+
+    void bindCurrentSurface() {
+        if (!_currentSurfaceValid) {
+            _currentSurfaceValid = true;
+            
+            // Bind the surface framebuffer and set the viewport
+            GLSurface* glsurface = (GLSurface*)_currentSurface;
+            if (glsurface->_isPrivate && !glsurface->_fb) {
+                check_gl(glGenFramebuffers, 1, &glsurface->_fb);
+                assert(glsurface->_fb > 0);
+            }
+            check_gl(glBindFramebuffer, GL_FRAMEBUFFER, glsurface->_fb);
+            check_gl(glViewport, 0, 0, _currentSurface->_size.width, _currentSurface->_size.height);
+
+            // Check surface is capable of being a render target, i.e. has a framebuffer
+            if (glsurface->_isPrivate && !glsurface->_fbAttachmentsValid) {
+                GLTexture* gltex = glsurface->_texture.as<GLTexture>();
+                prepareTexture(gltex, false);
+                check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, gltex->_texTarget, gltex->_textureId, 0);
+                check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, gltex->_texTarget, 0, 0);
+                check_gl(glFramebufferTexture2D, GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, gltex->_texTarget, 0, 0);
+                GLenum x = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+                assert(x==GL_FRAMEBUFFER_COMPLETE);
+                glsurface->_fbAttachmentsValid = true;
+            }
+
+
+            // Clear
+            if (_currentSurface->_clearNeeded) {
+                float f[4] = {
+                    (_currentSurface->_clearColor & 0xFF) / 255.0f,
+                    ((_currentSurface->_clearColor & 0xFF00)>>8) / 255.0f,
+                    ((_currentSurface->_clearColor & 0xFF0000)>>16) / 255.0f,
+                    ((_currentSurface->_clearColor & 0xFF000000)>>24) / 255.0f
+                };
+                _currentSurface->_clearNeeded = false;
+                check_gl(glClearColor, f[0], f[1], f[2], f[3]);
+                check_gl(glClear, GL_COLOR_BUFFER_BIT);
+            }
+            _currentClipValid = false;
+        };
+
+    }
+    
+    void draw(PrimitiveType type, int count, int index) override {
+
+        // If the surface being drawn to is "invalid"
+        bindCurrentSurface();
+
+
+        GLShaderState* state = (GLShaderState*)_currentShader->_shaderState;
+        
+        // Update shader
+        if (!_currentShaderValid) {
+            _currentShaderValid = true;
+            GLShaderState* shaderState = (GLShaderState*)_currentShader->_shaderState;
+            check_gl(glUseProgram, shaderState->_program);
+            
+            // These are program-specific...
+            if (_currentVertexConfig != shaderState->_vertexConfig) {
+                _currentVertexConfig = shaderState->_vertexConfig;
+                check_gl(glVertexAttribPointer, VERTEXATTRIB_POSITION, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), 0);
+                check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), (void*)8);
+                //    check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_UNSIGNED_SHORT, GL_TRUE, sizeof(VERTEX), (void*)8);
+                check_gl(glVertexAttribPointer, VERTEXATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(VERTEX), (void*)16);
+                
+                check_gl(glEnableVertexAttribArray, VERTEXATTRIB_POSITION);
+                check_gl(glEnableVertexAttribArray, VERTEXATTRIB_TEXCOORD);
+                check_gl(glEnableVertexAttribArray, VERTEXATTRIB_COLOR);
+            }
+        }
+        
+        // Update blend
+        if (!_blendParamsValid) {
+            _blendParamsValid = true;
+
+            if (_blendParams.op == BlendOp::None) {
+                check_gl(glDisable, GL_BLEND);
+            } else {
+                GLenum srcRGB = convertGLBlendFactor(_blendParams.srcRGB);
+                GLenum srcAlpha = convertGLBlendFactor(_blendParams.srcA);
+                GLenum dstRGB = convertGLBlendFactor(_blendParams.dstRGB);
+                GLenum dstAlpha = convertGLBlendFactor(_blendParams.dstA);
+                check_gl(glBlendFuncSeparate, srcRGB, dstRGB, srcAlpha, dstAlpha);
+                check_gl(glBlendEquation,(_blendParams.op == BlendOp::Add) ? GL_FUNC_ADD : GL_FUNC_SUBTRACT);
+                check_gl(glEnable, GL_BLEND);
+            }
+            _currentTextureValid = false;
+        }
+        
+
+
+        // Ensure uniforms are up to date
+        if (!state->_uniformsValid) {
+            state->_uniformsValid = true;
+            for (int i=0 ; i<state->_uniformLocations.size() ; i++) {
+                if (!state->_validity[i]) {
+                    state->_validity[i] = true;
+                    auto& uniform = _currentShader->_uniforms[i];
+                    auto data = (state->_uniformData.data() + uniform.offset);
+                    GLuint loc = state->_uniformLocations[i];
+                    switch (uniform.type) {
+                        case Shader::VariableType::Color: check_gl(glUniform4fv, loc, 1, (GLfloat*)data); break;
+                        case Shader::VariableType::Int1: check_gl(glUniform1iv, loc, 1, (GLint*)data); break;
+                        case Shader::VariableType::Float1: check_gl(glUniform1fv, loc, 1, (GLfloat*)data); break;
+                        case Shader::VariableType::Float2: check_gl(glUniform2fv, loc, 1, (GLfloat*)data); break;
+                        case Shader::VariableType::Float4: check_gl(glUniform4fv, loc, 1, (GLfloat*)data); break;
+                        case Shader::VariableType::Matrix4: check_gl(glUniformMatrix4fv, loc, 1, false, (GLfloat*)data); break;
+                    }
+
+                }
+            }
+        }
+
+        // Validate source texture
+        if (_currentTexture) {
+            GLTexture* gltex = (GLTexture*)_currentTexture;
+            prepareTexture(gltex, true);
+        }
+        
+        // Clip
+        if (!_currentClipValid) {
+            _currentClipValid = true;
+            float x = _currentClip.left();
+            float y = _currentClip.top();
+            float width = _currentClip.size.width;
+            float height = _currentClip.size.height;
+            if (width<1 || height<1) {
+                check_gl(glDisable, GL_SCISSOR_TEST);
+            } else {
+                check_gl(glEnable, GL_SCISSOR_TEST);
+                check_gl(glScissor, x, _currentSurface->_size.height-(y+height), width, height);
+            }
+        }
+
+        
+        //   app->log("Drawing %d quads at once", numQuads);
+        if (type == Quad) {
+            check_gl(glDrawElements, GL_TRIANGLES, 6 * count, GL_UNSIGNED_SHORT, (void*)((index)*6*sizeof(GLshort)));
+        } else if (type == Line) {
+            //check_gl(glDrawElements, GL_LINES, 2 * count, GL_UNSIGNED_SHORT, (void*)((index)*4*sizeof(GLshort)));
+            check_gl(glDrawArrays, GL_LINES, index, 2 * count);
+        } else {
+            assert(false);
+        }
+
+    }
+
+    
+    void copyFromCurrent(const RECT& rect, Texture* destTex, const POINT& destOrigin) override {
+        bindCurrentSurface();
+        RECT wrect = rect;
+        //wrect.origin.y = 0;//rect.bottom();
+        wrect.origin.y += _currentSurface->_size.height - rect.size.height;
+        prepareTexture(destTex, true);
+        check_gl(glCopyTexSubImage2D, ((GLTexture*)destTex)->_texTarget, 0, destOrigin.x, destOrigin.y, wrect.origin.x, wrect.origin.y, wrect.size.width, wrect.size.height);
+    }
+
+    void generateMipmaps(Texture* tex) override {
+        GLTexture* gltex = (GLTexture*)tex;
+        check_gl(glGenerateMipmap, gltex->_texTarget);
+    }
+
+
+    void commit(std::function<void()> onComplete) override {
+        // TODO: implement proper command buffering etc
+        check_gl(glFinish);
+        if (onComplete) {
+            Task::postToMainThread(onComplete);
+        }
+    }
+    
+    
+
+
+};
+
+
+
 
 void* GLRenderer::createShaderState(Shader* shader) {
     return new GLShaderState(shader);
@@ -456,8 +711,7 @@ void GLRenderer::deleteShaderState(void* state) {
 
 
 
-GLRenderer::GLRenderer(Window* window) : Renderer(window) {
-    _primarySurface = new GLSurface(this, false);
+GLRenderer::GLRenderer() : Renderer() {
     _quadBuffer._resizeFunc = [=](int oldItemCount, int newItemCount) {
         
         // Realloc
@@ -496,7 +750,38 @@ GLRenderer::GLRenderer(Window* window) : Renderer(window) {
         _fullBufferUploadNeeded =true;
 
     };
-    _unpackAlignment = 4;
+    
+}
+
+void GLRenderer::initVertexBuffers() {
+    
+    // As long as we only have one quadbuffer we only need to bind the once so can do
+    // that on the first frame and thereafter never again
+#ifdef HAS_VAO
+    check_gl(glGenVertexArrays, 1, &_vao);
+    check_gl(glBindVertexArray, _vao);
+#endif
+    check_gl(glGenBuffers, 1, &_indexBufferId);
+    check_gl(glGenBuffers, 1, &_vertexBufferId);
+    check_gl(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, _indexBufferId);
+    check_gl(glBindBuffer, GL_ARRAY_BUFFER, _vertexBufferId);
+
+}
+
+void GLRenderer::bindVertexBuffer() {
+#ifndef HAS_VAO
+    check_gl(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, _indexBufferId);
+    check_gl(glBindBuffer, GL_ARRAY_BUFFER, _vertexBufferId);
+#else
+    check_gl(glBindVertexArray, _vao);
+#endif
+}
+
+RenderTask* GLRenderer::createRenderTask() {
+    if (!_indexBufferId) {
+        initVertexBuffers();
+    }
+    return new GLRenderTask(this);
 }
 
 Texture* GLRenderer::createTexture(int format) {
@@ -512,43 +797,7 @@ void GLRenderer::releaseTexture(Texture* texture) {
  }
 
 
-void GLRenderer::setCurrentBlendMode(int blendMode) {
-    if (blendMode != _blendMode) {
-        if (blendMode == BLENDMODE_NONE) {
-            check_gl(glDisable, GL_BLEND);
-        } else {
-            if (blendMode == BLENDMODE_NORMAL) {
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // normal alpha blend
-            } else {
-                glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
-            }
-            if (_blendMode == BLENDMODE_NONE) {
-                check_gl(glEnable, GL_BLEND);
-            }
-        }
-        _blendMode = blendMode;
-    }
-}
 
-void GLRenderer::pushClip(RECT clip) {
-    bool firstClip = _clips.size()==0;
-    if (!firstClip) {
-        clip.intersectWith(_clips.top());
-    } else {
-        check_gl(glEnable, GL_SCISSOR_TEST);
-    }
-    _clips.push(clip);
-    glScissor(clip.left(), clip.top(), clip.size.width, clip.size.height);
-}
-void GLRenderer::popClip() {
-    assert(_clips.size()>0);
-    RECT clip = _clips.top();
-    _clips.pop();
-    glScissor(clip.left(), clip.top(), clip.size.width, clip.size.height);
-    if (_clips.size() == 0) {
-        check_gl(glDisable, GL_SCISSOR_TEST);
-    }
-}
 
 void GLRenderer::uploadQuad(ItemPool::Alloc* alloc) {
     check_gl(glBufferSubData, GL_ARRAY_BUFFER, alloc->offset*sizeof(QUAD), alloc->count*sizeof(QUAD), alloc->addr());
@@ -577,150 +826,8 @@ void GLRenderer::flushQuadBuffer() {
 
 
 
-void GLRenderer::draw(PrimitiveType type, int count, int index) {
-    
-    if (!_currentShaderValid) {
-        _currentShaderValid = true;
-        GLShaderState* shaderState = (GLShaderState*)_currentShader->_shaderState;
-        check_gl(glUseProgram, shaderState->_program);
-        
-        // These are program-specific...
-        if (_currentVertexConfig != shaderState->_vertexConfig) {
-            _currentVertexConfig = shaderState->_vertexConfig;
-            check_gl(glVertexAttribPointer, VERTEXATTRIB_POSITION, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), 0);
-            check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_FLOAT, GL_FALSE, sizeof(VERTEX), (void*)8);
-            //    check_gl(glVertexAttribPointer, VERTEXATTRIB_TEXCOORD, 2, GL_UNSIGNED_SHORT, GL_TRUE, sizeof(VERTEX), (void*)8);
-            check_gl(glVertexAttribPointer, VERTEXATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(VERTEX), (void*)16);
-            
-            check_gl(glEnableVertexAttribArray, VERTEXATTRIB_POSITION);
-            check_gl(glEnableVertexAttribArray, VERTEXATTRIB_TEXCOORD);
-            check_gl(glEnableVertexAttribArray, VERTEXATTRIB_COLOR);
-        }
-    }
-
-    //   app->log("Drawing %d quads at once", numQuads);
-    if (type == Quad) {
-        check_gl(glDrawElements, GL_TRIANGLES, 6 * count, GL_UNSIGNED_SHORT, (void*)((index)*6*sizeof(GLshort)));
-    } else if (type == Line) {
-        check_gl(glDrawElements, GL_LINES, 4 * count, GL_UNSIGNED_SHORT, (void*)((index)*4*sizeof(GLshort)));
-    } else {
-        assert(false);
-    }
-}
-
-void GLRenderer::startFrame(COLOR clearColor) {
-    // GL context init
-    if (!_doneInit) {
-        _doneInit = 1;
-
-        glGetIntegerv(GL_FRAMEBUFFER_BINDING, (GLint*)&((GLSurface*)_primarySurface)->_fb);
-        
-#if defined(GL_IMPLEMENTATION_COLOR_READ_FORMAT) && !PLATFORM_WEB // No web cos this is broken on Safari 12/13
-        GLint pixType, pixFmt;
-        check_gl(glGetIntegerv, GL_IMPLEMENTATION_COLOR_READ_TYPE, &pixType);
-        assert(GL_UNSIGNED_BYTE==pixType);
-        check_gl(glGetIntegerv, GL_IMPLEMENTATION_COLOR_READ_FORMAT, &pixFmt);
-        if (pixFmt == GL_RGB) {
-            _primarySurfaceFormat = PIXELFORMAT_RGB24;
-        } else if (pixFmt == GL_RGBA) {
-            _primarySurfaceFormat = PIXELFORMAT_RGBA32;
-        } else if (pixFmt == GL_BGRA) {
-            _primarySurfaceFormat = PIXELFORMAT_BGRA32;
-        } else {
-            assert(0); //???
-        }
-#else
-        _primarySurfaceFormat = PIXELFORMAT_DEFAULT32;
-#endif
-        
-        check_gl(glDepthMask, GL_TRUE);
-        check_gl(glClear, GL_DEPTH_BUFFER_BIT);
-        check_gl(glDepthMask, GL_FALSE);
-        check_gl(glDisable, GL_DEPTH_TEST);
-        check_gl(glActiveTexture, GL_TEXTURE0);
-        _blendMode = BLENDMODE_NONE;
-        check_gl(glDisable, GL_BLEND);
-        //_enabledFlags.scissorTest = 0;
-        check_gl(glDisable, GL_SCISSOR_TEST);
-        
-        // As long as we only have one quadbuffer we only need to bind the once so can do
-        // that on the first frame and thereafter never again
-        if (_indexBufferId == 0) {
-#ifdef HAS_VAO
-            check_gl(glGenVertexArrays, 1, &_vao);
-            check_gl(glBindVertexArray, _vao);
-#endif
-            check_gl(glGenBuffers, 1, &_indexBufferId);
-            check_gl(glGenBuffers, 1, &_vertexBufferId);
-            check_gl(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, _indexBufferId);
-            check_gl(glBindBuffer, GL_ARRAY_BUFFER, _vertexBufferId);
-        }
-#ifndef HAS_VAO
-        check_gl(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, _indexBufferId);
-        check_gl(glBindBuffer, GL_ARRAY_BUFFER, _vertexBufferId);
-#else
-        check_gl(glBindVertexArray, _vao);
-#endif
-        _currentVertexConfig = 0;
-        
-        _backgroundColor[0] = (clearColor & 0xFF) / 255.0f;
-        _backgroundColor[1] = ((clearColor & 0xFF00)>>8) / 255.0f;
-        _backgroundColor[2] = ((clearColor & 0xFF0000)>>16) / 255.0f;
-        _backgroundColor[3] = ((clearColor & 0xFF000000)>>24) / 255.0f;
-        check_gl(glClearColor, _backgroundColor[0],_backgroundColor[1],_backgroundColor[2],_backgroundColor[3]);
-    }
-    if (_backgroundColor[3] > 0.f) {
-        check_gl(glClear, GL_COLOR_BUFFER_BIT);
-    }
-
-    _renderCounter++;
-    _currentSurface = NULL;
-    _currentTexture = NULL;
-    _currentShader = NULL;
-}
 
 
-
-
-//void GLRenderer::convertTexture(GLTexture* texture, int width, int height) {
-    /*
-    // Set up the texture for framebuffer read
-    GLuint fbr = 0;
-    check_gl(glGenFramebuffers, 1, &fbr);
-    check_gl(glBindFramebuffer, GL_READ_FRAMEBUFFER, fbr);
-    check_gl(glFramebufferTexture2D, GL_READ_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,texture->_texTarget,texture->_textureId,0);
-#if !PLATFORM_ANDROID
-    check_gl(glReadBuffer, GL_COLOR_ATTACHMENT0);
-#endif
-
-    // Create a new GL_TEXTURE_2D texture for framebuffer write
-    GLuint fb = 0;
-    check_gl(glGenFramebuffers, 1, &fb);
-    check_gl(glBindFramebuffer, GL_DRAW_FRAMEBUFFER, fb);
-    GLuint texId2 = 0;
-    check_gl(glGenTextures, 1, &texId2);
-    check_gl(glBindTexture, GL_TEXTURE_2D, texId2);
-    
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
-    check_gl(glTexImage2D, GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    check_gl(glFramebufferTexture2D, GL_DRAW_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,texId2,0);
-    
-    // Copy
-    check_gl(glCopyTexSubImage2D, GL_TEXTURE_2D,0,0,0,0,0,width,height);
-    texture->_texTarget = GL_TEXTURE_2D;
-    texture->_textureId = texId2;
-    
-    check_gl(glBindTexture, GL_TEXTURE_2D, oldTex);
-    check_gl(glBindFramebuffer, GL_DRAW_FRAMEBUFFER, oldFBO);
-    check_gl(glBindFramebuffer, GL_READ_FRAMEBUFFER, oldFBOread);
-    check_gl(glDeleteFramebuffers, 1, &fbr);
-    check_gl(glDeleteFramebuffers, 1, &fb);
-     */
-//}
 
 
 /**
@@ -731,48 +838,8 @@ void GLRenderer::startFrame(COLOR clearColor) {
 
 
 
-void GLRenderer::copyFromCurrent(const RECT& rect, Texture* destTex, const POINT& destOrigin) {
-    RECT wrect = rect;
-    wrect.origin.y += _currentSurface->_size.height - rect.size.height;
-    Texture* prevTex = _currentTexture;
-    if (_currentTexture != destTex) {
-        setCurrentTexture(destTex);
-    }
-    check_gl(glCopyTexSubImage2D, GL_TEXTURE_2D, 0, destOrigin.x, destOrigin.y, wrect.origin.x, wrect.origin.y, wrect.size.width, wrect.size.height);
-    if (prevTex && _currentTexture != prevTex) {
-        setCurrentTexture(prevTex);
-    }
-}
 
-void GLRenderer::generateMipmaps(Texture* tex) {
-    GLTexture* gltex = (GLTexture*)tex;
-    check_gl(glGenerateMipmap, gltex->_texTarget);
-}
 
-void GLRenderer::setColorUniform(int16_t uniformIndex, const float* rgba) {
-    setUniformData(uniformIndex, rgba, sizeof(float)*4);
-}
-
-void GLRenderer::setUniformData(int16_t uniformIndex, const void* data, int32_t cb) {
-    GLShaderState* state = (GLShaderState*)_currentShader->_shaderState;
-    auto& uniform = _currentShader->_uniforms[uniformIndex];
-    auto currentData = (state->_uniformData.data() + uniform.offset);
-    if (0 == memcmp(currentData, data, cb)) {
-        return;
-    }
-    memcpy(currentData, data, cb);
-
-    GLuint loc = state->_uniformLocations[uniformIndex];
-    assert(loc >= 0);
-    switch (uniform.type) {
-        case Shader::VariableType::Color: check_gl(glUniform4fv, loc, 1, (GLfloat*)data); break;
-        case Shader::VariableType::Int1: check_gl(glUniform1iv, loc, 1, (GLint*)data); break;
-        case Shader::VariableType::Float1: check_gl(glUniform1fv, loc, 1, (GLfloat*)data); break;
-        case Shader::VariableType::Float2: check_gl(glUniform2fv, loc, 1, (GLfloat*)data); break;
-        case Shader::VariableType::Float4: check_gl(glUniform4fv, loc, 1, (GLfloat*)data); break;
-        case Shader::VariableType::Matrix4: check_gl(glUniformMatrix4fv, loc, 1, false, (GLfloat*)data); break;
-    }
-}
 
 int GLRenderer::getIntProperty(IntProperty property) {
     if (property == MaxVaryingFloats) {

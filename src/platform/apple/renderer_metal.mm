@@ -31,13 +31,21 @@ public:
         _tex = NULL;
         _sampler = NULL;
     }
-    void resize(int width, int height) override {
-        if (_tex) {
-            SIZE currentSize = size();
-            if (width == (int)currentSize.width  &&  height==(int)currentSize.height) {
-                return;
-            }
+    
+    bool readPixels(RECT rect, bytearray& target) const override {
+        int stride = rect.size.width * 4;
+        int cp = stride * rect.size.height;
+        if (target.size() < cp) {
+            target.resize(cp);
         }
+        [_tex getBytes:(void *)target.data()
+           bytesPerRow:stride
+            fromRegion:MTLRegionMake2D(rect.origin.x,rect.origin.y, rect.size.width, rect.size.height)
+                   mipmapLevel:0];
+        return true;
+    }
+    
+    void createMetalTexture() {
         MTLPixelFormat pixelFormat = MTLPixelFormatBGRA8Unorm;
         switch (_format) {
             case PIXELFORMAT_RGBA32:
@@ -51,11 +59,12 @@ public:
                 break;
             case PIXELFORMAT_A8:
                 pixelFormat = MTLPixelFormatA8Unorm;
+                //pixelFormat = MTLPixelFormatR8Unorm;
                 break;
         }
         MTLTextureDescriptor* desc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:pixelFormat
-                                                                                        width:width
-                                                                                       height:height
+                                                                                        width:_size.width
+                                                                                       height:_size.height
                                                                                     mipmapped:_maxMipMapLevel>0];
         desc.mipmapLevelCount = _maxMipMapLevel+1;
         desc.usage = MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead;
@@ -71,24 +80,7 @@ public:
         }
         _sampler = [s_device newSamplerStateWithDescriptor:samplerDesc];
         
-    }
-    
-    bool readPixels(RECT rect, bytearray& target) const override {
-        int stride = rect.size.width * 4;
-        int cp = stride * rect.size.height;
-        if (target.size() < cp) {
-            target.resize(cp);
-        }
-        [_tex getBytes:(void *)target.data()
-           bytesPerRow:stride
-            fromRegion:MTLRegionMake2D(rect.origin.x,rect.origin.y, rect.size.width, rect.size.height)
-                   mipmapLevel:0];
-        return true;
-    }
-
-
-    SIZE size() override {
-        return SIZE(_tex.width, _tex.height);
+        _isNativeTextureValid = true;
     }
 };
 
@@ -129,10 +121,6 @@ public:
         Surface::setSize(size);
         _viewport.width = size.width;
         _viewport.height = size.height;
-        if (!_isPrivate) {
-            return;
-        }
-        _texture->resize(size.width, size.height);
     }
     
     
@@ -304,6 +292,10 @@ public:
     CVMetalTextureCacheRef _cvTextureCache;
     
     CoreVideoTexture(BitmapApple* bitmap, Renderer* renderer, CVMetalTextureCacheRef cvTextureCache) : MetalTexture(renderer, bitmap->_format) {
+        _size.width = bitmap->_width;
+        _size.height = bitmap->_height;
+        _isNativeTextureValid = true;
+        
         _cvTextureCache = cvTextureCache;
         CVReturn err = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, cvTextureCache, bitmap->_cvImageBuffer, NULL, MTLPixelFormatBGRA8Unorm, bitmap->_width, bitmap->_height, 0, &_cvTexture);
         assert(err==0);
@@ -324,9 +316,6 @@ public:
             _cvTextureCache = NULL;
         }
     }
-    void resize(int width, int height) override {
-        assert(0); // CV textures aren't resizable
-    }
 
 };
 
@@ -338,7 +327,6 @@ public:
     MTLRenderPipelineDescriptor* _pipelineStateDescriptor;
     id<MTLRenderCommandEncoder> _renderCommandEncoder;
     id<MTLBlitCommandEncoder> _blitCommandEncoder;
-    Texture* _currentTextureBound;
     id<MTLRenderPipelineState> _currentPipelineState;
     id<MTLBuffer> __strong* _vertexBuffer;
     id<MTLBuffer> __strong* _indexBuffer;
@@ -365,32 +353,6 @@ public:
         return true;
     }
     
-    void setCurrentSurface(Surface* surface) override {
-        if (surface == _currentSurface) {
-            return;
-        }
-        _currentSurface = surface;
-        _currentSurfaceValid = false;
-    }
-    
-    static inline uint16_t make_half(float f) {
-        uint32_t x = *((uint32_t*)&f);
-        int e = ((x&0x7f800000U) >> 23) -127; // undo 32-bit bias to get the real exponent
-        e = MIN(15, MAX(-15,e)) + 15; // clamp to 5-bit range and add the 16-bit bias
-        uint16_t h = ((x>>16)&0x8000U)
-                   | (e<<10) // exponent is 5 bits, down from 8
-                   | ((x>>13)&0x03ffU); // significand is 10 bits, truncated from 23
-        return h;
-    }
-    
-    void setColorUniform(int16_t uniformIndex, const float* rgba) override {
-        uint16_t halfs[4];
-        halfs[0] = make_half(rgba[0]);
-        halfs[1] = make_half(rgba[1]);
-        halfs[2] = make_half(rgba[2]);
-        halfs[3] = make_half(rgba[3]);
-        setUniformData(uniformIndex, halfs, sizeof(halfs));
-    }
 
     void setUniformData(int16_t uniformIndex, const void* data, int32_t cb) override {
         auto& uniform = _currentShader->_uniforms[uniformIndex];
@@ -407,12 +369,6 @@ public:
         } else {
             state->_fragUniformsValid = false;
         }
-    }
-
-
-    void setCurrentTexture(Texture* texture) override {
-        _currentTexture = texture;
-        // defer texture update to blit
     }
 
 
@@ -451,6 +407,11 @@ public:
             // Configure new encoder to use the current surface
             MetalSurface* metalSurface = (MetalSurface*)_currentSurface;
             MetalTexture* metalTex = metalSurface->_texture.as<MetalTexture>();
+            
+            if (!metalTex->_isNativeTextureValid) {
+                metalTex->createMetalTexture();
+            }
+            
             _renderPassDescriptor.colorAttachments[0].texture = metalTex->_tex;
             if (_currentSurface->_clearNeeded) {
                 float f[4] = {
@@ -471,7 +432,7 @@ public:
             
             // Bind vertex buffer which never changes
             [_renderCommandEncoder setVertexBuffer:*_vertexBuffer offset:0 atIndex:0];
-            _currentTextureBound = nullptr;
+            _currentTextureValid = false;
             _currentPipelineState = nullptr;
             
             // When starting a new render command encoder, all shaders need to resend their
@@ -528,7 +489,7 @@ public:
             [_renderCommandEncoder setRenderPipelineState:_currentPipelineState];
             
             // Texture needs rebinding after pipeline state change
-            _currentTextureBound = NULL;
+            _currentTextureValid = false;
         }
         
         // Ensure uniforms are up to date
@@ -541,11 +502,14 @@ public:
             [_renderCommandEncoder setFragmentBytes:state->_fragUniformData.data() length:state->_fragUniformData.size() atIndex:0];
         }
 
-        // Bind to texture if there is one
-        if (_currentTexture && _currentTexture != _currentTextureBound) {
-            _currentTextureBound = _currentTexture;
+        // Validate source texture
+        if (_currentTexture) {
             MetalTexture* metalTexture = (MetalTexture*)_currentTexture;
+            if (!_currentTexture->_isNativeTextureValid) {
+                metalTexture->createMetalTexture();
+            }
             
+            // Ensure source texture is in graphics RAM
             if (metalTexture->_needsUpload) {
                 metalTexture->_needsUpload = false;
                 metalTexture->retain();
@@ -564,8 +528,14 @@ public:
                     });
                 });
             }
-            [_renderCommandEncoder setFragmentTexture:metalTexture->_tex atIndex:0];
-            [_renderCommandEncoder setFragmentSamplerState:metalTexture->_sampler atIndex:0];
+
+            
+            // Bind
+            if (!_currentTextureValid) {
+                _currentTextureValid = true;
+                [_renderCommandEncoder setFragmentTexture:metalTexture->_tex atIndex:0];
+                [_renderCommandEncoder setFragmentSamplerState:metalTexture->_sampler atIndex:0];
+            }
         }
         
         // Clip
@@ -587,9 +557,14 @@ public:
                                              indexBuffer:*_indexBuffer
                                        indexBufferOffset:index*6*sizeof(uint16_t)];
         } else if (type == Line) {
-            [_renderCommandEncoder drawPrimitives:MTLPrimitiveTypeLine
+            [_renderCommandEncoder drawIndexedPrimitives:MTLPrimitiveTypeLine
+                                              indexCount:count*2
+                                               indexType:MTLIndexTypeUInt16
+                                             indexBuffer:*_indexBuffer
+                                       indexBufferOffset:index*6*sizeof(uint16_t)];
+/*            [_renderCommandEncoder drawPrimitives:MTLPrimitiveTypeLine
                                       vertexStart:index
-                                      vertexCount:count*4];
+                                      vertexCount:count*2];*/
         } else {
             assert(false);
         }
@@ -603,7 +578,7 @@ public:
         if (_renderCommandEncoder) {
             [_renderCommandEncoder endEncoding];
             _renderCommandEncoder = nil;
-            _currentTextureBound = NULL;
+            _currentTextureValid = false;
         }
         _blitCommandEncoder = [_commandBuffer blitCommandEncoder];
     }
@@ -611,6 +586,9 @@ public:
     void copyFromCurrent(const RECT& rect, Texture* destTex, const POINT& destOrigin) override {
         MetalSurface* metalSurface = (MetalSurface*)_currentSurface;
         MetalTexture* metalDestTex = (MetalTexture*)destTex;
+        if (!metalDestTex->_isNativeTextureValid) {
+            metalDestTex->createMetalTexture();
+        }
 
         useBlitEncoder();
         

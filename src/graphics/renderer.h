@@ -26,6 +26,7 @@
 #define SL_UNIFORM(x) "uniforms->"#x
 #define SL_VERTEX_INPUT(x) "v_in[vid]."#x
 #define SL_VERTEX_OUTPUT(x) "in."#x
+#define SL_VERTEX_OUTPUT_STR(x) "in."+x
 #define SL_TEXSAMPLE_2D(x, coord) "colorTexture.sample(textureSampler," coord ")"
 #define SL_TEXSAMPLE_2D_RECT(x, coord) "colorTexture.sample(textureSampler," coord ")"
 #define SL_TEXSAMPLE_2D_OES(x, coord) "colorTexture.sample(textureSampler," coord ")"
@@ -35,18 +36,22 @@
 #define SL_CONST "const"
 #define SL_HALF1 "float"
 #define SL_HALF1_DECL "lowp float"
+#define SL_HALF2 "vec2"
+#define SL_HALF2_DECL "lowp vec2"
 #define SL_HALF3 "vec3"
 #define SL_HALF3_DECL "lowp vec3"
 #define SL_HALF4 "vec4"
 #define SL_HALF4_DECL "lowp vec4"
 #define SL_FLOAT1 "float"
 #define SL_FLOAT2 "vec2"
+#define SL_FLOAT3 "vec3"
 #define SL_FLOAT4 "vec4"
 #define SL_MATRIX4 "highp mat4"
 #define SL_OUTPIXVAL "gl_FragColor"
 #define SL_UNIFORM(x) #x
 #define SL_VERTEX_INPUT(x) #x
 #define SL_VERTEX_OUTPUT(x) "v_"#x
+#define SL_VERTEX_OUTPUT_STR(x) "v_"+x
 #define SL_TEXSAMPLE_2D(x, coord) "texture2D(texture," coord ")"
 #define SL_TEXSAMPLE_2D_RECT(x, coord) "texture2DRect(texture," coord ")"
 #define SL_TEXSAMPLE_2D_OES(x, coord) "texture2D(texture," coord ")"
@@ -123,10 +128,15 @@ public:
     Texture(Renderer* renderer, int format);
     ~Texture();
     
-    virtual void resize(int width, int height)=0;
-    virtual SIZE size() =0;
+    void setSize(SIZEI size) {
+        if (size != _size) {
+            _size = size;
+            _isNativeTextureValid = false;
+        }
+    }
     virtual bool readPixels(RECT rect, bytearray& target) const =0;
 
+    
     class Bitmap* _bitmap; // NB: can be null
     enum Type {
         None,
@@ -135,9 +145,14 @@ public:
         OES
     } _type;
     int _format; // see BitmapFormat
+    int _maxMipMapLevel; // defaults to 0, i.e. no mipmaps
+    SIZEI _size;
+
+    // Flags
+    bool _isNativeTextureValid; // set false when size or format changes
+    bool _isRenderTarget;
     bool _needsUpload;
     bool _denormalizedCoords; // usually false, only true for OpenGL's rectangular textures
-    int _maxMipMapLevel; // defaults to 0, i.e. no mipmaps
     bool _minFilterLinear;
     bool _magFilterLinear;
     bool _mipFilterLinear;
@@ -282,9 +297,9 @@ public:
 
     RenderTask(Renderer* renderer);
     void bindBitmap(Bitmap* bitmap);
-    virtual bool bindToNativeSurface(class Surface* surface)=0;
-    virtual void setCurrentSurface(Surface* surface)=0;
-    virtual void setCurrentTexture(Texture* texture)=0;
+    virtual bool bindToNativeSurface(class Surface* surface)=0; // TODO: rename
+    void setCurrentSurface(Surface* surface);
+    void setCurrentTexture(Texture* texture);
     inline void setBlendNone() {
         setBlendParams({
             .op     = None,
@@ -333,7 +348,6 @@ public:
         _blendParamsValid = false;
     }
     virtual void setUniformData(int16_t uniformIndex, const void* data, int32_t cb) =0;
-    virtual void setColorUniform(int16_t uniformIndex, const float* rgba) =0;
     void setCurrentShader(Shader* shader);
     template<class T>
     void setUniform(int16_t uniformIndex, const T& val);
@@ -353,6 +367,7 @@ protected:
     BlendParams _blendParams;
     bool _blendParamsValid;
     Texture* _currentTexture;
+    bool _currentTextureValid;
     Surface* _currentSurface;
     bool _currentSurfaceValid;
     stack<RECT> _clips;
@@ -371,9 +386,6 @@ public:
     list<RenderResource*> _shaders;
     map<Shader::Features, sp<Shader>> _standardShaders; // standard shaders, not custom ones
     int _primarySurfaceFormat;
-
-    // Render state (used during render loop)
-    bool _doneInit;
 
     void reset();
     ItemPool::Alloc* allocQuads(int num, ItemPool::Alloc* existingAlloc);

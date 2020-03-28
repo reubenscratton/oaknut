@@ -32,7 +32,8 @@ public:
     virtual void setFillColor(COLOR color)=0;
     virtual void setStrokeColor(COLOR color)=0;
     virtual void setStrokeWidth(float strokeWidth)=0;
-    virtual void setAffineTransform(AFFINE_TRANSFORM* t)=0;
+    virtual void setTransform(const AFFINE_TRANSFORM& t)=0;
+    virtual void clearTransform()=0;
     virtual void drawRect(RECT rect)=0;
     virtual void drawOval(RECT rect)=0;
     virtual void drawPath(Path* path)=0;
