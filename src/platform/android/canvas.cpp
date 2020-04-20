@@ -87,15 +87,14 @@ public:
     void setStrokeWidth(float strokeWidth) override {
         getJNIEnv()->CallVoidMethod(_canvas, jmidSetStrokeWidth, (jfloat)strokeWidth);
     }
-    void setAffineTransform(AFFINE_TRANSFORM* t) override {
-        if (t) {
-            getJNIEnv()->CallVoidMethod(_canvas, jmidSetTransform,
-                                        (jfloat)t->a, (jfloat)t->b,
-                                        (jfloat)t->c, (jfloat)t->d,
-                                        (jfloat)t->tx, (jfloat)t->ty);
-        } else {
-            getJNIEnv()->CallVoidMethod(_canvas, jmidClearTransform);
-        }
+    void setTransform(const AFFINE_TRANSFORM& t) override {
+        getJNIEnv()->CallVoidMethod(_canvas, jmidSetTransform,
+                                    (jfloat) t.a, (jfloat) t.b,
+                                    (jfloat) t.c, (jfloat) t.d,
+                                    (jfloat) t.tx, (jfloat) t.ty);
+    }
+    void clearTransform() override {
+        getJNIEnv()->CallVoidMethod(_canvas, jmidClearTransform);
     }
     void drawRect(RECT rect) override {
         getJNIEnv()->CallVoidMethod(_canvas, jmidDrawRect,

@@ -77,7 +77,7 @@ void Task::postToMainThread(std::function<void(void)> func, int delay) {
 
 
 
-bool App::fileResolve(string& path) const {
+bool File::resolve(string& path) {
     if (!path.hasPrefix("//"_S)) {
         return true;
     }
@@ -135,8 +135,9 @@ bool App::fileResolve(string& path) const {
     return false;
 }
     
-bool App::fileEnsureFolderExists(string& path) const {
-    if (!fileResolve(path)) {
+bool File::mkdirs_sync(const string& apath, bool lastElementIsFile) {
+    string path = apath;
+    if (!resolve(path)) {
         return false;
     }
     [[NSFileManager defaultManager] createDirectoryAtPath:[NSString stringWithUTF8String:path.c_str()] withIntermediateDirectories:YES attributes:nil error:nil];
@@ -144,19 +145,6 @@ bool App::fileEnsureFolderExists(string& path) const {
 }
 
 
-
-vector<string> App::fileList(string& dir) const {
-    fileResolve(dir);
-    NSError* error = nil;
-    NSArray<NSString*>* foo = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:[NSString stringWithUTF8String:dir.c_str()]  error:(NSError * _Nullable *)&error];
-    assert(!error);
-    vector<string> files;
-    for (NSString* e : foo) {
-        files.push_back(nsstr(e));
-    }
-    return files;
-
-}
 
 
 

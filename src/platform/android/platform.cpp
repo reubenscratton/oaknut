@@ -10,12 +10,54 @@
 #include <oaknut.h>
 
 JavaVM* g_jvm;
+jclass s_jclassURLRequest;
 
+static ALooper* mainThreadLooper;
+static int messagePipe[2];
+static os_sem mainThreadCallbacksSem;
+static std::list<std::function<void()>> mainThreadCallbacks;
+
+static int mainThreadLooperCallback(int fd, int events, void* data) {
+    uint8_t msg;
+    read(fd, &msg, 1); // read message from pipe
+    assert(msg == 1);
+    os_sem_wait(mainThreadCallbacksSem, -1);
+    assert(mainThreadCallbacks.size() > 0);
+    auto callback = *mainThreadCallbacks.begin();
+    mainThreadCallbacks.pop_front();
+    os_sem_signal(mainThreadCallbacksSem);
+    callback();
+    return 1; // continue listening for events
+}
 
 
 extern "C" jint JNI_OnLoad(JavaVM *jvm, void *reserved) {
     g_jvm = jvm;
+
+    auto env = getJNIEnv();
+    s_jclassURLRequest = env->FindClass(PACKAGE "/URLRequest");
+    s_jclassURLRequest = (jclass) env->NewGlobalRef(s_jclassURLRequest);
+
+    os_sem_init(&mainThreadCallbacksSem, 1);
+    mainThreadLooper = ALooper_forThread();
+    ALooper_acquire(mainThreadLooper);
+    pipe(messagePipe); //create send-receive pipe
+    // listen for pipe read end, if there is something to read
+    // - notify via provided callback on main thread
+    ALooper_addFd(mainThreadLooper, messagePipe[0],
+                  0, ALOOPER_EVENT_INPUT, mainThreadLooperCallback, nullptr);
+
     return JNI_VERSION_1_6;
+}
+
+
+void Task::postToMainThread(std::function<void()> callback, int delay) {
+    assert(delay==0); // TODO: implement delayed callbacks
+    os_sem_wait(mainThreadCallbacksSem, -1);
+    mainThreadCallbacks.push_back(callback);
+    os_sem_signal(mainThreadCallbacksSem);
+    uint8_t msg = 1;
+    write(messagePipe[1], &msg, 1);
 }
 
 
@@ -58,13 +100,22 @@ jstring jstringFromString(JNIEnv* env, const string& str) {
     return NULL;
 }
 
+class GLSurfaceAndroid : public GLSurface {
+public:
+    GLSurfaceAndroid(Renderer* renderer, bool isPrivate) : GLSurface(renderer, isPrivate) {
+    }
+
+    void bindToNativeWindow(long nativeWindowHandle) override {
+        //assert(0); // todo: move the gl setup here
+    }
+
+};
 
 class WindowAndroid : public Window {
 public:
     jobject activity;
     AConfiguration* config;
     ANativeWindow* window;
-    AAssetManager* assetManager;
     ARect contentRect;
     int animating;
     EGLDisplay display;
@@ -188,19 +239,23 @@ Window* Window::create() {
 
 class AndroidRenderer : public GLRenderer {
 public:
-    AndroidRenderer(Window* window) : GLRenderer(window) {
+    AndroidRenderer() : GLRenderer() {
     }
-    void bindToNativeWindow(long nativeWindowHandle) override {
+    Surface* createSurface(bool isPrivate) override {
+        return new GLSurfaceAndroid(this, isPrivate);
+    }
+
+    /*void bindToNativeWindow(long nativeWindowHandle) override {
         // todo: move EAGL setup code here
     }
     void commit() override {
         // todo: move Linux swapBuffer stuff here
-    }
+    }*/
 
 };
 
-Renderer* Renderer::create(Window* window) {
-    return new AndroidRenderer(window);
+Renderer* Renderer::create() {
+    return new AndroidRenderer();
 }
 
 JAVA_FN(jlong, MainActivity, onCreateNative)(JNIEnv *env, jobject obj,
@@ -222,7 +277,6 @@ JAVA_FN(jlong, MainActivity, onCreateNative)(JNIEnv *env, jobject obj,
     window->retain();
     window->activity = env->NewGlobalRef(obj);
     window->setSafeInsets(EDGEINSETS(0, statusBarHeight, 0, navigationBarHeight));
-    window->assetManager = AAssetManager_fromJava(env, jassetManager);
 
     app->loadStyleAssetSync("styles.res");
 

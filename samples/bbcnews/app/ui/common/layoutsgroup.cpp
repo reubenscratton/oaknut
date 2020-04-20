@@ -200,7 +200,7 @@ BNLayoutsGroup::BNLayoutsGroup(string layoutsDir) {
     _incBuffer = loadJson(layoutsDir, "inc.json");
     
     // Load all files
-    vector<string> fileNames = app->fileList(layoutsDir);
+    vector<string> fileNames = File::dir_sync(layoutsDir);
     
     // Iterate the layout files
     for (int i = 0; i < fileNames.size(); i++) {
@@ -231,7 +231,7 @@ variant BNLayoutsGroup::loadJson(const string& layoutsDir, const string& fileNam
     filePath.append("/");
     filePath.append(fileName);
     
-    variant v = app->fileLoadSync(filePath);
+    variant v = File::load_sync(filePath);
     if (v.isError()) {
         return v;
     }

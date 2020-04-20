@@ -10,30 +10,6 @@
 #include <oaknut.h>
 #include <dirent.h>
 
-static AAssetManager* assetManager;
-
-vector<string> App::fileList(oak::string& path) const {
-    vector<string> results;
-    if (path.hasPrefix("//assets")) {
-        AAssetDir* dir = AAssetManager_openDir(assetManager, path.c_str()+9);
-        while(const char * fileName = AAssetDir_getNextFileName(dir)) {
-            results.push_back(string(fileName,-1));
-        }
-        AAssetDir_close(dir);
-    } else {
-        struct dirent *pDirent;
-        DIR *pDir = opendir(path.c_str());
-        if (!pDir) {
-            printf("Cannot open directory '%s'\n", path.c_str());
-        } else {
-            while ((pDirent = readdir(pDir)) != NULL) {
-                results.push_back(pDirent->d_name);
-            }
-            closedir(pDir);
-        }
-    }
-    return results;
-}
 
 static jclass jclassApp;
 static jmethodID jmidAppResolvePath;
@@ -43,6 +19,7 @@ static jmethodID jmidAppGetPrefsString;
 static jmethodID jmidAppSetPrefsString;
 static jmethodID jmidAppCreateUUID;
 static jmethodID jmidAppGetCurrentCountryCode;
+
 
 static JNIEnv* getAppEnv() {
   JNIEnv* env = getJNIEnv();
@@ -56,9 +33,6 @@ static JNIEnv* getAppEnv() {
     jmidAppSetPrefsString = env->GetStaticMethodID(jclassApp, "setPrefsString", "([B[B)V");
     jmidAppCreateUUID = env->GetStaticMethodID(jclassApp, "createUUID", "()Ljava/lang/String;");
     jmidAppGetCurrentCountryCode = env->GetStaticMethodID(jclassApp, "getCurrentCountryCode", "()[B");
-    jmethodID jmidAppGetAssetManager = env->GetStaticMethodID(jclassApp, "getAssetManager", "()Landroid/content/res/AssetManager;");
-    jobject jassetManager = env->CallStaticObjectMethod(jclassApp, jmidAppGetAssetManager);
-    assetManager = AAssetManager_fromJava(env, jassetManager);
   }
   return env;
 }
@@ -104,53 +78,7 @@ private:
     jbyteArray _jba;
 };
 
-static int oaknut_android_fread(void* cookie, char* buf, int size) {
-    return AAsset_read((AAsset*)cookie, buf, size);
-}
-
-static int oaknut_android_fwrite(void* cookie, const char* buf, int size) {
-    return EACCES; // can't provide write access to the apk
-}
-
-static fpos_t oaknut_android_fseek(void* cookie, fpos_t offset, int whence) {
-    return AAsset_seek((AAsset*)cookie, offset, whence);
-}
-
-static int oaknut_android_fclose(void* cookie) {
-    AAsset_close((AAsset*)cookie);
-    return 0;
-}
-#undef fopen
-
-FILE* oaknut_android_fopen(const char* fname, const char* mode) {
-    if (0!=strncmp(fname, "//assets", 8)) {
-        return fopen(fname, mode);
-    }
-    JNIEnv* env = getAppEnv();
-    AAsset* asset = AAssetManager_open(assetManager, fname+9, 0);
-    if(!asset) return NULL;
-    return funopen(asset, oaknut_android_fread, oaknut_android_fwrite, oaknut_android_fseek, oaknut_android_fclose);
-}
-
-
-bool App::fileExists(string& path) const {
-    if (!path.hasPrefix("//assets")) {
-        if (!fileResolve(path)) {
-            return false;
-        }
-        struct stat buf;
-        return 0==stat(path.c_str(), &buf); // TODO: this can fail for many reasons. Consider renaming API.
-    }
-    JNIEnv* env = getAppEnv();
-    AAsset* asset = AAssetManager_open(assetManager, path.c_str()+9, 0);
-    if(!asset) return false;
-    AAsset_close(asset);
-    return true;
-}
-
-
-
-bool App::fileResolve(string& path) const {
+bool File::resolve(string& path) {
     if (!path.hasPrefix("//"_S)) {
         return true;
     }
@@ -160,6 +88,8 @@ bool App::fileResolve(string& path) const {
     path = stringFromJbyteArray(env, jbytes);
     return true;
 }
+
+
 
 string App::currentCountryCode() const {
     JNIEnv* env = getAppEnv();
@@ -189,20 +119,6 @@ TIMESTAMP App::currentMillis() {
     return l;
 }
 
-/*
-ByteBuffer* App::loadAsset(const char* assetPath) {
-    JNIEnv* env = getAppEnv();
-    jobject jstr = env->NewStringUTF(assetPath);
-    jbyteArray result = (jbyteArray)env->CallStaticObjectMethod(jclassApp, jmidAppLoadAsset, jstr);
-    ByteBuffer* data = NULL;
-    if (result != NULL) {
-        data = new ByteBuffer();
-        data->cb = env->GetArrayLength(result);
-        data->data = (uint8_t*)malloc(data->cb);
-        env->GetByteArrayRegion(result, 0, data->cb, reinterpret_cast<jbyte*>(data->data));
-    }
-    return data;
-}*/
 
 string string::uuid() {
     JNIEnv* env = getAppEnv();

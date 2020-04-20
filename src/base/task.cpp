@@ -95,7 +95,7 @@ public:
     ThreadPool(Task::exec_context ctx, int threads) : _ctx(ctx), _stop(false) {
         for(int i=0 ; i<threads ; ++i) {
             pthread_t thread;
-            auto init = new thread_init {this, i+1};
+            auto init = new thread_init {this, i};
             int status = pthread_create(&thread, NULL, thread_func, init);
             assert(status == 0);
             _threads.push_back(thread);
@@ -115,8 +115,12 @@ public:
             case Task::IO: prefix="IO"; break;
             default: prefix="?"; break;
         }
-        sprintf(name, "%s %d", prefix, init->thread_index);
+        sprintf(name, "%s %d", prefix, init->thread_index+1);
+#if PLATFORM_APPLE
         pthread_setname_np(name);
+#else
+        pthread_setname_np(pool->_threads[init->thread_index], name);
+#endif
         delete init;
         
         for(;;) {
@@ -188,9 +192,10 @@ void Task::subtask::exec() {
 
 void Task::enqueueNextSubtask(const variant& input) {
     if (!s_backgroundThreadPool) {
-        unsigned int ncores=0,nthreads=0,ht=0;
-        asm volatile("cpuid": "=a" (ncores), "=b" (nthreads) : "a" (0xb), "c" (0x1) : );
-        ht=(ncores!=nthreads);
+        //unsigned int ncores=0,nthreads=0,ht=0;
+        //asm volatile("cpuid": "=a" (ncores), "=b" (nthreads) : "a" (0xb), "c" (0x1) : );
+        //ht=(ncores!=nthreads);
+        const auto ncores = std::thread::hardware_concurrency();
         //printf("Cores: %d\nThreads: %d\nHyperThreading: %s\n",ncores,nthreads,ht?"Yes":"No");
         s_backgroundThreadPool = new ThreadPool(Task::Background, MAX(1,ncores-1));
         s_ioThreadPool = new ThreadPool(Task::IO, 2); // TODO: work out some kind of heuristic
@@ -271,59 +276,5 @@ void Task::cancel() {
     }
     _subtasks.clear();
     _status = Cancelled;
-}
-
-
-
-variant Task::fileLoad(int fd) {
-    assert(!isMainThread());
-    struct stat st;
-    if (-1 == fstat(fd, &st)) {
-        ::close(fd);
-        return variant(error::fromErrno());
-    }
-    bytearray bytes((int32_t)st.st_size);
-    ssize_t cbRead = ::read(fd, bytes.data(), st.st_size);
-    if (cbRead == -1) {
-        ::close(fd);
-        return variant(error::fromErrno());
-    }
-    ::close(fd);
-    assert(st.st_size == cbRead);
-    return variant(bytes);
-}
-variant Task::fileLoad(const string& path) {
-    assert(!isMainThread());
-    int fd = ::open(path.c_str(), O_RDONLY, 0);
-    if (-1 == fd) {
-        return variant(error::fromErrno());
-    }
-    return fileLoad(fd);
-}
-
-static void mkdir_rec(char* path) {
-    char* p = path;
-    while ((p = strchr(p+1, '/'))) {
-        *p = 0;
-        mkdir(path, S_IRWXU);
-        *p = '/';
-    }
-}
-error Task::fileSave(const string& path, const bytearray& data) {
-    assert(!isMainThread());
-    int fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR|S_IWUSR);
-    if (-1 == fd && 2==errno) {
-        mkdir_rec((char*)path.c_str());
-        fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR|S_IWUSR);
-    }
-    if (-1 == fd) {
-        return error::fromErrno();
-    }
-    ssize_t cbWritten = ::write(fd, data.data(), data.size());
-    ::close(fd);
-    if (cbWritten != data.size()) {
-        return error::fromErrno();
-    }
-    return error::none();
 }
 

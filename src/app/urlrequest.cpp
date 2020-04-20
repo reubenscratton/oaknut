@@ -9,6 +9,13 @@
 
 //static MruCache<string> s_urldataCache(4*1024*1024);
 
+static string pathForHash(const sha1_t& hash) {
+    string path = string::format("//cache/url/%02X/%02X/", hash.bytes[0], hash.bytes[1]);
+    path += string::hex(hash.bytes+2, sizeof(hash.bytes)-2);
+    File::resolve(path);
+    return path;
+}
+
 class URLCache : public Object {
 public:
     struct index_entry {
@@ -21,7 +28,7 @@ public:
     URLCache() {
         Task::enqueue({
             {Task::IO, [=](variant&) -> variant {
-                return app->fileLoadSync("//cache/url/index.dat");
+                return File::load_sync("//cache/url/index.dat");
             }},
             {Task::Background, [=](variant& v) -> variant {
                 if (v.isByteArray()) {
@@ -58,32 +65,7 @@ public:
         return true;
     }
     
-    string pathForHash(const sha1_t& hash) {
-        string path = string::format("//cache/url/%02X/%02X/", hash.bytes[0], hash.bytes[1]);
-        path += string::hex(hash.bytes+2, sizeof(hash.bytes)-2);
-        app->fileResolve(path);
-        return path;
-    }
     
-    URLResponse* loadRawResponse(const sha1_t& hash) {
-        assert(!Task::isMainThread()); // todo: assert is IO thread
-        string path = pathForHash(hash);
-        int fd = open(path.c_str(), O_RDONLY, 0);
-        if (fd == -1) {
-            return nullptr;
-        }
-        variant data = Task::fileLoad(fd);
-        if (!data.isByteArray()) {
-            // TODO: if we opened it but couldn't read it, maybe delete the file?
-            return nullptr;
-        }
-        bytestream strm(data.bytearrayRef());
-        URLResponse* response = new URLResponse();
-        strm.read(response->httpStatus);
-        strm.read(response->headers);
-        strm.read(response->data);
-        return response;
-    }
     void storeRawResponse(const sha1_t& hash, URLResponse* response) {
         response->retain();
         Task::enqueue({
@@ -93,7 +75,7 @@ public:
                 strm.write(response->httpStatus);
                 strm.write(response->headers);
                 strm.write(response->data);
-                Task::fileSave(path, strm.getWrittenBytes());
+                File::save_sync(path, strm.getWrittenBytes());
                 return variant();
             }},
             {Task::MainThread, [=](variant&) -> variant {
@@ -193,12 +175,23 @@ void URLRequest::start() {
         }
     }
     
-    // Enqueue the cache load
+    // Enqueue the disk cache load
     if (cacheLoadWanted) {
         retain();
         _cacheTask = Task::enqueue({
             {Task::IO, [=](variant&)->variant {
-                return s_cache->loadRawResponse(sha);
+                string path = pathForHash(sha);
+                variant data = File::load_sync(path);
+                if (!data.isByteArray()) {
+                    // TODO: if we opened it but couldn't read it, maybe delete the file?
+                    return nullptr;
+                }
+                bytestream strm(data.bytearrayRef());
+                URLResponse* response = new URLResponse();
+                strm.read(response->httpStatus);
+                strm.read(response->headers);
+                strm.read(response->data);
+                return response;
             }},
             {Task::Background, [=](variant& result)->variant {
                 // If the cache load failed OR the remote load already
@@ -269,9 +262,14 @@ void URLRequest::cancel() {
         _cacheTask = nullptr;
     }
     if (_remoteTask) {
+        os_sem_signal(_sem);
         _remoteTask->cancel();
         _remoteTask = nullptr;
     }
+}
+
+bool URLRequest::isCancelled() const {
+    return _status == Status::Cancelled;
 }
 
 void URLRequest::dispatchResponse(const URLResponse* response, bool isFromCache) {

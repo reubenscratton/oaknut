@@ -14,11 +14,8 @@ static jmethodID jmidCreateBitmap;
 static jmethodID jmidCopyPixelsFromBuffer;
 static jmethodID jmidCopyPixelsToBuffer;
 static jmethodID jmidGetRowBytes;
-//static jclass jclassBitmapFactory;
-//static jmethodID jmidDecodeByteArray;
-static jclass jclassBitmapDecodeTask;
-static jmethodID jmidBitmapDecodeTaskInit;
-static jmethodID jmidCancel;
+static jclass jclassBitmapFactory;
+static jmethodID jmidDecodeByteArray;
 static jobject configAlpha8;
 static jobject configARGB8888;
 static jobject configRGB565;
@@ -108,61 +105,20 @@ BitmapAndroid::~BitmapAndroid() {
     }
 }
 
-class BitmapDecodeTask : public Task {
-public:
-    BitmapDecodeTask(bytearray& data, std::function<void(Bitmap*)> callback) : _callback(callback), Task(NULL) {
-        auto env = getBitmapEnv();
-        if (!jclassBitmapDecodeTask) {
-            jclassBitmapDecodeTask = env->FindClass(PACKAGE "/BitmapDecodeTask");
-            jclassBitmapDecodeTask = (jclass) env->NewGlobalRef(jclassBitmapDecodeTask);
-            jmidBitmapDecodeTaskInit = env->GetMethodID(jclassBitmapDecodeTask, "<init>",
-                                                              "(J[B)V");
-            jmidCancel = env->GetMethodID(jclassBitmapDecodeTask, "cancel", "()V");
-        }
-        jbyteArray jbuff = env->NewByteArray(data.length());
-        env->SetByteArrayRegion(jbuff, 0, data.length(), (jbyte*)data.data());
-        _jtask = env->NewObject(jclassBitmapDecodeTask, jmidBitmapDecodeTaskInit, (jlong)this, jbuff);
-        _jtask = env->NewGlobalRef(_jtask);
-    }
-    ~BitmapDecodeTask() {
-        if (_jtask) {
-            auto env = getBitmapEnv();
-            env->CallVoidMethod(_jtask, jmidCancel);
-            env->DeleteGlobalRef(_jtask);
-            _jtask = NULL;
-        }
-    }
-    void cancel() override {
-        if (_jtask) {
-            auto env = getBitmapEnv();
-            env->CallVoidMethod(_jtask, jmidCancel);
-            env->DeleteGlobalRef(_jtask);
-            _jtask = NULL;
-        }
-        Task::cancel();
-    }
-    
-    void handleDecodedBitmap(jobject jbitmap) {
-        //jobject jbitmap = env->CallStaticObjectMethod(jclassBitmapFactory, jmidDecodeByteArray, jbuff, 0, cb);
-        //env->DeleteLocalRef(jbuff);
-        
-        BitmapAndroid* bitmap = new BitmapAndroid(jbitmap);
-        bitmap->retain();
-        _callback(bitmap);
-        bitmap->release();
-    }
-    
-    std::function<void(Bitmap*)> _callback;
-    jobject _jtask;
-};
 
-JAVA_FN(void, BitmapDecodeTask, nativeHandleDecodedBitmap)(JNIEnv *env, jobject obj, jlong cppTask, jobject jbitmap) {
-    BitmapDecodeTask* task = (BitmapDecodeTask*)cppTask;
-    task->handleDecodedBitmap(jbitmap);
-}
 
-Task* Bitmap::createFromData(bytearray& data, std::function<void(Bitmap*)> callback) {
-    return new BitmapDecodeTask(data, callback);
+Bitmap* Bitmap::createFromData(const bytearray& data) {
+    auto env = getBitmapEnv();
+    if (!jclassBitmapFactory) {
+        jclassBitmapFactory = env->FindClass("android/graphics/BitmapFactory");
+        jclassBitmapFactory = (jclass) env->NewGlobalRef(jclassBitmapFactory);
+        jmidDecodeByteArray = env->GetStaticMethodID(jclassBitmapFactory, "decodeByteArray", "([BII)Landroid/graphics/Bitmap;");
+    }
+    jbyteArray jbuff = env->NewByteArray(data.length());
+    env->SetByteArrayRegion(jbuff, 0, data.length(), (jbyte*)data.data());
+    jobject jbitmap = env->CallStaticObjectMethod(jclassBitmapFactory, jmidDecodeByteArray, jbuff, 0, data.length());
+    //env->DeleteLocalRef(jbuff);
+    return new BitmapAndroid(jbitmap);
 }
 
 Bitmap* Bitmap::create(int width, int height, int format) {

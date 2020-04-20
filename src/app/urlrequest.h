@@ -76,7 +76,7 @@ public:
     void handle(std::function<void(const class URLResponse* res, bool isFromCache)> handler);
     
     /** Decode the response on a background thread. Return true to prevent default decoding. */
-    std::function<bool(URLResponse*)> customDecoder;
+    std::function<bool(class URLResponse*)> customDecoder;
     
     /**@}*/
 
@@ -87,6 +87,9 @@ public:
      */
     /** Cancels the request, ensuring that response handlers won't run. */
     virtual void cancel();
+    
+    bool isCancelled() const;
+
     /**@}*/
     
 protected:
@@ -108,7 +111,7 @@ protected:
     std::function<void(const URLResponse*, bool)> _handler;
     sp<Task> _cacheTask;
     sp<Task> _remoteTask;
-    os_sem _sem;
+    os_sem _sem; // Signalled by cancel(). IO task should wait on or poll this to know if request cancelled. 
     std::atomic<bool> _remoteLoadComplete;
 
     // Request data

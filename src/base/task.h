@@ -61,11 +61,6 @@ public:
     static void flushCurrentThread();
     static void addObjectToCurrentThreadDeletePool(Object*);
 
-    // File helpers
-    static variant fileLoad(const string& path);
-    static variant fileLoad(int fd);
-    static error fileSave(const string& path, const bytearray& data);
-
 protected:
 
     std::atomic<status> _status;

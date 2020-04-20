@@ -205,7 +205,7 @@ public:
             {Task::IO, [=](variant&) -> variant {
                 string mainFileName = _name + ".dat";
                 _mainFd = ::open(mainFileName.c_str(), O_RDWR, O_CREAT);
-                return Task::fileLoad(_name + ".idx");
+                return File::load_sync(_name + ".idx");
             }},
             
             // Task 2: Process index file contents into usable form
@@ -252,7 +252,7 @@ public:
                 return variant(strm);
             }});
             tasks.push_back({Task::IO, [=](variant& indexFileContents) -> variant {
-                return Task::fileSave(_name + ".idx", indexFileContents.bytearrayRef());
+                return File::save_sync(_name + ".idx", indexFileContents.bytearrayRef());
             }});
         };
         if (close) {

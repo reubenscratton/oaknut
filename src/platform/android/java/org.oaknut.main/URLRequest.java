@@ -3,32 +3,29 @@ package org.oaknut.main;
 import android.text.TextUtils;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.List;
 import java.util.Map;
 
 
-public class URLRequest implements Runnable {
+public class URLRequest {
 
 
     static final Charset UTF_8 = Charset.forName("UTF-8");
 
-    static LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<>();
-    static ThreadPoolExecutor executor = new ThreadPoolExecutor(4, 4, 0, TimeUnit.MILLISECONDS, queue);
 
     long cobj;
     String url;
     String method;
-    Future<?> future;
     byte[] headersBytes;
     byte[] requestEntityBytes;
+    HttpURLConnection urlConnection;
+    InputStream inputStream;
 
     public URLRequest(long cobj, String url, String method, byte[] headersBytes, byte[] requestEntityBytes) {
         this.cobj = cobj;
@@ -36,16 +33,25 @@ public class URLRequest implements Runnable {
         this.method = method;
         this.headersBytes = headersBytes;
         this.requestEntityBytes = requestEntityBytes;
-        future = executor.submit(this);
     }
 
     public void cancel() {
-        future.cancel(true);
+        close();
     }
 
-    @Override
-    public void run() {
-        HttpURLConnection urlConnection = null;
+    private void close() {
+        if (inputStream != null) {
+            try {
+                inputStream.close();
+            } catch (IOException e) {}
+            inputStream = null;
+        }
+        if (urlConnection != null) {
+            urlConnection.disconnect();
+        }
+    }
+
+    public void run(long cobjResponse) {
         try {
             URL url = new URL(this.url);
             urlConnection = (HttpURLConnection) url.openConnection();
@@ -66,10 +72,12 @@ public class URLRequest implements Runnable {
                 urlConnection.getOutputStream().write(requestEntityBytes);
             }
 
+            // Set the read timeout cos we have to poll for data
+            urlConnection.setReadTimeout(100);
+
             // The request executes here!
             int status = urlConnection.getResponseCode();
 
-            InputStream inputStream;
             if(status != HttpURLConnection.HTTP_OK)
                 inputStream = new BufferedInputStream(urlConnection.getErrorStream());
             else
@@ -89,28 +97,36 @@ public class URLRequest implements Runnable {
             // Read whole response into memory.
             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
             byte[] byteChunk = new byte[4096];
-            int n;
-            while ((n = inputStream.read(byteChunk)) > 0 ) {
-                baos.write(byteChunk, 0, n);
+            for (;;) {
+                try {
+                    int n = inputStream.read(byteChunk);
+                    if (n > 0 ) {
+                        baos.write(byteChunk, 0, n);
+                    }
+                    else if (n<0 || nativeCheckIfCancelled(cobj)) {
+                        break;
+                    }
+                }
+                catch (SocketTimeoutException e) {
+                    android.util.Log.i("http", "timeout");
+                }
             }
 
             // Pass to C++ for dispatch
-            nativeOnGotData(cobj, status,
+            nativeOnGotData(cobj, cobjResponse, status,
               headers.getBytes(UTF_8),
               baos.toByteArray());
 
         } catch (Exception e) {
             e.printStackTrace();
             android.util.Log.e("Oaknut",  e.toString());
-            nativeOnGotData(cobj, 999, null, null);
+            nativeOnGotData(cobj, cobjResponse, 999, null, null);
         } finally {
-            if (urlConnection != null) {
-                urlConnection.disconnect();
-            }
+            close();
         }
     }
 
-    native void nativeOnGotData(long cobj, int httpStatus, byte[] headersUtf8, byte[] data);
-
+    native void nativeOnGotData(long cobj, long cobjResponse, int httpStatus, byte[] headersUtf8, byte[] data);
+    native boolean nativeCheckIfCancelled(long cobj);
 
 }

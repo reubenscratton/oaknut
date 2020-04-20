@@ -7,6 +7,7 @@ typedef float GLfloat;
     RETURNS JNICALL Java_org_oaknut_main_ ## CLAZZ ## _ ## METHOD
 
 #include <stdlib.h>
+#include <fcntl.h>
 #include <android/log.h>
 #include <EGL/egl.h>
 #include <GLES/gl.h>
@@ -41,11 +42,8 @@ typedef float GLfloat;
 #endif
 
 extern JavaVM* g_jvm;
+extern jclass s_jclassURLRequest;
 JNIEnv* getJNIEnv();
-
-// Reroute fopen() to a horrible hack that means it can work with compressed assets
-#define fopen(name, mode) oaknut_android_fopen(name, mode)
-FILE* oaknut_android_fopen(const char* fname, const char* mode);
 
 // Utilities for handling Java strings without falling foul of JVM's weird ideas about UTF
 jbyteArray jbyteArrayFromString(JNIEnv* env, const string& str);

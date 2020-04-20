@@ -68,6 +68,8 @@ error URLRequest::ioLoadRemote(URLResponse* response) {
         os_sem_signal(_sem);
     }];
     [dataTask resume];
+    
+    // Wait for either request to complete or for cancel().
     os_sem_wait(_sem);
     
     // If semaphore signalled by cancel(), the data task has not completed so cancel it.

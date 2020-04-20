@@ -160,35 +160,6 @@ public:
     /**@}*/
     
     
-    /** @name Files
-     * @{
-     * In general files are accessed with the standard libc functions fopen() and friends,
-     * just be sure to use resolved paths. Oaknut adds a few useful helpers such as fileExists,
-     * fileSize, and fileList.
-     *
-     * Filesystems are navigated with standard Unix path notation with the addition of some
-     * special double-slash roots that refer to platform-specific, app-specific, and user-
-     * specific locations:
-     *
-     *                      MacOS
-     *                      =====
-     *     //assets         <app bundle>/assets
-     *     //data           ~/Library/Application Support/AppName
-     *     //cache          ~/Library/Caches/AppName
-     *     //tmp            
-     *     //userdocs       ~/Documents
-     *
-     * Note that Oaknut has a separate API for structured, database-like storage. See LocalStorage.
-     */
-    bool fileResolve(string& path) const;
-    void fileExists(string& path, std::function<void(bool)> callback) const;
-    bool fileEnsureFolderExists(string& path) const;
-    vector<string> fileList(string& path) const;
-    void fileLoad(const string& filePath, std::function<void(variant&)> callback);
-    variant fileLoadSync(const string& path);
-    variant fileLoadSync(int fd);
-
-    /**@}*/
     
     /** The default display. Usually there is only one. */
     sp<Display> _defaultDisplay;

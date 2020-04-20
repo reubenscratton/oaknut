@@ -131,7 +131,7 @@ class variant_SynthProvider:
         name = None
         if self.type == 'MAP':
             name = c.GetChildMemberWithName('first')
-            name = name.GetSummary()[1:-1]
+            name = name.GetSummary()
         if name == None:
             name = '[' + str(index) + ']'
         return self.valobj.CreateValueFromData(str(name), c.GetData(), c.GetType());

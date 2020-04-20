@@ -183,17 +183,6 @@ string App::friendlyTimeString(TIMESTAMP timestamp) {
 
 
 
-// Generic file handling
-/*#if !PLATFORM_ANDROID
-bool App::fileExists(string& path) const {
-    if (!fileResolve(path)) {
-        return false;
-    }
-    struct stat buf;
-    return 0==stat(path.c_str(), &buf); // TODO: this can fail for many reasons. Consider renaming API.
-}
-#endif
-*/
 
 static bool qualifierIsScale(const string& q) {
     return (q=="1x" || q=="2x" || q=="3x");
@@ -236,58 +225,21 @@ Task* App::loadBitmapAsset(const string& assetPath, std::function<void(Bitmap*)>
 }
 
 
-void App::fileLoad(const string& filePath, std::function<void(variant&)> callback) {
-    Task::enqueue({
-        {Task::IO, [=](variant&) -> variant {
-            return fileLoadSync(filePath);
-        }},
-        {Task::MainThread, [=](variant& r) -> variant {
-            callback(r);
-            return variant();
-        }}
-    });
-}
-
-variant App::fileLoadSync(int fd) {
-    struct stat st;
-    if (-1 == fstat(fd, &st)) {
-        ::close(fd);
-        return variant(error::fromErrno());
-    }
-    bytearray bytes((int32_t)st.st_size);
-    ssize_t cbRead = ::read(fd, bytes.data(), st.st_size);
-    ::close(fd);
-    if (cbRead == -1) {
-        return variant(error::fromErrno());
-    }
-    return variant(bytes);
-}
-
-variant App::fileLoadSync(const string& apath) {
-    string path = apath;
-    fileResolve(path);
-    int fd = open(path.c_str(), O_RDONLY, 0);
-    if (fd == -1) {
-        return variant(error::fromErrno());
-    }
-    return fileLoadSync(fd);
-}
 
 variant App::loadAssetSync(const string& assetPath) {
-    string path = "//assets/" + assetPath;
-    fileResolve(path);
     
     // TODO: asset cache needed
 
     // If the file exists as named then that's the easy path
-    int fd = open(path.c_str(), O_RDONLY, 0);
-    if (fd == -1) {
+    string path = "//assets/" + assetPath;
+    variant data = File::load_sync(path);
+    if (data.isError()) {
         
         // Oh dear, let's try to find a config-specific asset. First get the list of files.
         auto dirpos = path.findLast("/");
         string dirname = path.substr(0, dirpos);
         string filename = path.substr(dirpos+1);
-        vector<string> files = fileList(dirname);
+        vector<string> files = File::dir_sync(dirname);
 
         // Filter out irrelevant files
         auto extpos = filename.findLast(".");
@@ -332,13 +284,10 @@ variant App::loadAssetSync(const string& assetPath) {
 
         // Load the winning qualified file
         path = dirname + "/" + filename + files[0] + ext;
-        fd = open(path.c_str(), O_RDONLY, 0);
+        data = File::load_sync(path);
     }
     
-    if (fd == -1) {
-        return error(string::format("No such file: %s", path.c_str()));
-    }
-    return fileLoadSync(fd);
+    return data;
 }
 
 void App::subscribe(const char* notificationName, Object* observer, std::function<void(const char*, void*, variant&)> callback, void* source/*=NULL*/) {

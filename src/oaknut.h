@@ -138,18 +138,31 @@ inline void os_sem_delete(os_sem sem) {
 #ifdef __APPLE__
     sem = nil;
 #else
-    sem_destroy(sem);
+    sem_destroy(&sem);
 #endif
 }
 
-inline void os_sem_wait(os_sem sem) {
+// Returns true if semaphore aquired, false if timed out or errored
+inline bool os_sem_wait(os_sem sem, int timeoutMillis=-1) {
 #ifdef __APPLE__
-    dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+    return dispatch_semaphore_wait(sem, (timeoutMillis<0)?DISPATCH_TIME_FOREVER:(dispatch_time(DISPATCH_TIME_NOW, timeoutMillis*1000000LL)))!=0;
 #else
     int r;
-    do {
-            r = sem_wait(&sem);
-    } while (r == -1 && errno == EINTR);
+    if (timeoutMillis<0) {
+        do {
+                r = sem_wait(&sem);
+        } while (r == -1 && errno == EINTR);
+    } else {
+        struct timespec ts;
+        if (clock_gettime(CLOCK_REALTIME, &ts) == -1)    {
+            return false;
+        }
+        ts.tv_sec += (timeoutMillis/1000);
+        ts.tv_nsec += (timeoutMillis%1000) * 1000000;
+        while ((r = sem_timedwait(&sem, &ts)) == -1 && errno == EINTR)
+            continue;
+    }
+    return (r == 0);
 #endif
 }
 
@@ -197,6 +210,7 @@ namespace oak {
 #include "text/textlayout.h"
 #include "graphics/canvas.h"
 #include "app/display.h"
+#include "app/file.h"
 #include "app/app.h"
 #include "app/urlrequest.h"
 #include "util/cache.h"

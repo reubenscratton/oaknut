@@ -8,94 +8,75 @@
 
 #include <oaknut.h>
 
-static jclass s_jclass;
 static jmethodID s_jmidConstructor;
+static jmethodID s_jmidRun;
 static jmethodID s_jmidCancel;
 
 
-class URLRequestAndroid : public URLRequest {
-public:
-    URLRequestAndroid(const string& url, const string& method, const bytearray& body, int flags)
-        : URLRequest(url, method, body, flags) {
+
+error URLRequest::ioLoadRemote(URLResponse* response) {
+
+    JNIEnv *env = getJNIEnv();
+    if (!s_jmidCancel) {
+        s_jmidConstructor = env->GetMethodID(s_jclassURLRequest, "<init>", "(JLjava/lang/String;Ljava/lang/String;[B[B)V");
+        s_jmidRun = env->GetMethodID(s_jclassURLRequest, "run", "(J)V");
+        s_jmidCancel = env->GetMethodID(s_jclassURLRequest, "cancel", "()V");
     }
-    ~URLRequestAndroid() {
-    }
+    jobject url = env->NewStringUTF(_url.c_str());
+    jobject method = env->NewStringUTF(_method.c_str());
 
-    void run() override {
-      JNIEnv *env = getJNIEnv();
-      if (!s_jclass) {
-          s_jclass = env->FindClass(PACKAGE "/URLRequest");
-          s_jclass = (jclass) env->NewGlobalRef(s_jclass);
-          s_jmidConstructor = env->GetMethodID(s_jclass, "<init>", "(JLjava/lang/String;Ljava/lang/String;[B[B)V");
-          s_jmidCancel = env->GetMethodID(s_jclass, "cancel", "()V");
-      }
-      jobject url = env->NewStringUTF(_url.c_str());
-      jobject method = env->NewStringUTF(_method.c_str());
-
-      // Concatenate the headers into a single string
-      jbyteArray headersBytes = NULL;
-      string headersStr;
-      for (auto it : _headers) {
-          if (headersStr.lengthInBytes()>0) {
-              headersStr.append('\n');
-          }
-          headersStr.append(it.first);
-          headersStr.append(':');
-          headersStr.append(it.second);
-      }
-      int32_t cb = headersStr.lengthInBytes();
-      if (cb) {
-          headersBytes = env->NewByteArray(cb);
-          jbyte *buf = env->GetByteArrayElements(headersBytes, NULL);
-          memcpy((char*)buf, headersStr.c_str(), cb);
-          env->ReleaseByteArrayElements(headersBytes, buf, 0);
-      }
-
-        // Body bytes
-        jbyteArray bodyBytes = NULL;
-        cb = _body.size();
-        if (cb) {
-            bodyBytes = env->NewByteArray(cb);
-            jbyte *buf = env->GetByteArrayElements(bodyBytes, NULL);
-            memcpy((char*)buf, _body.data(), cb);
-            env->ReleaseByteArrayElements(bodyBytes, buf, 0);
+    // Concatenate the headers into a single string
+    jbyteArray headersBytes = NULL;
+    string headersStr;
+    for (auto it : _headers) {
+        if (headersStr.lengthInBytes()>0) {
+            headersStr.append('\n');
         }
-
-        jobject object = env->NewObject(s_jclass, s_jmidConstructor, jlong(this), url, method, headersBytes, bodyBytes);
-      _osobj = env->NewGlobalRef(object);
+        headersStr.append(it.first);
+        headersStr.append(':');
+        headersStr.append(it.second);
+    }
+    int32_t cb = headersStr.lengthInBytes();
+    if (cb) {
+        headersBytes = env->NewByteArray(cb);
+        jbyte *buf = env->GetByteArrayElements(headersBytes, NULL);
+        memcpy((char*)buf, headersStr.c_str(), cb);
+        env->ReleaseByteArrayElements(headersBytes, buf, 0);
     }
 
-    void cancel() override {
-        _cancelled = true;
-        JNIEnv* env = getJNIEnv();
-        env->CallVoidMethod((jobject)_osobj, s_jmidCancel);
-        env->DeleteGlobalRef((jobject)_osobj);
-        _osobj = NULL;
+    // Body bytes
+    jbyteArray bodyBytes = NULL;
+    cb = _body.size();
+    if (cb) {
+        bodyBytes = env->NewByteArray(cb);
+        jbyte *buf = env->GetByteArrayElements(bodyBytes, NULL);
+        memcpy((char*)buf, _body.data(), cb);
+        env->ReleaseByteArrayElements(bodyBytes, buf, 0);
     }
 
-    void dispatchResult(int httpStatus, const map<string,string>& responseHeaders, const bytearray& data) {
-        _response.httpStatus = httpStatus;
-        _response.responseHeaders = responseHeaders;
-        _response.data = data;
-        URLRequest::processResponse();
-    }
+    jobject jreq = env->NewObject(s_jclassURLRequest, s_jmidConstructor, jlong(this), url, method, headersBytes, bodyBytes);
+    jreq = env->NewGlobalRef(jreq);
 
-protected:
-  jobject _osobj;
-};
+    env->CallVoidMethod(jreq, s_jmidRun, (jlong)response);
+    error err = error::none();
+    return err;
 
-URLRequest* URLRequest::create(const string& url, const string& method, const bytearray& body, int flags) {
-    return new URLRequestAndroid(url, method, body, flags);
+//    req.cachePolicy = NSURLRequestReloadIgnoringCacheData;
+
 }
 
-JAVA_FN(void, URLRequest, nativeOnGotData)(JNIEnv *env, jobject jobj, jlong cobj, jint httpStatus, jbyteArray httpHeadersUtf8, jbyteArray array) {
-    URLRequestAndroid *req = (URLRequestAndroid *) cobj;
-    map<string, string> responseHeaders;
-    bytearray data;
+
+
+
+JAVA_FN(void, URLRequest, nativeOnGotData)(JNIEnv *env, jobject jobj, jlong cobj,
+               jlong cobjResponse, jint httpStatus, jbyteArray httpHeadersUtf8, jbyteArray array) {
+    URLRequest *req = (URLRequest *) cobj;
+    URLResponse* response = (URLResponse *) cobjResponse;
+    response->httpStatus = httpStatus;
     if (array) {
         int cb = env->GetArrayLength(array);
-        data.resize(cb);
-        env->GetByteArrayRegion(array, 0, cb, reinterpret_cast<jbyte *>(data.data()));
+        response->data.resize(cb);
+        env->GetByteArrayRegion(array, 0, cb, reinterpret_cast<jbyte *>(response->data.data()));
         cb = env->GetArrayLength(httpHeadersUtf8);
         bytearray httpHeadersUtf8Bytes(cb);
         env->GetByteArrayRegion(httpHeadersUtf8, 0, cb,
@@ -106,10 +87,14 @@ JAVA_FN(void, URLRequest, nativeOnGotData)(JNIEnv *env, jobject jobj, jlong cobj
             auto colonPos = it.find(":");
             string name = it.substr(0, colonPos);
             string value = it.substr(colonPos+1);
-            responseHeaders[name.lowercase()] = value;
+            response->headers[name.lowercase()] = value;
         }
     }
-    req->dispatchResult((int)httpStatus, responseHeaders, data);
+}
+
+JAVA_FN(jboolean, URLRequest, nativeCheckIfCancelled)(JNIEnv *env, jobject jobj, long cobj) {
+    URLRequest *req = (URLRequest *) cobj;
+    return req->isCancelled() ? 1:0;
 }
 
 #endif
