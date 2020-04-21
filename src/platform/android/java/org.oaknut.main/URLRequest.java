@@ -72,11 +72,11 @@ public class URLRequest {
                 urlConnection.getOutputStream().write(requestEntityBytes);
             }
 
-            // Set the read timeout cos we have to poll for data
-            urlConnection.setReadTimeout(100);
-
             // The request executes here!
             int status = urlConnection.getResponseCode();
+
+            // Set the read timeout cos we have to poll for data
+            urlConnection.setReadTimeout(100);
 
             if(status != HttpURLConnection.HTTP_OK)
                 inputStream = new BufferedInputStream(urlConnection.getErrorStream());

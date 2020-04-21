@@ -182,7 +182,7 @@ vector<string> File::dir_sync(string& path) {
                     continue;
                 }
             }
-            files.push_back(string(pDirent->d_name, pDirent->d_namlen));
+            files.push_back(string(pDirent->d_name, strlen(pDirent->d_name)/*pDirent->d_namlen*/));
         }
         closedir(pDir);
     }

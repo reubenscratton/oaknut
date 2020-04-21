@@ -115,7 +115,7 @@ void App::warn(char const* fmt, ...) {
 TIMESTAMP App::currentMillis() {
     timespec t;
     clock_gettime(CLOCK_REALTIME, &t);
-    TIMESTAMP l = t.tv_sec*1000 + (t.tv_nsec / 1000000);
+    TIMESTAMP l = t.tv_sec*1000ULL + (t.tv_nsec / 1000000);
     return l;
 }
 
