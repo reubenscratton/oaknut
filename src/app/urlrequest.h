@@ -29,16 +29,17 @@ public:
      */
     
     /** Create and return a GET request */
-    static URLRequest* get(const string& url, int flags=0);
+    static URLRequest* get(const string& url, Object* owner=nullptr, int flags=0);
 
     /** Create and return a POST request */
-    static URLRequest* post(const string& url, const bytearray& body);
+    static URLRequest* post(const string& url, const bytearray& body, Object* owner=nullptr);
 
     /** Create and return a PATCH request */
-    static URLRequest* patch(const string& url, const bytearray& body);
+    static URLRequest* patch(const string& url, const bytearray& body, Object* owner=nullptr);
     
     /** Create and return a request */
-    static URLRequest* createAndStart(const string& url, const string& method, const bytearray& body, int flags);
+    static URLRequest* createAndStart(const string& url, const string& method,
+            const bytearray& body, Object* owner=nullptr, int flags=0);
     
     /**@}*/
 
@@ -94,7 +95,7 @@ public:
     
 protected:
 
-    URLRequest(const string& url, const string& method, const bytearray& body, int flags);
+    URLRequest(const string& url, const string& method, const bytearray& body, Object* owner, int flags);
     ~URLRequest();
     
     virtual void start();
@@ -113,6 +114,7 @@ protected:
     sp<Task> _remoteTask;
     os_sem _sem; // Signalled by cancel(). IO task should wait on or poll this to know if request cancelled. 
     std::atomic<bool> _remoteLoadComplete;
+    sp<Object> _owner;
 
     // Request data
     string _url;

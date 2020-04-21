@@ -142,7 +142,7 @@ void ImageView::loadImage() {
             }}
         });
     } else if (_url.length() > 0) {
-        _request = URLRequest::get(_url, URL_FLAG_BITMAP);
+        _request = URLRequest::get(_url, this, URL_FLAG_BITMAP);
         _request->handle([=](const URLResponse* res, bool isFromCache) {
             setBitmap(res->decoded.bitmap);
         });

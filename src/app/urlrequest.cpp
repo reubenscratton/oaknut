@@ -111,7 +111,8 @@ protected:
 static URLCache* s_cache;
 
 
-URLRequest::URLRequest(const string& url, const string& method, const bytearray& body, int flags) : _url(url) {
+URLRequest::URLRequest(const string& url, const string& method, const bytearray& body,
+        Object* owner, int flags) : _url(url), _owner(owner) {
     if (!s_cache) {
         s_cache = new URLCache();
     }
@@ -123,11 +124,12 @@ URLRequest::URLRequest(const string& url, const string& method, const bytearray&
     os_sem_init(&_sem, 0);
 }
 
-URLRequest* URLRequest::createAndStart(const string& url, const string& method, const bytearray& body, int flags) {
+URLRequest* URLRequest::createAndStart(const string& url, const string& method,
+        const bytearray& body, Object* owner, int flags) {
     
     // TODO: lookup existing request by url?
     
-    auto req = new URLRequest(url, method, body, flags);
+    auto req = new URLRequest(url, method, body, owner, flags);
     req->retain();
     Task::postToMainThread([=]() {
         req->start();
@@ -135,14 +137,14 @@ URLRequest* URLRequest::createAndStart(const string& url, const string& method, 
     });
     return req;
 }
-URLRequest* URLRequest::get(const string& url, int flags/*=0*/) {
-    return createAndStart(url, "GET", bytearray(), flags);
+URLRequest* URLRequest::get(const string& url, Object* owner, int flags/*=0*/) {
+    return createAndStart(url, "GET", bytearray(), owner, flags);
 }
-URLRequest* URLRequest::post(const string& url, const bytearray& body) {
-    return createAndStart(url, "POST", body, 0);
+URLRequest* URLRequest::post(const string& url, const bytearray& body, Object* owner) {
+    return createAndStart(url, "POST", body, owner, 0);
 }
-URLRequest* URLRequest::patch(const string& url, const bytearray& body) {
-    return createAndStart(url, "PATCH", body, 0);
+URLRequest* URLRequest::patch(const string& url, const bytearray& body, Object* owner) {
+    return createAndStart(url, "PATCH", body, owner, 0);
 }
 
 URLRequest::~URLRequest() {
@@ -266,6 +268,9 @@ void URLRequest::cancel() {
         _remoteTask->cancel();
         _remoteTask = nullptr;
     }
+    if (_owner) {
+        _owner = nullptr;
+    }
 }
 
 bool URLRequest::isCancelled() const {
@@ -275,6 +280,9 @@ bool URLRequest::isCancelled() const {
 void URLRequest::dispatchResponse(const URLResponse* response, bool isFromCache) {
     if (_handler && _status != Cancelled) {
         _handler(response, isFromCache);
+    }
+    if (_owner) {
+        _owner = nullptr;
     }
 }
 
