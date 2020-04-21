@@ -1,4 +1,4 @@
-package org.oaknut.main;
+package oaknut;
 
 import android.graphics.Bitmap;
 import android.graphics.Rect;

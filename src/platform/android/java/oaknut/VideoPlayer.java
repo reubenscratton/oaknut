@@ -1,4 +1,4 @@
-package org.oaknut.main;
+package oaknut;
 
 import android.graphics.SurfaceTexture;
 import android.media.AudioFormat;

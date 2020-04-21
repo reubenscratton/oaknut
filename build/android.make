@@ -12,7 +12,7 @@ $(error ANDROID_SDK_DIR must be set to point to the root of a valid Android SDK)
 endif
 
 # Derived paths
-JAVA_FILES:=$(wildcard $(OAKNUT_DIR)/src/platform/android/java/org.oaknut.main/*.java)
+JAVA_FILES:=$(wildcard $(OAKNUT_DIR)/src/platform/android/java/oaknut/*.java)
 RESOURCES_DIR:=$(PROJECT_ROOT)/platform/android/res
 MANIFEST_FILE:=$(PROJECT_ROOT)/platform/android/AndroidManifest.xml
 ANDROID_NDK_DIR:=$(ANDROID_SDK_DIR)/ndk-bundle

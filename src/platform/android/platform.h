@@ -2,9 +2,9 @@
 #include <GLES2/gl2ext.h>
 typedef float GLfloat;
 
-#define PACKAGE "org/oaknut/main"
+#define PACKAGE "oaknut"
 #define JAVA_FN(RETURNS, CLAZZ,METHOD) extern "C" JNIEXPORT \
-    RETURNS JNICALL Java_org_oaknut_main_ ## CLAZZ ## _ ## METHOD
+    RETURNS JNICALL Java_oaknut_ ## CLAZZ ## _ ## METHOD
 
 #include <stdlib.h>
 #include <fcntl.h>

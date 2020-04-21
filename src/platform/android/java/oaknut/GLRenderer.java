@@ -1,4 +1,4 @@
-package org.oaknut.main;
+package oaknut;
 
 import android.opengl.EGL14;
 import android.opengl.EGLConfig;

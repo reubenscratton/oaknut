@@ -1,4 +1,4 @@
-package org.oaknut.main;
+package oaknut;
 
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;

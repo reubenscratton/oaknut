@@ -11,9 +11,9 @@
         android:icon="@mipmap/ic_launcher"
         android:label="emBeeb"
         android:supportsRtl="true"
-        android:name="org.oaknut.main.App">
+        android:name="oaknut.App">
         <activity
-            android:name="org.oaknut.main.MainActivity"
+            android:name="oaknut.MainActivity"
             android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

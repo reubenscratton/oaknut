@@ -1,4 +1,4 @@
-package org.oaknut.main;
+package oaknut;
 
 
 import java.util.concurrent.Future;

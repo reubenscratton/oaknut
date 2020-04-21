@@ -1,4 +1,4 @@
-package org.oaknut.main;
+package oaknut;
 
 import android.app.Activity;
 import android.content.Context;

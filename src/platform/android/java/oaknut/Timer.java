@@ -1,4 +1,4 @@
-package org.oaknut.main;
+package oaknut;
 
 
 public class Timer implements Runnable {

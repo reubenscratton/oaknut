@@ -1,4 +1,4 @@
-package org.oaknut.main;
+package oaknut;
 
 import android.content.Context;
 import android.graphics.SurfaceTexture;

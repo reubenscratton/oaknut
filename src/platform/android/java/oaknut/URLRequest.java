@@ -1,4 +1,4 @@
-package org.oaknut.main;
+package oaknut;
 
 import android.text.TextUtils;
 import java.io.BufferedInputStream;
@@ -15,9 +15,7 @@ import java.util.Map;
 
 public class URLRequest {
 
-
     static final Charset UTF_8 = Charset.forName("UTF-8");
-
 
     long cobj;
     String url;
