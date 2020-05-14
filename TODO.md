@@ -1,14 +1,13 @@
 Oaknut TODOs
 ============
+
+Feature: URL cache should not issue any remote request if cache entry still valid. (By default, obviously... lets allow a flag to override it).
+
 Feature: Tasks need priorities.
 
 Feature: URL RAM cache has very wrong byte count for images. Need an API for measuring RAM cost of decoded URLs.
 
-Feature: URL cache should not issue any remote request if cache entry still valid. (By default, obviously... lets allow a flag to override it).
-
 Feature: Logging categories? Must be compiled in or out, no runtime switching.
-
-Feature: IO thread pool should be dynamically sized up to some maximum number, with idle threads terminating after z seconds inactivity.
 
 Feature: URL disk cache max size enforcement. Low-priority background IO task
 
@@ -397,7 +396,5 @@ Android: "Glyphs are packed in the textures in columns. Each texture has list of
 2048x512 alpha cache	= 1MB
 1024x512 RGBA cache	= 2MB
 2048x256 RGBA cache	= 8MB
-
-
 
 

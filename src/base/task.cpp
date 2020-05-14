@@ -118,13 +118,29 @@ public:
 #endif
         delete init;
 
-dontjudgeme:
-        // Wait at most 5 seconds for something to do
-        while (pool->_sem.wait(5000)) {
+        for (;;) {
+
+            // Wait at most 5 seconds for something to do
+            pool->_mutex.lock();
+            pool->_numThreadsWaiting++;
+            pool->_mutex.unlock();
+            bool gotWork = pool->_sem.wait(5000);
+
+            // Update wait count
+            pool->_mutex.lock();
+            pool->_numThreadsWaiting--;
+                    
+            // If there's no work (i.e. wait timed out) and thread is surplus to minimum requirement, break the loop
+            if (!gotWork) {
+                if (pool->_numThreadsRunning > pool->_minThreads) {
+                    break;
+                }
+                pool->_mutex.unlock();
+                continue;
+            }
 
             // Remove subtask from head of subtask queue
             Task::subtask subtask;
-            pool->_mutex.lock();
             assert(!pool->_subtasks.empty());
             auto tt = const_cast<Task::subtask&>(pool->_subtasks.top());
             subtask = std::move(tt);
@@ -138,12 +154,6 @@ dontjudgeme:
             s_threadLocalData.flush();
         }
         
-        // Wait timed out, exit the thread unless pool is already at minimum thread count
-        pool->_mutex.lock();
-        if (pool->_numThreadsRunning <= pool->_minThreads) {
-            pool->_mutex.unlock();
-            goto dontjudgeme;
-        }
         
         // Remove the pthread from the pool
         pool->_numThreadsRunning--;
@@ -156,15 +166,17 @@ dontjudgeme:
 
     void enqueueSubtask(Task::subtask& subtask) {
         _mutex.lock();
-        if (_numThreadsRunning < _maxThreads) {
-            for (int i=0 ; i<_maxThreads ; i++) {
-                pthread_t& thread = _threads[i];
-                if (thread == nullptr) {
-                    auto init = new thread_init {this, i};
-                    int status = pthread_create(&thread, NULL, thread_func, init);
-                    assert(status == 0);
-                    _numThreadsRunning++;
-                    break;
+        if (_numThreadsWaiting == 0) {
+            if (_numThreadsRunning < _maxThreads) {
+                for (int i=0 ; i<_maxThreads ; i++) {
+                    pthread_t& thread = _threads[i];
+                    if (thread == nullptr) {
+                        auto init = new thread_init {this, i};
+                        int status = pthread_create(&thread, NULL, thread_func, init);
+                        assert(status == 0);
+                        _numThreadsRunning++;
+                        break;
+                    }
                 }
             }
         }
@@ -176,6 +188,7 @@ dontjudgeme:
     int _minThreads;
     int _maxThreads;
     int _numThreadsRunning;
+    int _numThreadsWaiting;
     pthread_t* _threads;
     std::priority_queue<Task::subtask> _subtasks;
     std::mutex _mutex;
