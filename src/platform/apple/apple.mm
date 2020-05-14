@@ -8,43 +8,46 @@
 
 #import <oaknut.h>
 
-string nsstr(NSString* s) {
+string ns2str(NSString* s) {
     auto sz = [s cStringUsingEncoding:NSUTF8StringEncoding];
     return string(sz, (uint32_t)strlen(sz));
+}
+NSString* str2ns(const string& s) {
+    return [NSString stringWithCString:s.c_str() encoding:NSUTF8StringEncoding];
 }
 error nserr(NSError* e) {
     if (!e) {
         return error::none();
     }
-    return error((int)e.code, nsstr(e.localizedDescription));
+    return error((int)e.code, ns2str(e.localizedDescription));
 }
 
 int App::getIntSetting(const string& key, const int defaultValue) {
-    id val = [[NSUserDefaults standardUserDefaults] objectForKey:[NSString stringWithCString:key.c_str() encoding:NSUTF8StringEncoding]];
+    id val = [[NSUserDefaults standardUserDefaults] objectForKey:str2ns(key)];
     return val ? [val intValue] : defaultValue;
 }
 void App::setIntSetting(const string& key, const int value) {
-    [[NSUserDefaults standardUserDefaults] setObject:@(value) forKey:[NSString stringWithCString:key.c_str() encoding:NSUTF8StringEncoding]];
+    [[NSUserDefaults standardUserDefaults] setObject:@(value) forKey:str2ns(key)];
 }
 
 bool App::getBoolSetting(const string& key, const bool defaultValue) {
-    id val = [[NSUserDefaults standardUserDefaults] objectForKey:[NSString stringWithCString:key.c_str() encoding:NSUTF8StringEncoding]];
+    id val = [[NSUserDefaults standardUserDefaults] objectForKey:str2ns(key)];
     return val ? [val boolValue] : defaultValue;
 }
 void App::setBoolSetting(const string& key, const bool value) {
-    [[NSUserDefaults standardUserDefaults] setObject:@(value) forKey:[NSString stringWithCString:key.c_str() encoding:NSUTF8StringEncoding]];
+    [[NSUserDefaults standardUserDefaults] setObject:@(value) forKey:str2ns(key)];
 }
 
 string App::getStringSetting(const string& key, const string& defaultValue) {
-    id val = [[NSUserDefaults standardUserDefaults] objectForKey:[NSString stringWithCString:key.c_str() encoding:NSUTF8StringEncoding]];
+    id val = [[NSUserDefaults standardUserDefaults] objectForKey:str2ns(key)];
     if (!val) {
         return defaultValue;
     }
-    return nsstr((NSString*)val);
+    return ns2str((NSString*)val);
 }
 void App::setStringSetting(const string& key, const string& value) {
-    NSString* val = [NSString stringWithCString:value.c_str() encoding:NSUTF8StringEncoding];
-    [[NSUserDefaults standardUserDefaults] setObject:val forKey:[NSString stringWithCString:key.c_str() encoding:NSUTF8StringEncoding]];
+    NSString* val = str2ns(value);
+    [[NSUserDefaults standardUserDefaults] setObject:val forKey:str2ns(key)];
 }
 
 TIMESTAMP App::currentMillis() {
@@ -85,7 +88,7 @@ bool File::resolve(string& path) {
     //assets/...
     if (path.hasPrefix("//assets/"_S)) {
         path.erase(0, 1); // remove just the leading slash, leaving the path as '/assets/...'
-        string bundlepath = nsstr([NSBundle bundleForClass:NSClassFromString(@"NativeView")].bundlePath);
+        string bundlepath = ns2str([NSBundle bundleForClass:NSClassFromString(@"NativeView")].bundlePath);
 #if TARGET_OS_OSX
         bundlepath.append("/Contents/Resources/"_S);
 #endif
@@ -131,7 +134,7 @@ bool File::resolve(string& path) {
     }
 
     // :-(
-    app->warn("Unknown path: %s", path.c_str());
+    warn("Unknown path: %s", path.c_str());
     return false;
 }
     

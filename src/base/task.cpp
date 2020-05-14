@@ -91,75 +91,95 @@ public:
         ThreadPool* pool;
         int thread_index;
     };
-    
-    ThreadPool(Task::exec_context ctx, int threads) : _ctx(ctx), _stop(false) {
-        for(int i=0 ; i<threads ; ++i) {
-            pthread_t thread;
-            auto init = new thread_init {this, i};
-            int status = pthread_create(&thread, NULL, thread_func, init);
-            assert(status == 0);
-            _threads.push_back(thread);
-        }
-    }
 
+    ThreadPool(Task::exec_context ctx, int minThreads, int maxThreads) : _ctx(ctx), _minThreads(minThreads), _maxThreads(maxThreads) {
+        _numThreadsRunning = 0;
+        _threads = (pthread_t*)calloc(maxThreads, sizeof(pthread_t));
+    }
     ~ThreadPool();
+    
     
     static void* thread_func(void* arg) {
         auto init = (thread_init*)arg;
+        int threadIndex = init->thread_index;
         ThreadPool* pool = init->pool;
         char name[64];
         const char* prefix;
         switch (pool->_ctx) {
-            case Task::MainThread: prefix="Main"; break;
             case Task::Background: prefix="Background"; break;
             case Task::IO: prefix="IO"; break;
             default: prefix="?"; break;
         }
-        sprintf(name, "%s %d", prefix, init->thread_index+1);
+        sprintf(name, "%s %d", prefix, threadIndex+1);
 #if PLATFORM_APPLE
         pthread_setname_np(name);
 #else
-        pthread_setname_np(pool->_threads[init->thread_index], name);
+        pthread_setname_np(pool->_threads[threadIndex], name);
 #endif
         delete init;
-        
-        for(;;) {
+
+dontjudgeme:
+        // Wait at most 5 seconds for something to do
+        while (pool->_sem.wait(5000)) {
+
+            // Remove subtask from head of subtask queue
             Task::subtask subtask;
-            if (pool->waitForSubtask(subtask)) {
-                subtask.exec();
-            }
+            pool->_mutex.lock();
+            assert(!pool->_subtasks.empty());
+            auto tt = const_cast<Task::subtask&>(pool->_subtasks.top());
+            subtask = std::move(tt);
+            pool->_subtasks.pop();
+            pool->_mutex.unlock();
+            
+            // Run the subtask
+            subtask.exec();
+            
+            // Clean up any dead objects on this thread
             s_threadLocalData.flush();
         }
+        
+        // Wait timed out, exit the thread unless pool is already at minimum thread count
+        pool->_mutex.lock();
+        if (pool->_numThreadsRunning <= pool->_minThreads) {
+            pool->_mutex.unlock();
+            goto dontjudgeme;
+        }
+        
+        // Remove the pthread from the pool
+        pool->_numThreadsRunning--;
+        pool->_threads[threadIndex] = nullptr;
+        pool->_mutex.unlock();
+        
+        s_threadLocalData.flush();
         return nullptr;
-
-    }
-    bool waitForSubtask(Task::subtask& subtask) {
-        std::unique_lock<std::mutex> lock(_mutex);
-        _condition.wait(lock,
-            [this]{ return _stop || !_subtasks.empty(); });
-        if(_stop || _subtasks.empty())
-            return false;
-        auto tt = const_cast<Task::subtask&>(_subtasks.top());
-        subtask = std::move(tt);
-        _subtasks.pop();
-        return true;
     }
 
     void enqueueSubtask(Task::subtask& subtask) {
-        if (_stop) {
-            app->log("enqueue on stopped ThreadPool");
-            return;
+        _mutex.lock();
+        if (_numThreadsRunning < _maxThreads) {
+            for (int i=0 ; i<_maxThreads ; i++) {
+                pthread_t& thread = _threads[i];
+                if (thread == nullptr) {
+                    auto init = new thread_init {this, i};
+                    int status = pthread_create(&thread, NULL, thread_func, init);
+                    assert(status == 0);
+                    _numThreadsRunning++;
+                    break;
+                }
+            }
         }
-        std::unique_lock<std::mutex> lock(_mutex);
         _subtasks.emplace(subtask);
-        _condition.notify_one();
+        _mutex.unlock();
+        _sem.signal();
     }
 
-    vector<pthread_t> _threads;
+    int _minThreads;
+    int _maxThreads;
+    int _numThreadsRunning;
+    pthread_t* _threads;
     std::priority_queue<Task::subtask> _subtasks;
     std::mutex _mutex;
-    std::condition_variable _condition;
-    std::atomic<bool> _stop;
+    semaphore _sem;
     Task::exec_context _ctx;
     
 };
@@ -192,36 +212,42 @@ void Task::subtask::exec() {
 
 void Task::enqueueNextSubtask(const variant& input) {
     if (!s_backgroundThreadPool) {
-        //unsigned int ncores=0,nthreads=0,ht=0;
-        //asm volatile("cpuid": "=a" (ncores), "=b" (nthreads) : "a" (0xb), "c" (0x1) : );
-        //ht=(ncores!=nthreads);
-        const auto ncores = std::thread::hardware_concurrency();
-        //printf("Cores: %d\nThreads: %d\nHyperThreading: %s\n",ncores,nthreads,ht?"Yes":"No");
-        s_backgroundThreadPool = new ThreadPool(Task::Background, MAX(1,ncores-1));
-        s_ioThreadPool = new ThreadPool(Task::IO, 2); // TODO: work out some kind of heuristic
+        unsigned int ncores=0;
+#if defined(__x86_64__) || defined(__i386__) // For Intel we want to know core count, not thread count. Hyperthreading is a bit of a con.
+        unsigned int nthreads=0,hyperthreaded=0;
+        asm volatile("cpuid": "=a" (ncores), "=b" (nthreads) : "a" (0xb), "c" (0x1) : );
+        hyperthreaded = (ncores!=nthreads);
+#else
+        ncores = std::thread::hardware_concurrency();
+#endif
+        s_backgroundThreadPool = new ThreadPool(Task::Background, 1, MAX(1,ncores-1));
+        s_ioThreadPool = new ThreadPool(Task::IO, 2, (int)app->getStyleFloat("app.max-io-threads"));
     }
     
     // Detach next subtask from internal list and set its input
-    Task::subtask subtask = _subtasks[0];
-    _subtasks.erase(_subtasks.begin());
-    subtask._input = input;
-    
-    //assert(_status == Created || _status == Executing);
-    
-    _status = Queued;
-    switch(subtask._threadType) {
-        case Task::Background:
-            s_backgroundThreadPool->enqueueSubtask(subtask);
-            break;
-        case Task::IO:
-            s_ioThreadPool->enqueueSubtask(subtask);
-            break;
-        case Task::MainThread:
-            postToMainThread([=]() mutable {
+    postToMainThread([=] () {
+        if (isCancelled()) {
+            return;
+        }
+        Task::subtask subtask = _subtasks[0];
+        _subtasks.erase(_subtasks.begin());
+        subtask._input = input;
+        
+        //assert(_status == Created || _status == Executing);
+        
+        _status = Queued;
+        switch(subtask._threadType) {
+            case Task::Background:
+                s_backgroundThreadPool->enqueueSubtask(subtask);
+                break;
+            case Task::IO:
+                s_ioThreadPool->enqueueSubtask(subtask);
+                break;
+            case Task::MainThread:
                 subtask.exec();
-            });
-            break;
-    }
+                break;
+        }
+    });
     
 }
 
@@ -235,18 +261,8 @@ void Task::enqueueNextSubtask(const variant& input) {
 
 
 ThreadPool::~ThreadPool() {
-    _stop = true;
-    _condition.notify_all();
-    /*for (auto& thread : _threads) {
-        thread->join();
-    }*/
 }
  
-
-/*
-void Thread::post(std::function<void ()> callback) {
-    _callbacks.push_back(callback);
-}*/
 
 #if PLATFORM_WEB
     worker_handle _worker;
@@ -262,7 +278,7 @@ Task::Task(const vector<subtask>& subtasks) {
     }
 }
 Task::~Task() {
-    //app->log("~Task(%X : %d)", this, _runContext);
+    //log("~Task(%X : %d)", this, _runContext);
 }
 
 
@@ -274,7 +290,6 @@ void Task::cancel() {
         assert(_subtasks.size()==0);
         return;
     }
-    _subtasks.clear();
     _status = Cancelled;
 }
 

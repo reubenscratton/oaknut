@@ -22,7 +22,7 @@ View::View() : _alpha(1.0f),
 }
 
 View::~View() {
-//	app->log("~View()");
+//	log("~View()");
     if (_statemapStyleValues) {
         delete _statemapStyleValues;
     }
@@ -79,7 +79,7 @@ bool View::applySingleStyle(const string& name, const style& value) {
         } else if (str == "gone") {
             setVisibility(Gone);
         } else {
-            app->warn("Invalid visibility: '%s'", str.c_str());
+            warn("Invalid visibility: '%s'", str.c_str());
         }
         return true;
     } else if (name=="gravity") {
@@ -231,7 +231,7 @@ RenderOp* View::processDrawable(const style& value) {
                 EDGEINSETS insets = subval.edgeInsetsVal();
                 op->setInset(insets);
             } else {
-                app->warn("Unknown drawable attribute: %s", it.first.c_str());
+                warn("Unknown drawable attribute: %s", it.first.c_str());
             }
         }
     } else {
@@ -456,7 +456,7 @@ void View::setRect(const RECT& rect) {
     setRectSize(rect.size);
     setRectOrigin(rect.origin);
     
-    app->log("Break here! Want to see what uses this");
+    log("Break here! Want to see what uses this");
     _widthMeasureSpec = MEASURESPEC::Abs(rect.size.width);
     _heightMeasureSpec = MEASURESPEC::Abs(rect.size.height);
     _alignspecHorz = {0,0,0, rect.origin.x};
@@ -575,6 +575,7 @@ void View::invalidateIntrinsicSize() {
             constraint.height -= (_padding.top + _padding.bottom);
             updateIntrinsicSize(constraint);
             _intrinsicSizeValid = true;
+            setNeedsLayout();
         }
     }
     setNeedsFullRedraw();
@@ -644,7 +645,7 @@ float View::getAlignspecVal(const ALIGNSPEC& spec, bool isVertical) {
             anchorSize -= isVertical ? (anchor->_padding.top+anchor->_padding.bottom):  (anchor->_padding.left+anchor->_padding.right);
         } else {
             if (anchor->_parent != _parent) {
-                app->warn("View layout is not clever enough for non-sibling anchors");
+                warn("View layout is not clever enough for non-sibling anchors");
             }
             anchorVal = isVertical ? anchor->_rect.origin.y : anchor->_rect.origin.x;
         }
@@ -754,7 +755,7 @@ void View::layout(RECT containingRect) {
     }
 #if DEBUG
     if (_debugTag.length()) {
-        app->log("%s: _intrinsicSize is %f x %f", _debugTag.c_str(), _intrinsicSize.width, _intrinsicSize.height);
+        log("%s: _intrinsicSize is %f x %f", _debugTag.c_str(), _intrinsicSize.width, _intrinsicSize.height);
     }
 #endif
 
@@ -789,7 +790,7 @@ void View::layout(RECT containingRect) {
         
 #if DEBUG
         if (_debugTag.length()) {
-            app->log("%s: laying out subviews in %s", _debugTag.c_str(), constraintForSubviews.toString().c_str());
+            log("%s: laying out subviews in %s", _debugTag.c_str(), constraintForSubviews.toString().c_str());
         }
 #endif
 
@@ -840,7 +841,7 @@ void View::layout(RECT containingRect) {
     
 #if DEBUG
     if (_debugTag.length()) {
-        app->log("%s: < layout() _rect is %s", _debugTag.c_str(), _rect.toString().c_str());
+        log("%s: < layout() _rect is %s", _debugTag.c_str(), _rect.toString().c_str());
     }
 #endif
 
@@ -1607,7 +1608,7 @@ void View::debugDumpTree(int depth) {
     string line;
     for (int i=0 ; i<depth ; i++) line.append("-");
     line.append(debugDescription());
-    app->log(line.c_str());
+    log(line.c_str());
 
     if (_renderList) {
         for (auto op : _renderList->_ops) {

@@ -1,6 +1,14 @@
 R"({
 font-size: 17dp
 
+app: {
+    max-io-threads: 50
+    cache: {
+        ram: 50MB
+        disk: 100MB
+    }
+}
+
 window: {
     default-width:200dp
     default-height:200dp

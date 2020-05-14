@@ -9,7 +9,7 @@
 
 
 Worker::Worker(const string& name) {
-    app->log("Worker::Worker(%s)", name.c_str());
+    log("Worker::Worker(%s)", name.c_str());
 #if PLATFORM_WEB
     string jsfile = name + ".js";
     _worker = emscripten_create_worker(jsfile.c_str());

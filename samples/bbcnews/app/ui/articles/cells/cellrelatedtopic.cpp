@@ -36,7 +36,7 @@ public:
 
 
     void onTapped() override {
-        app->log("todo! open topic");
+        log("todo! open topic");
         //BNNavigationController* navController = [BNNavigationController get];
         //[navController openItem:self.collection withinCollection:nil andTitle:nil];
     }

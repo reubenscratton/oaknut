@@ -11,12 +11,13 @@
 static NSURLSession* s_session;
 
 
-extern string nsstr(NSString* s);
+extern string ns2str(NSString* s);
+extern NSString* str2ns(const string& s);
 extern error nserr(NSError* e);
 
 
 
-error URLRequest::ioLoadRemote(URLResponse* response) {
+error URLRequest::ioLoadRemote() {
 
     // One-off init of session object
     if (!s_session) {
@@ -25,7 +26,7 @@ error URLRequest::ioLoadRemote(URLResponse* response) {
     }
         
     // Build the native request
-    NSString* urlstr = [NSString stringWithCString:_url.c_str() encoding:[NSString defaultCStringEncoding]];
+    NSString* urlstr = str2ns(_url);
     NSMutableURLRequest* req = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:urlstr]];
     req.HTTPMethod = [NSString stringWithUTF8String:_method.c_str()];
     req.timeoutInterval = 15;
@@ -38,6 +39,12 @@ error URLRequest::ioLoadRemote(URLResponse* response) {
         [req setValue:headerValue forHTTPHeaderField:headerName];
     }
     req.cachePolicy = NSURLRequestReloadIgnoringCacheData;
+    if (_cachedResponse) {
+        auto etag_it = _cachedResponse->headers.find("etag");
+        if (etag_it != _cachedResponse->headers.end()) {
+            [req setValue:str2ns(etag_it->second) forHTTPHeaderField:@"If-None-Match"];
+        }
+    }
     
     // Execute the native request and block this IO thread on our semaphore until it's signalled
     __block error err = error::none();
@@ -48,13 +55,13 @@ error URLRequest::ioLoadRemote(URLResponse* response) {
                 err = nserr(error);
             } else {
                 NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)res;
-                response->httpStatus = (int)httpResponse.statusCode;
+                _remoteResponse->httpStatus = (int)httpResponse.statusCode;
                 
                 // Get all response headers into a generic container
                 //  Cache-Control: public, max-age=31536000
-                response->headers.clear();
+                _remoteResponse->headers.clear();
                 for (NSString* headerName in httpResponse.allHeaderFields.allKeys) {
-                    response->headers[nsstr([headerName lowercaseString])] = nsstr(httpResponse.allHeaderFields[headerName]);
+                    _remoteResponse->headers[ns2str([headerName lowercaseString])] = ns2str(httpResponse.allHeaderFields[headerName]);
                 }
 
                 // Read the response data into contiguous memory
@@ -62,15 +69,15 @@ error URLRequest::ioLoadRemote(URLResponse* response) {
                 [data enumerateByteRangesUsingBlock:^(const void * _Nonnull bytes, NSRange byteRange, BOOL * _Nonnull stop) {
                     responseData.append((uint8_t*)bytes, (int32_t)byteRange.length);
                 }];
-                response->data = responseData;
+                _remoteResponse->data = responseData;
             }
         }
-        os_sem_signal(_sem);
+        _sem.signal();
     }];
     [dataTask resume];
     
     // Wait for either request to complete or for cancel().
-    os_sem_wait(_sem);
+    _sem.wait();
     
     // If semaphore signalled by cancel(), the data task has not completed so cancel it.
     if (_status == Status::Cancelled) {

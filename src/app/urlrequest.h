@@ -103,7 +103,7 @@ protected:
     virtual void dispatchResponse(const URLResponse* response, bool isFromCache);
 
     // Platform-implemented methods
-    error ioLoadRemote(URLResponse* response); // runs on an IO thread, ie should block
+    error ioLoadRemote(); // runs on an IO thread, ie should block
 
     // General data
     Status _status;
@@ -112,7 +112,7 @@ protected:
     std::function<void(const URLResponse*, bool)> _handler;
     sp<Task> _cacheTask;
     sp<Task> _remoteTask;
-    os_sem _sem; // Signalled by cancel(). IO task should wait on or poll this to know if request cancelled. 
+    semaphore _sem; // Signalled if request cancelled
     std::atomic<bool> _remoteLoadComplete;
     sp<Object> _owner;
 
@@ -121,20 +121,24 @@ protected:
     string _method;
     map<string,string> _headers;
     bytearray _body;
+  
+    // Responses
+    sp<class URLResponse> _cachedResponse;
+    sp<URLResponse> _remoteResponse;
     
-    
-    
-    friend class URLCache;
+private:
+    void startRemoteLoad(const sha1_t& sha);
 };
 
 class URLResponse : public Object {
 public:
+    
+    // Raw response data
     int httpStatus;
     map<string,string> headers;
-    
-    // Raw bytes. This may be zero length if the
-    // response has been decoded.
-    bytearray data;
+    TIMESTAMP downloadTime;
+    TIMESTAMP expiryTime;
+    bytearray data; // NB: May be reset to zero length after decoding
     
     // Decoded forms. At most one of these will be set.
     struct {

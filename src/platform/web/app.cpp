@@ -30,7 +30,7 @@ bool App::fileResolve(string& path) const {
         return true;
     }
 
-    app->warn("Could not resolve file path: %s", path.c_str());
+    warn("Could not resolve file path: %s", path.c_str());
     return false;
 }
 bool App::fileExists(string& path) const {

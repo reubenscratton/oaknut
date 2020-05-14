@@ -31,7 +31,7 @@ FontWeb::FontWeb(const string& fontAssetPath, float size, float weight) : Font(f
             }
             fontFamily.hadSuffix(".ttf");
             fontFamily.hadSuffix(".otf");
-            //app->log("Custom font %s loaded from %s", fontFamily.c_str(), fontAssetPath.c_str());
+            //log("Custom font %s loaded from %s", fontFamily.c_str(), fontAssetPath.c_str());
             string fontDataStr = "@font-face { font-family:\"";
             fontDataStr += fontFamily;
             fontDataStr += "\"; src: url(data:application/font-sfnt;base64,";

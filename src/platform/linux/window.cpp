@@ -141,10 +141,10 @@ public:
                 window->_inputFlags &= ~INPUT_FLAG_LBUTTON_DOWN;
                 break;
             default:
-                app->log("unhandled mouse event type=%d", event->type);
+                log("unhandled mouse event type=%d", event->type);
                 return FALSE;
         }
-        //app->log("t=%d x=%d y=%d", eventType, x, y);
+        //log("t=%d x=%d y=%d", eventType, x, y);
         INPUTEVENT inputEvent;
         inputEvent.deviceType = INPUTEVENT::Mouse;
         inputEvent.deviceIndex = 0;

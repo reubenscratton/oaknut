@@ -5,12 +5,12 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
-template <typename K>
+template <typename K, typename V>
 class MruCache {
 public:
 	typedef struct {
 		K key;
-		Object* value;
+		V value;
 		size_t cost;
 	} ENTRY;
 	typedef typename std::list<ENTRY>::iterator list_iterator_t;
@@ -18,7 +18,7 @@ public:
 	MruCache(size_t max) : _max(max) {
 	}
 	
-	bool get(const K& key, Object** p) {
+	bool get(const K& key, V* p) {
 		auto it = _map.find(key);
 		if (it == _map.end()) {
 			*p = NULL;
@@ -29,7 +29,7 @@ public:
 		return true;
 	}
 
-	void put(const K& key, Object* value, size_t cost) {
+	void put(const K& key, V& value, size_t cost) {
 		ENTRY entry;
 		entry.key = key;
 		entry.value = value;

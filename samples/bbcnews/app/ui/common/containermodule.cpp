@@ -62,7 +62,7 @@ void BNContainerModule::updateLayoutWithContentObject(BNContent* contentObject) 
 			submodule->updateLayoutWithContentObject(contentObject);
 		}
         catch(...) {
-			app->warn("Exception in layout");
+			warn("Exception in layout");
 		}
 	}
 }

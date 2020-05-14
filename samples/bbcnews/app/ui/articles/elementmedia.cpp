@@ -14,17 +14,17 @@ BNElementMedia::BNElementMedia(BNRelationship* relationship) {
 
 
 void BNElementMedia::measureForContainingRect(const RECT& rect) {
-    app->log("todo: BNElementMedia::measureForContainingRect");
+    log("todo: BNElementMedia::measureForContainingRect");
 	//[self.mediaCell measureForContainingRect:rect];
 }
 
 POINT BNElementMedia::getContentFrameOrigin() {
-    app->log("todo");
+    log("todo");
     return POINT {0,0};
 	//return _mediaCell->_frameOrigin;
 }
 void BNElementMedia::setContentFrameOrigin(POINT pt) {
-    app->log("todo");
+    log("todo");
 	//_mediaCell.frameOrigin = pt;
 }
 /*

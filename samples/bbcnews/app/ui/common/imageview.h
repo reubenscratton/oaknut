@@ -27,7 +27,7 @@ public:
     void setBNImage(BNImage* image);
     BNImage* getBNImage();
     void updateImageKeyDimensions();
-    void tryUpdateImage(bool startDownloadIfNotInCache);
+    void tryUpdateImage();
 
     TIMESTAMP _timeImageUrlSet;
     BNImage* _bnimage;

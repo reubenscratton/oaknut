@@ -506,21 +506,21 @@ skipDraw:
 #if DEBUG
 static void debugDump(Surface* surface) {
     static int s_frame=0;
-    app->log("Frame %d lists=%d batches=%d", ++s_frame, (int)surface->_renderLists.size(), (int)surface->_listBatches.size());
+    log("Frame %d lists=%d batches=%d", ++s_frame, (int)surface->_renderLists.size(), (int)surface->_listBatches.size());
     for (auto it : surface->_renderLists) {
         RenderList* list = it;
-        app->log("> list order=%d size=%d", list->_renderListsIndex, list->_ops.size());
+        log("> list order=%d size=%d", list->_renderListsIndex, list->_ops.size());
     }
     for (auto it : surface->_listBatches) {
         RenderBatch* batch = it;
-        app->log("> batch size=%d", batch->_ops.size());
+        log("> batch size=%d", batch->_ops.size());
         for (auto jt : batch->_ops) {
             RenderOp* op = jt;
             string str = op->debugDescription();
-            app->log(" op=%s", str.c_str());
+            log(" op=%s", str.c_str());
         }
     }
-    app->log("");
+    log("");
 }
 #endif
 */
@@ -532,11 +532,11 @@ void Surface::checkSanity(View* view, bool dump) {
         viewsToCheck.erase(viewsToCheck.begin());
         if (dump) {
 #if DEBUG
-            string log = viewToCheck->debugDescription();
+            string logmsg = viewToCheck->debugDescription();
             if (viewToCheck->_renderList) {
-                log.append(string::format(" %d", viewToCheck->_renderList->_renderListsIndex));
+                logmsg.append(string::format(" %d", viewToCheck->_renderList->_renderListsIndex));
             }
-            app->log(log.c_str());
+            log(logmsg.c_str());
 #endif
         } else {
             if (viewToCheck->_renderList && -1 != viewToCheck->_renderList->_renderListsIndex) {

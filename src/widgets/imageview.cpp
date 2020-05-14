@@ -39,6 +39,9 @@ bool ImageView::applySingleStyle(const string& name, const style& value) {
 }
 
 void ImageView::setImageUrl(const string& url) {
+    if (0 == url.compare(_url)) {
+        return;
+    }
     cancelLoad();
 	_url = url;
     _assetPath = "";
@@ -70,14 +73,14 @@ void ImageView::setTexture(Texture* texture) {
     _renderOp->setTexture(texture);
     _rectTex = RECT(0,0,1,1);
     invalidateIntrinsicSize();
-    _loaded = true;
+    _loaded = (texture!=nullptr);
 }
 
 void ImageView::setBitmap(Bitmap *bitmap) {
     _renderOp->setBitmap(bitmap);
     _rectTex = RECT(0,0,1,1);
     invalidateIntrinsicSize();
-    _loaded = true;
+    _loaded = (bitmap!=nullptr);
 }
 
 void ImageView::setImageNode(AtlasNode* node) {
@@ -105,7 +108,7 @@ void ImageView::detachFromSurface() {
 }
 
 void ImageView::loadImage() {
-    if (_loaded || !_window) {
+    if (_loaded || !_surface) {
         return;
     }
     if (!(_url.length() || _assetPath.length())) {
@@ -142,6 +145,7 @@ void ImageView::loadImage() {
             }}
         });
     } else if (_url.length() > 0) {
+        assert(!_request);
         _request = URLRequest::get(_url, this, URL_FLAG_BITMAP);
         _request->handle([=](const URLResponse* res, bool isFromCache) {
             setBitmap(res->decoded.bitmap);

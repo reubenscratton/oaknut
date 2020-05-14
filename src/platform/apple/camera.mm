@@ -65,7 +65,7 @@ public:
             CMVideoDimensions dims = CMVideoFormatDescriptionGetDimensions(format.formatDescription);
             int shortSize = MIN(dims.width, dims.height);
             int longSize = MAX(dims.width, dims.height);
-            app->log("short:%d long:%d", shortSize, longSize);
+            log("short:%d long:%d", shortSize, longSize);
             // Calculate the size diff
             auto shortDiff = shortSize - _options.frameSizeShort;
             auto longDiff = longSize - _options.frameSizeLong;

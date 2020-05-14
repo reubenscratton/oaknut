@@ -35,7 +35,7 @@ vector<BNContent::stub> BNCollections::followedCollections = [] {
     s_followedDatFilePath = [NSString stringWithFormat:@"%@/followed.dat", documentsDirectory];
     s_followedCollections = [[NSMutableArray alloc] init];
     [s_followedCollections addObjectsFromArray:[NSKeyedUnarchiver unarchiveObjectWithFile:s_followedDatFilePath]];*/
-    app->log("TODO: load followed collections");
+    log("TODO: load followed collections");
     return vector<BNContent::stub>();
 } ();
 static string s_followedDatFilePath;
@@ -104,7 +104,7 @@ void BNCollections::toggleFollowState(const BNContent::stub& stub) {
 
 void BNCollections::applyTopicOverrides(const vector<string>& topicOverrides) {
 	
-    app->log("TODO:applyTopicOverrides");
+    log("TODO:applyTopicOverrides");
 	
     // Iterate over all the overrides
 	/*bool changedFollowedCollections = false;
@@ -180,7 +180,7 @@ void BNCollections::applyTopicOverrides(const vector<string>& topicOverrides) {
 
 
 void BNCollections::save() {
-    app->log("TODO: BNCollections::save()");
+    log("TODO: BNCollections::save()");
     /*
 	dispatch_async(dispatch_get_main_queue(), ^() {
 		NSArray *copyCollections = [s_followedCollections copy];

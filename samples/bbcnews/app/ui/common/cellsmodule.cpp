@@ -228,7 +228,7 @@ void BNCellsModule::updateLayoutWithContentObject(BNContent* contentObject) {
     }
 
     if (dummyEndCell) {
-        app->log("TODO: dummy cell");
+        log("TODO: dummy cell");
         //cell->setDummyInfo(string::format(" +%ld more", (long)dummyNum));
     }
 
@@ -374,7 +374,7 @@ void BNCellsModule::updateSubviews(View* superview) {
 					cell->setPrefetchLevel(1);
 				}
 			}
-            app->log("Todo: need the scroll offset hack?");
+            log("Todo: need the scroll offset hack?");
 			//if (cell->_usesScrollviewOffset && [superview isKindOfClass:[UIScrollView class]]) {
 			//	UIScrollView* scrollView = (UIScrollView*)superview;
 			//	[cell adviseScrollviewOffset:scrollView.contentOffset.y + scrollView.contentInset.top];

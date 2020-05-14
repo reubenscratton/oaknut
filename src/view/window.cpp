@@ -59,7 +59,7 @@ void Window::resizeSurface(int width, int height) {
     if (_surface->_size.width==width && _surface->_size.height==height) {
         return;
     }
-	//app->log("Window::resize %d %d", width, height);
+	//log("Window::resize %d %d", width, height);
     _rect = RECT(0,0,width,height);
     _surface->setSize({(float)width, (float)height});
     applySafeInsetsChange(false);
@@ -97,7 +97,7 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
         if (!touchedView) {
             touchedView = topVC->getView();
         }
-        //app->log("Window DOWN! touchedView=%X", touchedView._obj);
+        //log("Window DOWN! touchedView=%X", touchedView._obj);
         _didSendLongpressEvent = false;
         if (event.deviceType != INPUTEVENT::ScrollWheel) {
             _longpressTimer = Timer::start([=] {
@@ -145,13 +145,13 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
             dy = event.pt.y - ptDown.y;
             float dist = sqrtf(dx * dx + dy * dy);
             if (app->idp(dist) >= TOUCH_SLOP) {
-                // app->log("Drag started");
+                // log("Drag started");
                 _dragIsVertical = fabsf(dy) >= fabsf(dx);
                 
                 // Dispatch a tap-cancel event to the current touch target
                 // (e.g. button that changes colour when pressed)
                 if (touchedView) {
-                    // app->log("Sending INPUT_EVENT_TAP_CANCEL to %X", touchedView._obj);
+                    // log("Sending INPUT_EVENT_TAP_CANCEL to %X", touchedView._obj);
                     INPUTEVENT cancelEvent = event;
                     cancelEvent.type = INPUT_EVENT_TAP_CANCEL;
                     touchedView->dispatchInputEvent(&cancelEvent);
@@ -164,7 +164,7 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
                 }
                 
                 // Dispatch a drag-start event and track the view that handles it
-                // app->log("Sending INPUT_EVENT_DRAG_START to top");
+                // log("Sending INPUT_EVENT_DRAG_START to top");
                 INPUTEVENT dragStartEvent = event;
                 dragStartEvent.delta = event.pt - ptDown;
                 dragStartEvent.type = INPUT_EVENT_DRAG_START;
@@ -185,7 +185,7 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
                     dragEvent.delta.y = 0;
                 }
             }
-            //app->log("Window sending INPUT_EVENT_DRAG_MOVE to %X", touchedView._obj);
+            //log("Window sending INPUT_EVENT_DRAG_MOVE to %X", touchedView._obj);
             touchedView->dispatchInputEvent(&dragEvent);
         }
         
@@ -196,7 +196,7 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
             _longpressTimer->stop();
             _longpressTimer = nullptr;
         }
-        //app->log("Window sending INPUT_EVENT_UP to %X", touchedView._obj);
+        //log("Window sending INPUT_EVENT_UP to %X", touchedView._obj);
         if (touchedView) {
             touchedView->dispatchInputEvent(&event);
         }
@@ -207,7 +207,7 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
                     INPUTEVENT tapEvent = event;
                     tapEvent.type = INPUT_EVENT_TAP;
                     touchedView->dispatchInputEvent(&tapEvent);
-                    // app->log("tap %d", numClicks);
+                    // log("tap %d", numClicks);
                 }
                 auto touchedViewCopy = touchedView;
                 multiclickTimer = Timer::start([=] {
@@ -217,7 +217,7 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
                         touchedViewCopy->dispatchInputEvent(&tapEvent);
                     }
                     multiclickTimer = nullptr;
-                    // app->log("tap confirmed at %d", numClicks);
+                    // log("tap confirmed at %d", numClicks);
                     numClicks = 0;
                 }, MULTI_CLICK_THRESHOLD, false);
             } else {

@@ -11,7 +11,7 @@
 DECLARE_DYNCREATE(BNAdvertModule, const variant&);
 
 BNAdvertModule::BNAdvertModule(const variant& json) : BNModule(json) {
-    app->log("TODO: Finish BNAdvertModule");
+    log("TODO: Finish BNAdvertModule");
     //if ([BNAdManager sharedInstance].bannerAdsEnabled) {
     //    self.parallax = [json[@"parallax"] boolValue];
     //}

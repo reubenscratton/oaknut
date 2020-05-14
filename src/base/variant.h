@@ -91,6 +91,7 @@ public:
         ERROR,
     } type;
     
+    static variant empty();
     void setType(enum type newType);
 
     variant();

@@ -6,6 +6,19 @@
 //
 
 
+/** @name Logging
+ * @{
+ */
+
+/** Log an informational message */
+void log(char const* fmt, ...);
+
+/** Log a warning message prefixed with "Warning: " */
+void warn(char const* fmt, ...);
+
+/**@}*/
+
+
 /**
  * @ingroup app_group
  * @class App
@@ -145,18 +158,6 @@ public:
     /** Sets a named bool setting. */
     void setBoolSetting(const string& key, bool value);
 
-    /**@}*/
-
-    /** @name Logging
-     * @{
-     */
-    
-    /** Log an informational message */
-    void log(char const* fmt, ...);
-    
-    /** Log a warning message prefixed with "Warning: " */
-    void warn(char const* fmt, ...);
-    
     /**@}*/
     
     

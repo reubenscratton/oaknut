@@ -59,7 +59,7 @@ public:
             }
             assert(error == 0);
             if (error) {
-                app->log("Error: %d", error);
+                log("Error: %d", error);
                 break;
             }
             if (ioOutputDataPacketSize > 0) {

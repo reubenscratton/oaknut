@@ -24,50 +24,6 @@
 
 
 
-/*TODO
-- (NSUInteger)hash {
-	return self.width*self.height*self.url.hash;
-}
-- (BOOL)isEqual:(id)anObject {
-	ImageCacheKey* otherKey = (ImageCacheKey*)anObject;
-	if (self.width != otherKey.width || self.height != otherKey.height) {
-		return NO;
-	}
-	return [self.url.absoluteString isEqualToString:otherKey.url.absoluteString];
-}*/
-
-
-//static NSCache* imageCache;
-
-
-/*
- Cache size
- ==========
- 
- Process limits are, allegedly  :
- 260 MB of ram on iPad 2 (Thanks RobCroll)
- 170-180MB of ram on devices with 512 Mb of ram total (iPhone 4, iPod touch 4g)
- */
-/*+(void)staticInit {
-	//dataCache = [NSCache new];
-	imageCache = [NSCache new];
-	if (IS_IPAD) {
-		imageCache.totalCostLimit = 96*1024*1024;
-	} else {
-		imageCache.totalCostLimit = 48*1024*1024;
-	}
-	
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(memoryWarning:)
-                                                 name:UIApplicationDidReceiveMemoryWarningNotification object:nil];
-}
-
-+(void)memoryWarning:(NSNotification*)notification {
-    [imageCache removeAllObjects];
-}*/
-
-
-
-
 BNImageView::BNImageView() {
 	_opaque = true;
     setContentMode(ContentMode::AspectFill);
@@ -85,7 +41,7 @@ void BNImageView::detachFromSurface() {
 void BNImageView::attachToSurface() {
     ImageView::attachToSurface();
     if (_imageKey.url.length()) {
-        tryUpdateImage(true);
+        tryUpdateImage();
     }
 }
 
@@ -94,7 +50,7 @@ void BNImageView::layout(RECT constraint) {
     
     if (_imageKey.width<=0 || _imageKey.height<=0) {
         if (getWidth()>0 && getHeight()>0) {
-            tryUpdateImage(true);
+            tryUpdateImage();
         }
     }
 }
@@ -144,7 +100,7 @@ void BNImageView::setBNImage(BNImage* image) {
 	_errorDisplay = false;
 	
 	if (/*_imageKey.url.length() &&*/ _surface) {
-        tryUpdateImage(true);
+        tryUpdateImage();
 	}
 	
 }
@@ -241,7 +197,7 @@ void BNImageView::updateImageKeyDimensions() {
 }
 
 
-void BNImageView::tryUpdateImage(bool startDownloadIfNotInCache) {
+void BNImageView::tryUpdateImage() {
     
     updateImageKeyDimensions();
     
@@ -257,27 +213,15 @@ void BNImageView::tryUpdateImage(bool startDownloadIfNotInCache) {
     }
     _imageKey.url = url;
     
+            
+    // Image data has to be downloaded. Schedule the activity view to appear
+    //[self performSelector:@selector(setShouldFade:) withObject:@YES afterDelay:0.5];
+    _shouldFade = true;
     
-    // Look in image cache first
-    app->log("todo: implement image cache lookup");
-    /*self.image = [imageCache objectForKey:self.imageKey];
-    if (self.image != nil) {
-        return;
-    }*/
-    
-    
-    // No image so fetch from urlcache or remotely
-    if (startDownloadIfNotInCache) {
-        
-        // Image data has to be downloaded. Schedule the activity view to appear
-        //[self performSelector:@selector(setShouldFade:) withObject:@YES afterDelay:0.5];
-        _shouldFade = true;
-        
-        // Create or attach to an HTTP request
-        _timeImageUrlSet = app->currentMillis();
-        string url = _imageKey.url;
-        setImageUrl(url);
-    }
+    // Create or attach to an HTTP request
+    _timeImageUrlSet = app->currentMillis();
+    setImageUrl(_imageKey.url);
+
 }
 
 

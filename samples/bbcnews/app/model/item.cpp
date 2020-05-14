@@ -147,7 +147,7 @@ BNItem::BNItem(const variant& json) : BNContent(json) {
 
         // Unknown!
         else {
-            app->warn("Unknown tag: %s", tag.c_str());
+            warn("Unknown tag: %s", tag.c_str());
             unknownTagDepth += isCloseTag? (-1) : 1;
         }
 

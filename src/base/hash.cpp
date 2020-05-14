@@ -608,6 +608,10 @@ unsigned char c;
 bool sha1_t::operator<(const struct sha1_t &s1) const {
     return memcmp(bytes, s1.bytes, sizeof(bytes)) < 0;
 }
+bool sha1_t::operator==(const struct sha1_t &s1) const {
+    return memcmp(bytes, s1.bytes, sizeof(bytes)) == 0;
+}
+
 
 sha1_t oak::sha1(const string& str) {
     sha1_t hash;

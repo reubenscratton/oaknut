@@ -379,7 +379,7 @@ void BNCellItem::setPrefetchLevel(int level) {
     }
     _prefetchLevel = level;
 	if (level == 1) {
-		app->log("Prefetching %s", _item->_modelId.c_str());
+		log("Prefetching %s", _item->_modelId.c_str());
         _reqPrefetch = BNURLRequest::requestContent(_item->_modelId, 0, BNURLRequest::Priority::Medium);
 	} else if (level == -1) {
 		//NSLog(@"Unprefetching %@", _item.modelId);

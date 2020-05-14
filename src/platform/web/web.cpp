@@ -86,12 +86,12 @@ static void oak_initDisplay(int screenWidth, int screenHeight, int screenScale) 
 }
 
 static void oak_setWindowSize(int width, int height) {
-    app->log("window size %d x %d", width, height);
+    log("window size %d x %d", width, height);
     app->_window->resizeSurface(width, height);
 }
 
 static void oak_userEvent(int eventType, int eventSourceId, int x, int y) {
-    //app->log("userEv type=%d src=%d x=%d,y=%d", eventType, eventSourceId, x, y);
+    //log("userEv type=%d src=%d x=%d,y=%d", eventType, eventSourceId, x, y);
     
     INPUTEVENT inputEvent;
     inputEvent.deviceType = INPUTEVENT::Mouse;
@@ -123,7 +123,7 @@ static map<string,KeyboardInputSpecialKeyCode> s_specialKeys = {
 static void oak_keyEvent(int keyDown, int keyCode, int keynameBuffPtr) {
     if (app->_window->_keyboardHandler) {
         string keyname((char*)keynameBuffPtr, -1);
-        //app->log("key: %s", keyname.c_str());
+        //log("key: %s", keyname.c_str());
         char32_t charCode = 0;
         KeyboardInputSpecialKeyCode specialKey = SpecialKeyNone;
         if (keyname.length()==1) {

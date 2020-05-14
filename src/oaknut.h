@@ -120,59 +120,7 @@ namespace oak {
 using namespace oak;
 #include __incstr(platform/PLATFORM/platform.h)
 
-#ifdef __APPLE__
-typedef dispatch_semaphore_t os_sem;
-#else
-typedef sem_t os_sem;
-#endif
-
-inline void os_sem_init(os_sem *sem, uint32_t value) {
-#ifdef __APPLE__
-    *sem = dispatch_semaphore_create(value);
-#else
-    sem_init(sem, 0, value);
-#endif
-}
-
-inline void os_sem_delete(os_sem sem) {
-#ifdef __APPLE__
-    sem = nil;
-#else
-    sem_destroy(&sem);
-#endif
-}
-
-// Returns true if semaphore aquired, false if timed out or errored
-inline bool os_sem_wait(os_sem sem, int timeoutMillis=-1) {
-#ifdef __APPLE__
-    return dispatch_semaphore_wait(sem, (timeoutMillis<0)?DISPATCH_TIME_FOREVER:(dispatch_time(DISPATCH_TIME_NOW, timeoutMillis*1000000LL)))!=0;
-#else
-    int r;
-    if (timeoutMillis<0) {
-        do {
-                r = sem_wait(&sem);
-        } while (r == -1 && errno == EINTR);
-    } else {
-        struct timespec ts;
-        if (clock_gettime(CLOCK_REALTIME, &ts) == -1)    {
-            return false;
-        }
-        ts.tv_sec += (timeoutMillis/1000);
-        ts.tv_nsec += (timeoutMillis%1000) * 1000000;
-        while ((r = sem_timedwait(&sem, &ts)) == -1 && errno == EINTR)
-            continue;
-    }
-    return (r == 0);
-#endif
-}
-
-inline void os_sem_signal(os_sem sem) {
-#ifdef __APPLE__
-    dispatch_semaphore_signal(sem);
-#else
-    sem_post(&sem);
-#endif
-}
+#include "base/semaphore.h"
 
 // Oaknut types
 namespace oak {
@@ -274,6 +222,19 @@ struct hash<oak::BlendParams> {
 };
 }
 
+
+namespace std {
+    template <>
+    struct hash<oak::sha1_t> {
+        size_t operator() (const oak::sha1_t& k) const {
+#if INTPTR_MAX == INT64_MAX
+            return CityHash64((char*)&k.bytes[0], sizeof(k.bytes));
+#elif INTPTR_MAX == INT32_MAX
+            return CityHash32((char*)&k.bytes[0], sizeof(k.bytes)));
+#endif
+        }
+    };
+}
 
 #endif
 

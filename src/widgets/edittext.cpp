@@ -58,7 +58,7 @@ bool EditText::applySingleStyle(const string& name, const style& value) {
         } else if (softKeyboardType == "general") {
             _softKeyboardType = KeyboardGeneral;
         } else {
-            app->warn("invalid softKeyboardType '%s'", softKeyboardType.c_str());
+            warn("invalid softKeyboardType '%s'", softKeyboardType.c_str());
         }
         return true;
     }
@@ -75,7 +75,7 @@ bool EditText::applySingleStyle(const string& name, const style& value) {
         } else if (actionType == "go") {
             _actionType = ActionGo;
         } else {
-            app->warn("invalid actionType '%s'", actionType.c_str());
+            warn("invalid actionType '%s'", actionType.c_str());
         }
         return true;
     }

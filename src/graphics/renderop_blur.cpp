@@ -32,7 +32,7 @@ BlurShader::BlurShader(Renderer* renderer, int radius/*=4*/) : Shader(renderer) 
     uint32_t calculatedSampleRadius = 0;
     if (blurRadiusInPixels >= 1) {
         float minimumWeightToFindEdgeOfSamplingArea = 1.0/256.0;
-        calculatedSampleRadius = floor(sqrt(-2.0 * pow(blurRadiusInPixels, 2.0) * log(minimumWeightToFindEdgeOfSamplingArea * sqrt(2.0 * M_PI * pow(blurRadiusInPixels, 2.0))) ));
+        calculatedSampleRadius = floor(sqrt(-2.0 * pow(blurRadiusInPixels, 2.0) * ::log(minimumWeightToFindEdgeOfSamplingArea * sqrt(2.0 * M_PI * pow(blurRadiusInPixels, 2.0))) ));
         calculatedSampleRadius += calculatedSampleRadius % 2;
     }
     _blurRadius = calculatedSampleRadius;
