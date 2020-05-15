@@ -204,7 +204,7 @@ void CameraWeb::start() {
                 video.src = window.URL.createObjectURL(stream);
             }
         }).catch(function(e) {
-            log("Failed to open webcam: " + e);
+            log_error("Failed to open webcam: " + e);
         });
     }, this, val::global("gotSet")(_video).as<int>(), s_timerCallbackCPP, s_callbackStoreIntervalId,
             _options.frontFacing, _options.frameSizeShort, _options.frameSizeLong, _options.frameRate);

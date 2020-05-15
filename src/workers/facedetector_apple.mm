@@ -40,7 +40,7 @@ public:
         CIImage* image = [CIImage imageWithBitmapData:data bytesPerRow:width*4 size:CGSizeMake(width,height) format:kCIFormatRGBA8 colorSpace:nil];
         //[CIImage imageWithTexture:tex->_textureId size: flipped:NO colorSpace:nil];
         NSArray *features = [_detector featuresInImage:image options:@{}];
-        //log("faces: %d", features.count);
+        //log_info("faces: %d", features.count);
         variant retval;
         retval.setType(variant::ARRAY);
         for (int i=0 ; i<features.count ; i++) {

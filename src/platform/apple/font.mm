@@ -105,7 +105,7 @@ public:
     POINT _dd;
     
     GlyphApple(FontApple* font, char32_t ch) : Glyph(font, ch) {
-        //log("Creating glyph for char code %d in font %X", ch, this);
+        //log_dbg("Creating glyph for char code %d in font %X", ch, this);
         UniChar uch = ch;
         if (!CTFontGetGlyphsForCharacters(font->_ctfont, &uch, &_cgglyph, 1)) {
             // Sometimes CTFontGetGlyphsForCharacters() fails for no clear reason and the only
@@ -113,13 +113,13 @@ public:
             CFRelease(font->_ctfont);
             font->_ctfont = createCTFont(font);
             if (!CTFontGetGlyphsForCharacters(font->_ctfont, &uch, &_cgglyph, 1)) {
-                warn("Glyph '%c' not in chosen font", ch);
+                log_warn("Glyph '%c' not in chosen font", ch);
                 uch = '?';
                 if (!CTFontGetGlyphsForCharacters(font->_ctfont, &uch, &_cgglyph, 1)) {
                     assert(false); // glyph is not in the font, TODO: fall back to another font
                 }
             }
-            warn("Stupid Core Text bug caused us to waste time recreating a font");
+            log_warn("Stupid Core Text bug caused us to waste time recreating a font");
         }
         
         

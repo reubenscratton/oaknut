@@ -64,7 +64,7 @@ BNBaseModel* BNBaseModel::createModelObjectFromJson(const variant& json) {
     if (factoryFunc != s_factory.end()) {
         return factoryFunc->second(json);
     }
-    warn("Unknown content type '%s'", type.c_str());
+    log_warn("Unknown content type '%s'", type.c_str());
 	return new BNBaseModel(json);
 }
 

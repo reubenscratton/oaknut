@@ -22,11 +22,11 @@ class VideoPlayerWeb : public VideoPlayer {
 public:
 
     void open(const string& assetPath) override {
-        warn("NYI!");
+        log_warn("NYI!");
     }
     
     void play() override {
-        warn("NYI!");
+        log_warn("NYI!");
     }
     
     void setCurrent(int current) override {

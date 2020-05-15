@@ -222,7 +222,7 @@ int variant::intVal() const {
         case MEASUREMENT: return (int)_measurement.val();
         default: break;
     }
-    warn("intVal() called on non-numeric Variant");
+    log_warn("intVal() called on non-numeric Variant");
     return 0;
 }
 bool variant::boolVal() const {
@@ -242,7 +242,7 @@ bool variant::boolVal() const {
         case MEASUREMENT: return _measurement.val()!=0.f;
         default: break;
     }
-    warn("boolVal() type coerce failed");
+    log_warn("boolVal() type coerce failed");
     return false;
 }
 
@@ -305,7 +305,7 @@ float variant::floatVal() const {
         case STRING: return atof(_str->c_str());
         default: break;
     }
-    warn("floatVal() called on non-numeric Variant");
+    log_warn("floatVal() called on non-numeric Variant");
     return 0.f;
 }
 float variant::floatVal(const string& name) const {
@@ -325,7 +325,7 @@ double variant::doubleVal() const {
         case STRING: return atof(_str->c_str());
         default: break;
     }
-    warn("doubleVal() called on non-numeric Variant");
+    log_warn("doubleVal() called on non-numeric Variant");
     return 0.;
 }
 double variant::doubleVal(const string& name) const {
@@ -339,7 +339,7 @@ measurement variant::measurementVal() const {
     if (isNumeric()) {
         return measurement(floatVal(), measurement::PX);
     }
-    warn("measurement() type coerce failed");
+    log_warn("measurement() type coerce failed");
     return measurement(0,measurement::PX);
 }
 
@@ -360,7 +360,7 @@ string variant::stringVal() const {
     if (type==ARRAY) {
         // todo: might be useful to concat the element stringVals...
     }
-    warn("stringVal() called on non-stringable StyleValue");
+    log_warn("stringVal() called on non-stringable StyleValue");
     return "";
 }
 string variant::stringVal(const string& name) const {
@@ -427,7 +427,7 @@ string& variant::stringRef() const {
     if (type == STRING) {
         return *_str;
     }
-    warn("stringRef() called on non-string type");
+    log_warn("stringRef() called on non-string type");
     return s_emptyStr;
 }
 
@@ -435,7 +435,7 @@ vector<variant>& variant::arrayRef() const {
     if (type==ARRAY) {
         return *_vec;
     }
-    warn("arrayRef() called on non-array type");
+    log_warn("arrayRef() called on non-array type");
     return s_emptyVec;
 }
 
@@ -443,7 +443,7 @@ map<string, variant>& variant::compoundRef() const {
     if (type==MAP) {
         return *_map;
     }
-    warn("compoundRef() called on non-compound type");
+    log_warn("compoundRef() called on non-compound type");
     return s_emptyCompound;
 }
 
@@ -451,7 +451,7 @@ error& variant::errorRef() const {
     if (type==ERROR) {
         return *_err;
     }
-    warn("errorRef() called on incompatible type");
+    log_warn("errorRef() called on incompatible type");
     return s_defaultError;
 }
 
@@ -559,7 +559,7 @@ string variant::toJson() const {
         case STRING: return string::format("\"%s\"", _str->c_str());
         case MEASUREMENT: return string::format("\"%s\"", _measurement.toString().c_str());
         case BYTEARRAY: {
-            warn("TODO! bytearray json representation needed");
+            log_warn("TODO! bytearray json representation needed");
             break;
         }
         case ARRAY: {
@@ -628,7 +628,7 @@ static string parseString(const string& s, uint32_t& o) {
                 legalEscape |= (ch == ',' || ch==':' || ch=='}');
             }
             if (!legalEscape) {
-                warn("Illegal escape \'\\%c\'", ch);
+                log_warn("Illegal escape \'\\%c\'", ch);
                 continue;
             }
             if (ch == 'n') ch='\n';
@@ -637,7 +637,7 @@ static string parseString(const string& s, uint32_t& o) {
         str.append(ch);
     }
     if (quoted && !endquote) {
-        warn("Expected closing \"");
+        log_warn("Expected closing \"");
     }
     
     return str;
@@ -775,14 +775,14 @@ variant variant::parse(const string& str, uint32_t& it, int flags) {
         while (str.peekChar(it) != '}' && it<str.lengthInBytes()) {
             skipWhitespaceAndComments(str, it);
             string fieldName = parseString(str, it);
-            // log(fieldName.c_str());
+            // log_dbg(fieldName.c_str());
             if (!fieldName) {
-                log("Invalid json: field name expected");
+                log_error("Invalid json: field name expected");
                 return val;
             }
             skipWhitespaceAndComments(str, it);
             if (str.readChar(it) != ':') {
-                log("Invalid json: ':' expected");
+                log_error("Invalid json: ':' expected");
                 return val;
             }
             variant fieldValue = parse(str, it, (flags & ~PARSEFLAG_EXPLICIT_ARRAY));
@@ -808,7 +808,7 @@ variant variant::parse(const string& str, uint32_t& it, int flags) {
                 it.next();
             } else {
                 if (sep != '}') {
-                    log("Invalid json: ',' or object end expected");
+                    log_error("Invalid json: ',' or object end expected");
                 }
                 break;
             }*/
@@ -831,7 +831,7 @@ variant variant::parse(const string& str, uint32_t& it, int flags) {
                 str.readChar(it);
             } else {
                 if (sep != ']') {
-                    log("Invalid json: ',' or array end expected");
+                    log_error("Invalid json: ',' or array end expected");
                 }
                 break;
             }
@@ -880,12 +880,12 @@ val variant::toJavascriptVal() const {
         case EMPTY: return val::undefined();
         case INT32: return val(_i32);
         case INT64: {
-            if (_i64 & 0x7FC0000000000000LL) warn("i64 too big for JS Number");
+            if (_i64 & 0x7FC0000000000000LL) log_warn("i64 too big for JS Number");
             return val((double)_i64);
         }
         case UINT32: return val(_u32);
         case UINT64: {
-            if (_u64 & 0xFFC0000000000000ULL) warn("u64 too big for JS Number");
+            if (_u64 & 0xFFC0000000000000ULL) log_warn("u64 too big for JS Number");
             return val((double)_u64);
         }
         case FLOAT32: return val(_f32);

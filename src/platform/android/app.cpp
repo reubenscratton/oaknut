@@ -96,19 +96,10 @@ string App::currentCountryCode() const {
     jbyteArray jbytes = (jbyteArray)env->CallStaticObjectMethod(jclassApp, jmidAppGetCurrentCountryCode);
     return stringFromJbyteArray(env, jbytes);
 }
-void App::log(char const* fmt, ...) {
+void App::log_v(const char* prefix, char const* fmt, va_list& args) {
     char ach[512];
-    va_list args;
-    va_start(args, fmt);
     vsprintf(ach, fmt, args);
     LOGI("%s", ach);
-}
-void App::warn(char const* fmt, ...) {
-    char ach[512];
-    va_list args;
-    va_start(args, fmt);
-    vsprintf(ach, fmt, args);
-    LOGW("%s", ach);
 }
 
 

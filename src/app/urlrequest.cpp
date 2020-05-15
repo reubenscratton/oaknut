@@ -32,7 +32,7 @@ URLRequest* URLRequest::createAndStart(const string& url, const string& method,
         const bytearray& body, Object* owner, int flags) {
     
     // TODO: lookup existing request by url?
-    log("createAndStart: %s", url.c_str());
+    log_dbg("createAndStart: %s", url.c_str());
     auto req = new URLRequest(url, method, body, owner, flags);
     req->retain();
     Task::postToMainThread([=]() {
@@ -62,7 +62,7 @@ void URLRequest::handle(std::function<void(const URLResponse*,bool)> handler) {
 }
 
 void URLRequest::start() {
-    log("start: %s", _url.c_str());
+    log_dbg("start: %s", _url.c_str());
     
     const sha1_t sha = sha1(_url);
 
@@ -71,7 +71,7 @@ void URLRequest::start() {
     URLResponse* cacheResponse = nullptr;
     if (cacheLoadWanted) {
         if (s_urlRamCache.get(sha, &cacheResponse)) {
-            log("RAMcache hit: %s", _url.c_str());
+            log_dbg("RAMcache hit: %s", _url.c_str());
             _cachedResponse = cacheResponse;
             dispatchResponse(cacheResponse, true);
             cacheLoadWanted = false;
@@ -89,7 +89,7 @@ void URLRequest::start() {
                 // spawn remote load before data has been read.
                 variant data = File::load_sync(path);
                 if (data.isByteArray()) {
-                    log("DiskCache hit: %s", _url.c_str());
+                    log_dbg("DiskCache hit: %s", _url.c_str());
                     bytestream strm(data.bytearrayRef());
                     _cachedResponse = new URLResponse();
                     strm.read(_cachedResponse->httpStatus);
@@ -111,7 +111,7 @@ void URLRequest::start() {
             }},
             {Task::MainThread, [=](variant& result)->variant {
                 if (_cachedResponse && !(_remoteLoadComplete || _status==Cancelled)) {
-                    log("Disk->RAM cache: %s", _url.c_str());
+                    log_dbg("Disk->RAM cache: %s", _url.c_str());
                     s_urlRamCache.put(sha, _cachedResponse._obj, 1024*16);
                     dispatchResponse(_cachedResponse, true);
                 }
@@ -139,7 +139,7 @@ void URLRequest::startRemoteLoad(const sha1_t& sha) {
             
             // Instantiate and fetch the remote data
             _remoteResponse = new URLResponse();
-            log("ioLoadRemote: %s", _url.c_str());
+            log_dbg("ioLoadRemote: %s", _url.c_str());
             error err = ioLoadRemote();
             if (err) {
                 return err;
@@ -161,7 +161,7 @@ void URLRequest::startRemoteLoad(const sha1_t& sha) {
             
             // If the cached version was ok, nothing else to do in background
             if (_cachedResponse && _remoteResponse->httpStatus == 304) {
-                log("304: %s", _url.c_str());
+                log_dbg("304: %s", _url.c_str());
                 // TODO: extend the expiry date of the cache entry
                 return true;
             }
@@ -172,7 +172,7 @@ void URLRequest::startRemoteLoad(const sha1_t& sha) {
             retain();
             Task::enqueue({
                 {Task::IO, [=](variant&) -> variant {
-                    log("DiskCache put: %s", _url.c_str());
+                    log_dbg("DiskCache put: %s", _url.c_str());
                     string path = pathForHash(sha);
                     bytestream strm;
                     strm.write(_remoteResponse->httpStatus);
@@ -196,7 +196,7 @@ void URLRequest::startRemoteLoad(const sha1_t& sha) {
             }
             if (_cachedResponse && _remoteResponse->httpStatus == 304) {
             } else {
-                log("Remote -> RAM: %s", _url.c_str());
+                log_dbg("Remote -> RAM: %s", _url.c_str());
                 s_urlRamCache.put(sha, _remoteResponse._obj, 16*1024);
                 dispatchResponse(_remoteResponse, false);
             }
@@ -211,12 +211,12 @@ void URLRequest::startRemoteLoad(const sha1_t& sha) {
 void URLRequest::cancel() {
     _status = Status::Cancelled;
     if (_cacheTask) {
-        log("Cancel cache: %s", _url.c_str());
+        log_dbg("Cancel cache: %s", _url.c_str());
         _cacheTask->cancel();
         _cacheTask = nullptr;
     }
     if (_remoteTask) {
-        log("Cancel remote: %s", _url.c_str());
+        log_dbg("Cancel remote: %s", _url.c_str());
         _sem.signal();
         _remoteTask->cancel();
         _remoteTask = nullptr;

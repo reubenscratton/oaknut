@@ -65,7 +65,7 @@ public:
         double* outbuf = new double[outbufSize];
         double* inbuf = samplesIn.data();
         int written = (int)smarc_resample(pfilt, pstate, inbuf, inbufSize, outbuf, outbufSize);
-        //log("written %d", written);
+        //log_info("written %d", written);
         
         // Convert to expected output type
         bytearray outbytes;

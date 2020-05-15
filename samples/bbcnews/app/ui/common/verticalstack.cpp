@@ -51,7 +51,7 @@ RECT BNVerticalStack::boundsAfter(RECT frame) {
 
 
 void BNVerticalStack::updateScrollsToTop() {
-    warn("TODO: updateScrollsToTop");
+    log_warn("TODO: updateScrollsToTop");
 	// self.scrollView.scrollsToTop = self.isOnScreen;
 }
 */

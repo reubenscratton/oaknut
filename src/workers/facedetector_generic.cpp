@@ -120,7 +120,7 @@ static vector<RECT> detect(const bytearray& pixels, int width, int height, RECT 
             s_boost[i] = (uint8_t) (s_boostF[i]*255); //MIN(255, i+16);
             s+= string::format("%d,", s_boost[i]-i);
         }
-        log(s.c_str());
+        log_info(s.c_str());
     }
     
     // Convert just the ROI to a new greyscale image

@@ -42,7 +42,7 @@ static inline char* buf_new(uint32_t cb) {
      static uint32_t s_malloctotal=0;
      s_strmallocs++;
      s_malloctotal += cb;
-     log("string malloc %d total=%d", s_strmallocs, s_malloctotal);*/
+     log_dbg("string malloc %d total=%d", s_strmallocs, s_malloctotal);*/
     auto hdr = (struct bufhdr*)malloc(sizeof(struct bufhdr) + cb + 1);
     hdr->cap = cb;
     hdr->cb = cb;
@@ -895,7 +895,7 @@ string string::readToken(uint32_t& offset) const {
             str.append(ch);
             return str;
         } else {
-            warn("Invalid char '%c'", ch);
+            log_warn("Invalid char '%c'", ch);
         }
     }
     return "";

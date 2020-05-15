@@ -11,6 +11,8 @@ Feature: Logging categories? Must be compiled in or out, no runtime switching.
 
 Feature: URL disk cache max size enforcement. Low-priority background IO task
 
+Feature: Asset loads should share URLCache.
+
 Feature: oak::bytearray needs the capacity feature that bytestream has. oak::string has shared buffers and copy-on-write which would be VERY USEFUL for bytearray too. Why not let bytearray share the same shared buffer mechanism that string uses??
 
 Image cache: The naive approach to image caching is to have a fixed-size cache of fully decompressed images with each image keyed by its URL. A better approach would be to give the app control of the size that an image is rasterized, since it is often the case that large bitmaps are rendered into smaller rectangles. BBC News is a case in point: news images are delivered in any of a fixed set of widths, client code is expected to round up to the nearest width it needs. But Im talking bollocks... the image width is part of the URL, so BBC News does *not* have one-URL-multiple-images and so we don't need to consider it.
@@ -30,7 +32,6 @@ Bylines look crap.
 iOS: edge-swipe support
 Indexes: 2-column area right margin too big
 Image fade-in
-IMAGE CACHE! Thumbnail & small images texture cache.
 Xcode project generator needs to support appicons (and start screens!)
 Articles: Video support
 ImageViews are being culled too soon when scrolling

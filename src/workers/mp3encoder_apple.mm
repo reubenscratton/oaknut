@@ -59,7 +59,7 @@ public:
             }
             assert(error == 0);
             if (error) {
-                log("Error: %d", error);
+                log_error("Error: %d", error);
                 break;
             }
             if (ioOutputDataPacketSize > 0) {

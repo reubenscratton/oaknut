@@ -47,7 +47,7 @@ void RenderBatch::updateQuads(Renderer* renderer) {
             renderBase += numQuads;
             op->_batchGeometryValid = true;
         }
-        //log("Buffering %d quads", _alloc->count);
+        //log_dbg("Buffering %d quads", _alloc->count);
         renderer->invalidateQuads(_alloc);
     }
 }

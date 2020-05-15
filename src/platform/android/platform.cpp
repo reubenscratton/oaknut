@@ -66,7 +66,7 @@ JNIEnv* getJNIEnv() {
     int getEnvStat = g_jvm->GetEnv((void **)&env, JNI_VERSION_1_6);
     if (getEnvStat == JNI_EDETACHED) {
         if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
-            log("Failed to attach to jvm");
+            log_error("Failed to attach to jvm");
             assert(0);
         }
     }

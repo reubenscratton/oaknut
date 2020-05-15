@@ -87,7 +87,7 @@ void BitmapWeb::lock(PIXELDATA* pixelData, bool forWriting) {
     }
 
     if (!_pixelData.data) {
-        warn("lock() called on bitmap with no data or image");
+        log_warn("lock() called on bitmap with no data or image");
         return;
     }
 
@@ -99,7 +99,7 @@ void BitmapWeb::lock(PIXELDATA* pixelData, bool forWriting) {
 void BitmapWeb::unlock(PIXELDATA* pixelData, bool pixelsChanged) {
     if (_canvas) {
         if (pixelsChanged) {
-            warn("TODO: implement canvas bitmap writeback");
+            log_warn("TODO: implement canvas bitmap writeback");
             assert(0); // code needed here
         }
         free(_pixelData.data);
@@ -132,7 +132,7 @@ void BitmapWeb::glTexImage2D(int width, int height) {
             _canvas->_hasChanged = false;
         }
     } else {
-        log("glTexImage2D() called on data-less bitmap");
+        log_warn("glTexImage2D() called on data-less bitmap");
     }
 }
 
@@ -184,7 +184,7 @@ public:
             task->_bitmap->_height = img["height"].as<int>();
             task->_bitmap->_format = PIXELFORMAT_RGBA32;
             if (task->_bitmap->_width<=0) { // image failed to decode
-                warn("Bitmap failed to decode");
+                log_warn("Bitmap failed to decode");
                 task->_bitmap->_img = val::null();
             } else {
                 task->_bitmap->_img = img;

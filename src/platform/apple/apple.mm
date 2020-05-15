@@ -134,7 +134,7 @@ bool File::resolve(string& path) {
     }
 
     // :-(
-    warn("Unknown path: %s", path.c_str());
+    log_warn("Unknown path: %s", path.c_str());
     return false;
 }
     

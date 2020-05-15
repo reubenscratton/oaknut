@@ -291,7 +291,7 @@ Task::Task(const vector<subtask>& subtasks) {
     }
 }
 Task::~Task() {
-    //log("~Task(%X : %d)", this, _runContext);
+    //log_dbg("~Task(%X : %d)", this, _runContext);
 }
 
 

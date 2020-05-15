@@ -99,7 +99,7 @@ void BNNavController::openPhotoGallery(vector<BNImage*>& images, BNImage* curren
 void BNNavController::openItem(BNContent* item, const vector<BNBaseModel*>& withinCollection, const string& title) {
     if (item->_modelType == BNModelTypeLiveEventExt) {
         //presentViewController:[[BBCNWebBrowser alloc] initWithURL:[NSURL URLWithString:item.shareUrl]] animated:YES completion:nil];
-        warn("TODO: integrate web browser nav");
+        log_warn("TODO: integrate web browser nav");
         return;
     }
     openURL(item->url(), withinCollection, title);
@@ -311,7 +311,7 @@ void BBCNewsApp::loadLayouts() {
     
     string urlstr = BNPolicy::current()->_endpointLayout->getHREF();
     urlstr += "&AppVersion=";
-    log("todo: download remote layouts");
+    log_info("todo: download remote layouts");
     /*urlstr += BNDeviceSpec::appVersion();
     if (requestRemoteLayouts) {
         [[BNURLRequestManager sharedInstance] requestURL:url delegate:self flags:0 priority:BNDownloadPriorityLow ttl:60*60 creatorBlock:^BNURLRequest *{

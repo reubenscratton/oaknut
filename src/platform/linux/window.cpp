@@ -141,7 +141,7 @@ public:
                 window->_inputFlags &= ~INPUT_FLAG_LBUTTON_DOWN;
                 break;
             default:
-                log("unhandled mouse event type=%d", event->type);
+                log_info("unhandled mouse event type=%d", event->type);
                 return FALSE;
         }
         //log("t=%d x=%d y=%d", eventType, x, y);

@@ -127,6 +127,7 @@ namespace oak {
 #include "data/base64.h"
 #include "text/regex.h"
 #include "util/gravity.h"
+#include "util/logging.h"
 #include "graphics/geom.h"
 #include "data/localstorage.h"
 #include "graphics/color.h"

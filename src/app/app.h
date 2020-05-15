@@ -6,18 +6,6 @@
 //
 
 
-/** @name Logging
- * @{
- */
-
-/** Log an informational message */
-void log(char const* fmt, ...);
-
-/** Log a warning message prefixed with "Warning: " */
-void warn(char const* fmt, ...);
-
-/**@}*/
-
 
 /**
  * @ingroup app_group
@@ -34,7 +22,6 @@ void warn(char const* fmt, ...);
  * * [Locale](#time)\n
  * * [Settings](#settings)\n
  * * [Files](#files)\n
- * * [Logging](#logging)\n
  * \n
  */
 class App : public Object {

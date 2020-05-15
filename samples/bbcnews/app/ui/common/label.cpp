@@ -122,7 +122,7 @@ void BNLabel::setBottomRightExclusionSize(const SIZE& size) {
     exclusionRect.origin.x = exclusionRect.right() - size.width;
     exclusionRect.origin.y = exclusionRect.bottom() - size.height;
     exclusionRect.size = size;
-    log("TODO: implement text layout exclusion paths");
+    log_info("TODO: implement text layout exclusion paths");
     //self.textContainer.exclusionPaths = @[[UIBezierPath bezierPathWithRect:exclusionRect]];
 }
 
@@ -145,7 +145,7 @@ static attributed_string s_audioPrefixString;
 
 /*    if (mediaGlyph != kNone) {
         
-        log("TODO!");
+        log_info("TODO!");
         _attributedString.insert(0, " ");
         Font* bbcNewsFont = Font::get("bbc-news", app->dp(11));
         _attributedString.setAttribute(Attribute::font(bbcNewsFont), 0, 1);
@@ -197,7 +197,7 @@ void BNLabel::createButton(View* superview) {
     button->setRect(_bounds);
     button->setText(_attributedString);
     
-    log("TODO: finish createButton()");
+    log_info("TODO: finish createButton()");
 */    //NSMutableAttributedString *selectedTitle = [[NSMutableAttributedString alloc] initWithAttributedString:self.attributedString];
     //[selectedTitle addAttribute:NSForegroundColorAttributeName value:[UIColor darkGrayColor] range:NSMakeRange(0, self.attributedString.length)];
     //[button setAttributedTitle:selectedTitle forState:UIControlStateHighlighted];
@@ -247,7 +247,7 @@ void BNLabel::setUseDynamicText(bool useDynamicText) {
     if (_useDynamicText != useDynamicText) {
         _useDynamicText = useDynamicText;
         if (useDynamicText) {
-            log("TODO: implement setUseDynamicText properly");
+            log_info("TODO: implement setUseDynamicText properly");
             //[self setAttributedString:self.attributedString];
         }
     }

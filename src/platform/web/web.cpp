@@ -86,12 +86,12 @@ static void oak_initDisplay(int screenWidth, int screenHeight, int screenScale) 
 }
 
 static void oak_setWindowSize(int width, int height) {
-    log("window size %d x %d", width, height);
+    log_dbg("window size %d x %d", width, height);
     app->_window->resizeSurface(width, height);
 }
 
 static void oak_userEvent(int eventType, int eventSourceId, int x, int y) {
-    //log("userEv type=%d src=%d x=%d,y=%d", eventType, eventSourceId, x, y);
+    //log_dbg("userEv type=%d src=%d x=%d,y=%d", eventType, eventSourceId, x, y);
     
     INPUTEVENT inputEvent;
     inputEvent.deviceType = INPUTEVENT::Mouse;

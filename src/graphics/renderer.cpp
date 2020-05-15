@@ -229,7 +229,7 @@ void RenderTask::pushClip(const RECT& clip) {
     }
     _clips.push(_currentClip);
     _currentClipValid = false;
-    //log(">clip %d,%d %dx%d", (int)_currentClip.origin.x,(int)_currentClip.origin.y, (int)_currentClip.size.width, (int)_currentClip.size.height);
+    //log_dbg(">clip %d,%d %dx%d", (int)_currentClip.origin.x,(int)_currentClip.origin.y, (int)_currentClip.size.width, (int)_currentClip.size.height);
 }
 void RenderTask::popClip() {
     assert(_clips.size()>0);
@@ -240,7 +240,7 @@ void RenderTask::popClip() {
         _currentClip = _clips.top();
     }
     _currentClipValid = false;
-    //log("<clip %d,%d %dx%d", (int)_currentClip.origin.x,(int)_currentClip.origin.y, (int)_currentClip.size.width, (int)_currentClip.size.height);
+    //log_dbg("<clip %d,%d %dx%d", (int)_currentClip.origin.x,(int)_currentClip.origin.y, (int)_currentClip.size.width, (int)_currentClip.size.height);
 }
 
 void Renderer::reset() {

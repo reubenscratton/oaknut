@@ -18,21 +18,6 @@ App::App() {
     _styles.parse(stylesres);
 }
 
-#ifndef ANDROID
-void oak::log(char const* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    vprintf(fmt, args);
-    printf("\n");
-}
-void oak::warn(char const* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    printf("Warning: ");
-    vprintf(fmt, args);
-    printf("\n");
-}
-#endif
 
 
 float App::dp(float dp) {
@@ -78,7 +63,7 @@ string App::getStyleString(const string& keypath, const string& defaultString) {
         if (defaultString) {
             return defaultString;
         }
-        warn("Missing string style info '%s'", keypath.c_str());
+        log_warn("Missing string style info '%s'", keypath.c_str());
         return "";
     }
     return value->stringVal();
@@ -87,7 +72,7 @@ string App::getStyleString(const string& keypath, const string& defaultString) {
 float App::getStyleFloat(const string& keypath) {
     auto value = getStyle(keypath);
     if (!value) {
-        warn("Missing float style info '%s'", keypath.c_str());
+        log_warn("Missing float style info '%s'", keypath.c_str());
         return 0;
     }
     return value->floatVal();
@@ -95,7 +80,7 @@ float App::getStyleFloat(const string& keypath) {
 COLOR App::getStyleColor(const string& key) {
     auto value = getStyle(key);
     if (!value) {
-        warn("Missing color style info '%s'", key.c_str());
+        log_warn("Missing color style info '%s'", key.c_str());
         return 0;
     }
     return value->colorVal();

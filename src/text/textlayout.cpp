@@ -120,7 +120,7 @@ SIZE TextLayout::measure(SIZE& constrainingSize) {
             
             // Tab-handling. For now just convert to spaces.
             if (codepoint=='\t') {
-                log("todo: tabstops!");
+                log_dbg("todo: tabstops!");
                 codepoint = ' ';
             }
 

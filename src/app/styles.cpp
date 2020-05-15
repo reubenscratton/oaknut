@@ -132,7 +132,7 @@ int style::intVal() const {
     if (val && val->type==TypeSimple) {
         return val->var.intVal();
     }
-    warn("intVal() failed");
+    log_warn("intVal() failed");
     return 0;
 }
 bool style::boolVal() const {
@@ -140,7 +140,7 @@ bool style::boolVal() const {
     if (val && val->type==TypeSimple) {
         return val->var.boolVal();
     }
-    warn("boolVal() failed");
+    log_warn("boolVal() failed");
     return false;
 }
 
@@ -149,7 +149,7 @@ float style::floatVal() const {
     if (val && val->type==TypeSimple) {
         return val->var.floatVal();
     }
-    warn("floatVal() type coerce failed");
+    log_warn("floatVal() type coerce failed");
     return 0.f;
 }
 
@@ -158,7 +158,7 @@ string style::stringVal() const {
     if (val && val->type==TypeSimple) {
         return val->var.stringVal();
     }
-    warn("stringVal() type coerce failed");
+    log_warn("stringVal() type coerce failed");
     return "";
 }
 string style::stringVal(const string& name) const {
@@ -182,7 +182,7 @@ COLOR style::colorVal(const string& name) const {
     assert(val->type == Compound);
     auto val2 = val->compound->find(name);
     if (val2 == val->compound->end()) {
-        warn("Value missing for field '%'", name.c_str());
+        log_warn("Value missing for field '%'", name.c_str());
         return 0;
     }
     return val2->second.intVal();
@@ -196,7 +196,7 @@ const vector<style>& style::arrayVal() const {
     if (val->type==TypeArray) {
         return *array;
     }
-    warn("arrayVal() type coerce failed");
+    log_warn("arrayVal() type coerce failed");
     return s_emptyArray;
 }
 const vector<style>& style::arrayVal(const string& name) const {
@@ -227,7 +227,7 @@ EDGEINSETS style::edgeInsetsVal() const {
             insets.bottom = a[3].floatVal();
         } else {
             insets = {0,0,0,0};
-            warn("Invalid inset, must be 1 or 4 values");
+            log_warn("Invalid inset, must be 1 or 4 values");
         }
     }
     return insets;
@@ -300,7 +300,7 @@ COLOR style::colorVal()  const {
                 | (r);
             }
             else {
-                warn("Malformed hex color value");
+                log_warn("Malformed hex color value");
                 return 0;
             }
         }
@@ -474,7 +474,7 @@ COLOR style::colorVal()  const {
         }
         
     }
-    warn("colorVal() failed");
+    log_warn("colorVal() failed");
     return 0;
 }
 
@@ -482,7 +482,7 @@ COLOR style::colorVal()  const {
 float StyleValue::floatVal(const string& name) const {
     auto field = get(name);
     if (!field) {
-        warn("Value missing for field '%'", name.c_str());
+        log_warn("Value missing for field '%'", name.c_str());
         return 0;
     }
     return field->floatVal();
@@ -497,7 +497,7 @@ static map<string, StyleValue> s_emptyMap;
 const map<string, StyleValue>& StyleValue::compoundVal() const {
     auto val = select();
     if (val->type==Type::Compound) return *(val->compound);
-    warn("compoundVal() type coerce failed");
+    log_warn("compoundVal() type coerce failed");
     return s_emptyMap;
 }
 */
@@ -528,7 +528,7 @@ VECTOR4 style::cornerRadiiVal() const {
             r.z = radii[2].floatVal();
             r.w = radii[3].floatVal();
         } else {
-            warn("Invalid corner-radii, must be 1 or 4 values");
+            log_warn("Invalid corner-radii, must be 1 or 4 values");
             r = {0,0,0,0};
         }
     }
@@ -552,7 +552,7 @@ float style::fontWeightVal() const {
         if (fw=="heavy") return FONT_WEIGHT_HEAVY;
         if (fw=="black") return FONT_WEIGHT_BLACK;
     }
-    warn("Invalid fontWeight");
+    log_warn("Invalid fontWeight");
     return 0;
 }
 
@@ -590,7 +590,7 @@ const style* style::resolve() const {
                 } else if (qual == "4inch") {
                     applies = app->_defaultDisplay->sizeDiagonalInches() <= 4;
                 } else {
-                    warn("Unsupported qualifier '%s'", qual.c_str());
+                    log_warn("Unsupported qualifier '%s'", qual.c_str());
                 }
                 if (applies) {
                     // TODO: apply precedence that favours higher specificity
@@ -610,7 +610,7 @@ const style* style::resolve() const {
             refdstylename.eraseAt(0, 1);
             auto refdstyle = app->getStyle(refdstylename);
             if (!refdstyle) {
-                warn("Missing referenced style: $%s", refdstylename.c_str());
+                log_warn("Missing referenced style: $%s", refdstylename.c_str());
             } else {
                 style* ncval = const_cast<style*>(val);
                 ncval->setType(TypeReference);
@@ -647,7 +647,7 @@ const style* style::get(const string& keypath) const {
         assert(val->type == TypeCompound);
         auto it = val->compound->find(key);
         if (it == val->compound->end()) {
-            //warn("Value missing for field '%s'", keypath.c_str());
+            //log_warn("Value missing for field '%s'", keypath.c_str());
             return NULL;
         }
         val = &it->second;
@@ -811,7 +811,7 @@ void Styleable::applyStyle(const style& astyle) {
     for (auto& field : *style->compound) {
         if (field.first == "style") continue;
         if (!applySingleStyle(field.first, field.second)) {
-            warn("Ignored unknown attribute '%s'", field.first.c_str());
+            log_warn("Ignored unknown attribute '%s'", field.first.c_str());
         }
     }
 }

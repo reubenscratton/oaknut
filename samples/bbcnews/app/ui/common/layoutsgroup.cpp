@@ -213,7 +213,7 @@ BNLayoutsGroup::BNLayoutsGroup(string layoutsDir) {
         }
         variant jsonLayout = loadJson(layoutsDir, fileName);
         if (jsonLayout.isEmpty()) {
-            warn("Error loading layout: %s", fileName.c_str());
+            log_warn("Error loading layout: %s", fileName.c_str());
             continue;
         }
         
@@ -376,7 +376,7 @@ BNOptimizedLayout* BNLayoutsGroup::chooseLayoutForModelId(const string& modelId,
 	
 	// Use a default if no matching layout found
 	if (!bestMatch) {
-		warn("No layout found for %s. Using default index layout", modelId.c_str());
+		log_warn("No layout found for %s. Using default index layout", modelId.c_str());
 		bestMatch = _defaultOptimizedLayout;
 	}
 	

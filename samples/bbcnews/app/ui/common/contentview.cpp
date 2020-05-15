@@ -92,7 +92,7 @@ void BNContentView::requestContent(bool request) {
         _req = BNURLRequest::requestContent(_contentStub.modelId, 0, _requestPriority);
         _req->onHandleContent = [=](BNBaseModel* object) {
             if (!object->isContent()) {
-                warn("BNContentView.onRequestLoadedObject received non-BNContent type, ignoring");
+                log_warn("BNContentView.onRequestLoadedObject received non-BNContent type, ignoring");
                 return;
             }
             updateWithNewContentObject((BNContent*)object);
@@ -299,7 +299,7 @@ void BNContentView::layout(RECT constraint) {
         
         if (_contentObject->isEmpty()) {
             if (_currentLayout->_emptyView.length() && !_emptyView) {
-                warn("TODO: inflate empty view");
+                log_warn("TODO: inflate empty view");
                 //UINib* nib = [UINib nibWithNibName:self.currentLayout.emptyView bundle:nil];
                 //self.emptyView = [[nib instantiateWithOwner:nil options:nil] firstObject];
                 //CGFloat topInset = self.topInset + navbarHeight;

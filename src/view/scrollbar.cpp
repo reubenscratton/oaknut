@@ -82,7 +82,7 @@ float ScrollInfo::maxScroll(View* view, bool isVertical) {
     float visibleSize = isVertical ? view->_rect.size.height : view->_rect.size.width;
     float scrollableSize = padPre + content + scrollInset + padPost;
     float m = (scrollableSize) - visibleSize;
-    //log("padPre:%f padPost:%f inset:%f content:%f vis:%f  max:%f", padPre, padPost, scrollInset, content, visibleSize, m);
+    //log_dbg("padPre:%f padPost:%f inset:%f content:%f vis:%f  max:%f", padPre, padPost, scrollInset, content, visibleSize, m);
     return (m>0) ? m : 0;
 }
 void ScrollInfo::updateVisibility(View* view, bool isVertical) {
@@ -158,7 +158,7 @@ void ScrollInfo::startFadeAnim(float targetAlpha) {
     }
     if (!_fadeAnim) {
         _fadeAnim = Animation::start(view, 300, [=](float val) {
-            //log("fade tick %f %X", val, this);
+            //log_dbg("fade tick %f %X", val, this);
             _alpha = val;
             if (_renderOp) {
                 _renderOp->setAlpha(val);

@@ -516,7 +516,7 @@ public:
                 dispatch_async(s_uploaderQueue, ^{
                     PIXELDATA pixeldata;
                     metalTexture->_bitmap->lock(&pixeldata, false);
-                    //log("texture upload %d x %d", _bitmap->_width, _bitmap->_height);
+                    //log_dbg("texture upload %d x %d", _bitmap->_width, _bitmap->_height);
                     [metalTexture->_tex replaceRegion:MTLRegionMake2D(0,0,metalTexture->_bitmap->_width,metalTexture->_bitmap->_height) mipmapLevel:0 withBytes:pixeldata.data bytesPerRow:pixeldata.stride];
                     metalTexture->_bitmap->unlock(&pixeldata, false);
                     dispatch_async(dispatch_get_main_queue(), ^{
@@ -546,7 +546,7 @@ public:
             rect.y = _currentClip.top();
             rect.width = _currentClip.size.width;
             rect.height = _currentClip.size.height;
-            // log("push: %ld,%ld x %ld,%ld", rect.x,rect.y, rect.width, rect.height);
+            // log_dbg("push: %ld,%ld x %ld,%ld", rect.x,rect.y, rect.width, rect.height);
             [_renderCommandEncoder setScissorRect:rect];
         }
 

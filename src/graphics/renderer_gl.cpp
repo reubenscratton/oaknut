@@ -31,7 +31,7 @@
 #else
 static void checkGlErr(const char* file, int line, const char* cmd) {
     for (GLint error = glGetError(); error; error = glGetError()) {
-        log("GL ERROR: %s(%d) %s() err=0x%x", file, line, cmd, error);
+        log_error("GL ERROR: %s(%d) %s() err=0x%x", file, line, cmd, error);
     }
     // GL_INVALID_VALUE 0x501
 }
@@ -658,7 +658,7 @@ public:
         }
 
         
-        //   log("Drawing %d quads at once", numQuads);
+        //   log_dbg("Drawing %d quads at once", numQuads);
         if (type == Quad) {
             check_gl(glDrawElements, GL_TRIANGLES, 6 * count, GL_UNSIGNED_SHORT, (void*)((index)*6*sizeof(GLshort)));
         } else if (type == Line) {

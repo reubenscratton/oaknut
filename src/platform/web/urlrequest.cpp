@@ -35,9 +35,9 @@ public:
         req->dispatch();
     }
     static void OnNonImageLoad(URLRequestWeb* req, int httpStatus, uint8_t* data, int data_size, int timestamp, const char* szHeaders) {
-        //log("status %d len=%d", httpStatus, data_size);
+        //log_dbg("status %d len=%d", httpStatus, data_size);
         //string foo((const char*)data, data_size);
-        //log("%s", foo.c_str());
+        //log_dbg("%s", foo.c_str());
         req->_response.httpStatus = httpStatus;
         vector<string> headers = string(szHeaders,-1).split("\r\n");
         for (auto& header: headers) {
