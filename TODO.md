@@ -1,11 +1,17 @@
 Oaknut TODOs
 ============
 
-Feature: URL cache should not issue any remote request if cache entry still valid. (By default, obviously... lets allow a flag to override it).
+Feature: Image fade-in
+
+Bug: Article page navpush animation looks wrong.
+
+Bug: Unwanted vertical scrollbars on article pages.
+
+Feature: ViewPager needs page-aligned horizontal scrolling
 
 Feature: Tasks need priorities.
 
-Feature: URL RAM cache has very wrong byte count for images. Need an API for measuring RAM cost of decoded URLs.
+Feature: Image parallax.
 
 Feature: Logging categories? Must be compiled in or out, no runtime switching.
 
@@ -20,7 +26,6 @@ Image cache: The naive approach to image caching is to have a fixed-size cache o
 However, it's still the case that images are often rendered at a different size to its intrinsic size, which means the rasterizer has to interpolate, which is not free. Oaknut should support an option to resize an image at decode time, it could be an important optimization. If the option is used we should disallow ImageView from initiating downloads before it has a non-zero size. Note that contentMode affects render size too.
 
 
-ViewPager: page-aligned scrolling
 
 Indexes: the cells should be 4 text lines tall. Currently timestamp text occludes 3rd line of headline.
 
@@ -31,7 +36,6 @@ More generally, the approach to vertex and index buffers MAY need a total change
 Bylines look crap.
 iOS: edge-swipe support
 Indexes: 2-column area right margin too big
-Image fade-in
 Xcode project generator needs to support appicons (and start screens!)
 Articles: Video support
 ImageViews are being culled too soon when scrolling

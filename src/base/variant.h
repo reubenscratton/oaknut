@@ -264,6 +264,8 @@ public:
         _f64 = d;
     }
 
+    uint32_t getRamCost() const;
+    
     friend class bytestream;
     friend class Task;
     

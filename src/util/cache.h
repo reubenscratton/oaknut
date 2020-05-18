@@ -15,17 +15,18 @@ public:
 	} ENTRY;
 	typedef typename std::list<ENTRY>::iterator list_iterator_t;
 
-	MruCache(size_t max) : _max(max) {
+	void setSize(size_t max) {
+        _max = max;
+        applyLimit();
 	}
 	
-	bool get(const K& key, V* p) {
+	bool get(const K& key, V& p) {
 		auto it = _map.find(key);
 		if (it == _map.end()) {
-			*p = NULL;
 			return false;
 		}
 		_list.splice(_list.begin(), _list, it->second);
-		*p = it->second->value;
+		p = it->second->value;
 		return true;
 	}
 
@@ -37,7 +38,11 @@ public:
         value->retain();
 		_list.push_front(entry);
 		_map[key] = _list.begin();
-		_used += cost;		
+		_used += cost;
+        applyLimit();
+    }
+    
+    void applyLimit() {
 		while (_used > _max) {
 			auto last = _list.end();
 			last--;

@@ -146,5 +146,9 @@ public:
         variant json;
         sp<class Bitmap> bitmap;
     } decoded;
+    bool hasBeenDecoded;
+
+    string getHeader(const string& headerName);
+    uint32_t getRamCost();
 };
 

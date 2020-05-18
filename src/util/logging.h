@@ -16,7 +16,7 @@
 
 /** Log an informational message */
 #ifndef LOG_LEVEL
-# if _DEBUG
+# if DEBUG
 #  define LOG_LEVEL LOG_LEVEL_INFO
 # else
 #  define LOG_LEVEL LOG_LEVEL_WARN

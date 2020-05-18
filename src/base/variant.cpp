@@ -547,6 +547,43 @@ const char* variant::debugString() const {
 }
 #endif
 
+uint32_t variant::getRamCost() const {
+    uint32_t cost = sizeof(variant);
+    switch (type) {
+        case EMPTY: break;
+        case INT32: cost += 4; break;
+        case UINT32: cost += 4; break;
+        case INT64: cost += 8; break;
+        case UINT64: cost += 8; break;
+        case FLOAT32: cost += 4; break;
+        case FLOAT64: cost += 8; break;
+        case STRING: cost += _str->lengthInBytes(); break;
+        case MEASUREMENT: break;
+        case BYTEARRAY: cost += _bytearray->size(); break;
+        case ARRAY: {
+            if (_vec) {
+                for (auto it=_vec->begin() ; it != _vec->end() ; it++) {
+                    cost += it->getRamCost();
+                }
+            }
+            break;
+        }
+        case MAP: {
+            if (_map) {
+                for (auto it=_map->begin() ; it != _map->end() ; it++) {
+                    cost += it->first.lengthInBytes();
+                    cost += it->second.getRamCost();
+                }
+            }
+            break;
+        }
+        default:
+            assert(0); // TODO:
+            break;
+    }
+    return cost;
+}
+
 string variant::toJson() const {
     switch (type) {
         case EMPTY: return "";
@@ -733,6 +770,26 @@ variant variant::parseNumber(const string& str, uint32_t& o, bool convertExpress
     } else if (str.skipString(o, "px")) {
         val._measurement = measurement(val.floatVal(), measurement::PX);
         val.type=variant::MEASUREMENT;
+    }
+
+    // Handle kilo/mega/gigabyte numbers
+    else {
+        uint64_t mul = 0;
+        if (str.skipString(o, "KB")) {
+            mul = 1024;
+        }
+        else if (str.skipString(o, "MB")) {
+            mul = 1024 * 1024;
+        }
+        else if (str.skipString(o, "GB")) {
+            mul = 1024 * 1024 * 1024;
+        }
+        if (mul) {
+            if (val.type==variant::INT32) val._i32 *= mul;
+            else if (val.type==variant::INT64) val._i64 *= mul;
+            else if (val.type==variant::FLOAT32) val._f32 *= mul;
+            else if (val.type==variant::FLOAT64) val._f64 *= mul;
+        }
     }
     
     // If number val is followed by anything other than ']', '}', ',', '\r' '\n' then
