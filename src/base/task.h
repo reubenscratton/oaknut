@@ -39,8 +39,11 @@
  *     });
  * }
  *
- Tasks are cancellable (see `Task::cancel()`) so Background tasks should periodically check `isCancelled()` and early exit if appropriate.
-
+ * Tasks are cancellable (see `Task::cancel()`) so background subtasks should periodically
+ * check `isCancelled()` and early exit if appropriate.
+ *
+ * Tasks can optionally hold a strong reference on an 'owner' object, this will typically be
+ * whatever object needs to stay alive until the Task completes.
  *
  */
 
@@ -90,8 +93,6 @@ public:
     static Task* enqueue(const vector<subtask>& subtasks, Object* owner=nullptr);
     static bool isMainThread();
     static void postToMainThread(std::function<void()> callback, int delay=0);
-    static void flushCurrentThread();
-    static void addObjectToCurrentThreadDeletePool(Object*);
 
 protected:
 

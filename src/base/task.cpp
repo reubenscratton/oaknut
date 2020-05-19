@@ -10,63 +10,19 @@
 
 
 namespace oak {
-class ThreadLocalData {
-public:
-    
-    std::list<Object*> _deadObjects;
-    vector<std::function<void()>> _callbacks;
-    bool _isMainThread;
-    std::mutex _mutex;
-    
-    void flush() {
-        while (_deadObjects.size()) {
-            auto it = _deadObjects.begin();
-            Object* obj = *it;
-            assert(obj->_refs == 0);
-            _deadObjects.erase(it);
-            delete obj;
-        }
-        
-        _mutex.lock();
-        if (_callbacks.size()) {
-            for (auto& cb : _callbacks) {
-                cb();
-            }
-            _callbacks.clear();
-        }
-        _mutex.unlock();
-    }
-    
-    void postCallback(std::function<void()> callback) {
-        _mutex.lock();
-        _callbacks.push_back(callback);
-        _mutex.unlock();
-    }
+    static thread_local bool s_isMainThread;
 
-};
+    static struct MainThreadInit {
+        MainThreadInit() {
+            s_isMainThread = true;
+        }
+    } s_mainThreadInit;
 }
-
-static thread_local ThreadLocalData s_threadLocalData;
-static ThreadLocalData* s_mainThreadLocalData;
-
-static struct MainThreadInit {
-    MainThreadInit() {
-        s_threadLocalData._isMainThread = true;
-        s_mainThreadLocalData = &s_threadLocalData;
-    }
-} s_mainThreadInit;
 
 bool Task::isMainThread() {
-    return s_threadLocalData._isMainThread;
+    return s_isMainThread;
 }
 
-void Task::addObjectToCurrentThreadDeletePool(Object* obj) {
-    s_threadLocalData._deadObjects.push_back(obj);
-}
-
-void Task::flushCurrentThread() {
-    s_threadLocalData.flush();
-}
 
 namespace oak {
 
@@ -135,9 +91,6 @@ public:
             
             // Run the subtask
             subtask.exec();
-            
-            // Clean up any dead objects on this thread
-            s_threadLocalData.flush();
         }
         
         
@@ -146,7 +99,6 @@ public:
         pool->_threads[threadIndex] = nullptr;
         pool->_mutex.unlock();
         
-        s_threadLocalData.flush();
         return nullptr;
     }
 

@@ -28,8 +28,8 @@ void Object::release() {
     assert(_owningThreadId == std::this_thread::get_id());
 #endif
 	if (--_refs == 0) {
-        Task::addObjectToCurrentThreadDeletePool(this);
-		//delete this;
+        //Task::addObjectToCurrentThreadDeletePool(this);
+		delete this;
 	}
     assert(_refs >= 0);
 }

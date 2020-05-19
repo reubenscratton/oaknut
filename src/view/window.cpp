@@ -352,8 +352,6 @@ void Window::draw() {
         }
     }
     
-    Task::flushCurrentThread();
-
     // If there are any animations running, request a redraw immediately
     if (_animations.size()) {
         requestRedraw();
