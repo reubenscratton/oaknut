@@ -115,6 +115,9 @@ void URLRequest::start() {
                 return true;
             }},
             {Task::Background, [=](variant& result)->variant {
+                if (_remoteLoadComplete || _status==Cancelled) {
+                    return true;
+                }
                 if (_cachedResponse) {
                     processRawResponse(_cachedResponse);
                 }
@@ -128,11 +131,14 @@ void URLRequest::start() {
                     log_dbg("Disk->RAM cache: %s", _url.c_str());
                     s_urlRamCache.put(sha, _cachedResponse, _cachedResponse->getRamCost());
                     dispatchResponse(_cachedResponse, true);
+                    if (_cachePolicy == CacheOnly) {
+                        _owner = nullptr;
+                    }
                 }
                 release();
                 return variant();
             }}
-        });
+        }, _owner);
     }
     
     // If we don't care about cache, kick off the remote load immediately
@@ -140,6 +146,7 @@ void URLRequest::start() {
         if (_cachedResponse) {
             bool cacheValid = app->currentMillis() <= _cachedResponse->expiryTime;
             if (cacheValid) {
+                _owner = nullptr;
                 return;
             }
         }
@@ -270,10 +277,11 @@ void URLRequest::startRemoteLoad(const sha1_t& sha) {
                 s_urlRamCache.put(sha, _remoteResponse, _remoteResponse->getRamCost());
                 dispatchResponse(_remoteResponse, false);
             }
+            _owner = nullptr;
             release();
             return variant();
         }},
-    });
+    }, _owner);
 
 }
 
@@ -291,9 +299,7 @@ void URLRequest::cancel() {
         _remoteTask->cancel();
         _remoteTask = nullptr;
     }
-    if (_owner) {
-        _owner = nullptr;
-    }
+    _owner = nullptr;
 }
 
 bool URLRequest::isCancelled() const {
@@ -303,9 +309,6 @@ bool URLRequest::isCancelled() const {
 void URLRequest::dispatchResponse(const URLResponse* response, bool isFromCache) {
     if (_handler && _status != Cancelled) {
         _handler(response, isFromCache);
-    }
-    if (_owner) {
-        _owner = nullptr;
     }
 }
 

@@ -1,9 +1,11 @@
 Oaknut TODOs
 ============
 
+Bug: Opening the same article page twice goes wrong.
+
 Feature: Image fade-in
 
-Bug: Article page navpush animation looks wrong.
+Bug: Article page navpush animation looks wrong. Need a scrim on top of the page going out and possibly a zoom out transform...
 
 Bug: Unwanted vertical scrollbars on article pages.
 
@@ -184,28 +186,13 @@ Interesting articles about platform diffs
 https://medium.com/@Alconost/ios-vs-android-design-630340a73ee6
 
 
-Problem:
-BNURLRequest lifetime is fucked. If one is rapidly cancelled, it is destroyed while the contained URLRequest's callback is extant... and when it runs it refers to a dead object.
-Ideally we want the URLRequest to keep BNURLRequest alive
+
 
 URLRequest
 ==========
 Currently modelled so platform layer is a single synchronous method that gets the data from the remote endpoint. BUT, when this method is blocked and waiting for data, it needs to also check the cancel semaphore! At present no platform layer does this bit - bad!
 
 
-Oaknut Task doc notes
-=====================
-No direct support for threads, what we have instead are Tasks. Tasks contain a single callable function which takes a `variant&` as input and returns a `variant` as output. A Task executes in one of three contexts:
-
- - Main thread
- - Background
- - IO
-
-The main API is `Task::enqueue()` which allows you to submit a chain of one or more tasks that will complete serially, each task passing it's output to the next task as input. For example a single call to Task::enqueue() could run (1) an IO Task that loads a file from disk, which is followed by (2) a Background task that processes the contents, and finally (3) a Main thread task updates UI based on the results.
-
-Behind the scenes Oaknut maintains two thread pools: one for Background tasks, and one for IO tasks. The Background pool is fixed to max(1, numCores-1) threads and the Tasks on these threads *should not block* (this will hopefully some day be enforced in a similar fashion to Android's Strict mode). The intention is to keep all the non-primary cores performing useful background work rather than blocking. The IO pool has no fixed size - it grows and shrinks as required - and it is expected that IO threads will spend almost all of their time in a suspended state, waiting for the OS to complete IO, rather than competing with Background threads for CPU time.
-
-Tasks are cancellable (see `Task::cancel()`) so long-running Background tasks should periodically check `isCancelled()` and early exit if appropriate.
 
 
 

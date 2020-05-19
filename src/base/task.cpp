@@ -9,21 +9,6 @@
 #include <sched.h>
 
 
-
-/**
- * @ingroup base_group
- * @class Thread
- * @brief Oaknut Threads are tightly controlled - you cannot spawn your own Threads, so if you need to do that
- * please use `std::thread` and be sure you know what you're doing. Oaknut maintains two pools of background
- * threads, one for CPU-intensive work, and one for I/O. These background threads execute `Tasks`, which
- * are cancelable, have priority ordering, and other useful attributes.
- *
- * The background thread pool is limited to the number of physical cores present.
- * The I/O thread pool grows dynamically to a maximum of 50 threads or so. Obviously it is expected that IO threads
- * will spend the vast majority of their time blocked and waiting for IO to complete.
- *
- */
-
 namespace oak {
 class ThreadLocalData {
 public:
@@ -94,6 +79,7 @@ public:
 
     ThreadPool(Task::exec_context ctx, int minThreads, int maxThreads) : _ctx(ctx), _minThreads(minThreads), _maxThreads(maxThreads) {
         _numThreadsRunning = 0;
+        _numThreadsWaiting = 0;
         _threads = (pthread_t*)calloc(maxThreads, sizeof(pthread_t));
     }
     ~ThreadPool();
@@ -203,24 +189,17 @@ static ThreadPool* s_backgroundThreadPool;
 static ThreadPool* s_ioThreadPool;
 
 
-Task* Task::enqueue(const vector<Task::subtask>& subtasks) {
-    Task* task = new Task(subtasks);
-    task->enqueueNextSubtask(variant());
-    return task;
+Task* Task::enqueue(const vector<Task::subtask>& subtasks, Object* owner/*=nullptr*/) {
+    return new Task(subtasks, owner);
 }
 
 void Task::subtask::exec() {
-    auto& status = task->_status;
-    if (status != Task::Cancelled) {
-        status = Task::Executing;
+    if (task->_status != Task::Cancelled) {
+        task->_status = Task::Executing;
         assert(_func);
         _output = _func(_input);
-        if (task->_subtasks.size()) {
-            task->enqueueNextSubtask(_output);
-        } else {
-            status = Task::Complete;
-        }
     }
+    task->enqueueNextSubtask(_output);
 }
 
 void Task::enqueueNextSubtask(const variant& input) {
@@ -239,9 +218,15 @@ void Task::enqueueNextSubtask(const variant& input) {
     
     // Detach next subtask from internal list and set its input
     postToMainThread([=] () {
-        if (isCancelled()) {
+        
+        // If task is complete or cancelled, release the owner, release the ref on ourself, and exit.
+        if (isCancelled() || !_subtasks.size()) {
+            _owner = nullptr;
+            release();
             return;
         }
+
+        // Detach next subtask from internal list and set its input
         Task::subtask subtask = _subtasks[0];
         _subtasks.erase(_subtasks.begin());
         subtask._input = input;
@@ -284,11 +269,17 @@ ThreadPool::~ThreadPool() {
 
 
     
-Task::Task(const vector<subtask>& subtasks) {
+Task::Task(const vector<subtask>& subtasks, Object* owner/*=nullptr*/) : _owner(owner) {
     for (auto subtask : subtasks) {
         subtask.task = this;
         _subtasks.push_back(subtask);
     }
+    
+    // Hold a ref on the Task object as long as the Task is executing
+    retain();
+    
+    // Enqueue it
+    enqueueNextSubtask(variant());
 }
 Task::~Task() {
     //log_dbg("~Task(%X : %d)", this, _runContext);
