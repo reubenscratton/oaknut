@@ -145,7 +145,7 @@ void BNCellsModule::updateLayoutWithContentObject(BNContent* contentObject) {
 		for (int i=0 ; i<rels.size() ; i++) {
 			BNRelationship* rel = rels[i];
 			if (rel->_childObject->isAV()) {
-				BNAV* av = (BNAV*)rel->_childObject;
+                BNAV* av = rel->_childObject.as<BNAV>();
 				if (!av->_isAvailable) {
                     rels.erase(rels.begin() + i);
                     i--;

@@ -80,9 +80,9 @@ BNItem::BNItem(const variant& json) : BNContent(json) {
             auto rel = findRelationshipByModelId(rels, id);
             if (rel) {
                 if (tag == "image") {
-                    _elements.push_back(Element((BNImage*)rel->_childObject));
+                    _elements.push_back(Element(rel->_childObject.as<BNImage>()));
                 } else {
-                    _elements.push_back(Element((BNAV*)rel->_childObject));
+                    _elements.push_back(Element(rel->_childObject.as<BNAV>()));
                 }
 
             }
@@ -191,7 +191,7 @@ vector<BNRelationship*> BNItem::findRelationships(const vector<string>& primaryT
                 vector<BNRelationship*> deDuped;
                 set<string> seenNames;
                 for (auto relationship : results ){
-					BNContent* content = (BNContent*)(relationship->_childObject);
+                    auto content = relationship->_childObject.as<BNContent>();
 					if (seenNames.find(content->_name)==seenNames.end()) {
 						seenNames.insert(content->_name);
 						deDuped.push_back(relationship);
@@ -202,7 +202,7 @@ vector<BNRelationship*> BNItem::findRelationships(const vector<string>& primaryT
 					if (content->isCPSTopic()) {
                         int i=0;
                         for (auto otherRelationship : deDuped) {
-							BNContent *otherContent = (BNContent*)(otherRelationship->_childObject);
+                            auto otherContent = otherRelationship->_childObject.as<BNContent>();
 							if (otherContent->_name == content->_name) {
 								if (!otherContent->isCPSTopic()) {
 									deDuped[i] = relationship;

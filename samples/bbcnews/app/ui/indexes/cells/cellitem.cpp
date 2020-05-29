@@ -216,7 +216,7 @@ BNCellItem::BNCellItem(BNCellsModule* module, BNCellStyle cellStyle) : BNCellCon
 
 void BNCellItem::setRelationship(BNRelationship* relationship) {
     if (relationship->_childObject->isItem()) {
-        setItem((BNItem*)relationship->_childObject);
+        setItem(relationship->_childObject.as<BNItem>());
     }
 }
 

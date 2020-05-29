@@ -208,13 +208,39 @@ Bitmap* Bitmap::createFromData(const bytearray& data) {
     GLubyte* pixels = (GLubyte *)CFDataGetBytePtr(dataRef);
     assert(pixels);
     size_t cbUncompressed = CFDataGetLength(dataRef);
+    
+    // Indexed (i.e. paletteized) images must be converted
+    int format = PIXELFORMAT_UNKNOWN;
+    if (colormodel==kCGColorSpaceModelIndexed) {
+        assert(bpp==8); // only support 256-entry palettes
+        auto palSize = CGColorSpaceGetColorTableCount(colorspace);
+        uint8_t* palette = (uint8_t*)malloc(palSize * 3); // assume RGB24 palette. Do RGBA palettes exist??
+        CGColorSpaceGetColorTable(colorspace, palette);
+        cbUncompressed *= 4;
+        CFDataRef dataRef2 = CFDataCreateMutable(nullptr, cbUncompressed);
+        format = PIXELFORMAT_RGBA32;
+        uint8_t* p1 = (uint8_t*)pixels;
+        uint8_t* p2 = (uint8_t*)CFDataGetBytePtr(dataRef2);
+        for (int i=0 ; i<width*height ; i++) {
+            uint8_t index = *p1++;
+            *p2++ = palette[index*3 + 0];
+            *p2++ = palette[index*3 + 1];
+            *p2++ = palette[index*3 + 2];
+            *p2++ = 0xFF;
+        }
+        bpp = 32;
+        CFRelease(dataRef);
+        dataRef = dataRef2;
+        free(palette);
+        pixels = (GLubyte*)CFDataGetBytePtr(dataRef);
+    }
+    
     CGImageRelease(cgImage);
 
     // Don't need compressed data any more
     CGDataProviderRelease(dataProvider);
-    
+
     // Conversions from unsupported pixel formats
-    int format = PIXELFORMAT_UNKNOWN;
     if (bpp==16 && colormodel==kCGColorSpaceModelMonochrome) {  // A16 ==> A8
         format = PIXELFORMAT_A8;
         uint8_t* p1 = (uint8_t*)pixels;
@@ -227,7 +253,7 @@ Bitmap* Bitmap::createFromData(const bytearray& data) {
         bpp = 8;
     }
 
-    // Choose OpenGL format
+    // Choose format
     switch(bpp) {
         case 32:
             switch(info & kCGBitmapAlphaInfoMask) {

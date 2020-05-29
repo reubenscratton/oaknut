@@ -147,8 +147,15 @@ void ImageView::loadImage() {
     } else if (_url.length() > 0) {
         assert(!_request);
         _request = URLRequest::get(_url, this, URL_FLAG_BITMAP);
+        auto timeReqStart = app->currentMillis();
         _request->handle([=](const URLResponse* res, bool isFromCache) {
             setBitmap(res->decoded.bitmap);
+            auto elapsed = app->currentMillis() - timeReqStart;
+            if (elapsed >= 250) {
+                Animation::start(this, 500, [=](float val) {
+                    _renderOp->setAlpha(val);
+                });
+            }
         });
     }
 }

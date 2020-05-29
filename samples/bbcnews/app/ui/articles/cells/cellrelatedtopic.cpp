@@ -27,7 +27,7 @@ public:
     }
     
     void setRelationship(BNRelationship* rel) override {
-        _collection = (BNCollection*)rel->_childObject;
+        _collection = rel->_childObject.as<BNCollection>();
         //self.textAreaInsets = textInsetsRelatedTopic;
         BNItem* parentItem = (BNItem*)rel->_parentObject;
         _inverseColorScheme = parentItem->isMediaItem();

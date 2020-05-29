@@ -48,9 +48,9 @@
 #endif
 
 #if RENDERER_METAL
- #if __OBJC__
-  #import <MetalKit/MetalKit.h>
- #endif
+#if __OBJC__
+#include <Metal/Metal.h>
+#endif
 #endif
 
 #if TARGET_OS_IOS

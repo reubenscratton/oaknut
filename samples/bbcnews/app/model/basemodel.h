@@ -12,7 +12,7 @@ public:
     int32_t _displayOrder;
     string _primaryType;
     string _secondaryType;
-    class BNBaseModel* _childObject;
+    sp<class BNBaseModel> _childObject;
     BNBaseModel* _parentObject;
 
     BNRelationship();
@@ -28,7 +28,7 @@ public:
     TIMESTAMP _lastUpdated;
     string _modelId;
     string _modelType;
-    vector<BNRelationship*> _childRelationships;
+    vector<sp<BNRelationship>> _childRelationships;
     vector<BNRelationship*> _parentRelationships;
 
     string url();

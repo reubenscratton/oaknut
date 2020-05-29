@@ -92,7 +92,7 @@ bool TextureRenderOp::canMergeWith(const RenderOp* op) {
 
 void TextureRenderOp::prepareToRender(RenderTask* r, Surface* surface) {
     RenderOp::prepareToRender(r, surface);
-    if (_alpha < 1) {
+    if (_shader->_features.alpha) {
         r->setUniform(_shader->_u_alpha, _alpha);
     }
     if (_texture) {

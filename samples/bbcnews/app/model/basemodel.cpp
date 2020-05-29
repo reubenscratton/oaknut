@@ -84,15 +84,15 @@ BNBaseModel::BNBaseModel(const variant& json) {
     _lastUpdated = json.floatVal("lastUpdated") / 1000;
 
     auto relations = json.arrayRef("relations");
-    vector<BNRelationship*> relationships;
+    //vector<BNRelationship*> relationships;
     for (auto relationDict : relations) {
         BNRelationship* relationship = new BNRelationship(relationDict, this);
         if (relationship->_childObject->_modelId.length() > 0) { // filter out objects with nil model ID.
-            relationships.push_back(relationship);
+            _childRelationships.push_back(relationship);
         }
     }
     
-    _childRelationships = relationships;
+    //_childRelationships = relationships;
 }
 
 BNBaseModel* BNBaseModel::findChildObject(const string& primaryType, const string& secondaryType) {
@@ -133,7 +133,7 @@ vector<BNRelationship*> BNBaseModel::findRelationships(const vector<string>& pri
             continue;
         }
 		if (formats.size() && rel->_childObject->isContent()) {
-			BNContent* child = (BNContent*)rel->_childObject;
+            auto child = rel->_childObject.as<BNContent>();
             if (!contains(formats, child->_format)) {
 				continue;
 			}

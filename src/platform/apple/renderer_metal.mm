@@ -492,16 +492,6 @@ public:
             _currentTextureValid = false;
         }
         
-        // Ensure uniforms are up to date
-        if (!state->_vertexUniformsValid) {
-            state->_vertexUniformsValid = true;
-            [_renderCommandEncoder setVertexBytes:state->_vertexUniformData.data() length:state->_vertexUniformData.size() atIndex:1];
-        }
-        if (!state->_fragUniformsValid) {
-            state->_fragUniformsValid = true;
-            [_renderCommandEncoder setFragmentBytes:state->_fragUniformData.data() length:state->_fragUniformData.size() atIndex:0];
-        }
-
         // Validate source texture
         if (_currentTexture) {
             MetalTexture* metalTexture = (MetalTexture*)_currentTexture;
@@ -535,9 +525,21 @@ public:
                 _currentTextureValid = true;
                 [_renderCommandEncoder setFragmentTexture:metalTexture->_tex atIndex:0];
                 [_renderCommandEncoder setFragmentSamplerState:metalTexture->_sampler atIndex:0];
+                state->_fragUniformsValid = false;
             }
         }
         
+        // Ensure uniforms are up to date
+        if (!state->_vertexUniformsValid) {
+            state->_vertexUniformsValid = true;
+            [_renderCommandEncoder setVertexBytes:state->_vertexUniformData.data() length:state->_vertexUniformData.size() atIndex:1];
+        }
+        if (!state->_fragUniformsValid) {
+            state->_fragUniformsValid = true;
+            [_renderCommandEncoder setFragmentBytes:state->_fragUniformData.data() length:state->_fragUniformData.size() atIndex:0];
+        }
+
+
         // Clip
         if (!_currentClipValid) {
             _currentClipValid = true;

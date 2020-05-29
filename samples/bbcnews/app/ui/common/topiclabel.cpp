@@ -62,7 +62,7 @@ void BNTopicLabel::setItem(BNItem* item, BNCollection* displayingCollection) {
     
     for (BNRelationship *childRelationship : item->_childRelationships) {
         if (childRelationship->_childObject->isCollection()) {
-            BNCollection *relatedCollection = (BNCollection *)childRelationship->_childObject;
+            auto relatedCollection = childRelationship->_childObject.as<BNCollection>();
             if (relatedCollection->canBeTopicLink()) {
                 vector_add_unique(collections, relatedCollection);
             }
