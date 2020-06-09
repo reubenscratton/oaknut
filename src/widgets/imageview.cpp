@@ -9,6 +9,10 @@
 
 DECLARE_DYNCREATE(ImageView);
 
+
+static_style s_fadeInThreshold("window.image-fade-in.threshold");
+static_style s_fadeInDuration("window.image-fade-in.duration");
+
 ImageView::ImageView() {
     _contentMode = ActualSize;
     _scrollHorz._disabled = true;
@@ -135,7 +139,7 @@ void ImageView::loadImage() {
                 if (loadResult.isError()) {
                     // TODO: show error image or something
                 } else {
-                    Bitmap* bitmap = loadResult.ptr<Bitmap>();
+                    Bitmap* bitmap = loadResult.objectVal<Bitmap>();
                     if (hashVal == _assetPath.hash()) {
                         setBitmap(bitmap);
                     }
@@ -149,10 +153,10 @@ void ImageView::loadImage() {
         _request = URLRequest::get(_url, this, URL_FLAG_BITMAP);
         auto timeReqStart = app->currentMillis();
         _request->handle([=](const URLResponse* res, bool isFromCache) {
-            setBitmap(res->decoded.bitmap);
+            setBitmap(res->decoded.objectVal<Bitmap>());
             auto elapsed = app->currentMillis() - timeReqStart;
-            if (elapsed >= 250) {
-                Animation::start(this, 500, [=](float val) {
+            if (elapsed >= s_fadeInThreshold.intVal()) {
+                Animation::start(this, s_fadeInDuration.intVal(), [=](float val) {
                     _renderOp->setAlpha(val);
                 });
             }

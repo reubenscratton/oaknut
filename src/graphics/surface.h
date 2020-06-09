@@ -32,7 +32,7 @@ public:
     COLOR _clearColor;
     bool _clearNeeded;
     REGION _invalidRegion; // unused on primary surface
-    MATRIX4 _mvp;
+    MATRIX4 _mvpR, _mvpP;
     POINT _savedOrigin;
     list<RenderList*> _renderLists;
     list<RenderList*>::iterator _renderListsLastTouchedIterator;

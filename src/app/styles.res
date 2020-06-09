@@ -21,6 +21,12 @@ window: {
         color: #777
         corner-radius: 2.5dp
     }
+    animation-duration: 3500
+    image-fade-in: {
+        threshold: 250
+        duration: 500
+    }
+
 }
 
 colors: {
@@ -162,6 +168,7 @@ TextField: {
         align: left, below+4dp
     }
 }
+
 
 
 })"_S

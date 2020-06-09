@@ -47,7 +47,7 @@ bool Bitmap::hasPremultipliedAlpha() {
     return _hasPremultipliedAlpha;
 }
 
-int Bitmap::getBytesPerPixel() {
+int Bitmap::getBytesPerPixel() const {
     switch (_format) {
         case PIXELFORMAT_RGBA32: return 4;
         case PIXELFORMAT_BGRA32: return 4;
@@ -58,8 +58,8 @@ int Bitmap::getBytesPerPixel() {
     assert(0);
 }
 
-int Bitmap::sizeInBytes() {
-    return _width*_height*getBytesPerPixel();
+uint32_t Bitmap::getRamCost() const {
+    return sizeof(Bitmap) + _width*_height*getBytesPerPixel();
 }
 
 

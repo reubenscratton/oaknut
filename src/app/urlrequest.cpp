@@ -338,21 +338,21 @@ void URLRequest::processRawResponse(URLResponse* response) {
 
         // Bitmaps
         if (contentType.hasPrefix("image/") && response->data.length()) {
-            response->decoded.bitmap = Bitmap::createFromData(response->data);
-            response->hasBeenDecoded = (response->decoded.bitmap != nullptr);
+            response->decoded = Bitmap::createFromData(response->data);
+            response->hasBeenDecoded = (response->decoded.objectVal<Bitmap>() != nullptr);
         }
 
         // JSON
         else if (contentType.contains("json")) {
             string str = response->data.toString();
-            response->decoded.json = variant::parse(str, PARSEFLAG_JSON);
+            response->decoded = variant::parse(str, PARSEFLAG_JSON);
             response->hasBeenDecoded = true;
         }
         
         // Other text form
         else if (contentType.hasPrefix("text/")) {
             // TODO: Handle charset encodings here. At present we just presume UTF-8.
-            response->decoded.text = response->data.toString();
+            response->decoded = response->data.toString();
             response->hasBeenDecoded = true;
         }
     //}
@@ -368,14 +368,10 @@ string URLResponse::getHeader(const string& headerName) {
     return it->second;
 }
 
-uint32_t URLResponse::getRamCost() {
+uint32_t URLResponse::getRamCost() const {
     uint32_t cost = 0;
-    if (decoded.bitmap) {
-        cost = sizeof(Bitmap) + decoded.bitmap->sizeInBytes();
-    } else if (!decoded.json.isEmpty()) {
-        cost = decoded.json.getRamCost();
-    } else if (decoded.text.lengthInBytes()) {
-        cost = decoded.text.lengthInBytes();
+    if (!decoded.isEmpty()) {
+        cost = decoded.getRamCost();
     } else {
         cost = data.size();
     }

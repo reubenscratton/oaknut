@@ -823,3 +823,7 @@ void Styleable::applyStyle(const style& astyle) {
         }
     }
 }
+
+static_style::static_style(const string& keypath) {
+    _style = app->getStyle(keypath);
+}

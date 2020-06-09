@@ -84,15 +84,20 @@ BNBaseModel::BNBaseModel(const variant& json) {
     _lastUpdated = json.floatVal("lastUpdated") / 1000;
 
     auto relations = json.arrayRef("relations");
-    //vector<BNRelationship*> relationships;
     for (auto relationDict : relations) {
         BNRelationship* relationship = new BNRelationship(relationDict, this);
         if (relationship->_childObject->_modelId.length() > 0) { // filter out objects with nil model ID.
             _childRelationships.push_back(relationship);
         }
     }
-    
-    //_childRelationships = relationships;
+}
+
+uint32_t BNBaseModel::getRamCost() const {
+    uint32_t cost = sizeof(BNBaseModel);
+    for (auto rel : _childRelationships) {
+        cost += rel->_childObject->getRamCost();
+    }
+    return cost;
 }
 
 BNBaseModel* BNBaseModel::findChildObject(const string& primaryType, const string& secondaryType) {

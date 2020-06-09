@@ -27,6 +27,7 @@ string measurement::toString() const {
     return string::format("%f%s", _unitVal, szUnit);
 }
 
+/*
 template <>
 Bitmap* variant::getObject<Bitmap>(const string& key) const {
     auto val = _map->find(key);
@@ -37,6 +38,7 @@ Bitmap* variant::getObject<Bitmap>(const string& key) const {
     obj->fromVariant(val->second);
     return obj;
 }
+*/
 
 variant variant::empty() {
     return variant();
@@ -411,7 +413,7 @@ bool variant::isMeasurement() const {
 bool variant::isCompound() const {
     return type == MAP;
 }
-bool variant::isPtr() const {
+bool variant::isObject() const {
     return type == OBJPTR;
 }
 bool variant::isError() const {
@@ -558,8 +560,8 @@ uint32_t variant::getRamCost() const {
         case FLOAT32: cost += 4; break;
         case FLOAT64: cost += 8; break;
         case STRING: cost += _str->lengthInBytes(); break;
-        case MEASUREMENT: break;
         case BYTEARRAY: cost += _bytearray->size(); break;
+        case OBJPTR: cost += _obj->getRamCost(); break;
         case ARRAY: {
             if (_vec) {
                 for (auto it=_vec->begin() ; it != _vec->end() ; it++) {
@@ -578,7 +580,6 @@ uint32_t variant::getRamCost() const {
             break;
         }
         default:
-            assert(0); // TODO:
             break;
     }
     return cost;

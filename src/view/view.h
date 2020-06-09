@@ -396,6 +396,18 @@ public:
 
     void setOpaque(bool opaque);
     
+    /** Applies a matrix transform to the view during rendering, optionally resetting first */
+    void applyMatrix(const MATRIX4& m, bool reset=true);
+    inline void applyTranslate(float tx, float ty, bool reset=true) {
+        applyMatrix(MATRIX4::makeTranslate(tx, ty), reset);
+    }
+    inline void applyScale(float sx, float sy, bool reset=true) {
+        applyMatrix(MATRIX4::makeScale(sx, sy), reset);
+    }
+
+    void addDecorOp(RenderOp* renderOp);
+    void removeDecorOp(RenderOp* renderOp);
+
 protected:
     /**  \cond INTERNAL */
     virtual void updateRenderOps();
@@ -411,8 +423,6 @@ protected:
     bool _updateRenderOpsNeeded;
     bool _opaque;
     MATRIX4* _matrix;
-    void addDecorOp(RenderOp* renderOp);
-    void removeDecorOp(RenderOp* renderOp);
     void updateBackgroundRect();
     void addRenderOpToList(RenderOp* renderOp, bool atFront, sp<RenderList>& list);
     void removeRenderOpFromList(RenderOp* renderOp, sp<RenderList>& list);
@@ -528,7 +538,6 @@ public:
     virtual void animateTranslate(POINT translation, float duration);
     virtual Animation* animateInFromBottom(float duration, InterpolateFunc interpolater = Animation::strongEaseOut);
     virtual Animation* animateOutToBottom(float duration, InterpolateFunc interpolater = Animation::strongEaseOut);
-	virtual void setTranslate(POINT translation);
     int _animationCount; // number of active animations currently attached to the view
     /**@}*/
 

@@ -140,15 +140,11 @@ public:
     TIMESTAMP expiryTime;
     bytearray data; // NB: May be reset to zero length after decoding
     
-    // Decoded forms. At most one of these will be set.
-    struct {
-        string text;
-        variant json;
-        sp<class Bitmap> bitmap;
-    } decoded;
+    // Decoded form
+    variant decoded;
     bool hasBeenDecoded;
 
     string getHeader(const string& headerName);
-    uint32_t getRamCost();
+    virtual uint32_t getRamCost() const override;
 };
 

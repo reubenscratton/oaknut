@@ -101,7 +101,8 @@ Surface::Surface(Renderer* renderer, bool isPrivate) : RenderResource(renderer) 
 
 void Surface::setSize(const SIZE& size) {
     _size = size;
-    _mvp = MATRIX4::ortho(0, size.width, size.height, 0, -1, 1);
+    _mvpR = MATRIX4::makeOrtho(0, size.width, size.height, 0, -1, 1);
+    _mvpP.identity();
     if (_supportsPartialRedraw) {
         _invalidRegion.rects.clear();
         _invalidRegion.addRect(RECT(0,0,size.width,size.height));
@@ -421,18 +422,22 @@ void Surface::renderPhase3(RenderTask* r, View* view, Surface* prevsurf) {
     }
     
 
-    MATRIX4 savedMatrix;
+    MATRIX4 savedMvpR, savedMvpP;
     bool changesMvp = view->_matrix || !view->_contentOffset.isZero();
     if (changesMvp) {
-        savedMatrix = surface->_mvp;
+        savedMvpR = surface->_mvpR;
+        savedMvpP = surface->_mvpP;
     }
     if (view->_matrix) {
-        surface->_mvp *= *view->_matrix;
+        surface->_mvpR *= *view->_matrix;
+        surface->_mvpP *= *view->_matrix;
     }
+    
+    // Apply content offset to the renderspace matrix
     if (!view->_contentOffset.isZero()) {
-        MATRIX4 tm;
-        tm.translate(-(int)view->_contentOffset.x, -(int)view->_contentOffset.y, 0);
-        surface->_mvp *= tm;
+        MATRIX4 tm = MATRIX4::makeTranslate(-(int)view->_contentOffset.x, -(int)view->_contentOffset.y);
+        surface->_mvpR *= tm;
+        //surface->_mvpP *= tm; not done since getSurfaceRect() below tracks content offset changes
     }
     
     bool clips = view->_clipsContents;
@@ -443,10 +448,11 @@ void Surface::renderPhase3(RenderTask* r, View* view, Surface* prevsurf) {
     }
     //clips = false;
     if (clips) {
+        // Get the clip rect without any animation (mvp) transforms. 
         RECT clip = view->getSurfaceRect();
-//#if RENDERER_GL
-//        clip.origin.y = surface->_size.height - clip.bottom(); /* flip Y */
-//#endif
+        // Apply current mvp (pixelspace) transform
+        clip.transform(surface->_mvpP);
+        // Clamp to surface area
         clip.intersectWith({0,0,_size.width,_size.height});
         if (clip.size.width <= 0 || clip.size.height <= 0) {
             goto skipDraw;
@@ -478,7 +484,8 @@ skipDraw:
         r->popClip();
     }
     if (changesMvp) {
-        surface->_mvp = savedMatrix;
+        surface->_mvpR = savedMvpR;
+        surface->_mvpP = savedMvpP;
     }
     
     // If rendered a child surface then we must now render the child surface onto its parent

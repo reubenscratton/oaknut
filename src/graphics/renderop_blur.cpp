@@ -203,7 +203,7 @@ void BlurRenderOp::setRect(const RECT &rect) {
     _dirty = true;
     
     // Set up an MVP for the offscreen part
-    _mvp = MATRIX4::ortho(0,_downsampledSize.width,0,_downsampledSize.height,-1,1);
+    _mvp = MATRIX4::makeOrtho(0,_downsampledSize.width,0,_downsampledSize.height,-1,1);
 }
 
 

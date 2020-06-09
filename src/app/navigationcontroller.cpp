@@ -7,6 +7,7 @@
 
 #include <oaknut.h>
 
+static_style s_window_anim_duration("window.animation-duration");
 
 NavigationController::NavigationController() {
 
@@ -124,17 +125,23 @@ void NavigationController::startNavAnimation(ViewController* incomingVC, Animati
 		return;
 	}
 
-	// Do an initial apply so the translation and alpha on the incoming view & navitem is correct
-	onNavTransitionApply(0);
+    // Scrim on outgoing VC
+    RectRenderOp* scrim = new RectRenderOp();
+    sp<View> currentView = _currentViewController->getView();
+    scrim->setRect(currentView->getVisibleRect());
+    currentView->addDecorOp(scrim);
 
 	// Create the animation
-    Animation* anim = Animation::start(_view, 350, [=](float val) {
-        onNavTransitionApply(val);
+    Animation* anim = Animation::start(_view, s_window_anim_duration.intVal(), [=](float val) {
+        applyNavTransitionToViewController(_incomingViewController, val, true);
+        applyNavTransitionToViewController(_currentViewController, val, false);
+        scrim->setFillColor(((int)(val*48)<<24));
     });
     anim->setInterpolater(Animation::regularEaseInOut);
     anim->onFinished = [=](Animation* anim) {
 		completeIncoming();
         _animationState = None;
+        currentView->removeDecorOp(scrim);
     };
 	_view->setNeedsLayout();
 }
@@ -151,11 +158,7 @@ void NavigationController::completeIncoming() {
 
 }
 
-
-void NavigationController::onNavTransitionApply(float val) {
-	applyNavTransitionToViewController(_incomingViewController, val, true);
-	applyNavTransitionToViewController(_currentViewController, val, false);
-}
+int s_debugFrame=0;
 
 void NavigationController::applyNavTransitionToViewController(ViewController* vc, float val, bool incoming) {
 	float tx;
@@ -165,7 +168,7 @@ void NavigationController::applyNavTransitionToViewController(ViewController* vc
 	else  {
 		tx = incoming ? (val-1) : val/2;
 	}
-    vc->getView()->setTranslate({tx * _view->getWidth(), 0});
+    vc->getView()->applyTranslate(tx * _view->getWidth(), 0);
 
     bool isPop = _animationState == Pop;
     float alpha = incoming?val:(1-val);
@@ -177,9 +180,9 @@ void NavigationController::applyNavTransitionToViewController(ViewController* vc
         float tx = incoming ? (1-val) : -val;
         float titleDistance = vc->_titleView->getWidth()/2 + _navBar->getWidth()/2;
         if (isPop) {
-            vc->_titleView->setTranslate({-tx * titleDistance,0});
+            vc->_titleView->applyTranslate(-tx * titleDistance,0);
         } else {
-            vc->_titleView->setTranslate({tx * titleDistance,0});
+            vc->_titleView->applyTranslate(tx * titleDistance,0);
         }
     }
     if (vc->_rightButtonsFrame) {

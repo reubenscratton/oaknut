@@ -366,9 +366,6 @@ void Window::startAnimation(Animation* animation, int duration, int delay) {
     if (animation->_window) {
         return;
     }
-#if CONFIG_SLOW_ANIMATIONS
-    duration *= 10;
-#endif
     animation->_duration = duration;
     animation->_delay = delay;
     animation->_paused = false;
@@ -383,6 +380,8 @@ void Window::startAnimation(Animation* animation, int duration, int delay) {
     // Applying the final value now rather than on next frame avoids unwanted in-between frames.
     if (delay<=0 && duration<=0) {
         animation->apply(1.0);
+    } else {
+        animation->apply(0.0);
     }
     requestRedraw();
 }
@@ -582,7 +581,7 @@ void Window::presentModalViewController(ViewController *viewController) {
 
     // Attach the new VC and animate it in from below
     attachViewController(viewController);
-    viewController->getView()->setTranslate({0, _rect.size.height}); // i.e. start off below screen
+    //viewController->getView()->applyTranslate(0, _rect.size.height); // i.e. start off below screen
     viewController->getView()->animateInFromBottom(333);
 }
 

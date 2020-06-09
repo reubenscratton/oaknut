@@ -23,7 +23,7 @@
 const float DEG2RAD = 3.141593f / 180;
 const float EPSILON = 0.00001f;
 
-MATRIX4 MATRIX4::ortho(float l, float r, float b, float t, float n, float f) {
+MATRIX4 MATRIX4::makeOrtho(float l, float r, float b, float t, float n, float f) {
     MATRIX4 mat;
     mat[0]  = 2 / (r - l);
     mat[5]  = 2 / (t - b);
@@ -33,7 +33,6 @@ MATRIX4 MATRIX4::ortho(float l, float r, float b, float t, float n, float f) {
     mat[14] = -(f + n) / (f - n);
     return mat;
 }
-
 
 
 ///////////////////////////////////////////////////////////////////////////////

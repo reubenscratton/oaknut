@@ -39,6 +39,10 @@ void* Object::operator new(size_t sz) {
 	return p;
 }
 
+uint32_t Object::getRamCost() const {
+    assert(0); // you should override this with an appropriate implementation!
+}
+
 #ifdef DEBUG
 string Object::debugDescription() {
     char ach[256];

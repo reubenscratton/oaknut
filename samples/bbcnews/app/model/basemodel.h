@@ -32,6 +32,8 @@ public:
     vector<BNRelationship*> _parentRelationships;
 
     string url();
+    
+    virtual uint32_t getRamCost() const override;
 
     // Runtime type
     virtual bool isContent() { return false; }

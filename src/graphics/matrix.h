@@ -23,8 +23,20 @@ class MATRIX4 {
 public:
     
     // helpers
-    static MATRIX4 ortho(float l, float r, float b, float t, float n, float f);
-    
+    static MATRIX4 makeOrtho(float l, float r, float b, float t, float n, float f);
+    static inline MATRIX4 makeTranslate(float tx, float ty) {
+        return MATRIX4(1.0f, 0.0f, 0.0f, 0.0f, // 1st column
+                       0.0f, 1.0f, 0.0f, 0.0f, // 2nd column
+                       0.0f, 0.0f, 1.0f, 0.0f, // 3rd column
+                       tx, ty, 0.0f, 1.0f);
+    }
+    static inline MATRIX4 makeScale(float sx, float sy) {
+        return MATRIX4(sx,   0.0f, 0.0f, 0.0f, // 1st column
+                       0.0f, sy,   0.0f, 0.0f, // 2nd column
+                       0.0f, 0.0f, 1.0f, 0.0f, // 3rd column
+                       0.0f, 0.0f, 0.0f, 1.0f);
+    }
+
     // constructors
     MATRIX4();  // init with identity
     MATRIX4(const float src[16]);
@@ -46,7 +58,7 @@ public:
     void        setColumn(int index, const VECTOR3& v);
 
     const float* get() const;
-    const float* getTranspose();                        // return transposed matrix
+    //const float* getTranspose();                        // return transposed matrix
     float        getDeterminant();
 
     MATRIX4&    identity();
@@ -96,7 +108,7 @@ private:
                             float m6, float m7, float m8);
 
     float m[16];
-    float tm[16];                                       // transpose m
+    //float tm[16];                                       // transpose m
 
 };
 
@@ -204,14 +216,14 @@ inline const float* MATRIX4::get() const
 
 
 
-inline const float* MATRIX4::getTranspose()
+/*inline const float* MATRIX4::getTranspose()
 {
     tm[0] = m[0];   tm[1] = m[4];   tm[2] = m[8];   tm[3] = m[12];
     tm[4] = m[1];   tm[5] = m[5];   tm[6] = m[9];   tm[7] = m[13];
     tm[8] = m[2];   tm[9] = m[6];   tm[10]= m[10];  tm[11]= m[14];
     tm[12]= m[3];   tm[13]= m[7];   tm[14]= m[11];  tm[15]= m[15];
     return tm;
-}
+}*/
 
 
 

@@ -38,6 +38,21 @@ RECT RECT::copyWithUninsets(const struct EDGEINSETS& insets) const {
     return rect;
 }
 
+void RECT::transform(const class MATRIX4 &m) {
+    VECTOR4 tl = {origin.x, origin.y, 0, 1};
+    VECTOR4 tr = {origin.x+size.width, origin.y, 0, 1};
+    VECTOR4 bl = {origin.x, origin.y+size.height, 0, 1};
+    VECTOR4 br = {origin.x+size.width, origin.y+size.height, 0, 1};
+    tl = m.operator*(tl);
+    tr = m.operator*(tr);
+    bl = m.operator*(bl);
+    br = m.operator*(br);
+    origin.x = fmin(tl.x, bl.x);
+    origin.y = fmin(tl.y, tr.y);
+    size.width = fmax(tr.x, br.x) - origin.x;
+    size.height = fmax(bl.y, br.y) - origin.y;
+}
+
 
 string RECT::toString() const {
 	// "{{0, 0}, {100, 100}}"

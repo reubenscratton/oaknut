@@ -78,11 +78,11 @@ public:
     virtual void unlock(PIXELDATA* pixelData, bool pixelsChanged)=0;
     uint8_t* pixelAddress(PIXELDATA* pixelData, int x, int y);
 
-    int getBytesPerPixel();
+    int getBytesPerPixel() const;
     bool hasAlpha();
     bool hasPremultipliedAlpha();
     
-    int sizeInBytes();
+    virtual uint32_t getRamCost() const override;
     Bitmap* convertToFormat(int newFormat);
     
     // ISerializeToVariant

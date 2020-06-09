@@ -40,6 +40,11 @@ public:
 	
 	void* operator new(size_t sz);
     
+    /**
+     Return an estimated cost (in bytes) of this object in memory. Should be inclusive, i.e. include the cost of all sub objects.
+     */
+    virtual uint32_t getRamCost() const;
+    
 #ifdef DEBUG
     virtual string debugDescription();
 #endif

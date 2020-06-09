@@ -74,7 +74,7 @@ BNURLRequest::BNURLRequest(const string& url, int flags, int priority) {
     
     // Special background processing used to trim the BBC's highly redundant JSON and to convert into a model obj
     _req->customDecoder = [=] (URLResponse* response) -> bool {
-        auto& json = response->decoded.json;
+        auto& json = response->decoded;
         json = variant::parse(response->data.toString(), PARSEFLAG_JSON);
         if (json.isError()) {
             json.clear();
@@ -82,20 +82,19 @@ BNURLRequest::BNURLRequest(const string& url, int flags, int priority) {
         }
         if (json.hasVal("type")) {
             fixRedundantJson(json);
-            BNBaseModel* modelObj = BNBaseModel::createModelObjectFromJson(json);
-            retain();
-            Task::postToMainThread([=]() {
-                modelObj->retain();
-                if (!_cancelled) {
-                    onHandleContent(modelObj);
-                }
-                modelObj->release();
-                release();
-            });
+            response->decoded = BNBaseModel::createModelObjectFromJson(json);
         }
             
         return true; // i.e. no default processing
     };
+    _req->handle([=](const URLResponse* response, bool foo) {
+        if (response->decoded.isObject()) {
+            auto modelObj = response->decoded.objectVal<BNBaseModel>();
+            if (!_cancelled) {
+                onHandleContent(modelObj);
+            }
+        }
+    });
 
 }
 

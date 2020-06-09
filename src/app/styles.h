@@ -81,6 +81,20 @@ protected:
     friend class Styleable;
 };
 
+
+class static_style {
+public:
+    static_style(const string& keypath);
+
+    // TODO: update when/if global style tree are updated
+    
+    inline int intVal() const {
+        return _style ? _style->intVal() : 0;
+    }
+private:
+    const style* _style;
+};
+
 /**
  * @ingroup app_group
  * @brief Represents a value in the global style namespace. Typical usage is to

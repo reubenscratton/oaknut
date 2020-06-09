@@ -132,7 +132,7 @@ void RenderOp::prepareToRender(RenderTask* r, Surface* surface) {
         default:
             assert(0);
     }
-    r->setUniform(_shader->_u_mvp, surface->_mvp);
+    r->setUniform(_shader->_u_mvp, surface->_mvpR);
 }
 
 void RenderOp::invalidateBatchGeometry() {

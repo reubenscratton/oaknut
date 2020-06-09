@@ -237,6 +237,7 @@ struct RECT {
         size.width *= sx;
         size.height *= sy;
     }
+    void transform(const class MATRIX4& m);
     
     RECT copyWithInsets(const struct EDGEINSETS& insets) const;
     RECT copyWithUninsets(const struct EDGEINSETS& insets) const;

@@ -1551,38 +1551,41 @@ void View::animateAlpha(float target, float duration) {
 
 void View::animateTranslate(POINT translation, float duration) {
     if (duration <= 0) {
-        setTranslate(translation);
+        applyTranslate(translation.x, translation.y);
     } else {
         Animation::start(this, duration, [=](float val) {
-            setTranslate({translation.x*val, translation.y*val});
+            applyTranslate(translation.x*val, translation.y*val);
         });
     }
 }
 Animation* View::animateInFromBottom(float duration, InterpolateFunc interpolater/* = strongEaseOut*/) {
     return Animation::start(this, duration, [=](float val) {
-        setTranslate({0, _rect.size.height * (1-val)});
+        applyTranslate(0, _rect.size.height * (1-val));
     }, interpolater);
 }
 Animation* View::animateOutToBottom(float duration, InterpolateFunc interpolater/* = strongEaseIn*/) {
     return Animation::start(this, duration, [=](float val) {
-        setTranslate({0, _rect.size.height * (val)});
+        applyTranslate(0, _rect.size.height * (val));
     }, interpolater);
 }
 
 
-void View::setTranslate(POINT translation) {
-    if (translation.x==0 && translation.y==0) {
+void View::applyMatrix(const MATRIX4& m, bool reset/*=false*/) {
+    if (!_matrix) {
+        _matrix = new MATRIX4(m);
+    } else {
+        if (reset) {
+            *_matrix = m;
+        } else {
+            _matrix->operator*=(m);
+        }
+    }
+    /*if (translation.x==0 && translation.y==0) {
         if (_matrix) {
             delete _matrix;
             _matrix = NULL;
         }
-    } else {
-        if (!_matrix) {
-            _matrix = new MATRIX4();
-        }
-        _matrix->identity();
-        _matrix->translate(translation.x, translation.y, 0);
-    }
+    }*/
     if (_ownsSurface) {
         setNeedsFullRedraw();
     }

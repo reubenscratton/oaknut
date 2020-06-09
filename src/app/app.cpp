@@ -202,7 +202,7 @@ Task* App::loadBitmapAsset(const string& assetPath, std::function<void(Bitmap*)>
             if (r.isError()) {
                 callback(nullptr);
             } else {
-                callback(r.ptr<Bitmap>());
+                callback(r.objectVal<Bitmap>());
             }
             return variant();
         }}

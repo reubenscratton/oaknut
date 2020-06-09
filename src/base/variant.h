@@ -126,7 +126,7 @@ public:
     bool isMeasurement() const;
     bool isArray() const;
     bool isCompound() const;
-    bool isPtr() const;
+    bool isObject() const;
     bool isError() const;
 
     // Comparison
@@ -149,7 +149,7 @@ public:
     vector<string> stringArrayVal() const;
     vector<string> stringArrayVal(const string& name) const;
     template <typename T>
-    T* ptr() const {
+    T* objectVal() const {
         static_assert(std::is_base_of<Object, T>::value, "type must be Object-derived");
         return (type==OBJPTR) ? static_cast<T*>(_obj) : nullptr;
     }
@@ -278,5 +278,5 @@ private:
     static variant parse(const string& str, uint32_t& o, int flags);
 };
 
-template <>
-class Bitmap* variant::getObject<Bitmap>(const string& key) const;
+//template <>
+//class Bitmap* variant::getObject<Bitmap>(const string& key) const;
