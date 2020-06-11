@@ -263,6 +263,10 @@ void RenderTask::setUniform<float>(int16_t uniformIndex, const float& val) {
     setUniformData(uniformIndex, &val, sizeof(val));
 }
 template<>
+void RenderTask::setUniform<POINT>(int16_t uniformIndex, const POINT& val) {
+    setUniformData(uniformIndex, &val, sizeof(val));
+}
+template<>
 void RenderTask::setUniform<MATRIX4>(int16_t uniformIndex, const MATRIX4& val) {
     setUniformData(uniformIndex, val.get(), 16*sizeof(float));
 }

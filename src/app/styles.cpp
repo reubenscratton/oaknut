@@ -142,7 +142,6 @@ int style::intVal(const string& name) const {
     }
     return val->intVal();
 }
-
 bool style::boolVal() const {
     auto val = resolve();
     if (val && val->type==TypeSimple) {
@@ -159,6 +158,13 @@ float style::floatVal() const {
     }
     log_warn("floatVal() type coerce failed");
     return 0.f;
+}
+float style::floatVal(const string& name) const {
+    auto val = get(name);
+    if (!val) {
+        return 0;
+    }
+    return val->floatVal();
 }
 
 string style::stringVal() const {

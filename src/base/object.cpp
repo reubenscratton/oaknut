@@ -27,11 +27,11 @@ void Object::release() {
 #if DEBUG && !WANT_ATOMIC_REFCOUNTS
     assert(_owningThreadId == std::this_thread::get_id());
 #endif
+    assert(_refs > 0);
 	if (--_refs == 0) {
         //Task::addObjectToCurrentThreadDeletePool(this);
 		delete this;
 	}
-    assert(_refs >= 0);
 }
 void* Object::operator new(size_t sz) {
 	void* p = malloc(sz);

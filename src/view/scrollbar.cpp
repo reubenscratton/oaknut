@@ -86,27 +86,53 @@ float ScrollInfo::maxScroll(View* view, bool isVertical) {
     return (m>0) ? m : 0;
 }
 void ScrollInfo::updateVisibility(View* view, bool isVertical) {
+    if (!view || !view->_window) {
+        return;
+    }
     if (canScroll(view, isVertical)) {
         if (!_renderOp) {
             _renderOp = new RectRenderOp();
-            _renderOp->setFillColor(app->getStyleColor("window.scrollbars.color"));
-            _renderOp->setCornerRadius(app->getStyleFloat("window.scrollbars.corner-radius"));
+            _renderOp->setFillColor(view->_window->_scrollbarColor);
+            _renderOp->setCornerRadius(view->_window->_scrollbarCornerRadius);
+            _renderOp->setAlpha(0);
             view->addDecorOp(_renderOp);
         }
         
-        // If there's no fade-in animation and the alpha isn't yet one, do the fade-in animation
-        if (/*_alpha<1 &&*/ (!_fadeAnim || _fadeAnim->_toVal != 1.0f)) {
-            if (_fadeTimer) {
-                _fadeTimer->stop();
+        // Scroll bar should be visible. Fade it in.
+        if (_showState==Invisible || _showState==FadingOut) {
+            _showState = FadingIn;
+            if (_fadeAnim) {
+                _fadeAnim->stop();
             }
-            _fadeTimer = Timer::start([=]() {
-                startFadeAnim(0.0f);
-            }, 500, false); // todo: style!
-            startFadeAnim(1.0f);
+            _fadeAnim = Animation::start(view, view->_window->_scrollbarFadeDuration, [=](float val) {
+                if (_renderOp) {
+                    _renderOp->setAlpha(val);
+                    view->invalidateRect(_renderOp->_rect);
+                }
+            });
         }
+
+        // Schedule fade out
+        if (_fadeOutTimer) {
+            _fadeOutTimer->stop();
+        }
+        _fadeOutTimer = Timer::start([=]() {
+            if (_fadeAnim) {
+                _fadeAnim->stop();
+            }
+            _fadeAnim = Animation::start(view, view->_window->_scrollbarFadeDuration, [=](float val) {
+                if (_renderOp) {
+                    _renderOp->setAlpha(1.0f-val);
+                    view->invalidateRect(_renderOp->_rect);
+                }
+            });
+            _fadeAnim->onFinished = [=](class Animation* anim) {
+                _showState = Invisible;
+            };
+            _showState = FadingOut;
+        }, view->_window->_scrollbarFadeDuration + view->_window->_scrollbarFadeOutDelay, false);
         
-        //SIZE contentSize = view->getContentSize();
-        //POINT contentOffset = view->getContentOffset();
+
         float content = isVertical ? view->_contentSize.height : view->_contentSize.width;
         float contentOffset = isVertical ? view->_contentOffset.y : view->_contentOffset.x;
         float contentOffsetPerp = isVertical ? view->_contentOffset.x : view->_contentOffset.y;
@@ -125,10 +151,10 @@ void ScrollInfo::updateVisibility(View* view, bool isVertical) {
         origin = topLeftInset + contentOffset * scale
                               + contentOffset; // Add the unscaled contentOffset cos we have to correct for
                                                // it now being part of MVP translation!
-        originPerp = contentOffsetPerp + visibleSizeOther - (5+4); // todo: style!
+        originPerp = contentOffsetPerp + visibleSizeOther - (view->_window->_scrollbarWidth+view->_window->_scrollbarInset);
         barLength = (visibleSize-insets) * scale;
-        barLength = fmaxf(barLength, app->dp(40)); // todo: style!
-        barThickness = 5; // todo: style!
+        barLength = fmaxf(barLength, view->_window->_scrollbarMinLength);
+        barThickness = view->_window->_scrollbarWidth;
         _renderOp->setRect(rect);
     } else {
         if (_renderOp) {
@@ -144,33 +170,13 @@ void ScrollInfo::detach() {
     if (_fadeAnim) {
         _fadeAnim = NULL;
     }
-    if (_fadeTimer) {
-        _fadeTimer->stop();
-        _fadeTimer = NULL;
+    if (_fadeOutTimer) {
+        _fadeOutTimer->stop();
+        _fadeOutTimer = NULL;
     }
 }
 
 
-void ScrollInfo::startFadeAnim(float targetAlpha) {
-    View* view = _renderOp->_view;
-    if (!view || !view->_window) {
-        return;
-    }
-    if (!_fadeAnim) {
-        _fadeAnim = Animation::start(view, 300, [=](float val) {
-            //log_dbg("fade tick %f %X", val, this);
-            _alpha = val;
-            if (_renderOp) {
-                _renderOp->setAlpha(val);
-                view->invalidateRect(_renderOp->_rect);
-            }
-        });
-    }
-    _fadeAnim->stop();
-    _fadeAnim->_fromVal = _alpha;
-    _fadeAnim->_toVal = targetAlpha;
-    _fadeAnim->start(300);
-}
 
 bool ScrollInfo::handleEvent(View* view, bool isVertical, INPUTEVENT* event) {
     if (_disabled) {

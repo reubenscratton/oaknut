@@ -238,6 +238,9 @@ public:
     /** Set the size this view would like to have, given various constraints (see MEASURESPEC and layout()). */
     virtual void setLayoutSize(MEASURESPEC widthSpec, MEASURESPEC heightSpec);
     
+    /** Set an absolute view rect, in pixels. This is the easiest way to position views in code. */
+    virtual void setLayoutRect(const RECT& rect);
+
     /** Set an absolute view size, in pixels. */
     virtual void setLayoutSize(const SIZE& size);
     
@@ -254,15 +257,12 @@ public:
     /** Set this view's measured size to be that of its content size plus padding. */
     virtual void sizeToFit(float widthConstraint = FLT_MAX);
     
-    /** Sets the view rect. CAUTION! This API is dumb and will probably be removed. Use
-     setSize() to set an absolute view size in code. */
-    virtual void setRectSize(const SIZE& size);
 
     /** Sets the position of the view. CAUTION! This API exists so Views may override the positioning
         of subviews during layout. Ideally this would not be a `public` API. */
     virtual void setRectOrigin(const POINT& origin);
-    
-    virtual void setRect(const RECT& rect);
+    virtual void setRectSize(const SIZE& size);
+
 
     /** Set visibility. A view will only draw in its window when the following are all true:
         - The view is attached to a Window
@@ -413,6 +413,7 @@ protected:
     virtual void updateRenderOps();
     virtual void updateEffectiveTint();
     virtual void onEffectiveTintColorChanged();
+    virtual void updateBackgroundRect();
     COLOR _tintColor;
     COLOR _effectiveTintColor;
     float _alpha; // View's own alpha
@@ -423,7 +424,6 @@ protected:
     bool _updateRenderOpsNeeded;
     bool _opaque;
     MATRIX4* _matrix;
-    void updateBackgroundRect();
     void addRenderOpToList(RenderOp* renderOp, bool atFront, sp<RenderList>& list);
     void removeRenderOpFromList(RenderOp* renderOp, sp<RenderList>& list);
     

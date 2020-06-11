@@ -322,7 +322,7 @@ void View::applyStatemapStyleValue(const string& name, const style& statemap) {
         else if (it.first == "unpressed") stateset.setBits(STATE_PRESSED, 0);
         else if (it.first == "focused") stateset.setBits(STATE_FOCUSED, STATE_FOCUSED);
         else if (it.first == "unchecked") stateset.setBits(STATE_CHECKED, 0);
-        else if (it.first == "pressed") stateset.setBits(STATE_PRESSED, STATE_PRESSED);
+        else if (it.first == "pressed") {stateset.setBits(STATE_PRESSED, STATE_PRESSED); pri=2;}
         else if (it.first == "selected") stateset.setBits(STATE_SELECTED, STATE_SELECTED);
         else if (it.first == "checked") stateset.setBits(STATE_CHECKED, STATE_CHECKED);
         else if (it.first == "errored") {stateset.setBits(STATE_ERRORED, STATE_ERRORED); pri=2;}
@@ -452,23 +452,25 @@ RECT View::getRect() const {
     return _rect;
 }
 
-void View::setRect(const RECT& rect) {
+void View::setLayoutRect(const RECT& rect) {
     setRectSize(rect.size);
     setRectOrigin(rect.origin);
-    
-    log_dbg("Break here! Want to see what uses this");
-    _widthMeasureSpec = MEASURESPEC::Abs(rect.size.width);
-    _heightMeasureSpec = MEASURESPEC::Abs(rect.size.height);
-    _alignspecHorz = {0,0,0, rect.origin.x};
-    _alignspecVert = {0,0,0, rect.origin.y};
+    _widthMeasureSpec = MEASURESPEC::Abs(_rect.size.width);
+    _heightMeasureSpec = MEASURESPEC::Abs(_rect.size.height);
+    _alignspecHorz = {0,0,0, _rect.origin.x};
+    _alignspecVert = {0,0,0, _rect.origin.y};
 }
 
 void View::setRectOrigin(const POINT& origin) {
+    POINT o = origin;
+    o.x = floorf(o.x);
+    o.y = floorf(o.y);
+
     POINT d;
-    d.x = origin.x - _rect.origin.x;
-    d.y = origin.y - _rect.origin.y;
+    d.x = o.x - _rect.origin.x;
+    d.y = o.y - _rect.origin.y;
     if (d.x || d.y) {
-        _rect.origin = origin;
+        _rect.origin = o;
         adjustSurfaceOrigin(d);
     }
 }
@@ -507,11 +509,14 @@ void View::adjustSurfaceOrigin(const POINT& d) {
 }
 
 void View::setRectSize(const SIZE& size) {
+    SIZE s;
+    s.width = ceilf(size.width);
+    s.height = ceilf(size.height);
     SIZE d;
-    d.width = size.width - _rect.size.width;
-    d.height = size.height - _rect.size.height;
+    d.width = s.width - _rect.size.width;
+    d.height = s.height - _rect.size.height;
     if (d.width || d.height) {
-        _rect.size = size;
+        _rect.size = s;
         updateBackgroundRect();
         setNeedsFullRedraw();
     }
@@ -772,7 +777,8 @@ void View::layout(RECT containingRect) {
 
     // Layout subviews
     if (_subviews.size() == 0) {
-        _contentSize = _intrinsicSize;
+        _contentSize.width = ceilf(_intrinsicSize.width);
+        _contentSize.height = ceilf(_intrinsicSize.height);
     } else {
         // If wrapping content but then use the constraint size and update afterwards
         if (_widthMeasureSpec.type==MEASURESPEC::TypeContent && _intrinsicSize.width<=0) {
@@ -803,8 +809,8 @@ void View::layout(RECT containingRect) {
             subviewExtent.width = fmaxf(subviewExtent.width, view->getRight());
             subviewExtent.height = fmaxf(subviewExtent.height, view->getBottom());
         }
-        _contentSize.width = fmaxf(_intrinsicSize.width, subviewExtent.width-_padding.left);
-        _contentSize.height = fmaxf(_intrinsicSize.height, subviewExtent.height-_padding.top);
+        _contentSize.width = ceilf(fmaxf(_intrinsicSize.width, subviewExtent.width-_padding.left));
+        _contentSize.height = ceilf(fmaxf(_intrinsicSize.height, subviewExtent.height-_padding.top));
         
         
         // Handle subview-based width and/or height
@@ -828,10 +834,10 @@ void View::layout(RECT containingRect) {
     
     // Calculate the new rect, aligning to pixel grid
     RECT rect;
-    rect.size.width = floorf(refSize.width * _widthMeasureSpec.mul + _widthMeasureSpec.con);
-    rect.size.height = floorf(refSize.height * _heightMeasureSpec.mul + _heightMeasureSpec.con);
-    rect.origin.x = floorf(_alignspecHorz.calc(rect.size.width, alignRect.origin.x, alignRect.size.width));
-    rect.origin.y = floorf(_alignspecVert.calc(rect.size.height, alignRect.origin.y, alignRect.size.height));
+    rect.size.width = refSize.width * _widthMeasureSpec.mul + _widthMeasureSpec.con;
+    rect.size.height = refSize.height * _heightMeasureSpec.mul + _heightMeasureSpec.con;
+    rect.origin.x = _alignspecHorz.calc(rect.size.width, alignRect.origin.x, alignRect.size.width);
+    rect.origin.y = _alignspecVert.calc(rect.size.height, alignRect.origin.y, alignRect.size.height);
 
     // Set the view rect
     setRectOrigin(rect.origin);
@@ -1189,6 +1195,7 @@ void View::removeRenderOpFromList(RenderOp* renderOp, sp<RenderList>& list) {
     if (_surface && list->_renderListsIndex>=0) {
         _surface->detachRenderListOp(renderOp);
     }
+    renderOp->_view = NULL;
     list->removeRenderOp(renderOp);
     if (!list->_ops.size()) {
         if (_surface) {
@@ -1196,7 +1203,6 @@ void View::removeRenderOpFromList(RenderOp* renderOp, sp<RenderList>& list) {
         }
         list = NULL;
     }
-    renderOp->_view = NULL;
 }
 
 
@@ -1238,6 +1244,8 @@ POINT View::getContentOffset() const {
 
 void View::setContentOffset(POINT contentOffset, bool animated/*=false*/) {
     assert(!animated); // TODO: implement animation here
+    contentOffset.x = floorf(contentOffset.x);
+    contentOffset.y = floorf(contentOffset.y);
     POINT d = contentOffset - _contentOffset;
 	if (d.isZero()) {
         return;
@@ -1301,6 +1309,10 @@ void View::updateScrollOffsets() {
             newContentOffset.y = _scrollVert.flingUpdate();
         }
         setContentOffset(newContentOffset);
+        // Ensure renderloop keeps going if a fling is still going on
+        if (_scrollVert._fling || _scrollHorz._fling) {
+            _window->requestRedraw();
+        }
     }
 }
 

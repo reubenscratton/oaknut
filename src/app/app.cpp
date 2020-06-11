@@ -77,6 +77,15 @@ float App::getStyleFloat(const string& keypath) {
     }
     return value->floatVal();
 }
+int App::getStyleInt(const string& key) {
+    auto value = getStyle(key);
+    if (!value) {
+        log_warn("Missing style info '%s'", key.c_str());
+        return 0;
+    }
+    return value->intVal();
+}
+
 COLOR App::getStyleColor(const string& key) {
     auto value = getStyle(key);
     if (!value) {

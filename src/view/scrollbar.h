@@ -54,14 +54,17 @@ protected:
     float _dragTotal;
     bool _isDragging;
     float _offsetStart;
-    float _alpha;
     sp<class Animation> _fadeAnim;
-    sp<Timer> _fadeTimer;
+    sp<Timer> _fadeOutTimer;
     Fling* _fling;
     RectRenderOp* _renderOp;
     
-    void startFadeAnim(float targetAlpha);
-
+    enum {
+        Invisible,
+        FadingIn,
+        Visible,
+        FadingOut
+    } _showState;
 };
 
 

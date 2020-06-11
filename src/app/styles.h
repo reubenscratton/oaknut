@@ -63,6 +63,7 @@ public:
     // Compound accessors
     string stringVal(const string& name) const;
     int intVal(const string& name) const;
+    float floatVal(const string& name) const;
     COLOR colorVal(const string& name) const;
     const vector<style>& arrayVal(const string& name) const;
     EDGEINSETS edgeInsetsVal(const string& name) const;

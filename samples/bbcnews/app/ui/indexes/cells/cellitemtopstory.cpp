@@ -45,7 +45,7 @@ void BNCellItemTopStory::setItem(BNItem* item) {
             RECT frame = tinyTimestampLabel->getRect();
             frame.origin.x = (_frame.size.width - frame.size.width) - 8;
             frame.origin.y = (_frame.size.height - frame.size.height) - 4;
-            tinyTimestampLabel->setRect(frame);
+            tinyTimestampLabel->setLayoutRect(frame);
             
             _headline->_bottomRightExclusionSize = frame.size;
         }

@@ -7,8 +7,6 @@
 
 #include <oaknut.h>
 
-static_style s_window_anim_duration("window.animation-duration");
-
 NavigationController::NavigationController() {
 
 	_view = new View();
@@ -132,7 +130,7 @@ void NavigationController::startNavAnimation(ViewController* incomingVC, Animati
     currentView->addDecorOp(scrim);
 
 	// Create the animation
-    Animation* anim = Animation::start(_view, s_window_anim_duration.intVal(), [=](float val) {
+    Animation* anim = Animation::start(_view, _view->getWindow()->_animationDuration, [=](float val) {
         applyNavTransitionToViewController(_incomingViewController, val, true);
         applyNavTransitionToViewController(_currentViewController, val, false);
         scrim->setFillColor(((int)(val*48)<<24));

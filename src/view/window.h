@@ -88,7 +88,17 @@ public:
     virtual bool setFocusedView(View* view);
 	void attachViewController(ViewController* vc);
     void detachViewController(ViewController* vc);
-    
+
+    // Style vals
+    int _animationDuration;
+    COLOR _scrollbarColor;
+    float _scrollbarCornerRadius;
+    float _scrollbarWidth;
+    float _scrollbarMinLength;
+    float _scrollbarInset;
+    int _scrollbarFadeInDelay;
+    int _scrollbarFadeDuration;
+    int _scrollbarFadeOutDelay;
 
 	// Render state
     Renderer* _renderer;

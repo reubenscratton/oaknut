@@ -70,13 +70,10 @@ public:
     /** Get a named style value */
     const style* getStyle(const string& keypath);
     
-    /** Get a named style value and coerce to a string */
+    /** Get a named style value */
     string getStyleString(const string& key, const string& defaultString = string::empty);
-    
-    /** Get a named style value and coerce to a float */
+    int getStyleInt(const string& key);
     float getStyleFloat(const string& key);
-    
-    /** Get a named style value and coerce to a COLOR */
     COLOR getStyleColor(const string& key);
     
     Font* defaultFont();

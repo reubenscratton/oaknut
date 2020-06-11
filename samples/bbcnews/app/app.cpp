@@ -21,7 +21,7 @@ BNViewPagerController::BNViewPagerController() {
 
 void BNViewPagerController::applySafeInsets(const EDGEINSETS& insets) {
     _view->setPadding(insets);
-    _view->setScrollInsets(insets);
+    //_view->setScrollInsets(insets);
 }
 
 bool BNViewPagerController::navigateToUrl(const string& url, bool animated) {

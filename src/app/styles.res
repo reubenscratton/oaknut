@@ -18,10 +18,16 @@ window: {
     }
     scrim: #80000000
     scrollbars: {
+        width: 2.5dp
         color: #777
         corner-radius: 2.5dp
+        min-length: 40dp
+        inset: 2dp
+        fade-in-delay: 500
+        fade-duration: 300
+        fade-out-delay: 800
     }
-    animation-duration: 3500
+    animation-duration: 350
     image-fade-in: {
         threshold: 250
         duration: 500
@@ -70,6 +76,7 @@ Button: {
         }
     }
     gravity: center
+    padding: 12dp,8dp
 }
 
 ToolbarButton: {

@@ -10,13 +10,23 @@
 
 Window::Window() : _rootViewController(NULL) {
     _renderer = Renderer::create();
-    _surface = _renderer->createSurface( false);
+    _surface = _renderer->createSurface(false);
     _window = this;
     _effectiveAlpha = 1;
 }
 
 void Window::show() {
     _backgroundColor = app->getStyleColor("window.background-color");
+    _animationDuration = app->getStyleInt("window.animation-duration");
+    auto scrollstyle = app->getStyle("window.scrollbars");
+    _scrollbarColor = scrollstyle->colorVal("color");
+    _scrollbarCornerRadius = scrollstyle->floatVal("corner-radius");
+    _scrollbarWidth = scrollstyle->floatVal("width");
+    _scrollbarMinLength = scrollstyle->floatVal("min-length");
+    _scrollbarInset = scrollstyle->floatVal("inset");
+    _scrollbarFadeInDelay = scrollstyle->intVal("fade-in-delay");
+    _scrollbarFadeDuration = scrollstyle->intVal("fade-duration");
+    _scrollbarFadeOutDelay = scrollstyle->intVal("fade-out-delay");
 }
 
 
