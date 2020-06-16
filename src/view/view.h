@@ -292,7 +292,6 @@ protected:
     ALIGNSPEC _alignspecVert;
     EDGEINSETS _padding;
     Visibility _visibility;
-    bool _layoutValid;
     void adjustRectSize(const SIZE& d);
     void adjustSurfaceOrigin(const POINT& d);
     float getAlignspecVal(const ALIGNSPEC& spec, bool isVertical);
@@ -348,10 +347,8 @@ public:
 protected:
     /**  \cond INTERNAL */
     SIZE _intrinsicSize;
-    bool _intrinsicSizeValid;
     SIZE _contentSize;
     POINT _contentOffset, _contentOffsetAccum;
-    bool _clipsContents;
     GRAVITY _gravity;
     EDGEINSETS _scrollInsets;
     ScrollInfo _scrollVert;
@@ -407,7 +404,10 @@ public:
 
     void addDecorOp(RenderOp* renderOp);
     void removeDecorOp(RenderOp* renderOp);
-
+    
+    /** Set a drop shadow */
+    void setShadow(ShadowRenderOp* shadow);
+    
 protected:
     /**  \cond INTERNAL */
     virtual void updateRenderOps();
@@ -420,9 +420,7 @@ protected:
     float _effectiveAlpha;
     virtual void updateEffectiveAlpha();
     sp<RenderOp> _backgroundOp;
-    bool _needsFullRedraw;
-    bool _updateRenderOpsNeeded;
-    bool _opaque;
+    sp<ShadowRenderOp> _shadowOp;
     MATRIX4* _matrix;
     void addRenderOpToList(RenderOp* renderOp, bool atFront, sp<RenderList>& list);
     void removeRenderOpFromList(RenderOp* renderOp, sp<RenderList>& list);
@@ -466,7 +464,6 @@ protected:
 
     /**  \cond INTERNAL */
     STATE _state;
-    bool _subviewsInheritState;
     /**  \endcond */
     /**@}*/
 
@@ -515,9 +512,20 @@ protected:
     virtual bool handleInputEvent(INPUTEVENT* event);
 	
     POINT _ptDrag;
-    bool _directionalLockEnabled;
     /**  \endcond */
     /**@}*/
+
+    // Flags
+    struct {
+        bool _layoutValid;
+        bool _needsFullRedraw:1;
+        bool _intrinsicSizeValid:1;
+        bool _updateRenderOpsNeeded:1;
+        bool _clipsContents:1;
+        bool _directionalLockEnabled:1;
+        bool _subviewsInheritState:1;
+        bool _opaque:1;
+    };
 
     
 public:

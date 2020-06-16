@@ -499,6 +499,9 @@ void View::adjustSurfaceOrigin(const POINT& d) {
                 it->rebatchIfNecessary();
             }
         }
+        if (_shadowOp) {
+            _shadowOp->setRect(_rect);
+        }
         _window->requestRedraw();
     }
     
@@ -517,6 +520,9 @@ void View::setRectSize(const SIZE& size) {
     d.height = s.height - _rect.size.height;
     if (d.width || d.height) {
         _rect.size = s;
+        if (_shadowOp) {
+            _shadowOp->setRect(_rect);
+        }
         updateBackgroundRect();
         setNeedsFullRedraw();
     }
@@ -1083,9 +1089,13 @@ void View::setBackground(RenderOp* op) {
 }
 
 void View::setBackgroundColor(COLOR color) {
-    auto op = new RectRenderOp();
-    op->setColor(color);
-    setBackground(op);
+    if (_backgroundOp) {
+        _backgroundOp->setColor(color);
+    } else {
+        auto op = new RectRenderOp();
+        op->setColor(color);
+        setBackground(op);
+    }
 }
 
 
@@ -1156,6 +1166,12 @@ void View::addDecorOp(RenderOp* renderOp) {
 
 void View::removeDecorOp(RenderOp* renderOp) {
     removeRenderOpFromList(renderOp, _renderListDecor);
+}
+
+void View::setShadow(ShadowRenderOp* shadow) {
+    _shadowOp = shadow;
+    _shadowOp->setRect(_rect);
+    // todo: invalidate something
 }
 
 

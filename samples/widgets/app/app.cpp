@@ -7,23 +7,23 @@
 
 #include <oaknut.h>
 
+
 class InkShader : public Shader {
 public:
-    InkShader(Renderer* renderer) : Shader(renderer, Features(true, 1, false, Texture::Type::None)) {
+    InkShader(Renderer* renderer) : Shader(renderer, Features(true, SDF_ROUNDRECT_1, false, Texture::Type::None)) {
         _u_origin = declareUniform("origin", VariableType::Float2, Uniform::Usage::Fragment);
-        _u_radius = declareUniform("radius2", VariableType::Float1, Uniform::Usage::Fragment);
+        _u_radius = declareUniform("radius", VariableType::Float1, Uniform::Usage::Fragment);
     }
     
     string getFragmentSource() override {
         return
         SL_FLOAT2 " p=" SL_VERTEX_OUTPUT(texcoord) ";\n"
-        SL_FLOAT1 " d = (length(p) - " SL_UNIFORM(radius2) ");\n"
-        SL_FLOAT1 " a;\n"
-        "if (d >= 0.0) {\n"
-        "    a =0.0;\n"
-        "} else {\n"
-        "    a =0.4;\n"
-        "}\n"
+        // Simple circle SDF
+        SL_FLOAT1 " dist = -(length(p - " SL_UNIFORM(origin) ") - " SL_UNIFORM(radius) ");\n"
+        // TODO: Union with button background SDF (ie roundrect or nothing)
+        // Inside the SDF: 0.4 alpha, outside: 0.0
+        SL_FLOAT1 " a = clamp(sign(dist), 0.0, 0.4);\n"
+        // Mix SDF alpha with uniform alpha and derive final color
         SL_OUTPIXVAL "=half4(1.0,1.0,1.0,a * " SL_UNIFORM(alpha) ");\n";
     }
     
@@ -51,18 +51,6 @@ public:
         }
     }
 
-    void asQuads(QUAD *quad) override {
-        rectToSurfaceQuad(_rect, quad);
-        if (1 /*_signedDistanceField*/) {
-            // Put the quad size into the texture coords so the frag shader
-            // can trivially know distance to quad center
-            quad->tl.s = quad->bl.s = -_rect.size.width/2;
-            quad->tl.t = quad->tr.t = -_rect.size.height/2;
-            quad->tr.s = quad->br.s = _rect.size.width/2;
-            quad->bl.t = quad->br.t = _rect.size.height/2;
-        }
-    }
-    
     void prepareToRender(RenderTask* r, class Surface* surface) override {
         RenderOp::prepareToRender(r, surface);
         InkShader* shader = _shader.as<InkShader>();
@@ -82,19 +70,30 @@ public:
         _inkOp->setAlpha(1);
         _inkOp->setColor(0xFF00FF00);
         addRenderOp(_inkOp);
+        _shadowOp = new ShadowRenderOp();
+        _shadowOp->setSigma(2);
     }
     bool handleInputEvent(INPUTEVENT* event) override {
         if (event->type == INPUT_EVENT_DOWN) {
-            _inkOp->setOrigin(event->ptLocal);
+            POINT dc = event->ptLocal;
+            dc.x -= _rect.size.width/2;
+            dc.y -= _rect.size.height/2;
+            _inkOp->setOrigin(dc);
             _inkOp->setAlpha(1);
             _rippleAnim = Animation::start(this, 500, [=](float val) {
                 _inkOp->setRadius(500*val);
+                val *= 4;
+                val = fmin(1.0f, val);
+                _shadowOp->setSigma(2 + 5*val);
                 setNeedsFullRedraw();
             });
         }
         if (event->type == INPUT_EVENT_UP) {
             _fadeAnim = Animation::start(this, 500, [=](float val) {
                 _inkOp->setAlpha(1-val);
+                val *= 4;
+                val = fmin(1.0f, val);
+                _shadowOp->setSigma(7 - 5*val);
                 setNeedsFullRedraw();
             });
 
@@ -105,6 +104,11 @@ public:
     //    setPressed(true);
     //}
 
+    void attachToWindow(Window* window) override {
+        Button::attachToWindow(window);
+        _parent->addRenderOp(_shadowOp);
+    }
+    
     void applyStatemapStyleValue(const string& name, const style& value) override {
         if (name == "pressed") {
             
@@ -120,6 +124,7 @@ public:
     sp<Animation> _fadeAnim;
 };
 
+
 class MainViewController : public ViewController {
 public:
 
@@ -134,6 +139,13 @@ public:
         _button->setTextColor(0xFFFFFFFF);
         
         view->addSubview(_button);
+        
+        ShadowRenderOp* shadow = new ShadowRenderOp();
+        shadow->setSigma(5);
+        shadow->setRect(RECT(50,50,200,200));
+        view->addRenderOp(shadow);
+        
+        
         
         setView(view);
     }

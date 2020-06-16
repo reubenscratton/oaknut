@@ -17,7 +17,7 @@ public:
     float getStrokeWidth() const;
     void setStrokeWidth(float strokeWidth);
     VECTOR4 getCornerRadii() const;
-    void setCornerRadius(float radius);
+    void setCornerRadius(float cornerRadius);
     void setCornerRadii(const VECTOR4& cornerRadii);
 
     // Overrides
@@ -30,7 +30,7 @@ public:
 //protected:
     COLOR _strokeColor;
     float _strokeWidth;
-    VECTOR4 _radii;
+    VECTOR4 _cornerRadii;
     
 #define OPFLAG_FILL 1
 #define OPFLAG_STROKE 2

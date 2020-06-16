@@ -34,13 +34,18 @@ Shader::Shader(Renderer* renderer, Shader::Features features) : RenderResource(r
     if (_features.alpha) {
         _u_alpha = declareUniform("alpha", VariableType::Float1);
     }
-    if (_features.roundRect) {
+    if (_features.sdf != SDF_NONE) {
         _u_strokeColor = declareUniform("strokeColor", VariableType::Color);
         _u_u = declareUniform("u", VariableType::Float4);
-        if (_features.roundRect == SHADER_ROUNDRECT_1) {
-            _u_radius = declareUniform("radius", VariableType::Float1);
-        } else {
-            _u_radii = declareUniform("radii", VariableType::Float4);
+        switch (_features.sdf) {
+        case SDF_ROUNDRECT_1:
+            _u_cornerRadius = declareUniform("cornerRadius", VariableType::Float1);
+            break;
+        case SDF_ROUNDRECT_2H:
+        case SDF_ROUNDRECT_2V:
+        case SDF_ROUNDRECT_4:
+            _u_cornerRadii = declareUniform("cornerRadii", VariableType::Float4);
+            break;
         }
         useTexCoordAttrib = true;
     }
@@ -110,12 +115,13 @@ string Shader::getSupportingSource() {
 
 
 string Shader::getFragmentSource() {
-    bool useTexCoords = false;
     bool useTexSampler = false;
-    int roundRect = _features.roundRect;
-    if (roundRect) {
-        useTexCoords = true; // we don't use the sampler, we just want the texcoord attributes, which are
-        // not actually texture coords, v_texcoords is x-dist and y-dist from quad centre
+    bool useTexCoords = false;
+    
+    // If shader uses an SDF, we put quad size into texcoord attribute
+    // TODO: this is bogus cos it prevents textured SDFs. Needs a dedicated attrib, which requires dynamic vertex structure
+    if (_features.sdf != SDF_NONE) {
+        useTexCoords = true;
     }
     if (_features.textures[0]) {
         useTexSampler = true;
@@ -153,29 +159,32 @@ string Shader::getFragmentSource() {
     }
     
 
-    if (roundRect) {
+    if (_features.sdf == SDF_NONE) {
+        fs += SL_OUTPIXVAL " = c;\n";
+    } else {
         
-        if (roundRect == SHADER_ROUNDRECT_1) {
-            fs += SL_FLOAT2 " b = " SL_UNIFORM(u) ".xy - " SL_FLOAT2 "(" SL_UNIFORM(radius) ");\n"
-                  "float dist = length(max(abs(" SL_VERTEX_OUTPUT(texcoord)")-b, 0.0)) - " SL_UNIFORM(radius) "  - 0.5;\n";
+        // SDF implementations!
+        if (_features.sdf == SDF_ROUNDRECT_1) {
+            fs += SL_FLOAT2 " b = " SL_UNIFORM(u) ".xy - " SL_FLOAT2 "(" SL_UNIFORM(cornerRadius) ");\n"
+                  "float dist = length(max(abs(" SL_VERTEX_OUTPUT(texcoord)")-b, 0.0)) - " SL_UNIFORM(cornerRadius) "  - 0.5;\n";
         }
-        else if (roundRect == SHADER_ROUNDRECT_2H) {
+        else if (_features.sdf == SDF_ROUNDRECT_2H) {
             // branchless selection of radius=r.x if on left side of quad or radius=r.y on right side
             fs +=
             SL_FLOAT2 " size = " SL_UNIFORM(u) ".xy;\n"
-            SL_FLOAT2 " r = " SL_UNIFORM(radii) ".xw\n;" // TODO: this is specific to left|right config
+            SL_FLOAT2 " r = " SL_UNIFORM(cornerRadii) ".xw\n;" // TODO: this is specific to left|right config
             "float s=step(" SL_VERTEX_OUTPUT(texcoord) ".x,0.0);\n"
             "float radius = s*r.x + (1.0-s)*r.y;\n"
             "size -= " SL_FLOAT2 "(radius);\n"
             SL_FLOAT2 " d = abs(" SL_VERTEX_OUTPUT(texcoord) ") - size;\n"
             "float dist = min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - radius;\n";
         }
+        
+        // Stroke blend
         fs +=  SL_HALF4_DECL " col = " SL_HALF4 "(" SL_UNIFORM(strokeColor) ");\n"
         "   col.a = mix(" SL_HALF1 "(0.0), " SL_HALF1 "(" SL_UNIFORM(strokeColor) ".a), " SL_HALF1 "(clamp(-dist, 0.0, 1.0)));\n"   // outer edge blend
+        // final blend
         SL_OUTPIXVAL " = mix(col, c, " SL_HALF4 "(clamp(-(dist + " SL_UNIFORM(u) ".w), 0.0, 1.0)));\n";
-    }
-    else {
-        fs += SL_OUTPIXVAL " = c;\n";
     }
     
     

@@ -25,7 +25,7 @@ void RenderOp::setRect(const RECT& rect) {
     if (!rect.equal(_rect)) {
         _rect = rect;
         if (_batch) {
-            _batch->invalidateGeometry(this);
+            invalidateBatchGeometry(); //_batch->invalidateGeometry(this);
         }
     }
 }

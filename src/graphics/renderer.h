@@ -163,30 +163,30 @@ public:
  StandardShader does the vast majority of rendering. They are constructed on-demand
  for a unique feature set
  */
-#define SHADER_ROUNDRECT_0  0
-#define SHADER_ROUNDRECT_1  1
-#define SHADER_ROUNDRECT_2H 2
-#define SHADER_ROUNDRECT_2V 3
-#define SHADER_ROUNDRECT_4  4
+#define SDF_NONE         0
+#define SDF_ROUNDRECT_1  1
+#define SDF_ROUNDRECT_2H 2
+#define SDF_ROUNDRECT_2V 3
+#define SDF_ROUNDRECT_4  4
 
 class Shader : public RenderResource  {
 public:
     struct Features {
         uint32_t alpha:1;
-        uint32_t roundRect:3;
         uint32_t tint:1;
+        uint32_t sdf:3;
         Texture::Type textures[2];
         
         Features() {
             alpha = 0;
-            roundRect = 0;
+            sdf = SDF_NONE;
             tint = 0;
             textures[0] = Texture::Type::None;
             textures[1] = Texture::Type::None;
         }
-        Features(bool alpha, uint32_t roundRect, bool tint, Texture::Type tex) {
+        Features(bool alpha, uint32_t sdf, bool tint, Texture::Type tex) {
             this->alpha = alpha;
-            this->roundRect = roundRect;
+            this->sdf = sdf;
             this->tint = tint;
             this->textures[0] = tex;
             this->textures[1] = Texture::Type::None;
@@ -194,7 +194,7 @@ public:
 
         bool operator==(const Features& other) const {
             if (alpha!=other.alpha) return false;
-            if (roundRect!=other.roundRect) return false;
+            if (sdf!=other.sdf) return false;
             if (tint!=other.tint) return false;
             if (textures[0]!=other.textures[0]) return false;
             if (textures[1]!=other.textures[1]) return false;
@@ -202,7 +202,7 @@ public:
         }
         bool operator!=(const Features& other) const {
             if (alpha!=other.alpha) return true;
-            if (roundRect!=other.roundRect) return true;
+            if (sdf!=other.sdf) return true;
             if (tint!=other.tint) return true;
             if (textures[0]!=other.textures[0]) return true;
             if (textures[1]!=other.textures[1]) return true;
@@ -210,7 +210,7 @@ public:
         }
         bool operator<(const Features& other) const {
             if (alpha<other.alpha) return true;
-            if (roundRect<other.roundRect) return true;
+            if (sdf<other.sdf) return true;
             if (tint<other.tint) return true;
             if (textures[0]<other.textures[0]) return true;
             if (textures[1]<other.textures[1]) return true;
@@ -269,8 +269,8 @@ public:
     int16_t _u_sampler;
     int16_t _u_strokeColor;
     int16_t _u_u;
-    int16_t _u_radius;
-    int16_t _u_radii;
+    int16_t _u_cornerRadius;
+    int16_t _u_cornerRadii;
 
     
 protected:

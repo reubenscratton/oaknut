@@ -39,14 +39,14 @@ void RectRenderOp::setStrokeColor(COLOR strokeColor) {
     }
 }
 VECTOR4 RectRenderOp::getCornerRadii() const {
-    return _radii;
+    return _cornerRadii;
 }
 void RectRenderOp::setCornerRadius(float radius) {
     setCornerRadii({radius, radius, radius, radius});
 }
 void RectRenderOp::setCornerRadii(const VECTOR4& radii) {
-    if (_radii != radii) {
-        _radii = radii;
+    if (_cornerRadii != radii) {
+        _cornerRadii = radii;
         
         bool singleRadius = (radii[0]==radii[1] && radii[2]==radii[3] && radii[0]==radii[3]);
         if (singleRadius) {
@@ -73,17 +73,17 @@ void RectRenderOp::validateShader(RenderTask* r) {
     if (_strokeWidth>0 && _strokeColor!=0) {
         
     }
-    bool singleRadius = (_radii[0]==_radii[1] && _radii[2]==_radii[3] && _radii[0]==_radii[3]);
+    bool singleRadius = (_cornerRadii[0]==_cornerRadii[1] && _cornerRadii[2]==_cornerRadii[3] && _cornerRadii[0]==_cornerRadii[3]);
     if (singleRadius) {
-        if (_radii[0] != 0.0f) {
-            features.roundRect = SHADER_ROUNDRECT_1;
+        if (_cornerRadii[0] != 0.0f) {
+            features.sdf = SDF_ROUNDRECT_1;
         }
     } else {
-        if ((_radii[0]==_radii[2]) && (_radii[1]==_radii[3])) {
-            features.roundRect = SHADER_ROUNDRECT_2H;
+        if ((_cornerRadii[0]==_cornerRadii[2]) && (_cornerRadii[1]==_cornerRadii[3])) {
+            features.sdf = SDF_ROUNDRECT_2H;
         }
         else {
-            features.roundRect = SHADER_ROUNDRECT_4;
+            features.sdf = SDF_ROUNDRECT_4;
 
         }
     }
@@ -96,13 +96,13 @@ void RectRenderOp::prepareToRender(RenderTask* r, class Surface* surface) {
     if (_shader->_features.alpha) {
         r->setUniform(_shader->_u_alpha, _alpha);
     }
-    if (_shader->_features.roundRect) {
+    if (_shader->_features.sdf != SDF_NONE) {
         r->setUniform(_shader->_u_strokeColor, _strokeColor);
         r->setUniform(_shader->_u_u, VECTOR4(_rect.size.width/2, _rect.size.height/2,0, _strokeWidth));
-        if (_shader->_features.roundRect == SHADER_ROUNDRECT_1) {
-            r->setUniform(_shader->_u_radius, _radii[0]);
+        if (_shader->_features.sdf == SDF_ROUNDRECT_1) {
+            r->setUniform(_shader->_u_cornerRadius, _cornerRadii[0]);
         } else {
-            r->setUniform(_shader->_u_radii, _radii);
+            r->setUniform(_shader->_u_cornerRadii, _cornerRadii);
         }
     }
 }
@@ -116,15 +116,15 @@ bool RectRenderOp::canMergeWith(const RenderOp* op) {
     if (_shader->_features != op->_shader->_features) {
         return false;
     }
-    if (_shader->_features.roundRect) {
+    if (_shader->_features.sdf != SDF_NONE) {
         return _rect.size.width == ((const RectRenderOp*)op)->_rect.size.width
         && _rect.size.height == ((const RectRenderOp*)op)->_rect.size.height
         && _strokeColor==((const RectRenderOp*)op)->_strokeColor
         && _strokeWidth==((const RectRenderOp*)op)->_strokeWidth
-        && _radii[0] ==((const RectRenderOp*)op)->_radii[0]
-        && _radii[1] ==((const RectRenderOp*)op)->_radii[1]
-        && _radii[2] ==((const RectRenderOp*)op)->_radii[2]
-        && _radii[3] ==((const RectRenderOp*)op)->_radii[3];
+        && _cornerRadii[0] ==((const RectRenderOp*)op)->_cornerRadii[0]
+        && _cornerRadii[1] ==((const RectRenderOp*)op)->_cornerRadii[1]
+        && _cornerRadii[2] ==((const RectRenderOp*)op)->_cornerRadii[2]
+        && _cornerRadii[3] ==((const RectRenderOp*)op)->_cornerRadii[3];
     }
     return true;
 }
@@ -133,9 +133,9 @@ bool RectRenderOp::canMergeWith(const RenderOp* op) {
 
 void RectRenderOp::asQuads(QUAD *quad) {
     rectToSurfaceQuad(_rect, quad);
-    if (_shader->_features.roundRect) {
-        // Put the quad size into the texture coords so the frag shader
-        // can trivially know distance to quad center
+    if (_shader->_features.sdf != SDF_NONE) {
+        // Put the quad size into the texture coords so the shader
+        // can trivially calc distance to quad center
         quad->tl.s = quad->bl.s = -_rect.size.width/2;
         quad->tl.t = quad->tr.t = -_rect.size.height/2;
         quad->tr.s = quad->br.s = _rect.size.width/2;
