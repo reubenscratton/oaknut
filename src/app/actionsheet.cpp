@@ -20,14 +20,14 @@ public:
     }
     
     void applyCornersToOp(RenderOp* op) {
-        float r = app->getStyleFloat("ActionSheet.corner-radius");
+        float r = getStyleFloat("ActionSheet.corner-radius");
         VECTOR4 radii = {_isTop?r:0, _isTop?r:0, _isBottom?r:0, _isBottom?r:0};
         ((RectRenderOp*)op)->setCornerRadii(radii);
         if (!_isTop) {
             if (!_divider) {
                 _divider = new View();
                 _divider->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Abs(1));
-                _divider->setBackgroundColor(app->getStyleColor("ActionSheet.divider-color"));
+                _divider->setBackgroundColor(getStyleColor("ActionSheet.divider-color"));
                 addSubview(_divider);
             }
         } else {

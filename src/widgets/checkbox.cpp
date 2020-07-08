@@ -21,7 +21,7 @@ bool Checkbox::handleInputEvent(INPUTEVENT* event) {
     return ImageView::handleInputEvent(event);
 }
 
-void Checkbox::onStateChanged(STATESET changes) {
+void Checkbox::onStateChanged(VIEWSTATE changes) {
     ImageView::onStateChanged(changes);
     if (changes.mask & STATE_CHECKED) {
         if (onIsCheckedChanged) {

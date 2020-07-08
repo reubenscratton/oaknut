@@ -19,16 +19,21 @@ enum Visibility {
 #define STATE_SELECTED  4
 #define STATE_CHECKED   8
 #define STATE_PRESSED  16
-#define STATE_ERRORED  32
-typedef uint16_t STATE;
-typedef struct _STATESET {
-    STATE mask;
-    STATE state;
-    void setBits(STATE mask, STATE state) {
+#define STATE_HOVER    32
+#define STATE_ERRORED  64
+struct VIEWSTATE {
+    uint8_t mask;
+    uint8_t state;
+    VIEWSTATE(uint8_t amask, uint8_t astate) : mask(amask), state(astate) {
+    }
+    inline void setBits(uint8_t mask, uint8_t state) {
         this->mask |= mask;
         this->state |= (this->state & ~state) | state;
     }
-} STATESET;
+    inline operator uint16_t() const {
+        return *(uint16_t*)this;
+    }
+};
 
 
 
@@ -405,8 +410,8 @@ public:
     void addDecorOp(RenderOp* renderOp);
     void removeDecorOp(RenderOp* renderOp);
     
-    /** Set a drop shadow */
-    void setShadow(ShadowRenderOp* shadow);
+    void setElevation(float elevation, bool animate=false);
+    float getElevation() const;
     
 protected:
     /**  \cond INTERNAL */
@@ -417,6 +422,7 @@ protected:
     COLOR _tintColor;
     COLOR _effectiveTintColor;
     float _alpha; // View's own alpha
+    float _elevation; // controls drop-shadow as per Material Design
     float _effectiveAlpha;
     virtual void updateEffectiveAlpha();
     sp<RenderOp> _backgroundOp;
@@ -442,7 +448,7 @@ public:
     
     /** Set one or more state bits at once. The STATESET parameter has a 'mask' member which determines
         the state bits that get updated. */
-    virtual void setState(STATE mask, STATE value);
+    virtual void setState(VIEWSTATE state);
     
     virtual bool isPressed() const;
     virtual void setPressed(bool isPressed);
@@ -460,10 +466,10 @@ public:
 
 protected:
     /** Called whenever state changes.  */
-     virtual void onStateChanged(STATESET changes);
+     virtual void onStateChanged(VIEWSTATE changes);
 
     /**  \cond INTERNAL */
-    STATE _state;
+    uint8_t _state;
     /**  \endcond */
     /**@}*/
 
@@ -482,11 +488,10 @@ protected:
     /** Applies a single style value for the given attribute name. Custom views
         should override this method to add support for custom attributes. */
     bool applySingleStyle(const string& name, const style& value) override;
+    const style* resolveQualifiedStyle(const style* val) override;
     
     /**  \cond INTERNAL */
-    virtual bool handleStatemapDeclaration(const string& name, const style& value);
-    virtual void applyStatemapStyleValue(const string& name, const style& value);
-    map<string, style*>* _statemapStyleValues;
+    //virtual void applyStatemapStyleValue(const string& name, const style& value);
     RenderOp* processDrawable(const style& value);
     void processSizeStyleValue(const style& sizeValue, MEASURESPEC* widthspec, MEASURESPEC* heightspec);
     void processAlignStyleValue(const style& alignValue, ALIGNSPEC* horzspec, ALIGNSPEC* vertspec);

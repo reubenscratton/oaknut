@@ -57,8 +57,8 @@ public:
     void show() override {
         Window::show();
         gtk_widget_set_size_request(glarea,
-                                    app->getStyleFloat("window.default-width"),
-                                    app->getStyleFloat("window.default-height"));
+                                    getStyleFloat("Window.default-width"),
+                                    getStyleFloat("Window.default-height"));
     }
     
     void requestRedrawNative() override {

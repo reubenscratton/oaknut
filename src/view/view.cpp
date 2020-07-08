@@ -23,8 +23,8 @@ View::View() : _alpha(1.0f),
 
 View::~View() {
 //	log_dbg("~View()");
-    if (_statemapStyleValues) {
-        delete _statemapStyleValues;
+    if (_dynamicStyles) {
+        delete _dynamicStyles;
     }
 }
 
@@ -33,6 +33,24 @@ void View::inflate(const string& layoutFile) {
 }
 
 
+const style* View::resolveQualifiedStyle(const style* val) {
+    const style* defaultVal = nullptr;
+    const style* bestVal = nullptr;
+    for (auto& it : *val->qualmap) {
+        uint32_t qual = it.first;
+        if (0 == qual) {
+            defaultVal = &it.second;
+            continue;
+        }
+        assert((qual & 0xff) == 1); // Q_VIEWSTATE
+        VIEWSTATE viewstate((qual & 0xFF0000)>>16, (qual&0xFF00)>>8);
+        bool applies = (_state & viewstate.mask) == viewstate.state;
+        if (applies) {
+            bestVal = &it.second;
+        }
+    }
+    return bestVal ? bestVal : defaultVal; //Styleable::resolveQualifiedStyle(val);
+}
 
 bool View::applySingleStyle(const string& name, const style& value) {
     // Ignore "class" and "subviews" which are handled by layoutInflate
@@ -62,9 +80,6 @@ bool View::applySingleStyle(const string& name, const style& value) {
         _alignspecVert = ALIGNSPEC(value.variantVal(), this);
         return true;
     } else if (name == "background") {
-        if (handleStatemapDeclaration(name, value)) {
-            return true;
-        }
         setBackground(processDrawable(value));
         return true;
     } else if (name == "enabled") {
@@ -120,6 +135,9 @@ bool View::applySingleStyle(const string& name, const style& value) {
         return true;
     } else if (name == "scroll-insets") {
         setScrollInsets(value.edgeInsetsVal());
+        return true;
+    } else if (name == "elevation") {
+        setElevation(value.floatVal(), true);
         return true;
     }
 #if DEBUG
@@ -240,107 +258,6 @@ RenderOp* View::processDrawable(const style& value) {
     return op;
 }
 
-static bool isStateName(const string& name) {
-    if (name == "enabled") return true;
-    if (name == "disabled") return true;
-    if (name == "focused") return true;
-    if (name == "unfocused") return true;
-    if (name == "selected") return true;
-    if (name == "unselected") return true;
-    if (name == "pressed") return true;
-    if (name == "unpressed") return true;
-    if (name == "checked") return true;
-    if (name == "unchecked") return true;
-    if (name == "errored") return true;
-    return false;
-
-}
-bool View::handleStatemapDeclaration(const string& name, const style& value) {
-    
-    // A style can only be a statemap if it's a map and one or more of it's keys
-    // are view state names. Early exit if not dealing with a statemap style.
-    if (!value.isCompound()) {
-        return false;
-    }
-    int c = 0;
-    for (auto& k : *value.compound) {
-        if (isStateName(k.first)) {
-            c++;
-        }
-    }
-    if (!c) {
-        return false;
-    }
-    
-    // Find all the non-state values and apply them to the state values.
-    map<string,style> nonstateVals;
-    for (auto& k : *value.compound) {
-        if (!isStateName(k.first)) {
-            nonstateVals.insert(k);
-        }
-    }
-    if (nonstateVals.size() > 0) {
-        for (auto& k : *value.compound) {
-            if (isStateName(k.first)) {
-                const_cast<style&>(k.second).importNamedValues(nonstateVals);
-            }
-        }
-    }
-
-    // Remove the nonstate values from the statemap
-    for (auto& k : nonstateVals) {
-        const_cast<map<string, style>&>(*value.compound).erase(k.first);
-    }
-
-    // Ensure we have a valid statemap container with no existing entry for the given name
-    if (_statemapStyleValues) {
-        _statemapStyleValues->erase(name);
-    } else {
-        _statemapStyleValues = new map<string, style*>();
-    }
-    
-    // Create the new statemap container entry
-    _statemapStyleValues->insert(make_pair(name, (style*)&value));
-    
-    // Choose initial value immediately
-    applyStatemapStyleValue(name, value);
-    return true;
-}
-
-void View::applyStatemapStyleValue(const string& name, const style& statemap) {
-    // Walk the map and find the values which apply. Longest (i.e. most state bits) matching value wins.
-    list<style*> matchingValues;
-    const style* bestMatchValue = NULL;
-    int best_pri=0;
-    for (auto& it : *statemap.compound) {
-        int pri=1;
-        
-        // Convert the map entry to a stateset
-        STATESET stateset = {0,0};
-        if (it.first == "enabled") stateset.setBits(STATE_DISABLED, 0);
-        else if (it.first == "disabled") {stateset.setBits(STATE_DISABLED, STATE_DISABLED); pri=2;}
-        else if (it.first == "unpressed") stateset.setBits(STATE_PRESSED, 0);
-        else if (it.first == "focused") stateset.setBits(STATE_FOCUSED, STATE_FOCUSED);
-        else if (it.first == "unchecked") stateset.setBits(STATE_CHECKED, 0);
-        else if (it.first == "pressed") {stateset.setBits(STATE_PRESSED, STATE_PRESSED); pri=2;}
-        else if (it.first == "selected") stateset.setBits(STATE_SELECTED, STATE_SELECTED);
-        else if (it.first == "checked") stateset.setBits(STATE_CHECKED, STATE_CHECKED);
-        else if (it.first == "errored") {stateset.setBits(STATE_ERRORED, STATE_ERRORED); pri=2;}
-
-        // If the stateset matches
-        if ((_state & stateset.mask) == stateset.state && pri>best_pri) {
-            bestMatchValue = &it.second;
-            best_pri = pri;
-        }
-    }
-    
-    if (bestMatchValue) {
-        applySingleStyle(name, *bestMatchValue);
-    } else {
-        style nullVal;
-        applySingleStyle(name, nullVal);
-    }
-}
 
 void View::setNeedsFullRedraw() {
 	if (!_window) {
@@ -1010,6 +927,9 @@ void View::insertSubview(View* subview, int index) {
     assert(!subview->_parent);
     _subviews.insert(_subviews.begin()+index, subview);
 	subview->_parent = this;
+    if (subview->_shadowOp) {
+        addRenderOp(subview->_shadowOp);
+    }
 	if (_window) {
 		subview->attachToWindow(_window);
         subview->setNeedsLayout();
@@ -1044,10 +964,14 @@ void View::removeSubview(int index) {
     bool index_ok = index>=0 && index<_subviews.size();
 	assert(index_ok);
 	if (index_ok) {
+        View* subview = _subviews[index];
+        if (subview->_shadowOp) {
+            removeRenderOp(subview->_shadowOp);
+        }
 		if (_window) {
-			_subviews[index]->detachFromWindow();
+			subview->detachFromWindow();
 		}
-        _subviews[index]->_parent = nullptr;
+        subview->_parent = nullptr;
 		_subviews.erase(_subviews.begin() + index);
 	}
 }
@@ -1103,59 +1027,61 @@ bool View::isPressed() const {
     return (_state & STATE_PRESSED)!=0;
 }
 void View::setPressed(bool isPressed) {
-    setState(STATE_PRESSED, (STATE)(isPressed?STATE_PRESSED:0));
+    setState(VIEWSTATE(STATE_PRESSED, (isPressed?STATE_PRESSED:0)));
 }
 bool View::isEnabled() const {
     return (_state & STATE_DISABLED)==0;
 }
 void View::setEnabled(bool isEnabled) {
-    setState(STATE_DISABLED, (STATE)(isEnabled?0:STATE_DISABLED));
+    setState(VIEWSTATE(STATE_DISABLED, (isEnabled?0:STATE_DISABLED)));
 }
 bool View::isChecked() const {
     return (_state & STATE_CHECKED)!=0;
 }
 void View::setChecked(bool checked) {
-    setState(STATE_CHECKED, (STATE)(checked?STATE_CHECKED:0));
+    setState(VIEWSTATE(STATE_CHECKED, (checked?STATE_CHECKED:0)));
 }
 bool View::isSelected() const {
     return (_state & STATE_SELECTED)!=0;
 }
 void View::setSelected(bool selected) {
-    setState(STATE_SELECTED, (STATE)(selected?STATE_SELECTED:0));
+    setState(VIEWSTATE(STATE_SELECTED, (selected?STATE_SELECTED:0)));
 }
 bool View::isFocused() const {
     return (_state & STATE_FOCUSED)!=0;
 }
 void View::setFocused(bool focused) {
-    setState(STATE_FOCUSED, (STATE)(focused?STATE_FOCUSED:0));
+    setState(VIEWSTATE(STATE_FOCUSED, (focused?STATE_FOCUSED:0)));
 }
 bool View::isErrored() const {
     return (_state & STATE_ERRORED)!=0;
 }
 void View::setErrored(bool errored) {
-    setState(STATE_ERRORED, (STATE)(errored?STATE_ERRORED:0));
+    setState(VIEWSTATE(STATE_ERRORED, (errored?STATE_ERRORED:0)));
 }
 
 
 
-void View::setState(STATE mask, STATE value) {
-    uint16_t oldstate = _state;
-    uint16_t newstate = (_state & ~mask) | value;
-    if (oldstate != newstate) {
-        _state = newstate;
-        onStateChanged({(STATE)(oldstate^newstate), newstate});
+void View::setState(VIEWSTATE newstate) {
+    uint8_t oldval = _state;
+    uint8_t newval = (_state & ~newstate.mask) | newstate.state;
+    if (oldval != newval) {
+        _state = newval;
+        onStateChanged(VIEWSTATE(oldval^newval, newval));
         setNeedsFullRedraw();
         if (_subviewsInheritState) {
             for (auto& subview : _subviews) {
-                subview->setState(mask, value);
+                subview->setState(newstate);
             }
         }
     }
 }
-void View::onStateChanged(STATESET changedStates) {
-    if (_statemapStyleValues) {
-        for (auto& it : *_statemapStyleValues) {
-            applyStatemapStyleValue(it.first, *it.second);
+void View::onStateChanged(VIEWSTATE changes) {
+    if (_dynamicStyles) {
+        for (auto& it : *_dynamicStyles) {
+            auto val = it.second;
+            val = resolveQualifiedStyle(val);
+            applySingleStyle(it.first, *val);
         }
     }
 }
@@ -1168,10 +1094,38 @@ void View::removeDecorOp(RenderOp* renderOp) {
     removeRenderOpFromList(renderOp, _renderListDecor);
 }
 
-void View::setShadow(ShadowRenderOp* shadow) {
-    _shadowOp = shadow;
-    _shadowOp->setRect(_rect);
-    // todo: invalidate something
+float View::getElevation() const {
+    return _elevation;
+}
+void View::setElevation(float elevation, bool animate/*=false*/) {
+    if (_window && animate) {
+        float oldElevation = _elevation;
+        Animation::start(this, 100, [=](float val) {
+            setElevation(oldElevation + (elevation-oldElevation) * val, false);
+        });
+        return;
+    }
+    if (elevation != _elevation) {
+        _elevation = elevation;
+        if (elevation>0) {
+            if (!_shadowOp) {
+                _shadowOp = new ShadowRenderOp();
+                _shadowOp->setRect(_rect);
+                if (_parent) {
+                    _parent->addRenderOp(_shadowOp);
+                }
+            }
+            _shadowOp->setSigma(elevation);
+        } else {
+            if (_shadowOp) {
+                if (_parent) {
+                    _parent->removeRenderOp(_shadowOp);
+                }
+                _shadowOp = nullptr;
+            }
+        }
+        setNeedsFullRedraw();
+    }
 }
 
 

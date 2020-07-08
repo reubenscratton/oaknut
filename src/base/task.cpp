@@ -165,7 +165,7 @@ void Task::enqueueNextSubtask(const variant& input) {
         ncores = std::thread::hardware_concurrency();
 #endif
         s_backgroundThreadPool = new ThreadPool(Task::Background, 1, MAX(1,ncores-1));
-        s_ioThreadPool = new ThreadPool(Task::IO, 2, (int)app->getStyleFloat("app.max-io-threads"));
+        s_ioThreadPool = new ThreadPool(Task::IO, 2, (int)style::get("App.max-io-threads")->intVal());
     }
     
     // Detach next subtask from internal list and set its input

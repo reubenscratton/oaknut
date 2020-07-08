@@ -63,28 +63,17 @@ public:
     /** @name Styles
      * @{
      */
-    
-    /** Load a style asset from the assets directory. Generally used in App::main() */
-    void loadStyleAssetSync(const string& assetPath);
-    
+
     /** Get a named style value */
-    const style* getStyle(const string& keypath);
-    
-    /** Get a named style value */
-    string getStyleString(const string& key, const string& defaultString = string::empty);
-    int getStyleInt(const string& key);
-    float getStyleFloat(const string& key);
-    COLOR getStyleColor(const string& key);
-    
     Font* defaultFont();
-    
+
     /**@}*/
     
     
     /** @name Layout
      * @{
      */
-    
+public:
     /** Loads a view from an asset file. See the Layout Guide for details */
     class View* layoutInflate(const string& assetPath);
     void layoutInflateExistingView(View* view, const string& assetPath);
@@ -159,8 +148,6 @@ public:
     void notify(const char* notificationName, void* source=NULL, variant data=variant());
     void unsubscribe(const char* notificationName, Object* observer);
 
-protected:
-    style _styles;
 
 
 };

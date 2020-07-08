@@ -278,7 +278,7 @@ JAVA_FN(jlong, MainActivity, onCreateNative)(JNIEnv *env, jobject obj,
     window->activity = env->NewGlobalRef(obj);
     window->setSafeInsets(EDGEINSETS(0, statusBarHeight, 0, navigationBarHeight));
 
-    app->loadStyleAssetSync("styles.res");
+    Style::loadStyleAssetSync("styles.res");
 
     // If no VC created then this is app startup
     app->_window = window; // this sucks. I'd like to lose app->_window completely...

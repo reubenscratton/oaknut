@@ -12,10 +12,6 @@ App* oak::app;
 App::App() {
     assert(!app);
     app = this;
-    string stylesres(
-#include "styles.res"
-    );
-    _styles.parse(stylesres);
 }
 
 
@@ -28,71 +24,8 @@ float App::idp(float pix) {
 }
 
 
-void App::loadStyleAssetSync(const string& assetPath) {
-    variant v = loadAssetSync(assetPath);
-    if (v.isError()) {
-    } else {
-        auto& data = v.bytearrayRef();
-        string str = data.toString();
-        style s;
-        s.parse(str);
-        assert(s.isCompound());
-        _styles.importNamedValues(*s.compound);
-    }
-}
-
-
-const style* App::getStyle(const string& keypath) {
-    static map<string,const style*> styleCache;
-    auto cacheVal = styleCache.find(keypath);
-    if (cacheVal != styleCache.end()) {
-        return cacheVal->second;
-    }
-    const style* val = _styles.get(keypath);
-    styleCache.insert(std::make_pair(keypath, val));
-    return val;
-}
-
 Font* App::defaultFont() {
     return Font::get("", 17.0);
-}
-
-string App::getStyleString(const string& keypath, const string& defaultString) {
-    auto value = getStyle(keypath);
-    if (!value) {
-        if (defaultString) {
-            return defaultString;
-        }
-        log_warn("Missing string style info '%s'", keypath.c_str());
-        return "";
-    }
-    return value->stringVal();
-}
-
-float App::getStyleFloat(const string& keypath) {
-    auto value = getStyle(keypath);
-    if (!value) {
-        log_warn("Missing float style info '%s'", keypath.c_str());
-        return 0;
-    }
-    return value->floatVal();
-}
-int App::getStyleInt(const string& key) {
-    auto value = getStyle(key);
-    if (!value) {
-        log_warn("Missing style info '%s'", key.c_str());
-        return 0;
-    }
-    return value->intVal();
-}
-
-COLOR App::getStyleColor(const string& key) {
-    auto value = getStyle(key);
-    if (!value) {
-        log_warn("Missing color style info '%s'", key.c_str());
-        return 0;
-    }
-    return value->colorVal();
 }
 
 static View* inflateFromResource(const style& value, View* parent) {

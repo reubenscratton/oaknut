@@ -150,6 +150,7 @@ namespace oak {
 #include "graphics/renderop_texture.h"
 #include "graphics/surface.h"
 #include "graphics/renderop_blur.h"
+#include "graphics/renderop_ink.h"
 #include "graphics/renderop_shadow.h"
 #include "graphics/renderer_gl.h"
 #include "media/videorecorder.h"

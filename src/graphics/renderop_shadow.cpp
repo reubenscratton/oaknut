@@ -15,21 +15,23 @@ public:
     }
     string getFragmentSource() override {
         return
+        SL_FLOAT1 " cornerRadius=12.0;\n"
         SL_FLOAT1 " sigma=" SL_UNIFORM(sigma) ";\n"
-        SL_FLOAT2 " size = " SL_UNIFORM(u) ".xy - sigma*2;\n"
-        SL_FLOAT2 " lower = -size;\n"
-        SL_FLOAT2 " upper = size;\n"
         // texcoord is fragment xy in surface coords
         SL_FLOAT2 " p=" SL_VERTEX_OUTPUT(texcoord) ";\n"
-        SL_FLOAT4 " query = " SL_FLOAT4 "(p - lower, p - upper);\n"
-        SL_FLOAT4 " x = query * (sqrt(0.5) / sigma);\n"
-        SL_FLOAT4 " s = sign(x), a = abs(x);\n"
-        "x = 1.0 + (0.278393 + (0.230389 + 0.078108 * (a * a)) * a) * a;\n"
-        "x *= x;\n"
-        SL_FLOAT4 " erf = s - s / (x * x);\n"
-        SL_FLOAT4 " integral = 0.5 + 0.5 * erf;\n"
-        SL_FLOAT1 " shadow = (integral.z - integral.x) * (integral.w - integral.y);\n"
-        SL_OUTPIXVAL " = " SL_HALF4 "(0.0, 0.0, 0.0, 0.5 * shadow);\n";
+        SL_FLOAT2 " half_size = " SL_UNIFORM(u) ".xy - sigma*2;\n"
+#if 0
+        SL_FLOAT1 " dist = -(length(p) - 100);\n"
+#else
+        "half_size -= cornerRadius;\n"
+        SL_FLOAT1 " dist = -(length(max(abs(p)-half_size, 0.0)) - cornerRadius - 0.5);\n"
+#endif
+        SL_FLOAT1 " x = dist / (sigma * sqrt(0.5));\n"
+        SL_FLOAT1 " s = sign(x), a = abs(x);\n"
+        " x = 1.0 + (0.278393 + (0.230389 + 0.078108 * (a * a)) * a) * a;\n"
+        SL_FLOAT1 " erf = s - s / (x * x);\n"
+        SL_FLOAT1 " integral = 0.5 + 0.5 * erf;\n"
+        SL_OUTPIXVAL " = " SL_HALF4 "(0.0, 0.0, 0.0, 0.3 * integral);\n";
     }
     
     int16_t _u_sigma;

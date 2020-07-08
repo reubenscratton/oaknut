@@ -66,8 +66,8 @@ public:
     
     void show() override {
         Window::show();
-        float width = app->getStyleFloat("window.default-width") / app->_defaultDisplay->_scale;
-        float height = app->getStyleFloat("window.default-height") / app->_defaultDisplay->_scale;
+        float width = getStyleFloat("Window.default-width") / app->_defaultDisplay->_scale;
+        float height = getStyleFloat("Window.default-height") / app->_defaultDisplay->_scale;
         _nativeWindow = [[NativeWindow alloc] initWithContentRect:NSMakeRect(0, 0, width, height)
                                                         styleMask:NSWindowStyleMaskTitled
                                                           backing:NSBackingStoreBuffered
@@ -134,7 +134,7 @@ Window* Window::create() {
 
     // Got to create app object before we create any native elements so we can get at style system
     app->_window = Window::create();
-    app->loadStyleAssetSync("styles.res");
+    style::loadStyleAssetSync("styles.res");
     app->_window->show();
     app->main();
     

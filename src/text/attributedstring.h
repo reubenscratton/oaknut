@@ -120,7 +120,7 @@ public:
     void clearAttributes();
     attributed_string& operator=(const attributed_string& str);
 
-    void applyStyle(const string& s);
+    //void applyStyle(const string& s);
     void applyStyle(const class style* s);
     
     void append(const attributed_string& str);

@@ -16,9 +16,12 @@ Window::Window() : _rootViewController(NULL) {
 }
 
 void Window::show() {
-    _backgroundColor = app->getStyleColor("window.background-color");
-    _animationDuration = app->getStyleInt("window.animation-duration");
-    auto scrollstyle = app->getStyle("window.scrollbars");
+    auto winstyle = getStyle("Window");
+    _backgroundColor = winstyle->colorVal("background-color");
+    _animationDuration = winstyle->intVal("animation-duration");
+    _fadeInThreshold = winstyle->intVal("image-fade-in.threshold");
+    _fadeInDuration = winstyle->intVal("image-fade-in.duration");
+    auto scrollstyle = getStyle("Window.scrollbars");
     _scrollbarColor = scrollstyle->colorVal("color");
     _scrollbarCornerRadius = scrollstyle->floatVal("corner-radius");
     _scrollbarWidth = scrollstyle->floatVal("width");
@@ -27,6 +30,8 @@ void Window::show() {
     _scrollbarFadeInDelay = scrollstyle->intVal("fade-in-delay");
     _scrollbarFadeDuration = scrollstyle->intVal("fade-duration");
     _scrollbarFadeOutDelay = scrollstyle->intVal("fade-out-delay");
+    
+
 }
 
 
@@ -539,7 +544,7 @@ void Window::applySafeInsetsChange(bool updateFocusedView) {
 
 void Window::updateDecorOp(bool bottom, float height) {
     RectRenderOp*& op = bottom?_renderOpDecorBottom:_renderOpDecorTop;
-    COLOR color = app->getStyleColor(bottom ? "window.safeInsetBackgrounds.bottom"_S : "window.safeInsetBackgrounds.top"_S);
+    COLOR color = getStyleColor(bottom ? "Window.safeInsetBackgrounds.bottom"_S : "Window.safeInsetBackgrounds.top"_S);
     if (color!=0 && height>0) {
         if (!op) {
             op = new RectRenderOp();
@@ -584,7 +589,7 @@ void Window::presentModalViewController(ViewController *viewController) {
     scrimView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Fill());
     addSubview(scrimView);
     setNeedsLayout();
-    COLOR scrimColor = app->getStyleColor("window.scrim");
+    COLOR scrimColor = getStyleColor("Window.scrim");
     Animation::start(scrimView, 333, [=](float val) {
         scrimView->setBackgroundColor(COLOR::interpolate(0, scrimColor, val));
     });
@@ -602,7 +607,7 @@ void Window::dismissModalViewController(ViewController* viewController, std::fun
     View* scrimView = getSubview(indexOfSubview(view)-1);
     
     // Animate out
-    COLOR scrimColor = app->getStyleColor("window.scrim");
+    COLOR scrimColor = getStyleColor("Window.scrim");
     Animation::start(view, 333, [=](float val) {
         scrimView->setBackgroundColor(COLOR::interpolate(scrimColor, 0, val));
         if (val >= 1.0f) {

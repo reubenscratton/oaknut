@@ -178,12 +178,13 @@ attributed_string& attributed_string::operator=(const attributed_string& str) {
     return *this;
 }
 
+/*
 void attributed_string::applyStyle(const string& styleName) {
     auto s = app->getStyle(styleName);
     if (s) {
         applyStyle(s);
     }
-}
+}*/
 
 void attributed_string::applyStyle(const style* s) {
     float weight = s->fontWeightVal("font-weight");

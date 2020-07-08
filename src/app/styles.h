@@ -11,10 +11,9 @@
  
  - Replace StyleValue with a Style type that contains a map of strings to variants and a pointer to its parent.
  - Restore the cascadeability, e.g. looking up a style entry will look to parent style if it doesnt have it.
- -
+
  
  */
-
 
 class style {
 public:
@@ -29,7 +28,8 @@ public:
         variant var;                   // value is simple
         const style* reference;
         vector<style>* array;
-        map<string,style>* compound;   // value is compound (or qualified)
+        map<string,style>* compound;   // value is a compound
+        map<uint32_t,style>* qualmap;     // value is a qualifier compound
     };
     style();
     style(const style&);
@@ -46,7 +46,7 @@ public:
     bool isMeasurement() const;
     bool isArray() const;
     bool isCompound() const;
-        
+
     // Accessors
     const variant& variantVal() const;
     string stringVal() const;
@@ -73,28 +73,20 @@ public:
     void importNamedValues(const map<string,style>& styleValues);
     void fromVariant(const variant& v);
 
+    static void loadStyleAssetSync(const string& assetPath);
+    static const style* get(const string& name);
+
 protected:
-    const style* resolve() const;
     void copyFrom(const style* other);
     void setType(enum type newType);
-    const style* get(const string& name) const;
+    const style* getValue(const string& name) const;
+    static const style* resolve(const style* val);
     friend class App;
     friend class Styleable;
 };
 
 
-class static_style {
-public:
-    static_style(const string& keypath);
 
-    // TODO: update when/if global style tree are updated
-    
-    inline int intVal() const {
-        return _style ? _style->intVal() : 0;
-    }
-private:
-    const style* _style;
-};
 
 /**
  * @ingroup app_group
@@ -121,5 +113,15 @@ protected:
     /** Applies a single resolved style for the given attribute name. Custom views
      should override this method to add support for custom attributes. */
     virtual bool applySingleStyle(const string& name, const style& style) = 0;
+    
+    virtual const style* resolveQualifiedStyle(const style* style);
+    
+    /** Get a named style values */
+    const style* getStyle(const string& key);
+    float getStyleFloat(const string& key);
+    COLOR getStyleColor(const string& key);
+
+    map<string, const style*>* _dynamicStyles;
+
 };
 

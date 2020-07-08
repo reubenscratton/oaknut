@@ -41,7 +41,7 @@ void EditText::detachFromWindow() {
     updateCursor();
 }
 
-void EditText::onStateChanged(STATESET changedStates) {
+void EditText::onStateChanged(VIEWSTATE changedStates) {
     Label::onStateChanged(changedStates);
     if (changedStates.mask & STATE_FOCUSED) {
         updateCursor();

@@ -845,11 +845,11 @@ variant variant::parse(const string& str, uint32_t& it, int flags) {
             }
             variant fieldValue = parse(str, it, (flags & ~PARSEFLAG_EXPLICIT_ARRAY));
             
-            auto tt = val._map->emplace(std::move(fieldName), std::move(fieldValue));
+            val._map->operator[](std::move(fieldName)) = std::move(fieldValue);
+            /*auto tt = val._map->emplace(std::move(fieldName), std::move(fieldValue));
             if (!tt.second) {
-                assert(0);
-                //it.first = val;
-            }
+                tt.first.first = val;
+            }*/
             
             skipWhitespaceAndComments(str, it);
 

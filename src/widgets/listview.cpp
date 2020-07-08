@@ -135,7 +135,7 @@ void ListView::setSelectedIndex(LISTINDEX index) {
 		if (itemView) {
             // TODO: Am not wild about poking at item view backgrounds like this, perhaps
             // we need an ItemView type which has a "background overlay" renderop.
-            itemView->setBackgroundColor(app->getStyleColor("listview.selected-bkgnd-color"));
+            itemView->setBackgroundColor(getStyleColor("ListView.selected-bkgnd-color"));
 		}
 	}
 }

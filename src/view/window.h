@@ -99,6 +99,8 @@ public:
     int _scrollbarFadeInDelay;
     int _scrollbarFadeDuration;
     int _scrollbarFadeOutDelay;
+    int _fadeInThreshold;
+    int _fadeInDuration;
 
 	// Render state
     Renderer* _renderer;

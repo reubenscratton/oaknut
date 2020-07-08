@@ -17,6 +17,6 @@ public:
     
 protected:
     bool handleInputEvent(INPUTEVENT* event) override;
-    void onStateChanged(STATESET changes) override;
+    void onStateChanged(VIEWSTATE changes) override;
 
 };

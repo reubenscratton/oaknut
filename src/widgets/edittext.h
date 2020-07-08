@@ -44,7 +44,7 @@ public:
     IKeyboardInputHandler* getKeyboardInputHandler() override;
     ITextInputReceiver* getTextInputReceiver() override;
     bool handleInputEvent(INPUTEVENT* event) override;
-    void onStateChanged(STATESET changedStates) override;
+    void onStateChanged(VIEWSTATE changedStates) override;
     void updateRenderOps() override;
     void layout(RECT constraint) override;
     void detachFromWindow() override;

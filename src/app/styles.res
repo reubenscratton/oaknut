@@ -1,7 +1,7 @@
 R"({
 font-size: 17dp
 
-app: {
+App: {
     max-io-threads: 50
     cache: {
         ram: 50MB
@@ -9,7 +9,7 @@ app: {
     }
 }
 
-window: {
+Window: {
     default-width:200dp
     default-height:200dp
     safeInsetBackgrounds: {
@@ -43,8 +43,9 @@ colors: {
     text_link_default: #007AFF
 }
 
-listview: {
-    selected-bkgnd-color: #d9d9d9
+ListView: {
+    background@selected: #d9d9d9
+    divider-height: 1px
     divider-color: #ccc
     item-title: {
         forecolor: #333
@@ -54,11 +55,6 @@ listview: {
     }
 }
 
-ListView: {
-    divider-height: 1px
-    divider-color: $listview.selected-bkgnd-color
-}
-
 Label: {
     font-size: $font-size
     forecolor: black
@@ -66,14 +62,11 @@ Label: {
 
 Button: {
     background: {
-        enabled: {
-            fill: lightGray
-            corner-radii: 4dp
+        fill: {
+            @default: lightGray
+            @pressed: gray
         }
-        pressed: {
-            fill: gray
-            corner-radii: 4dp
-        }
+        corner-radii: 4dp
     }
     gravity: center
     padding: 12dp,8dp
@@ -147,8 +140,8 @@ ActionSheet: {
         font-size: 20dp
         forecolor: #007AFF
         background: {
-            pressed: #DDD
-            unpressed: #F7F6F5
+            @default: #F7F6F5
+            @pressed: #DDD
         }
     }
     Title: {

@@ -56,7 +56,7 @@ void SearchBox::layout(RECT constraint) {
     _searchIconOp->setRect(getIconRect(isFocused()?1:0));
 }
 
-void SearchBox::onStateChanged(STATESET changes) {
+void SearchBox::onStateChanged(VIEWSTATE changes) {
     EditText::onStateChanged(changes);
     if ((changes.mask & STATE_FOCUSED) && (changes.state & STATE_FOCUSED)) {
         Animation::start(this, 250,  [=](float val) {

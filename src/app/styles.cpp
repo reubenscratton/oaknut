@@ -19,6 +19,239 @@
 
 */
 
+static style s_styleRoot;
+
+static struct init {
+    init() {
+        string stylesres(
+    #include "styles.res"
+        );
+        s_styleRoot.parse(stylesres);
+    }
+} _init;
+
+// A qualifier is a uint32_t where the low byte is the name and the upper 3 bytes are a parameter.
+
+#define MAKE_Q(name, param) uint32_t(((param)<<8) | (name))
+
+#define Q_DEFAULT    0
+#define Q_VIEWSTATE  1
+#define Q_IOS        2
+#define Q_MACOS      3
+#define Q_ANDROID    4
+#define Q_WEB        5
+#define Q_LINUX      6
+#define Q_WINDOWS    7
+#define Q_DESKTOP    8
+#define Q_MOBILE     9
+#define Q_TABLET    10
+#define Q_TV        11
+#define Q_LANDSCAPE 32
+#define Q_PORTRAIT  33
+#define Q_DPI_1x    34
+#define Q_DPI_2x    35
+#define Q_DPI_3x    36
+#define Q_SCREEN_WIDTH_LONGER 37
+#define Q_SCREEN_WIDTH_SHORTER 38
+
+
+
+
+
+void style::loadStyleAssetSync(const string& assetPath) {
+    variant v = app->loadAssetSync(assetPath);
+    if (v.isError()) {
+    } else {
+        auto& data = v.bytearrayRef();
+        string str = data.toString();
+        style s;
+        s.parse(str);
+        assert(s.isCompound());
+        s_styleRoot.importNamedValues(*s.compound);
+    }
+}
+
+
+
+const style* style::get(const string& keypath) {
+    static map<string,const style*> styleCache;
+    auto cacheVal = styleCache.find(keypath);
+    if (cacheVal != styleCache.end()) {
+        return cacheVal->second;
+    }
+    const style* val = s_styleRoot.getValue(keypath);
+    styleCache.insert(std::make_pair(keypath, val));
+    return val;
+}
+
+const style* style::resolve(const style* val) {
+
+    while (val) {
+            
+        // Resolve references to other styles
+        if (val->type == style::TypeReference) {
+            val = val->reference;
+        }
+        else if (val->type == style::TypeSimple && val->var.isString() && val->var.stringVal().hasPrefix("$")) {
+            auto refdstylename = val->var.stringVal();
+            refdstylename.eraseAt(0, 1);
+            auto refdstyle = style::get(refdstylename);
+            if (!refdstyle) {
+                log_warn("Missing referenced style: $%s", refdstylename.c_str());
+            } else {
+                style* ncval = const_cast<style*>(val);
+                ncval->setType(TypeReference);
+                ncval->reference = refdstyle;
+            }
+            val = refdstyle;
+        }
+
+        // Run-time selection of qualified value
+        else if (val->type == style::TypeQual) {
+            const style* newval = NULL;
+            for (auto it = val->qualmap->begin() ; it != val->qualmap->end() ; it++) {
+                uint32_t qual = it->first;
+                bool applies = false;
+                switch (qual & 0xFF) {
+                    case Q_DEFAULT:
+                        applies = true;
+                        break;
+                        
+                    case Q_VIEWSTATE:
+                        // Dynamic qualifiers cannot be resolved here!
+                        return val;
+                        
+                    case Q_IOS:
+#if PLATFORM_IOS
+                        applies = true;
+#endif
+                        break;
+                    case Q_MACOS:
+#if PLATFORM_OSX
+                        applies = true;
+#endif
+                        break;
+                    case Q_ANDROID:
+#if ANDROID
+                        applies = true;
+#endif
+                        break;
+                    case Q_TABLET:
+                        applies = app->_defaultDisplay->sizeClass() == Display::Tablet;
+                        break;
+                    case Q_MOBILE:
+                        applies = app->_defaultDisplay->sizeDiagonalInches() <= 4;
+                        break;
+                    default:
+                        assert(0); // todo: implement
+                        break;
+                }
+
+                
+                if (applies) {
+                    // TODO: apply precedence that favours higher specificity
+                    newval = &it->second;
+                }
+            }
+            val = newval;
+        }
+        
+        else {
+            break;
+        }
+    }
+
+    return val;
+}
+
+const style* style::getValue(const string& keypath) const {
+    auto val = this;
+    string subkey, key = keypath;
+    do {
+        val = resolve(val);
+
+        if (!val) {
+            return NULL;
+        }
+        auto dotPos = key.find(".");
+        if (dotPos != 0xFFFFFFFF) {
+            subkey = key.substr(dotPos+1);// key.substr(dotIndex+1).own();
+            key.erase(dotPos);
+        } else {
+            subkey = "";
+        }
+        assert(val->type == TypeCompound);
+        auto it = val->compound->find(key);
+        if (it == val->compound->end()) {
+            //log_warn("Value missing for field '%s'", keypath.c_str());
+            return NULL;
+        }
+        val = &it->second;
+        key = subkey;
+    } while (key.lengthInBytes() > 0);
+    return val;
+}
+
+static map<string, uint32_t>& s_qualifiers()
+{
+    static map<string, uint32_t> m({
+        {"default", Q_DEFAULT},
+        
+        {"ios",     Q_IOS},
+        {"macos",   Q_MACOS},
+        {"android", Q_ANDROID},
+        {"web",     Q_WEB},
+        {"linux",   Q_LINUX},
+        {"windows", Q_WINDOWS},
+        {"desktop", Q_DESKTOP},
+        {"mobile",  Q_MOBILE},
+        {"tablet",  Q_TABLET},
+        {"tv",      Q_TV},
+        
+        {"land",      Q_LANDSCAPE},
+        {"landscape", Q_LANDSCAPE},
+        {"port",      Q_PORTRAIT},
+        {"portrait",  Q_PORTRAIT},
+        {"1x",        Q_DPI_1x},
+        {"2x",        Q_DPI_2x},
+        {"3x",        Q_DPI_3x},
+        //lw320
+        //sw640
+
+        {"enabled",   MAKE_Q(Q_VIEWSTATE, VIEWSTATE(STATE_DISABLED, 0))},
+        {"disabled",  MAKE_Q(Q_VIEWSTATE, VIEWSTATE(STATE_DISABLED, STATE_DISABLED))},
+        {"focused",   MAKE_Q(Q_VIEWSTATE, VIEWSTATE(STATE_FOCUSED,STATE_FOCUSED))},
+        {"unfocused", MAKE_Q(Q_VIEWSTATE, VIEWSTATE(STATE_FOCUSED,0))},
+        {"selected",  MAKE_Q(Q_VIEWSTATE, VIEWSTATE(STATE_SELECTED, STATE_SELECTED))},
+        {"unselected",MAKE_Q(Q_VIEWSTATE, VIEWSTATE(STATE_SELECTED, 0))},
+        {"pressed",   MAKE_Q(Q_VIEWSTATE, VIEWSTATE(STATE_PRESSED, STATE_PRESSED))},
+        {"unpressed", MAKE_Q(Q_VIEWSTATE, VIEWSTATE(STATE_PRESSED, 0))},
+        {"checked",   MAKE_Q(Q_VIEWSTATE, VIEWSTATE(STATE_CHECKED, STATE_CHECKED))},
+        {"unchecked", MAKE_Q(Q_VIEWSTATE, VIEWSTATE(STATE_CHECKED, 0))},
+        {"hover",     MAKE_Q(Q_VIEWSTATE, VIEWSTATE(STATE_HOVER, STATE_HOVER))},
+        {"errored",   MAKE_Q(Q_VIEWSTATE, VIEWSTATE(STATE_ERRORED, STATE_ERRORED))},
+    });
+    return m;
+};
+
+
+static bool parseQual(const string& qualifierName, uint32_t& qual) {
+    static auto& qualifiers = s_qualifiers();
+    auto it = qualifiers.find(qualifierName);
+    if (it != qualifiers.end()) {
+        qual = it->second;
+        return true;
+    }
+    bool lw = qualifierName.hasPrefix("lw");
+    bool sw = qualifierName.hasPrefix("sw");
+    if (lw || sw) {
+        qual = MAKE_Q(lw ? Q_SCREEN_WIDTH_LONGER : Q_SCREEN_WIDTH_SHORTER,
+                      atoi(qualifierName.c_str()+2));
+        return true;
+    }
+    return false;
+}
+
 style::style() : type(TypeSimple), var() {
 }
 style::style(const style& rval) : type(TypeSimple), var() {
@@ -30,7 +263,7 @@ style::style(style&& rval) noexcept : type(rval.type), var() {
         case TypeReference: reference = rval.reference; rval.reference = NULL; break;
         case TypeArray: array = rval.array; rval.array = NULL; break;
         case TypeCompound: compound = rval.compound; rval.compound = NULL; break;
-        case TypeQual: compound = rval.compound; rval.compound=NULL; break;
+        case TypeQual: qualmap = rval.qualmap; rval.qualmap=NULL; break;
     }
     rval.type = TypeSimple;
     rval.var = variant();
@@ -40,8 +273,8 @@ style::~style() {
         delete array;
     } else if (type == TypeCompound && compound) {
         delete compound;
-    } else if (type == TypeQual && compound) {
-        delete compound;
+    } else if (type == TypeQual && qualmap) {
+        delete qualmap;
     }
 }
 void style::setType(enum type newType) {
@@ -55,15 +288,12 @@ void style::setType(enum type newType) {
     } else if (!wasSimple && isSimple) {
         new (&var) variant();
     }
-    bool wasCompound = (type==TypeCompound || type==TypeQual);
-    bool isCompound = (newType==TypeCompound || newType==TypeQual);
+    bool wasCompound = (type==TypeCompound);
+    bool isCompound = (newType==TypeCompound);
     if (wasCompound && !isCompound) {
         delete compound;
     } else if (!wasCompound && isCompound) {
         compound = new map<string,style>();
-    }
-    if (wasCompound && isCompound && (type != newType)) {
-        compound->clear();
     }
     bool wasArray = (type==TypeArray);
     bool isArray = (newType==TypeArray);
@@ -72,7 +302,14 @@ void style::setType(enum type newType) {
     } else if (!wasArray && isArray) {
         array = new vector<style>();
     }
-    
+    bool wasQualMap = (type==TypeQual);
+    bool isQualMap = (newType==TypeQual);
+    if (wasQualMap && !isQualMap) {
+        delete qualmap;
+    } else if (!wasQualMap && isQualMap) {
+        qualmap = new map<uint32_t,style>();
+    }
+
     type = newType;
 }
 
@@ -88,79 +325,70 @@ void style::copyFrom(const style* other) {
         case TypeSimple: var = other->var; break;
         case TypeReference: reference = other->reference; break;
         case TypeArray: array->insert(array->end(), other->array->begin(), other->array->end()); break;
-        case TypeCompound:
-        case TypeQual: compound->insert(other->compound->begin(), other->compound->end()); break;
+        case TypeCompound: compound->insert(other->compound->begin(), other->compound->end()); break;
+        case TypeQual: qualmap->insert(other->qualmap->begin(), other->qualmap->end()); break;
     }
 }
 bool style::isEmpty() const {
-    auto s = resolve();
-    switch (s->type) {
-        case TypeSimple: return s->var.isEmpty();
-        case TypeReference: return s->reference==NULL;
-        case TypeArray: return s->array==NULL;
-        case TypeCompound: return s->compound==NULL;
-        case TypeQual: return s->compound==NULL;
+    switch (type) {
+        case TypeSimple: return var.isEmpty();
+        case TypeReference: return reference==NULL;
+        case TypeArray: return array==NULL;
+        case TypeCompound: return compound==NULL;
+        case TypeQual: return qualmap==NULL;
     }
     return true;
 }
 bool style::isNumeric() const {
-    auto s = resolve();
-    return (s->type == TypeSimple) && s->var.isNumeric();
+    return (type == TypeSimple) && var.isNumeric();
 }
 bool style::isFloatingPoint() const {
-    auto s = resolve();
-    return (s->type == TypeSimple) && s->var.isFloatingPoint();
+    return (type == TypeSimple) && var.isFloatingPoint();
 }
 bool style::isString() const {
-    auto s = resolve();
-    return (s->type == TypeSimple) && s->var.isString();
+    return (type == TypeSimple) && var.isString();
 }
 bool style::isMeasurement() const {
-    auto s = resolve();
-    return (s->type == TypeSimple) && s->var.isMeasurement();
+    return (type == TypeSimple) && var.isMeasurement();
 }
 bool style::isArray() const {
-    auto s = resolve();
-    return (s->type == TypeArray);// && s->var.isArray();
+    return (type == TypeArray);// && s->var.isArray();
 }
 bool style::isCompound() const {
-    return resolve()->type == TypeCompound;
+    return type == TypeCompound;
 }
 
 int style::intVal() const {
-    auto val = resolve();
-    if (val && val->type==TypeSimple) {
-        return val->var.intVal();
+    if (type==TypeSimple) {
+        return var.intVal();
     }
     log_warn("intVal() failed");
     return 0;
 }
 int style::intVal(const string& name) const {
-    auto val = get(name);
+    auto val = getValue(name);
     if (!val) {
         return 0;
     }
     return val->intVal();
 }
 bool style::boolVal() const {
-    auto val = resolve();
-    if (val && val->type==TypeSimple) {
-        return val->var.boolVal();
+    if (type==TypeSimple) {
+        return var.boolVal();
     }
     log_warn("boolVal() failed");
     return false;
 }
 
 float style::floatVal() const {
-    auto val = resolve();
-    if (val && val->type==TypeSimple) {
-        return val->var.floatVal();
+    if (type==TypeSimple) {
+        return var.floatVal();
     }
     log_warn("floatVal() type coerce failed");
     return 0.f;
 }
 float style::floatVal(const string& name) const {
-    auto val = get(name);
+    auto val = getValue(name);
     if (!val) {
         return 0;
     }
@@ -168,15 +396,14 @@ float style::floatVal(const string& name) const {
 }
 
 string style::stringVal() const {
-    auto val = resolve();
-    if (val && val->type==TypeSimple) {
-        return val->var.stringVal();
+    if (type==TypeSimple) {
+        return var.stringVal();
     }
     log_warn("stringVal() type coerce failed");
     return "";
 }
 string style::stringVal(const string& name) const {
-    auto val = get(name);
+    auto val = getValue(name);
     if (!val) {
         return "";
     }
@@ -184,7 +411,7 @@ string style::stringVal(const string& name) const {
 }
 
 COLOR style::colorVal(const string& name) const {
-    auto v = get(name);
+    auto v = getValue(name);
     if (v) {
         return v->colorVal();
     }
@@ -192,10 +419,9 @@ COLOR style::colorVal(const string& name) const {
 }
 
 /*int style::intVal(const string& name) const {
-    auto val = resolve();
-    assert(val->type == Compound);
-    auto val2 = val->compound->find(name);
-    if (val2 == val->compound->end()) {
+    assert(type == Compound);
+    auto val2 = compound->find(name);
+    if (val2 == compound->end()) {
         log_warn("Value missing for field '%'", name.c_str());
         return 0;
     }
@@ -206,15 +432,14 @@ static vector<style> s_emptyArray;
 
 
 const vector<style>& style::arrayVal() const {
-    auto val = resolve();
-    if (val->type==TypeArray) {
+    if (type==TypeArray) {
         return *array;
     }
     log_warn("arrayVal() type coerce failed");
     return s_emptyArray;
 }
 const vector<style>& style::arrayVal(const string& name) const {
-    auto val = get(name);
+    auto val = getValue(name);
     if (val) {
         return val->arrayVal();
     }
@@ -222,13 +447,12 @@ const vector<style>& style::arrayVal(const string& name) const {
 }
 
 EDGEINSETS style::edgeInsetsVal() const {
-    auto val = resolve();
     EDGEINSETS insets;
-    if (val->isNumeric()) {
-        insets.left = insets.top = insets.right = insets.bottom = val->floatVal();
+    if (isNumeric()) {
+        insets.left = insets.top = insets.right = insets.bottom = floatVal();
     } else {
-        assert(val->isArray());
-        auto& a = val->arrayVal();
+        assert(isArray());
+        auto& a = arrayVal();
         if (a.size()==1) {
             insets.left = insets.top = insets.right = insets.bottom = a[0].floatVal();
         } else if (a.size()==2) {
@@ -247,7 +471,7 @@ EDGEINSETS style::edgeInsetsVal() const {
     return insets;
 }
 EDGEINSETS style::edgeInsetsVal(const string& name) const {
-    auto v = get(name);
+    auto v = getValue(name);
     if (v) {
         return v->edgeInsetsVal();
     }
@@ -255,7 +479,7 @@ EDGEINSETS style::edgeInsetsVal(const string& name) const {
 }
 
 float style::fontWeightVal(const string& name) const {
-    auto v = get(name);
+    auto v = getValue(name);
     if (v) {
         return v->fontWeightVal();
     }
@@ -263,26 +487,21 @@ float style::fontWeightVal(const string& name) const {
 }
 
 const variant& style::variantVal() const {
-    auto val = resolve();
-    assert(val->type == TypeSimple);
-    return val->var;
+    assert(type == TypeSimple);
+    return var;
 }
 
 COLOR style::colorVal()  const {
-    auto val = resolve();
-    if (!val) {
-        return 0;
-    }
-    if (val->isNumeric()) {
-        if (val->isFloatingPoint()) {
-            uint8_t lum = val->floatVal() * 255;
+    if (isNumeric()) {
+        if (isFloatingPoint()) {
+            uint8_t lum = floatVal() * 255;
             return 0xFF000000 | (lum<<16) | (lum<<8) | lum;
         } else {
-            return val->intVal();
+            return intVal();
         }
-    } else if (val->isString()) {
+    } else if (isString()) {
         // TODO: make this method non-const and have it mutate type to Int after the colour is parsed
-        string colorVal = val->stringVal();
+        string colorVal = stringVal();
         // value is in either '#fff', '#ffffff', '#ffffffff',
         if (colorVal.hadPrefix("#")) {
             unsigned int val = (unsigned int)strtoul(colorVal.c_str(), NULL, 16);
@@ -494,7 +713,7 @@ COLOR style::colorVal()  const {
 
 /*
 float StyleValue::floatVal(const string& name) const {
-    auto field = get(name);
+    auto field = getValue(name);
     if (!field) {
         log_warn("Value missing for field '%'", name.c_str());
         return 0;
@@ -518,9 +737,8 @@ const map<string, StyleValue>& StyleValue::compoundVal() const {
 
 
 measurement style::measurementVal() const {
-    auto val = resolve();
-    if (val->type == TypeSimple && val->var.isMeasurement()) {
-        return val->var.measurementVal();
+    if (type == TypeSimple && var.isMeasurement()) {
+        return var.measurementVal();
     }
     return measurement(0,measurement::PX);
 }
@@ -528,12 +746,11 @@ measurement style::measurementVal() const {
 
 VECTOR4 style::cornerRadiiVal() const {
     VECTOR4 r;
-    auto val = resolve();
-    if (val->isNumeric()) {
-        r.x = r.y = r.z = r.w = val->floatVal();
+    if (isNumeric()) {
+        r.x = r.y = r.z = r.w = floatVal();
     } else {
-        assert(val->isArray());
-        auto& radii = val->arrayVal();
+        assert(isArray());
+        auto& radii = arrayVal();
         if (radii.size()==1) {
             r.x = r.y = r.z = r.w = radii[0].floatVal();
         } else if (radii.size()==4) {
@@ -551,11 +768,10 @@ VECTOR4 style::cornerRadiiVal() const {
 
 
 float style::fontWeightVal() const {
-    auto val = resolve();
-    if (val->isNumeric()) {
-        return val->floatVal();
-    } else if (val->isString()) {
-        string fw = val->stringVal().lowercase();
+    if (isNumeric()) {
+        return floatVal();
+    } else if (isString()) {
+        string fw = stringVal().lowercase();
         if (fw=="bold") return FONT_WEIGHT_BOLD;
         if (fw=="regular") return FONT_WEIGHT_REGULAR;
         if (fw=="medium") return FONT_WEIGHT_MEDIUM;
@@ -570,122 +786,8 @@ float style::fontWeightVal() const {
     return 0;
 }
 
-const style* style::resolve() const {
-    const style* val = this;
-    while (val) {
-        
-        // Run-time selection of qualified value
-        if (val->type == TypeQual) {
-            val = NULL;
-            for (auto it = compound->begin() ; it != compound->end() ; it++) {
-                const string& qual = it->first;
-                bool applies = false;
-                if (qual.length()==0) {
-                    applies = true;
-                }
-                
-                // Platform qualifiers
-                else if (qual == "iOS") {
-#if TARGET_OS_IOS
-                    applies = true;
-#endif
-                } else if (qual == "OSX") {
-#if TARGET_OS_OSX
-                    applies = true;
-#endif
-                } else if (qual == "android") {
-#ifdef ANDROID
-                    applies = true;
-#endif
 
-                // Screen size qualifiers
-                } else if (qual == "tablet") {
-                    applies = app->_defaultDisplay->sizeClass() == Display::Tablet;
-                } else if (qual == "4inch") {
-                    applies = app->_defaultDisplay->sizeDiagonalInches() <= 4;
-                } else {
-                    log_warn("Unsupported qualifier '%s'", qual.c_str());
-                }
-                if (applies) {
-                    // TODO: apply precedence that favours higher specificity
-                    val = &it->second;
-                }
-            }
-        }
 
-        // Follow established references to other styles
-        else if (val->type == TypeReference) {
-            val = val->reference;
-        }
-        
-        // Follow references for the first time
-        else if (val->type == TypeSimple && val->var.isString() && val->var.stringVal().hasPrefix("$")) {
-            auto refdstylename = val->var.stringVal();
-            refdstylename.eraseAt(0, 1);
-            auto refdstyle = app->getStyle(refdstylename);
-            if (!refdstyle) {
-                log_warn("Missing referenced style: $%s", refdstylename.c_str());
-            } else {
-                style* ncval = const_cast<style*>(val);
-                ncval->setType(TypeReference);
-                ncval->reference = refdstyle;
-            }
-            val = refdstyle;
-        }
-        
-        else {
-            break;
-        }
-
-    }
-    
-
-    return val;
-}
-
-const style* style::get(const string& keypath) const {
-    auto val = this;
-    string subkey, key = keypath;
-    do {
-        val = val->resolve();
-        if (!val) {
-            return NULL;
-        }
-        auto dotPos = key.find(".");
-        if (dotPos != 0xFFFFFFFF) {
-            subkey = key.substr(dotPos+1);// key.substr(dotIndex+1).own();
-            key.erase(dotPos);
-        } else {
-            subkey = "";
-        }
-        assert(val->type == TypeCompound);
-        auto it = val->compound->find(key);
-        if (it == val->compound->end()) {
-            //log_warn("Value missing for field '%s'", keypath.c_str());
-            return NULL;
-        }
-        val = &it->second;
-        key = subkey;
-    } while (key.lengthInBytes() > 0);
-    return val->resolve();
-}
-
-/*variant v_array = vector<variant> {
- 1, 2.0f, "3", 4.0
- };
- variant v_map({
- {"name", variant({
- {"first","Reuben"},
- {"last","Scratton"}
- })},
- {"address", variant({
- {"line1","15 St John's Church Rd"},
- {"line2","Folkestone"},
- {"line3","Kent"},
- })},
- {"age", 47},
- {"phone", "+447943199199"},
- });*/
 
 
 void style::importNamedValues(const map<string,style>& styleValues) {
@@ -731,54 +833,68 @@ void style::fromVariant(const variant& v) {
     if (v.isCompound()) {
         setType(TypeCompound);
         
-        map<string,map<string,style>> qual_vals;
-        
         // Iterate the compound's fields
         auto compoundVal = v.compoundRef();
         for (auto e : compoundVal) {
+            
+            // Get the field value
             style styleVal;
             styleVal.fromVariant(e.second);
 
-            // If field is qualified, put it in qual_vals container
+            // See if field name includes a qualifier. If not, add
+            // the new value to the compound and continue
             auto qualifierStart = e.first.find("@");
-            if (qualifierStart<e.first.lengthInBytes()) {
-                string qualifier = e.first.substr(qualifierStart+1);
-                string fieldName = e.first.substr(0, qualifierStart);
-                auto q = qual_vals.find(fieldName);
-                if (q == qual_vals.end()) {
-                    q = qual_vals.insert(make_pair(fieldName, map<string,style>())).first;
-                }
-                q->second.operator[](qualifier) = styleVal;
-            }
-            
-            // Non-qualified
-            else {
+            if (qualifierStart>=e.first.lengthInBytes()) {
                 compound->insert(make_pair(e.first, styleVal));
+                continue;
             }
-        }
-        
-        // If the compound contains qualified values...
-        if (qual_vals.size()) {
-            
-            // Move any unqualified default values into the map of qualified
-            // values, using an empty string as the key
-            for (auto& q : qual_vals) {
-                auto defaultValIt = compound->find(q.first);
-                if (defaultValIt != compound->end()) {
-                    q.second.insert(make_pair(string(), (*defaultValIt).second));
-                    compound->erase(defaultValIt);
+
+            // Extract the qualifier name and convert it to a struct qual (a uint32_t)
+            string qualifierName = e.first.substr(qualifierStart+1);
+            uint32_t qual;
+            if (!parseQual(qualifierName, qual)) {
+                log_error("Invalid qualifier: %s", qualifierName.c_str());
+                return;
+            }
+
+            // If qualifier is pure (i.e. no field name) then we can only be parsing a qualifier map
+            // and all we have to do is add the new style value to it
+            bool isPure = qualifierStart==0;
+            if (isPure) {
+                if (type == TypeCompound) {
+                    if (compound->size() > 0) {
+                        log_error("Cannot mix pure and non-pure qualified values");
+                        return;
+                    }
+                    setType(TypeQual);
                 }
+                qualmap->insert(make_pair(qual, styleVal));
+                continue;
+            }
+                
+            // Handle a qualified field name. First we look up any existing value.
+            string fieldName = e.first.substr(0, qualifierStart);
+            auto existingVal = compound->find(fieldName);
+            
+            // If there is an existing value and it's not already a qualifier map, then create
+            // a new qualmap value with the default entry set to the existing value.
+            if (existingVal != compound->end()) {
+                if (existingVal->second.type != TypeQual) {
+                    style newVal;
+                    newVal.setType(TypeQual);
+                    newVal.qualmap->insert(make_pair(0, existingVal->second)); // 0 == @default
+                    existingVal->second = newVal;
+                }
+                existingVal->second.qualmap->insert(make_pair(qual, styleVal));
+                continue;
             }
             
-            // Move the qualified values map into the main compound value
-            for (auto q : qual_vals) {
-                style qualval;
-                qualval.setType(TypeQual);
-                qualval.compound->insert(q.second.begin(), q.second.end());
-                compound->insert(make_pair(q.first, qualval));
-            }
+            // No existing value, so create a new qualmap
+            style newVal;
+            newVal.setType(TypeQual);
+            newVal.qualmap->insert(make_pair(qual, styleVal));
+            compound->insert(make_pair(fieldName, newVal));
         }
-            
         
     }
     
@@ -801,17 +917,18 @@ void style::fromVariant(const variant& v) {
 
 
 
-
-
 void Styleable::applyStyle(const string& name) {
-    auto value = app->getStyle(name);
+    auto value = s_styleRoot.get(name);
     if (value) {
         applyStyle(*value);
     }
 }
 
 void Styleable::applyStyle(const style& astyle) {
-    const style* style = astyle.resolve();
+    const style* style = style::resolve(&astyle);
+
+    // TODO: handle single values and arrays
+
     assert(style->isCompound());
     
     // Ensure the 'style' attribute, if present, gets processed first, because the others may override it
@@ -824,12 +941,60 @@ void Styleable::applyStyle(const style& astyle) {
     
     for (auto& field : *style->compound) {
         if (field.first == "style") continue;
-        if (!applySingleStyle(field.first, field.second)) {
+        const class style* val = &field.second;
+        val = style::resolve(val);
+        if (val->type == style::TypeQual) {
+            if (!_dynamicStyles) {
+                _dynamicStyles = new map<string, const class style*>();
+            }
+            (*_dynamicStyles)[field.first] = val;
+            val = resolveQualifiedStyle(val);
+        } else {
+            if (_dynamicStyles) {
+                auto it = _dynamicStyles->find(field.first);
+                if (it != _dynamicStyles->end()) {
+                    _dynamicStyles->erase(it);
+                }
+                if (!_dynamicStyles->size()) {
+                    delete _dynamicStyles;
+                    _dynamicStyles = nullptr;
+                }
+            }
+
+        }
+        if (!applySingleStyle(field.first, *val)) {
             log_warn("Ignored unknown attribute '%s'", field.first.c_str());
         }
     }
 }
 
-static_style::static_style(const string& keypath) {
-    _style = app->getStyle(keypath);
+const style* Styleable::resolveQualifiedStyle(const style* style) {
+    assert(style->type == style::TypeQual);
+    auto it = style->qualmap->find(Q_DEFAULT);
+    if (it == style->qualmap->end()) {
+        return nullptr;
+    }
+    return style::resolve(&it->second);
+}
+
+const style* Styleable::getStyle(const string& key) {
+    return style::get(key);
+}
+
+float Styleable::getStyleFloat(const string& key) {
+    auto value = getStyle(key);
+    if (!value) {
+        log_warn("Missing float style info '%s'", key.c_str());
+        return 0;
+    }
+    return value->floatVal();
+}
+COLOR Styleable::getStyleColor(const string& key) {
+    auto value = getStyle(key);
+    if (!value) {
+        log_warn("Missing color style info '%s'", key.c_str());
+        return 0;
+    }
+    return value->colorVal();
+
 }

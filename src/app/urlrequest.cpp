@@ -12,7 +12,7 @@ static MruCache<sha1_t, sp<URLResponse>> s_urlRamCache;
 
 static struct init {
     init() {
-        auto cacheConfig = app->getStyle("app.cache");
+        auto cacheConfig = style::get("App.cache");
         s_urlRamCache.setSize(cacheConfig->intVal("ram"));
     }
 } _init;

@@ -10,8 +10,6 @@
 DECLARE_DYNCREATE(ImageView);
 
 
-static_style s_fadeInThreshold("window.image-fade-in.threshold");
-static_style s_fadeInDuration("window.image-fade-in.duration");
 
 ImageView::ImageView() {
     _contentMode = ActualSize;
@@ -24,9 +22,6 @@ ImageView::ImageView() {
 
 bool ImageView::applySingleStyle(const string& name, const style& value) {
     if (name=="image") {
-        if (handleStatemapDeclaration(name, value)) {
-            return true;
-        }
         // TODO: leverage drawable code
         setImageAsset(value.stringVal());
         return true;
@@ -155,8 +150,8 @@ void ImageView::loadImage() {
         _request->handle([=](const URLResponse* res, bool isFromCache) {
             setBitmap(res->decoded.objectVal<Bitmap>());
             auto elapsed = app->currentMillis() - timeReqStart;
-            if (elapsed >= s_fadeInThreshold.intVal()) {
-                Animation::start(this, s_fadeInDuration.intVal(), [=](float val) {
+            if (elapsed >= _window->_fadeInThreshold) {
+                Animation::start(this, _window->_fadeInDuration, [=](float val) {
                     _renderOp->setAlpha(val);
                 });
             }

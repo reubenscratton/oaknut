@@ -12,7 +12,7 @@
 
 int main(int argc, char **argv) {
     gtk_init(&argc, &argv);
-    app->loadStyleAssetSync("styles.res");
+    Style::loadStyleAssetSync("styles.res");
     app->_window = Window::create();
     app->_window->show();
     app->main();

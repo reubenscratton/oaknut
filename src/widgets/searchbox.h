@@ -16,7 +16,7 @@ public:
     
     // Overrides
     virtual void layout(RECT constraint) override;
-    virtual void onStateChanged(STATESET changes) override;
+    virtual void onStateChanged(VIEWSTATE changes) override;
     virtual void setPadding(EDGEINSETS padding) override;
     virtual void setText(const attributed_string& text) override;
 
