@@ -15,13 +15,18 @@ subviews: [
     spacing: 16dp
     subviews: [
         {
-        class: MDButton
-        style: $material_design
+        class: Button
+        style: $material_design.Button.contained
         text: BUTTON
         },
         {
-        class: MDButton
-        style: $material_design
+        class: Button
+        style: $material_design.Button.outlined
+        text: BUTTON
+        },
+        {
+        class: Button
+        style: $material_design.Button.text
         text: BUTTON
         }
     ]

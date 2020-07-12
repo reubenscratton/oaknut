@@ -13,13 +13,6 @@ class Button : public Label {
 public:
     
     Button();
-    void setInkColor(COLOR inkColor);
-    
-    bool applySingleStyle(const string& name, const style& value) override;
-    void updateBackgroundRect() override;
-
-protected:
-    InkRenderOp* _inkOp;
 
 };
 

@@ -21,6 +21,9 @@
 
 static style s_styleRoot;
 
+static string STYLENAME_BACKGROUND="background";
+static string STYLENAME_BACKGROUND_COLOR="background-color";
+
 static struct init {
     init() {
         string stylesres(
@@ -694,7 +697,8 @@ COLOR style::colorVal()  const {
                 {"lightslategray", 0xff778899},
                 {"slategray", 0xff708090},
                 {"darkslategray", 0xff2f4f4f},
-                {"black", 0xff000000}
+                {"black", 0xff000000},
+                {"transparent", 0x00000000}
             };
             auto it = htmlColors.find(colorVal.lowercase());
             if (it != htmlColors.end()) {
@@ -827,6 +831,7 @@ bool style::parse(const string& str) {
     return true;
 }
 
+
 void style::fromVariant(const variant& v) {
 
     // Expand compounds
@@ -837,20 +842,31 @@ void style::fromVariant(const variant& v) {
         auto compoundVal = v.compoundRef();
         for (auto e : compoundVal) {
             
+            string fieldName = e.first;
+            auto qualifierStart = fieldName.find("@");
+            string qualifierName = fieldName.substr(qualifierStart+1);
+            if (qualifierStart < fieldName.lengthInBytes()) {
+                fieldName.erase(qualifierStart);
+            }
+            if (fieldName == "background" || fieldName == "fill") {
+                const_cast<string&>(fieldName).mutateToStatic(STYLENAME_BACKGROUND);
+            }
+            else if (fieldName == "background-color" || fieldName == "fill-color") {
+                const_cast<string&>(fieldName).mutateToStatic(STYLENAME_BACKGROUND_COLOR);
+            }
+            
             // Get the field value
             style styleVal;
             styleVal.fromVariant(e.second);
 
             // See if field name includes a qualifier. If not, add
             // the new value to the compound and continue
-            auto qualifierStart = e.first.find("@");
-            if (qualifierStart>=e.first.lengthInBytes()) {
-                compound->insert(make_pair(e.first, styleVal));
+            if (!qualifierName.lengthInBytes()) {
+                compound->insert(make_pair(fieldName, styleVal));
                 continue;
             }
 
             // Extract the qualifier name and convert it to a struct qual (a uint32_t)
-            string qualifierName = e.first.substr(qualifierStart+1);
             uint32_t qual;
             if (!parseQual(qualifierName, qual)) {
                 log_error("Invalid qualifier: %s", qualifierName.c_str());
@@ -873,7 +889,6 @@ void style::fromVariant(const variant& v) {
             }
                 
             // Handle a qualified field name. First we look up any existing value.
-            string fieldName = e.first.substr(0, qualifierStart);
             auto existingVal = compound->find(fieldName);
             
             // If there is an existing value and it's not already a qualifier map, then create

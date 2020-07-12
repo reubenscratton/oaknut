@@ -57,6 +57,7 @@ void InkRenderOp::setRadius(float radius) {
     }
 }
 
+
 void InkRenderOp::prepareToRender(RenderTask* r, class Surface* surface) {
     RectRenderOp::prepareToRender(r, surface);
     InkShader* shader = _shader.as<InkShader>();

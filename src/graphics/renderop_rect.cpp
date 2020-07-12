@@ -7,16 +7,39 @@
 
 #include <oaknut.h>
 
+// TODO: move to color.h
+static inline void applyAlpha(COLOR& c, float a) {
+    uint8_t* p = (uint8_t*)&c;
+    float ca = p[3] * 255.0f;
+    p[3] = uint8_t((ca * a) / 255.0f);
+}
+static inline void unapplyAlpha(COLOR& c, float a) {
+    uint8_t* p = (uint8_t*)&c;
+    float ca = p[3] * 255.0f;
+    p[3] = (a==0.0f) ? 0 : uint8_t((ca / a) / 255.0f);
+}
 
 RectRenderOp::RectRenderOp() : RenderOp() {
     _blendMode = BLENDMODE_NONE;
+    _fillColorAlpha = 1.0f;
 }
 COLOR RectRenderOp::getFillColor() const {
-    return _color;
+    COLOR c = _color;
+    unapplyAlpha(c, _fillColorAlpha);
+    return c;
 }
 void RectRenderOp::setFillColor(COLOR fillColor) {
+    applyAlpha(fillColor, _fillColorAlpha);
     setColor(fillColor);
-    _blendMode = ((fillColor>>24) < 255) ? BLENDMODE_NORMAL : BLENDMODE_NONE;
+    invalidate();
+}
+void RectRenderOp::setFillColorAlpha(float fillColorAlpha) {
+    if (fillColorAlpha != _fillColorAlpha) {
+        COLOR color = _color;
+        unapplyAlpha(color, _fillColorAlpha);
+        _fillColorAlpha = fillColorAlpha;
+        setFillColor(color);
+    }
 }
 
 void RectRenderOp::setAlpha(float alpha) {
@@ -47,24 +70,13 @@ void RectRenderOp::setCornerRadius(float radius) {
 void RectRenderOp::setCornerRadii(const VECTOR4& radii) {
     if (_cornerRadii != radii) {
         _cornerRadii = radii;
-        
-        bool singleRadius = (radii[0]==radii[1] && radii[2]==radii[3] && radii[0]==radii[3]);
-        if (singleRadius) {
-            if (radii[0] == 0.0f) {
-                _flags = _flags & ~(OPFLAG_CORNER1|OPFLAG_CORNER4);
-            } else {
-                _flags |= OPFLAG_CORNER1;
-            }
-        } else {
-            _flags |= OPFLAG_CORNER4;
-        }
         invalidate();
     }
 }
 
 void RectRenderOp::validateShader(RenderTask* r) {
     Shader::Features features;
-    if (_alpha<1.0f) {
+    if (_alpha<1.0f || (_color & 0xFF000000)<0xFF000000) {
         features.alpha = 1;
         _blendMode = BLENDMODE_NORMAL;
     } else {
@@ -93,8 +105,11 @@ void RectRenderOp::validateShader(RenderTask* r) {
 
 void RectRenderOp::prepareToRender(RenderTask* r, class Surface* surface) {
     RenderOp::prepareToRender(r, surface);
+    
     if (_shader->_features.alpha) {
         r->setUniform(_shader->_u_alpha, _alpha);
+    } else {
+        assert(_fillColorAlpha==0.0 || _fillColorAlpha==1.0f);
     }
     if (_shader->_features.sdf != SDF_NONE) {
         r->setUniform(_shader->_u_strokeColor, _strokeColor);

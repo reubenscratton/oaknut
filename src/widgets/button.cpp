@@ -15,37 +15,7 @@ Button::Button() {
     applyStyle("Button");
 }
 
-bool Button::applySingleStyle(const string& name, const style& value) {
-    if (name == "ink") {
-        setInkColor(value.colorVal());
-        _inkOp->setCornerRadius(8);
-        return true;
-    }
-    return Label::applySingleStyle(name, value);
-}
 
-void Button::setInkColor(COLOR inkColor) {
-    if (!inkColor) {
-        if (_inkOp) {
-            removeRenderOp(_inkOp);
-            _inkOp = nullptr;
-        }
-    } else {
-        if (!_inkOp) {
-            _inkOp = new InkRenderOp();
-            _inkOp->setAlpha(1);
-            addRenderOp(_inkOp);
-        }
-        _inkOp->setColor(inkColor);
-    }
-}
-
-void Button::updateBackgroundRect() {
-    Label::updateBackgroundRect();
-    if (_inkOp) {
-        _inkOp->setRect(getOwnRect());
-    }
-}
 
 ToolbarButton::ToolbarButton() {
     applyStyle("ToolbarButton");

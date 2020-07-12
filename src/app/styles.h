@@ -75,12 +75,12 @@ public:
 
     static void loadStyleAssetSync(const string& assetPath);
     static const style* get(const string& name);
+    static const style* resolve(const style* val);
 
 protected:
     void copyFrom(const style* other);
     void setType(enum type newType);
     const style* getValue(const string& name) const;
-    static const style* resolve(const style* val);
     friend class App;
     friend class Styleable;
 };

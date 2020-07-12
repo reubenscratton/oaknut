@@ -187,6 +187,13 @@ public:
         return _buf+_offset;
     }
 
+    void mutateToStatic(const string& staticVal) {
+        clear();
+        _buf = staticVal._buf;
+        _cb = staticVal._cb;
+        _offset = staticVal._offset;
+        _type = staticVal._type;
+    }
 protected:
     mutable char* _buf; // 8 bytes
     uint32_t _cb; // 4 bytes

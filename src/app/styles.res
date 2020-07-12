@@ -13,7 +13,10 @@ Window: {
     default-width:200dp
     default-height:200dp
     safeInsetBackgrounds: {
-        bottom@android: black
+        bottom: {
+            @default: transparent
+            @android: black
+        }
         top:0
     }
     scrim: #80000000
@@ -61,15 +64,14 @@ Label: {
 }
 
 Button: {
-    background: {
-        fill: {
-            @default: lightGray
-            @pressed: gray
-        }
-        corner-radii: 4dp
+    size: wrap
+    corner-radii: 4dp
+    background-color: {
+        @default: lightGray
+        @pressed: gray
     }
     gravity: center
-    padding: 12dp,8dp
+    padding: 16dp,8dp
 }
 
 ToolbarButton: {
@@ -96,13 +98,11 @@ NavigationBar: {
 }
 
 SearchBox: {
-    background: {
-        inset: 6dp
-        fill: white
-        stroke: darkGray
-        stroke-width: 1px
-        corner-radii: 8dp
-    }
+    background-color: white
+    background-inset: 6dp
+    stroke: darkGray
+    stroke-width: 1px
+    corner-radii: 8dp
     lines: 1
     gravity: left, center
     padding: 16dp, 2dp, 16dp, 2dp

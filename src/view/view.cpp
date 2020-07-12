@@ -49,7 +49,7 @@ const style* View::resolveQualifiedStyle(const style* val) {
             bestVal = &it.second;
         }
     }
-    return bestVal ? bestVal : defaultVal; //Styleable::resolveQualifiedStyle(val);
+    return style::resolve(bestVal ? bestVal : defaultVal);
 }
 
 bool View::applySingleStyle(const string& name, const style& value) {
@@ -79,8 +79,33 @@ bool View::applySingleStyle(const string& name, const style& value) {
     } else if (name == "alignY") {
         _alignspecVert = ALIGNSPEC(value.variantVal(), this);
         return true;
-    } else if (name == "background") {
-        setBackground(processDrawable(value));
+    } else if (name == "background" || name=="background-color") {
+        /*if (value->type == StyleValue::Type::String) {
+             // todo: handle image
+             assert(0);
+        }*/
+        setBackgroundColor(value.colorVal());
+        return true;
+    } else if (name == "background-alpha" || name == "fill-alpha") {
+        setBackgroundColorAlpha(value.floatVal());
+        return true;
+    } else if (name == "stroke-color" || name == "stroke") {
+        setBackgroundStrokeColor(value.colorVal());
+        return true;
+    } else if (name == "stroke-width") {
+        setBackgroundStrokeWidth(value.floatVal());
+        return true;
+    } else if (name == "corner-radius" || name == "corner-radii") {
+        setBackgroundCornerRadii(value.cornerRadiiVal());
+        return true;
+    } else if (name == "background-insets") {
+        setBackgroundEdgeInsets(value.edgeInsetsVal());
+        return true;
+    } else if (name == "ink" || name == "ink-color") {
+        setInkColor(value.colorVal());
+        return true;
+    } else if (name == "ink-color-alpha") {
+        setInkColorAlpha(value.floatVal());
         return true;
     } else if (name == "enabled") {
         setEnabled(value.boolVal());
@@ -149,6 +174,7 @@ bool View::applySingleStyle(const string& name, const style& value) {
     return false;
 }
 
+
 void View::processSizeStyleValue(const style& sizeValue, MEASURESPEC* widthspec, MEASURESPEC* heightspec) {
     if (sizeValue.isArray()) {
         auto arrayVal = sizeValue.arrayVal();
@@ -210,52 +236,6 @@ void View::processGravityStyleValue(const style& gravityValue, bool applyToHorz,
         }
     }
     setGravity({horz, vert});
-}
-
-void processFill(RectRenderOp* op, const style& value) {
-    if (value.isCompound()) {
-        assert(0); // todo: support compound values
-        return;
-    }
-    op->setFillColor(value.colorVal());
-}
-
-RenderOp* View::processDrawable(const style& value) {
-    if (value.isEmpty()) {
-        return NULL;
-    }
-
-    /*if (value->type == StyleValue::Type::String) {
-        // todo: handle image
-        assert(0);
-    }*/
-
-    RectRenderOp* op = new RectRenderOp();
-    
-    
-    if (value.isCompound()) {
-        for (auto& it : *value.compound) {
-            auto& subval = it.second;
- 
-            if (it.first == "fill") {
-                processFill(op, subval);
-            } else if (it.first == "stroke") {
-                op->setStrokeColor(subval.colorVal());
-            } else if (it.first == "stroke-width") {
-                op->setStrokeWidth(subval.floatVal());
-            } else if (it.first == "corner-radius" || it.first == "corner-radii") {
-                op->setCornerRadii(subval.cornerRadiiVal());
-            } else if (it.first == "inset") {
-                EDGEINSETS insets = subval.edgeInsetsVal();
-                op->setInset(insets);
-            } else {
-                log_warn("Unknown drawable attribute: %s", it.first.c_str());
-            }
-        }
-    } else {
-        op->setFillColor(value.colorVal());
-    }
-    return op;
 }
 
 
@@ -446,8 +426,11 @@ void View::setRectSize(const SIZE& size) {
 }
 
 void View::updateBackgroundRect() {
+    RECT rect = getOwnRect();
+    if (_inkOp) {
+        _inkOp->setRect(rect);
+    }
     if (_backgroundOp) {
-        RECT rect = getOwnRect();
         rect.origin.x += (int)_contentOffset.x;
         rect.origin.y += (int)_contentOffset.y;
         _backgroundOp->_inset.applyToRect(rect);
@@ -1004,7 +987,7 @@ void View::setBackground(RenderOp* op) {
         if (_backgroundOp != NULL) {
             removeRenderOp(_backgroundOp);
         }
-        _backgroundOp = op;
+        _backgroundOp = (RectRenderOp*)op;
         if (_backgroundOp) {
             updateBackgroundRect();
             addRenderOp(_backgroundOp, true);
@@ -1012,15 +995,68 @@ void View::setBackground(RenderOp* op) {
     }
 }
 
-void View::setBackgroundColor(COLOR color) {
-    if (_backgroundOp) {
-        _backgroundOp->setColor(color);
-    } else {
-        auto op = new RectRenderOp();
-        op->setColor(color);
-        setBackground(op);
+void View::ensureBackgroundOpExists() {
+    if (!_backgroundOp) {
+        _backgroundOp = new RectRenderOp();
+        updateBackgroundRect();
+        addRenderOp(_backgroundOp, true);
     }
 }
+
+void View::setBackgroundColor(COLOR color) {
+    ensureBackgroundOpExists();
+    _backgroundOp->setColor(color);
+}
+void View::setBackgroundColorAlpha(float alpha) {
+    ensureBackgroundOpExists();
+    _backgroundOp->setFillColorAlpha(alpha);
+}
+void View::setBackgroundAlpha(float alpha) {
+    ensureBackgroundOpExists();
+    _backgroundOp->setAlpha(alpha);
+}
+void View::setBackgroundStrokeColor(COLOR color) {
+    ensureBackgroundOpExists();
+    _backgroundOp->setStrokeColor(color);
+}
+void View::setBackgroundStrokeWidth(float strokeWidth) {
+    ensureBackgroundOpExists();
+    _backgroundOp->setStrokeWidth(strokeWidth);
+}
+void View::setBackgroundCornerRadii(const VECTOR4& cornerRadii) {
+    ensureBackgroundOpExists();
+    _backgroundOp->setCornerRadii(cornerRadii);
+    if (_inkOp) {
+        _inkOp->setCornerRadius(cornerRadii.x);
+    }
+}
+void View::setBackgroundEdgeInsets(const EDGEINSETS& edgeInsets) {
+    ensureBackgroundOpExists();
+    _backgroundOp->setInset(edgeInsets);
+}
+
+
+void View::ensureInkOpExists() {
+    if (!_inkOp) {
+        _inkOp = new InkRenderOp();
+        _inkOp->setAlpha(1);
+        if (_backgroundOp) {
+            _inkOp->setCornerRadius(_backgroundOp.as<RectRenderOp>()->_cornerRadii.x);
+        }
+        addRenderOp(_inkOp);
+    }
+}
+
+void View::setInkColor(COLOR inkColor) {
+    ensureInkOpExists();
+    _inkOp->setColor(inkColor);
+}
+void View::setInkColorAlpha(float inkAlpha) {
+    ensureInkOpExists();
+    _inkOp->setFillColorAlpha(inkAlpha);
+}
+
+
 
 
 bool View::isPressed() const {
@@ -1146,7 +1182,7 @@ void View::addRenderOpToList(RenderOp* renderOp, bool atFront, sp<RenderList>& l
     }
     assert(!renderOp->_view);
     renderOp->_view = this;
-    renderOp->setAlpha(_effectiveAlpha);
+    //renderOp->setAlpha(_effectiveAlpha);
 
     if (!list) {
         list = new RenderList();
@@ -1372,6 +1408,27 @@ bool View::handleInputEvent(INPUTEVENT* event) {
     bool retVal = false;
     
     if (isEnabled()) {
+
+        // Material Design Ink Ripple Animation
+        if (_inkOp) {
+            if (event->type == INPUT_EVENT_DOWN) {
+                POINT dc = event->ptLocal;
+                dc.x -= _rect.size.width/2;
+                dc.y -= _rect.size.height/2;
+                _inkOp->setOrigin(dc);
+                _inkOp->setAlpha(1);
+                _inkOp->_rippleAnim = Animation::start(this, 500, [=](float val) {
+                    _inkOp->setRadius(500*val);
+                });
+            }
+            if (event->type == INPUT_EVENT_UP) {
+                _inkOp->_fadeAnim = Animation::start(this, 250, [=](float val) {
+                    _inkOp->setAlpha(1-val);
+                });
+            }
+        }
+
+        
         if (event->type == INPUT_EVENT_DOWN) {
             setPressed(true);
         }

@@ -8,40 +8,31 @@
 #include <oaknut.h>
 
 
-class MDButton : public Button {
-public:
-    MDButton() : Button() {
-    }
-    bool handleInputEvent(INPUTEVENT* event) override {
-        if (event->type == INPUT_EVENT_DOWN) {
-            POINT dc = event->ptLocal;
-            dc.x -= _rect.size.width/2;
-            dc.y -= _rect.size.height/2;
-            _inkOp->setOrigin(dc);
-            _inkOp->setAlpha(1);
-            _inkOp->_rippleAnim = Animation::start(this, 500, [=](float val) {
-                _inkOp->setRadius(500*val);
-            });
-        }
-        if (event->type == INPUT_EVENT_UP) {
-            _inkOp->_fadeAnim = Animation::start(this, 500, [=](float val) {
-                _inkOp->setAlpha(1-val);
-            });
-        }
-        return Button::handleInputEvent(event);
-    }
 
-};
 
-DECLARE_DYNCREATE(MDButton);
-
-class Tabs : public View {
+class Tabs : public LinearLayout {
 public:
 
-    Tabs() : View() {
+    Tabs() : LinearLayout() {
     }
 
     // Material Design Tabs are a horizontal array of text-style buttons without rounded corners.
+    
+    bool applySingleStyle(const string& name, const style& value) override {
+        if (name == "tabs") {
+            auto tabs = value.arrayVal();
+            for (auto& vtab : tabs) {
+                auto title = vtab.stringVal();
+                Button* button = new Button();
+                button->applyStyle("material_design.Tabs.Button");
+                button->setText(title);
+                addSubview(button);
+            }
+            return true;
+        }
+        return LinearLayout::applySingleStyle(name, value);
+    }
+
 };
 DECLARE_DYNCREATE(Tabs);
 

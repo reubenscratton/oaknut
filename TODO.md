@@ -1,5 +1,9 @@
 Oaknut TODOs
 ============
+1. Let 'background', 'background-color', and 'fill-color' be synonymous.
+2. Fix ink corner radius
+3. Tabs: let it extend a SelectableGroupView which applies the 'selected' state to child views.
+4. Style names need a faster representation. Have the known style names all in static const data, and at parse time replace known style names with the version in static data. Then testing could be a simple pointer comparison rather than string comparison.
 
 Bug: Opening the same article page twice goes wrong.
 
@@ -44,7 +48,6 @@ ImageViews are being culled too soon when scrolling
 Android: why no timestamps? why are font weights wrong?
 Mouseover handling on links
 Web browser articles: can we render them without a browser?
-Scroll indicators are sometimes buggy (they stop fading)
 Articles: Halfwidth picture support
 Articles: <italic> and <bold> tags
 Articles: Links

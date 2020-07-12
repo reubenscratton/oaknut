@@ -12,6 +12,7 @@ public:
     // API
     COLOR getFillColor() const;
     void setFillColor(COLOR fillColor);
+    void setFillColorAlpha(float colorAlpha);
     COLOR getStrokeColor() const;
     void setStrokeColor(COLOR strokeColor);
     float getStrokeWidth() const;
@@ -31,13 +32,7 @@ public:
     COLOR _strokeColor;
     float _strokeWidth;
     VECTOR4 _cornerRadii;
-    
-#define OPFLAG_FILL 1
-#define OPFLAG_STROKE 2
-#define OPFLAG_CORNER1 4
-#define OPFLAG_CORNER4 8
-    int _flags;
-
+    float _fillColorAlpha;
 };
 
 

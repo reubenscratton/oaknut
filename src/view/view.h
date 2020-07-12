@@ -379,6 +379,14 @@ public:
     virtual void setBackground(RenderOp* renderOp);
     virtual RenderOp* getBackgroundOp() const { return _backgroundOp; }
     virtual void setBackgroundColor(COLOR color);
+    virtual void setBackgroundColorAlpha(float alpha);
+    virtual void setBackgroundAlpha(float alpha);
+    virtual void setBackgroundStrokeColor(COLOR color);
+    virtual void setBackgroundStrokeWidth(float strokeWidth);
+    virtual void setBackgroundCornerRadii(const VECTOR4& cornerRadii);
+    virtual void setBackgroundEdgeInsets(const EDGEINSETS& edgeInsets);
+    virtual void setInkColor(COLOR inkColor);
+    virtual void setInkColorAlpha(float inkAlpha);
     virtual void addRenderOp(RenderOp* renderOp);
     virtual void addRenderOp(RenderOp* renderOp, bool atFront);
     virtual void removeRenderOp(RenderOp* renderOp);
@@ -425,11 +433,14 @@ protected:
     float _elevation; // controls drop-shadow as per Material Design
     float _effectiveAlpha;
     virtual void updateEffectiveAlpha();
-    sp<RenderOp> _backgroundOp;
+    sp<RectRenderOp> _backgroundOp;
+    InkRenderOp* _inkOp;
     sp<ShadowRenderOp> _shadowOp;
     MATRIX4* _matrix;
     void addRenderOpToList(RenderOp* renderOp, bool atFront, sp<RenderList>& list);
     void removeRenderOpFromList(RenderOp* renderOp, sp<RenderList>& list);
+    void ensureInkOpExists();
+    void ensureBackgroundOpExists();
     
     /** The RenderOps that draw this view */
     sp<RenderList> _renderList;
@@ -491,8 +502,6 @@ protected:
     const style* resolveQualifiedStyle(const style* val) override;
     
     /**  \cond INTERNAL */
-    //virtual void applyStatemapStyleValue(const string& name, const style& value);
-    RenderOp* processDrawable(const style& value);
     void processSizeStyleValue(const style& sizeValue, MEASURESPEC* widthspec, MEASURESPEC* heightspec);
     void processAlignStyleValue(const style& alignValue, ALIGNSPEC* horzspec, ALIGNSPEC* vertspec);
     void processGravityStyleValue(const style& gravityValue, bool horz, bool vert);
