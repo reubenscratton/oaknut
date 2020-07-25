@@ -27,7 +27,7 @@ string measurement::toString() const {
     return string::format("%f%s", _unitVal, szUnit);
 }
 
-/*
+
 template <>
 Bitmap* variant::getObject<Bitmap>(const string& key) const {
     auto val = _map->find(key);
@@ -38,7 +38,6 @@ Bitmap* variant::getObject<Bitmap>(const string& key) const {
     obj->fromVariant(val->second);
     return obj;
 }
-*/
 
 variant variant::empty() {
     return variant();

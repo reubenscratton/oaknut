@@ -50,29 +50,27 @@
 
 class Task : public Object {
 public:
-    int priority;
 
+    enum Status {
+        Error=-1,
+        Pending=0,
+        Running,
+        Complete,
+        Cancelled
+    };
     enum exec_context {
         MainThread,
         Background,
         IO
     };
     
-    enum status {
-        Created,
-        Queued,
-        Executing,
-        Cancelled,
-        Complete
-    };
-
     struct subtask {
         exec_context _threadType;
         std::function<variant(variant&)> _func;
         variant _input, _output;
         sp<Task> task;
         bool operator<(const subtask& rhs) const {
-            return task->priority<rhs.task->priority;
+            return task->_priority<rhs.task->_priority;
         }
     private:
         void exec();
@@ -81,24 +79,28 @@ public:
     };
 
     // API
-    Task(const vector<subtask>& subtasks, Object* owner=nullptr);
-    void enqueueNextSubtask(const variant& input);
-    void cancel();
-    bool isCancelled() const {
-        return _status == status::Cancelled;
-    }
+    Task(Object* owner=nullptr);
     ~Task();
+    void addSubtasks(const vector<subtask>& subtasks);
+    void enqueueNextSubtask(const variant& input);
+    virtual void cancel();
     
     // Helpers
     static Task* enqueue(const vector<subtask>& subtasks, Object* owner=nullptr);
     static bool isMainThread();
     static void postToMainThread(std::function<void()> callback, int delay=0);
 
-protected:
+    bool isCancelled() const {
+     return _status == Status::Cancelled;
+    }
 
-    std::atomic<status> _status;
-    vector<subtask> _subtasks;
+        
+protected:
+    int _priority;
+    std::atomic<Status> _status;
     sp<Object> _owner;
+    vector<subtask> _subtasks;
+    std::mutex _lock;
     
     friend class ThreadPool;
 };

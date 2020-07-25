@@ -16,6 +16,8 @@
 #define INPUT_EVENT_DRAG_MOVE 7
 #define INPUT_EVENT_FLING 8
 #define INPUT_EVENT_LONG_PRESS 9
+#define INPUT_EVENT_MOUSE_ENTER 10
+#define INPUT_EVENT_MOUSE_EXIT 11
 
 #define INPUT_FLAG_LBUTTON_DOWN 1
 #define INPUT_FLAG_RBUTTON_DOWN 2
@@ -40,7 +42,7 @@ struct INPUTEVENT {
     int deviceIndex;
     int flags; // see INPUT_FLAG_ values. 
     TIMESTAMP time;
-    POINT pt, ptLocal;
+    POINT ptDevice, ptSurface, ptLocal;
     POINT delta; // distance moved since previous event for same device
     POINT velocity; // specific to flings
 };

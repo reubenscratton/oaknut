@@ -163,7 +163,7 @@ namespace oak {
 #include "app/display.h"
 #include "app/file.h"
 #include "app/app.h"
-#include "app/urlrequest.h"
+#include "app/urltask.h"
 #include "util/cache.h"
 #include "util/circularbuffer.h"
 #include "util/facedetector.h"
@@ -233,7 +233,7 @@ namespace std {
 #if INTPTR_MAX == INT64_MAX
             return CityHash64((char*)&k.bytes[0], sizeof(k.bytes));
 #elif INTPTR_MAX == INT32_MAX
-            return CityHash32((char*)&k.bytes[0], sizeof(k.bytes)));
+            return CityHash32((char*)&k.bytes[0], sizeof(k.bytes));
 #endif
         }
     };

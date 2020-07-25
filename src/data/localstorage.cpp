@@ -210,6 +210,9 @@ public:
             
             // Task 2: Process index file contents into usable form
             {Task::Background, [=](variant& indexFileContents) -> variant {
+                if (indexFileContents.isError()) {
+                    return indexFileContents;
+                }
                 bytestream strm(indexFileContents.bytearrayRef());
                 strm.read(_deadSpace);
                 while (!strm.eof()) {

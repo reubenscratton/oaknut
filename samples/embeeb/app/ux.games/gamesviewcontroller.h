@@ -9,7 +9,7 @@
 #include "gameitem.h"
 
 
-class GamesListAdapter : public SimpleListAdapter<GameItem> {
+class GamesListAdapter : public SimpleListAdapter<GameItem*> {
 public:
     GamesListAdapter(string srcfile, bool best);
     

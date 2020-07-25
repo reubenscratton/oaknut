@@ -168,11 +168,9 @@ const style* style::resolve(const style* val) {
 }
 
 const style* style::getValue(const string& keypath) const {
-    auto val = this;
+    auto val = resolve(this);
     string subkey, key = keypath;
     do {
-        val = resolve(val);
-
         if (!val) {
             return NULL;
         }
@@ -189,7 +187,7 @@ const style* style::getValue(const string& keypath) const {
             //log_warn("Value missing for field '%s'", keypath.c_str());
             return NULL;
         }
-        val = &it->second;
+        val = resolve(&it->second);
         key = subkey;
     } while (key.lengthInBytes() > 0);
     return val;

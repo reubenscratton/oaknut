@@ -7,7 +7,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>Widgets</string>
 	<key>CFBundleExecutable</key>
-	<string>widgets</string>
+	<string>Widgets</string>
 	<key>CFBundleIdentifier</key>
 	<string>net.oaknut.samples.widgets</string>
 	<key>CFBundleInfoDictionaryVersion</key>

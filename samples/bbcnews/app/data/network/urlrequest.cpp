@@ -69,7 +69,7 @@ BNURLRequest::BNURLRequest(const string& url, int flags, int priority) {
 		ttl = 60;
 	}
 	
-    _req = URLRequest::get(url, this);
+    _req = URLTask::get(url, this);
     _req->setHeader("User-Agent", BNPolicy::current()->userAgent());
     
     // Special background processing used to trim the BBC's highly redundant JSON and to convert into a model obj

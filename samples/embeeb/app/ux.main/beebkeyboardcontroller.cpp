@@ -38,7 +38,7 @@ void BeebKeyboardKey::invalidate() {
 
 void BeebKeyboardKey::attachToView(ControllerView *view) {
 
-    string name = _beebKey->mainLabel?_beebKey->mainLabel:_beebKey->name;
+    auto name = string(_beebKey->mainLabel?_beebKey->mainLabel:_beebKey->name, -1);
     _keyColour = colourForKeyBackground;
     if (name[0] == 'f') {
         _keyColour = colourForFunctionKeyBackground;
@@ -58,7 +58,7 @@ void BeebKeyboardKey::attachToView(ControllerView *view) {
 
     if (_beebKey->shiftLabel) {
         _labelTop = new TextLayout();
-        _labelTop->setText(_beebKey->shiftLabel);
+        _labelTop->setText(string(_beebKey->shiftLabel, -1));
         _labelTop->setColor(0xFFFFFFFF);
         _label->setFont(Font::get("",app->dp(10)));
         //_labelTop->applyStyle("keyboard.labels-tiny");
@@ -137,10 +137,10 @@ void BeebKeyboardController::KeyRow::layout(const RECT& bounds) {
 
 BeebKeyboardController::BeebKeyboardController() {
 
-    colourForKeyBackground = app->getStyleColor("keyboard.backgroundKeyNormal");
-    colourForPressedKey = app->getStyleColor("keyboard.backgroundKeyPressed");
-    colourForFunctionKeyBackground = app->getStyleColor("keyboard.backgroundKeyFunction");
-    colourForLEDKeyBackground = app->getStyleColor("keyboard.backgroundKeyLED");
+    colourForKeyBackground = style::get("keyboard.backgroundKeyNormal")->colorVal();
+    colourForPressedKey = style::get("keyboard.backgroundKeyPressed")->colorVal();
+    colourForFunctionKeyBackground = style::get("keyboard.backgroundKeyFunction")->colorVal();
+    colourForLEDKeyBackground = style::get("keyboard.backgroundKeyLED")->colorVal();
 
 	KeyRow* row = new KeyRow(); _rows.push_back(row);
 	row->_keys.push_back(new BeebKeyboardKey(this, &beebKeyTab));
@@ -242,7 +242,7 @@ void BeebKeyboardController::highlightKey(const string& keyName) {
 	for (auto it=_keys.begin() ; it!=_keys.end() ; it++) {
 		BeebKeyboardKey* key = (BeebKeyboardKey*)(*it)._obj;
 		key->_highlighted = false;
-		if (0==strcmp(keyName.data(), key->_beebKey->name)) {
+		if (0==strcmp(keyName.c_str(), key->_beebKey->name)) {
 			key->_highlighted = true;
 		}
 	}
@@ -284,7 +284,7 @@ void BeebKeyboardController::handleTouchEndInKey(ControllerKey* key, ControllerV
 	key->invalidate();
 	
 	if (beebKeyboardKey->_beebKey->scancode == ScanCode_Break) {
-		app->log("todo: post brk notify");
+		log_info("todo: post brk notify");
 		//[[NSNotificationCenter defaultCenter] postNotificationName:kResetCurrentSnapshot object:nil];
 	}
 }

@@ -9,7 +9,7 @@
 DECLARE_DYNCREATE(ControllerView);
 
 ControllerView::ControllerView() {
-    setBackgroundColor(app->getStyleColor("keyboard.background"));
+    setBackgroundColor(getStyleColor("keyboard.background"));
 	_opaque = true;
 	setUsePrivateSurface(true);
 }
@@ -23,7 +23,7 @@ void ControllerView::setController(Controller* controller) {
 	}
 
     _cachedFrameRect = RECT::zero();
-    invalidateContentSize();
+    invalidateIntrinsicSize();
 	setNeedsLayout();
 }
 

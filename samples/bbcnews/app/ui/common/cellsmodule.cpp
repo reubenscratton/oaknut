@@ -18,7 +18,7 @@ BNCellsModule::BNCellsModule(const variant& json) : BNModule(json) {
         if (!titleStyle.lengthInBytes()) {
             titleStyle = "indexTitle";
         }
-        _titleStyle = app->getStyle(titleStyle);
+        _titleStyle = style::get(titleStyle);
     }
     _titleContentId = title.stringVal("content");
     _arrange = json.stringVal("arrange");

@@ -9,8 +9,6 @@
 #include "NativeView.h"
 
 
-static bool s_mouseIsDown;
-
 
 @implementation NativeLayer
 
@@ -101,6 +99,9 @@ forLayerTime:(CFTimeInterval)t
                                                         object:[self window]];
         
         [self setWantsBestResolutionOpenGLSurface:YES];
+        
+        // Handle all mouse events
+        [self addTrackingArea:[[NSTrackingArea alloc] initWithRect:self.bounds options:NSTrackingActiveAlways|NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved | NSTrackingInVisibleRect owner:self userInfo:nil]];
     }
     return self;
 }
@@ -112,8 +113,9 @@ forLayerTime:(CFTimeInterval)t
     float scale = app->_defaultDisplay->_scale;
     CGPoint pt = event.locationInWindow;
     pt.y = self.frame.size.height - pt.y;
-    inputEvent.pt.x = pt.x * scale;
-    inputEvent.pt.y = pt.y * scale;
+    inputEvent.ptDevice.x = pt.x * scale;
+    inputEvent.ptDevice.y = pt.y * scale;
+    inputEvent.ptSurface = inputEvent.ptDevice;
     inputEvent.time = event.timestamp*1000;
     if (isScrollWheel) {
         
@@ -133,8 +135,8 @@ forLayerTime:(CFTimeInterval)t
             _deltaAcc = {0,0};
         }
         _deltaAcc += delta;
-        //inputEvent.delta = delta;
-        inputEvent.pt += _deltaAcc;
+
+        inputEvent.ptSurface += _deltaAcc;
     } else {
         inputEvent.deviceType = INPUTEVENT::Mouse;
     }
@@ -142,11 +144,9 @@ forLayerTime:(CFTimeInterval)t
     // [self setNeedsDisplay:YES];
 }
 - (void)mouseDown:(NSEvent *)event {
-    s_mouseIsDown = true;
     [self dispatchInputEvent:event type:INPUT_EVENT_DOWN isScrollwheel:NO];
 }
 - (void)mouseUp:(NSEvent *)event {
-    s_mouseIsDown = false;
     [self dispatchInputEvent:event type:INPUT_EVENT_UP isScrollwheel:NO];
 }
 - (void)mouseMoved:(NSEvent *)event {
@@ -170,13 +170,16 @@ forLayerTime:(CFTimeInterval)t
     [self dispatchInputEvent:event type:type isScrollwheel:YES];
 }
 
-// TODO: Do we ever want mouseover events? I imagine we do so rework this...
+- (void)mouseEntered:(NSEvent *)event {
+    [self dispatchInputEvent:event type:INPUT_EVENT_MOVE isScrollwheel:NO];
+}
+- (void)mouseExited:(NSEvent *)event {
+    [self dispatchInputEvent:event type:INPUT_EVENT_MOVE isScrollwheel:NO];
+}
 //- (void)touchesBeganWithEvent:(NSEvent*)event {
 //}
 - (void)touchesMovedWithEvent:(NSEvent*)event {
-    if (s_mouseIsDown) {
-        [self dispatchInputEvent:event type:INPUT_EVENT_MOVE isScrollwheel:NO];
-    }
+    [self dispatchInputEvent:event type:INPUT_EVENT_MOVE isScrollwheel:NO];
 }
 //- (void)touchesEndedWithEvent:(NSEvent*)event {
 //}

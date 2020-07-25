@@ -36,6 +36,7 @@ void View::inflate(const string& layoutFile) {
 const style* View::resolveQualifiedStyle(const style* val) {
     const style* defaultVal = nullptr;
     const style* bestVal = nullptr;
+    uint8_t bestState = 255;
     for (auto& it : *val->qualmap) {
         uint32_t qual = it.first;
         if (0 == qual) {
@@ -45,8 +46,9 @@ const style* View::resolveQualifiedStyle(const style* val) {
         assert((qual & 0xff) == 1); // Q_VIEWSTATE
         VIEWSTATE viewstate((qual & 0xFF0000)>>16, (qual&0xFF00)>>8);
         bool applies = (_state & viewstate.mask) == viewstate.state;
-        if (applies) {
+        if (applies && (viewstate.state < bestState)) {
             bestVal = &it.second;
+            bestState = viewstate.state;
         }
     }
     return style::resolve(bestVal ? bestVal : defaultVal);
@@ -86,9 +88,6 @@ bool View::applySingleStyle(const string& name, const style& value) {
         }*/
         setBackgroundColor(value.colorVal());
         return true;
-    } else if (name == "background-alpha" || name == "fill-alpha") {
-        setBackgroundColorAlpha(value.floatVal());
-        return true;
     } else if (name == "stroke-color" || name == "stroke") {
         setBackgroundStrokeColor(value.colorVal());
         return true;
@@ -103,9 +102,6 @@ bool View::applySingleStyle(const string& name, const style& value) {
         return true;
     } else if (name == "ink" || name == "ink-color") {
         setInkColor(value.colorVal());
-        return true;
-    } else if (name == "ink-color-alpha") {
-        setInkColorAlpha(value.floatVal());
         return true;
     } else if (name == "enabled") {
         setEnabled(value.boolVal());
@@ -1007,10 +1003,6 @@ void View::setBackgroundColor(COLOR color) {
     ensureBackgroundOpExists();
     _backgroundOp->setColor(color);
 }
-void View::setBackgroundColorAlpha(float alpha) {
-    ensureBackgroundOpExists();
-    _backgroundOp->setFillColorAlpha(alpha);
-}
 void View::setBackgroundAlpha(float alpha) {
     ensureBackgroundOpExists();
     _backgroundOp->setAlpha(alpha);
@@ -1051,13 +1043,13 @@ void View::setInkColor(COLOR inkColor) {
     ensureInkOpExists();
     _inkOp->setColor(inkColor);
 }
-void View::setInkColorAlpha(float inkAlpha) {
-    ensureInkOpExists();
-    _inkOp->setFillColorAlpha(inkAlpha);
+
+
+void View::setSelectedSubview(View* subview) {
+    for (auto& it : _subviews) {
+        it->setSelected(subview == it._obj);
+    }
 }
-
-
-
 
 bool View::isPressed() const {
     return (_state & STATE_PRESSED)!=0;
@@ -1301,8 +1293,10 @@ float View::getMaxScrollY() {
     return _scrollVert.maxScroll(this, true);
 }
 void View::updateScrollbarVisibility() {
-    _scrollVert.updateVisibility(this, true);
-    _scrollHorz.updateVisibility(this, false);
+    if (!_hideScrollbars) {
+        _scrollVert.updateVisibility(this, true);
+        _scrollHorz.updateVisibility(this, false);
+    }
 }
 
 void View::updateScrollOffsets() {
@@ -1380,10 +1374,25 @@ View* View::dispatchInputEvent(INPUTEVENT* event) {
         return NULL;
     }
     
+    // Hover
+    if (event->type == INPUT_EVENT_MOUSE_ENTER) {
+        if (!(_state & STATE_HOVER)) {
+            setState({STATE_HOVER, STATE_HOVER});
+        }
+        return this;
+    }
+    if (event->type == INPUT_EVENT_MOUSE_EXIT) {
+        if ((_state & STATE_HOVER)) {
+            setState({STATE_HOVER, 0});
+        }
+        return this;
+    }
+
 	// Find the most distant leaf view containing the point
-    POINT hitPoint = event->pt;
+    POINT hitPoint = event->ptSurface;
+    hitPoint -= _surfaceOrigin;
 	View* hitView = hitTest(hitPoint);
-	
+
 	// Offer the event to the leaf view and if it doesn't handle it pass
 	// it up the view tree until a view handles it.
 	while (hitView) {
@@ -1409,40 +1418,46 @@ bool View::handleInputEvent(INPUTEVENT* event) {
     
     if (isEnabled()) {
 
-        // Material Design Ink Ripple Animation
-        if (_inkOp) {
-            if (event->type == INPUT_EVENT_DOWN) {
-                POINT dc = event->ptLocal;
-                dc.x -= _rect.size.width/2;
-                dc.y -= _rect.size.height/2;
-                _inkOp->setOrigin(dc);
-                _inkOp->setAlpha(1);
-                _inkOp->_rippleAnim = Animation::start(this, 500, [=](float val) {
-                    _inkOp->setRadius(500*val);
-                });
-            }
-            if (event->type == INPUT_EVENT_UP) {
-                _inkOp->_fadeAnim = Animation::start(this, 250, [=](float val) {
-                    _inkOp->setAlpha(1-val);
-                });
-            }
-        }
+        if (event->deviceType != INPUTEVENT::ScrollWheel) {
 
-        
-        if (event->type == INPUT_EVENT_DOWN) {
-            setPressed(true);
+            // Material Design Ink Ripple Animation
+            if (_inkOp) {
+                if (event->type == INPUT_EVENT_DOWN) {
+                    POINT dc = event->ptLocal;
+                    dc.x -= _rect.size.width/2;
+                    dc.y -= _rect.size.height/2;
+                    _inkOp->setOrigin(dc);
+                    _inkOp->setAlpha(1);
+                    _inkOp->_rippleAnim = Animation::start(this, 500, [=](float val) {
+                        _inkOp->setRadius(40+460*val);
+                    });
+                }
+                if (event->type == INPUT_EVENT_UP) {
+                    _inkOp->_fadeAnim = Animation::start(this, 250, [=](float val) {
+                        _inkOp->setAlpha(1-val);
+                    });
+                }
+            }
+
+            if (event->type == INPUT_EVENT_DOWN) {
+                setPressed(true);
+                if (_parent && _parent->_selectableSubviews) {
+                    _parent->setSelectedSubview(this);
+                }
+            }
+            if (event->type == INPUT_EVENT_TAP_CANCEL || event->type==INPUT_EVENT_UP) {
+                setPressed(false);
+            }
         }
-        if (event->type == INPUT_EVENT_TAP_CANCEL || event->type==INPUT_EVENT_UP) {
-            setPressed(false);
-        }
         
-        if (event->type == INPUT_EVENT_DRAG_START || event->type == INPUT_EVENT_DRAG_MOVE) {
+        /* TODO: What was I trying to achieve here...? */
+        /*if (event->type == INPUT_EVENT_DRAG_START || event->type == INPUT_EVENT_DRAG_MOVE) {
             if (_directionalLockEnabled) {
                 if (event->delta.y > event->delta.x) {
                     
                 }
             }
-        }
+        }*/
         
         if (event->type == INPUT_EVENT_DRAG_START) {
             bool v = canScrollVertically();
@@ -1461,10 +1476,11 @@ bool View::handleInputEvent(INPUTEVENT* event) {
             }
         }
         
+      
         bool scrolled = _scrollVert.handleEvent(this, true, event);
         scrolled |= _scrollHorz.handleEvent(this, false, event);
         retVal |= scrolled;
-
+    
         if (onInputEvent) {
             retVal = true;
         }
@@ -1641,8 +1657,9 @@ string View::debugViewType() {
 }
 string View::debugDescription() {
     char ach[256];
-    sprintf(ach, "%lX:%s", (long)this, debugViewType().c_str());
-    return string(ach);
+    string t = debugViewType();
+    sprintf(ach, "%lX:%s", (long)this, t.c_str());
+    return string(ach, -1);
 }
 void View::debugDumpTree(int depth) {
     

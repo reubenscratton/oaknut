@@ -14,13 +14,13 @@ enum Visibility {
 
 
 // State
-#define STATE_DISABLED  1
-#define STATE_FOCUSED   2
-#define STATE_SELECTED  4
+#define STATE_DISABLED  1   // Highest priority for state selection
+#define STATE_ERRORED   2
+#define STATE_PRESSED   4
 #define STATE_CHECKED   8
-#define STATE_PRESSED  16
-#define STATE_HOVER    32
-#define STATE_ERRORED  64
+#define STATE_SELECTED  16
+#define STATE_FOCUSED   32
+#define STATE_HOVER     64  // Lowest priority
 struct VIEWSTATE {
     uint8_t mask;
     uint8_t state;
@@ -379,14 +379,12 @@ public:
     virtual void setBackground(RenderOp* renderOp);
     virtual RenderOp* getBackgroundOp() const { return _backgroundOp; }
     virtual void setBackgroundColor(COLOR color);
-    virtual void setBackgroundColorAlpha(float alpha);
     virtual void setBackgroundAlpha(float alpha);
     virtual void setBackgroundStrokeColor(COLOR color);
     virtual void setBackgroundStrokeWidth(float strokeWidth);
     virtual void setBackgroundCornerRadii(const VECTOR4& cornerRadii);
     virtual void setBackgroundEdgeInsets(const EDGEINSETS& edgeInsets);
     virtual void setInkColor(COLOR inkColor);
-    virtual void setInkColorAlpha(float inkAlpha);
     virtual void addRenderOp(RenderOp* renderOp);
     virtual void addRenderOp(RenderOp* renderOp, bool atFront);
     virtual void removeRenderOp(RenderOp* renderOp);
@@ -456,7 +454,6 @@ protected:
      * focused, selected, and so on, the remaining bits are free for use.
      */
 public:
-    
     /** Set one or more state bits at once. The STATESET parameter has a 'mask' member which determines
         the state bits that get updated. */
     virtual void setState(VIEWSTATE state);
@@ -478,6 +475,8 @@ public:
 protected:
     /** Called whenever state changes.  */
      virtual void onStateChanged(VIEWSTATE changes);
+
+    virtual void setSelectedSubview(View* subview);
 
     /**  \cond INTERNAL */
     uint8_t _state;
@@ -531,7 +530,7 @@ protected:
 
     // Flags
     struct {
-        bool _layoutValid;
+        bool _layoutValid:1;
         bool _needsFullRedraw:1;
         bool _intrinsicSizeValid:1;
         bool _updateRenderOpsNeeded:1;
@@ -539,6 +538,8 @@ protected:
         bool _directionalLockEnabled:1;
         bool _subviewsInheritState:1;
         bool _opaque:1;
+        bool _selectableSubviews:1;
+        bool _hideScrollbars:1;
     };
 
     

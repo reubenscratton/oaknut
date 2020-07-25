@@ -25,19 +25,19 @@ public:
     GameItemView() {
     }
     GameItemView(bool best) {
-        app->layoutInflateExistingView(this, best ? "layout/disk_listitem_best.res" : "layout/disk_listitem.res");
+        app->layoutInflateExistingView(this, best ? "layout/disk_listitem_best.res"_S : "layout/disk_listitem.res"_S);
         numberLabel = (Label*)findViewById("number");
         imageView = (ImageView*)findViewById("image");
         titleLabel = (Label*)findViewById("title");
         subtitleLabel = (Label*)findViewById("subtitle");
     }
-    void bind(GameItem& gameItem, int index) {
+    void bind(GameItem* gameItem, int index) {
         if (numberLabel) {
             numberLabel->setText(string::format("%d.", index));
         }
-        imageView->setImageUrl(gameItem.getImageUrl());
-        titleLabel->setText(gameItem.getTitle());
-        subtitleLabel->setText(gameItem.getSubtitle());
+        imageView->setImage(gameItem->getImageUrl());
+        titleLabel->setText(gameItem->getTitle());
+        subtitleLabel->setText(gameItem->getSubtitle());
     }
     Label* numberLabel;
     ImageView* imageView;

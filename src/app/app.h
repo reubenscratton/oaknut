@@ -54,6 +54,8 @@ public:
     Task* loadAsset(const string& assetPath, std::function<void(variant&)> callback);
 
     /** Load and decompress a bitmap from the assets directory, asynchronously. */
+    Task* loadBitmap(const string& url, std::function<void(Bitmap*)> callback);
+
     Task* loadBitmapAsset(const string& assetPath, std::function<void(Bitmap*)> callback);
 
     /**@}*/

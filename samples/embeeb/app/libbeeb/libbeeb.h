@@ -56,8 +56,8 @@ typedef void(*PCALLBACK)(const void*);
 typedef void(*PCALLBACK2)(const void*, void*);
 #endif
 
-#define bbcLogE app->log
-#define bbcLogI app->log
+#define bbcLogE log_error
+#define bbcLogI log_info
 
 #ifdef __cplusplus
 extern "C" {

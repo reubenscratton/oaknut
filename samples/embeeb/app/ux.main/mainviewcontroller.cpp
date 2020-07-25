@@ -66,18 +66,19 @@ MainViewController::MainViewController() {
         sp<GamesViewController> vc = new GamesViewController([&](Game* game) {
             _currentSnapshot = NULL;
             _currentDiskInfo = game->defaultDiskInfo();
-            URLRequest::get(_currentDiskInfo->diskUrl())->handleData([=](URLRequest* req, const bytearray& data) {
-                if (req->didError()) {
+            URLTask::get(_currentDiskInfo->diskUrl())->handle([=](const URLResponse* res, bool isFromCache) {
+                if (!res || !res->data.length()) {
                     // TODO: show user error
                     return;
                 }
+                
                 // Hold shift key down for 2 seconds across the reset
                 _beeb->postKeyboardEvent(ScanCode_Shift, true);
                 Timer::start([=]() {
                     _beeb->postKeyboardEvent(ScanCode_Shift, false);
                 }, 2000, false);
                 //auto data = req->getResponseData();
-                _beeb->loadDisc(data.data(), data.size(), 1);
+                _beeb->loadDisc(res->data.data(), res->data.size(), 1);
             });
         });
         _navigationController->pushViewController(vc);

@@ -28,11 +28,11 @@ void Snapshot::toVariant(variant& v) {
 }
 
 
-void Snapshot::updateWithData(ByteBuffer* data, Bitmap* thumbnail, string controllerId) {
+void Snapshot::updateWithData(const bytearray& data, Bitmap* thumbnail, string controllerId) {
 	_timestamp = app->currentMillis();
 	_thumbnail = thumbnail;
 	_controllerId = controllerId;
-    _data.assign(data->data, (int32_t)data->cb);
+    _data.assign(data.data(), (int32_t)data.size());
 	
 	/*
 	// Update the index file

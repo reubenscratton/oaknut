@@ -280,9 +280,9 @@ void BeebKey_init() {
 
 
 BeebKey* BeebKey_keyByName(char const* name) {
-    for (std::vector<BeebKey*>::iterator it=s_bbcKeyList.begin() ; it!=s_bbcKeyList.end() ; it++) {
-        if (0==strcmp(name, (*it)->name)) {
-            return *it;
+    for (auto& it : s_bbcKeyList) {
+        if (0==strcmp(name, it->name)) {
+            return it;
         }
     }
     return NULL;

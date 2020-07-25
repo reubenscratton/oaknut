@@ -30,8 +30,6 @@ void Window::show() {
     _scrollbarFadeInDelay = scrollstyle->intVal("fade-in-delay");
     _scrollbarFadeDuration = scrollstyle->intVal("fade-duration");
     _scrollbarFadeOutDelay = scrollstyle->intVal("fade-out-delay");
-    
-
 }
 
 
@@ -106,7 +104,7 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
             numClicks++;
         }
         pastIndex = pastCount = 0;
-        ptDown = event.pt;
+        ptDown = event.ptSurface;
         timeOfDownEvent = event.time;
         touchedView = topVC->getView()->dispatchInputEvent(&event);
         if (!touchedView) {
@@ -119,7 +117,7 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
                 if (touchedView && touchedView->_window) {
                     INPUTEVENT lpEv = event;
                     lpEv.type = INPUT_EVENT_LONG_PRESS;
-                    lpEv.pt += touchedView->_surfaceOrigin;
+                    lpEv.ptSurface += touchedView->_surfaceOrigin;
                     touchedView->dispatchInputEvent(&lpEv);
                     _didSendLongpressEvent = true;
                 }
@@ -127,10 +125,10 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
             }, LONG_PRESS_THRESHOLD, false);
         }
         pastTime[pastIndex] = event.time;
-        pastPts[pastIndex] = event.pt;
+        pastPts[pastIndex] = event.ptSurface;
         pastIndex = (pastIndex + 1) % NUM_PAST;
         pastCount++;
-        ptPrev = event.pt;
+        ptPrev = event.ptSurface;
     }
 
     if (event.type == INPUT_EVENT_MOVE) {
@@ -139,7 +137,7 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
         if (event.deviceType != INPUTEVENT::ScrollWheel) {
             int prevIndex = pastIndex - 1;
             if (prevIndex < 0) prevIndex += NUM_PAST;
-            if (pastPts[prevIndex].equals(event.pt)) {
+            if (pastPts[prevIndex].equals(event.ptSurface)) {
                 pastTime[prevIndex] = event.time;
                 return;
             }
@@ -147,17 +145,17 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
         
         // Store the event in the history (used for fling velocity calculations)
         pastTime[pastIndex] = event.time;
-        pastPts[pastIndex] = event.pt;
+        pastPts[pastIndex] = event.ptSurface;
         pastIndex = (pastIndex + 1) % NUM_PAST;
         pastCount++;
-        event.delta = event.pt - ptPrev;
-        ptPrev = event.pt;
+        event.delta = event.ptSurface - ptPrev;
+        ptPrev = event.ptSurface;
         
         // If not dragging, test to see if a drag might have started
         if (timeOfDownEvent && !isDragging) {
             float dx,dy;
-            dx = event.pt.x - ptDown.x;
-            dy = event.pt.y - ptDown.y;
+            dx = event.ptSurface.x - ptDown.x;
+            dy = event.ptSurface.y - ptDown.y;
             float dist = sqrtf(dx * dx + dy * dy);
             if (app->idp(dist) >= TOUCH_SLOP) {
                 // log_info("Drag started");
@@ -181,11 +179,26 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
                 // Dispatch a drag-start event and track the view that handles it
                 // log_info("Sending INPUT_EVENT_DRAG_START to top");
                 INPUTEVENT dragStartEvent = event;
-                dragStartEvent.delta = event.pt - ptDown;
+                dragStartEvent.delta = event.ptSurface - ptDown;
                 dragStartEvent.type = INPUT_EVENT_DRAG_START;
                 touchedView = topVC->getView()->dispatchInputEvent(&dragStartEvent);
  
                 isDragging = true;
+            }
+        }
+        
+        // Hover events
+        View* hoverView = topVC->getView()->hitTest(event.ptDevice);
+        if (hoverView != this->hoverView) {
+            INPUTEVENT hoverEvent = event;
+            if (this->hoverView) {
+                hoverEvent.type = INPUT_EVENT_MOUSE_EXIT;
+                this->hoverView->dispatchInputEvent(&hoverEvent);
+            }
+            this->hoverView = hoverView;
+            if (this->hoverView) {
+                hoverEvent.type = INPUT_EVENT_MOUSE_ENTER;
+                this->hoverView->dispatchInputEvent(&hoverEvent);
             }
         }
         
@@ -203,8 +216,6 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
             //log_info("Window sending INPUT_EVENT_DRAG_MOVE to %X", touchedView._obj);
             touchedView->dispatchInputEvent(&dragEvent);
         }
-        
-        // TODO: Dispatch a plain old move event (so mousemove mouseover handling can work)
         
     } else if (event.type == INPUT_EVENT_UP) {
         if (_longpressTimer) {
@@ -253,8 +264,8 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
                     }
                     dTime = (int) (event.time - timeFrom);
                     if (dTime <= 0) continue;
-                    dx = event.pt.x - ptFrom.x;
-                    dy = event.pt.y - ptFrom.y;
+                    dx = event.ptSurface.x - ptFrom.x;
+                    dy = event.ptSurface.y - ptFrom.y;
                 }
                 float thisVeloX = dx * 1000.0f / dTime;
                 float thisVeloY = dy * 1000.0f / dTime;

@@ -1,5 +1,5 @@
 {
-window: {
+Window: {
     default-width:375dp
     default-height:580dp
     status-bar-light: true
@@ -92,7 +92,6 @@ font-sizes: {
     timestamp: 14sp
     summary@tablet: 18sp
     summary: 14sp
-    summary@4inch: 13sp
     ribbon@tablet: 20sp
     ribbon: 16sp
     cornerLabels@tablet: 20sp
@@ -107,7 +106,6 @@ line-heights: {
     timestamp: 18sp
     summary@tablet: 24sp
     summary: 18sp
-    summary@4inch: 17sp
 }
 
 cells: {

@@ -32,6 +32,7 @@ public:
 
         int source;
         sp<View>  touchedView;
+        sp<View>  hoverView;
         TIMESTAMP timeOfDownEvent;
         POINT ptDown;
         POINT ptPrev;

@@ -33,7 +33,7 @@ BNModule::BNModule(const variant& json) {
         if (colorstr.charAt(0) == '#') {
             _backgroundColor = s.colorVal("background");
         } else {
-            _backgroundColor = app->getStyleColor("color."_S + colorstr);
+            _backgroundColor = style::get("color."_S + colorstr)->colorVal();
         }
     }
     _textPadding = edgeInsetsVal(json, "textPadding");

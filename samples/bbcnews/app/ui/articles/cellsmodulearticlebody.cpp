@@ -47,7 +47,7 @@ public:
         }
         
         
-        auto textStyleDefault = app->getStyle("article.text.default");
+        auto textStyleDefault = style::get("article.text.default");
         
         for (auto& elem : item->_elements) {
             if (elem.text.lengthInBytes()) {

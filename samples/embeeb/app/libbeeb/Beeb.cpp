@@ -179,7 +179,7 @@ void Beeb::tick() {
 		
 	// Break!
 	if (resetting) {
-		bbcLogI("resetting... ");
+		log_info("resetting... ");
 		reset6502();
 		reset8271();
 		resetting = 0;

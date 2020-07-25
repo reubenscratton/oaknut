@@ -30,7 +30,7 @@ Font* App::defaultFont() {
 
 static View* inflateFromResource(const style& value, View* parent) {
     string className = value.stringVal("class");
-    if (className.length() == 0) {
+    if (!className.length()) {
         className = "View";
     }
     View* view = (View*)Object::createByName(className);
@@ -128,6 +128,72 @@ Task* App::loadAsset(const string& assetPath, std::function<void(variant&)> call
         }}
     });
 }
+/*
+AsyncOp* App::loadBitmap(const string& url, std::function<void(Bitmap*)> callback) {
+    if (url.hasPrefix("asset:")) {
+        return Task::enqueue({
+            {Task::IO, [=](variant&) -> variant {
+                return loadAssetSync(assetPath);
+            }},
+            {Task::Background, [=](variant& result) -> variant {
+                if (result.isError()) {
+                    return result;
+                }
+                Bitmap* bitmap = Bitmap::createFromData(result.bytearrayRef());
+                return variant(bitmap);
+            }},
+            {Task::MainThread, [=](variant& r) -> variant {
+                if (r.isError()) {
+                    callback(nullptr);
+                } else {
+                    callback(r.objectVal<Bitmap>());
+                }
+                return variant();
+            }}
+        });
+    }
+    auto req = URLRequest::get(url);
+    req->handle([=](const class URLResponse *, bool) {
+        
+    });
+    return req;
+}*/
+
+Task* App::loadBitmap(const string& assetOrUrl, std::function<void(Bitmap*)> callback) {
+    Task* task;
+    if (!assetOrUrl.contains(":")) {
+        task = Task::enqueue({
+            {Task::IO, [=] (variant&) -> variant {
+                return app->loadAssetSync(assetOrUrl);
+            }},
+            {Task::Background, [=] (variant& loadResult) -> variant  {
+                if (loadResult.isError()) {
+                    return loadResult;
+                }
+                bytearray& data = loadResult.bytearrayRef();
+                assert(data.size());
+                Bitmap* bitmap = Bitmap::createFromData(data);
+                return variant(bitmap);
+            }},
+            {Task::MainThread, [=] (variant& loadResult) -> variant  {
+                if (loadResult.isError()) {
+                    callback(nullptr);
+                } else {
+                    callback(loadResult.objectVal<Bitmap>());
+                }
+                return variant();
+            }}
+        });
+    } else {
+        URLTask* urlTask = URLTask::get(assetOrUrl, nullptr, URL_FLAG_BITMAP);
+        urlTask->handle([=](const URLResponse* res, bool isFromCache) {
+            callback(res->decoded.objectVal<Bitmap>());
+        });
+        task = urlTask;
+    }
+    return task;
+}
+
 Task* App::loadBitmapAsset(const string& assetPath, std::function<void(Bitmap*)> callback) {
     return Task::enqueue({
         {Task::IO, [=](variant&) -> variant {

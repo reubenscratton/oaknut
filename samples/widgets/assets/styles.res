@@ -8,6 +8,11 @@
 
     primary_color:#6221ea
   
+  // TODO: need a way to declare colours that are different alphas of other colours
+    primary_color_vfaint:#106221ea
+    primary_color_faint:#206221ea
+    primary_color_ink:#306221ea
+
     material_design: {
         Button: {
             contained: {
@@ -26,48 +31,41 @@
                 stroke-width: 1dp
                 fill-color: {
                     @default: transparent
-                    @pressed: $primary_color
+                    @pressed: $primary_color_faint
+                    @hover: $primary_color_vfaint
                 }
-                fill-alpha: {
-                    @default: 0
-                    @pressed: 0.2
-                }
-                ink-color: $primary_color
-                ink-color-alpha: 0.2
+                ink-color: $primary_color_ink
                 forecolor: $primary_color
             }
             text: {
                 corner-radius: 4dp
                 fill-color: {
                     @default: transparent
-                    @pressed: $primary_color
+                    @pressed: $primary_color_faint
+                    @hover: $primary_color_vfaint
                 }
-                fill-alpha: {
-                    @default: 0
-                    @pressed: 0.2
-                }
-                ink-color: $primary_color
-                ink-color-alpha: 0.2
+                ink-color: $primary_color_ink
                 forecolor: $primary_color
             }
         }
         Tabs: {
+            bar-color: $primary_color
+            bar-height: 2dp
             Button: {
                 corner-radius: 0dp
+                padding: 16dp, 12dp
                 fill-color: {
                     @default: transparent
-                    @pressed: $primary_color
+                    @hover: $primary_color_vfaint
+                    @pressed: $primary_color_faint
+                    @selected: $primary_color_faint
                 }
-                fill-alpha: {
-                    @default: 0
-                    @pressed: 0.2
-                }
-                ink-color: $primary_color
-                ink-color-alpha: 0.2
+                ink-color: $primary_color_ink
                 forecolor: {
                     @default: #666
                     @selected: $primary_color
                 }
+                icon-tint: true
             }
         }
 

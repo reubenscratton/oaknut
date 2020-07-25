@@ -19,7 +19,7 @@ public:
         SL_FLOAT1 " sigma=" SL_UNIFORM(sigma) ";\n"
         // texcoord is fragment xy in surface coords
         SL_FLOAT2 " p=" SL_VERTEX_OUTPUT(texcoord) ";\n"
-        SL_FLOAT2 " half_size = " SL_UNIFORM(u) ".xy - sigma*2;\n"
+        SL_FLOAT2 " half_size = " SL_UNIFORM(u) ".xy - sigma*2.0;\n"
 #if 0
         SL_FLOAT1 " dist = -(length(p) - 100);\n"
 #else

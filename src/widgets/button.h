@@ -13,6 +13,25 @@ class Button : public Label {
 public:
     
     Button();
+    
+    void setImage(const string& assetName);
+    void setImage(Bitmap* bitmap);
+    
+    bool applySingleStyle(const string &name, const style &value) override;
+    void setTextColor(COLOR color) override;
+    void updateIntrinsicSize(SIZE constrainingSize) override;
+    void layout(RECT constraint) override;
+    RECT getTextRectForLayout() override;
+    
+protected:
+    sp<Task> _imageTask;
+    TextureRenderOp* _imageOp;
+    bool _iconTint;
+    float _imageSpacing;
+    
+#ifdef DEBUG
+    string debugViewType() override;
+#endif
 
 };
 

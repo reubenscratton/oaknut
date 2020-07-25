@@ -26,7 +26,7 @@
     return self;
 }
 - (UIStatusBarStyle) preferredStatusBarStyle {
-    auto val = app->getStyle("window.status-bar-light");
+    auto val = style::get("Window.status-bar-light");
     if (!val) {
         return UIStatusBarStyleDefault;
     }
@@ -285,7 +285,7 @@ Window* Window::create() {
     
 
     app->_window = Window::create();
-    Style::loadStyleAssetSync("styles.res");
+    style::loadStyleAssetSync("styles.res");
     app->main();
     app->_window->show();
     return YES;

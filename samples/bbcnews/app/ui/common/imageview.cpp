@@ -220,7 +220,7 @@ void BNImageView::tryUpdateImage() {
     
     // Create or attach to an HTTP request
     _timeImageUrlSet = app->currentMillis();
-    setImageUrl(_imageKey.url);
+    setImage(_imageKey.url);
 
 }
 

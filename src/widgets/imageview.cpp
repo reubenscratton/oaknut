@@ -23,7 +23,7 @@ ImageView::ImageView() {
 bool ImageView::applySingleStyle(const string& name, const style& value) {
     if (name=="image") {
         // TODO: leverage drawable code
-        setImageAsset(value.stringVal());
+        setImage(value.stringVal());
         return true;
     }
     if (name=="contentMode") {
@@ -37,32 +37,20 @@ bool ImageView::applySingleStyle(const string& name, const style& value) {
     return View::applySingleStyle(name, value);
 }
 
-void ImageView::setImageUrl(const string& url) {
-    if (0 == url.compare(_url)) {
+void ImageView::setImage(const string& assetOrUrl) {
+    if (0 == assetOrUrl.compare(_url)) {
         return;
     }
     cancelLoad();
-	_url = url;
-    _assetPath = "";
+	_url = assetOrUrl;
 	_renderOp->setBitmap((Bitmap*)NULL);
     loadImage();
 }
 
-void ImageView::setImageAsset(const string& assetPath) {
-    cancelLoad();
-    _assetPath = assetPath;
-    loadImage();
-}
-
 void ImageView::cancelLoad() {
-    if (_imageLoadTask) {
-        _imageLoadTask->cancel();
-        _imageLoadTask = NULL;
-    }
-    // Cancel any extant HTTP request.
-    if (_request) {
-        _request->cancel();
-        _request = NULL;
+    if (_task) {
+        _task->cancel();
+        _task = nullptr;
     }
     _loaded = false;
 }
@@ -70,14 +58,12 @@ void ImageView::cancelLoad() {
 
 void ImageView::setTexture(Texture* texture) {
     _renderOp->setTexture(texture);
-    _rectTex = RECT(0,0,1,1);
     invalidateIntrinsicSize();
     _loaded = (texture!=nullptr);
 }
 
 void ImageView::setBitmap(Bitmap *bitmap) {
     _renderOp->setBitmap(bitmap);
-    _rectTex = RECT(0,0,1,1);
     invalidateIntrinsicSize();
     _loaded = (bitmap!=nullptr);
 }
@@ -86,11 +72,6 @@ void ImageView::setImageNode(AtlasNode* node) {
     _atlasNode = node;
     _renderOp->setBitmap(node->page->_bitmap);
     _loaded = true;
-    _rectTex = node->rect;
-    _rectTex.origin.x /= node->page->_bitmap->_width;
-    _rectTex.origin.y /= node->page->_bitmap->_height;
-    _rectTex.size.width /= node->page->_bitmap->_width;
-    _rectTex.size.height /= node->page->_bitmap->_height;
     // todo: if sizespec==wrap then invalidate layout
     setNeedsFullRedraw();
 }
@@ -107,56 +88,25 @@ void ImageView::detachFromSurface() {
 }
 
 void ImageView::loadImage() {
-    if (_loaded || !_surface) {
+    if (_loaded || !_surface || _task || !_url.length()) {
         return;
     }
-    if (!(_url.length() || _assetPath.length())) {
-        return;
-    }
+    auto timeReqStart = app->currentMillis();
+    auto hashVal = _url.hash();
 
-	_startLoadTime = app->currentMillis();
-    if (_assetPath.length() > 0) {
-        auto hashVal = _assetPath.hash();
-        _imageLoadTask = Task::enqueue({
-            {Task::IO, [=] (variant&) -> variant {
-                return app->loadAssetSync(_assetPath);
-            }},
-            {Task::Background, [=] (variant& loadResult) -> variant  {
-                if (loadResult.isError()) {
-                    return loadResult;
-                }
-                bytearray& data = loadResult.bytearrayRef();
-                assert(data.size());
-                Bitmap* bitmap = Bitmap::createFromData(data);
-                return variant(bitmap);
-            }},
-            {Task::MainThread, [=] (variant& loadResult) -> variant  {
-                if (loadResult.isError()) {
-                    // TODO: show error image or something
-                } else {
-                    Bitmap* bitmap = loadResult.objectVal<Bitmap>();
-                    if (hashVal == _assetPath.hash()) {
-                        setBitmap(bitmap);
-                    }
-                }
-                _imageLoadTask = NULL;
-                return variant();
-            }}
-        });
-    } else if (_url.length() > 0) {
-        assert(!_request);
-        _request = URLRequest::get(_url, this, URL_FLAG_BITMAP);
-        auto timeReqStart = app->currentMillis();
-        _request->handle([=](const URLResponse* res, bool isFromCache) {
-            setBitmap(res->decoded.objectVal<Bitmap>());
+    _task = app->loadBitmap(_url, [=](Bitmap* bitmap) {
+        if (hashVal == _url.hash()) {
             auto elapsed = app->currentMillis() - timeReqStart;
             if (elapsed >= _window->_fadeInThreshold) {
                 Animation::start(this, _window->_fadeInDuration, [=](float val) {
                     _renderOp->setAlpha(val);
                 });
             }
-        });
-    }
+            setBitmap(bitmap);
+        }
+        _task = nullptr;
+    });
+    
 }
 
 ImageView::ContentMode ImageView::getContentMode() const {

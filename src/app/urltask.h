@@ -6,6 +6,7 @@
 //
 
 
+
 // TODO: remove this flag and let this decision hinge on whether Bitmap handler set or not
 #define URL_FLAG_BITMAP 1   // use this when requesting images. Exists so web can use Image rather than XHR
 
@@ -14,14 +15,14 @@
  * @brief General purpose async HTTP networking support.
  * Simple example:\n
  * ````\n
- * URLRequest::get("http://www.foo.com/bar.json")\n
+ * URLTask::get("http://www.foo.com/bar.json")\n
  *    ->handle([=](URLResponse* res) {\n
  *        // handle the json here\n
  *    });\n
  * ````\n
- * When you create a URLRequest it will start automatically on the next tick of the event loop.
+ * When you create a URLTask it will start automatically on the next tick of the event loop.
  */
-class URLRequest : public Object {
+class URLTask : public Task {
 public:
     
     /** @name Instantiation
@@ -29,16 +30,16 @@ public:
      */
     
     /** Create and return a GET request */
-    static URLRequest* get(const string& url, Object* owner=nullptr, int flags=0);
+    static URLTask* get(const string& url, Object* owner=nullptr, int flags=0);
 
     /** Create and return a POST request */
-    static URLRequest* post(const string& url, const bytearray& body, Object* owner=nullptr);
+    static URLTask* post(const string& url, const bytearray& body, Object* owner=nullptr);
 
     /** Create and return a PATCH request */
-    static URLRequest* patch(const string& url, const bytearray& body, Object* owner=nullptr);
+    static URLTask* patch(const string& url, const bytearray& body, Object* owner=nullptr);
     
-    /** Create and return a request */
-    static URLRequest* createAndStart(const string& url, const string& method,
+    /** Create and return a URLTask which can be further configured before it starts on the next tick */
+    static URLTask* create(const string& url, const string& method,
             const bytearray& body, Object* owner=nullptr, int flags=0);
     
     /**@}*/
@@ -60,16 +61,6 @@ public:
     void setCachePolicy(CachePolicy policy);
     
 
-    enum Status {
-        Error=-1,
-        Queued=0,
-        Loading,
-        LoadedFromCache,
-        LoadedFromRemote,
-        Cancelled
-    };
-
-    
 
     /** @name Response handling
      * @{
@@ -82,39 +73,30 @@ public:
     /**@}*/
 
     
-    
-    /** @name Cancellation
-     * @{
-     */
-    /** Cancels the request, ensuring that response handlers won't run. */
-    virtual void cancel();
-    
-    bool isCancelled() const;
+    void cancel() override;
 
-    /**@}*/
     
 protected:
 
-    URLRequest(const string& url, const string& method, const bytearray& body, Object* owner, int flags);
-    ~URLRequest();
+    URLTask(const string& url, const string& method, const bytearray& body, Object* owner, int flags);
+    ~URLTask();
     
-    virtual void start();
     virtual void processRawResponse(URLResponse* response);
     virtual void dispatchResponse(const URLResponse* response, bool isFromCache);
+    
+
 
     // Platform-implemented methods
     error ioLoadRemote(); // runs on an IO thread, ie should block
 
     // General data
-    Status _status;
     int _flags;
     CachePolicy _cachePolicy;
     std::function<void(const URLResponse*, bool)> _handler;
-    sp<Task> _cacheTask;
-    sp<Task> _remoteTask;
+    //sp<Task> _cacheTask;
+    //sp<Task> _remoteTask;
     semaphore _sem; // Signalled if request cancelled
     std::atomic<bool> _remoteLoadComplete;
-    sp<Object> _owner;
 
     // Request data
     string _url;

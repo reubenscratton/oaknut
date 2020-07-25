@@ -103,7 +103,7 @@ ControllerKeySingle::ControllerKeySingle(Controller* controller) : ControllerKey
 void ControllerKeySingle::fromVariant(const variant& v) {
     ControllerKey::fromVariant(v);
 	_action = v.stringVal("a");
-	_beebKey = BeebKey_keyByName(v.stringVal("b").data());
+    _beebKey = BeebKey_keyByName(v.stringVal("b").c_str());
 	_beebKeyName = _beebKey->name;
 	_nameOfControllerToActivate = v.stringVal("c");
 }

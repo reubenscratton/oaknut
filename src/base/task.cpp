@@ -10,17 +10,17 @@
 
 
 namespace oak {
-    static thread_local bool s_isMainThread;
+    static pthread_t s_mainThread;
 
     static struct MainThreadInit {
         MainThreadInit() {
-            s_isMainThread = true;
+            s_mainThread = pthread_self();
         }
     } s_mainThreadInit;
 }
 
 bool Task::isMainThread() {
-    return s_isMainThread;
+    return s_mainThread == pthread_self();
 }
 
 
@@ -140,14 +140,38 @@ public:
 static ThreadPool* s_backgroundThreadPool;
 static ThreadPool* s_ioThreadPool;
 
+Task::Task(Object* owner) : _owner(owner), _status(Pending) {
+
+    // Hold a ref on the Task object until it completes or is cancelled
+    retain();
+
+}
+
+    
+void Task::addSubtasks(const vector<subtask> &subtasks) {
+    assert(_status != Cancelled && _status != Complete);
+    _lock.lock();
+    for (auto subtask : subtasks) {
+        subtask.task = this;
+        _subtasks.push_back(subtask);
+    }
+    _lock.unlock();
+}
+Task::~Task() {
+    //log_dbg("~Task(%X : %d)", this, _runContext);
+}
+
 
 Task* Task::enqueue(const vector<Task::subtask>& subtasks, Object* owner/*=nullptr*/) {
-    return new Task(subtasks, owner);
+    Task* task = new Task(owner);
+    task->addSubtasks(subtasks);
+    task->enqueueNextSubtask(variant());
+    return task;
 }
 
 void Task::subtask::exec() {
     if (task->_status != Task::Cancelled) {
-        task->_status = Task::Executing;
+        task->_status = Task::Running;
         assert(_func);
         _output = _func(_input);
     }
@@ -179,13 +203,15 @@ void Task::enqueueNextSubtask(const variant& input) {
         }
 
         // Detach next subtask from internal list and set its input
+        _lock.lock();
         Task::subtask subtask = _subtasks[0];
         _subtasks.erase(_subtasks.begin());
         subtask._input = input;
-        
+        _lock.unlock();
+
         //assert(_status == Created || _status == Executing);
         
-        _status = Queued;
+        _status = Pending;
         switch(subtask._threadType) {
             case Task::Background:
                 s_backgroundThreadPool->enqueueSubtask(subtask);
@@ -220,32 +246,18 @@ ThreadPool::~ThreadPool() {
 #endif
 
 
-    
-Task::Task(const vector<subtask>& subtasks, Object* owner/*=nullptr*/) : _owner(owner) {
-    for (auto subtask : subtasks) {
-        subtask.task = this;
-        _subtasks.push_back(subtask);
-    }
-    
-    // Hold a ref on the Task object as long as the Task is executing
-    retain();
-    
-    // Enqueue it
-    enqueueNextSubtask(variant());
-}
-Task::~Task() {
-    //log_dbg("~Task(%X : %d)", this, _runContext);
-}
-
 
 
 
 
 void Task::cancel() {
+    assert(isMainThread());
     if (_status == Cancelled || _status == Complete) {
-        assert(_subtasks.size()==0);
         return;
     }
     _status = Cancelled;
+    _lock.lock();
+    _subtasks.clear();
+    _lock.unlock();
 }
 

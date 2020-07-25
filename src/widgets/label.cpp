@@ -172,8 +172,11 @@ void Label::layout(RECT constraint) {
     layoutText();
 }
 
+RECT Label::getTextRectForLayout() {
+    return getOwnRectPadded();
+}
 void Label::layoutText() {
-    RECT rect = getOwnRectPadded();
+    RECT rect = getTextRectForLayout();
     _textLayout.layout(rect);
     if (!_textLayout.opsValid()) {
         _updateRenderOpsNeeded = true;
@@ -242,7 +245,7 @@ const attributed_string::attribute* Label::getAttribute(int32_t pos, attributed_
 string Label::debugViewType() {
     char ach[256];
     snprintf(ach, 256, "Label:%s", _textLayout.getText().c_str());
-    return string(ach);
+    return string(ach, -1);
 }
 
 #endif

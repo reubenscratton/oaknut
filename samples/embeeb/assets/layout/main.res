@@ -12,7 +12,7 @@
     {
         class: ControllerView
         id: controllerView
-        size: fill, aspect(0.675)
+        size: fill, aspect 0.675
         background: #222
     }
     ]

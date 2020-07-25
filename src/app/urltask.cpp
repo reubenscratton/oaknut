@@ -1,5 +1,5 @@
 //
-// Copyright © 2018 Sandcastle Software Ltd. All rights reserved.
+// Copyright © 2020 Sandcastle Software Ltd. All rights reserved.
 //
 // This file is part of 'Oaknut' which is released under the MIT License.
 // See the LICENSE file in the root of this installation for details.
@@ -26,138 +26,132 @@ static string pathForHash(const sha1_t& hash) {
 
 
 
-URLRequest::URLRequest(const string& url, const string& method, const bytearray& body,
-        Object* owner, int flags) : _url(url), _owner(owner) {
+URLTask::URLTask(const string& url, const string& method, const bytearray& body,
+        Object* owner, int flags) : Task(owner), _url(url) {
 	_method = method;
     _body = body;
     _flags = flags;
     _cachePolicy = CachePolicy::Default;
-    _status = Status::Queued;
+    addSubtasks({
+        {Task::MainThread, [=](variant& input) -> variant {
+            log_dbg("start: %s", _url.c_str());
+
+            const sha1_t sha = sha1(_url);
+
+            // See if response is in RAM cache, if so we can avoid a cache load.
+            bool cacheLoadWanted = (_cachePolicy != CachePolicy::RemoteOnly);
+            if (cacheLoadWanted) {
+                if (s_urlRamCache.get(sha, _cachedResponse)) {
+                    log_dbg("RAMcache hit: %s", _url.c_str());
+                    dispatchResponse(_cachedResponse, true);
+                    cacheLoadWanted = false;
+                }
+            }
+             
+
+            // Enqueue the disk cache load
+            if (cacheLoadWanted) {
+                addSubtasks({
+                    {Task::IO, [=](variant&)->variant {
+                        string path = pathForHash(sha);
+                        bool cacheValid = false;
+                        // TODO: don't load whole thing into RAM here, read in two parts so we can
+                        // spawn remote load before data has been read.
+                        variant data = File::load_sync(path);
+                        if (data.isByteArray()) {
+                            log_dbg("DiskCache hit: %s", _url.c_str());
+                            bytestream strm(data.bytearrayRef());
+                            _cachedResponse = new URLResponse();
+                            strm.read(_cachedResponse->expiryTime);
+                            strm.read(_cachedResponse->httpStatus);
+                            strm.read(_cachedResponse->headers);
+                            strm.read(_cachedResponse->downloadTime);
+                            strm.read(_cachedResponse->data);
+                            cacheValid = app->currentMillis() <= _cachedResponse->expiryTime;
+                        }
+                        if (_cachePolicy == CachePolicy::CacheOnly) {
+                            return true;
+                        }
+                        if (cacheValid && _cachePolicy != CachePolicy::RemoteOnly) {
+                            log_dbg("Cache valid: %s", _url.c_str());
+                            return true;
+                        }
+                        startRemoteLoad(sha);
+                        return true;
+                    }},
+                    {Task::Background, [=](variant& result)->variant {
+                        if (_remoteLoadComplete || _status==Cancelled) {
+                            return true;
+                        }
+                        if (_cachedResponse) {
+                            processRawResponse(_cachedResponse);
+                        }
+                        return true;
+                    }},
+                    {Task::MainThread, [=](variant& result)->variant {
+                        if (_cachedResponse && !(_remoteLoadComplete || _status==Cancelled)) {
+                            if (_cachedResponse->hasBeenDecoded) {
+                                _cachedResponse->data.clear();
+                            }
+                            log_dbg("Disk->RAM cache: %s", _url.c_str());
+                            s_urlRamCache.put(sha, _cachedResponse, _cachedResponse->getRamCost());
+                            dispatchResponse(_cachedResponse, true);
+                            if (_cachePolicy == CacheOnly) {
+                                _owner = nullptr;
+                            }
+                        }
+                        return variant();
+                    }}
+                });
+            }
+            
+            // If we don't care about cache, kick off the remote load immediately
+            if (!cacheLoadWanted) {
+                if (_cachedResponse) {
+                    bool cacheValid = app->currentMillis() <= _cachedResponse->expiryTime;
+                    if (cacheValid) {
+                        _owner = nullptr;
+                        return variant();
+                    }
+                }
+                startRemoteLoad(sha);
+            }
+            return variant();
+        }}
+    });
+    enqueueNextSubtask(variant());
+
 }
 
-URLRequest* URLRequest::createAndStart(const string& url, const string& method,
+URLTask* URLTask::create(const string& url, const string& method,
         const bytearray& body, Object* owner, int flags) {
     
     // TODO: lookup existing request by url?
-    auto req = new URLRequest(url, method, body, owner, flags);
-    req->retain();
-    Task::postToMainThread([=]() {
-        req->start();
-        req->release();
-    });
-    return req;
+    return new URLTask(url, method, body, owner, flags);
 }
-URLRequest* URLRequest::get(const string& url, Object* owner, int flags/*=0*/) {
-    return createAndStart(url, "GET", bytearray(), owner, flags);
+URLTask* URLTask::get(const string& url, Object* owner, int flags/*=0*/) {
+    return create(url, "GET", bytearray(), owner, flags);
 }
-URLRequest* URLRequest::post(const string& url, const bytearray& body, Object* owner) {
-    return createAndStart(url, "POST", body, owner, 0);
+URLTask* URLTask::post(const string& url, const bytearray& body, Object* owner) {
+    return create(url, "POST", body, owner, 0);
 }
-URLRequest* URLRequest::patch(const string& url, const bytearray& body, Object* owner) {
-    return createAndStart(url, "PATCH", body, owner, 0);
+URLTask* URLTask::patch(const string& url, const bytearray& body, Object* owner) {
+    return create(url, "PATCH", body, owner, 0);
 }
 
-URLRequest::~URLRequest() {
+URLTask::~URLTask() {
 }
 
-void URLRequest::setHeader(const string &headerName, const string &headerValue) {
+void URLTask::setHeader(const string &headerName, const string &headerValue) {
     _headers[headerName] = headerValue;
 }
-void URLRequest::handle(std::function<void(const URLResponse*,bool)> handler) {
+void URLTask::handle(std::function<void(const URLResponse*,bool)> handler) {
     _handler = handler;
 }
 
-void URLRequest::start() {
-    log_dbg("start: %s", _url.c_str());
-    
-    const sha1_t sha = sha1(_url);
-
-    // See if response is in RAM cache, if so we can avoid a cache load.
-    bool cacheLoadWanted = (_cachePolicy != CachePolicy::RemoteOnly);
-    if (cacheLoadWanted) {
-        if (s_urlRamCache.get(sha, _cachedResponse)) {
-            log_dbg("RAMcache hit: %s", _url.c_str());
-            dispatchResponse(_cachedResponse, true);
-            cacheLoadWanted = false;
-        }
-    }
-     
-
-    // Enqueue the disk cache load
-    if (cacheLoadWanted) {
-        retain();
-        _cacheTask = Task::enqueue({
-            {Task::IO, [=](variant&)->variant {
-                string path = pathForHash(sha);
-                bool cacheValid = false;
-                // TODO: don't load whole thing into RAM here, read in two parts so we can
-                // spawn remote load before data has been read.
-                variant data = File::load_sync(path);
-                if (data.isByteArray()) {
-                    log_dbg("DiskCache hit: %s", _url.c_str());
-                    bytestream strm(data.bytearrayRef());
-                    _cachedResponse = new URLResponse();
-                    strm.read(_cachedResponse->expiryTime);
-                    strm.read(_cachedResponse->httpStatus);
-                    strm.read(_cachedResponse->headers);
-                    strm.read(_cachedResponse->downloadTime);
-                    strm.read(_cachedResponse->data);
-                    cacheValid = app->currentMillis() <= _cachedResponse->expiryTime;
-                }
-                if (_cachePolicy == CachePolicy::CacheOnly) {
-                    return true;
-                }
-                if (cacheValid && _cachePolicy != CachePolicy::RemoteOnly) {
-                    log_dbg("Cache valid: %s", _url.c_str());
-                    return true;
-                }
-                startRemoteLoad(sha);
-                return true;
-            }},
-            {Task::Background, [=](variant& result)->variant {
-                if (_remoteLoadComplete || _status==Cancelled) {
-                    return true;
-                }
-                if (_cachedResponse) {
-                    processRawResponse(_cachedResponse);
-                }
-                return true;
-            }},
-            {Task::MainThread, [=](variant& result)->variant {
-                if (_cachedResponse && !(_remoteLoadComplete || _status==Cancelled)) {
-                    if (_cachedResponse->hasBeenDecoded) {
-                        _cachedResponse->data.clear();
-                    }
-                    log_dbg("Disk->RAM cache: %s", _url.c_str());
-                    s_urlRamCache.put(sha, _cachedResponse, _cachedResponse->getRamCost());
-                    dispatchResponse(_cachedResponse, true);
-                    if (_cachePolicy == CacheOnly) {
-                        _owner = nullptr;
-                    }
-                }
-                release();
-                return variant();
-            }}
-        }, _owner);
-    }
-    
-    // If we don't care about cache, kick off the remote load immediately
-    if (!cacheLoadWanted) {
-        if (_cachedResponse) {
-            bool cacheValid = app->currentMillis() <= _cachedResponse->expiryTime;
-            if (cacheValid) {
-                _owner = nullptr;
-                return;
-            }
-        }
-        startRemoteLoad(sha);
-    }
-}
-
-void URLRequest::startRemoteLoad(const sha1_t& sha) {
-    assert(!_remoteTask);
+void URLTask::startRemoteLoad(const sha1_t& sha) {
     retain();
-    _remoteTask = Task::enqueue({
+    addSubtasks({
         {Task::IO, [=](variant&) -> variant {
             
             if (_status==Cancelled) {
@@ -281,14 +275,16 @@ void URLRequest::startRemoteLoad(const sha1_t& sha) {
             release();
             return variant();
         }},
-    }, _owner);
+    });
 
 }
 
 
-void URLRequest::cancel() {
+void URLTask::cancel() {
     _status = Status::Cancelled;
-    if (_cacheTask) {
+    _sem.signal();
+    Task::cancel();
+/*    if (_cacheTask) {
         log_dbg("Cancel cache: %s", _url.c_str());
         _cacheTask->cancel();
         _cacheTask = nullptr;
@@ -299,14 +295,11 @@ void URLRequest::cancel() {
         _remoteTask->cancel();
         _remoteTask = nullptr;
     }
-    _owner = nullptr;
+    _owner = nullptr;*/
 }
 
-bool URLRequest::isCancelled() const {
-    return _status == Status::Cancelled;
-}
 
-void URLRequest::dispatchResponse(const URLResponse* response, bool isFromCache) {
+void URLTask::dispatchResponse(const URLResponse* response, bool isFromCache) {
     if (_handler && _status != Cancelled) {
         _handler(response, isFromCache);
     }
@@ -316,7 +309,7 @@ void URLRequest::dispatchResponse(const URLResponse* response, bool isFromCache)
  processResponse is called on the background to perform decoding of the raw byte response into
  a usable form, e.g. decoding a bitmap or parsing a JSON object, etc.
  */
-void URLRequest::processRawResponse(URLResponse* response) {
+void URLTask::processRawResponse(URLResponse* response) {
     //bool didError = (response->httpStatus>=400) || _status==Status::Error;
     
     // Give app code a chance to process the response in the background.

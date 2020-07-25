@@ -67,6 +67,7 @@ protected:
     } _pendingFontChange;
     
     void layoutText();
+    virtual RECT getTextRectForLayout();
 };
 
 

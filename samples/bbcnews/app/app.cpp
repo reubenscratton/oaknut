@@ -192,7 +192,7 @@ public:
             return true;
         }
         if (name=="image") {
-            _imageView->setImageAsset(value.stringVal());
+            _imageView->setImage(value.stringVal());
             return true;
         }
         return View::applySingleStyle(name, value);
@@ -236,7 +236,7 @@ public:
         _tabBar->setSelectedIndex(0);
 
         ImageView* logo = new ImageView();
-        logo->setImageAsset("images/logo.png");
+        logo->setImage("images/logo.png");
         setTitleView(logo);
         
         _topStories->setContentStub(BNContent::stub::fromID("/cps/news/front_page", "Front Page"));

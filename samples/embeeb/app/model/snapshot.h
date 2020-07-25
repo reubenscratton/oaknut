@@ -16,7 +16,7 @@ public:
     string _controllerId;
 
     Snapshot();
-    void updateWithData(ByteBuffer* data, Bitmap* thumbnail, string controllerId);
+    void updateWithData(const bytearray& data, Bitmap* thumbnail, string controllerId);
 
     // ISerializeToVariant
     void fromVariant(const variant& v) override;

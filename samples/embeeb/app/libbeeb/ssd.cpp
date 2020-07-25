@@ -100,7 +100,7 @@ uint8_t* serialize_ssd(bool saving, uint8_t* p) {
 
 
 void ssd_load(int drive, unsigned char *img, int cb) {
-    bbcLogI("ssd_load");
+    log_info("ssd_load");
     ssd_close(drive);
 	writeprot[drive]=0;
 	ssdf[drive].img = (uint8_t*)malloc(cb);
@@ -118,7 +118,7 @@ void ssd_load(int drive, unsigned char *img, int cb) {
 
 
 void ssd_close(int drive) {
-    bbcLogI("ssd_close");
+    log_info("ssd_close");
     if (ssdf[drive].img) {
         free(ssdf[drive].img);
         ssdf[drive].img=NULL;
@@ -128,7 +128,7 @@ void ssd_close(int drive) {
 }
 void dsd_load(int drive, unsigned char *img, int cb)
 {
-    bbcLogI("dsd_load");
+    log_info("dsd_load");
         writeprot[drive]=0;
         ssdf[drive].img = img;
         ssdf[drive].cb = cb;

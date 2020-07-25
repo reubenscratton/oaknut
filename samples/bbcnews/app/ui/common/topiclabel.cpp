@@ -18,7 +18,7 @@ static attributed_string* s_separatorString;
 static attributed_string& getSeparatorString() {
     if (!s_separatorString) {
         s_separatorString = new attributed_string("  |  ");
-        s_separatorString->applyStyle(app->getStyle("linkSeparator"));
+        s_separatorString->applyStyle(style::get("linkSeparator"));
     }
     return *s_separatorString;
 }

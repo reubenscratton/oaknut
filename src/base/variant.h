@@ -278,5 +278,5 @@ private:
     static variant parse(const string& str, uint32_t& o, int flags);
 };
 
-//template <>
-//class Bitmap* variant::getObject<Bitmap>(const string& key) const;
+template <>
+class Bitmap* variant::getObject<Bitmap>(const string& key) const;

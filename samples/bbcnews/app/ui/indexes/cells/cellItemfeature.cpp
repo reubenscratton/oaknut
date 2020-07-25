@@ -16,7 +16,7 @@ public:
     BNCellItemFeature(BNCellsModule* module) : BNCellItem(module, BNCellStyle::Feature) {
         
         _accentView = new View();
-        _accentView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Abs(app->getStyleFloat("featureAccentStripHeight")));
+        _accentView->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Abs(style::get("featureAccentStripHeight")->floatVal()));
         _accentView->setLayoutOrigin(ALIGNSPEC::Left(), ALIGNSPEC::Below(_imageView, 0));
         addSubview(_accentView);
         
@@ -24,7 +24,7 @@ public:
         _topic->setLayoutSize(MEASURESPEC::Fill(), MEASURESPEC::Wrap());
         _headline->setLayoutOrigin(ALIGNSPEC::Left(), ALIGNSPEC::Abs(app->dp(32)));
         _headline->applyStyle((module->_cellsPerRow > 1) ? "featureHeadline"_S : "featureFullWidthHeadline"_S);
-		_textAreaInsets = app->getStyle("text-insets")->edgeInsetsVal("feature");
+		_textAreaInsets = style::get("text-insets")->edgeInsetsVal("feature");
 		_showMediaGlyphInHeadline = true;
 		_hideTimestamp = true;
 		_imagePos = module->_json.stringVal("imagePosition");
@@ -51,7 +51,7 @@ public:
         } else {
             colorName = "color.featureFeatures";
         }
-        _accentView->setBackgroundColor(app->getStyleColor(colorName));
+        _accentView->setBackgroundColor(style::get(colorName)->colorVal());
     }
 
 };

@@ -59,7 +59,7 @@ BNCellItem::BNCellItem(BNCellsModule* module, BNCellStyle cellStyle) : BNCellCon
         _textFrame->addSubview(_topic);
     }
 
-    auto textInsetsStyle = app->getStyle("text-insets");
+    auto textInsetsStyle = style::get("text-insets");
     if (module->_H == 1) {
         _headline->applyStyle("H1");
         _textAreaInsets = textInsetsStyle->edgeInsetsVal("top-story");
@@ -235,9 +235,9 @@ void BNCellItem::setItem(BNItem* item) {
     }
 
     _inverseColorScheme = _item->isMediaItem();
-    setBackgroundColor(app->getStyleColor(_inverseColorScheme ? "color.contentBackgroundInv"_S:"color.contentBackground"_S));
+    setBackgroundColor(style::get(_inverseColorScheme ? "color.contentBackgroundInv"_S:"color.contentBackground"_S)->colorVal());
 
-    _headline->setTextColor(app->getStyleColor(_inverseColorScheme ? "color.contentForegroundInv"_S:"color.contentForeground"_S));
+    _headline->setTextColor(style::get(_inverseColorScheme ? "color.contentForegroundInv"_S:"color.contentForeground"_S)->colorVal());
     
     if (_summary) {
         if (_item->_summaryOverride.length()) {
@@ -269,7 +269,7 @@ void BNCellItem::setItem(BNItem* item) {
     _imageView->setBNImage(image);
     
     if (_isDummy) {
-        setBackgroundColor(app->getStyleColor("color.contentBackground"));
+        setBackgroundColor(style::get("color.contentBackground")->colorVal());
         //_dummyLabel->createLabel(_view);
     }
 

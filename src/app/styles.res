@@ -47,7 +47,10 @@ colors: {
 }
 
 ListView: {
-    background@selected: #d9d9d9
+    background: {
+        @default: #00000000
+        @selected: #d9d9d9
+    }
     divider-height: 1px
     divider-color: #ccc
     item-title: {
@@ -72,6 +75,7 @@ Button: {
     }
     gravity: center
     padding: 16dp,8dp
+    image-spacing: 8dp
 }
 
 ToolbarButton: {

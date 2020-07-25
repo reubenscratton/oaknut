@@ -19,8 +19,7 @@ public:
     };
 	
 	ImageView();
-	void setImageUrl(const string& url);
-    void setImageAsset(const string& assetPath);
+	void setImage(const string& assetOrUrl);
     void setTexture(Texture* texture);
     void setBitmap(Bitmap* bitmap);
     void setImageNode(AtlasNode* node);
@@ -29,7 +28,6 @@ public:
     RECT getImageRect() const;
 	
 	// Overrides
-	//void attachToWindow(Window* window) override;
     void attachToSurface() override;
 	void detachFromSurface() override;
 	void onEffectiveTintColorChanged() override;
@@ -41,17 +39,10 @@ public:
 
 protected:
     string _url;
-    string _assetPath;
-    sp<Task> _imageLoadTask;
-    sp<URLRequest> _request;
+    sp<Task> _task;
     sp<TextureRenderOp> _renderOp;
     sp<AtlasNode> _atlasNode;
     bool _loaded;
-    TIMESTAMP _startLoadTime;
-    bool _useFadeEffect;
-    bool _useSharedTexture;
-    SIZE _sharedTextureSize;
-    RECT _rectTex;
     ContentMode _contentMode;
 
     // Internal helpers

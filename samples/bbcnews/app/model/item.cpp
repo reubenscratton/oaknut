@@ -68,7 +68,7 @@ BNItem::BNItem(const variant& json) : BNContent(json) {
                 if (tag == "paragraph") {
                     style_name = xml.attributeValue("role");
                 }
-                currentPara.applyStyle(app->getStyle("article.text."+style_name));
+                currentPara.applyStyle(style::get("article.text."+style_name));
             }
         }
         

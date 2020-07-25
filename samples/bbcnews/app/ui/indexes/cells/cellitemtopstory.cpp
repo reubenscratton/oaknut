@@ -39,7 +39,7 @@ void BNCellItemTopStory::setItem(BNItem* item) {
         attributed_string age = "TODO"; //[NSDate tinyTimestampStringFromTimeStamp:_item->_lastUpdated);
         if (age.length()) {
             tinyTimestampLabel = new Label();
-            age.applyStyle(app->getStyle("tinyTimestamps"));
+            age.applyStyle(style::get("tinyTimestamps"));
             tinyTimestampLabel->setText(age);
             tinyTimestampLabel->sizeToFit();
             RECT frame = tinyTimestampLabel->getRect();

@@ -17,7 +17,7 @@ extern error nserr(NSError* e);
 
 
 
-error URLRequest::ioLoadRemote() {
+error URLTask::ioLoadRemote() {
 
     // One-off init of session object
     if (!s_session) {
