@@ -260,9 +260,12 @@ struct ShaderState {
         if (fragUniforms.length() > 0) {
             s += ",constant FragUniforms* uniforms [[buffer(0)]]\n";
         }
-        if (shader->_features.textures[0] != Texture::Type::None) {
-            s+= ",texture2d<half> colorTexture [[ texture(0) ]]\n";
-            s+= ",sampler textureSampler [[ sampler(0) ]]";
+        for (int i=0 ; i<shader->getTextureCount() ; i++) {
+            auto tex = shader->getTextureType(i);
+            if (tex != Texture::Type::None) {
+                s+= ",texture2d<half> colorTexture [[ texture(0) ]]\n";
+                s+= ",sampler textureSampler [[ sampler(0) ]]";
+            }
         }
         s+= ") {\n"
         " half4 c;\n";

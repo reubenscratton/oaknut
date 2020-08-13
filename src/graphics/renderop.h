@@ -9,13 +9,10 @@
 #define BLENDMODE_NORMAL 1
 #define BLENDMODE_PREMULTIPLIED 2
 
-#define MERGETYPE_ANY 0
-#define MERGETYPE_TEXT 1
 
 class RenderOp : public Object {
 public:
     class View* _view;
-    int _mergeType;
     RECT _rect;
     EDGEINSETS _inset;
     sp<Shader> _shader;
@@ -44,13 +41,18 @@ public:
     virtual bool intersects(RenderOp* op);
     virtual void asQuads(QUAD* quad);
     virtual void rectToSurfaceQuad(RECT rect, QUAD* quad);
-    virtual void invalidateBatchGeometry();
+    virtual void invalidateVertexes();
     RECT surfaceRect();
     int getRenderOrder();
 
+    // If an op is 'batched' it is attached to the surface and may be part of a batch
+    // of ops that can be drawn in a single call. If the shader changes (i.e. shader
+    // feature change) or any uniform data changes, you must call invalidateBatch().
+    virtual void invalidateBatch();
+    
     // The op is 'valid' once it has chosen a shader that can satisfy its render params. If the
     // render params change then the shader needs to be validated and possibly generated on demand
-    virtual void invalidate();
+    virtual void invalidateShader();
     virtual void validateShader(RenderTask* r)=0;
     virtual void rebatchIfNecessary();
 

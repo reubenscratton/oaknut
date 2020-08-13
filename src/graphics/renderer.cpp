@@ -21,42 +21,23 @@ Texture::~Texture() {
     }
 }
 
-Shader::Shader(Renderer* renderer) : Shader(renderer, Shader::Features()) {
-}
-Shader::Shader(Renderer* renderer, Shader::Features features) : RenderResource(renderer), _features(features) {
+Shader::Shader(Renderer* renderer) : RenderResource(renderer) {
     _it = renderer->_shaders.insert(renderer->_shaders.end(), this);
     declareAttribute("position", VariableType::Float2);
     _u_mvp = declareUniform("mvp", VariableType::Matrix4, Uniform::Vertex);
-    bool useTexCoordAttrib = false;
-    if (_features.textures[0]) {
-        useTexCoordAttrib = true;
-    }
-    if (_features.alpha) {
-        _u_alpha = declareUniform("alpha", VariableType::Float1);
-    }
-    if (_features.sdf != SDF_NONE) {
-        _u_strokeColor = declareUniform("strokeColor", VariableType::Color);
-        _u_u = declareUniform("u", VariableType::Float4);
-        switch (_features.sdf) {
-        case SDF_ROUNDRECT_1:
-            _u_cornerRadius = declareUniform("cornerRadius", VariableType::Float1);
-            break;
-        case SDF_ROUNDRECT_2H:
-        case SDF_ROUNDRECT_2V:
-        case SDF_ROUNDRECT_4:
-            _u_cornerRadii = declareUniform("cornerRadii", VariableType::Float4);
-            break;
-        }
-        useTexCoordAttrib = true;
-    }
-    
-    if (useTexCoordAttrib) {
-        declareAttribute("texcoord", VariableType::Float2);
-    }
+    _u_alpha = declareUniform("alpha", VariableType::Float1);
     declareAttribute("color", VariableType::Color);
 }
 
+string Shader::getSupportingSource() {
+    return "";
+}
+string Shader::getFragmentSource() {
+    return "";
+}
+
 Shader::~Shader() {
+    // TODO: release from factory
     if (_renderer) {
         _renderer->releaseShader(this);
     }
@@ -109,114 +90,8 @@ string oak::sl_getTypeString(Shader::VariableType type) {
 }
 
 
-string Shader::getSupportingSource() {
-    if (_features.sdf == SDF_NONE) {
-        return "";
-    }
-    string ss = "";
-    // SDF implementations!
-    if (_features.sdf == SDF_ROUNDRECT_1) {
-        ss += SL_FLOAT1 " sdf_roundrect(" SL_FLOAT2 " p, " SL_FLOAT2 " b, " SL_FLOAT1 " r) {\n"
-              SL_FLOAT2 " q = abs(p) - b + " SL_FLOAT2 "(r);\n"
-              " return min(max(q.x,q.y),0.0) + length(max(q,0.0)) - r;\n"
-              "}";
-    }
-    
-    else if (_features.sdf == SDF_ROUNDRECT_2H) {
-        // branchless selection of radius=r.x if on left side of quad or radius=r.y on right side
-        ss += "float sdf_roundrect_2h() {\n"
-/*
- float sdRoundedBox( in vec2 p, in vec2 b, in vec4 r )
- {
-     r.xy = (p.x>0.0)?r.xy : r.zw;
-     r.x  = (p.y>0.0)?r.x  : r.y;
-     vec2 q = abs(p)-b+r.x;
-     return min(max(q.x,q.y),0.0) + length(max(q,0.0)) - r.x;
- }
- */
-        SL_FLOAT2 " size = " SL_UNIFORM(u) ".xy;\n"
-        SL_FLOAT2 " r = " SL_UNIFORM(cornerRadii) ".xw\n;" // TODO: this is specific to left|right config
-        "float s=step(" SL_VERTEX_OUTPUT(texcoord) ".x,0.0);\n"
-        "float radius = s*r.x + (1.0-s)*r.y;\n"
-        "size -= " SL_FLOAT2 "(radius);\n"
-        SL_FLOAT2 " d = abs(" SL_VERTEX_OUTPUT(texcoord) ") - size;\n"
-        "float dist = min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - radius;\n";
-    }
-
-    return ss;
-}
 
 
-string Shader::getFragmentSource() {
-    bool useTexSampler = false;
-    bool useTexCoords = false;
-    
-    // If shader uses an SDF, we put quad size into texcoord attribute
-    // TODO: this is bogus cos it prevents textured SDFs. Needs a dedicated attrib, which requires dynamic vertex structure
-    if (_features.sdf != SDF_NONE) {
-        useTexCoords = true;
-    }
-    if (_features.textures[0]) {
-        useTexSampler = true;
-        useTexCoords = true;
-        //_sampler.set(0);
-    }
-    
-    
-    
-    
-    string fs = "c = ";
-    if (useTexSampler) {
-        switch (_features.textures[0]) {
-            case Texture::Type::None:
-                break;
-            case Texture::Type::Normal:
-                fs += SL_TEXSAMPLE_2D("texture",  SL_VERTEX_OUTPUT(texcoord));
-                break;
-            case Texture::Type::Rect:
-                fs += SL_TEXSAMPLE_2D_RECT("texture",  SL_VERTEX_OUTPUT(texcoord));
-                break;
-            case Texture::Type::OES:
-                fs += SL_TEXSAMPLE_2D_OES("texture",  SL_VERTEX_OUTPUT(texcoord));
-                break;
-        }
-        fs += ";\n";
-        
-        if (_features.tint) {
-            fs += "    c.rgb = " SL_VERTEX_OUTPUT(color) ".rgb;\n";
-        }
-    } else {
-        fs += SL_VERTEX_OUTPUT(color);
-        fs += ";\n";
-
-    }
-    
-
-    if (_features.sdf == SDF_NONE) {
-        fs += SL_OUTPIXVAL " = c;\n";
-    } else {
-        
-        // Get two distance values, one for the outer edge and one for the inner edge
-        fs += SL_FLOAT2 " p = " SL_VERTEX_OUTPUT(texcoord) ";\n";
-        fs += SL_FLOAT2 " b = " SL_UNIFORM(u) ".xy;\n";
-        fs += SL_HALF4_DECL " strokeColor(" SL_UNIFORM(strokeColor) ");\n";
-        fs += SL_FLOAT1 " dOuter = sdf_roundrect(p, b, " SL_UNIFORM(cornerRadius) ");\n";
-        fs += SL_FLOAT1 " strokeWidth = " SL_UNIFORM(u) ".w;\n";
-        fs += SL_FLOAT1 " dInner = sdf_roundrect(p, b - strokeWidth, " SL_UNIFORM(cornerRadius) " - strokeWidth);\n";
-        
-        // Cheap AA
-        fs += SL_HALF4_DECL " colOuter = strokeColor;\n"
-                            " colOuter.a *= 1.0 - clamp(dOuter+0.5, 0.0, 1.0);\n";
-        fs += SL_OUTPIXVAL " = mix(c, colOuter, clamp(dInner+0.5, 0.0, 1.0));\n";
-    }
-    
-    
-    if (_features.alpha) {
-        fs += SL_OUTPIXVAL ".a *= " SL_UNIFORM(alpha) ";\n";
-    }
-
-    return fs;
-}
 
 
 RenderTask::RenderTask(Renderer* r) : RenderResource(r) {
@@ -227,14 +102,14 @@ Renderer::Renderer() : _quadBuffer(sizeof(QUAD), 256) {
     _primarySurfaceFormat = PIXELFORMAT_DEFAULT32;
 }
 
-Shader* Renderer::getStandardShader(Shader::Features features) {
+/*Shader* Renderer::getStandardShader(RenderOp* op) {
     Shader* shader = _standardShaders[features];
     if (!shader) {
         shader = new Shader(this, features);
         _standardShaders[features] = shader;
     }
     return shader;    
-}
+}*/
 
 void RenderTask::setCurrentSurface(Surface* surface) {
     if (surface == _currentSurface) {

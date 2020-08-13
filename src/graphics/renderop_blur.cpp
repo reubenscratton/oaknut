@@ -22,7 +22,6 @@
 
 
 BlurShader::BlurShader(Renderer* renderer, int radius/*=4*/) : Shader(renderer) {
-    _features.textures[0] = Texture::Type::Normal;
     declareAttribute("texcoord", VariableType::Float2);
     _u_texOffset = declareUniform("texOffset", VariableType::Float2, Uniform::Usage::Vertex);
     
@@ -123,8 +122,8 @@ string BlurShader::getFragmentSource() {
 
 class PostBlurShader : public Shader {
 public:
-    PostBlurShader(Renderer* renderer) : Shader(renderer, Features(false,0,true,Texture::Type::Normal) ) {
-        
+    PostBlurShader(Renderer* renderer) : Shader(renderer) {
+        declareAttribute("texcoord", VariableType::Float2);
     }
     string getFragmentSource() override {
         return

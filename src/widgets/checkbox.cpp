@@ -20,7 +20,14 @@ Vertexes for the checkbox tick, as per https://material.io/develop/web/component
  */
 class TickShader : public Shader {
 public:
-    TickShader(Renderer* renderer) : Shader(renderer, Features(true, SDF_ROUNDRECT_1, true, Texture::Type::None)) {
+    struct Features {
+        uint32_t _;
+        bool operator<(const struct Features &rhs) const {
+            return _ < rhs._;
+        }
+    } _features;
+    
+    TickShader(Renderer* renderer, Features features) : Shader(renderer), _features(features) {
         //_u_sigma = declareUniform("sigma", VariableType::Float1, Uniform::Usage::Fragment);
     }
     string getFragmentSource() override {
@@ -62,9 +69,10 @@ public:
         // Alpha
         SL_OUTPIXVAL ".a = clamp(-dist, 0.0, 1.0);\n";
     }
-    
-    int16_t _u_sigma;
 };
+
+static ShaderFactory<TickShader> s_factory;
+
 class RenderOp_Tick : public RectRenderOp {
 public:
     
@@ -72,8 +80,7 @@ public:
     }
     
     void validateShader(RenderTask* r) override {
-        auto features = getStandardFeatures();
-        _shader = new TickShader(r->_renderer);
+        _shader = s_factory.get(r->_renderer, {});
         _blendMode = BLENDMODE_NORMAL;
 
     }

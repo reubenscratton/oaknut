@@ -14,7 +14,6 @@ TextRenderOp::TextRenderOp(AtlasPage* atlasPage) : RenderOp() {
     _alpha = 1.0f;
     _atlasPage = atlasPage;
     _blendMode = BLENDMODE_NORMAL;
-    _mergeType = MERGETYPE_TEXT;
 }
 
 void TextRenderOp::validateShader(RenderTask* r) {
@@ -23,11 +22,11 @@ void TextRenderOp::validateShader(RenderTask* r) {
         if (!bitmap->_texture) {
             r->_renderer->createTextureForBitmap(bitmap);
         }
-        Shader::Features features;        
-        features.textures[0] = bitmap->_texture->_type;
+        RectShader::Features features;
+        features.tex0 = bitmap->_texture->_type;
         features.tint = 1;
         features.alpha = _alpha<1.0f;
-        _shader = r->_renderer->getStandardShader(features);
+        _shader = RectShader::get(r->_renderer, features);
     }
 }
 

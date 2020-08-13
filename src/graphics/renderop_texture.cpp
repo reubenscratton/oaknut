@@ -56,16 +56,16 @@ void TextureRenderOp::validateShader(RenderTask* r) {
         }
     }
     if (tex) {
-        Shader::Features features;
-        features.textures[0] = tex->_type;
+        RectShader::Features features;
+        features.tex0 = tex->_type;
         features.alpha = (_alpha<1.0f);
         features.tint = (_color!=0);
-        _shader = r->_renderer->getStandardShader(features);
+        _shader = RectShader::get(r->_renderer, features);
     }
 }
 void TextureRenderOp::setTexRect(const RECT& texRect) {
     _rectTex = texRect;
-    invalidateBatchGeometry();
+    invalidateVertexes();
 }
 
 void TextureRenderOp::asQuads(QUAD *quad) {
@@ -92,8 +92,9 @@ bool TextureRenderOp::canMergeWith(const RenderOp* op) {
 
 void TextureRenderOp::prepareToRender(RenderTask* r, Surface* surface) {
     RenderOp::prepareToRender(r, surface);
-    if (_shader->_features.alpha) {
-        r->setUniform(_shader->_u_alpha, _alpha);
+    RectShader* shader = _shader.as<RectShader>();
+    if (shader->_features.alpha) {
+        r->setUniform(shader->_u_alpha, _alpha);
     }
     if (_texture) {
         r->setCurrentTexture(_texture);
@@ -104,13 +105,23 @@ void TextureRenderOp::prepareToRender(RenderTask* r, Surface* surface) {
 
 void TextureRenderOp::setTexture(Texture* texture) {
     if (_bitmapProvider) {
-        _bitmapProvider = NULL;
+        _bitmapProvider = nullptr;
     }
     if (_bitmap) {
         _bitmap = nullptr;
     }
     _texture = texture;
-    invalidate();
+    if (_shader) {
+        RectShader* shader = _shader.as<RectShader>();
+        RectShader::Features features;
+        features.tex0 = texture->_type;
+        features.alpha = (_alpha<1.0f);
+        features.tint = (_color!=0);
+        if (shader->_features != features) {
+            invalidateShader();
+        }
+    }
+
     if (_view) {
         _view->setNeedsFullRedraw(); // lazy
     }
@@ -134,7 +145,7 @@ void TextureRenderOp::setBitmap(Bitmap *bitmap) {
                 setBlendMode(BLENDMODE_NONE);
             }
         }
-        invalidate();
+        invalidateShader();
         if (_view) {
             _view->setNeedsFullRedraw(); // lazy
         }

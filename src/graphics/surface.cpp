@@ -44,11 +44,11 @@ public:
     }
     void validateShader(RenderTask* r) override {
         //TextureRenderOp::validateShader(renderer);
-        Shader::Features features;
-        features.textures[0] = Texture::Type::Normal;
+        RectShader::Features features;
+        features.tex0 = Texture::Type::Normal;
         features.alpha = (_alpha<1.0f);
         features.tint = (_color!=0);
-        _shader = r->_renderer->getStandardShader(features);
+        _shader = RectShader::get(r->_renderer, features);
     }
     void prepareToRender(RenderTask* r, Surface* surface) override {
         RenderOp::prepareToRender(r, surface);

@@ -93,10 +93,10 @@ struct GLShaderState {
     GLShaderState(Shader* shader) {
         
         string vs;
-        if (shader->_features.textures[0] == Texture::Type::Rect) {
+        if (shader->_features.tex0 == Texture::Type::Rect) {
             vs += "#extension GL_ARB_texture_rectangle : require\n";
         }
-        if (shader->_features.textures[0] == Texture::Type::OES) {
+        if (shader->_features.tex0 == Texture::Type::OES) {
             vs += "#extension GL_OES_EGL_image_external : require\n";
         }
         
@@ -165,15 +165,15 @@ struct GLShaderState {
         }
         
         // Add appropriate sampler
-        if (shader->_features.textures[0] != Texture::Type::None) {
+        if (shader->_features.tex0 != Texture::Type::None) {
             fs += "uniform ";
-            if (shader->_features.textures[0] == Texture::Type::Normal) {
+            if (shader->_features.tex0 == Texture::Type::Normal) {
                 fs += "sampler2D texture;\n";
             }
-            else if (shader->_features.textures[0] == Texture::Type::Rect) {
+            else if (shader->_features.tex0 == Texture::Type::Rect) {
                 fs += "sampler2DRect texture;\n";
             }
-            else if (shader->_features.textures[0] == Texture::Type::OES) {
+            else if (shader->_features.tex0 == Texture::Type::OES) {
                 fs += "samplerExternalOES texture;\n";
             }
             else {

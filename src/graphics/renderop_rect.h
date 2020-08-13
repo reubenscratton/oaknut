@@ -5,6 +5,44 @@
 // See the LICENSE file in the root of this installation for details.
 //
 
+class RectShader : public Shader {
+public:
+    struct Features {
+        uint32_t tex0:2;
+        uint32_t alpha:1;
+        uint32_t tint:1;
+        uint32_t sdf:3;
+        uint32_t stroke:1;
+        uint32_t _:24;
+        
+        Features() {
+            *(uint32_t*)this = 0;
+        }
+
+        operator uint32_t() const {
+            return *(uint32_t*)this;
+        }
+    } _features;
+
+    static RectShader* get(Renderer* r, Features features);
+    
+    int16_t _u_sampler;
+    int16_t _u_strokeColor;
+    int16_t _u_u;
+    int16_t _u_cornerRadius;
+    int16_t _u_cornerRadii;
+protected:
+    RectShader(Renderer* renderer, Features features);
+    
+    string getSupportingSource() override;
+    string getFragmentSource() override;
+    
+    int getTextureCount() override;
+    Texture::Type getTextureType(int index) override;
+    
+    friend class ShaderFactory<RectShader>;
+};
+
 class RectRenderOp : public RenderOp {
 public:
     RectRenderOp();
@@ -31,8 +69,6 @@ public:
     COLOR _strokeColor;
     float _strokeWidth;
     VECTOR4 _cornerRadii;
-    
-    Shader::Features getStandardFeatures();
 };
 
 

@@ -165,66 +165,16 @@ public:
  */
 #define SDF_NONE         0
 #define SDF_ROUNDRECT_1  1
-#define SDF_ROUNDRECT_2H 2
-#define SDF_ROUNDRECT_2V 3
-#define SDF_ROUNDRECT_4  4
+#define SDF_ROUNDRECT_4  2
+
+
 
 class Shader : public RenderResource  {
 public:
-    struct Features {
-        uint32_t alpha:1;
-        uint32_t tint:1;
-        uint32_t sdf:3;
-        Texture::Type textures[2];
-        
-        Features() {
-            alpha = 0;
-            sdf = SDF_NONE;
-            tint = 0;
-            textures[0] = Texture::Type::None;
-            textures[1] = Texture::Type::None;
-        }
-        Features(bool alpha, uint32_t sdf, bool tint, Texture::Type tex) {
-            this->alpha = alpha;
-            this->sdf = sdf;
-            this->tint = tint;
-            this->textures[0] = tex;
-            this->textures[1] = Texture::Type::None;
-        }
-
-        bool operator==(const Features& other) const {
-            if (alpha!=other.alpha) return false;
-            if (sdf!=other.sdf) return false;
-            if (tint!=other.tint) return false;
-            if (textures[0]!=other.textures[0]) return false;
-            if (textures[1]!=other.textures[1]) return false;
-            return true;
-        }
-        bool operator!=(const Features& other) const {
-            if (alpha!=other.alpha) return true;
-            if (sdf!=other.sdf) return true;
-            if (tint!=other.tint) return true;
-            if (textures[0]!=other.textures[0]) return true;
-            if (textures[1]!=other.textures[1]) return true;
-            return false;
-        }
-        bool operator<(const Features& other) const {
-            if (alpha<other.alpha) return true;
-            if (sdf<other.sdf) return true;
-            if (tint<other.tint) return true;
-            if (textures[0]<other.textures[0]) return true;
-            if (textures[1]<other.textures[1]) return true;
-            return false;
-        }
-    } _features;
 
     Shader(Renderer* renderer);
-    Shader(Renderer* renderer, Features features);
-
     ~Shader();
-
-
-
+    
     enum VariableType {
         Color, // a lowp vec4 or half4 in shader code
         Int1,
@@ -233,17 +183,6 @@ public:
         Float4,
         Matrix4,
     };
-
-    struct VertexShaderOutput {
-        bool isVertexAttribute;
-        VariableType type;
-        string name;
-        string outValue;
-    };
-    vector<VertexShaderOutput> _vertexShaderOutputs;
-
-
-    
     struct Uniform {
         VariableType type;
         enum Usage {
@@ -255,28 +194,51 @@ public:
         int16_t length();
         COLOR cachedColorVal; // exists to avoid a lot of unneccessary COLOR->float[] conversions
     };
-    vector<Uniform> _uniforms;
+    struct VertexShaderOutput {
+        bool isVertexAttribute;
+        VariableType type;
+        string name;
+        string outValue;
+    };
 
+
+
+    vector<VertexShaderOutput> _vertexShaderOutputs;
+    vector<Uniform> _uniforms;
     void* _shaderState; // opaque data managed by renderer. Non-null while shader is loaded.
 
     // Generic shader language APIs. The outer program structure is provided by the renderer.
     virtual string getSupportingSource();
     virtual string getFragmentSource();
+    virtual int getTextureCount() { return 0;}
+    virtual Texture::Type getTextureType(int index) { return Texture::Type::None; };
 
     // Uniforms
     int16_t _u_mvp;
     int16_t _u_alpha;
-    int16_t _u_sampler;
-    int16_t _u_strokeColor;
-    int16_t _u_u;
-    int16_t _u_cornerRadius;
-    int16_t _u_cornerRadii;
-
     
 protected:
     int16_t declareAttribute(const string& name, VariableType type, string value="");
-    int16_t declareUniform(const string& name, VariableType type, Uniform::Usage usage=Uniform::Usage::Fragment);
+    int16_t declareUniform(const string& name, VariableType type, typename Uniform::Usage usage=Uniform::Usage::Fragment);
+    
 };
+
+template <class T>
+class ShaderFactory {
+public:
+    using TFeatures = typename T::Features;
+    
+    map<TFeatures, T*> _shaders;
+
+    T* get(Renderer* renderer, TFeatures features) {
+        auto it = _shaders.find(features);
+        if (it == _shaders.end()) {
+            it = _shaders.insert(make_pair(features, new T(renderer, features))).first;
+        }
+        return it->second;
+    }
+};
+
 
 
 string sl_getTypeString(Shader::VariableType type);
@@ -384,13 +346,11 @@ class Renderer : public Object {
 public:
     list<RenderResource*> _textures;
     list<RenderResource*> _shaders;
-    map<Shader::Features, sp<Shader>> _standardShaders; // standard shaders, not custom ones
     int _primarySurfaceFormat;
 
     void reset();
     ItemPool::Alloc* allocQuads(int num, ItemPool::Alloc* existingAlloc);
     virtual void createTextureForBitmap(Bitmap* bitmap);
-    Shader* getStandardShader(Shader::Features features);
     virtual void releaseTexture(Texture* tex);
     virtual void releaseShader(Shader* shader);
 

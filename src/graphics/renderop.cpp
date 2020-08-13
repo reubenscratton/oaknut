@@ -9,14 +9,13 @@
 
 
 
-RenderOp::RenderOp() : _view(NULL), _mergeType(MERGETYPE_ANY), _alpha(1.0f) {
+RenderOp::RenderOp() : _view(NULL), _alpha(1.0f) {
 }
 RenderOp::~RenderOp() {
 }
 
 bool RenderOp::canMergeWith(const RenderOp* op) {
     return _shader==op->_shader
-        && _mergeType==op->_mergeType
         && _blendMode==op->_blendMode
         && _alpha==op->_alpha;
 }
@@ -25,7 +24,7 @@ void RenderOp::setRect(const RECT& rect) {
     if (!rect.equal(_rect)) {
         _rect = rect;
         if (_batch) {
-            invalidateBatchGeometry(); //_batch->invalidateGeometry(this);
+            invalidateVertexes();
         }
     }
 }
@@ -135,7 +134,7 @@ void RenderOp::prepareToRender(RenderTask* r, Surface* surface) {
     r->setUniform(_shader->_u_mvp, surface->_mvpR);
 }
 
-void RenderOp::invalidateBatchGeometry() {
+void RenderOp::invalidateVertexes() {
     if (!_batchGeometryValid) {
         return;
     }
@@ -146,34 +145,39 @@ void RenderOp::invalidateBatchGeometry() {
     _batch->invalidateGeometry(this);
 }
 
-void RenderOp::invalidate() {
+void RenderOp::invalidateShader() {
     if (_shader) {
         if (_view->_surface) {
-            if (_batch) {
-                _view->_surface->unbatchRenderOp(this);
-                _view->_surface->_opsNeedingValidation.push_back(this);
-            }
+            invalidateBatch();
         }
         _shader = NULL;
     }
 }
+
+void RenderOp::invalidateBatch() {
+    if (_batch) {
+        _view->_surface->unbatchRenderOp(this);
+        _view->_surface->_opsNeedingValidation.push_back(this);
+    }
+}
+
 void RenderOp::setBlendMode(int blendMode) {
     if (_blendMode != blendMode) {
         _blendMode = blendMode;
-        invalidate();
+        invalidateBatch();
     }
 }
 
 void RenderOp::setAlpha(float alpha) {
     if (alpha != _alpha) {
         _alpha = alpha;
-        invalidate();
+        invalidateBatch();
     }
 }
 void RenderOp::setColor(COLOR color) {
     if (color != _color) {
         _color = color;
-        invalidate();  // hmmm... color is an attribute now, can we remove this?
+        invalidateVertexes(); // color is a vertex attribute so need to update vertex data
     }
 }
 void RenderOp::setInset(EDGEINSETS inset) {

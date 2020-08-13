@@ -10,7 +10,10 @@
 
 class ShadowShader : public Shader {
 public:
-    ShadowShader(Renderer* renderer) : Shader(renderer, Features(true, SDF_ROUNDRECT_1, false, Texture::Type::None)) {
+    ShadowShader(Renderer* renderer) : Shader(renderer) {
+        declareAttribute("texcoord", VariableType::Float2);
+        _u_halfSize = declareUniform("halfSize", VariableType::Float2);
+        _u_cornerRadius = declareUniform("cornerRadius", VariableType::Float1);
         _u_sigma = declareUniform("sigma", VariableType::Float1, Uniform::Usage::Fragment);
     }
     string getFragmentSource() override {
@@ -19,7 +22,7 @@ public:
         SL_FLOAT1 " sigma=" SL_UNIFORM(sigma) ";\n"
         // texcoord is fragment xy in surface coords
         SL_FLOAT2 " p=" SL_VERTEX_OUTPUT(texcoord) ";\n"
-        SL_FLOAT2 " half_size = " SL_UNIFORM(u) ".xy - sigma*2.0;\n"
+        SL_FLOAT2 " half_size = " SL_UNIFORM(halfSize) " - sigma*2.0;\n"
 #if 0
         SL_FLOAT1 " dist = -(length(p) - 100);\n"
 #else
@@ -34,6 +37,8 @@ public:
         SL_OUTPIXVAL " = " SL_HALF4 "(0.0, 0.0, 0.0, 0.3 * integral);\n";
     }
     
+    int16_t _u_halfSize;
+    int16_t _u_cornerRadius;
     int16_t _u_sigma;
 };
 
@@ -44,7 +49,7 @@ void ShadowRenderOp::validateShader(RenderTask* r) {
 }
 
 void ShadowRenderOp::prepareToRender(RenderTask* r, class Surface* surface) {
-    RectRenderOp::prepareToRender(r, surface);
+    RenderOp::prepareToRender(r, surface);
     ShadowShader* shader = _shader.as<ShadowShader>();
     r->setUniform(shader->_u_sigma, _sigma);
     //r->setUniform(shader->_u_origin, POINT(0, 0));
@@ -53,7 +58,7 @@ void ShadowRenderOp::prepareToRender(RenderTask* r, class Surface* surface) {
 void ShadowRenderOp::setSigma(float sigma) {
     if (_sigma != sigma) {
         _sigma = sigma;
-        invalidate();
+        invalidateBatch();
         updateRect();
     }
 }
@@ -66,7 +71,16 @@ void ShadowRenderOp::updateRect() {
     RECT rect = _baseRect;
     rect.inset(-_sigma*2, -_sigma*2);
     rect.origin.y += _sigma;
-    RectRenderOp::setRect(rect);
+    RenderOp::setRect(rect);
 }
 
+void ShadowRenderOp::asQuads(QUAD *quad) {
+    rectToSurfaceQuad(_rect, quad);
+    // Put the quad size into the texture coords so the shader
+    // can trivially calc distance to quad center
+    quad->tl.s = quad->bl.s = -_rect.size.width/2;
+    quad->tl.t = quad->tr.t = -_rect.size.height/2;
+    quad->tr.s = quad->br.s = _rect.size.width/2;
+    quad->bl.t = quad->br.t = _rect.size.height/2;
+}
 
