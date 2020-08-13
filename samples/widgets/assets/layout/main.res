@@ -6,14 +6,27 @@ subviews: [
     id: drawer
     class: Drawer
     size: 180dp, fill
+    elevation: {
+        @default: 0dp
+        @mobile: 12dp
+    }
     background: white
     subviews: [
+        {
+        class: Label
+        style: $material_design.Tabs.Button
+        size: fill,wrap
+        font-size:24dp
+        selectable: false
+        text: Widgets
+        },
         {
         id: buttons
         class: Button
         style: $material_design.Tabs.Button
         width: fill
         gravityX: left
+        selectable: true
         text: Buttons
         },
         {
@@ -22,6 +35,7 @@ subviews: [
         style: $material_design.Tabs.Button
         width: fill
         gravityX: left
+        selectable: true
         text: Checkboxes
         },
         {
@@ -30,6 +44,7 @@ subviews: [
         style: $material_design.Tabs.Button
         width: fill
         gravityX: left
+        selectable: true
         text: EditBoxes
         },
         {
@@ -38,6 +53,7 @@ subviews: [
         style: $material_design.Tabs.Button
         width: fill
         gravityX: left
+        selectable: true
         text: Lists
         },
         {
@@ -46,6 +62,7 @@ subviews: [
         style: $material_design.Tabs.Button
         width: fill
         gravityX: left
+        selectable: true
         text: Progress Bars
         },
         {
@@ -54,6 +71,7 @@ subviews: [
         style: $material_design.Tabs.Button
         width: fill
         gravityX: left
+        selectable: true
         text: Radio Buttons
         },
         {
@@ -62,6 +80,7 @@ subviews: [
         style: $material_design.Tabs.Button
         width: fill
         gravityX: left
+        selectable: true
         text: Tabs
         }
     ]
@@ -80,10 +99,15 @@ subviews: [
         },
         {
         class: LinearLayout
+        orientation: vertical
         size: wrap
         align: center
         spacing: 16dp
         subviews: [
+            {
+            class: Checkbox
+            style: $material_design.Checkbox
+            },
             {
             class: Button
             style: $material_design.Button.contained

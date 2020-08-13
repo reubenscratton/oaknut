@@ -103,6 +103,9 @@ bool View::applySingleStyle(const string& name, const style& value) {
     } else if (name == "ink" || name == "ink-color") {
         setInkColor(value.colorVal());
         return true;
+    } else if (name == "selectable") {
+        setSelectable(value.boolVal());
+        return true;
     } else if (name == "enabled") {
         setEnabled(value.boolVal());
         return true;
@@ -1047,6 +1050,9 @@ void View::setInkColor(COLOR inkColor) {
 
 void View::setSelectedSubview(View* subview) {
     for (auto& it : _subviews) {
+        if (!it->isSelectable()) {
+            continue;
+        }
         it->setSelected(subview == it._obj);
     }
 }
@@ -1375,17 +1381,19 @@ View* View::dispatchInputEvent(INPUTEVENT* event) {
     }
     
     // Hover
-    if (event->type == INPUT_EVENT_MOUSE_ENTER) {
-        if (!(_state & STATE_HOVER)) {
-            setState({STATE_HOVER, STATE_HOVER});
+    if (_pressable) {
+        if (event->type == INPUT_EVENT_MOUSE_ENTER) {
+            if (!(_state & STATE_HOVER)) {
+                setState({STATE_HOVER, STATE_HOVER});
+            }
+            return this;
         }
-        return this;
-    }
-    if (event->type == INPUT_EVENT_MOUSE_EXIT) {
-        if ((_state & STATE_HOVER)) {
-            setState({STATE_HOVER, 0});
+        if (event->type == INPUT_EVENT_MOUSE_EXIT) {
+            if ((_state & STATE_HOVER)) {
+                setState({STATE_HOVER, 0});
+            }
+            return this;
         }
-        return this;
     }
 
 	// Find the most distant leaf view containing the point
@@ -1421,7 +1429,7 @@ bool View::handleInputEvent(INPUTEVENT* event) {
         if (event->deviceType != INPUTEVENT::ScrollWheel) {
 
             // Material Design Ink Ripple Animation
-            if (_inkOp) {
+            if (_inkOp && _pressable) {
                 if (event->type == INPUT_EVENT_DOWN) {
                     POINT dc = event->ptLocal;
                     dc.x -= _rect.size.width/2;
@@ -1440,13 +1448,19 @@ bool View::handleInputEvent(INPUTEVENT* event) {
             }
 
             if (event->type == INPUT_EVENT_DOWN) {
-                setPressed(true);
-                if (_parent && _parent->_selectableSubviews) {
-                    _parent->setSelectedSubview(this);
+                if (_pressable) {
+                    setPressed(true);
+                }
+                if (_selectable) {
+                    if (_parent) {
+                        _parent->setSelectedSubview(this);
+                    }
                 }
             }
             if (event->type == INPUT_EVENT_TAP_CANCEL || event->type==INPUT_EVENT_UP) {
-                setPressed(false);
+                if (_pressable) {
+                    setPressed(false);
+                }
             }
         }
         

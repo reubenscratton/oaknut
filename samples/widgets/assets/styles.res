@@ -14,6 +14,19 @@
     primary_color_ink:#306221ea
 
     material_design: {
+        Checkbox: {
+            padding: 8dp
+            size: 32dp
+            corner-radius: 16dp
+            fill-color: {
+                @default: transparent
+                @pressed: $primary_color_faint
+                @hover: $primary_color_vfaint
+            }
+            ink-color: $primary_color_ink
+            box-color: $primary_color
+            tick-color: white
+        }
         Button: {
             contained: {
                 corner-radius: 4dp

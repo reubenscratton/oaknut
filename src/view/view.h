@@ -471,7 +471,11 @@ public:
     virtual bool isErrored() const;
     virtual void setErrored(bool errored);
 
-
+    inline bool isPressable() { return _pressable; }
+    void setPressable(bool pressable) { _pressable = pressable; }
+    inline bool isSelectable() { return _selectable; }
+    void setSelectable(bool selectable) { _selectable = selectable; }
+    
 protected:
     /** Called whenever state changes.  */
      virtual void onStateChanged(VIEWSTATE changes);
@@ -536,9 +540,10 @@ protected:
         bool _updateRenderOpsNeeded:1;
         bool _clipsContents:1;
         bool _directionalLockEnabled:1;
-        bool _subviewsInheritState:1;
+        bool _subviewsInheritState:1; // if set then state changes are propagated to subviews
         bool _opaque:1;
-        bool _selectableSubviews:1;
+        bool _pressable:1; // set to enable pressed/unpressed state bit
+        bool _selectable:1; // set to enable selected/unselected state bit
         bool _hideScrollbars:1;
     };
 

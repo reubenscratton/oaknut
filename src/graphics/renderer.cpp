@@ -110,7 +110,40 @@ string oak::sl_getTypeString(Shader::VariableType type) {
 
 
 string Shader::getSupportingSource() {
-    return "";
+    if (_features.sdf == SDF_NONE) {
+        return "";
+    }
+    string ss = "";
+    // SDF implementations!
+    if (_features.sdf == SDF_ROUNDRECT_1) {
+        ss += SL_FLOAT1 " sdf_roundrect(" SL_FLOAT2 " p, " SL_FLOAT2 " b, " SL_FLOAT1 " r) {\n"
+              SL_FLOAT2 " q = abs(p) - b + " SL_FLOAT2 "(r);\n"
+              " return min(max(q.x,q.y),0.0) + length(max(q,0.0)) - r;\n"
+              "}";
+    }
+    
+    else if (_features.sdf == SDF_ROUNDRECT_2H) {
+        // branchless selection of radius=r.x if on left side of quad or radius=r.y on right side
+        ss += "float sdf_roundrect_2h() {\n"
+/*
+ float sdRoundedBox( in vec2 p, in vec2 b, in vec4 r )
+ {
+     r.xy = (p.x>0.0)?r.xy : r.zw;
+     r.x  = (p.y>0.0)?r.x  : r.y;
+     vec2 q = abs(p)-b+r.x;
+     return min(max(q.x,q.y),0.0) + length(max(q,0.0)) - r.x;
+ }
+ */
+        SL_FLOAT2 " size = " SL_UNIFORM(u) ".xy;\n"
+        SL_FLOAT2 " r = " SL_UNIFORM(cornerRadii) ".xw\n;" // TODO: this is specific to left|right config
+        "float s=step(" SL_VERTEX_OUTPUT(texcoord) ".x,0.0);\n"
+        "float radius = s*r.x + (1.0-s)*r.y;\n"
+        "size -= " SL_FLOAT2 "(radius);\n"
+        SL_FLOAT2 " d = abs(" SL_VERTEX_OUTPUT(texcoord) ") - size;\n"
+        "float dist = min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - radius;\n";
+    }
+
+    return ss;
 }
 
 
@@ -163,28 +196,18 @@ string Shader::getFragmentSource() {
         fs += SL_OUTPIXVAL " = c;\n";
     } else {
         
-        // SDF implementations!
-        if (_features.sdf == SDF_ROUNDRECT_1) {
-            fs += SL_FLOAT2 " b = " SL_UNIFORM(u) ".xy - " SL_FLOAT2 "(" SL_UNIFORM(cornerRadius) ");\n"
-                  "float dist = length(max(abs(" SL_VERTEX_OUTPUT(texcoord)")-b, 0.0)) - " SL_UNIFORM(cornerRadius) "  - 0.5;\n";
-        }
-        else if (_features.sdf == SDF_ROUNDRECT_2H) {
-            // branchless selection of radius=r.x if on left side of quad or radius=r.y on right side
-            fs +=
-            SL_FLOAT2 " size = " SL_UNIFORM(u) ".xy;\n"
-            SL_FLOAT2 " r = " SL_UNIFORM(cornerRadii) ".xw\n;" // TODO: this is specific to left|right config
-            "float s=step(" SL_VERTEX_OUTPUT(texcoord) ".x,0.0);\n"
-            "float radius = s*r.x + (1.0-s)*r.y;\n"
-            "size -= " SL_FLOAT2 "(radius);\n"
-            SL_FLOAT2 " d = abs(" SL_VERTEX_OUTPUT(texcoord) ") - size;\n"
-            "float dist = min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - radius;\n";
-        }
+        // Get two distance values, one for the outer edge and one for the inner edge
+        fs += SL_FLOAT2 " p = " SL_VERTEX_OUTPUT(texcoord) ";\n";
+        fs += SL_FLOAT2 " b = " SL_UNIFORM(u) ".xy;\n";
+        fs += SL_HALF4_DECL " strokeColor(" SL_UNIFORM(strokeColor) ");\n";
+        fs += SL_FLOAT1 " dOuter = sdf_roundrect(p, b, " SL_UNIFORM(cornerRadius) ");\n";
+        fs += SL_FLOAT1 " strokeWidth = " SL_UNIFORM(u) ".w;\n";
+        fs += SL_FLOAT1 " dInner = sdf_roundrect(p, b - strokeWidth, " SL_UNIFORM(cornerRadius) " - strokeWidth);\n";
         
-        // Stroke blend
-        fs +=  SL_HALF4_DECL " col = " SL_HALF4 "(" SL_UNIFORM(strokeColor) ");\n"
-        "   col.a = mix(" SL_HALF1 "(0.0), " SL_HALF1 "(" SL_UNIFORM(strokeColor) ".a), " SL_HALF1 "(clamp(-dist, 0.0, 1.0)));\n"   // outer edge blend
-        // final blend
-        SL_OUTPIXVAL " = mix(col, c, " SL_HALF4 "(clamp(-(dist + " SL_UNIFORM(u) ".w), 0.0, 1.0)));\n";
+        // Cheap AA
+        fs += SL_HALF4_DECL " colOuter = strokeColor;\n"
+                            " colOuter.a *= 1.0 - clamp(dOuter+0.5, 0.0, 1.0);\n";
+        fs += SL_OUTPIXVAL " = mix(c, colOuter, clamp(dInner+0.5, 0.0, 1.0));\n";
     }
     
     

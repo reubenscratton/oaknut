@@ -34,7 +34,6 @@ public:
 
     Tabs() : LinearLayout() {
         _selectedOp = new RectRenderOp();
-        _selectableSubviews = true;
         _hideScrollbars = true;
         addDecorOp(_selectedOp);
     }
@@ -54,6 +53,7 @@ public:
             for (auto& vtab : tabs) {
                 auto title = vtab.stringVal();
                 Button* button = new Button();
+                button->setSelectable(true);
                 button->applyStyle("material_design.Tabs.Button");
                 button->setText(title);
                 button->setImage("star.png");
@@ -66,6 +66,9 @@ public:
 
     void setSelectedSubview(View* subview) override {
         for (auto& it : _subviews) {
+            if (!it->isSelectable()) {
+                continue;
+            }
             bool selected = subview == it._obj;
             it->setSelected(selected);
             if (selected) {

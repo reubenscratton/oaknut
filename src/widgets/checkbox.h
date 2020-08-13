@@ -7,16 +7,23 @@
 
 /**
  * @ingroup widgets
- * @brief A checkbox is an ImageView that toggles it's `STATE_CHECKED` bit when tapped.
+ * @brief A checkbox is a View that toggles it's `STATE_CHECKED` bit when pressed. Some special shaders
+ * provide a close simulacrum to platform equivalents. 
  */
-class Checkbox : public ImageView {
+class Checkbox : public View {
 public:
     Checkbox();
     
     std::function<void(View*,bool)> onIsCheckedChanged;
     
 protected:
+    bool applySingleStyle(const string &name, const style &value) override;
     bool handleInputEvent(INPUTEVENT* event) override;
     void onStateChanged(VIEWSTATE changes) override;
+    void layout(RECT constraint) override;
+    void updateRenderOps() override;
 
+    RectRenderOp* _renderOpBox;
+    sp<RenderOp> _renderOpTick;
+    COLOR _boxColor;
 };

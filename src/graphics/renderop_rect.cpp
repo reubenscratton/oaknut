@@ -51,17 +51,16 @@ void RectRenderOp::setCornerRadii(const VECTOR4& radii) {
     }
 }
 
-void RectRenderOp::validateShader(RenderTask* r) {
+Shader::Features RectRenderOp::getStandardFeatures() {
     Shader::Features features;
     if (_alpha<1.0f || (_color & 0xFF000000)<0xFF000000) {
         features.alpha = 1;
-        _blendMode = BLENDMODE_NORMAL;
     } else {
-        _blendMode = ((_color>>24) < 255) ? BLENDMODE_NORMAL : BLENDMODE_NONE;
+        features.alpha = 0;
     }
-    if (_strokeWidth>0 && _strokeColor!=0) {
+//    if (_strokeWidth>0 && _strokeColor!=0) {
         
-    }
+//    }
     bool singleRadius = (_cornerRadii[0]==_cornerRadii[1] && _cornerRadii[2]==_cornerRadii[3] && _cornerRadii[0]==_cornerRadii[3]);
     if (singleRadius) {
         if (_cornerRadii[0] != 0.0f) {
@@ -76,8 +75,12 @@ void RectRenderOp::validateShader(RenderTask* r) {
 
         }
     }
+    return features;
+}
+
+void RectRenderOp::validateShader(RenderTask* r) {
     _blendMode = BLENDMODE_NORMAL;
-    _shader = r->_renderer->getStandardShader(features);
+    _shader = r->_renderer->getStandardShader(getStandardFeatures());
 }
 
 void RectRenderOp::prepareToRender(RenderTask* r, class Surface* surface) {

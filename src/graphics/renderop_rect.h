@@ -31,6 +31,8 @@ public:
     COLOR _strokeColor;
     float _strokeWidth;
     VECTOR4 _cornerRadii;
+    
+    Shader::Features getStandardFeatures();
 };
 
 

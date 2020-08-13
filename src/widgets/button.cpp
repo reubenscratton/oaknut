@@ -12,6 +12,7 @@ DECLARE_DYNCREATE(ToolbarButton);
 
 
 Button::Button() {
+    _pressable = true;
     applyStyle("Button");
 }
 
