@@ -25,6 +25,7 @@ Shader::Shader(Renderer* renderer) : RenderResource(renderer) {
     _it = renderer->_shaders.insert(renderer->_shaders.end(), this);
     declareAttribute("position", VariableType::Float2);
     _u_mvp = declareUniform("mvp", VariableType::Matrix4, Uniform::Vertex);
+    // TODO: Not sure these are generic enough to be here....
     _u_alpha = declareUniform("alpha", VariableType::Float1);
     declareAttribute("color", VariableType::Color);
 }
@@ -37,7 +38,9 @@ string Shader::getFragmentSource() {
 }
 
 Shader::~Shader() {
-    // TODO: release from factory
+    if (_onDestroy) {
+        _onDestroy();
+    }
     if (_renderer) {
         _renderer->releaseShader(this);
     }

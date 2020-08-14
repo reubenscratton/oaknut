@@ -213,6 +213,8 @@ public:
     virtual int getTextureCount() { return 0;}
     virtual Texture::Type getTextureType(int index) { return Texture::Type::None; };
 
+    std::function<void()> _onDestroy;
+    
     // Uniforms
     int16_t _u_mvp;
     int16_t _u_alpha;
@@ -233,7 +235,11 @@ public:
     T* get(Renderer* renderer, TFeatures features) {
         auto it = _shaders.find(features);
         if (it == _shaders.end()) {
-            it = _shaders.insert(make_pair(features, new T(renderer, features))).first;
+            T* shader = new T(renderer, features);
+            it = _shaders.insert(make_pair(features, shader)).first;
+            shader->_onDestroy = [=]() {
+                _shaders.erase(it);
+            };
         }
         return it->second;
     }

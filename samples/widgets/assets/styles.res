@@ -25,6 +25,7 @@
             }
             ink-color: $primary_color_ink
             box-color: $primary_color
+            box-corner-radius: 2dp
             tick-color: white
         }
         Button: {

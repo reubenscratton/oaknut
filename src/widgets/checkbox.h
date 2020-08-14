@@ -26,4 +26,5 @@ protected:
     RectRenderOp* _renderOpBox;
     sp<RenderOp> _renderOpTick;
     COLOR _boxColor;
+    float _boxCornerRadius;
 };
