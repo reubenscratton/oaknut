@@ -188,7 +188,7 @@ void Window::MotionTracker::dispatchInputEvent(INPUTEVENT& event, ViewController
         }
         
         // Hover events
-        View* hoverView = topVC->getView()->hitTest(event.ptDevice);
+        View* hoverView = topVC->getView()->hitTest(&event);
         if (hoverView != this->hoverView) {
             INPUTEVENT hoverEvent = event;
             if (this->hoverView) {

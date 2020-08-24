@@ -44,7 +44,12 @@ static View* inflateFromResource(const style& value, View* parent) {
     // Inflate the subviews
     auto& subviews = value.arrayVal("subviews");
     for (auto& subview : subviews) {
-        inflateFromResource(subview, view);
+        if (subview.isString()) {
+            View* newsubview = app->layoutInflate(subview.stringVal());
+            view->addSubview(newsubview);
+        } else {
+            inflateFromResource(subview, view);
+        }
     }
     
     return view;

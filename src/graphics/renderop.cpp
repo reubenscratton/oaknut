@@ -15,7 +15,10 @@ RenderOp::~RenderOp() {
 }
 
 bool RenderOp::canMergeWith(const RenderOp* op) {
-    return _shader==op->_shader
+    size_t vtable_this = *(size_t*)this;
+    size_t vtable_other = *(size_t*)op;
+    return vtable_this == vtable_other
+        && _shader==op->_shader
         && _blendMode==op->_blendMode
         && _alpha==op->_alpha;
 }

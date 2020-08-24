@@ -199,6 +199,7 @@ namespace oak {
 #include "widgets/tabbar.h"
 #include "widgets/textfield.h"
 #include "widgets/viewpager.h"
+#include "widgets/viewswitcher.h"
 }
 
 

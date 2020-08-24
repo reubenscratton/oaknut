@@ -18,9 +18,22 @@ public:
     bool applySingleStyle(const string& name, const style& value) override {
         return LinearLayout::applySingleStyle(name, value);
     }
+    
+    void setSelectedSubview(View* subview) override {
+        View::setSelectedSubview(subview);
+        if (subview != _selectedSubview) {
+            if (_onSelectedSubviewChanged) {
+                _onSelectedSubviewChanged(subview);
+            }
+            _selectedSubview = subview;
+        }
+    }
 
+    std::function<void(View*)> _onSelectedSubviewChanged;
 
+    View* _selectedSubview;
 };
+
 DECLARE_DYNCREATE(Drawer);
 
 
@@ -100,6 +113,16 @@ public:
     MainViewController() {
         inflate("layout/main.res");
         bind(_drawer, "drawer");
+        bind(_content, "content");
+        
+        _drawer->_onSelectedSubviewChanged = [=](View* selectedSubview) {
+            int index = _drawer->indexOfSubview(selectedSubview);
+            if (index == 1) {
+                _content->setCurrentSubview(0);
+            } else {
+                _content->setCurrentSubview(1);
+            }
+        };
         
         /*ShadowRenderOp* shadow = new ShadowRenderOp();
         shadow->setSigma(0);
@@ -108,6 +131,7 @@ public:
     }
 
     Drawer* _drawer;
+    ViewSwitcher* _content;
     
 };
 

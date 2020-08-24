@@ -39,7 +39,7 @@ public:
         SL_FLOAT2 " v3(22.79/24.0-0.5,4.59/24.0-0.5);\n"
         SL_FLOAT1 " half_width = 2.25;\n"
         
-        SL_FLOAT2 " size(24.0, 24.0);\n"
+        SL_FLOAT2 " size(26.0, 26.0);\n"
         
         "v1 *= size;\n"
         "v2 *= size;\n"

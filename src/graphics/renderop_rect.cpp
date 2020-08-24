@@ -248,8 +248,7 @@ bool RectRenderOp::canMergeWith(const RenderOp* op) {
     RectShader* shader = _shader.as<RectShader>();
     RectShader::Features* features = (RectShader::Features*)&shader->_features;
     if (features->sdf != SDF_NONE) {
-        return _rect.size.width == ((const RectRenderOp*)op)->_rect.size.width
-        && _rect.size.height == ((const RectRenderOp*)op)->_rect.size.height
+        return _rect.size == ((const RectRenderOp*)op)->_rect.size
         && _strokeColor==((const RectRenderOp*)op)->_strokeColor
         && _strokeWidth==((const RectRenderOp*)op)->_strokeWidth
         && _cornerRadii[0] ==((const RectRenderOp*)op)->_cornerRadii[0]

@@ -11,8 +11,8 @@
 class GameView : public View {
 public:
     Game* _game;
-    sp<BitmapProvider> _imgUnknown, _imgMine, _imgFlag, _imgBoom;
-    sp<BitmapProvider> _imgNumbers[9];
+    sp<Bitmap> _imgUnknown, _imgMine, _imgFlag, _imgBoom;
+    sp<Bitmap> _imgNumbers[9];
     float _cellSize;
     sp<Timer> _timer;
     bool _wasLongPress;
@@ -26,5 +26,5 @@ public:
     bool handleInputEvent(INPUTEVENT* event) override;
 
 protected:
-    void processCellTouch(const POINT& pt, bool longPress);
+    void processCellTouch(const POINT pt, bool longPress);
 };

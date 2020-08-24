@@ -14,40 +14,36 @@ AtlasNode::AtlasNode(AtlasPage* page) {
     filled = false;
 }
 
-/* TODO: restore this
-BitmapProvider* AtlasPage::importAsset(const string& assetPath) {
+Bitmap* AtlasPage::importAsset(const string& assetPath) {
     variant v = app->loadAssetSync(assetPath);
     if (v.isError()) {
         assert(0); // oops;
         return NULL;
     };
     bytearray& data = v.bytearrayRef();
-    BitmapProvider* bitmapProvider = new BitmapProvider();
-    Bitmap::createFromData(data, [=](Bitmap* bitmap) {
-        assert(bitmap);
-        if (bitmap->_format != _bitmap->_format) {
-            bitmap = bitmap->convertToFormat(_bitmap->_format);
-        }
-        AtlasNode* node = reserve(bitmap->_width, bitmap->_height);
-        assert(node);
-        POINT origin = node->rect.origin;
-        PIXELDATA pixelDataDest, pixelDataSrc;
-        _bitmap->lock(&pixelDataDest, true);
-        bitmap->lock(&pixelDataSrc, false);
-        uint8_t* destData = (uint8_t*)_bitmap->pixelAddress(&pixelDataDest, origin.x, origin.y);
-        uint8_t* srcData = (uint8_t*)pixelDataSrc.data;
-        for (int y=0 ; y<bitmap->_height ; y++) {
-            memcpy(destData, srcData, pixelDataSrc.stride);
-            destData += pixelDataDest.stride;
-            srcData += pixelDataSrc.stride;
-        }
-        bitmap->unlock(&pixelDataSrc, false);
-        _bitmap->unlock(&pixelDataDest, true);
-        bitmapProvider->dispatch(node);
-    });
-    return bitmapProvider;
+    auto bitmap = Bitmap::createFromData(data);
+    assert(bitmap);
+    if (bitmap->_format != _bitmap->_format) {
+        bitmap = bitmap->convertToFormat(_bitmap->_format);
+    }
+    AtlasNode* node = reserve(bitmap->_width, bitmap->_height);
+    assert(node);
+    POINT origin = node->rect.origin;
+    PIXELDATA pixelDataDest, pixelDataSrc;
+    _bitmap->lock(&pixelDataDest, true);
+    bitmap->lock(&pixelDataSrc, false);
+    uint8_t* destData = (uint8_t*)_bitmap->pixelAddress(&pixelDataDest, origin.x, origin.y);
+    uint8_t* srcData = (uint8_t*)pixelDataSrc.data;
+    for (int y=0 ; y<bitmap->_height ; y++) {
+        memcpy(destData, srcData, pixelDataSrc.stride);
+        destData += pixelDataDest.stride;
+        srcData += pixelDataSrc.stride;
+    }
+    bitmap->unlock(&pixelDataSrc, false);
+    _bitmap->unlock(&pixelDataDest, true);
+    return bitmap;
 }
-*/
+
 
 //
 // Adapted from: https://github.com/mackstann/binpack/blob/master/livedemo.html

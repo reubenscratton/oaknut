@@ -6,6 +6,14 @@
         background-color: #f6f6f6
     }
 
+    drawer-button: {
+        class: Button
+        style: $material_design.Tabs.Button
+        width: fill
+        gravityX: left
+        selectable: true
+    }
+
     primary_color:#6221ea
   
   // TODO: need a way to declare colours that are different alphas of other colours
@@ -16,7 +24,7 @@
     material_design: {
         Checkbox: {
             padding: 8dp
-            size: 32dp
+            size: 34dp
             corner-radius: 16dp
             fill-color: {
                 @default: transparent

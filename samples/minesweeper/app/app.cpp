@@ -45,13 +45,13 @@ public:
     virtual void onGameStateChanged() {
         switch (_game->_state) {
             case InProgress:
-                _imageViewFace->setImageAsset("images/face_normal.png");
+                _imageViewFace->setImage("images/face_normal.png");
                 break;
             case Won:
-                _imageViewFace->setImageAsset("images/face_won.png");
+                _imageViewFace->setImage("images/face_won.png");
                 break;
             case Lost:
-                _imageViewFace->setImageAsset("images/face_lost.png");
+                _imageViewFace->setImage("images/face_lost.png");
                 break;
         }
     }

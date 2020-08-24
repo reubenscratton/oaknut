@@ -96,7 +96,7 @@ bool GameView::handleInputEvent(INPUTEVENT* event) {
 }
 
 
-void GameView::processCellTouch(const POINT& pt, bool longPress) {
+void GameView::processCellTouch(const POINT pt, bool longPress) {
     int col = pt.x / _cellSize;
     int row = pt.y / _cellSize;
     if (col>=0 && row>=0 && col < _game->_cols && row < _game->_rows) {

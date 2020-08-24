@@ -518,7 +518,7 @@ protected:
 public:
     std::function<bool(View*,INPUTEVENT*)> onInputEvent;
     std::function<void()> onClick;
-    virtual View* hitTest(POINT& pt);
+    virtual View* hitTest(INPUTEVENT* ev);
     virtual View* subviewContainingPoint(POINT pt);
     virtual int indexOfSubviewContainingPoint(POINT pt);
     virtual void setDirectionalLockEnabled(bool enabled);

@@ -836,6 +836,11 @@ void View::detachFromSurface() {
         if (_renderListDecor) {
             _surface->detachRenderList(_renderListDecor);
         }
+        
+        if (_inkOp) {
+            removeRenderOp(_inkOp);
+            _inkOp = nullptr;
+        }
     
         // If this view owns its surface, remove the op that renders it from the render target
         if (_ownsSurface && _surface->_op) {
@@ -1347,15 +1352,18 @@ int View::indexOfSubviewContainingPoint(POINT pt) {
 }
 
 
-View* View::hitTest(POINT& pt) {
-	
-	// Find the leaf view that corresponds to the given point
-	if (_visibility==Visible && _rect.contains(pt)) {
-        pt += _contentOffset;
-        pt -= _rect.origin;
+View* View::hitTest(INPUTEVENT* ev) {
+    
+	// Update ptLocal to be in view-local coords
+    ev->ptLocal = ev->ptSurface;
+    ev->ptLocal -= _surfaceOrigin;
+    if (_parent) {
+        ev->ptLocal += _parent->_contentOffsetAccum;
+    }
+	if (_visibility==Visible && getOwnRect().contains(ev->ptLocal)) {
         for (long i=_subviews.size()-1 ; i>=0 ; i--) {
 			View* subview = _subviews.at(i);
-			auto hitTestSub = subview->hitTest(pt);
+			auto hitTestSub = subview->hitTest(ev);
 			if (hitTestSub) {
 				return hitTestSub;
 			}
@@ -1396,24 +1404,19 @@ View* View::dispatchInputEvent(INPUTEVENT* event) {
         }
     }
 
-	// Find the most distant leaf view containing the point
-    POINT hitPoint = event->ptSurface;
-    hitPoint -= _surfaceOrigin;
-	View* hitView = hitTest(hitPoint);
+	// Find the most distant leaf view containing the point. If a view is found
+    // the ptLocal field of the event will hold the event location in view-local coordinates
+	View* hitView = hitTest(event);
 
 	// Offer the event to the leaf view and if it doesn't handle it pass
 	// it up the view tree until a view handles it.
 	while (hitView) {
-        event->ptLocal = hitPoint + hitView->_contentOffset;
 		if (hitView->handleInputEvent(event)) {
 			return hitView;
 		}
-        event->ptLocal -= hitView->_contentOffset;
-        hitPoint += hitView->_rect.origin;
+        // Move to parent coords
+        event->ptLocal += hitView->_rect.origin - hitView->_contentOffset;
 		hitView = hitView->_parent;
-        if (hitView) {
-            hitPoint -= hitView->_contentOffset;
-        }
 	}
 
 	return handleInputEvent(event) ? this : NULL;
